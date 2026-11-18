@@ -6836,7 +6836,7 @@
     {
       "id": "SURFACE-3862d80cc6873442",
       "path": "scripts/test-production-workspace-browser.py",
-      "sha256": "2abc00701aa573ea07d20b3ca4ab8ab3b7c300b43f0cc359e67e27794360a017",
+      "sha256": "dceb957614e75bd6f130ca4be31e1590bc07389196940249301f477a90d2d8b6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10526,7 +10526,7 @@
     {
       "id": "SURFACE-5ed7d8944694e02d",
       "path": "tdf-hq-ui/src/features/production/ProductionForms.tsx",
-      "sha256": "a7b8171525c06bbabbe09dfe6c32d0a91e1d4d4c5884565bc5c484017c2ec3da",
+      "sha256": "f37e78adb76c1de2ea5e6027cbbd4c83a703c14f8036f9911caf4b2a618ab8dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10538,7 +10538,7 @@
     {
       "id": "SURFACE-ed3344c5599b510a",
       "path": "tdf-hq-ui/src/features/production/WorkspaceViews.tsx",
-      "sha256": "e4d3de9f6d5a006cfd72959ccb00de767f9da9afdcaca54fa29b4a875198de64",
+      "sha256": "86d86ba9c6520593f05a53d12099909c06ebd48501fa1e7e751c0c7a2e64a6cd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30150,7 +30150,7 @@
     },
     {
       "path": "formal/production/README.md",
-      "sha256": "3d8e7fea1a943056e5ec1847fc5452f23f57537d8df8b4979d9234daea701217",
+      "sha256": "7e705493931ee5656c412ec66e44a4f84793006eda610d92363ca6b2d4e9354a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

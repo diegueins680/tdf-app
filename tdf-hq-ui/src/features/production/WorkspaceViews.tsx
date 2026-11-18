@@ -20,7 +20,7 @@ export function TaskCard({ p, t, actor, save }: { p: Project; t: Task; actor: nu
       {expanded && <>
       <Reviews {...{ p,t,actor,save,editable }} />
       {editable && t.status !== 'Completada' && <>
-        <Form submit="Guardar bloqueo" action={d => void save({ op: 'block', task: t.id, note: d.get('note') })}>
+        <Form revision={p.revision} submit="Guardar bloqueo" action={(d, revision) => void save({ revision, op: 'block', task: t.id, note: d.get('note') })}>
           <Field name="note" title="Motivo del bloqueo (vacío para resolver)" value={t.blockage ?? ''} required={false} /></Form>
         {t.status !== 'En revisión' && <Stack direction="row" flexWrap="wrap">
           <Button onClick={() => void save({ op: 'progress', task: t.id, status: 'En curso' })}>Poner en curso</Button>

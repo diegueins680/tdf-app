@@ -1,5 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { Button, Stack, TextField } from '@mui/material';
+import { Alert, Button, Stack, TextField } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { Label } from '../../api/label';
 import { useSession } from '../../session/SessionContext';
@@ -11,13 +11,24 @@ export function Field({ name, title, value, type = 'text', required = true }: { 
 export function SelectField({ name, title, value, multiple, children }: { name: string; title: string; value?: string | number | string[]; multiple?: boolean; children: ReactNode }) {
   return <label>{title}<select aria-label={title} name={name} defaultValue={value} multiple={multiple} style={{ display: 'block', padding: 8, maxWidth: '100%' }}>{children}</select></label>;
 }
-export function Form({ action, submit, children }: { action: (data: FormData) => void; submit: string; children: ReactNode }) {
+export function Form({ action, submit, children, revision }: {
+  action: (data: FormData, baseRevision?: number) => void;
+  submit: string;
+  children: ReactNode;
+  revision?: number;
+}) {
+  const [baseRevision, setBaseRevision] = useState(revision);
+  const stale = revision !== baseRevision;
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    action(new FormData(event.currentTarget));
+    if (!stale) action(new FormData(event.currentTarget), baseRevision);
   }
-  return <Stack component="form" onSubmit={onSubmit} spacing={1.5} sx={{ my: 2, maxWidth: 640 }}>
-    {children}<Button type="submit" variant="outlined">{submit}</Button></Stack>;
+  return <Stack key={baseRevision} component="form" onSubmit={onSubmit} spacing={1.5} sx={{ my: 2, maxWidth: 640 }}>
+    {children}
+    {stale && <Alert severity="warning">El proyecto cambió desde que abriste este formulario. Revisa los valores actuales antes de guardar.
+      <Button type="button" onClick={() => setBaseRevision(revision)}>Cargar valores actuales</Button>
+    </Alert>}
+    <Button type="submit" variant="outlined" disabled={stale}>{submit}</Button></Stack>;
 }
 const textValue = (data: FormData, name: string) => {
   const value = data.get(name);
@@ -62,7 +73,8 @@ export function CreateProject({ save }: { save: (body: Action) => void }) {
 export function TaskForm({ project: p, task: t, save }: { project: Project; task?: Task; save: (body: Action) => void }) {
   const team = p.people.filter(person => person.role !== 'client');
   const options = team.map(person => <option key={person.id} value={person.id}>{person.name}</option>);
-  return <Form submit={t ? 'Guardar tarea' : 'Añadir tarea'} action={d => save({
+  return <Form revision={t ? p.revision : undefined} submit={t ? 'Guardar tarea' : 'Añadir tarea'} action={(d, revision) => save({
+    ...(t && { revision }),
     ...Object.fromEntries(d.entries()), op: t ? 'edit' : 'task', task: t?.id,
     approver: optionalId(d, 'approver'), booking: optionalId(d, 'booking'),
     songs: d.getAll('songs'), collaborators: d.getAll('collaborators'),

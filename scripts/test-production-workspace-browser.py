@@ -226,6 +226,26 @@ def scenario(browser, api, web, actors, offering):
     expect(page.get_by_text('Segundo proyecto · Entrega coincidente')).to_be_visible()
     expect(page.get_by_text('Sin superposiciones',exact=False)).to_be_visible()
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    page.get_by_role('button',name='Tablero por canción').click()
+    page.locator('select').filter(has=page.locator(f'option[value="{second}"]')).select_option(second)
+    card=page.locator('.MuiCard-root').filter(has=page.get_by_role('heading',name='Entrega coincidente',exact=True)).last
+    card.locator('summary').first.click()
+    card.get_by_text('Editar tarea y asignaciones',exact=True).click()
+    editor=card.locator('form').filter(has=page.get_by_role('button',name='Guardar tarea',exact=True))
+    # The title is deliberately dirty when a second tab changes the committed date.
+    editor.locator('[name=title]').fill('Borrador local')
+    other=next(p for p in http('Productor','GET','/productions').json() if p['id']==second)
+    target=other['tasks'][0]
+    remote_date=(today+timedelta(days=90)).isoformat()
+    http('Productor','POST',f'/productions/{second}/actions',data=dict(op='edit',revision=other['revision'],task=target['id'],
+        title=target['title'],stage=target['stage'],owner=producer,duration=target['duration'],due=remote_date,songs=target['songs']))
+    expect(editor.get_by_role('button',name='Guardar tarea')).to_be_disabled(timeout=35000)
+    expect(editor.locator('[name=title]')).to_have_value('Borrador local')
+    editor.get_by_role('button',name='Cargar valores actuales').click()
+    expect(editor.locator('[name=due]')).to_have_value(remote_date)
+    expect(editor.locator('[name=title]')).to_have_value(target['title'])
+    expect(editor.get_by_role('button',name='Guardar tarea')).to_be_enabled()
+    print('PASS refreshed task draft cannot overwrite a concurrent edit',flush=True)
     print('PASS real TDF booking, six-stage EP, shared drums, four account scopes, both action owners, version history, stale decision, schedule, mobile viewport, cross-project workload', flush=True)
 
 
