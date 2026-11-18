@@ -12,7 +12,8 @@
     "webPR": 722,
     "mobilePR": 188,
     "salesClosePR": 735,
-    "productionDeployedByThisContinuation": false
+    "productionDeployedByThisContinuation": false,
+    "ticketOrderEmailPR": 769
   },
   "findings": [
     {
@@ -218,6 +219,12 @@
       "principle": "Revelación progresiva y carga extrínseca",
       "finding": "La introducción de reserva repetía horario, zonas y contexto de precios antes del contacto; la versión con cotización añadía vocabulario del servidor.",
       "change": "La instrucción breve y el control nativo Horario y precios ocupan hasta tres líneas de texto en los viewports saludables probados. Detalles de horario físico de Quito, zona del visitante y moneda se abren por teclado sin cambiar datos ni enviar reservas. Estimados, avisos y reintento de catálogo permanecen fuera del contenido plegado; horario y consentimiento conservan sus guías y validaciones."
+    },
+    {
+      "id": "COG-20261117-08",
+      "principle": "Legibilidad y reconocimiento de opciones",
+      "finding": "El selector de reserva combinaba nombre y tarifa en una fila recortada en teléfonos; unidades inglesas y una tarifa de poco contraste en la opción seleccionada dificultaban leer el servicio. El espaciado de contenedores anidados también desplazaba los campos fuera de la columna.",
+      "change": "El valor seleccionado muestra el nombre completo, las opciones separan nombre y tarifa, y los textos largos se ajustan dentro de su columna. El precio seleccionado conserva contraste y las unidades hour, episode, song y package se muestran como hora, episodio, canción y paquete; las unidades desconocidas se conservan. Se mantienen el catálogo, orden, identificadores y cálculo existente, con cotización, depósito y consentimiento."
     }
   ],
   "measurements": [
@@ -346,8 +353,8 @@
     {
       "id": 17,
       "item": "Enlace seguro a la orden por correo",
-      "status": "Pendiente de backend",
-      "nextOrEvidence": "Diseñar expiración, recuperación y verificación; no poner la capacidad privada en analítica ni registros."
+      "status": "Parcial; implementación separada #769",
+      "nextOrEvidence": "PR #769 OPEN DRAFT, cabeza 87bb5ff8a9f19c12b062932b95ffa7cac0fe9635: enlace de acceso a orden de entradas en correo, fragmento #acceso= retirado al abrir y hash verificado antes del envío. Autorización Do it reconciliada en sesión 41891438. No integrado ni desplegado; sin caducidad ni revocación por orden, sin reenvío de correos previos. Faltan revisión e integración; no duplicar aquí."
     },
     {
       "id": 18,
@@ -377,7 +384,7 @@
       "id": 22,
       "item": "Reserva y datos repetidos",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Reserva en 2 pasos con cotización, depósito y consentimiento en Horario. Prefill en mezcla, marketplace, pruebas y correo de Live Sessions tras validar su código. Contacto completo de la cuenta resumido y editable; invitados e incompletos abiertos. Introducción saludable: instrucción y control de detalles en hasta tres líneas de texto en siete configuraciones. Horario/zona/moneda disponibles por teclado; avisos y estimados visibles. El resto de repeticiones y la evaluación humana siguen pendientes. Carrito de mercancía precarga nombre/correo de la cuenta montada y conserva ediciones y borrados explícitos."
+      "nextOrEvidence": "Reserva en 2 pasos con cotización, depósito y consentimiento en Horario. Prefill en mezcla, marketplace, pruebas y correo de Live Sessions tras validar su código. Contacto completo de la cuenta resumido y editable; invitados e incompletos abiertos. Introducción saludable: instrucción y control de detalles en hasta tres líneas de texto en siete configuraciones. Horario/zona/moneda disponibles por teclado; avisos y estimados visibles. El resto de repeticiones y la evaluación humana siguen pendientes. Carrito de mercancía precarga nombre/correo de la cuenta montada y conserva ediciones y borrados explícitos. Selector de servicio: nombres completos con salto de línea, tarifa aparte en opciones y traducciones de presentación de unidades del catálogo; conserva identificadores y cálculo existente."
     },
     {
       "id": 23,
@@ -487,9 +494,9 @@
       "scope": "Full web checkpoint before the final schedule-disclosure change; affected suites and browser paths rerun afterwards."
     },
     "latestFocusedJest": {
-      "suitesPassed": 3,
-      "testsPassed": 32,
-      "sourceCommit": "02e4d070ab61f643dfa2450124f8356b535e1221"
+      "suitesPassed": 4,
+      "testsPassed": 34,
+      "sourceCommit": "de6336230e60a992083bb7e7e1d666033f20c1e5"
     },
     "browser": {
       "passed": 22,
@@ -503,9 +510,9 @@
       "latestBookingDisclosurePassed": 10
     },
     "governance": {
-      "sourceCommit": "02e4d070ab61f643dfa2450124f8356b535e1221",
+      "sourceCommit": "de6336230e60a992083bb7e7e1d666033f20c1e5",
       "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-      "mappedChangedMaterialSurfaces": 130,
+      "mappedChangedMaterialSurfaces": 133,
       "inventory": "passed",
       "traceability": "passed",
       "semanticConformance": "not established by these checks"
@@ -519,9 +526,11 @@
     "typecheck": "passed",
     "lint": "passed",
     "latestBrowserMatrix": {
-      "cases": 70,
-      "passed": 70,
+      "cases": 49,
+      "passed": 49,
       "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
       "configurations": [
         "Chromium desktop",
         "Chromium phone",
@@ -532,29 +541,29 @@
         "WebKit critical"
       ],
       "caseGroups": {
+        "servicePicker": 7,
         "briefIntroduction": 7,
         "catalogRecoveryAndViewport": 21,
-        "physicalQuitoTimezones": 14,
-        "orderSupportAndCancellation_es_en": 28
+        "physicalQuitoTimezones": 14
       },
       "checks": [
-        "Healthy introductory prose plus summary label <=3 visible lines in all7 viewports; title/account card/safety notices excluded from that count",
-        "Native disclosure opens/closes with Enter, retains focus and contact edits, displays Quito hours/currency and never writes",
-        "Price estimate stays visible while details collapsed; schedule guidance and existing create/quote/consent/idempotency flow retained",
-        "Error/empty catalog recovery preserves drafts; zero-tolerance root overflow/tooltip/keyboard regressions retained",
-        "UTC/Madrid DST visitors preserve the same physical Quito opening/closing times and refused UTC payloads",
-        "Order dialog sampled only after paint, opaque ancestors and animation completion; injected600ms fade exercises the readiness guard",
-        "All WCAG/ARIA rules, normal viewport/pointer checks and assertion budgets retained"
+        "Full multiword and unbroken service names measured against actual select/field/card text rectangles, not only root overflow",
+        "Every menu option keeps its full name, catalog order and raw ID; names wrap, rates remain separate, selected rate passes full WCAG contrast",
+        "All option bounds inside viewport and normal pointer hit tests; keyboard Enter/ArrowDown/Escape returns focus and selects the same catalog ID",
+        "Known unit display translation, unchanged hourly reference calculation, zero versus absent rate and unknown unit text",
+        "Contact edits survive selection; selected ID reaches synthetic availability reads without a booking write",
+        "Existing healthy introduction, error/empty catalog recovery, exact overflow negative control and UTC/Madrid physical Quito timezone journeys",
+        "All WCAG/ARIA tags retained; no forced click, disabled accessibility rule or increased assertion budget"
       ],
       "harness": {
         "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
         "port": 4189,
         "reuseExistingServer": false,
         "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
-        "identity": "Owned preview PID47163 cwd verified; /inicio bytes matched this worktree dist/index.html."
+        "identity": "Owned preview PID62589 cwd verified; /inicio bytes matched this worktree dist/index.html."
       },
-      "log": "/private/tmp/cogload-fifteenth-browser.log",
-      "limitations": "Todas las API interceptadas; reservas/órdenes/reportes/cancelaciones sintéticas. No operación real, publicación ni despliegue. El conteo de líneas no abarca título, tarjeta de cuenta, estimado ni avisos de seguridad, ni prueba otros zooms/fuentes o comprensión humana."
+      "log": "/private/tmp/cogload-sixteenth-browser.log",
+      "limitations": "All APIs intercepted and all bookings synthetic/refused. Browser configurations do not establish native-device or human comprehension acceptance."
     },
     "latestCompletedHostedCheckpoint": {
       "commit": "7426a7bc1371e07af3110065cda97e86221b9bdc",
@@ -602,6 +611,24 @@
         "fixture": "Real generated AAC/FLAC media over loopback; account/catalog/access synthetic."
       },
       "description": "La reverificación local de música nativa aprobó cuatro casos WebKit (dos recorridos repetidos dos veces) con el decodificador y reloj reales. No prueba que el fallo hosted esté resuelto. El primer intento usó el puerto4190 restringido por WebKit, no cargó la app y se detuvo; se excluye como evidencia de producto."
+    },
+    "latestHostedCheckpointSnapshot": {
+      "commit": "9343be19f661c145b4c25dd44c6e186ff2e77162",
+      "ciRun": 44210874742,
+      "ciConclusion": "in_progress at documentation preparation",
+      "webJest": {
+        "suites": 382,
+        "tests": 4431,
+        "result": "passed"
+      },
+      "backend": "passed",
+      "nativeMusic": {
+        "passed": 74,
+        "failed": 0
+      },
+      "mainBrowser": "persona-web-e2e still running; no final counts or overall pass established",
+      "specialistWorkflows": "all four passed: catalog44210878915,event44210882981,social44210887632,interaction44210891321",
+      "scope": "Read-only snapshot before publishing this pass. Counts belong only to the recorded prior head. A newer dispatch on the same ref may cancel its unfinished workflow."
     }
   },
   "limitations": [
@@ -714,6 +741,14 @@
     {
       "path": "figures/booking-introduction-expanded-phone.png",
       "scope": "Detalles prácticos sintéticos abiertos por teclado; horario, zona y moneda conservados."
+    },
+    {
+      "path": "figures/booking-service-selected-phone.png",
+      "scope": "Selección sintética en teléfono: nombre completo dentro de la columna y tarifa por hora localizada, con contacto retenido."
+    },
+    {
+      "path": "figures/booking-service-options-phone.png",
+      "scope": "Menú sintético en teléfono: nombres completos, precio seleccionado con contraste, cero, unidad desconocida y servicio sin precio."
     }
   ],
   "followups": [
@@ -1989,6 +2024,102 @@
       },
       "hostedCI": "New published head requires its own full workflows.",
       "limitations": "No structural/owner decision, navigation or payment-state change. Intro target applies to healthy prose/summary only. Further service-picker localization and containment review remains open."
+    },
+    {
+      "date": "2026-11-17",
+      "baseCommit": "9343be19f661c145b4c25dd44c6e186ff2e77162",
+      "scope": "Item22: service-picker name/price containment, selected-option contrast and Spanish display units. Reconciled separate authorized ticket-email item17 implementation #769 without changing that branch or integrating it.",
+      "regressionVerification": {
+        "suites": 4,
+        "tests": 34,
+        "log": "/private/tmp/cogload-sixteenth-unit-verified.log",
+        "checks": [
+          "PublicBookingPage catalog, service/quote race, authoritative deposit, consent, idempotency, contact drafts and physical timezone regressions",
+          "Billing-unit display/raw-catalog separation, unknown/missing units, date-only and status labels"
+        ]
+      },
+      "browserVerification": {
+        "cases": 49,
+        "passed": 49,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "servicePicker": 7,
+          "briefIntroduction": 7,
+          "catalogRecoveryAndViewport": 21,
+          "physicalQuitoTimezones": 14
+        },
+        "checks": [
+          "Full multiword and unbroken service names measured against actual select/field/card text rectangles, not only root overflow",
+          "Every menu option keeps its full name, catalog order and raw ID; names wrap, rates remain separate, selected rate passes full WCAG contrast",
+          "All option bounds inside viewport and normal pointer hit tests; keyboard Enter/ArrowDown/Escape returns focus and selects the same catalog ID",
+          "Known unit display translation, unchanged hourly reference calculation, zero versus absent rate and unknown unit text",
+          "Contact edits survive selection; selected ID reaches synthetic availability reads without a booking write",
+          "Existing healthy introduction, error/empty catalog recovery, exact overflow negative control and UTC/Madrid physical Quito timezone journeys",
+          "All WCAG/ARIA tags retained; no forced click, disabled accessibility rule or increased assertion budget"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Owned preview PID62589 cwd verified; /inicio bytes matched this worktree dist/index.html."
+        },
+        "log": "/private/tmp/cogload-sixteenth-browser.log",
+        "limitations": "All APIs intercepted and all bookings synthetic/refused. Browser configurations do not establish native-device or human comprehension acceptance."
+      },
+      "catalogCandidates": 1429,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "Manually reviewed display-only hour/episode/song/package labels against ServiceCatalogDTO.scBillingUnit and tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql. Unknown text passes through; no selectable service, unit authority or price rule added. Scanner adds no candidate; all1429 complete decision objects remain unchanged, verified by preservation tests. Canonical JSON/CSV refreshed.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "9343be19f661c145b4c25dd44c6e186ff2e77162",
+        "ciRun": 44210874742,
+        "ciConclusion": "in_progress at documentation preparation",
+        "webJest": {
+          "suites": 382,
+          "tests": 4431,
+          "result": "passed"
+        },
+        "backend": "passed",
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "mainBrowser": "persona-web-e2e still running; no final counts or overall pass established",
+        "specialistWorkflows": "all four passed: catalog44210878915,event44210882981,social44210887632,interaction44210891321",
+        "scope": "Read-only snapshot before publishing this pass. Counts belong only to the recorded prior head. A newer dispatch on the same ref may cancel its unfinished workflow."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "de6336230e60a992083bb7e7e1d666033f20c1e5",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 133,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "separateImplementation": {
+        "pullRequest": 769,
+        "head": "87bb5ff8a9f19c12b062932b95ffa7cac0fe9635",
+        "state": "OPEN DRAFT",
+        "authorization": "Owner Do it in Claude session41891438; read-only context reconciliation",
+        "limits": "Not integrated or deployed; ticket-order link has no per-order expiration/revocation and old receipts are not resent. No real inbox/order verification in this continuation."
+      },
+      "hostedCI": "New published head requires its own full workflows; prior in-progress run is not a pass.",
+      "limitations": "Existing rate estimation policy and backend quote authority retained; this is presentation/local layout. No navigation/role/removal decision, new business option, real reservation, email, merge or deployment. Other forms, integrations, owner decisions, native-device and human comprehension acceptance remain open."
     }
   ],
   "lastUpdated": "2026-11-17"
