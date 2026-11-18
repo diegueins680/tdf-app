@@ -1087,6 +1087,14 @@ loadOperationByPreparation ProviderOperationPreparation{..} = do
     [] -> Left "Provider operation idempotency key conflicts with immutable fields"
     _ -> Left "Provider operation idempotency lookup was ambiguous"
 
+-- A PayPhone Button page is handed out (again) only for ten minutes after the
+-- preparation (ADR 0136). Its form lives ten minutes from load, so a payment
+-- happens at most twenty minutes after preparation and must be confirmed five
+-- minutes later; the query worker reads the reference every minute for 24
+-- attempts (about 24 minutes), which covers that horizon. A session read past
+-- the window gets no page, so TDF never reopens a form whose payment the worker
+-- could no longer confirm. An attempt nobody paid ends in review when the
+-- worker's attempts run out.
 loadOperation
   :: ProviderOperationReference
   -> Text
@@ -1098,11 +1106,15 @@ loadOperation operationRef encryptionKey = do
     \ CASE WHEN review.id IS NOT NULL THEN 'ambiguous' ELSE operation.outcome_certainty END,\
     \ operation.provider_resource_id,\
     \ CASE WHEN review.id IS NOT NULL OR operation.redirect_url_ciphertext IS NULL THEN NULL\
+    \   WHEN left(operation.provider_reference, ?) = ?\
+    \     AND operation.created_at < now() - interval '10 minutes' THEN NULL\
     \   ELSE pgp_sym_decrypt(operation.redirect_url_ciphertext, ?) END\
     \ FROM commerce_provider_operation operation\
     \ LEFT JOIN commerce_reconciliation_exception review ON review.id=?::uuid\
     \ WHERE operation.id = ?::uuid"
-    [ PersistText encryptionKey
+    [ PersistInt64 (fromIntegral (T.length payPhoneButtonReferencePrefix))
+    , PersistText payPhoneButtonReferencePrefix
+    , PersistText encryptionKey
     , PersistText (closedCheckoutApprovalId (providerOperationReferenceId operationRef))
     , PersistText (providerOperationReferenceId operationRef)
     ] :: SqlPersistT IO
