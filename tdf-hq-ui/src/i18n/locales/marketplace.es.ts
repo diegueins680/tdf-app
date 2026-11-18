@@ -117,6 +117,8 @@ const marketplace = {
       balance: 'Pagar el saldo con PayPhone',
       notEnabled: 'Los cobros dentro de la plataforma todavía no están habilitados. Por ahora coordina el pago directamente con la otra parte.',
       noPage: 'PayPhone no devolvió una página de pago válida. Vuelve a intentarlo en unos minutos; no se te cobró nada.',
+      inProgress: 'Ya hay un pago en curso para este cobro. No pagues otra vez; el acuerdo se actualizará cuando PayPhone lo confirme.',
+      recoveryUnavailable: 'Este navegador no puede guardar la recuperación del pago, así que no se inició. Activa el almacenamiento del sitio o prueba en otra pestaña.',
     },
     payments: 'Cobros',
     paymentKind: { deposit: 'Depósito', balance: 'Saldo' },

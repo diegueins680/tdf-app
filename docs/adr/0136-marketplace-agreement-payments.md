@@ -99,7 +99,11 @@ Hechos verificados antes de diseñar (fuentes al final):
 7. **Orden de bloqueo.** anuncio → oferta → acuerdo → cobro. La reconciliación bloquea checkout e
    intento primero (regla existente) y después el cobro y el acuerdo; ningún camino del marketplace
    toma un bloqueo de checkout mientras sostiene el acuerdo, salvo la creación del checkout, que es
-   una inserción.
+   una inserción, y el inicio de una sesión de pago: el ejecutor bloquea acuerdo y cobro, vuelve a
+   comprobar que el acuerdo espera ese cobro y después bloquea el checkout para registrar el
+   intento. Así cancelar, vencer o reemplazar el cobro ve el intento o espera a que exista. Si eso
+   coincide con la reconciliación del mismo checkout, PostgreSQL detecta el interbloqueo y aborta
+   una de las dos transacciones; ambas se reintentan sin efectos parciales.
 
 ## Alternativas descartadas
 

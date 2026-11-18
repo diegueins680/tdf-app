@@ -90,6 +90,25 @@ lockCheckoutSplit
 lockCheckoutSplit checkout provider
   | ceDomainType checkout /= "marketplace_agreement" = pure (Right [])
   | otherwise = do
+      -- Lock order of the marketplace (ADR 0136): agreement, then charge. The
+      -- agreement paths that cancel, expire or replace a charge take the same
+      -- order and check for a live attempt under the agreement lock, so they
+      -- either see the attempt this transaction records or wait for it.
+      agreement <- rawSql
+        "SELECT agreement.status,payment.kind FROM marketplace_agreement agreement\
+        \ JOIN marketplace_agreement_payment payment ON payment.agreement_id=agreement.id\
+        \ WHERE payment.checkout_id=?::uuid AND payment.id::text=? FOR UPDATE OF agreement"
+        [ PersistText (Checkout.checkoutReferenceId (ceCheckout checkout))
+        , PersistText (ceDomainOrderId checkout)
+        ] :: SqlPersistT IO [(Single Text, Single Text)]
+      case agreement of
+        [(Single status, Single kind)]
+          | kind == "deposit" && status == "pending_deposit" -> lockCharge
+          | kind == "balance" && status == "balance_due" -> lockCharge
+          | otherwise -> pure (Left "This agreement is no longer waiting for this charge")
+        _ -> pure (Left "This agreement charge is not available")
+  where
+    lockCharge = do
       rows <- rawSql
         "SELECT payment.status,payment.provider,payment.amount_minor,payment.currency,\
         \ payment.payout_identifier_type,payment.payout_identifier,payment.provider_amount_minor\

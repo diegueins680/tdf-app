@@ -117,6 +117,8 @@ const marketplace = {
       balance: 'Pay the balance with PayPhone',
       notEnabled: 'Payments inside the platform are not enabled yet. For now arrange the payment directly with the other party.',
       noPage: 'PayPhone did not return a valid payment page. Try again in a few minutes; you were not charged.',
+      inProgress: 'A payment for this charge is already in progress. Do not pay again; the agreement updates once PayPhone confirms it.',
+      recoveryUnavailable: 'This browser cannot keep the payment recovery record, so no payment was started. Allow site storage or try another tab.',
     },
     payments: 'Charges',
     paymentKind: { deposit: 'Deposit', balance: 'Balance' },

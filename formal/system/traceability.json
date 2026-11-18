@@ -29120,7 +29120,7 @@
     "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx": "05fcda4385711ddd958c53037446fadd41081fe70e4879ededc9c9638e3e809e",
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
     "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx": "34d38e97a9e6c27509256ce7182b50a883de6942b5038887b2bab8d089821fd4",
-    "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx": "14b28bb846b01fb21a2ad01826d72c5c9541fa83f28f302f02d8fb09d4c683ba",
+    "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx": "c4532b0883f136a4762d8dd0e4a2eb40b8344f933f504bc670a175e3de697786",
     "tdf-hq-ui/src/features/marketplace/AgreementDisputesPanel.tsx": "b8c4e7e02c7334bc51bc562b07c56ac72805549cfa3ef2c5826b2f0e7655de32",
     "tdf-hq-ui/src/features/marketplace/MyAgreementsPanel.tsx": "eb7f1eb13f345b656751be082638b185fc86132af05fca7c2bcd402f505bf38b",
     "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx": "7bbcb643b3c7d4e8384a7e3d697309aae846b8d8b685f753b3c49f4b850e9904",
@@ -29129,8 +29129,8 @@
     "tdf-hq-ui/src/features/marketplace/OfferForm.tsx": "193e8cdfcb1b6561a98cf19cafd20437114fa54e6d70050347e88c45c085db85",
     "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx": "a9bfb4f66250e3c129f28d567c429c40ada29c807fec638c0204b02c7dd47303",
     "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx": "c79a98df646ecf1c975ac23972fc06af6c7f8b9dfe8dbe9540211d6ca1d55fed",
-    "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts": "430ea0d14eb5b9fdf473813c368268bae39ca0dabfe0cc6d12bcf1aa3df411e0",
-    "tdf-hq-ui/src/features/marketplace/agreementPayment.ts": "737face7a2d2c2f35036daae5a8a4ac4715c05f373441efffcf93a9ddbaee0ff",
+    "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts": "85c5ac5c573b2b7cf5e88eb38551ecc59f79981a404d6a611dc1c9702b6a235f",
+    "tdf-hq-ui/src/features/marketplace/agreementPayment.ts": "20621bc5d448ccaa46aa16cd3000246abe7a389160d4bdbe4158abb7c7323e53",
     "tdf-hq-ui/src/features/marketplace/agreements.test.ts": "744aa19c4bfe2232c3090f4f908590197908be95c95ac9b2bd4c0a7044ed5203",
     "tdf-hq-ui/src/features/marketplace/agreements.ts": "a24989e84d57b01b99145e147e2aa1116245d36bbf962b82b9256c66f42f85c0",
     "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
@@ -29164,8 +29164,8 @@
     "tdf-hq-ui/src/i18n/locales/en.ts": "49154a85f27738ba723dba0c559d834a9a97fa1f1b2e6e47c1994751dd046d03",
     "tdf-hq-ui/src/i18n/locales/es.ts": "725221c145af964391a67eb53d2304830a6bcd456c1ed688f7d1da56c3f81127",
     "tdf-hq-ui/src/i18n/locales/fr.ts": "d319cd470e1e2843ef5af496d917c1d15fbfe44f73cc9fdd7a501318a4ec19c6",
-    "tdf-hq-ui/src/i18n/locales/marketplace.en.ts": "85dd6f834775141b7d2edf2f3b29590a24a94d01fc9eb6bdf254f4d75db890a3",
-    "tdf-hq-ui/src/i18n/locales/marketplace.es.ts": "b2c1b65672c15a23e4ff9107c0ae6313505916e8ca9d75f595e2342f2dc6d14f",
+    "tdf-hq-ui/src/i18n/locales/marketplace.en.ts": "174c6bef13379941b6f2fde43eab6686acbb3c916c5f2fadd9b6ebb4a44b3178",
+    "tdf-hq-ui/src/i18n/locales/marketplace.es.ts": "73a958d76e024bea3545b2c33d7764fe9b3d69843898f56058d147d8e83c2d93",
     "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts": "e99993b766505ad368038b768dd19f31032e7b4f0854376a10e78eaa7b6acb96",
     "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts": "6500275d794c925824d4fe895a8503f53384e2d48c15f9dacacd4532c9ce085d",
     "tdf-hq-ui/src/i18n/locales/pt.ts": "a85d098abc9c9e1d1a5b035622cb219b0dd3fd56fdcd8d38156800f4567cc0e5",
@@ -29679,7 +29679,7 @@
     "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs": "0845b9639d054fbb4e43af1a86abf9b9b1587306e8f2ee0200ad529d2fd17fd3",
     "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "8a792c1acc5881f86cd99d27b8916bc021d95853f7bcde82cac290aebef2300d",
     "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs": "0e1b0135876e275cb5131236e7907060dca3f128b9e6341b2d6221141fee21e5",
-    "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "a349348f4c9ba1682b0bf2b81e4b42daffe660c8c40fb713bf6a49ed13331871",
+    "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "29d50650e88731b500f9993f0703f4e6a8145ad2791f93e5ac1813e588d0466f",
     "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "7bc73d48a3903741855811eff1c285b88ed6241c309a4c75756d1c5817807426",
     "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs": "3a583134de0b5428438b46725fc42b670b4b5147adc6cacc969c62ed4c1fd917",
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
@@ -62976,7 +62976,7 @@
     {
       "id": "SURFACE-0ba61d7e94897ebf",
       "path": "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
-      "sha256": "14b28bb846b01fb21a2ad01826d72c5c9541fa83f28f302f02d8fb09d4c683ba",
+      "sha256": "c4532b0883f136a4762d8dd0e4a2eb40b8344f933f504bc670a175e3de697786",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63092,7 +63092,7 @@
     {
       "id": "SURFACE-d689c68a5b5cfbbc",
       "path": "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
-      "sha256": "430ea0d14eb5b9fdf473813c368268bae39ca0dabfe0cc6d12bcf1aa3df411e0",
+      "sha256": "85c5ac5c573b2b7cf5e88eb38551ecc59f79981a404d6a611dc1c9702b6a235f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63104,7 +63104,7 @@
     {
       "id": "SURFACE-22fab616d1cda1f8",
       "path": "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
-      "sha256": "737face7a2d2c2f35036daae5a8a4ac4715c05f373441efffcf93a9ddbaee0ff",
+      "sha256": "20621bc5d448ccaa46aa16cd3000246abe7a389160d4bdbe4158abb7c7323e53",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63834,7 +63834,7 @@
     {
       "id": "SURFACE-98d71404b05bdcb7",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
-      "sha256": "85dd6f834775141b7d2edf2f3b29590a24a94d01fc9eb6bdf254f4d75db890a3",
+      "sha256": "174c6bef13379941b6f2fde43eab6686acbb3c916c5f2fadd9b6ebb4a44b3178",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63854,7 +63854,7 @@
     {
       "id": "SURFACE-f132c3ba830ae795",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
-      "sha256": "b2c1b65672c15a23e4ff9107c0ae6313505916e8ca9d75f595e2342f2dc6d14f",
+      "sha256": "73a958d76e024bea3545b2c33d7764fe9b3d69843898f56058d147d8e83c2d93",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75546,7 +75546,7 @@
     {
       "id": "SURFACE-1d441708a9c7e070",
       "path": "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-      "sha256": "a349348f4c9ba1682b0bf2b81e4b42daffe660c8c40fb713bf6a49ed13331871",
+      "sha256": "29d50650e88731b500f9993f0703f4e6a8145ad2791f93e5ac1813e588d0466f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
