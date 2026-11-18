@@ -63,6 +63,7 @@ import qualified TDF.Models as Models
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Routes.EventTickets as Routes
 import qualified TDF.Ticketing.Inventory as Inventory
+import           TDF.Ticketing.LookupToken (deriveTicketLookupToken)
 import qualified TDF.Ticketing.Transfer as Transfer
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Server.PaymentAvailability as PaymentAvailability
@@ -179,12 +180,6 @@ loadTicketLookupTokenSecret = do
     Just secret | BS.length secret >= 32 -> pure secret
     _ -> throwError err503
       { errBody = "Secure guest ticket lookup is not configured in this environment" }
-
-deriveTicketLookupToken :: BS.ByteString -> Text -> Int64 -> Either Text Text
-deriveTicketLookupToken secret idempotencyKey eventId
-  | BS.length secret < 32 = Left "Ticket lookup secret must contain at least 32 bytes"
-  | otherwise = Right $ hmacSha256Text secret
-      ("event-ticket-order-lookup:" <> idempotencyKey <> ":" <> T.pack (show eventId))
 
 validatePositiveKey :: Text -> Int64 -> Either ServerError Int64
 validatePositiveKey fieldName value

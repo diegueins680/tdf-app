@@ -101,6 +101,7 @@ library
     TDF.Ticketing.Issuance
     TDF.Ticketing.Refund
     TDF.Ticketing.Confirmation
+    TDF.Ticketing.LookupToken
     TDF.Ticketing.Inventory
     TDF.Ticketing.Transfer
     TDF.Commerce.MarketplaceSales
