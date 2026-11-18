@@ -12124,13 +12124,13 @@
     {
       "id": "SURFACE-8a38cb4c7289aec1",
       "path": "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.test.tsx",
-      "sha256": "0597bad0ac7b1b04ded9721c7738b52b67d9ccb4a80d2cffc79f460d11d21f37",
+      "sha256": "e12697e1e24c433a4d4b24d959028c8fe0c84e9096cd4fc4babb011a7da80410",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-54a41f2ada423353",
       "path": "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
-      "sha256": "01d15b4a8d4a5e2ebb771f008b9954d1a9de78fae1eeb636c3f20798a7ea1a7a",
+      "sha256": "3caada9d04b5cf50b7b71bb52aa6281e834e68694e9641803bf96e1540915d05",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24788,7 +24788,7 @@
     },
     {
       "path": "docs/payments/payment-failure-alternatives.md",
-      "sha256": "7e33eabc1960b83bc38e8c2bad9eb53e11339d3be0d846e6bd80d56cf30420f3",
+      "sha256": "2fe9a0c81d683df9a36c0856ee9ec0bc15d80b751bcaee854ca7f1dcd52dafb7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -51,12 +51,14 @@ it('distinguishes loading and failed capability lookup from a confirmed empty li
   } finally { cleanup(); }
 });
 
-it('shows confirmed alternatives after a failed payment when the capability lookup succeeds', async () => {
+it('directs a failed service order to support rather than advertising its disabled executors', async () => {
   loadMethods.mockResolvedValue({ ...noMethods, payPhoneWallet: true });
   const { cleanup } = renderPage();
   try {
-    await screen.findByText('App PayPhone', { exact: true });
-    expect(screen.queryByText(/No hay otro medio habilitado|No pudimos consultar otros medios de pago/)).toBeNull();
+    await screen.findByText(/No hay otro medio habilitado/);
+    expect(screen.queryByText('App PayPhone', { exact: true })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Pagar con.*PayPhone/ })).toBeNull();
+    expect(screen.queryByText(/No pudimos consultar otros medios de pago/)).toBeNull();
     expect(loadMethods).toHaveBeenCalledTimes(1);
   } finally { cleanup(); }
 });

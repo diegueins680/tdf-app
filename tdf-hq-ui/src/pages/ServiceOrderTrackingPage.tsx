@@ -124,7 +124,7 @@ export default function ServiceOrderTrackingPage() {
                     returnPath: `/mezcla-mastering/pedido/${encodeURIComponent(order.ssoOrderNumber)}`,
                   }}
                   offeredMethods={order.ssoStatus === 'awaiting_payment' ? hostedPaymentMethods : []}
-                  alternativeMethods={hostedPaymentMethods}
+                  alternativeMethods={order.ssoStatus === 'awaiting_payment' ? hostedPaymentMethods : []}
                   availabilityUnknown={!paymentMethodsQuery.isSuccess}
                   paymentFailure={order.ssoStatus === 'payment_failed' ? { needsVerification: true } : null}
                   disabled={order.ssoStatus !== 'awaiting_payment' || paymentMethodsQuery.isLoading}
