@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-18T15:54:27.699Z",
+  "generatedAt": "2026-11-18T18:08:33.219Z",
   "repositoryRoot": ".",
-  "filesScanned": 2764,
+  "filesScanned": 2767,
   "candidateCount": 1464,
   "byClassification": {
     "dynamic-business-catalog": 964,
@@ -4802,7 +4802,7 @@
       "lines": [
         314
       ],
-      "consumerCount": 1240,
+      "consumerCount": 1243,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -5090,7 +5090,7 @@
       "lines": [
         888
       ],
-      "consumerCount": 1239,
+      "consumerCount": 1242,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -6292,7 +6292,7 @@
       "lines": [
         80
       ],
-      "consumerCount": 928,
+      "consumerCount": 930,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -6579,7 +6579,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 928,
+      "consumerCount": 930,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -6867,7 +6867,7 @@
       "lines": [
         238
       ],
-      "consumerCount": 138,
+      "consumerCount": 139,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -6932,6 +6932,7 @@
         "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.test.ts",
         "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.ts",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/i18n/locales/es.ts",
@@ -7947,7 +7948,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 743,
+      "consumerCount": 745,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -8570,7 +8571,7 @@
       "lines": [
         563
       ],
-      "consumerCount": 339,
+      "consumerCount": 340,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -8662,6 +8663,7 @@
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
         "tdf-hq-ui/src/i18n/locales/de.ts",
         "tdf-hq-ui/src/i18n/locales/en.ts",
@@ -8672,8 +8674,7 @@
         "tdf-hq-ui/src/mobile/distribution.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
-        "tdf-hq-ui/src/pages/AppearanceModeCatalogPage.tsx",
-        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx"
+        "tdf-hq-ui/src/pages/AppearanceModeCatalogPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -8802,7 +8803,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 1239,
+      "consumerCount": 1242,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -9435,7 +9436,7 @@
       "lines": [
         601
       ],
-      "consumerCount": 1645,
+      "consumerCount": 1648,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -16565,7 +16566,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 941,
+      "consumerCount": 943,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17348,7 +17349,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 936,
+      "consumerCount": 938,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17638,7 +17639,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 936,
+      "consumerCount": 938,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -19237,7 +19238,7 @@
       "lines": [
         649
       ],
-      "consumerCount": 776,
+      "consumerCount": 778,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -20071,7 +20072,7 @@
       "lines": [
         5
       ],
-      "consumerCount": 43,
+      "consumerCount": 45,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql",
         "tdf-hq/sql/2026-11-06_music_legacy_source_compatibility.sql",
@@ -20084,6 +20085,7 @@
         "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
         "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
         "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
@@ -20107,7 +20109,8 @@
         "tdf-hq-ui/src/utils/sessionPersonalData.test.ts"
       ],
       "mobileConsumers": [
-        "tdf-mobile/app/userProfile.tsx"
+        "tdf-mobile/app/userProfile.tsx",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "automationConsumers": [
         ".github/workflows/ci.yml",
@@ -20127,7 +20130,8 @@
         "tdf-hq-ui/src/api/artistCatalog.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq/src/TDF/API/Feedback.hs",
-        "tdf-hq/src/TDF/API/MusicRelease.hs"
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -20840,7 +20844,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 155,
+      "consumerCount": 156,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -20911,6 +20915,7 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
@@ -22799,7 +22804,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 132,
+      "consumerCount": 133,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -22868,6 +22873,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -23644,7 +23650,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 101,
+      "consumerCount": 102,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -23704,6 +23710,7 @@
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/i18n/locales/en.ts",
@@ -26116,7 +26123,7 @@
       "lines": [
         686
       ],
-      "consumerCount": 66,
+      "consumerCount": 67,
       "backendConsumers": [
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
@@ -26171,12 +26178,12 @@
         "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx",
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+        "tdf-hq-ui/src/components/events/useSaveTicketTier.ts",
         "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
         "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
-        "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
-        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx"
+        "tdf-hq-ui/src/pages/EventLogisticsPage.tsx"
       ],
       "mobileConsumers": [],
       "automationConsumers": [
@@ -26599,7 +26606,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 1010,
+      "consumerCount": 1012,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -26896,7 +26903,7 @@
       "lines": [
         29
       ],
-      "consumerCount": 117,
+      "consumerCount": 118,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-14_social_v2_foundation.sql",
         "tdf-hq/sql/2026-09-18_notification_navigation.sql",
@@ -26917,6 +26924,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
         "tdf-hq/test/TicketManualReviewMain.hs",
@@ -27459,7 +27467,7 @@
       "lines": [
         1128
       ],
-      "consumerCount": 165,
+      "consumerCount": 166,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -27537,6 +27545,7 @@
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -28309,7 +28318,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 801,
+      "consumerCount": 803,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -29126,7 +29135,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1106,
+      "consumerCount": 1107,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -29423,7 +29432,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 1106,
+      "consumerCount": 1107,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -29807,9 +29816,10 @@
       "lines": [
         15
       ],
-      "consumerCount": 422,
+      "consumerCount": 426,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
+        "tdf-hq/config/default.env.example",
         "tdf-hq/db/migrations/2026-04-23_inventory_checkout_amounts.sql",
         "tdf-hq/db/migrations/2026-04-23_inventory_checkout_terms_and_payment.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -29857,8 +29867,7 @@
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
         "tdf-hq/sql/2026-08-25_commerce_trigger_row_binding_compatibility.sql",
         "tdf-hq/sql/2026-08-25_commerce_trigger_row_binding_compatibility_rollback.sql",
-        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
-        "tdf-hq/sql/2026-09-07_artist_merch_storefronts_rollback.sql"
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -30522,7 +30531,7 @@
       "lines": [
         14
       ],
-      "consumerCount": 1106,
+      "consumerCount": 1107,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -32215,7 +32224,7 @@
       "lines": [
         59
       ],
-      "consumerCount": 146,
+      "consumerCount": 148,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -32283,6 +32292,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -32368,7 +32379,7 @@
       "lines": [
         104
       ],
-      "consumerCount": 114,
+      "consumerCount": 116,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -32430,6 +32441,8 @@
         "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
@@ -32506,7 +32519,7 @@
       "lines": [
         89
       ],
-      "consumerCount": 244,
+      "consumerCount": 245,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -32580,6 +32593,7 @@
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
         "tdf-hq-ui/src/desktop/shell.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
@@ -33033,7 +33047,7 @@
       "lines": [
         1411
       ],
-      "consumerCount": 1154,
+      "consumerCount": 1156,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -33462,7 +33476,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 311,
+      "consumerCount": 312,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -33551,6 +33565,7 @@
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
         "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
@@ -33564,8 +33579,7 @@
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
         "tdf-hq-ui/src/pages/FeedbackCatalogPage.tsx",
-        "tdf-hq-ui/src/pages/InternshipsPage.test.tsx",
-        "tdf-hq-ui/src/pages/InternshipsPage.tsx"
+        "tdf-hq-ui/src/pages/InternshipsPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -33792,7 +33806,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 328,
+      "consumerCount": 329,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -34066,7 +34080,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 777,
+      "consumerCount": 779,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -36580,7 +36594,7 @@
       "lines": [
         105
       ],
-      "consumerCount": 544,
+      "consumerCount": 546,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -37013,7 +37027,7 @@
       "lines": [
         54
       ],
-      "consumerCount": 115,
+      "consumerCount": 116,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -37082,6 +37096,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -37395,7 +37410,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 777,
+      "consumerCount": 779,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -42303,7 +42318,7 @@
       "lines": [
         138
       ],
-      "consumerCount": 752,
+      "consumerCount": 754,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -45453,7 +45468,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 300,
+      "consumerCount": 301,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -46097,7 +46112,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 518,
+      "consumerCount": 520,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -52631,7 +52646,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 1041,
+      "consumerCount": 1043,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -54607,7 +54622,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 236,
+      "consumerCount": 237,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -54829,7 +54844,7 @@
       "lines": [
         81
       ],
-      "consumerCount": 192,
+      "consumerCount": 193,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -55185,7 +55200,7 @@
       "lines": [
         37
       ],
-      "consumerCount": 155,
+      "consumerCount": 156,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -55257,6 +55272,7 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
@@ -55690,7 +55706,7 @@
       "lines": [
         60
       ],
-      "consumerCount": 366,
+      "consumerCount": 367,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -56218,7 +56234,7 @@
       "lines": [
         220
       ],
-      "consumerCount": 106,
+      "consumerCount": 107,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -56229,6 +56245,7 @@
         "tdf-hq/src/TDF/API/Admin.hs",
         "tdf-hq/src/TDF/API/LiveSessions.hs",
         "tdf-hq/src/TDF/AppleSignIn.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Contracts/Server.hs",
         "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
         "tdf-hq/src/TDF/Cron.hs",
@@ -57363,7 +57380,7 @@
       "lines": [
         4446
       ],
-      "consumerCount": 366,
+      "consumerCount": 367,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -59769,7 +59786,7 @@
       "lines": [
         149
       ],
-      "consumerCount": 1267,
+      "consumerCount": 1270,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -60204,7 +60221,7 @@
       "lines": [
         343
       ],
-      "consumerCount": 1151,
+      "consumerCount": 1152,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -61745,7 +61762,7 @@
       "lines": [
         408
       ],
-      "consumerCount": 1242,
+      "consumerCount": 1245,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -62640,7 +62657,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 814,
+      "consumerCount": 816,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -63086,7 +63103,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 1041,
+      "consumerCount": 1043,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -63796,7 +63813,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 163,
+      "consumerCount": 164,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
@@ -63874,6 +63891,7 @@
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -64170,7 +64188,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 163,
+      "consumerCount": 164,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
@@ -64248,6 +64266,7 @@
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -67407,7 +67426,7 @@
       "lines": [
         116
       ],
-      "consumerCount": 79,
+      "consumerCount": 80,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -67460,6 +67479,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
@@ -67545,7 +67565,7 @@
       "lines": [
         134
       ],
-      "consumerCount": 79,
+      "consumerCount": 80,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -67598,6 +67618,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
@@ -68472,7 +68493,7 @@
         199,
         214
       ],
-      "consumerCount": 324,
+      "consumerCount": 326,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -70089,7 +70110,7 @@
         102,
         111
       ],
-      "consumerCount": 565,
+      "consumerCount": 566,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -70357,7 +70378,7 @@
       "lines": [
         120
       ],
-      "consumerCount": 111,
+      "consumerCount": 112,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -70433,6 +70454,7 @@
         "tdf-hq-ui/src/components/events/EventTicketSaleCard.test.tsx",
         "tdf-hq-ui/src/components/events/EventTicketSaleCard.tsx",
         "tdf-hq-ui/src/components/events/EventTicketSaleRequestsQueue.tsx",
+        "tdf-hq-ui/src/components/events/useSaveTicketTier.ts",
         "tdf-hq-ui/src/i18n/locales/de.ts",
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/i18n/locales/es.ts",
@@ -72904,7 +72926,7 @@
       "lines": [
         16
       ],
-      "consumerCount": 146,
+      "consumerCount": 148,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -72973,6 +72995,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -73370,7 +73394,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 1041,
+      "consumerCount": 1043,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -73670,7 +73694,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 1041,
+      "consumerCount": 1043,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -74475,7 +74499,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1247,
+      "consumerCount": 1250,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -75121,7 +75145,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 1041,
+      "consumerCount": 1043,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -75404,7 +75428,7 @@
       "domain": "events-ticketing",
       "kind": "object-registry",
       "name": "eventFixture",
-      "line": 66,
+      "line": 71,
       "values": [
         "eventId",
         "eventOrganizerPartyId",
@@ -75419,7 +75443,7 @@
       "valueCount": 9,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        66
+        71
       ],
       "consumerCount": 41,
       "backendConsumers": [
@@ -75499,7 +75523,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "eventArtists",
-      "line": 264,
+      "line": 337,
       "values": [
         "{artistId=999, artistPartyId=55, artistName=Synthetic Artist}",
         "{artistId=1000, artistName=Unlinked Artist}"
@@ -75507,7 +75531,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        264
+        337
       ],
       "consumerCount": 38,
       "backendConsumers": [
@@ -75580,7 +75604,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 314,
+      "line": 333,
       "values": [
         "media",
         "audio",
@@ -75589,7 +75613,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        314
+        333
       ],
       "consumerCount": 36,
       "backendConsumers": [
@@ -75676,7 +75700,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 1106,
+      "consumerCount": 1107,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -75959,7 +75983,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "BUDGET_CATEGORY_OPTIONS",
-      "line": 141,
+      "line": 142,
       "values": [
         "tickets",
         "sponsorship",
@@ -75980,7 +76004,7 @@
       "valueCount": 15,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        141
+        142
       ],
       "consumerCount": 156,
       "backendConsumers": [
@@ -76136,7 +76160,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "FINANCE_SOURCE_OPTIONS",
-      "line": 164,
+      "line": 165,
       "values": [
         "{value=ticket_sale, label=Venta de tickets, direction=income, category=tickets}",
         "{value=ticket_refund, label=Reembolso de tickets, direction=expense, category=tickets}",
@@ -76159,7 +76183,7 @@
       "valueCount": 17,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        164
+        165
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -76184,7 +76208,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "FINANCE_STATUS_OPTIONS",
-      "line": 187,
+      "line": 188,
       "values": [
         "{value=posted, label=Publicado}",
         "{value=pending, label=Pendiente}",
@@ -76194,7 +76218,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        187
+        188
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -76219,7 +76243,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "PROJECT_BUDGET_TEMPLATE",
-      "line": 199,
+      "line": 200,
       "values": [
         "{code=INC-TICKETS, name=Venta de tickets, type=income, category=tickets}",
         "{code=INC-SPONSORS, name=Patrocinios, type=income, category=sponsorship}",
@@ -76233,7 +76257,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        199
+        200
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -76258,7 +76282,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 1006,
+      "line": 1007,
       "values": [
         "expense",
         "income",
@@ -76269,7 +76293,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1006
+        1007
       ],
       "consumerCount": 24,
       "backendConsumers": [
@@ -78941,7 +78965,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 822,
+      "consumerCount": 824,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -80544,7 +80568,7 @@
       "lines": [
         706
       ],
-      "consumerCount": 1154,
+      "consumerCount": 1156,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -81306,7 +81330,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 777,
+      "consumerCount": 779,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -81820,7 +81844,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 958,
+      "consumerCount": 960,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -82449,7 +82473,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 73,
+      "consumerCount": 74,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -82500,6 +82524,7 @@
         "tdf-hq-ui/src/components/PromoCodeField.logic.ts",
         "tdf-hq-ui/src/components/PromoCodeField.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
@@ -86716,7 +86741,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 109,
+      "consumerCount": 110,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -86728,6 +86753,7 @@
         "tdf-hq/src/TDF/API/LiveSessions.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/AppleSignIn.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Contracts/Server.hs",
         "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
         "tdf-hq/src/TDF/Cron.hs",
@@ -88715,7 +88741,7 @@
       "lines": [
         34
       ],
-      "consumerCount": 43,
+      "consumerCount": 45,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
@@ -88752,6 +88778,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
         "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
@@ -90332,7 +90360,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "environment-list",
       "name": "SUPPORTED_CURRENCIES",
-      "line": 180,
+      "line": 183,
       "values": [
         "USD",
         "EUR",
@@ -90345,7 +90373,7 @@
       "valueCount": 7,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        180
+        183
       ],
       "consumerCount": 7,
       "backendConsumers": [
@@ -90382,7 +90410,7 @@
       "domain": "international-reference-data",
       "kind": "environment-list",
       "name": "SUPPORTED_LOCALES",
-      "line": 182,
+      "line": 185,
       "values": [
         "en",
         "es",
@@ -90393,7 +90421,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        182
+        185
       ],
       "consumerCount": 5,
       "backendConsumers": [
@@ -90705,7 +90733,7 @@
       "lines": [
         3479
       ],
-      "consumerCount": 300,
+      "consumerCount": 303,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -90794,6 +90822,8 @@
         "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
@@ -90806,9 +90836,7 @@
         "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
         "tdf-hq-ui/src/mobile/MobileFeedbackForm.tsx",
         "tdf-hq-ui/src/mobile/distribution.ts",
-        "tdf-hq-ui/src/mobile/telemetry.ts",
-        "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx",
-        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx"
+        "tdf-hq-ui/src/mobile/telemetry.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -90961,7 +90989,7 @@
       "lines": [
         8214
       ],
-      "consumerCount": 476,
+      "consumerCount": 477,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -91319,7 +91347,7 @@
       "lines": [
         11134
       ],
-      "consumerCount": 109,
+      "consumerCount": 110,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -91385,6 +91413,7 @@
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
@@ -91803,7 +91832,7 @@
       "lines": [
         11345
       ],
-      "consumerCount": 1061,
+      "consumerCount": 1062,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -92789,7 +92818,7 @@
       "lines": [
         12047
       ],
-      "consumerCount": 282,
+      "consumerCount": 283,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -92875,6 +92904,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
@@ -92891,8 +92921,7 @@
         "tdf-hq-ui/src/pages/InternshipsPage.tsx",
         "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx",
         "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx",
-        "tdf-hq-ui/src/pages/MarketplacePage.tsx"
+        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/access-requests/review.tsx",
@@ -93227,7 +93256,7 @@
       "lines": [
         12285
       ],
-      "consumerCount": 133,
+      "consumerCount": 136,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -93258,6 +93287,7 @@
         "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
         "tdf-hq/src/TDF/EventOperations/Types.hs",
@@ -93277,8 +93307,7 @@
         "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
         "tdf-hq/test/EventOperationsHttpMain.hs",
         "tdf-hq/test/Spec.hs",
-        "tdf-hq/test/TDF/APITypesSpec.hs",
-        "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs"
+        "tdf-hq/test/TDF/APITypesSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -93302,6 +93331,8 @@
         "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -93403,7 +93434,7 @@
         12288,
         12454
       ],
-      "consumerCount": 239,
+      "consumerCount": 240,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
@@ -93483,6 +93514,7 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -93505,8 +93537,7 @@
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
-        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-        "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx"
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/merch.tsx",
@@ -93610,7 +93641,7 @@
       "lines": [
         12291
       ],
-      "consumerCount": 155,
+      "consumerCount": 157,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -93684,6 +93715,8 @@
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -94755,7 +94788,7 @@
       "lines": [
         13042
       ],
-      "consumerCount": 81,
+      "consumerCount": 82,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -94809,6 +94842,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
@@ -94892,7 +94926,7 @@
       "lines": [
         13445
       ],
-      "consumerCount": 147,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -94971,6 +95005,8 @@
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
         "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
@@ -95335,7 +95371,7 @@
       "lines": [
         14605
       ],
-      "consumerCount": 1240,
+      "consumerCount": 1243,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -96091,7 +96127,7 @@
       "lines": [
         14992
       ],
-      "consumerCount": 409,
+      "consumerCount": 411,
       "backendConsumers": [
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/docs/openapi/user-roles.yaml",
@@ -96369,7 +96405,7 @@
       "lines": [
         15049
       ],
-      "consumerCount": 1240,
+      "consumerCount": 1243,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -96722,7 +96758,7 @@
       "lines": [
         16003
       ],
-      "consumerCount": 608,
+      "consumerCount": 609,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -97002,7 +97038,7 @@
       "lines": [
         16018
       ],
-      "consumerCount": 577,
+      "consumerCount": 578,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -98454,7 +98490,7 @@
         17510,
         17562
       ],
-      "consumerCount": 1239,
+      "consumerCount": 1242,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -98751,7 +98787,7 @@
       "lines": [
         17534
       ],
-      "consumerCount": 236,
+      "consumerCount": 237,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
@@ -98831,6 +98867,7 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -98853,8 +98890,7 @@
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
-        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-        "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx"
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/merch.tsx",
@@ -99062,7 +99098,7 @@
       "lines": [
         17600
       ],
-      "consumerCount": 165,
+      "consumerCount": 166,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
@@ -99141,6 +99177,7 @@
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -100264,7 +100301,7 @@
       "lines": [
         19056
       ],
-      "consumerCount": 1054,
+      "consumerCount": 1055,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -100646,7 +100683,7 @@
       "lines": [
         19099
       ],
-      "consumerCount": 1249,
+      "consumerCount": 1252,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -101157,7 +101194,7 @@
       "lines": [
         71
       ],
-      "consumerCount": 39,
+      "consumerCount": 41,
       "backendConsumers": [
         "tdf-hq/sql/2026-11-06_music_legacy_source_compatibility.sql",
         "tdf-hq/sql/2026-11-06_music_media_health.sql",
@@ -101169,6 +101206,7 @@
         "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
         "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
         "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
         "tdf-hq/test/TDF/ServerAdminSpec.hs"
@@ -101187,6 +101225,7 @@
         "tdf-hq-ui/src/utils/sessionPersonalData.test.ts"
       ],
       "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "automationConsumers": [
@@ -101211,6 +101250,7 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq/src/TDF/API/Feedback.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "decision": "genuine-technical-constant",
@@ -103807,7 +103847,7 @@
       "lines": [
         70
       ],
-      "consumerCount": 108,
+      "consumerCount": 109,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -103873,6 +103913,7 @@
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
@@ -107121,7 +107162,7 @@
       "lines": [
         108
       ],
-      "consumerCount": 135,
+      "consumerCount": 136,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -107189,6 +107230,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -111670,7 +111712,7 @@
       "lines": [
         290
       ],
-      "consumerCount": 264,
+      "consumerCount": 265,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -111752,6 +111794,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/AppearanceModeCatalogPage.tsx",
@@ -111772,8 +111815,7 @@
         "tdf-hq-ui/src/pages/MerchReputationModerationPage.tsx",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-        "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
-        "tdf-hq-ui/src/pages/PublicBookingPage.tsx"
+        "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/access-requests/review.tsx",
@@ -111881,7 +111923,7 @@
       "lines": [
         301
       ],
-      "consumerCount": 258,
+      "consumerCount": 259,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -111963,6 +112005,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/AppearanceModeCatalogPage.tsx",
@@ -111983,8 +112026,7 @@
         "tdf-hq-ui/src/pages/MerchReputationModerationPage.tsx",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-        "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
-        "tdf-hq-ui/src/pages/PublicBookingPage.tsx"
+        "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/access-requests/review.tsx",
@@ -112721,7 +112763,7 @@
       "lines": [
         53
       ],
-      "consumerCount": 213,
+      "consumerCount": 214,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -112798,6 +112840,7 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -113411,7 +113454,7 @@
       "lines": [
         110
       ],
-      "consumerCount": 214,
+      "consumerCount": 216,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -113488,6 +113531,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -113606,7 +113651,7 @@
       "lines": [
         151
       ],
-      "consumerCount": 156,
+      "consumerCount": 157,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -113678,6 +113723,7 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
@@ -113785,7 +113831,7 @@
       "lines": [
         165
       ],
-      "consumerCount": 282,
+      "consumerCount": 283,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -113871,6 +113917,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
@@ -113887,8 +113934,7 @@
         "tdf-hq-ui/src/pages/InternshipsPage.tsx",
         "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx",
         "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx",
-        "tdf-hq-ui/src/pages/MarketplacePage.tsx"
+        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/access-requests/review.tsx",
@@ -114576,7 +114622,7 @@
       "lines": [
         314
       ],
-      "consumerCount": 113,
+      "consumerCount": 114,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -114643,6 +114689,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -121381,7 +121428,7 @@
       "lines": [
         872
       ],
-      "consumerCount": 92,
+      "consumerCount": 93,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -121443,6 +121490,7 @@
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
@@ -121512,7 +121560,7 @@
       "lines": [
         874
       ],
-      "consumerCount": 65,
+      "consumerCount": 66,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -121558,6 +121606,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
@@ -122673,7 +122722,7 @@
       "lines": [
         71
       ],
-      "consumerCount": 80,
+      "consumerCount": 81,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -122725,6 +122774,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
@@ -122990,7 +123040,7 @@
       "lines": [
         135
       ],
-      "consumerCount": 125,
+      "consumerCount": 126,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -123055,6 +123105,7 @@
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
@@ -123351,7 +123402,7 @@
       "lines": [
         54
       ],
-      "consumerCount": 125,
+      "consumerCount": 126,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -123416,6 +123467,7 @@
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
@@ -124610,7 +124662,7 @@
       "lines": [
         69
       ],
-      "consumerCount": 133,
+      "consumerCount": 136,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -124652,6 +124704,7 @@
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/EventOperations/Types.hs",
         "tdf-hq/src/TDF/ModelsExtra.hs",
@@ -124660,8 +124713,7 @@
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/EventResearch.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/MarketplaceOrderTrackingPage.test.tsx",
@@ -124678,6 +124730,8 @@
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/CampaignAutomationsPage.tsx",
@@ -124781,7 +124835,7 @@
       "lines": [
         74
       ],
-      "consumerCount": 187,
+      "consumerCount": 188,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -124852,6 +124906,7 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
@@ -124968,7 +125023,7 @@
       "lines": [
         77
       ],
-      "consumerCount": 173,
+      "consumerCount": 174,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -125038,6 +125093,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
@@ -125234,7 +125290,7 @@
       "lines": [
         133
       ],
-      "consumerCount": 125,
+      "consumerCount": 126,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -125299,6 +125355,7 @@
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
@@ -125395,11 +125452,12 @@
         14,
         71
       ],
-      "consumerCount": 13,
+      "consumerCount": 14,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
         "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
         "tdf-hq/src/TDF/Commerce/DepositPolicy.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
         "tdf-hq/src/TDF/Server/Directory.hs"
       ],
@@ -125791,7 +125849,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 187,
+      "consumerCount": 188,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -125862,6 +125920,7 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
@@ -125980,7 +126039,7 @@
       "lines": [
         76
       ],
-      "consumerCount": 173,
+      "consumerCount": 174,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -126050,6 +126109,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
@@ -126156,7 +126216,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 125,
+      "consumerCount": 126,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -126221,6 +126281,7 @@
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
@@ -127122,7 +127183,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 131,
+      "consumerCount": 134,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -127152,6 +127213,7 @@
         "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
         "tdf-hq/src/TDF/EventOperations/Types.hs",
@@ -127172,8 +127234,7 @@
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-        "tdf-hq/test/TDF/CorsSpec.hs",
-        "tdf-hq/test/TDF/EventAdminDelegationSpec.hs"
+        "tdf-hq/test/TDF/CorsSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -127197,6 +127258,8 @@
         "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -127296,7 +127359,7 @@
       "lines": [
         52
       ],
-      "consumerCount": 134,
+      "consumerCount": 136,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -127364,6 +127427,8 @@
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -127459,7 +127524,7 @@
       "lines": [
         76
       ],
-      "consumerCount": 63,
+      "consumerCount": 66,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -127474,6 +127539,7 @@
         "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/EventOperations/Types.hs",
         "tdf-hq/src/TDF/Operations/Types.hs",
@@ -127501,6 +127567,8 @@
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -127569,7 +127637,7 @@
       "lines": [
         78
       ],
-      "consumerCount": 60,
+      "consumerCount": 63,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -127583,6 +127651,7 @@
         "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/EventOperations/Types.hs",
         "tdf-hq/src/TDF/Operations/Types.hs",
@@ -127609,6 +127678,8 @@
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -127676,7 +127747,7 @@
       "lines": [
         109
       ],
-      "consumerCount": 125,
+      "consumerCount": 126,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -127741,6 +127812,7 @@
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
@@ -128180,7 +128252,7 @@
       "lines": [
         64
       ],
-      "consumerCount": 187,
+      "consumerCount": 188,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -128251,6 +128323,7 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
@@ -128360,7 +128433,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 125,
+      "consumerCount": 126,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -128425,6 +128498,7 @@
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
@@ -129918,7 +129992,7 @@
       "lines": [
         153
       ],
-      "consumerCount": 164,
+      "consumerCount": 165,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
@@ -129996,6 +130070,7 @@
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -132438,7 +132513,7 @@
       "lines": [
         254
       ],
-      "consumerCount": 153,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -132509,6 +132584,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
@@ -134951,7 +135027,7 @@
       "lines": [
         375
       ],
-      "consumerCount": 88,
+      "consumerCount": 89,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -135012,6 +135088,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
@@ -135092,7 +135169,7 @@
       "lines": [
         376
       ],
-      "consumerCount": 153,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -135160,6 +135237,7 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
@@ -135352,7 +135430,7 @@
       "lines": [
         378
       ],
-      "consumerCount": 313,
+      "consumerCount": 314,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -135442,6 +135520,7 @@
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
@@ -135454,8 +135533,7 @@
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
-        "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
-        "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx"
+        "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -136382,7 +136460,7 @@
       "lines": [
         489
       ],
-      "consumerCount": 63,
+      "consumerCount": 65,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -136430,6 +136508,8 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/AppearanceModeCatalogPage.test.ts",
@@ -137904,7 +137984,7 @@
       "lines": [
         647
       ],
-      "consumerCount": 134,
+      "consumerCount": 135,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -137971,6 +138051,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -138059,7 +138140,7 @@
       "lines": [
         664
       ],
-      "consumerCount": 95,
+      "consumerCount": 97,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -138121,6 +138202,8 @@
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
@@ -138746,7 +138829,7 @@
       "lines": [
         270
       ],
-      "consumerCount": 120,
+      "consumerCount": 121,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -138816,6 +138899,7 @@
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/components/reviews/ExperienceReviews.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
@@ -140541,7 +140625,7 @@
       "lines": [
         816
       ],
-      "consumerCount": 105,
+      "consumerCount": 107,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -140593,6 +140677,8 @@
         "tdf-hq-ui/src/components/notificationTarget.test.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
@@ -142845,7 +142931,7 @@
       "lines": [
         12
       ],
-      "consumerCount": 144,
+      "consumerCount": 146,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -142923,6 +143009,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
         "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
@@ -143028,7 +143116,7 @@
       "lines": [
         22
       ],
-      "consumerCount": 144,
+      "consumerCount": 146,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -143106,6 +143194,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
         "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
@@ -143211,7 +143301,7 @@
         90,
         242
       ],
-      "consumerCount": 144,
+      "consumerCount": 146,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -143289,6 +143379,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
         "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
@@ -144508,7 +144600,7 @@
       "lines": [
         84
       ],
-      "consumerCount": 128,
+      "consumerCount": 130,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -144577,6 +144669,8 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -145276,7 +145370,7 @@
       "lines": [
         176
       ],
-      "consumerCount": 125,
+      "consumerCount": 126,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -145341,6 +145435,7 @@
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
@@ -146520,7 +146615,7 @@
       "lines": [
         344
       ],
-      "consumerCount": 119,
+      "consumerCount": 121,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -146593,6 +146688,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
         "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
@@ -146951,7 +147048,7 @@
       "lines": [
         361
       ],
-      "consumerCount": 114,
+      "consumerCount": 116,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -147023,6 +147120,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
         "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
@@ -147859,7 +147958,7 @@
       "lines": [
         97
       ],
-      "consumerCount": 133,
+      "consumerCount": 134,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -147929,6 +148028,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -149261,7 +149361,7 @@
       "lines": [
         303
       ],
-      "consumerCount": 202,
+      "consumerCount": 203,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_dry_run.sql",
@@ -149331,6 +149431,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -151710,7 +151811,7 @@
       "lines": [
         822
       ],
-      "consumerCount": 45,
+      "consumerCount": 46,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_dry_run.sql",
@@ -151746,7 +151847,8 @@
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx"
       ],
       "mobileConsumers": [
-        "tdf-mobile/src/api/ddex.ts"
+        "tdf-mobile/src/api/ddex.ts",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "automationConsumers": [
         "scripts/__tests__/diagnose-social.test.mjs",
@@ -151777,7 +151879,8 @@
         "tdf-hq/src/TDF/Server/DDEX.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
-        "tdf-mobile/src/api/ddex.ts"
+        "tdf-mobile/src/api/ddex.ts",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -151956,7 +152059,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 149,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -152027,6 +152130,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
         "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -152123,7 +152228,7 @@
       "lines": [
         76
       ],
-      "consumerCount": 110,
+      "consumerCount": 111,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -152186,6 +152291,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
@@ -152260,7 +152366,7 @@
       "lines": [
         88
       ],
-      "consumerCount": 144,
+      "consumerCount": 146,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -152330,6 +152436,8 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -153836,7 +153944,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 139,
+      "consumerCount": 140,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -153906,6 +154014,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
@@ -154083,7 +154192,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 125,
+      "consumerCount": 126,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -154150,6 +154259,7 @@
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/components/reviews/ExperienceReviews.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
@@ -155450,7 +155560,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 185,
+      "consumerCount": 186,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -155531,6 +155641,7 @@
         "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
         "tdf-hq-ui/src/features/marketplace/offers.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
@@ -158608,7 +158719,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 39,
+      "consumerCount": 41,
       "backendConsumers": [
         "tdf-hq/sql/2026-11-06_music_legacy_source_compatibility.sql",
         "tdf-hq/sql/2026-11-07_music_featured_source_health.sql",
@@ -158619,6 +158730,7 @@
         "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
         "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
         "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
         "tdf-hq/test/TDF/ServerAdminSpec.hs"
@@ -158637,6 +158749,7 @@
         "tdf-hq-ui/src/utils/sessionPersonalData.test.ts"
       ],
       "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "automationConsumers": [
@@ -158662,6 +158775,7 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq/src/TDF/API/Feedback.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "decision": "genuine-technical-constant",
@@ -159687,7 +159801,7 @@
         22,
         89
       ],
-      "consumerCount": 95,
+      "consumerCount": 97,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -159757,6 +159871,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
         "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
@@ -159841,7 +159957,7 @@
         24,
         91
       ],
-      "consumerCount": 76,
+      "consumerCount": 78,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -159899,6 +160015,8 @@
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
@@ -159964,7 +160082,7 @@
       "lines": [
         49
       ],
-      "consumerCount": 62,
+      "consumerCount": 64,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -160016,6 +160134,8 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
         "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
@@ -160075,12 +160195,13 @@
       "lines": [
         51
       ],
-      "consumerCount": 42,
+      "consumerCount": 43,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
         "tdf-hq/src/TDF/Directory/Policy.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
@@ -160342,11 +160463,12 @@
       "lines": [
         87
       ],
-      "consumerCount": 13,
+      "consumerCount": 14,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
         "tdf-hq/sql/2026-08-17_course_checkout_runtime.sql",
         "tdf-hq/src/TDF/Commerce/DepositPolicy.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
         "tdf-hq/src/TDF/Server/Directory.hs"
       ],
@@ -160534,7 +160656,7 @@
       "lines": [
         79
       ],
-      "consumerCount": 163,
+      "consumerCount": 165,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -160604,6 +160726,8 @@
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -160707,7 +160831,7 @@
       "lines": [
         81
       ],
-      "consumerCount": 30,
+      "consumerCount": 32,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
@@ -160730,6 +160854,8 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts"
       ],
@@ -160779,7 +160905,7 @@
       "lines": [
         94
       ],
-      "consumerCount": 17,
+      "consumerCount": 20,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-18_domo_quote_checkout_runtime.sql",
@@ -160788,12 +160914,15 @@
         "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/Server/Directory.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts"
       ],
@@ -163122,7 +163251,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "AdapterHttpMethod",
-      "line": 63,
+      "line": 67,
       "values": [
         "AdapterGet",
         "AdapterPost"
@@ -163130,7 +163259,7 @@
       "valueCount": 2,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        63
+        67
       ],
       "consumerCount": 2,
       "backendConsumers": [
@@ -164684,7 +164813,7 @@
       "lines": [
         88
       ],
-      "consumerCount": 13,
+      "consumerCount": 15,
       "backendConsumers": [
         "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
         "tdf-hq/src/TDF/Seed.hs",
@@ -164692,6 +164821,7 @@
         "tdf-hq/src/TDF/Server/EventTicketSale.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
@@ -164700,7 +164830,8 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/components/events/EventTicketSaleCard.test.tsx",
         "tdf-hq-ui/src/components/events/EventTicketSaleCard.tsx",
-        "tdf-hq-ui/src/components/events/EventTicketSaleRequestsQueue.test.tsx"
+        "tdf-hq-ui/src/components/events/EventTicketSaleRequestsQueue.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx"
       ],
       "mobileConsumers": [],
       "automationConsumers": [],
@@ -166535,7 +166666,7 @@
       "lines": [
         4991
       ],
-      "consumerCount": 67,
+      "consumerCount": 68,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -166582,6 +166713,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
@@ -166986,7 +167118,7 @@
       "lines": [
         19072
       ],
-      "consumerCount": 156,
+      "consumerCount": 157,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -167056,6 +167188,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
@@ -167339,7 +167472,7 @@
       "lines": [
         1225
       ],
-      "consumerCount": 281,
+      "consumerCount": 282,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -167425,6 +167558,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
@@ -167441,8 +167575,7 @@
         "tdf-hq-ui/src/pages/InternshipsPage.tsx",
         "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx",
         "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx",
-        "tdf-hq-ui/src/pages/MarketplacePage.tsx"
+        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/access-requests/review.tsx",
@@ -167781,7 +167914,7 @@
       "lines": [
         934
       ],
-      "consumerCount": 132,
+      "consumerCount": 133,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -167851,6 +167984,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
@@ -168449,7 +168583,7 @@
       "lines": [
         1546
       ],
-      "consumerCount": 163,
+      "consumerCount": 164,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
@@ -168527,6 +168661,7 @@
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -172353,7 +172488,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 1041,
+      "consumerCount": 1043,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -173888,7 +174023,7 @@
       "lines": [
         436
       ],
-      "consumerCount": 283,
+      "consumerCount": 284,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -174114,7 +174249,7 @@
       "lines": [
         1211
       ],
-      "consumerCount": 1239,
+      "consumerCount": 1242,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -180320,7 +180455,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 100,
+      "consumerCount": 101,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -180331,6 +180466,7 @@
         "tdf-hq/sql/2026-09-20_records_ingestion_runtime.sql",
         "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
         "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
         "tdf-hq/src/TDF/DDEX/Detect.hs",
         "tdf-hq/src/TDF/Directory/Policy.hs",
