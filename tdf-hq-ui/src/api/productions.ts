@@ -21,7 +21,7 @@ export type Project = z.infer<typeof project>;
 export type Task = z.infer<typeof task>;
 export type Version = z.infer<typeof version>;
 export type Action = Record<string, unknown>;
-export const listProductions = async () => z.array(project).parse(await get<unknown>('/productions'));
+export const listProductions = async () => z.array(project).parse(await get<unknown>('/productions', { cache: 'no-store' }));
 const receipt = z.object({ id: z.string() });
 export const createProduction = async (body: Action) => receipt.parse(await post<unknown>('/productions', body));
 export const productionAction = async (p: Project, body: Action) =>
@@ -60,7 +60,7 @@ export function deliveryRisks(project: Project, today: string) {
   const forecasts = new Map<string, { finish: string; cause: string }>();
   const day = 86_400_000;
   for (const task of queue) {
-    if (!forecasts.has(task.id) && task.status !== 'Completada' && task.due < today) {
+    if ((forecasts.get(task.id)?.finish ?? '') < today && task.status !== 'Completada' && task.due < today) {
       forecasts.set(task.id, { finish: today, cause: task.title });
     }
     const upstream = forecasts.get(task.id);

@@ -1,5 +1,8 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Button, Stack, TextField } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
+import { Label } from '../../api/label';
+import { useSession } from '../../session/SessionContext';
 import type { Action, Project, Task } from '../../api/productions';
 
 export function Field({ name, title, value, type = 'text', required = true }: { name: string; title: string; value?: string | number; type?: string; required?: boolean }) {
@@ -26,13 +29,26 @@ const optionalId = (data: FormData, name: string) => {
 };
 const defaultStages = ['Preproducción', 'Grabación', 'Edición', 'Mezcla', 'Masterización', 'Entrega'];
 export function CreateProject({ save }: { save: (body: Action) => void }) {
+  const { session } = useSession();
+  const canLink = session?.roles.some(role => ['artist', 'artista', 'admin'].includes(role.toLowerCase())) ?? false;
+  const [showTracks, setShowTracks] = useState(false);
+  const [linkedTracks, setLinkedTracks] = useState<string[]>([]);
+  const tracks = useQuery({ queryKey: ['production-source-tracks',session?.partyId], queryFn: () => Label.listTracks(session?.partyId),
+    enabled: canLink && showTracks && !!session?.partyId });
   const [stages, setStages] = useState(defaultStages.map((name, index) => ({ name, days: index === 5 ? 0 : 1 })));
   return <Form submit="Crear producción privada" action={data => save({ title: data.get('title'), format: data.get('format'), delivery: data.get('delivery'),
-    songs: textValue(data, 'songs').split('\n').map(title => title.trim()).filter(Boolean).map(title => ({ title })), template: stages })}>
+    songs: [...linkedTracks.map(track => ({ track })), ...textValue(data, 'songs').split('\n').map(title => title.trim()).filter(Boolean).map(title => ({ title }))], template: stages })}>
     <Field name="title" title="Nombre del proyecto" />
     <SelectField name="format" title="Formato">{['Sencillo', 'EP', 'Álbum'].map(format => <option key={format}>{format}</option>)}</SelectField>
     <Field name="delivery" title="Entrega final" type="date" />
-    <TextField required multiline minRows={3} label="Canciones, una por línea" name="songs" />
+    <TextField required={!linkedTracks.length} multiline minRows={3} label="Canciones, una por línea" name="songs" />
+    {canLink && <details onToggle={event => setShowTracks(event.currentTarget.open)}><summary>Vincular pistas propias del label</summary>
+      {tracks.isLoading && <p>Cargando pistas…</p>}
+      {tracks.isError && <p>No se pudieron cargar tus pistas.</p>}
+      {tracks.data?.filter(track => track.ltOwnerId === session?.partyId).map(track => <label key={track.ltId} style={{ display: 'block' }}>
+        <input type="checkbox" checked={linkedTracks.includes(track.ltId)} onChange={e => setLinkedTracks(e.target.checked
+          ? [...linkedTracks, track.ltId] : linkedTracks.filter(id => id !== track.ltId))} />{track.ltTitle}</label>)}
+    </details>}
     <details><summary>Editar plantilla y duración de cada etapa</summary>
       {stages.map((stage, index) => <Stack key={index} direction="row" spacing={1} sx={{ mt: 1 }}>
         <TextField label="Etapa" required value={stage.name} onChange={e => setStages(stages.map((s, i) => i === index ? { ...s, name: e.target.value } : s))} />

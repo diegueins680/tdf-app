@@ -28175,6 +28175,97 @@
         "classification": "PARTIAL",
         "reason": "Local tests pass; the supervisor's launchd behaviour and disk guard are exercised by shell tests only, and hosted gates remain pending."
       }
+    },
+    {
+      "id": "MUSIC-PRODUCTION-001",
+      "title": "Private per-song production management",
+      "statement": "GET /productions, POST /productions, POST /productions/{project}/actions and GET /productions/{project}/versions/{version}/audio expose a member-scoped workspace with version-bound review and producer-confirmed planning.",
+      "domain": "MUSIC",
+      "actors": [
+        "Project producer",
+        "Engineer",
+        "Invited artist or client"
+      ],
+      "preconditions": [
+        "Active TDF session, project membership and object-specific role or grant."
+      ],
+      "inputs": [
+        "Song template, dependency, private file revision, version decision, booking reference and proposed dates."
+      ],
+      "state": {
+        "work": "five production statuses, independent blockage",
+        "reviews": "immutable file and terminal decision per review",
+        "schedule": "committed dates, revision and persistent proposal"
+      },
+      "allowedTransitions": [
+        "Publish audio, request changes, publish next revision, approve exact current revision.",
+        "Propose dates, check booking and current plan, confirm as producer."
+      ],
+      "forbiddenTransitions": [
+        "Cycle, stale approval, incompatible decision, foreign file read and stale plan confirmation."
+      ],
+      "effects": [
+        "A shared task updates once for all its songs."
+      ],
+      "authorization": "Project role, team assignment, explicit version grant, active session and booking authority.",
+      "privacy": "Private audio remains in managed storage. A client sees only shared revisions in projects they belong to.",
+      "concurrency": "Graph, publication, decision and plan transitions serialize on the project row.",
+      "idempotency": "A prior feedback receipt returns its original result for an identical actor, request, note, kind and revision.",
+      "failure": "403 or 404 for denied access; 409 for stale or conflicting transitions.",
+      "recovery": "Refresh the scoped projection, inspect the recorded decision or recalculate a schedule.",
+      "observability": "Visible per-version history, next owner, causal scheduling proposals and cross-project load.",
+      "authority": "Owner implementation request on 2026-11-18",
+      "source": "formal/production/README.md",
+      "property": "Member-scoped production, acyclic dependencies, exact-version approval, stable decision replay and confirmed scheduling.",
+      "contract": "formal/production/README.md",
+      "implementation": [
+        "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq-ui/src/pages/LabelProjectsPage.tsx",
+        "tdf-hq-ui/src/pages/ProductionWorkspacePage.tsx",
+        "tdf-hq-ui/src/api/productions.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/productions.yaml",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/API/Production.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/Production.hs",
+        "tdf-hq/src/TDF/ContentStorage.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/sql/2026-11-18_production_workspace.sql",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs",
+        "tdf-hq-ui/src/features/production/WorkspaceViews.tsx",
+        "tdf-hq-ui/src/features/production/ProductionForms.tsx",
+        "tdf-hq-ui/src/features/production/Review.tsx"
+      ],
+      "tests": [
+        "scripts/verify-production-workspace.sh",
+        "scripts/test-production-workspace.py",
+        "tdf-hq-ui/src/api/productions.test.ts",
+        "scripts/test-production-workspace-browser.py"
+      ],
+      "formalModels": [
+        "formal/production/decision.cfg",
+        "formal/production/graph.cfg",
+        "formal/production/plan.cfg",
+        "formal/production/read.cfg",
+        "formal/production/review.cfg",
+        "formal/production/Workspace.tla"
+      ],
+      "verification": "TLC explores separate bounded scenarios, with negative controls. PostgreSQL overlapping transactions exercise implementation operations.",
+      "evidence": "See commands and observed scope in the production workspace report.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Bounded model and exercised PostgreSQL histories. Release evidence is tracked separately.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The executable model abstracts files, network delivery, authentication and database locking. Deployment requires separate verification."
+      }
     }
   ]
 }

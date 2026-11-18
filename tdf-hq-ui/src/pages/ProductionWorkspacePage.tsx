@@ -12,7 +12,7 @@ const views = ['Tablero por canción', 'Mis tareas', 'Cronograma del proyecto', 
 type View = typeof views[number];
 
 function Workspace({ actor }: { actor: number }) {
-  const projects = useQuery({ queryKey: ['productions',actor], queryFn: listProductions });
+  const projects = useQuery({ queryKey: ['productions',actor], queryFn: listProductions, refetchInterval: 15000 });
   const [selected, setSelected] = useState('');
   const [view, setView] = useState<View>('Tablero por canción');
   const [message, setMessage] = useState('');

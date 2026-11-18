@@ -14,7 +14,7 @@ import Data.UUID (UUID)
 import Database.Persist (PersistValue(..), toPersistValue)
 import Database.Persist.Sql (Single(..), SqlPersistT, rawSql, runSqlPool)
 import Servant
-import TDF.API.Production (ProductionAPI)
+import TDF.API.Production (ProductionAPI, ProductionAudio)
 import TDF.Auth (AuthedUser(..), withCurrentAuthSession, withCurrentAuthorization)
 import TDF.ContentStorage (readManagedFile)
 import TDF.DB (Env(..))
@@ -25,6 +25,7 @@ productionServer :: (AuthedUser -> Bool) -> AuthedUser -> ServerT ProductionAPI 
 productionServer studioAccess user = list :<|> create :<|> command :<|> audio
   where
     person = toPersistValue (auPartyId user)
+    payload :: Value -> PersistValue
     payload = PersistText . TE.decodeUtf8 . BL.toStrict . encode
     transaction :: SqlPersistT IO a -> AppM a
     transaction action = do
@@ -32,8 +33,12 @@ productionServer studioAccess user = list :<|> create :<|> command :<|> audio
       result <- liftIO (runSqlPool (withCurrentAuthSession user action) pool)
       maybe (throwError err401) pure result
     query sql params = rawSql sql params :: SqlPersistT IO [Single Text]
-    list = transaction (query "SELECT production_workspace(?)::text" [person]) >>= response
+    list :: AppM (Headers '[Header "Cache-Control" Text] Value)
+    list = do
+      value <- transaction (query "SELECT production_workspace(?)::text" [person]) >>= response
+      pure (addHeader ("private, no-store" :: Text) value)
     create body = transaction (query "SELECT production_create(?,?::jsonb)::text" [person,payload body]) >>= response
+    command :: UUID -> Value -> AppM Value
     command project body = do
       let run staff = query "SELECT production_command(?,?,?::uuid,?::jsonb)::text"
                         [person,PersistBool staff,toPersistValue project,payload body]
@@ -45,6 +50,7 @@ productionServer studioAccess user = list :<|> create :<|> command :<|> audio
           either throwError pure checked
         else transaction (run False)
       response rows
+    audio :: UUID -> UUID -> AppM ProductionAudio
     audio project version = do
       rows <- transaction (rawSql
         "SELECT u.id,u.media_type FROM production_version v JOIN production_task t ON t.id=v.task JOIN content_storage_upload u ON u.id=v.file_id WHERE t.project=?::uuid AND v.id=?::uuid AND production_visible_version(?,v.id) AND u.visibility='private' AND u.status='completed' AND u.destination='tdf'"

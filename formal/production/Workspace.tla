@@ -10,14 +10,14 @@ Nodes == {1,2,3}
 Arcs == {e \in Nodes \X Nodes : e[1] # e[2]}
 Cyclic(g) == \/ \E a,b \in Nodes : <<a,b>> \in g /\ <<b,a>> \in g
              \/ \E a,b,c \in Nodes : <<a,b>> \in g /\ <<b,c>> \in g /\ <<c,a>> \in g
-Writers == {"producer","engineer"}
+Writers == {"producer1","producer2"}
 Init == /\ tickets=[a \in Writers |-> <<0,0>>] /\ lastRead="none" /\ edges={} /\ version=3 /\ history={} /\ completed=FALSE
         /\ plan=0 /\ proposal=-1 /\ date=0 /\ audit=TRUE /\ leak=FALSE
-Submit(a,e) == /\ tickets[a]=<<0,0>> /\ ~Cyclic(edges \cup {e})
+Submit(a,e) == /\ tickets[a]= <<0,0>> /\ ~Cyclic(edges \cup {e})
                /\ tickets'=[tickets EXCEPT ![a]=e]
                /\ UNCHANGED <<lastRead,edges,version,history,completed,plan,proposal,date,audit,leak>>
 CommitEdge(a) == LET e == tickets[a] IN
-                 /\ e # <<0,0>> /\ tickets'=[tickets EXCEPT ![a]=<<0,0>>]
+                 /\ e # <<0,0>> /\ tickets'=[tickets EXCEPT ![a]= <<0,0>>]
                  /\ edges'= IF Unsafe \/ ~Cyclic(edges \cup {e}) THEN edges \cup {e} ELSE edges
                  /\ UNCHANGED <<lastRead,version,history,completed,plan,proposal,date,audit,leak>>
 Publish == /\ version=3 /\ version'=4 /\ completed'=FALSE
@@ -41,7 +41,7 @@ Confirm(actor) == /\ actor="producer" /\ proposal>=0 /\ plan<2
 \* Client has been granted only P's v3, while staff belong to P.
 Read(actor,p,v) ==
     LET allowed == p="P" /\ (actor \in {"producer","engineer"} \/ (actor="artist" /\ v=3))
-    IN /\ (allowed \/ Unsafe) /\ leak'=~allowed /\ lastRead'=<<actor,p,v>>
+    IN /\ (allowed \/ Unsafe) /\ leak'=~allowed /\ lastRead'= <<actor,p,v>>
        /\ UNCHANGED <<tickets,edges,version,history,completed,plan,proposal,date,audit>>
 Next == CASE Scenario="graph" -> (\E a \in Writers,e \in Arcs : Submit(a,e)) \/ (\E a \in Writers : CommitEdge(a))
           [] Scenario \in {"review","decision"} -> Publish \/ \E a \in Actors,v \in Versions,c \in Choices : Decide(a,v,c)

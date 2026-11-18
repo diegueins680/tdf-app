@@ -31781,21 +31781,21 @@
       "reviewed": true
     },
     {
-      "id": "912cda11c7b6eb622f76",
+      "id": "b4e8eb26808372aa8032",
       "classification": "security-system-registry",
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "justification": "Preserve all 253 protected-main migration rows and their review history. Append the five previously reviewed player migrations in their original order with identical SQL and introduction commits. Preserve both parent manifest reviews and keep activation separate.",
+      "justification": "Append the reviewed production workspace migration after the existing ordered ledger.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "player-server-main-integration-20261116",
+      "reviewBatch": "music-production-workspace",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 258
+        "valueCount": 259
       },
       "previousDecision": {
         "id": "f2a4dfbd31904f6f478e",
@@ -51134,6 +51134,16 @@
           "sourceEntryCanonicalSha256": "24348c04edbc82948052df44400f2c37767b3c06b30123dbe367e4f57baed47c",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Exact prior review retained as provenance; fresh checks and independent approval remain required."
+        },
+        {
+          "sourceRevision": "83cbffdeb8570f621927b528ff90e070963dafd9",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "6d51b8fa8c73aaa4fb88875fcf8859aea108266c0ffbc3dcb68908a9b1391dc7",
+          "sourceEntry": {
+            "id": "912cda11c7b6eb622f76"
+          },
+          "sourceEntryCanonicalSha256": "3c2f539985558c2fc29d53f33ab1e2c70696282473d894cebf8a14ab73072300",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ],
       "concurrentReviewHistory": [
@@ -77484,19 +77494,19 @@
       }
     },
     {
-      "id": "a00fcee87036af5dfa95",
+      "id": "6560fb5fbc6a2969ca2e",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target. Successor reviewed for the October 25 feature menu request: additive concrete navigation links or the session feature-flag test fixture. Existing catalog classification, persistence target and priority remain unchanged.",
+      "justification": "Add the authenticated production destination to the existing navigation group.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
         "line": 166
       },
-      "reviewBatch": "feature-menu-coverage-2026-10-25",
+      "reviewBatch": "music-production-workspace",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
         "id": "9fca63dce34f8900c6a4",
@@ -77523,7 +77533,19 @@
           "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
           "reviewed": true
         }
-      }
+      },
+      "sourceReviewReferences": [
+        {
+          "sourceRevision": "83cbffdeb8570f621927b528ff90e070963dafd9",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "6d51b8fa8c73aaa4fb88875fcf8859aea108266c0ffbc3dcb68908a9b1391dc7",
+          "sourceEntry": {
+            "id": "a00fcee87036af5dfa95"
+          },
+          "sourceEntryCanonicalSha256": "01f4096dc64fc86cff59ad003b1b7140cdbf225ce261bdcd8900a617dd79b607",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ]
     },
     {
       "id": "ce1e609baf902df58b08",
@@ -95058,6 +95080,108 @@
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
       "reviewed": true
+    },
+    {
+      "id": "b2e587a4db45dafa2a4e",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-with-justification",
+      "specializedModel": "tdf-hq-ui/src/features/production/ProductionForms.tsx",
+      "priority": "P1-integrity",
+      "risk": "Changes alter an application contract or its controls.",
+      "justification": "Editable starting stages supplied by the project brief. Each production stores its own task stages and durations.",
+      "reviewed": true,
+      "reviewBatch": "music-production-workspace",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/production/ProductionForms.tsx",
+        "line": 27,
+        "kind": "array",
+        "name": "defaultStages"
+      }
+    },
+    {
+      "id": "16f18fa0f0f72da70388",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-database-authoritative-state-machine",
+      "specializedModel": "tdf-hq-ui/src/pages/ProductionWorkspacePage.tsx",
+      "priority": "P1-integrity",
+      "risk": "Changes alter an application contract or its controls.",
+      "justification": "Role choices mirror the project-scoped membership constraints enforced at every API transition.",
+      "reviewed": true,
+      "reviewBatch": "music-production-workspace",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/ProductionWorkspacePage.tsx",
+        "line": 53,
+        "kind": "jsx-option-values",
+        "name": "JSX value attributes"
+      }
+    },
+    {
+      "id": "f8d0e346ad4accebd9d9",
+      "classification": "governed-reference-data",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "tdf-hq/sql/2026-11-18_production_workspace.sql",
+      "priority": "P1-integrity",
+      "risk": "Changes alter an application contract or its controls.",
+      "justification": "The project format is limited to the three release formats required by the production workflow.",
+      "reviewed": true,
+      "reviewBatch": "music-production-workspace",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-18_production_workspace.sql",
+        "line": 7,
+        "kind": "sql-check-values",
+        "name": "CHECK IN"
+      }
+    },
+    {
+      "id": "a5d14038ea0bfaf220b8",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-database-authoritative-state-machine",
+      "specializedModel": "tdf-hq/sql/2026-11-18_production_workspace.sql",
+      "priority": "P1-integrity",
+      "risk": "Changes alter an application contract or its controls.",
+      "justification": "Project grants select between producer plan control, engineer work and a client version grant.",
+      "reviewed": true,
+      "reviewBatch": "music-production-workspace",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-18_production_workspace.sql",
+        "line": 13,
+        "kind": "sql-check-values",
+        "name": "CHECK IN"
+      }
+    },
+    {
+      "id": "55566c0e1105e8479bea",
+      "classification": "governed-reference-data",
+      "disposition": "retain-as-database-authoritative-state-machine",
+      "specializedModel": "tdf-hq/sql/2026-11-18_production_workspace.sql",
+      "priority": "P1-integrity",
+      "risk": "Changes alter an application contract or its controls.",
+      "justification": "The five named work states drive review and action ownership. Blockage is independent.",
+      "reviewed": true,
+      "reviewBatch": "music-production-workspace",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-18_production_workspace.sql",
+        "line": 29,
+        "kind": "sql-check-values",
+        "name": "CHECK IN"
+      }
+    },
+    {
+      "id": "56deb78efea67a292eee",
+      "classification": "governed-reference-data",
+      "disposition": "retain-as-database-authoritative-state-machine",
+      "specializedModel": "tdf-hq/sql/2026-11-18_production_workspace.sql",
+      "priority": "P1-integrity",
+      "risk": "Changes alter an application contract or its controls.",
+      "justification": "Feedback kinds control exact-version decision uniqueness, permission and completion.",
+      "reviewed": true,
+      "reviewBatch": "music-production-workspace",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-18_production_workspace.sql",
+        "line": 63,
+        "kind": "sql-check-values",
+        "name": "CHECK IN"
+      }
     }
   ]
 }

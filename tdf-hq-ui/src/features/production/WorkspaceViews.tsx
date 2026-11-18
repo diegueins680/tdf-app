@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import { calendarEntries, deliveryRisks, nextPerson, pendingDependencies, personName, workingDate, type Project, type Task } from '../../api/productions';
 import { Field, Form, SelectField, TaskForm } from './ProductionForms';
 import { Reviews, type Save } from './Review';
 
 export function TaskCard({ p, t, actor, save }: { p: Project; t: Task; actor: number; save: Save }) {
+  const [expanded, setExpanded] = useState(false);
   const editable = p.role === 'producer' || (p.role === 'engineer' && (actor === t.owner || t.collaborators.includes(actor)));
   const dependencies = pendingDependencies(p, t);
   const approved = t.versions.find(v => v.feedback.some(f => f.kind === 'approve'));
@@ -14,7 +16,8 @@ export function TaskCard({ p, t, actor, save }: { p: Project; t: Task; actor: nu
     {t.blockage && <Typography color="error">Bloqueo · {t.blockage}</Typography>}
     {dependencies.length > 0 && <Typography>Depende de {dependencies.map(d => d.title).join(', ')}</Typography>}
     {t.booking && <a href={`/estudio/calendario?bookingId=${t.booking.id}`}>Reserva {t.booking.id} · {new Date(t.booking.start).toLocaleString('es-EC')} · {t.booking.status}</a>}
-    <details><summary>Tarea, audio e historial ({t.versions.length})</summary>
+    <details onToggle={e => setExpanded(e.currentTarget.open)}><summary>Tarea, audio e historial ({t.versions.length})</summary>
+      {expanded && <>
       <Reviews {...{ p,t,actor,save,editable }} />
       {editable && t.status !== 'Completada' && <>
         <Form submit="Guardar bloqueo" action={d => void save({ op: 'block', task: t.id, note: d.get('note') })}>
@@ -30,6 +33,7 @@ export function TaskCard({ p, t, actor, save }: { p: Project; t: Task; actor: nu
           <SelectField name="needs" title="Debe completarse antes">{p.tasks.filter(a => a.id !== t.id && !t.needs.includes(a.id)).map(a =>
             <option value={a.id} key={a.id}>{a.title} · {p.songs.filter(s => a.songs.includes(s.id)).map(s => s.title).join(', ')}</option>)}</SelectField>
         </Form></details>}
+      </>}
     </details>
   </Stack></CardContent></Card>;
 }
@@ -50,6 +54,7 @@ export function Timeline({ p, save }: { p: Project; save: Save }) {
     </div>)}
     {p.proposals.map(a => <Card key={a.id} variant="outlined"><CardContent><Typography variant="h6">{a.confirmed ? 'Ajuste confirmado' : 'Propuesta de ajuste'}</Typography>
       {a.changes.map(c => <p key={c.task}>{c.title} · {c.current} → {c.suggested} · {c.cause ? `${a.backward ? 'Debe terminar antes de' : 'Depende de'} ${c.cause}` : 'Tarea de origen'}
+        {!a.confirmed && a.base !== p.revision && <> · Compromiso actual: {p.tasks.find(t => t.id === c.task)?.due}</>}
         {c.booking && <> · <a href={`/estudio/calendario?bookingId=${c.booking}`}>Revisar disponibilidad de la reserva {c.booking}</a></>}</p>)}
       <p>Entrega final sugerida · {a.delivery}</p>
       {!a.confirmed && (a.base !== p.revision ? <p>El plan cambió. Revisa las fechas y calcula de nuevo.</p>

@@ -3,6 +3,7 @@ import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
 import { buildAuthorizationHeader } from '../../api/authHeader';
 import { API_BASE_URL } from '../../api/client';
 import { getAuthSessionEpoch } from '../../session/authEvents';
+import { newUploadKey, normalizeUploadFailure, uploadFailureMessage } from '../../api/uploadFailure';
 import { uploadToDrive } from '../../api/drive';
 import type { Action, Project, Task, Version } from '../../api/productions';
 import { Field, Form, SelectField } from './ProductionForms';
@@ -70,21 +71,24 @@ function ReviewVersion({ p, t, v, actor, save }: { p: Project; t: Task; v: Versi
 export function Reviews({ p, t, actor, save, editable }: { p: Project; t: Task; actor: number; save: Save; editable: boolean }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const attempts = useRef(new WeakMap<File, string>());
   async function publish(d: FormData) {
     const file = d.get('file');
     if (!(file instanceof File) || !file.size) return;
     const epoch = getAuthSessionEpoch();
     setUploading(true); setError('');
     try {
-      const uploaded = await uploadToDrive(file, { destination: 'tdf', visibility: 'private', idempotencyKey: crypto.randomUUID() });
+      const key = attempts.current.get(file) ?? newUploadKey();
+      attempts.current.set(file, key);
+      const uploaded = await uploadToDrive(file, { destination: 'tdf', visibility: 'private', idempotencyKey: key });
       if (getAuthSessionEpoch() === epoch) await save({ op: 'publish', task: t.id, file: uploaded.id, number: Number(d.get('number')), recipients: d.getAll('recipients') });
-    } catch (e) { setError(e instanceof Error ? e.message : 'Falló la carga del audio.'); }
+    } catch (e) { setError(uploadFailureMessage(normalizeUploadFailure(e, 'server'))); }
     finally { setUploading(false); }
   }
   return <>
     {t.versions.map(v => <ReviewVersion key={v.id} {...{ p,t,v,actor,save }} />)}
     {editable && t.approver !== null && t.status !== 'Completada' && <details><summary>Entregar versión de audio</summary>
-      <fieldset disabled={uploading}><Form submit={uploading ? 'Subiendo audio…' : 'Compartir entrega'} action={d => void publish(d)}>
+      <fieldset disabled={uploading}><Form key={t.versions[0]?.id ?? t.id} submit={uploading ? 'Subiendo audio…' : 'Compartir entrega'} action={d => void publish(d)}>
         <Field name="number" title="Número de versión" type="number" value={(t.versions[0]?.number ?? 0) + 1} />
         <label>Audio privado <input type="file" name="file" required accept="audio/*" /></label>
         <SelectField name="recipients" title="Otros clientes con acceso a esta versión" multiple>

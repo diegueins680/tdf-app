@@ -40,9 +40,9 @@ def create(title, songs):
 def exercise():
     sql("""
       CREATE TABLE party(id bigint primary key, display_name text);
-      INSERT INTO party VALUES (1,'Productor'),(2,'Ingeniera'),(3,'Artista'),(4,'Otra cuenta'),(5,'Cliente');
+      INSERT INTO party VALUES (1,'Productor'),(2,'Ingeniera'),(3,'Artista'),(4,'Otra cuenta'),(5,'Cliente'),(6,'Coproductora');
       CREATE TABLE user_credential(username text,active boolean,party_id bigint);
-      INSERT INTO user_credential VALUES('audio',true,2),('artista',true,3),('cliente',true,5);
+      INSERT INTO user_credential VALUES('audio',true,2),('artista',true,3),('cliente',true,5),('coproductora',true,6);
       CREATE TABLE label_track(id uuid PRIMARY KEY,title text,owner_party_id bigint);
       CREATE TABLE booking(id bigint PRIMARY KEY,starts_at timestamptz,ends_at timestamptz,status text,party_id bigint,engineer_party_id bigint);
       INSERT INTO booking VALUES(7,'2027-05-23T09:00:00-05:00','2027-05-23T13:00:00-05:00','Confirmed',1,2);
@@ -73,7 +73,7 @@ def exercise():
         t = next(t for t in p['tasks'] if t['id']==task)
         return t['status'], t['approver'] if t['status']=='En revisión' else None if t['status']=='Completada' else t['owner']
 
-    for username,role in [('audio','engineer'),('artista','client'),('cliente','client')]:
+    for username,role in [('audio','engineer'),('artista','client'),('cliente','client'),('coproductora','producer')]:
         ok(op='invite', username=username, role=role)
     songs = project()['songs']
     drums = ok(op='task', title='Batería', stage='Grabación', songs=[s['id'] for s in songs], duration=1,
@@ -142,7 +142,7 @@ def exercise():
     x,y=[t['id'] for t in pending]
     rev=project()['revision']
     a,b=race(dict(actor=1,op='dependency',task=y,needs=x,revision=rev),
-             dict(actor=1,op='dependency',task=x,needs=y,revision=rev))
+             dict(actor=6,op='dependency',task=x,needs=y,revision=rev))
     assert 'id' in a and b['error']==409
     assert command(op='dependency',task=x,needs=y)['error']==409
     before=project()['tasks']
@@ -183,7 +183,7 @@ if __name__=='__main__':
     subprocess.run(['docker','run','--rm','-d','--name',container,'--network','none','-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:17-alpine'],check=True,stdout=subprocess.DEVNULL)
     try:
         for _ in range(120):
-            if subprocess.run(['docker','exec',container,'pg_isready','-U','postgres'],capture_output=True).returncode==0: break
+            if subprocess.run(['docker','exec',container,'pg_isready','-h','127.0.0.1','-U','postgres'],capture_output=True).returncode==0: break
             time.sleep(.25)
         exercise()
     finally:
