@@ -3987,7 +3987,7 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "a9f665f14a487ec4b4bf8a0bafb11999250e0d0d816a72cc5426bab57b4082f7",
+      "sha256": "d05493c9464025edb1f275797e3aafb9a15da0213a2dc0b2ed130f6a4ba5fbbc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4875,19 +4875,19 @@
     {
       "id": "SURFACE-4866f83da6180efe",
       "path": "scripts/continuous-improvement-loop.codex.json",
-      "sha256": "bb03117ee8f488069cca81703f8e70f96fb7412902f9bfb78b7f1363ed9a1af2",
+      "sha256": "c831a6b49afc58ba3a84e58ee4739a5ede35c64079c5fdfea50654a77400e85e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-587b06f07bbc17e1",
       "path": "scripts/continuous-improvement-loop.example.json",
-      "sha256": "6f0a787a68041a7413c53b447854f77ce09accaf37efb14aee92bc90334a2a3d",
+      "sha256": "00c741c2d02c4a55edc9a2af06eb4157d1cba1d9d9aee1c17feaf39681419d5a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-655b9679c92bd422",
       "path": "scripts/continuous-improvement-loop.mjs",
-      "sha256": "f2618194f28d356e0d5d9c856bf92397f7b69b7b6e2bbde1a2745ea58cbc79c6",
+      "sha256": "042ea8ee69649c5de3b838a82d404488dc444fd40b65052a0b2364b9496b0672",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21946,7 +21946,7 @@
   "artifacts": [
     {
       "path": "AI_WORKFLOW.md",
-      "sha256": "905a1dbf49d26cc640390b2b278fdfd8f55aba725d0aa0d1559a9a78bece3f1e",
+      "sha256": "c23bf537ca118d6da215393adf74f31242ca51cbecb9d3f243fa49009e9a3263",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
