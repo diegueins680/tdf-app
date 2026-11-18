@@ -163,14 +163,24 @@ queryProviderWith fetch adapter payment now = do
             }
         }
       context = AdapterContext now nonce
+      parse value = either (const (Left QueryBindingMismatch)) Right
+        (adapterParseResponse adapter AdapterQuery locator value)
   case adapterBuildQuery adapter context locator of
     Left _ -> pure (Left QueryUnsupported)
     Right request -> do
       response <- fetch request
-      pure $ case response of
-        Left AdapterTransportError{} -> Left QueryUnavailable
-        Right value -> either (const (Left QueryBindingMismatch)) Right
-          (adapterParseResponse adapter AdapterQuery locator value)
+      case response of
+        Left AdapterTransportError{} -> pure (Left QueryUnavailable)
+        Right value -> case adapterQueryFollowUp adapter context locator value of
+          Left _ -> pure (Left QueryBindingMismatch)
+          Right Nothing -> pure (parse value)
+          -- The provider's own follow-up (PayPhone's Button confirmation)
+          -- answers for the payment; the first answer is never applied.
+          Right (Just followUp) -> do
+            confirmed <- fetch followUp
+            pure $ case confirmed of
+              Left AdapterTransportError{} -> Left QueryUnavailable
+              Right answer -> parse answer
 
 -- No thread is started by default. The process switch is also reread each
 -- tick; the database gate and account qualification remain independently required.

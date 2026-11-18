@@ -35,6 +35,7 @@ module TDF.Commerce.ProviderAdapter
   , validVisibleCredential
   , validProviderIdentifier
   , unsupportedOperation
+  , noQueryFollowUp
   , refuseSplitTransfers
   ) where
 
@@ -228,7 +229,18 @@ data ProviderAdapter = ProviderAdapter
   , adapterBuildSameDayReverse :: AdapterContext -> PaymentMutation -> Either AdapterError AdapterRequest
   , adapterParseResponse      :: AdapterOperation -> PaymentLocator -> Value -> Either AdapterError AdapterResult
   , adapterAssessNotification :: Value -> Either AdapterError NotificationAssessment
+    -- | Given a successful status-query answer, the request the provider needs
+    -- before that answer may be applied (PayPhone's Button confirmation), or
+    -- 'Nothing' when the answer is final. The follow-up answer is parsed as the
+    -- query answer instead of the first one.
+  , adapterQueryFollowUp      :: AdapterContext -> PaymentLocator -> Value
+                              -> Either AdapterError (Maybe AdapterRequest)
   }
+
+-- | A provider whose status query answer is final.
+noQueryFollowUp
+  :: AdapterContext -> PaymentLocator -> Value -> Either AdapterError (Maybe AdapterRequest)
+noQueryFollowUp _ _ _ = Right Nothing
 
 minorToDecimal :: Int64 -> Scientific
 minorToDecimal amountMinor = scientific (fromIntegral amountMinor) (-2)

@@ -89,12 +89,13 @@ pruebas de PayPhone, con dos cuentas y un receptor real:
 
 | Supuesto del código | Cómo verificarlo |
 | --- | --- |
-| El `paymentId` de Prepare es el mismo `id` que llega a la URL de respuesta y el `transactionId` de Confirm | Pagar una vez y comparar los tres; si difieren, la conciliación deja el cobro en revisión y PayPhone lo revierte a los cinco minutos |
-| Confirm antes de que el comprador pague responde con un estado HTTP de error | Llamar Confirm con el `paymentId` recién preparado; un 2xx con otro formato dejaría la consulta en revisión |
+| La consulta de estado por referencia (`GET /api/Sale/client/{clientTransactionId}`) encuentra también las transacciones del Botón | PayPhone la documenta en API Sale sin limitarla a ese producto. Pagar una vez y consultarla con la referencia `TDFC-`; si no la encuentra, el cobro nunca se confirma y PayPhone lo revierte: habría que tomar el `id` de la URL de respuesta o de la notificación externa |
+| Antes del pago, esa consulta responde con un estado HTTP de error | Consultar la referencia recién preparada; un 2xx con otro formato dejaría la consulta en revisión |
+| Confirm (`{id: transactionId, clientTxId}`) responde con `transactionId`, `clientTransactionId`, `amount` en centavos, `currency` y `statusCode` | Comparar con la respuesta real; el `paymentId` de Prepare es opaco (texto) y solo identifica la preparación |
 | PayPhone acepta `transferTo` con `Amount` numérico en centavos | Revisar en PayPhone Developer que el receptor recibió `provider_amount_minor` |
 | `payWithCard` está en `payphonetodoesposible.com` o `payphone.app` | Si es otro dominio, ampliar `safePayPhoneRedirect` (backend y web) |
 | PayPhone añade `id` y `clientTransactionId` a la URL de respuesta sin romper `tdf_checkout` | La página de retorno ya corta lo que siga a un segundo `?` |
-| La consulta del worker confirma antes de cinco minutos | `COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED=true` y flag `checkout.provider_query_recovery`. Las referencias `TDFC-` se confirman cada minuto (`providerQueryRetryDelaySeconds`) durante los 24 intentos, unos 24 minutos; el presupuesto compartido de una consulta por proveedor cada diez segundos sostiene ese ritmo con seis cobros simultáneos y el plazo con unos 25. Medir el tiempo entre pago y confirmación |
+| La consulta del worker confirma antes de cinco minutos | `COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED=true` y flag `checkout.provider_query_recovery`. Las referencias `TDFC-` se consultan cada minuto, y una respuesta aprobada se confirma en el mismo intento, (`providerQueryRetryDelaySeconds`) durante los 24 intentos, unos 24 minutos; el presupuesto compartido de una consulta por proveedor cada diez segundos sostiene ese ritmo con seis cobros simultáneos y el plazo con unos 25. Medir el tiempo entre pago y confirmación |
 
 Configuración: `PAYPHONE_CODING_PASSWORD` (exactamente 32 caracteres, de PayPhone Developer) además de
 `PAYPHONE_TOKEN`, `PAYPHONE_STORE_ID` y `PAYPHONE_RESPONSE_URL`. Sin la contraseña el método `card`

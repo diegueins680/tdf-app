@@ -3178,13 +3178,14 @@ main = hspec $ do
             maybe "" (BL.unpack . A.encode) (ProviderAdapter.arBody whole)
               `shouldNotContain` "transferTo"
             let prepared = A.object
-                  [ "paymentId" .= (23178284 :: Int)
+                  [ "paymentId" .= ("GSizecyUkIAkxTj3SQ" :: Text)
                   , "payWithCard" .= ("https://pay.payphonetodoesposible.com/PayWithCard/abc" :: Text)
                   , "payWithPayPhone" .= ("https://pay.payphonetodoesposible.com/PayWithPayPhone/abc" :: Text)
                   ]
                 parsed = ProviderAdapter.adapterParseResponse payPhoneSplit
                   ProviderAdapter.AdapterCreate locator prepared
-            fmap ProviderAdapter.adapterResultExternalId parsed `shouldBe` Right "23178284"
+            -- The documented preparation ID is opaque text, never the transaction ID.
+            fmap ProviderAdapter.adapterResultExternalId parsed `shouldBe` Right "GSizecyUkIAkxTj3SQ"
             fmap ProviderAdapter.adapterResultState parsed
               `shouldBe` Right ProviderAdapter.AdapterRequiresCustomerAction
             fmap ProviderAdapter.adapterResultRedirectUrl parsed
@@ -3227,40 +3228,53 @@ main = hspec $ do
             build ptp buttonPayment { ProviderAdapter.cpReference = "TDF-payment-001" }
               `shouldSatisfy` isLeft
 
-        it "reconciles a PayPhone Button charge with its confirmation, not the API Sale query (ADR 0136)" $ do
+        it "finds a PayPhone Button charge by its reference and confirms it before applying it (ADR 0136)" $ do
             let buttonLocator = locator
-                  { ProviderAdapter.plExternalId = "23178284"
+                  { ProviderAdapter.plExternalId = "GSizecyUkIAkxTj3SQ"
                   , ProviderAdapter.plExpected = expected
                       { ProviderAdapter.epReference = "TDFC-0123456789abcdef0123456789a" }
                   }
-                confirm = fromRight (error "valid PayPhone confirmation")
-                  (ProviderAdapter.adapterBuildQuery payPhoneSplit adapterContext buttonLocator)
-                confirmBody = maybe "" (BL.unpack . A.encode) (ProviderAdapter.arBody confirm)
-            ProviderAdapter.arUrl confirm
-              `shouldBe` "https://pay.payphonetodoesposible.com/api/button/V2/Confirm"
-            confirmBody `shouldContain` "\"id\":23178284"
-            confirmBody `shouldContain` "\"clientTxId\":\"TDFC-0123456789abcdef0123456789a\""
-            -- A Button charge is never cancelled through API Sale.
-            (ProviderAdapter.safeRequestSummary
-              <$> ProviderAdapter.adapterBuildCancel payPhoneSplit adapterContext buttonLocator)
-              `shouldSatisfy` isLeft
-            -- The confirmation answers with the transaction fields of a status query.
-            let confirmed statusCode = A.object
+                status statusCode amount = A.object
                   [ "transactionId" .= (23178284 :: Int)
                   , "clientTransactionId" .= ("TDFC-0123456789abcdef0123456789a" :: Text)
-                  , "amount" .= (12515 :: Int)
+                  , "amount" .= (amount :: Int)
                   , "currency" .= ("USD" :: Text)
                   , "statusCode" .= (statusCode :: Int)
                   , "transactionStatus" .= ("Approved" :: Text)
                   ]
-            fmap ProviderAdapter.adapterResultState
-              (ProviderAdapter.adapterParseResponse payPhoneSplit ProviderAdapter.AdapterQuery
-                buttonLocator (confirmed 3))
+                followUp = ProviderAdapter.adapterQueryFollowUp payPhoneSplit adapterContext
+                summary = fmap (fmap ProviderAdapter.safeRequestSummary)
+            -- The preparation ID is not a transaction: the status read uses the reference.
+            fmap ProviderAdapter.arUrl
+              (ProviderAdapter.adapterBuildQuery payPhoneSplit adapterContext buttonLocator)
+              `shouldBe` Right
+                "https://pay.payphonetodoesposible.com/api/Sale/client/TDFC-0123456789abcdef0123456789a"
+            -- An approved, matching answer is confirmed with its transaction ID first.
+            let confirm = fromRight (error "valid PayPhone confirmation")
+                  (followUp buttonLocator (status 3 12515))
+                confirmBody = maybe "" (BL.unpack . A.encode) (confirm >>= ProviderAdapter.arBody)
+            fmap ProviderAdapter.arUrl confirm
+              `shouldBe` Just "https://pay.payphonetodoesposible.com/api/button/V2/Confirm"
+            confirmBody `shouldContain` "\"id\":23178284"
+            confirmBody `shouldContain` "\"clientTxId\":\"TDFC-0123456789abcdef0123456789a\""
+            -- A cancelled answer is final; a mismatched one is never confirmed.
+            summary (followUp buttonLocator (status 2 12515)) `shouldBe` Right Nothing
+            summary (followUp buttonLocator (status 3 100)) `shouldSatisfy` isLeft
+            -- API Sale answers are final as they are.
+            summary (followUp locator (status 3 12515)) `shouldBe` Right Nothing
+            -- The confirmation answer settles the Button binding by its preparation ID.
+            let settled statusCode = ProviderAdapter.adapterParseResponse payPhoneSplit
+                  ProviderAdapter.AdapterQuery buttonLocator (status statusCode 12515)
+            fmap ProviderAdapter.adapterResultState (settled 3)
               `shouldBe` Right ProviderAdapter.AdapterSucceeded
-            fmap ProviderAdapter.adapterResultState
-              (ProviderAdapter.adapterParseResponse payPhoneSplit ProviderAdapter.AdapterQuery
-                buttonLocator (confirmed 2))
+            fmap ProviderAdapter.adapterResultExternalId (settled 3)
+              `shouldBe` Right "GSizecyUkIAkxTj3SQ"
+            fmap ProviderAdapter.adapterResultState (settled 2)
               `shouldBe` Right ProviderAdapter.AdapterCancelled
+            -- A Button charge is never cancelled through API Sale.
+            (ProviderAdapter.safeRequestSummary
+              <$> ProviderAdapter.adapterBuildCancel payPhoneSplit adapterContext buttonLocator)
+              `shouldSatisfy` isLeft
             -- API Sale references keep the API Sale status query.
             fmap ProviderAdapter.arUrl (ProviderAdapter.adapterBuildQuery payPhoneSplit adapterContext locator)
               `shouldSatisfy` either (const False) ("/api/Sale/client/" `Data.Text.isInfixOf`)

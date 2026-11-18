@@ -80,9 +80,12 @@ Hechos verificados antes de diseñar (fuentes al final):
      `PAYPHONE_CODING_PASSWORD` de 32 bytes como clave, IV en cero, PKCS#7, Base64). El ejecutor
      compartido lee el receptor y el neto del cobro bajo bloqueo y los vuelve a comprobar en la
      transacción que registra el intento; API Sale (billetera) y PlaceToPay rechazan un reparto. Las
-     referencias del Botón empiezan con `TDFC-`, y su conciliación usa la confirmación
-     (`/api/button/V2/Confirm`), que PayPhone exige en los cinco minutos siguientes al pago o revierte
-     el cobro. El método solo se ofrece con la contraseña de codificación configurada y con evidencia
+     referencias del Botón empiezan con `TDFC-`. `Prepare` solo devuelve un `paymentId` opaco, que
+     identifica la preparación y no la transacción; la conciliación busca la transacción por la
+     referencia (`GET /api/Sale/client/{clientTransactionId}`) y, si está aprobada y coinciden
+     referencia, monto y moneda, la confirma con su `transactionId` (`/api/button/V2/Confirm`) en el
+     mismo intento. Solo la respuesta de la confirmación se aplica; PayPhone exige confirmar en los
+     cinco minutos siguientes al pago o revierte el cobro. El método solo se ofrece con la contraseña de codificación configurada y con evidencia
      verificada de todas las capacidades de marketplace para `payphone`/`card`.
    - **Stripe:** adaptador canónico con Checkout Session alojada y cargo destino
      (`transfer_data.destination`, `application_fee_amount`); se entrega en un segundo PR (B2) junto

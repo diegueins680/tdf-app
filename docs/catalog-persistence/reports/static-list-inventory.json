@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-18T14:09:13.518Z",
+  "generatedAt": "2026-11-18T14:14:01.382Z",
   "repositoryRoot": ".",
   "filesScanned": 2755,
   "candidateCount": 1466,
@@ -4804,7 +4804,7 @@
       "lines": [
         314
       ],
-      "consumerCount": 1240,
+      "consumerCount": 1241,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -5092,7 +5092,7 @@
       "lines": [
         888
       ],
-      "consumerCount": 1239,
+      "consumerCount": 1240,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -8806,7 +8806,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 1239,
+      "consumerCount": 1240,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -59997,7 +59997,7 @@
       "lines": [
         149
       ],
-      "consumerCount": 1266,
+      "consumerCount": 1267,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -61973,7 +61973,7 @@
       "lines": [
         408
       ],
-      "consumerCount": 1242,
+      "consumerCount": 1243,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -74699,7 +74699,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1247,
+      "consumerCount": 1248,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -95552,7 +95552,7 @@
       "lines": [
         14605
       ],
-      "consumerCount": 1240,
+      "consumerCount": 1241,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -96586,7 +96586,7 @@
       "lines": [
         15049
       ],
-      "consumerCount": 1240,
+      "consumerCount": 1241,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -98673,7 +98673,7 @@
         17510,
         17562
       ],
-      "consumerCount": 1239,
+      "consumerCount": 1240,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -100866,7 +100866,7 @@
       "lines": [
         19099
       ],
-      "consumerCount": 1249,
+      "consumerCount": 1250,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -163375,7 +163375,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "AdapterHttpMethod",
-      "line": 65,
+      "line": 66,
       "values": [
         "AdapterGet",
         "AdapterPost"
@@ -163383,7 +163383,7 @@
       "valueCount": 2,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        65
+        66
       ],
       "consumerCount": 2,
       "backendConsumers": [
@@ -174356,7 +174356,7 @@
       "lines": [
         1211
       ],
-      "consumerCount": 1239,
+      "consumerCount": 1240,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",

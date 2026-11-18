@@ -63,6 +63,7 @@ placeToPayAdapter config = do
     , adapterBuildSameDayReverse = \_ _ -> unsupportedOperation
     , adapterParseResponse = parseResponse config
     , adapterAssessNotification = verifyPlaceToPayNotification config
+    , adapterQueryFollowUp = noQueryFollowUp
     }
 
 placeToPayReference :: Text -> Text

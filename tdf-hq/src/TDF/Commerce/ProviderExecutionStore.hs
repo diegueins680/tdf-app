@@ -593,7 +593,10 @@ recordCreateResult operationRef checkout attempt provider merchantRef providerRe
             _ -> "payment"
           resourcePath = case provider of
             Checkout.ProviderPlaceToPay -> Just ("/api/session/" <> adapterResultExternalId result)
-            Checkout.ProviderPayPhone -> Just ("/api/Sale/" <> adapterResultExternalId result)
+            Checkout.ProviderPayPhone
+              -- A Button binding holds the opaque preparation ID, not a sale.
+              | payPhoneButtonReferencePrefix `T.isPrefixOf` providerReference -> Nothing
+              | otherwise -> Just ("/api/Sale/" <> adapterResultExternalId result)
             _ -> Nothing
       binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
         { Checkout.pbcAttempt = attempt

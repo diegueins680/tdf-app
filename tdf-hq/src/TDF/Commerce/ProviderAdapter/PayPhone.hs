@@ -39,7 +39,6 @@ import           Data.Int (Int64)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import           Text.Read (readMaybe)
 import           Data.Time
   ( TimeOfDay(..), hoursToTimeZone, localDay, localTimeOfDay, utcToLocalTime )
 
@@ -77,6 +76,7 @@ payPhoneAdapter config = do
     , adapterBuildSameDayReverse = buildSameDayReverse config
     , adapterParseResponse = parseResponse
     , adapterAssessNotification = assessCallback config
+    , adapterQueryFollowUp = buttonConfirmation config
     }
 
 buildCreate
@@ -238,7 +238,7 @@ isButtonReference = T.isPrefixOf payPhoneButtonReferencePrefix
 safePayPhoneRedirect :: Text -> Maybe Text
 safePayPhoneRedirect url = do
   rest <- T.stripPrefix "https://" url
-  let authority = T.toLower (T.takeWhile (\character -> character /= '/' && character /= '?' && character /= '#') rest)
+  let authority = T.toLower (T.takeWhile (`notElem` ("/?#" :: String)) rest)
       payPhoneHost = authority == "payphonetodoesposible.com"
         || ".payphonetodoesposible.com" `T.isSuffixOf` authority
         || authority == "payphone.app"
@@ -250,35 +250,18 @@ safePayPhoneRedirect url = do
     then Just url
     else Nothing
 
+-- | The authenticated status read by the merchant's client reference. A
+-- Button charge has no transaction ID until the buyer pays (Prepare answers
+-- only an opaque preparation ID), so it is found by its @TDFC-@ reference too;
+-- until the buyer pays, PayPhone answers with an error status, which
+-- reconciliation treats as unavailable and retries. An approved Button answer
+-- is not final: 'buttonConfirmation' confirms it first.
 buildQuery
   :: PayPhoneConfig
   -> AdapterContext
   -> PaymentLocator
   -> Either AdapterError AdapterRequest
-buildQuery config _ locator
-  | isButtonReference reference = do
-      validateClientReference reference
-      -- The confirmation answers with the same transaction fields as the
-      -- API Sale status query; until the buyer pays, PayPhone answers with an
-      -- error status, which reconciliation treats as unavailable and retries.
-      transactionId <- maybe
-        (Left (AdapterError "PayPhone button transaction ID is invalid."))
-        Right
-        (readMaybe (T.unpack (plExternalId locator)) :: Maybe Int64)
-      unless (transactionId > 0)
-        (Left (AdapterError "PayPhone button transaction ID is invalid."))
-      pure AdapterRequest
-        { arProvider = ProviderPayPhone
-        , arOperation = AdapterQuery
-        , arMethod = AdapterPost
-        , arUrl = payPhoneBaseUrl <> "/api/button/V2/Confirm"
-        , arHeaders = payPhoneHeaders config
-        , arBody = Just (A.object ["id" .= transactionId, "clientTxId" .= reference])
-        , arRetryPolicy = SafeReadRetry
-        }
-  | otherwise = buildSaleQuery config locator
-  where
-    reference = epReference (plExpected locator)
+buildQuery config _ = buildSaleQuery config
 
 buildSaleQuery
   :: PayPhoneConfig
@@ -295,6 +278,43 @@ buildSaleQuery config locator = do
     , arBody = Nothing
     , arRetryPolicy = SafeReadRetry
     }
+
+-- | PayPhone reverses a Button payment that is not confirmed within five
+-- minutes (ADR 0136). When the status read shows an approved Button payment
+-- whose reference, amount and currency match the binding, the confirmation
+-- with its transaction ID is the request that must answer before anything is
+-- applied. Any other answer is final as it is.
+buttonConfirmation
+  :: PayPhoneConfig
+  -> AdapterContext
+  -> PaymentLocator
+  -> Value
+  -> Either AdapterError (Maybe AdapterRequest)
+buttonConfirmation config _ locator value
+  | not (isButtonReference reference) = Right Nothing
+  | otherwise = do
+      validateClientReference reference
+      approved <- parsePayPhoneValue approvedTransaction value
+      pure $ flip fmap approved $ \transactionId -> AdapterRequest
+        { arProvider = ProviderPayPhone
+        , arOperation = AdapterQuery
+        , arMethod = AdapterPost
+        , arUrl = payPhoneBaseUrl <> "/api/button/V2/Confirm"
+        , arHeaders = payPhoneHeaders config
+        , arBody = Just (A.object ["id" .= transactionId, "clientTxId" .= reference])
+        , arRetryPolicy = SafeReadRetry
+        }
+  where
+    reference = epReference (plExpected locator)
+    approvedTransaction = A.withObject "PayPhone status response" $ \object -> do
+      clientReference <- object .: "clientTransactionId"
+      transactionId <- object .: "transactionId" :: Parser Int64
+      amountMinor <- object .: "amount" :: Parser Int64
+      currency <- normalizedCurrency <$> object .: "currency"
+      statusCode <- object .: "statusCode" :: Parser Int
+      when (transactionId <= 0) (fail "PayPhone returned an invalid transaction ID")
+      validateBindingParser (plExpected locator) clientReference amountMinor currency
+      pure (if statusCode == 3 then Just transactionId else Nothing)
 
 buildCancel
   :: PayPhoneConfig
@@ -365,13 +385,17 @@ parseCreate = A.withObject "PayPhone create response" $ \object -> do
 -- unknown until the buyer pays and the confirmation answers.
 parsePrepared :: A.Object -> Text -> Parser AdapterResult
 parsePrepared object page = do
-  paymentId <- object .: "paymentId" :: Parser Int64
-  when (paymentId <= 0) (fail "PayPhone returned an invalid payment ID")
+  -- An opaque preparation ID (the documentation shows text such as
+  -- "GSizecyUkIAkxTj3SQ"); it identifies the binding, never the transaction.
+  paymentId <- (object .: "paymentId" :: Parser Text)
+    <|> (T.pack . show <$> (object .: "paymentId" :: Parser Int64))
+  unless (validProviderIdentifier paymentId)
+    (fail "PayPhone returned an invalid payment ID")
   redirect <- maybe (fail "PayPhone payment page is not an allowed PayPhone URL") pure
     (safePayPhoneRedirect page)
   pure AdapterResult
     { adapterResultState = AdapterRequiresCustomerAction
-    , adapterResultExternalId = T.pack (show paymentId)
+    , adapterResultExternalId = paymentId
     , adapterResultRedirectUrl = Just redirect
     , adapterResultAmountMinor = Nothing
     , adapterResultCurrency = Nothing
@@ -398,14 +422,18 @@ parseQuery locator = A.withObject "PayPhone query response" $ \object -> do
   amountMinor <- object .: "amount" :: Parser Int64
   currency <- normalizedCurrency <$> object .: "currency"
   statusCode <- object .: "statusCode" :: Parser Int
+  when (transactionId <= 0) (fail "PayPhone returned an invalid transaction ID")
   let transactionIdText = T.pack (show transactionId)
-  unless (transactionIdText == plExternalId locator)
+      button = isButtonReference (epReference (plExpected locator))
+  -- A Button binding holds the preparation ID; its transaction is bound by the
+  -- merchant reference, amount and currency checked below.
+  unless (button || transactionIdText == plExternalId locator)
     (fail "PayPhone transaction ID does not match the stored sale")
   validateBindingParser (plExpected locator) clientReference amountMinor currency
   let (state, certainty) = payPhoneStatus statusCode
   pure AdapterResult
     { adapterResultState = state
-    , adapterResultExternalId = transactionIdText
+    , adapterResultExternalId = if button then plExternalId locator else transactionIdText
     , adapterResultRedirectUrl = Nothing
     , adapterResultAmountMinor = Just amountMinor
     , adapterResultCurrency = Just currency
