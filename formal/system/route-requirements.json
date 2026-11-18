@@ -3485,7 +3485,8 @@
       "path": "/social-events/event-sources",
       "basis": "named",
       "requirements": [
-        "EVT-RESEARCH-001"
+        "EVT-RESEARCH-001",
+        "EVT-VENUE-DISCOVERY-001"
       ]
     },
     {

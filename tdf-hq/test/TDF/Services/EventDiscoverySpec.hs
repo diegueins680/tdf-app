@@ -39,7 +39,10 @@ import TDF.Services.EventDiscovery
   , discoveredEventFitsPilotLimit
   , normalizeTicketmasterResponse
   , normalizeUserCities
-  , loadEcuadorDiscoveryCities
+  , loadRegistryDiscoveryCities
+  , StructuredFeedEvent(..)
+  , classifyDiscoveredEventType
+  , parseIcsEvents
   , publishedEventTypeLookupParams
   , failEventDiscoveryRun
   , finishEventDiscoveryRun
@@ -50,6 +53,13 @@ import TDF.Services.EventDiscovery
   , discoveredEventPublicationReady
   , syncDiscoveredEvent
   , syncDiscoveredEventDraft
+  )
+import TDF.Services.EventDiscoveryLinkedData
+  ( LinkedDataSourceConfig(..)
+  , linkedDataEventLinks
+  , normalizeLinkedDataDocument
+  , parseLinkedDataSourceConfig
+  , parseLinkedDataTime
   )
 import qualified TDF.Models.SocialEventsModels as Social
 
@@ -86,18 +96,268 @@ spec = do
           Left _ -> True
           Right _ -> False
 
-  describe "Ecuador discovery coverage" $ do
-    it "includes registered Ecuador cities without subscriptions and prioritizes Quito" $
+  describe "registry discovery coverage" $ do
+    it "includes registered Ecuador and Colombia cities without subscriptions and prioritizes Quito" $
       withSystemTempFile "tdf-discovery-cities.sqlite" $ \dbPath handle -> do
         hClose handle
         pool <- runNoLoggingT $ createSqlitePool (T.pack dbPath) 1
         runSqlPool (do
           rawExecute "CREATE TABLE event_city(name TEXT,normalized_name TEXT,country_code TEXT,time_zone TEXT)" []
-          rawExecute "INSERT INTO event_city VALUES('Loja','loja','EC','America/Guayaquil'),('Quito','quito','EC','America/Guayaquil'),('Madrid','madrid','ES','Europe/Madrid')" []
+          rawExecute "INSERT INTO event_city VALUES('Loja','loja','EC','America/Guayaquil'),('Quito','quito','EC','America/Guayaquil'),('Madrid','madrid','ES','Europe/Madrid'),('Bogotá','bogotá','CO','America/Bogota')" []
           ) pool
-        cities <- loadEcuadorDiscoveryCities pool
-        map eventDiscoveryCityName cities `shouldBe` ["Quito","Loja"]
+        cities <- loadRegistryDiscoveryCities pool
+        map eventDiscoveryCityName cities `shouldBe` ["Quito","Loja","Bogotá"]
         destroyAllResources pool
+
+  describe "venue iCalendar feeds" $ do
+    let calendar =
+          T.unlines
+            [ "BEGIN:VCALENDAR"
+            , "BEGIN:VEVENT"
+            , "DTSTART;TZID=America/Guayaquil:20261130T200000"
+            , "DTEND;TZID=America/Guayaquil:20261130T220000"
+            , "UID:281552-1@teatrosucre.com"
+            , "SUMMARY:Orquesta de Instrumentos Andinos"
+            , "URL:https://teatrosucre.com/event/oia/"
+            , "CATEGORIES:Danza,Música"
+            , "ATTACH;FMTTYPE=image/png:https://cdn.teatrosucre.com/oia.png"
+            , "END:VEVENT"
+            , "BEGIN:VEVENT"
+            , "DTSTART:20261201T193000"
+            , "UID:floating-2@teatrosucre.com"
+            , "SUMMARY:Lectura dramatizada"
+            , "LOCATION:Teatro Variedades\\, Plaza del Teatro\\, Quito"
+            , "END:VEVENT"
+            , "BEGIN:VEVENT"
+            , "DTSTART;TZID=Europe/Madrid:20261201T193000"
+            , "UID:unknown-zone-3@teatrosucre.com"
+            , "SUMMARY:Zona sin regla fija"
+            , "END:VEVENT"
+            , "BEGIN:VEVENT"
+            , "DTSTART;VALUE=DATE:20261205"
+            , "UID:all-day-4@teatrosucre.com"
+            , "SUMMARY:Abonos"
+            , "END:VEVENT"
+            , "END:VCALENDAR"
+            ]
+        events = parseIcsEvents "Teatro Nacional Sucre" (Just "America/Guayaquil") calendar
+    it "resolves TZID and floating local times in the feed city's zone and drops unresolvable ones" $ do
+      map structuredEventId events `shouldBe` ["281552-1@teatrosucre.com", "floating-2@teatrosucre.com"]
+      map structuredEventStart events
+        `shouldBe` [ UTCTime (fromGregorian 2026 12 1) (secondsToDiffTime 3600)
+                   , UTCTime (fromGregorian 2026 12 2) (secondsToDiffTime 1800)
+                   ]
+      map structuredEventEnd events
+        `shouldBe` [Just (UTCTime (fromGregorian 2026 12 1) (secondsToDiffTime 10800)), Nothing]
+    it "names the venue from the source when LOCATION is absent and maps categories to catalog types" $ do
+      map structuredEventVenue events `shouldBe` ["Teatro Nacional Sucre", "Teatro Variedades"]
+      map structuredEventType events `shouldBe` [Just "concert", Just "other"]
+      map structuredEventImageUrl events `shouldBe` [Just "https://cdn.teatrosucre.com/oia.png", Nothing]
+    it "keeps explicit UTC values unchanged" $
+      map structuredEventStart
+        (parseIcsEvents "Venue" Nothing "BEGIN:VEVENT\nDTSTART:20261201T010000Z\nUID:utc-1\nSUMMARY:UTC\nEND:VEVENT\n")
+        `shouldBe` [UTCTime (fromGregorian 2026 12 1) (secondsToDiffTime 3600)]
+
+  describe "schema.org linked-data sources" $ do
+    let now = UTCTime (fromGregorian 2026 11 14) 0
+        quito = EventDiscoveryCity "Quito" "EC" (Just "America/Guayaquil")
+        cuenca = EventDiscoveryCity "Cuenca" "EC" (Just "America/Guayaquil")
+        bogota = EventDiscoveryCity "Bogotá" "CO" (Just "America/Bogota")
+        medellin = EventDiscoveryCity "Medellín" "CO" (Just "America/Bogota")
+        cities = [quito, cuenca, bogota, medellin]
+        platform = LinkedDataSourceConfig Nothing Nothing Nothing 60 Nothing Nothing
+        at day seconds = UTCTime day (secondsToDiffTime seconds)
+        block json = "<script type=\"application/ld+json\">" <> json <> "</script>"
+        normalize config fixedCity isEventPage =
+          normalizeLinkedDataDocument 365 "USD" "source" config fixedCity cities now isEventPage
+    it "parses offsets with and without a colon, UTC, and venue-local times" $ do
+      parseLinkedDataTime Nothing "2026-12-11T20:00:00-05:00" `shouldBe` Just (at (fromGregorian 2026 12 12) 3600)
+      parseLinkedDataTime Nothing "2026-12-11T20:00:00-0500" `shouldBe` Just (at (fromGregorian 2026 12 12) 3600)
+      parseLinkedDataTime Nothing "2026-11-20T20:00-05:00" `shouldBe` Just (at (fromGregorian 2026 11 21) 3600)
+      parseLinkedDataTime Nothing "2026-12-11T20:00:00Z" `shouldBe` Just (at (fromGregorian 2026 12 11) 72000)
+      parseLinkedDataTime (Just "America/Guayaquil") "2026-11-14T20:30:00" `shouldBe` Just (at (fromGregorian 2026 11 15) 5400)
+    it "rejects date-only values and local times in a zone without a fixed offset" $ do
+      parseLinkedDataTime (Just "America/Bogota") "2026-11-28" `shouldBe` Nothing
+      parseLinkedDataTime Nothing "2026-11-14T20:30:00" `shouldBe` Nothing
+      parseLinkedDataTime (Just "Europe/Madrid") "2026-11-14T20:30:00" `shouldBe` Nothing
+    it "validates the source configuration" $ do
+      parseLinkedDataSourceConfig Nothing `shouldBe` Right platform
+      fmap linkedDataMaxPages (parseLinkedDataSourceConfig (Just "{\"linkPrefix\":\"https://a.example/e/\",\"maxPages\":300}"))
+        `shouldBe` Right 300
+      parseLinkedDataSourceConfig (Just "{\"maxPages\":401}") `shouldSatisfy` isLeftText
+      parseLinkedDataSourceConfig (Just "{\"linkPrefix\":\"http://a.example/e/\"}") `shouldSatisfy` isLeftText
+      parseLinkedDataSourceConfig (Just "{\"rewriteFrom\":\"/ev/\"}") `shouldSatisfy` isLeftText
+      parseLinkedDataSourceConfig (Just "not json") `shouldSatisfy` isLeftText
+    it "follows only sitemap locations under the prefix and applies the page rewrite" $ do
+      let config = platform
+            { linkedDataLinkPrefix = Just "https://www.meet2go.com/ev/"
+            , linkedDataRewriteFrom = Just "https://www.meet2go.com/ev/"
+            , linkedDataRewriteTo = Just "https://www.meet2go.com/seo/ev/"
+            }
+          sitemap =
+            "<?xml version=\"1.0\"?><urlset><url><loc>https://www.meet2go.com/</loc></url>"
+              <> "<url><loc>https://www.meet2go.com/ev/uno</loc><image:image><image:loc>https://cdn.example/a</image:loc></image:image></url>"
+              <> "<url><loc>https://www.meet2go.com/ev/dos</loc></url>"
+              <> "<url><loc>https://www.meet2go.com/ev/uno</loc></url>"
+              <> "<url><loc>https://www.meet2go.com/organizer/x</loc></url></urlset>"
+      linkedDataEventLinks config "https://www.meet2go.com/seo/sitemap.xml" sitemap
+        `shouldBe` ["https://www.meet2go.com/seo/ev/uno", "https://www.meet2go.com/seo/ev/dos"]
+    it "resolves root-relative listing links against the index origin and ignores other hosts" $ do
+      let config = platform { linkedDataLinkPrefix = Just "https://www.tuboleta.com/es/eventos/" }
+          listing =
+            "<a href=\"/es/eventos/uno-bogota\">1</a><a href=\"#eventos\">x</a>"
+              <> "<a href=\"/es/eventos/uno-bogota#boletas\">1</a>"
+              <> "<a href='https://www.tuboleta.com/es/eventos/dos'>2</a>"
+              <> "<a href=\"https://evil.example/es/eventos/tres\">3</a>"
+              <> "<a href=\"/es/venue/otro\">v</a><a href=\"../eventos/relativo\">r</a>"
+      linkedDataEventLinks config "https://www.tuboleta.com/es/venue/daviarena?x=1" listing
+        `shouldBe` ["https://www.tuboleta.com/es/eventos/uno-bogota", "https://www.tuboleta.com/es/eventos/dos"]
+      linkedDataEventLinks platform "https://www.tuboleta.com/es/venue/daviarena" listing `shouldBe` []
+    it "imports a platform event only when it names a registered city in the matching country" $ do
+      let page locality country =
+            block
+              ( "{\"@context\":\"https://schema.org\",\"@type\":\"Event\",\"name\":\"Noche de jazz\","
+                  <> "\"startDate\":\"2026-11-20T19:30:00-05:00\",\"endDate\":\"2026-11-20T21:30:00-05:00\","
+                  <> "\"eventStatus\":\"https://schema.org/EventScheduled\","
+                  <> "\"location\":{\"@type\":\"Place\",\"name\":\"MicroTeatro UIO\",\"address\":{\"@type\":\"PostalAddress\","
+                  <> "\"streetAddress\":\"Yánez Pinzón N25-106\",\"addressLocality\":\"" <> locality <> "\",\"addressCountry\":\"" <> country <> "\"}},"
+                  <> "\"image\":[\"https://cdn.example/jazz.png\"],"
+                  <> "\"offers\":[{\"@type\":\"Offer\",\"url\":\"https://www.meet2go.com/ev/jazz\",\"price\":\"12.5\",\"priceCurrency\":\"USD\",\"availability\":\"https://schema.org/InStock\"},"
+                  <> "{\"@type\":\"Offer\",\"url\":\"https://www.meet2go.com/ev/jazz\",\"price\":\"6\",\"priceCurrency\":\"USD\",\"availability\":\"https://schema.org/InStock\"}]}"
+              )
+          url = "https://www.meet2go.com/seo/ev/jazz"
+      case normalize platform Nothing True url (page "Quito" "EC") of
+        [event] -> do
+          discoveredEventExternalId event `shouldBe` "jazz"
+          discoveredEventStart event `shouldBe` at (fromGregorian 2026 11 21) 1800
+          discoveredEventEnd event `shouldBe` Just (at (fromGregorian 2026 11 21) 9000)
+          discoveredVenueName (discoveredEventVenue event) `shouldBe` "MicroTeatro UIO"
+          discoveredVenueCity (discoveredEventVenue event) `shouldBe` "Quito"
+          discoveredVenueCountryCode (discoveredEventVenue event) `shouldBe` Just "EC"
+          discoveredEventPriceCents event `shouldBe` Just 600
+          discoveredEventCurrency event `shouldBe` "USD"
+          discoveredEventTicketUrl event `shouldBe` Just "https://www.meet2go.com/ev/jazz"
+          discoveredEventImageUrl event `shouldBe` Just "https://cdn.example/jazz.png"
+          discoveredEventStatus event `shouldBe` "on_sale"
+          discoveredEventType event `shouldBe` "other"
+        other -> expectationFailure ("expected one event, got " <> show (length other))
+      normalize platform Nothing True url (page "Ambato" "EC") `shouldBe` []
+      normalize platform Nothing True url (page "Cuenca" "ES") `shouldBe` []
+      map (discoveredVenueCity . discoveredEventVenue) (normalize platform Nothing True url (page "Cuenca" "Ecuador"))
+        `shouldBe` ["Cuenca"]
+    it "matches a platform city from an unaccented street address" $ do
+      let page =
+            block
+              ( "{\"@type\":\"Event\",\"name\":\"Jeff Mills\",\"startDate\":\"2026-11-21T20:00:00-05:00\","
+                  <> "\"location\":{\"@type\":\"Place\",\"name\":\"Plaza Mayor\",\"address\":{\"@type\":\"PostalAddress\",\"streetAddress\":\"Cl. 41 #55-80, Medellin\"}},"
+                  <> "\"performer\":[{\"@type\":\"PerformingGroup\",\"name\":\"Jeff Mills\"}]}"
+              )
+      case normalize platform Nothing True "https://latiquetera.com/event/jeff-mills" page of
+        [event] -> do
+          discoveredVenueCity (discoveredEventVenue event) `shouldBe` "Medellín"
+          discoveredEventCurrency event `shouldBe` "COP"
+          map discoveredArtistName (discoveredEventArtists event) `shouldBe` ["Jeff Mills"]
+          discoveredEventTicketUrl event `shouldBe` Just "https://latiquetera.com/event/jeff-mills"
+        other -> expectationFailure ("expected one event, got " <> show (length other))
+    it "binds a venue source to its city, names the venue from configuration, and flags date-only pages" $ do
+      let config = platform
+            { linkedDataVenueName = Just "DAVIarena"
+            , linkedDataDateOnlyLocalTime = Just "07:00"
+            }
+          dateOnlyPage =
+            block
+              ( "{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Event\",\"name\":\"LA MARRANADA DEL SOCIAL\","
+                  <> "\"image\":{\"@type\":\"ImageObject\",\"url\":\"http://www.tuboleta.com/files/a.jpg\"},"
+                  <> "\"startDate\":\"2026-12-19T07:00:00-0500\",\"location\":{\"@type\":\"City\",\"name\":\"Medellín\"}}]}"
+              )
+          richPage =
+            block
+              ( "{\"@type\":\"MusicEvent\",\"name\":\"Alcolirykoz - El Remate 2026\",\"startDate\":\"2026-12-11T20:00:00-05:00\","
+                  <> "\"location\":{\"@type\":\"Place\",\"name\":\"DAVIarena\",\"address\":{\"@type\":\"PostalAddress\",\"streetAddress\":\"Cra. 49 #52 Sur-200\",\"addressLocality\":\"Sabaneta\",\"addressCountry\":\"CO\"}},"
+                  <> "\"offers\":{\"@type\":\"AggregateOffer\",\"priceCurrency\":\"COP\",\"lowPrice\":\"85400\",\"highPrice\":\"419700\",\"url\":\"https://checkout.tuboleta.com/selection/event/1\"},"
+                  <> "\"performer\":{\"@type\":\"MusicGroup\",\"name\":\"Alcolirykoz\"}}"
+              )
+      case normalize config (Just medellin) True "https://www.tuboleta.com/es/eventos/la-marranada-del-social" dateOnlyPage of
+        [event] -> do
+          discoveredVenueName (discoveredEventVenue event) `shouldBe` "DAVIarena"
+          discoveredVenueCity (discoveredEventVenue event) `shouldBe` "Medellín"
+          discoveredEventDescription event `shouldBe` Just "Hora por confirmar: la fuente publica solo la fecha."
+          discoveredEventImageUrl event `shouldBe` Just "https://www.tuboleta.com/files/a.jpg"
+          discoveredEventStatus event `shouldBe` "announced"
+        other -> expectationFailure ("expected one event, got " <> show (length other))
+      case normalize config (Just medellin) True "https://www.tuboleta.com/es/eventos/alcolirykoz-el-remate-2026-medellin" richPage of
+        [event] -> do
+          discoveredEventExternalId event `shouldBe` "alcolirykoz-el-remate-2026-medellin"
+          discoveredVenueCity (discoveredEventVenue event) `shouldBe` "Medellín"
+          discoveredVenueAddress (discoveredEventVenue event) `shouldBe` Just "Cra. 49 #52 Sur-200"
+          discoveredEventPriceCents event `shouldBe` Just 8540000
+          discoveredEventCurrency event `shouldBe` "COP"
+          discoveredEventDescription event `shouldBe` Nothing
+          discoveredEventType event `shouldBe` "concert"
+          discoveredEventTicketUrl event `shouldBe` Just "https://checkout.tuboleta.com/selection/event/1"
+        other -> expectationFailure ("expected one event, got " <> show (length other))
+      normalize platform (Just medellin) True "https://www.tuboleta.com/es/eventos/x" dateOnlyPage `shouldBe` []
+    it "reads several events from a listing page with venue-local times and distinct identities" $ do
+      let config = platform { linkedDataVenueName = Just "Teatro Centro de Arte" }
+          guayaquil = EventDiscoveryCity "Guayaquil" "EC" (Just "America/Guayaquil")
+          listing =
+            block "{\"@type\":\"NGO\",\"name\":\"Fundación\"}"
+              <> block
+                ( "[{\"@type\":\"Event\",\"name\":\"Los Panchos\",\"startDate\":\"2026-11-20T20:00:00\",\"location\":{\"@id\":\"https://t.example/#theater\"}},"
+                    <> "{\"@type\":\"Event\",\"name\":\"El Cascanueces\",\"startDate\":\"2026-11-22T16:30:00\",\"eventStatus\":\"https://schema.org/EventCancelled\",\"location\":{\"@id\":\"https://t.example/#theater\"}},"
+                    <> "{\"@type\":\"Event\",\"name\":\"Función pasada\",\"startDate\":\"2026-11-01T16:30:00\",\"location\":{\"@id\":\"https://t.example/#theater\"}}]"
+                )
+              <> block "{ not json"
+          events = normalize config (Just guayaquil) False "https://www.teatrocentrodearte.org/eventos" listing
+      map discoveredEventTitle events `shouldBe` ["Los Panchos", "El Cascanueces"]
+      map discoveredEventExternalId events `shouldBe` ["eventos@20261121T0100", "eventos@20261122T2130"]
+      map discoveredEventStatus events `shouldBe` ["announced", "cancelled"]
+      map (discoveredVenueName . discoveredEventVenue) events
+        `shouldBe` ["Teatro Centro de Arte", "Teatro Centro de Arte"]
+    it "keeps one identity for a listed event with its own page when it is rescheduled" $ do
+      let guayaquil = EventDiscoveryCity "Guayaquil" "EC" (Just "America/Guayaquil")
+          config = platform { linkedDataVenueName = Just "Teatro Centro de Arte" }
+          listingOn day =
+            block
+              ( "[{\"@type\":\"Event\",\"name\":\"Los Panchos\",\"url\":\"https://www.teatrocentrodearte.org/eventos/los-panchos\",\"startDate\":\"2026-11-" <> day <> "T20:00:00\"},"
+                  <> "{\"@type\":\"Event\",\"name\":\"Temporada A\",\"url\":\"https://www.teatrocentrodearte.org/eventos/temporada\",\"startDate\":\"2026-11-25T20:00:00\"},"
+                  <> "{\"@type\":\"Event\",\"name\":\"Temporada B\",\"url\":\"https://www.teatrocentrodearte.org/eventos/temporada\",\"startDate\":\"2026-11-26T20:00:00\"}]"
+              )
+          identities day =
+            map discoveredEventExternalId
+              (normalize config (Just guayaquil) False "https://www.teatrocentrodearte.org/eventos" (listingOn day))
+      identities "20" `shouldBe` ["los-panchos", "temporada@20261126T0100", "temporada@20261127T0100"]
+      identities "27" `shouldBe` ["los-panchos", "temporada@20261126T0100", "temporada@20261127T0100"]
+    it "gives same-named venues in different cities of one source different identities" $ do
+      let eventIn locality =
+            block
+              ( "{\"@type\":\"Event\",\"name\":\"Gira\",\"startDate\":\"2026-12-11T20:00:00-05:00\","
+                  <> "\"location\":{\"@type\":\"Place\",\"name\":\"Teatro Municipal\",\"address\":{\"addressLocality\":\"" <> locality <> "\"}}}"
+              )
+          venueIdIn locality =
+            map (discoveredVenueExternalId . discoveredEventVenue)
+              (normalize platform Nothing True "https://p.example/eventos/gira" (eventIn locality))
+      venueIdIn "Quito" `shouldBe` ["source:ec:quito:teatro municipal"]
+      venueIdIn "Cuenca" `shouldBe` ["source:ec:cuenca:teatro municipal"]
+    it "rejects a registered city name in an explicitly different country" $ do
+      let eventIn country =
+            block
+              ( "{\"@type\":\"Event\",\"name\":\"Gira\",\"startDate\":\"2026-12-11T20:00:00-05:00\","
+                  <> "\"location\":{\"@type\":\"Place\",\"name\":\"Teatro Municipal\",\"address\":{\"addressLocality\":\"Cuenca\",\"addressCountry\":\"" <> country <> "\"}}}"
+              )
+          matched country =
+            length (normalize platform Nothing True "https://p.example/eventos/gira" (eventIn country))
+      matched "Spain" `shouldBe` 0
+      matched "España" `shouldBe` 0
+      matched "ES" `shouldBe` 0
+      matched "Ecuador" `shouldBe` 1
+      matched "República del Ecuador" `shouldBe` 1
+      matched "EC" `shouldBe` 1
+    it "classifies free-text source categories into catalog event types" $ do
+      classifyDiscoveredEventType "Festival de Jazz" [] `shouldBe` "festival"
+      classifyDiscoveredEventType "Gala" ["Danza", "Música"] `shouldBe` "concert"
+      classifyDiscoveredEventType "Gala" ["MusicEvent"] `shouldBe` "concert"
+      classifyDiscoveredEventType "Macbeth" ["Teatro"] `shouldBe` "other"
 
   describe "event discovery event-type lookup" $ do
     it "binds both effective-date placeholders for PostgreSQL" $ do
@@ -1192,3 +1452,6 @@ initializeEventDiscoverySchema = do
   rawExecute
     "CREATE TABLE artist_genre_membership (artist_id INTEGER NOT NULL, genre_id TEXT NOT NULL, sort_order INTEGER NOT NULL, created_at TIMESTAMP NOT NULL, PRIMARY KEY(artist_id, genre_id))"
     []
+
+isLeftText :: Either T.Text a -> Bool
+isLeftText = either (const True) (const False)

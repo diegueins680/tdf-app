@@ -35,6 +35,7 @@ type SourceDraft = EventDiscoverySourceWrite;
 const sourceTypes: { value: EventDiscoverySourceType; label: string }[] = [
   { value: 'ical', label: 'Venue iCalendar' },
   { value: 'json', label: 'Venue JSON' },
+  { value: 'jsonld', label: 'Páginas de eventos (schema.org)' },
   { value: 'ticketmaster', label: 'Ticketmaster' },
   { value: 'buenplan', label: 'Buen Plan' },
   { value: 'web', label: 'Web oficial (investigación manual)' },
@@ -64,7 +65,11 @@ const isVenueFeed = (sourceType: EventDiscoverySourceType) =>
   sourceType === 'ical' || sourceType === 'json';
 
 const hasSourceUrl = (sourceType: EventDiscoverySourceType) =>
-  isVenueFeed(sourceType) || sourceType === 'web';
+  isVenueFeed(sourceType) || sourceType === 'jsonld' || sourceType === 'web';
+
+// A schema.org source may cover one venue (city set) or a whole platform.
+const hasSourceCity = (sourceType: EventDiscoverySourceType) =>
+  isVenueFeed(sourceType) || sourceType === 'jsonld';
 
 const formatTimestamp = (value?: string | null) => {
   if (!value) return 'Nunca';
@@ -224,7 +229,7 @@ export default function EventDiscoverySourcesPage() {
 }
 
 function normalizeDraft(draft: SourceDraft): SourceDraft {
-  const venueFeed = isVenueFeed(draft.discoverySourceWriteType);
+  const venueFeed = hasSourceCity(draft.discoverySourceWriteType);
   const sourceUrl = hasSourceUrl(draft.discoverySourceWriteType);
   const normalizedFeedUrl = draft.discoverySourceWriteFeedUrl?.trim() ?? null;
   const normalizedCityId = draft.discoverySourceWriteCityId?.trim() ?? null;
@@ -253,7 +258,7 @@ function SourceFields({
   lockProviderIdentity?: boolean;
   onChange: (update: Partial<SourceDraft>) => void;
 }) {
-  const venueFeed = isVenueFeed(draft.discoverySourceWriteType);
+  const venueFeed = hasSourceCity(draft.discoverySourceWriteType);
   const sourceUrl = hasSourceUrl(draft.discoverySourceWriteType);
   const manualWeb = draft.discoverySourceWriteType === 'web';
   const availableSourceTypes = lockProviderIdentity

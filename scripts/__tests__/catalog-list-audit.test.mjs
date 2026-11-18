@@ -76,8 +76,48 @@ const playerMigrations = new Set([
 ]);
 
 async function manifestBeforePlayer() {
-  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  const manifest = await manifestBeforeVenue();
   return { ...manifest, migrations: manifest.migrations.filter(row => !playerMigrations.has(row.id)) };
+}
+
+// The six-city venue discovery migration (EVT-VENUE-DISCOVERY-001) appends one
+// entry to the 258-entry manifest of protected main and extends the two
+// discovery source type lists of the admin UI with jsonld. Earlier reviews are
+// verified with these records stepped back to the main they reviewed.
+const LATAM_VENUE_DISCOVERY_ENTRY = '2026-11-14_latam_venue_discovery_sources';
+const VENUE_DISCOVERY_PROTECTED_MAIN = '65317ec2e4febf920292ecace7df466153ae5046';
+const VENUE_DISCOVERY_INTRODUCTION = 'c8a55bb726b7627bd63154bc4cf703f80b97c179';
+// The CHECK list of the venue migration is new; the two UI lists are successors
+// nesting the exact review of protected main: [successor review, nested review].
+const VENUE_DISCOVERY_CHECK_REVIEW = 'cc53e292fd806a3a73aa';
+const VENUE_DISCOVERY_LIST_SUCCESSORS = [
+  ['a72c8ad948739d7af29c', '51b43e3c0476c26bf606'],
+  ['6257a5d5234a30c49185', '17ba38f46aff91a21784']];
+
+async function manifestBeforeVenue() {
+  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  return { ...manifest, migrations: manifest.migrations.filter(row => row.id !== LATAM_VENUE_DISCOVERY_ENTRY) };
+}
+
+// The register as protected main left it: the manifest review, its pointer and
+// retirement one step back, the two UI list successors replaced by the reviews
+// they nest, and the new CHECK list review removed.
+function stepBackVenue({ active, successors, integration, ...rest }) {
+  const pointer = successors.find(row => row.name === 'migrations');
+  const retirement = integration.retirements.find(row => row.source.name === 'migrations');
+  const nested = new Map(VENUE_DISCOVERY_LIST_SUCCESSORS);
+  return {
+    ...rest,
+    active: active.filter(row => row.id !== VENUE_DISCOVERY_CHECK_REVIEW).map(row =>
+      row.id === pointer.currentId || nested.has(row.id) ? row.previousDecision : row),
+    successors: successors.map(row => row === pointer ? row.previousResolution : row),
+    integration: { ...integration, retirements: integration.retirements
+      .map(row => row === retirement ? row.previousResolution : row) },
+  };
+}
+
+async function readReconciliationBeforeVenue() {
+  return stepBackVenue(await readReconciliation());
 }
 
 // The continuous improvement loop rework (pull request #750) deleted two automation
@@ -90,7 +130,7 @@ async function readLoopRework() {
 }
 
 async function readHistoricalReconciliation() {
-  const current = await readReconciliation();
+  const current = await readReconciliationBeforeVenue();
   const rework = await readLoopRework();
   const added = new Set(rework.addedDecisionIds);
   const active = current.active.filter(row => !added.has(row.id));
@@ -114,7 +154,10 @@ async function readReconciliation(beforePlayer = false) {
   const integration = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-integration-retirements.json'), 'utf8'));
   if (!beforePlayer) return { ledger, active, retired, successors, integration };
+  return beforePlayerView(stepBackVenue({ ledger, active, retired, successors, integration }));
+}
 
+async function beforePlayerView({ ledger, active, retired, successors, integration }) {
   // Earlier reviews retain their own manifest fingerprint and catalog size.
   const predecessor = (await reviewedJson(PLAYER_SERVER_MAIN_BASE, catalogPath)).decisions;
   const pointer = successors.find(row => row.name === 'migrations');
@@ -1227,7 +1270,8 @@ test('marketplace agreement payments append one migration to the protected 252-e
 test('player server preserves both reviewed migration histories and appends only reviewed SQL', async () => {
   const main = await reviewedJson(PLAYER_SERVER_MAIN_BASE, manifestPath);
   const player = await reviewedJson(PLAYER_SERVER_REVIEW_HEAD, manifestPath);
-  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  // The venue discovery entry appends after these and has its own review.
+  const current = await manifestBeforeVenue();
   const extension = player.migrations.filter(row => playerMigrations.has(row.id));
   assert.deepEqual(extension.map(row => row.id), [...playerMigrations]);
   assert.deepEqual(current, { ...main, migrations: [...main.migrations, ...extension] });
@@ -1239,7 +1283,7 @@ test('player server preserves both reviewed migration histories and appends only
     assert.equal(await fs.readFile(path.join(workspaceRoot, row.path), 'utf8'), stdout);
   }
 
-  const { active, successors, integration } = await readReconciliation();
+  const { active, successors, integration } = await readReconciliationBeforeVenue();
   const pointer = successors.find(row => row.name === 'migrations');
   const actual = active.find(row => row.id === pointer.currentId);
   const findTip = doc => doc.decisions.find(row => row.evidence?.file === manifestPath);
@@ -1254,8 +1298,65 @@ test('player server preserves both reviewed migration histories and appends only
   assert.equal(retirement.previousResolution.replacementId, mainReview.id);
 });
 
+test('venue discovery sources append one migration to the protected 258-entry manifest', async () => {
+  const main = await reviewedJson(VENUE_DISCOVERY_PROTECTED_MAIN, manifestPath);
+  const combined = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  const migration = { id: LATAM_VENUE_DISCOVERY_ENTRY,
+    path: 'tdf-hq/sql/2026-11-14_latam_venue_discovery_sources.sql',
+    introducedBy: VENUE_DISCOVERY_INTRODUCTION };
+  assert.equal(main.migrations.length, 258);
+  assert.deepEqual(combined, { ...main, migrations: [...main.migrations, migration] });
+  const { stdout } = await execFileAsync('git', ['show', `${VENUE_DISCOVERY_INTRODUCTION}:${migration.path}`],
+    { cwd: workspaceRoot });
+  assert.equal(await fs.readFile(path.join(workspaceRoot, migration.path), 'utf8'), stdout);
+  await execFileAsync('git', ['merge-base', '--is-ancestor', VENUE_DISCOVERY_INTRODUCTION, 'HEAD'],
+    { cwd: workspaceRoot });
+  const { active, retired, successors, integration } = await readReconciliation();
+  const priorMain = (await reviewedJson(VENUE_DISCOVERY_PROTECTED_MAIN, catalogPath)).decisions;
+  const pointer = successors.find(row => row.name === 'migrations');
+  const current = active.find(row => row.id === pointer.currentId);
+  assert.equal(current.evidence.valueCount, 259);
+  assert.equal(current.reviewed, true);
+  assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
+  // The complete review of protected main is nested unchanged, and so are the
+  // pointer and the retirement that named it.
+  assert.deepEqual(current.previousDecision, priorMain.find(row => row.evidence?.file === manifestPath));
+  assert.equal(current.previousDecision.evidence.valueCount, 258);
+  assert.equal(pointer.valueCount, 259);
+  assert.equal(pointer.previousCurrentId, current.previousDecision.id);
+  assert.equal(pointer.change, current.justification);
+  assert.deepEqual(pointer.previousResolution, (await reviewedJson(VENUE_DISCOVERY_PROTECTED_MAIN,
+    'docs/catalog-persistence/event-catalog-current-successors.json')).successors
+    .find(row => row.name === 'migrations'));
+  const retirement = integration.retirements.find(row => row.source.name === 'migrations');
+  assert.equal(retirement.replacementId, current.id);
+  assert.equal(retirement.previousReplacementId, current.previousDecision.id);
+  assert.equal(retirement.reason, current.justification);
+  assert.deepEqual(retirement.previousResolution, (await reviewedJson(VENUE_DISCOVERY_PROTECTED_MAIN,
+    'docs/catalog-persistence/event-integration-retirements.json')).retirements
+    .find(row => row.source.name === 'migrations'));
+  // The two admin UI source type lists gain jsonld; each successor nests the
+  // exact review of protected main. The migration's CHECK list is new.
+  const history = new Map([...active, ...retired].map(row => [row.id, row]));
+  const replaced = new Set([current.previousDecision.id]);
+  for (const [successorId, nestedId] of VENUE_DISCOVERY_LIST_SUCCESSORS) {
+    const successor = history.get(successorId);
+    assert.equal(successor.reviewed, true);
+    assert.equal(successor.reviewMethod, 'successor-of-reviewed-decisions');
+    assert.deepEqual(successor.previousDecision, priorMain.find(row => row.id === nestedId));
+    replaced.add(nestedId);
+  }
+  assert.ok(!priorMain.some(row => row.id === VENUE_DISCOVERY_CHECK_REVIEW));
+  assert.equal(history.get(VENUE_DISCOVERY_CHECK_REVIEW)?.reviewed, true);
+  for (const row of priorMain) {
+    if (replaced.has(row.id)) assert.ok(!history.has(row.id));
+    else assert.deepEqual(history.get(row.id), row);
+  }
+  assert.equal(active.length, priorMain.length + 1);
+});
+
 test('loop rework retires the reviews of two deleted scripts as provenance and reviews one new list', async () => {
-  const { active } = await readReconciliation();
+  const { active } = await readReconciliationBeforeVenue();
   const rework = await readLoopRework();
   assert.equal(rework.decisions.length, 2);
   assert.ok(rework.reason.length > 80);

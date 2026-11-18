@@ -580,6 +580,7 @@
       "scripts/test-invitation-update-concurrency.sh",
       "scripts/test-invoice-worker.sh",
       "scripts/test-isolated-application-canary.py",
+      "scripts/test-latam-venue-discovery-migration.sh",
       "scripts/test-ledger-posting.sh",
       "scripts/test-live-intake-identity.sh",
       "scripts/test-marketplace-contact-identity.sh",
@@ -2286,6 +2287,8 @@
       "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql",
+      "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources.sql",
+      "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2530,6 +2533,7 @@
       "tdf-hq/src/TDF/ServerRadio.hs",
       "tdf-hq/src/TDF/Services.hs",
       "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+      "tdf-hq/src/TDF/Services/EventDiscoveryLinkedData.hs",
       "tdf-hq/src/TDF/Services/EventLogisticsRoutes.hs",
       "tdf-hq/src/TDF/Services/FacebookMessaging.hs",
       "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
@@ -3853,7 +3857,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "862ea41afa019dcf0edea194b2dfc0f75f3a593886e3603403bc9b2a22af4c92",
+      "sha256": "f2c36ff5cc7d7772a74a2f1befae7fb32569f774437d86f0ebdd70c94ccd4d5b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3931,7 +3935,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "13e0ebcb2e1c582da01c14aeed5580f29d79cfb3535531fff28b57211b356f79",
+      "sha256": "c0c4f646e4e34117ea3a9851a35a0a378e1b9d72d11a02ad14fd106a11d53c69",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5509,7 +5513,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "66eb7f410d6801095d49d3b9f1676e92d0f881dbcd662babaed67aaa0a43710b",
+      "sha256": "2f2ea72383f36d7c66caa5d4912bd8d34ee49de9533b96a8ee5fc66f92a7cabf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6524,6 +6528,12 @@
       "id": "SURFACE-b6d8e853f9192b94",
       "path": "scripts/test-isolated-application-canary.py",
       "sha256": "3b50fccf75e7ae6e11d2765b07b02154239a8ec8295022f7c3c6042c7a4b9078",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e24b57f42786c346",
+      "path": "scripts/test-latam-venue-discovery-migration.sh",
+      "sha256": "199ef246bc415162d5768223e893cf1b420add3265637c51e6624bf5382794f1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8371,7 +8381,7 @@
     {
       "id": "SURFACE-8a2776e43bfcbb99",
       "path": "tdf-hq-ui/src/api/eventDiscoverySources.ts",
-      "sha256": "25a52612ab0e9228060dd65246722fe9530e912c27f8b725df4c2b25ca5e39f7",
+      "sha256": "c73e4c32cf6b775425ff3bcfadcf36dbab3fbca1a997133d8c38e45e80c7ebc0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11263,7 +11273,7 @@
     {
       "id": "SURFACE-378a6bc30de606b4",
       "path": "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx",
-      "sha256": "4dac7124635899687df092f6164248eab3673764ae71ed80d44bac9be0234bdf",
+      "sha256": "572fd5bd8d8094c618a627352dbe74fc7e7b6182402e1036e19ad8c1d3355473",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16703,6 +16713,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7bcde7c345db5c9e",
+      "path": "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources.sql",
+      "sha256": "ac023d7798dbc485e4786603169e4d480d8544dc4ea25d0fc9bb2d394fe5c391",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2831864c8972417d",
+      "path": "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources_rollback.sql",
+      "sha256": "e89b182f451dd1197e62b8e854c855810446f07959dfa500d8698f4d61b04030",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -17425,7 +17447,7 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
+      "sha256": "d0f787da4118e5344e609ca0a8cf4faa1184bb2e11173170db9ffc7ab38d95d6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18043,7 +18065,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "790e1d6df83864710f6251d7473976d779a65c25d7e291be540041627dff278f",
+      "sha256": "3b9b9d20529c14950904322ba7890c6a6522618456e1e31d9f5d7788fee8bf2e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18163,7 +18185,13 @@
     {
       "id": "SURFACE-f53dee8d468f33b8",
       "path": "tdf-hq/src/TDF/Services/EventDiscovery.hs",
-      "sha256": "2f607cc22ee3646febe4e913583969a4df00a411a616f698cc142f6c8019ed7e",
+      "sha256": "5e20776b2f857475d8c7b0fe4e4566fabe78b82bf1ac128e66f78dd00220bd47",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dfd6616359647c1a",
+      "path": "tdf-hq/src/TDF/Services/EventDiscoveryLinkedData.hs",
+      "sha256": "8920fffd28e64ae62190cada54a8ffa5cc9dbe8b1171c825d63e1fd3a58234de",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18409,7 +18437,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "sha256": "1e026554abd9b3aab4f08ad15548d463d97cba889773c003feb45d77998a3cd9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18955,7 +18983,7 @@
     {
       "id": "SURFACE-916f8955abd0c6a2",
       "path": "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs",
-      "sha256": "2fbffdb8b05ba0138c791b49455c183402ec1250feeb0a51d271d5f89e2083cf",
+      "sha256": "923b4128c425fc73bdad450972aa6451b34a7f9f0923eade287f4d396f1914e3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22198,7 +22226,7 @@
     },
     {
       "path": "docs/Event_Discovery_Cron.md",
-      "sha256": "a83169ccab65669cde0d1bdeae65aa2870bb76c10937df857b0b7ae848ba65e9",
+      "sha256": "78a92473ff3a0ca24e05d126a66c48af10b94a5097c2d7f9693f28fd98d0ee8b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30507,7 +30535,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "6f642380184c1a4a94e3669112a9dc8502f6d6ab608c4449830aaace184a8aa5",
+      "sha256": "5bb4422734b80ad76e4c22c6b20569e533ef0419aaaebe400a439e3f977c301f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31501,7 +31529,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "16d16260a2490c1921d3a09501cf7f9ab1baed2a576e8640a650d8b0cd579c93",
+      "sha256": "0f0f991c52b5f546fb5647242f2a164ecd5798507cccec32cd587be2f8808e47",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -31635,6 +31663,13 @@
     {
       "path": "formal/system/uri-decoder.md",
       "sha256": "76b05e52e50e782016c33dd0d0500b30f4d9b6555898fb7c3045865020e9cbbc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/venue-discovery-sources.md",
+      "sha256": "f26959e605c8a1a60c742ab52a60e74bcb5bbbdaee3b4c0c3bc17de0e16fff0a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

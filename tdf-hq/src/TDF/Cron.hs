@@ -100,12 +100,13 @@ import           TDF.Services.EventDiscovery
   , fetchStructuredFeedEvents
   , fetchTicketmasterEventsForCity
   , completeEventDiscoverySourceRun
-  , loadEcuadorDiscoveryCities
+  , loadRegistryDiscoveryCities
   , loadSubscribedDiscoveryCities
   , reconcileImportedEvents
   , syncDiscoveredEvent
   , syncDiscoveredEventDraft
   )
+import           TDF.Services.EventDiscoveryLinkedData (fetchLinkedDataEvents)
 import           TDF.Services.EventLogisticsRoutes
   ( RouteEstimateInput(..)
   , RouteEstimateResult(..)
@@ -550,7 +551,7 @@ runEventDiscoveryOnce Env{..} = do
   LogBuf.addLog LogBuf.LogInfo
     ("[Cron][EventDiscovery] " <> (if eventDiscoveryFullReconciliation slot then "Sunday full" else "Daily")
       <> " source refresh for " <> T.pack (show slot))
-  ecuadorCities <- loadEcuadorDiscoveryCities envPool
+  ecuadorCities <- loadRegistryDiscoveryCities envPool
   followedCities <- loadSubscribedDiscoveryCities envPool
   let allCities = nub (ecuadorCities ++ followedCities)
       cities = selectEventDiscoveryCities slot allCities
@@ -573,7 +574,7 @@ runEventDiscoveryOnce Env{..} = do
     then
       LogBuf.addLog
         LogBuf.LogInfo
-        "[Cron][EventDiscovery] Ecuador city registry is empty; coverage is unavailable."
+        "[Cron][EventDiscovery] City registry is empty; coverage is unavailable."
     else forM_ sources $ \sourceEntity@(Entity _ source) ->
       if sourceCircuitOpen now source
         then
@@ -656,6 +657,7 @@ runEventDiscoveryOnce Env{..} = do
                     )
           "ical" -> fetchConfiguredFeed "ical"
           "json" -> fetchConfiguredFeed "json"
+          "jsonld" -> fetchLinkedDataSource
           _ -> pure (Left "Unsupported event discovery source type")
       case fetched of
         Left err -> pure (Left err)
@@ -719,6 +721,7 @@ runEventDiscoveryOnce Env{..} = do
                             ( fetchStructuredFeedEvents
                                 envConfig
                                 (Social.eventDiscoverySourceSourceKey source)
+                                (Social.eventDiscoverySourceName source)
                                 sourceType
                                 feedUrl
                                 target
@@ -726,6 +729,47 @@ runEventDiscoveryOnce Env{..} = do
                             )
                         else pure (Right ([], []))
             _ -> pure (Left "Venue feed requires both feed URL and city")
+
+        -- A linked-data source bound to a city covers one venue; without a
+        -- city it is a platform whose events must name a discovery city.
+        fetchLinkedDataSource =
+          case Social.eventDiscoverySourceFeedUrl source of
+            Nothing -> pure (Left "Linked-data source requires an index URL")
+            Just indexUrl -> do
+              boundCity <-
+                case Social.eventDiscoverySourceCityId source of
+                  Nothing -> pure (Right Nothing)
+                  Just cityKey -> do
+                    cityRow <- runSqlPool (get cityKey) envPool
+                    pure $
+                      case cityRow of
+                        Nothing -> Left "Configured linked-data source city does not exist"
+                        Just city ->
+                          Right
+                            ( Just
+                                EventDiscoveryCity
+                                  { eventDiscoveryCityName = Social.eventCityName city
+                                  , eventDiscoveryCityCountryCode =
+                                      Social.eventCityCountryCode city
+                                  , eventDiscoveryCityTimeZone =
+                                      Social.eventCityTimeZone city
+                                  }
+                            )
+              case boundCity of
+                Left err -> pure (Left err)
+                Right (Just target) | target `notElem` cities -> pure (Right ([], []))
+                Right fixedCity ->
+                  fmap
+                    (fmap (\events -> (maybe cities pure fixedCity, events)))
+                    ( fetchLinkedDataEvents
+                        envConfig
+                        (Social.eventDiscoverySourceSourceKey source)
+                        indexUrl
+                        (Social.eventDiscoverySourceConfiguration source)
+                        fixedCity
+                        cities
+                        now
+                    )
 
     syncOne now totals event = do
       let autoPublish = eventDiscoveryAutoPublish envConfig

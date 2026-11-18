@@ -16,6 +16,9 @@ module TDF.Services.EventDiscovery
   , buildTicketmasterRequestUrl
   , fetchBuenPlanEvents
   , fetchStructuredFeedEvents
+  , parseIcsEvents
+  , StructuredFeedEvent(..)
+  , classifyDiscoveredEventType
   , fetchTicketmasterEvents
   , fetchTicketmasterEventsForCity
   , failEventDiscoveryRun
@@ -23,7 +26,7 @@ module TDF.Services.EventDiscovery
   , completeEventDiscoverySourceRun
   , loadActiveUserCities
   , loadSubscribedDiscoveryCities
-  , loadEcuadorDiscoveryCities
+  , loadRegistryDiscoveryCities
   , decodeBuenPlanResponse
   , normalizeTicketmasterResponse
   , normalizeUserCities
@@ -38,6 +41,21 @@ module TDF.Services.EventDiscovery
   , syncDiscoveredEvent
   , syncDiscoveredEventDraft
   , preserveEventOwnership
+    -- Shared with TDF.Services.EventDiscoveryLinkedData.
+  , cleanIdentifier
+  , cleanMultiline
+  , cleanSingleLine
+  , fixedUtcOffsetMinutes
+  , foldCityText
+  , joinDescription
+  , localTimeInZone
+  , normalizeEventStatus
+  , normalizeHttpsUrl
+  , normalizeStructuredArtist
+  , normalizeTokenText
+  , requestTicketmasterPage
+  , validatePublicFeedUrl
+  , whenMaybe
   ) where
 
 import Control.Applicative ((<|>))
@@ -79,7 +97,7 @@ import Data.Ord (comparing)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Data.Time (UTCTime(..), DayOfWeek(Sunday), addDays, addUTCTime, dayOfWeek, diffUTCTime, secondsToDiffTime, utctDay)
+import Data.Time (UTCTime(..), DayOfWeek(Sunday), LocalTime(..), localTimeToUTC, utc, addDays, addUTCTime, dayOfWeek, diffUTCTime, secondsToDiffTime, utctDay)
 import Data.Time.Format (defaultTimeLocale, formatTime, parseTimeM)
 import Data.Time.Format.ISO8601 (iso8601ParseM)
 import Data.UUID (UUID)
@@ -923,10 +941,11 @@ fetchStructuredFeedEvents ::
   Text ->
   Text ->
   Text ->
+  Text ->
   EventDiscoveryCity ->
   UTCTime ->
   IO (Either Text [DiscoveredEvent])
-fetchStructuredFeedEvents cfg sourceKey sourceType feedUrl city now =
+fetchStructuredFeedEvents cfg sourceKey sourceName sourceType feedUrl city now =
   case validatePublicFeedUrl feedUrl of
     Left err -> pure (Left err)
     Right validatedUrl -> do
@@ -959,6 +978,7 @@ fetchStructuredFeedEvents cfg sourceKey sourceType feedUrl city now =
                             ( parseStructuredFeed
                                 cfg
                                 sourceKey
+                                sourceName
                                 sourceType
                                 city
                                 now
@@ -1012,11 +1032,12 @@ parseStructuredFeed ::
   AppConfig ->
   Text ->
   Text ->
+  Text ->
   EventDiscoveryCity ->
   UTCTime ->
   BL.ByteString ->
   Either Text [DiscoveredEvent]
-parseStructuredFeed cfg sourceKey sourceType city now body
+parseStructuredFeed cfg sourceKey sourceName sourceType city now body
   | T.toCaseFold sourceType == "json" =
       case eitherDecode body of
         Left _ -> Left "Venue JSON feed is invalid"
@@ -1033,7 +1054,7 @@ parseStructuredFeed cfg sourceKey sourceType city now body
           Right
             ( mapMaybe
                 (normalizeStructuredEvent cfg sourceKey city now)
-                (parseIcsEvents calendarText)
+                (parseIcsEvents sourceName (eventDiscoveryCityTimeZone city) calendarText)
             )
   | otherwise = Left "Unsupported venue feed type"
 
@@ -1135,9 +1156,11 @@ normalizeStructuredStatus now startsAt endsAt rawStatus
   where
     normalized = maybe "" (T.toCaseFold . T.strip) rawStatus
 
-parseIcsEvents :: Text -> [StructuredFeedEvent]
-parseIcsEvents =
-  mapMaybe eventFromProperties
+-- The source name stands in for the venue when an event has no LOCATION, and
+-- the city's zone resolves floating local times.
+parseIcsEvents :: Text -> Maybe Text -> Text -> [StructuredFeedEvent]
+parseIcsEvents defaultVenue defaultZone =
+  mapMaybe (eventFromProperties defaultVenue defaultZone)
     . splitIcsEvents
     . unfoldIcsLines
     . T.lines
@@ -1164,13 +1187,14 @@ splitIcsEvents = go False [] []
           go False [] (reverse current : acc) remaining
       | otherwise = go True (line : current) acc remaining
 
-eventFromProperties :: [Text] -> Maybe StructuredFeedEvent
-eventFromProperties properties = do
+eventFromProperties :: Text -> Maybe Text -> [Text] -> Maybe StructuredFeedEvent
+eventFromProperties defaultVenue defaultZone properties = do
   eventId <- lookupIcsProperty "UID" properties >>= cleanIdentifier
   title <- lookupIcsProperty "SUMMARY" properties
-  startsAt <- lookupIcsProperty "DTSTART" properties >>= parseIcsTime
-  let endsAt = lookupIcsProperty "DTEND" properties >>= parseIcsTime
-      location = fromMaybe "Venue" (lookupIcsProperty "LOCATION" properties)
+  startsAt <- lookupIcsDateTime defaultZone "DTSTART" properties
+  let endsAt = lookupIcsDateTime defaultZone "DTEND" properties
+      location = fromMaybe defaultVenue (lookupIcsProperty "LOCATION" properties)
+      categories = maybe [] (T.splitOn ",") (lookupIcsProperty "CATEGORIES" properties)
   pure
     StructuredFeedEvent
       { structuredEventId = eventId
@@ -1183,11 +1207,13 @@ eventFromProperties properties = do
           T.strip (listToMaybe (T.splitOn "," (unescapeIcsText location)) `orText` location)
       , structuredEventAddress = Just (unescapeIcsText location)
       , structuredEventTicketUrl = lookupIcsProperty "URL" properties
-      , structuredEventImageUrl = lookupIcsProperty "IMAGE" properties
+      , structuredEventImageUrl =
+          lookupIcsProperty "IMAGE" properties <|> lookupIcsProperty "ATTACH" properties
       , structuredEventPriceCents = Nothing
       , structuredEventCurrency = Nothing
       , structuredEventStatus = lookupIcsProperty "STATUS" properties
-      , structuredEventType = lookupIcsProperty "CATEGORIES" properties
+      , structuredEventType =
+          Just (classifyDiscoveredEventType (unescapeIcsText title) categories)
       , structuredEventArtists = []
       }
   where
@@ -1195,7 +1221,10 @@ eventFromProperties properties = do
     orText Nothing fallback = fallback
 
 lookupIcsProperty :: Text -> [Text] -> Maybe Text
-lookupIcsProperty wanted =
+lookupIcsProperty wanted = fmap snd . lookupIcsPropertyWithParams wanted
+
+lookupIcsPropertyWithParams :: Text -> [Text] -> Maybe ([Text], Text)
+lookupIcsPropertyWithParams wanted =
   listToMaybe
     . mapMaybe propertyValue
   where
@@ -1203,8 +1232,22 @@ lookupIcsProperty wanted =
       let (rawKey, rawValueWithColon) = T.breakOn ":" line
           key = T.toUpper (T.takeWhile (/= ';') rawKey)
        in if key == wanted && not (T.null rawValueWithColon)
-            then Just (T.drop 1 rawValueWithColon)
+            then Just (drop 1 (T.splitOn ";" rawKey), T.drop 1 rawValueWithColon)
             else Nothing
+
+-- UTC values keep their meaning; local values use the property's TZID or,
+-- when floating, the feed city's zone. All-day values have no start time.
+lookupIcsDateTime :: Maybe Text -> Text -> [Text] -> Maybe UTCTime
+lookupIcsDateTime defaultZone wanted properties = do
+  (params, rawValue) <- lookupIcsPropertyWithParams wanted properties
+  let zone =
+        listToMaybe
+          [ T.dropAround (== '"') value
+          | param <- params
+          , Just value <- [T.stripPrefix "TZID=" param]
+          ]
+          <|> defaultZone
+  parseIcsTime rawValue <|> parseZonedLocalTime zone ["%Y%m%dT%H%M%S"] rawValue
 
 parseIcsTime :: Text -> Maybe UTCTime
 parseIcsTime rawValue =
@@ -1218,6 +1261,77 @@ unescapeIcsText =
     . T.replace "\\," ","
     . T.replace "\\;" ";"
     . T.replace "\\\\" "\\"
+
+-- Zones without daylight saving time that the supported venue feeds publish
+-- local times in. Any other zone must carry an explicit offset; guessing an
+-- offset would silently shift events.
+fixedUtcOffsetMinutes :: Text -> Maybe Int
+fixedUtcOffsetMinutes rawZone =
+  case T.toCaseFold (T.strip rawZone) of
+    "america/guayaquil" -> Just (-300)
+    "america/bogota" -> Just (-300)
+    "america/lima" -> Just (-300)
+    "america/panama" -> Just (-300)
+    "utc" -> Just 0
+    "etc/utc" -> Just 0
+    _ -> Nothing
+
+localTimeInZone :: Int -> LocalTime -> UTCTime
+localTimeInZone offsetMinutes localTime =
+  addUTCTime (fromIntegral (negate offsetMinutes * 60)) (localTimeToUTC utc localTime)
+
+parseZonedLocalTime :: Maybe Text -> [String] -> Text -> Maybe UTCTime
+parseZonedLocalTime zone formats rawValue = do
+  offsetMinutes <- zone >>= fixedUtcOffsetMinutes
+  localTime <-
+    listToMaybe
+      ( mapMaybe
+          (\format -> parseTimeM True defaultTimeLocale format (T.unpack (T.strip rawValue)))
+          formats
+      )
+  pure (localTimeInZone offsetMinutes localTime)
+
+-- Source categories are free text, while imported events must resolve to a
+-- published catalog type. Map the evidence to the types discovery already uses.
+classifyDiscoveredEventType :: Text -> [Text] -> Text
+classifyDiscoveredEventType title hints
+  | "festival" `T.isInfixOf` foldedTitle || any ("festival" `T.isInfixOf`) foldedHints = "festival"
+  | any isMusicHint foldedHints = "concert"
+  | otherwise = "other"
+  where
+    foldedTitle = foldCityText title
+    foldedHints = map foldCityText hints
+    isMusicHint hint =
+      any (`T.isInfixOf` hint) ["music", "concert", "concierto", "opera", "sinfon", "recital"]
+
+-- Accent- and punctuation-insensitive form used to compare place names.
+foldCityText :: Text -> Text
+foldCityText =
+  T.unwords
+    . T.words
+    . T.map (\ch -> if isAlphaNum ch then ch else ' ')
+    . T.map foldAccent
+    . T.toCaseFold
+  where
+    foldAccent ch =
+      case ch of
+        'á' -> 'a'
+        'à' -> 'a'
+        'ä' -> 'a'
+        'é' -> 'e'
+        'è' -> 'e'
+        'ë' -> 'e'
+        'í' -> 'i'
+        'ì' -> 'i'
+        'ï' -> 'i'
+        'ó' -> 'o'
+        'ò' -> 'o'
+        'ö' -> 'o'
+        'ú' -> 'u'
+        'ù' -> 'u'
+        'ü' -> 'u'
+        'ñ' -> 'n'
+        _ -> ch
 
 normalizeUserCities :: [Text] -> [Text]
 normalizeUserCities rawCities =
@@ -1237,11 +1351,12 @@ loadActiveUserCities pool =
   map eventDiscoveryCityName <$> loadSubscribedDiscoveryCities pool
 
 -- Discovery scope is independent of personal follow preferences. Reuse the
--- canonical city registry, including places attached to approved venue feeds.
-loadEcuadorDiscoveryCities :: ConnectionPool -> IO [EventDiscoveryCity]
-loadEcuadorDiscoveryCities pool = do
+-- canonical city registry for the countries discovery covers (Ecuador and
+-- Colombia), including places attached to approved venue feeds.
+loadRegistryDiscoveryCities :: ConnectionPool -> IO [EventDiscoveryCity]
+loadRegistryDiscoveryCities pool = do
   rows <- runSqlPool (rawSql
-    "SELECT name,country_code,time_zone FROM event_city WHERE country_code='EC' ORDER BY CASE WHEN normalized_name='quito' THEN 0 ELSE 1 END,normalized_name"
+    "SELECT name,country_code,time_zone FROM event_city WHERE country_code IN ('EC','CO') ORDER BY CASE WHEN normalized_name='quito' AND country_code='EC' THEN 0 ELSE 1 END,CASE WHEN country_code='EC' THEN 0 ELSE 1 END,normalized_name"
     [] :: SqlPersistT IO [(Single Text,Single Text,Single (Maybe Text))]) pool
   pure [EventDiscoveryCity name country zone | (Single name,Single country,Single zone) <- rows]
 
@@ -2148,7 +2263,7 @@ syncDiscoveredEventDb requestedPublication now event@DiscoveredEvent{..} = do
   backend <- T.toCaseFold <$> getRDBMS
   autoPublish <- if "postgres" `T.isInfixOf` backend then do
     sources <- rawSql
-      "SELECT id FROM event_discovery_source WHERE source_key=? AND enabled AND source_type IN ('ticketmaster','buenplan','ical','json') FOR SHARE"
+      "SELECT id FROM event_discovery_source WHERE source_key=? AND enabled AND source_type IN ('ticketmaster','buenplan','ical','json','jsonld') FOR SHARE"
       [toPersistValue discoveredEventProvider] :: SqlPersistT IO [Single Int64]
     unless (length sources == 1) (liftIO (fail "Event source disabled or unavailable"))
     controls <- rawSql

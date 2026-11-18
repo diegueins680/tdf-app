@@ -1154,6 +1154,17 @@
       "conflict": "Earlier dependency notes asserted current React Navigation/Expo incoming query parsing reached decoder0.2.2 and left0.5 compatibility unresolved. Fresh exact-version source inspection shows different incoming parsers, while query-string7 still installs and exposes the affected decoder; a direct0.5 override is not a callable CommonJS export.",
       "authority": "The user-authorized security repair preserves supported caller behavior and follows the maintainer fix; fresh version-bound source and actual-consumer tests govern reachability claims rather than historical prose.",
       "resolution": "Pin unchanged official upstream0.5.1 under an explicit npm alias, bind query-string7 to a private callable adapter through a root dependency-reference override, retain original0.2.2/namespace controls and add the actual0.5.0 distinct-run regression control. The original0.5.0 choice predates GHSA-qr28-fpjm-wq7f and its historical qualification does not qualify this successor. Narrow the old current incoming attack-path claim; preserve separately required audit/distribution gates."
+    },
+    {
+      "id": "AUTHORITY-VENUE-DISCOVERY-001",
+      "sources": [
+        "docs/Event_Discovery_Cron.md",
+        "formal/system/venue-discovery-sources.md",
+        "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources.sql"
+      ],
+      "conflict": "The discovery document limited registry coverage to Ecuador, stated that no source is enabled by a migration, and excluded reading web pages. The repository owner asked on 2026-11-14 for the events of the most important venues in Quito, Guayaquil, Cuenca, Bogotá, Cali and Medellín to be ingested automatically every day; most of those venues publish events only as schema.org data on venue or ticketing pages.",
+      "authority": "Repository owner request of 2026-11-14.",
+      "resolution": "Extend registry coverage to Colombia, admit a jsonld source type that reads only link targets and schema.org JSON-LD, and seed the verified sources enabled (EVT-VENUE-DISCOVERY-001), except a source whose platform terms prohibit automated access. Imports remain private drafts; publication approval, the pilot allowance and the master switch are unchanged. The terms of TuBoleta, Meet2Go and La Tiquetera were read on 2026-11-15: Meet2Go prohibits robot, crawler and spider access (section 1.10), so its source is seeded disabled until Meet2Go grants written permission; TuBoleta and La Tiquetera state no automated-access rule for their ticketing sites but reserve their content, so republishing their descriptions or images remains an editorial obligation at publication."
     }
   ]
 }
