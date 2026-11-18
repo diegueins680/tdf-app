@@ -7022,7 +7022,8 @@
         "scripts/test-stripe-integration.sh",
         "scripts/upsert-course.mjs",
         "tdf-hq/scripts/create_artists_from_list.sh",
-        "tdf-hq/src/TDF/Config.hs"
+        "tdf-hq/src/TDF/Config.hs",
+        "scripts/check-messaging-token.mjs"
       ],
       "tests": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -17075,7 +17076,7 @@
       "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
       "source": "formal/system/admin-routes.md",
       "contract": "formal/system/admin-routes.md",
-      "property": "The user or message must exist and resolve to a phone number; a reply must reference that user's message; every call sends through the WhatsApp Cloud API and records an outgoing row, also when sending fails.",
+      "property": "The user or message must exist and resolve to a phone number; a reply must reference that user's message; a number whose WhatsApp consent is withdrawn is refused with 409 before anything is sent or recorded (whatsAppRecipientConsentWithdrawn); otherwise every call sends through the WhatsApp Cloud API and records an outgoing row, also when sending fails.",
       "actors": [
         "Strict administrator"
       ],
@@ -17108,12 +17109,13 @@
       "privacy": "Sends to personal phone numbers without a consent check.",
       "concurrency": "None.",
       "idempotency": "Not idempotent: each call sends again.",
-      "failure": "400 invalid input or unresolvable phone; 404 user or message.",
+      "failure": "400 invalid input or unresolvable phone; 404 user or message; 409 consent withdrawn.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/ServerAdmin.hs",
-        "tdf-hq/src/TDF/WhatsApp/Transport.hs"
+        "tdf-hq/src/TDF/WhatsApp/Transport.hs",
+        "tdf-hq/src/TDF/CampaignAutomation.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerAdminSpec.hs"
@@ -17125,7 +17127,7 @@
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "No WhatsApp consent, opt-out or 24-hour customer-service-window check is applied on this path (PRIV-WHATSAPP-001 governs consent for the public flow only).",
+        "No 24-hour customer-service-window check is applied on this path. (Resolved 2026-11-18: a send or resend to a number whose consent is withdrawn is refused with 409 before anything is sent or recorded.)",
         "A resend may replace the body, so any number ever messaged can be sent arbitrary text."
       ],
       "conformance": {
@@ -20016,12 +20018,14 @@
       "implementation": [
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/src/TDF/ServerInternships.hs",
-        "tdf-hq/src/TDF/API/InternAudit.hs"
+        "tdf-hq/src/TDF/API/InternAudit.hs",
+        "scripts/lib/studio-audit-safety.mjs"
       ],
       "tests": [
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "e2e/web/studio-internship-audit.spec.mjs",
-        "scripts/test-studio-internship-audit-migration.sh"
+        "scripts/test-studio-internship-audit-migration.sh",
+        "scripts/__tests__/studio-internship-audit.test.mjs"
       ],
       "formalModels": [],
       "verification": "scripts/test-studio-internship-audit-api-e2e.mjs drives the real API: plan creation races, cancel/activate races, activation refusals, completion with exception justification and immutability, intern 404/403 boundaries, audit-controlled task and project 409s, concurrent executions and terminal immutability, summary authorization and post-completion refusals.",
@@ -23067,7 +23071,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/identity-routes.md.",
       "source": "formal/system/identity-routes.md",
       "contract": "formal/system/identity-routes.md",
-      "property": "Login validates username (254) and password (72 bytes) shape (400), locks the party and credential, refuses with 429 and Retry-After once ten invalid-credential answers were recorded for the identifier in the current 15-minute window (auth_rate_limit, counted per normalized identifier whether or not the account exists; the count check, the password check and the count run in one transaction under a per-identifier advisory lock, so concurrent attempts cannot pass the limit together), checks the password before the active flag and answers 401 \"Invalid username or password\" alike for an unknown identifier, a wrong password and a disabled account, and mints an api_token (ID-SESSION-004) plus a login activity row without revoking other sessions. Google login validates the ID token shape, terms and intent (400), needs a configured client id (500), verifies the token with Google (401 on any failure, audience, issuer, expiry, verified email), serializes on an advisory lock per issuer and subject, and either logs the bound credential in, links an unbound identity to a password-confirmed TDF account, or creates a new party, customer role by policy, fan profile, credential and identity when createNewAccount and terms are given (401 otherwise). Signup normalizes the email, requires a password of at least 8 characters, the current terms version, a first or last name and an optional E.164 phone (400), refuses claimArtistId (403, ID-ARTIST-CLAIM-001) and unknown fanArtistIds (422), answers 409 when the email exists, inserts party, policy role, follows, credential, fan profile and token in one transaction and emails a welcome. Signup consumes a per-email counter before creating anything and answers 429 past five requests in an hour.",
+      "property": "Login validates username (254) and password (72 bytes) shape (400), locks the party and credential, refuses with 429 and Retry-After once invalid-credential answers in the current 15-minute window reach the limit of any of three counters (auth_rate_limit, whether or not the account exists): ten for the normalized identifier at the client address, fifty for the client address across identifiers, one hundred for the identifier from every address; the client address is the last X-Forwarded-For entry when the TCP peer is a loopback or private address (the reverse proxy) and the peer otherwise, IPv6 keyed by /64 (TDF.Auth.ClientAddress); the count checks, the password check and the counts run in one transaction under the three counters' advisory locks taken in a fixed order, so concurrent attempts cannot pass a limit together, checks the password before the active flag and answers 401 \"Invalid username or password\" alike for an unknown identifier, a wrong password and a disabled account, and mints an api_token (ID-SESSION-004) plus a login activity row without revoking other sessions. Google login validates the ID token shape, terms and intent (400), needs a configured client id (500), verifies the token with Google (401 on any failure, audience, issuer, expiry, verified email), serializes on an advisory lock per issuer and subject, and either logs the bound credential in, links an unbound identity to a password-confirmed TDF account, or creates a new party, customer role by policy, fan profile, credential and identity when createNewAccount and terms are given (401 otherwise). Signup normalizes the email, requires a password of at least 8 characters, the current terms version, a first or last name and an optional E.164 phone (400), refuses claimArtistId (403, ID-ARTIST-CLAIM-001) and unknown fanArtistIds (422), answers 409 when the email exists, inserts party, policy role, follows, credential, fan profile and token in one transaction and emails a welcome. Signup consumes a per-email counter before creating anything and answers 429 past five requests in an hour.",
       "actors": [
         "Anonymous visitor"
       ],
@@ -23116,6 +23120,7 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/src/TDF/Auth.hs",
         "tdf-hq/src/TDF/Auth/Throttle.hs",
+        "tdf-hq/src/TDF/Auth/ClientAddress.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
         "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql"
@@ -23130,13 +23135,13 @@
       "formalModels": [
         "formal/auth/credential_throttle.py"
       ],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema). Z3 proof credential_throttle.py (translation of the pure policy of TDF.Auth.Throttle and of the login transaction, pinned by the hash of those two regions; attempts on one subject assumed serialized by the advisory lock): the failure counter equals the failed password checks of the window and never exceeds ten, a locked-out attempt checks no password, signup admits exactly the first five requests of a window, Retry-After is between one second and the window and reaches the next window; guard necessity checked.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. Added 2026-11-18: the same script (each scenario with its own forwarded address) checks that the owner at another address still signs in after ten failures from one address, that fifty failures from one address across identifiers refuse that address only, that one hundred failures from ten addresses refuse the account from a fresh address, and that only the last forwarded entry counts; the three counters and the client address derivation are unit-tested in ServerSpec. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema). Z3 proof credential_throttle.py (translation of the pure policy of TDF.Auth.Throttle and of the login transaction, pinned by the hash of those two regions; attempts on one subject assumed serialized by the advisory lock): each of the three login counters never exceeds its limit (10, 50, 100) and a failed check moves all three by one, a locked-out attempt checks no password, the owner at a fresh address is refused only by the identifier counter, which needs ten addresses, signup admits exactly the first five requests of a window, Retry-After is between one second and the window and reaches the next window; guard necessity checked.",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "Throttling is per identifier only: the backend has no trusted client address (no proxy-forwarding contract), so one client can still try a few passwords against many accounts, and anyone can lock a known identifier out of password login for up to fifteen minutes by failing ten times. Google login is not throttled.",
+        "Resolved 2026-11-18 (owner decision): failures from one address lock the account only for that address; locking the owner out from everywhere needs one hundred failures in fifteen minutes, so at least ten addresses. That residual lockout remains. The client address relies on the deployment having exactly one reverse proxy that appends the client to X-Forwarded-For (Caddy in production, Fly in staging); a CDN in front would make all clients share its addresses. Google login is not throttled.",
         "Signup still discloses an existing email with 409.",
         "A racing duplicate signup answers 500 instead of 409.",
         "A Google account may share a primary email with a password account, after which email login for that address matches two parties and fails."
@@ -23790,7 +23795,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
       "source": "formal/system/social-messaging-routes.md",
       "contract": "formal/system/social-messaging-routes.md",
-      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false. A WhatsApp reply to a contact whose consent row is withdrawn (consent false with a revocation time) is refused with 409 before anything is sent or recorded (validateWhatsAppReplyConsent); a contact with no consent row, who wrote in but never subscribed, can still be answered.",
+      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false. A WhatsApp reply to a contact whose consent row is withdrawn (consent false with a revocation time) is refused with 409 before anything is sent or recorded (validateWhatsAppReplyConsent); a contact with no consent row, who wrote in but never subscribed, can still be answered. The same check (whatsAppRecipientConsentWithdrawn) runs before every other send to a contact: administrator sends and resends (409), the course-registration auto-reply and the automatic AI reply (not sent; the reply is marked as an error). An operator question goes only to the configured operator phone, so no contact consent applies.",
       "actors": [
         "Social inbox staff",
         "Administrator"
@@ -23841,16 +23846,17 @@
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+        "tdf-hq/test/TDF/ServerExtraSpec.hs",
+        "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateWhatsAppReplyConsent is unit-tested in tdf-hq/test/TDF/ServerSpec.hs.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateWhatsAppReplyConsent is unit-tested in tdf-hq/test/TDF/ServerSpec.hs. Added 2026-11-18: whatsAppRecipientConsentWithdrawn is tested against PostgreSQL in tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs (no row, subscribed, after STOP in both phone spellings, resubscribed, unparseable number).",
       "evidence": "formal/system/social-messaging-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "WhatsApp replies do not mark the inbound message replied; the operator-question route and the administrator send route do not consult consent.",
+        "WhatsApp replies do not mark the inbound message replied. (Resolved 2026-11-18: every send to a contact consults consent; the operator question never messages a contact.)",
         "Staff consent capture sets consent immediately with no double opt-in; opt-out confirms even for a number never subscribed.",
         "Consent and opt-out are gated by the plain Admin role while siblings use strict admin."
       ],
@@ -28087,7 +28093,7 @@
     ".github/workflows/check-messaging-token.yml": "68ee6bacc89bb3d49176cd023a289b68c5fcaabf616fe599c645be7b34a20ddf",
     ".github/workflows/check-mobile-distribution.yml": "a02130cf5379c4a451ec8588b989a057a683dcf275fd3d6638b275aaec0ba599",
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
-    ".github/workflows/ci.yml": "75794018c70149c89c9322f7bd0acf64e9b79ef221db55c14c0b9ee643775139",
+    ".github/workflows/ci.yml": "23ade27a31842e6552e0e12165d01dbca02c127cdd1b018efb4324a31103a7b6",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/event-operations-formal.yml": "16d0f422186a4626e30b8f65f469c3a544aca859037f9a4df099e83c659b87f1",
@@ -28098,7 +28104,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "4783debf9262269a89363525c8c99dbb0e523c372c8774647add2e8a26b7e179",
+    "docs/catalog-persistence/catalog-list-decisions.json": "6d51b8fa8c73aaa4fb88875fcf8859aea108266c0ffbc3dcb68908a9b1391dc7",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
@@ -28159,7 +28165,7 @@
     "formal/auth/LogoutIntentLegacy.cfg": "a89e41350ca46b7e087f4dd3a99858ca54518951d98e653d858051591e788d4e",
     "formal/auth/SessionExpiry.tla": "bc8137a81818acbb2053db4492e7d12f1d07e776778011132b456d2497f94be5",
     "formal/auth/calendar_token_storage.py": "cb26bc885fd084694c46974db37a300406584e2ff716f85f021b425292fb3595",
-    "formal/auth/credential_throttle.py": "7f166f5c25db685cc0206bf06508a213ec25de31316ea2f66773dd81697a6239",
+    "formal/auth/credential_throttle.py": "abebf07f01f7218cced6d201cced72fff679dd8378fe7262db2cd9d6d966a0b2",
     "formal/auth/meta_webhook_admission.py": "a97549ca7408a57529b348bb71cff0e28508d113edfdfcc231be2cd77c38b741",
     "formal/event-memories/check.py": "e743d51920053e82ad3cf007b18028a2f4b702a5200772246186c2249636597e",
     "formal/event-operations/AccessGrant.tla": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
@@ -28476,13 +28482,13 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
-    "formal/system/compiled-api-surface.json": "d6041a3d81d41d52d1a55f0b071197c81928b11305990773a67ac6fddd71979d",
+    "formal/system/compiled-api-surface.json": "e1f03a66b7a2ca7548b3a33f6827b34e5ef57463de9a398a61d9d16b31c6d0ba",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
     "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "b8fc5fe6c0b12637f70f84a408e03862947fe9849067701af9e81b54066639f0",
+    "formal/system/recovery-expiry-arithmetic.json": "15c95ac8cdd4e0add1a6e96bcc75953c859948fd52dcf1474fc5190616228059",
     "formal/system/route-requirements.json": "4b8541ce4d17b650cac35db612ca295ee3cfd76de201b80ce81a7c7075c10232",
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -28526,13 +28532,13 @@
     "scripts/__tests__/alloy-controls.test.mjs": "1f1b6904444f5c7e47a71c00f37d332da956b885d2746b2a1dcc2b342742c873",
     "scripts/__tests__/app-smart-link.test.mjs": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
     "scripts/__tests__/architecture-boundaries.test.mjs": "536a8b583458acc1dcf511caf2ca9ea307eaea3d58ef39a5235f7cd61ab62cb6",
-    "scripts/__tests__/artist-enrichment.test.mjs": "493c2727d5e765a6b2c74b822a551d1f54032cb22129277cc4250359ae90f560",
+    "scripts/__tests__/artist-enrichment.test.mjs": "045b26e1fbb6697cf16314850fd71df4896aa647f5b90036ddc8f908929c303f",
     "scripts/__tests__/artist-image-download.test.mjs": "fe0af2d7a4754bfaeadeec4000974c2d3ebaa8642d2197ae5471989f679352de",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "1fea1fe89594c6ad5fac1ba12d3056b51481b16dc6c701122edf6b578bdaf525",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "13e0ebcb2e1c582da01c14aeed5580f29d79cfb3535531fff28b57211b356f79",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -28571,7 +28577,7 @@
     "scripts/__tests__/hetzner-preparation.test.mjs": "f5c996dbf9fd298e088531bfbde258202d7b54f30832427b2868f1718d82ad36",
     "scripts/__tests__/hetzner-restore.test.mjs": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
     "scripts/__tests__/identity-http-runtime.mjs": "67e453896cfdc6a2fc2a3c7a9e6299bee61dc5a1e7ead3c3720ce729431f2354",
-    "scripts/__tests__/instagram-token-workflows.test.mjs": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
+    "scripts/__tests__/instagram-token-workflows.test.mjs": "60c2b30195a7b5a1d89b8d26ced251a0152afecdb41806d7eff35aaa629c0b9b",
     "scripts/__tests__/ledger-event-identity.mjs": "65e6578d15bba078f5e48d36a9a8ad2c240d1f34d89b7f015f43a9f9ca23a526",
     "scripts/__tests__/ledger-posting-namespace.py": "e2cf1845e5c4d31de06a9f4065969365ff2098bb31e93a1943bb2d7dbb89e490",
     "scripts/__tests__/ledger-posting-snapshot.py": "a69dc1a988132d62c614fe09b4da4207da0ab00134d1e68d0fcdf3adf79f4af3",
@@ -28605,6 +28611,7 @@
     "scripts/__tests__/provider-rollback.test.mjs": "f1dc29ea2b20a71b88a3ae50552c130a0802c6d8ae00e90075af2bd4d2291910",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
     "scripts/__tests__/startup-gates-postgres.mjs": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
+    "scripts/__tests__/studio-internship-audit.test.mjs": "17d13b1f02ee443aa724c4378e184f588782fe704c7e330901291a8a2adf1311",
     "scripts/__tests__/test-child-completion.test.mjs": "5b6b04119090e05d9931a04993e0b8b4d2779b30513145da54485fd35f6c9a4e",
     "scripts/__tests__/test-process-session.test.mjs": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
     "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs": "dac0014a94862b79c1ecf385194e60747ec31ce2300c00d6d0cf6a0df88c25cc",
@@ -28616,7 +28623,7 @@
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/__tests__/video-campaign-access.test.mjs": "618dec9d2f28c82b786b66403ad33350ca97949a9abb37cb32f9ff03c9522b04",
     "scripts/__tests__/video-campaign-postgres-runner.test.mjs": "72e9e3fe9f0dad70d85a921b9b479465dcc60ba09dd34c7c564eb56af054c0a3",
-    "scripts/artist-enrichment.mjs": "9c28bed3f0868cc7669a8a20de22e0336547186081ed98a9ddeb1150ab792d06",
+    "scripts/artist-enrichment.mjs": "7cae285c8ffd2373048ab4d3e4ea2838046b7c62571e795163de86f22516809e",
     "scripts/artist-image-download.mjs": "012978206590de16a22c53b98ed29e5245a586dd2928ad26be34981005e3c20c",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
     "scripts/audit-formal-methods.mjs": "3a34763b5815dbd9fa02dc53e50ce019d5ac64646aeaeee2c515e435d9db85d1",
@@ -28630,6 +28637,7 @@
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7725e45fa91bbe2014005bef70385d318a0f2e91dac8b45b6d33d47d9f90c6e1",
+    "scripts/check-messaging-token.mjs": "feb51d713046b1c1e65df434d1c73c4820bc3a71c90ca4bbfc83bb203e0fafc8",
     "scripts/check-mobile-distribution.mjs": "69bcc44343de5106f36d3dd53d7e89a0686db8be324be2a159bcc1e4419e5171",
     "scripts/check-mobile-gitlink-ancestry.sh": "869c14c28762f93d572ea7dca182e43fe1fc860f1576cc833062ae6d52a715d1",
     "scripts/check-native-resolver-lock.mjs": "04e39a1b57373db9720bf6ea9e4453668202e689289cd2997b63daa07ee15529",
@@ -28665,7 +28673,7 @@
     "scripts/interactions/test-api.py": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
     "scripts/interactions/test-http.sh": "087ac80166a5381eff9e60417685428c462721533324a7dd7c96cf6b7968a41a",
     "scripts/lib/alloy-controls.mjs": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
-    "scripts/lib/auth_throttle_http.py": "871129c684a31eeecce2e75cb82e7d26c69f08ef8b0b4be201591b784ef71fbe",
+    "scripts/lib/auth_throttle_http.py": "c30b34ba0e5057b013ffd601421ed462c61a71e61e51e25f233e130d3c915989",
     "scripts/lib/compiled-api-surface.mjs": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
     "scripts/lib/continuous-improvement-loop-verify.mjs": "3db41dd0683f33d1a03d46f402e6cd9c25a4e07cd2b690a179ba8e6744fc9f97",
     "scripts/lib/continuous-improvement-loop.mjs": "658148df4d0bf1c8df6e19da2d1266673158ba934f2191186b3b57b5e2e36fae",
@@ -28694,6 +28702,7 @@
     "scripts/lib/public_routes_conformance.py": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
     "scripts/lib/readiness_conformance.py": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
+    "scripts/lib/studio-audit-safety.mjs": "4cec971d00a5ec16524dd94c490289ffc33d69d9cae32ba9db0910275f3e80d8",
     "scripts/lib/test-child-completion.mjs": "b2254b43a28ad96b7c522a18fd57fa17479bfd783513f1f4bd056bc6c4fbf039",
     "scripts/lib/test-process-session.mjs": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -29517,13 +29526,13 @@
     "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
     "tdf-hq-ui/src/vite-env.d.ts": "28fae652abf43eaed9c5a3615cb2f362f8d81efdd7815347fa995b222908a22e",
     "tdf-hq/.env.example": "52c6e873ba21c44a10f7fd7fb1bdb44c0234a806dde3b019cf383a850b06b77a",
-    "tdf-hq/Dockerfile": "05ff5c843da66ae0781656c36dad94b7a973a72fdb372ebfad2e75d13efd0e1f",
+    "tdf-hq/Dockerfile": "505fa666dbdcc1247d871369bc84557d79dc0fca947897d6ab7f3d4aa807af5e",
     "tdf-hq/Dockerfile.music-worker": "c6921beae4fddef66fcf4d6135f2fb94b39ccb548e19dc2101dff69735d624a6",
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
     "tdf-hq/assets/feature-registry.json": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
-    "tdf-hq/config/default.env.example": "d7449a12a7ddf04fe78768668111d533345e3d99ca69c322566eed0c4b8f502b",
+    "tdf-hq/config/default.env.example": "43e79e82892aa470110818f593c2784857a1e6324e8ae5a111ff1de063d55364",
     "tdf-hq/docs/openapi/api.yaml": "169df5e00c28e75faeea29e47509f07478a7586da520fae3a30765c5d1215ab5",
     "tdf-hq/docs/openapi/artist-playback.yaml": "16c71adea21002fb54ecff645bba84be251a8537828d38342b1fb67a78acabcf",
     "tdf-hq/docs/openapi/directory.yaml": "796a92d53f69e5be446ac9de7f18da1916c151de4b0ead2f95d1d2751813e7e3",
@@ -29711,7 +29720,7 @@
     "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql": "47a811221f03817022572f6bee479567c08f714897b56706cea4f75c8b39ac8f",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
-    "tdf-hq/src/TDF/API.hs": "14f98ec436c46f5eed2df814ca140ea1125b93a7ac3bcc4ff6f160861a2233ec",
+    "tdf-hq/src/TDF/API.hs": "5fff27851b528e15bc225b2cbf15a5df9804e87d6419d92c0eb9a87fc2695b20",
     "tdf-hq/src/TDF/API/Admin.hs": "fadc0f212fce8046e9a116d4d431df510dd3adb0c1df4b0c28d497e089a4862f",
     "tdf-hq/src/TDF/API/Catalog.hs": "a062b9681db64a9f68114888a0c296935944903efcbfedd672de2a3991e9d781",
     "tdf-hq/src/TDF/API/ContentStorage.hs": "252b724cba9b5a963757472792a4073f8562e7e1819b6e6840ca270dc5bf9f9b",
@@ -29737,11 +29746,12 @@
     "tdf-hq/src/TDF/Artists/Promotion.hs": "ab803d6ed02e9b51ef548548bcf9b9cee3d22bdc766b09ab09c4ba2ad3f5d078",
     "tdf-hq/src/TDF/Auth.hs": "cbf9a2642b4e43acf65afc04812816703020981198d6e9cf8f090dac7e69b4fb",
     "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
-    "tdf-hq/src/TDF/Auth/Throttle.hs": "462dd51867cf0f6634fc2450e7723e297721dbc4544775aa9d2fcbcf12eb0533",
+    "tdf-hq/src/TDF/Auth/ClientAddress.hs": "9520084fa6710848f47c40efbf35133af4d889720d9b7806bf5136adf60e904c",
+    "tdf-hq/src/TDF/Auth/Throttle.hs": "32444975e77373416fec2c1c379e5975713cc0857123d82930752bca5b0ef43f",
     "tdf-hq/src/TDF/CMS/Models.hs": "7cbd5b8e31dd3214114c63b162408af2438d674759e1ec3c528fe8a66bf7484f",
     "tdf-hq/src/TDF/Calendar/Models.hs": "ade52945cff1553e3e6e88edbd3a67457bda196364df216a62a8d1d69e8bcee8",
     "tdf-hq/src/TDF/Calendar/TokenCipher.hs": "663078efb750b0158d3af8b7bdba30b8b874473f33f9a676425bcc0ee05e5b3b",
-    "tdf-hq/src/TDF/CampaignAutomation.hs": "f6419624116a99987e6e68fb59c39f56073ec1a0392fa9fbb66e4a776a634c8b",
+    "tdf-hq/src/TDF/CampaignAutomation.hs": "2cb7ce3d8732aba8f17708deee5f15bf0b41f5376e95dac0962a8564fce6c9d8",
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "e918ed18cf1351d63b16a111af524f6f42541c873974da43299cc5134ce990d0",
     "tdf-hq/src/TDF/Catalog/Security.hs": "bf5ec6b5b0a740ca58709fac5a04118d29cfacf1002ecd4299c35d8a142313e0",
     "tdf-hq/src/TDF/Catalog/Seed.hs": "50badb8bb7b8e413086ec8f656cbfea8818733394f96af51464b8367e4e814d0",
@@ -29786,7 +29796,7 @@
     "tdf-hq/src/TDF/Courses/Metadata.hs": "ba3efe18dff11d3f36413640d7d3c2b58222a445dd2240509ef2b1378b5fe661",
     "tdf-hq/src/TDF/Courses/Production.hs": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
     "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "f1b7d5faa26ac03e6217695f5b1dbf11ba31108bd1d3967969f62efe33b04376",
-    "tdf-hq/src/TDF/Cron.hs": "74692f8cd6294d02c8b5b121e3fc0a2089fabbcde9cbdef781e17d090071192d",
+    "tdf-hq/src/TDF/Cron.hs": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
@@ -29832,7 +29842,7 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "09876be565334ca1447092a96546f919b578168a2e927acaa593153ea3fe8e00",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "d760b7f6be41ff776a10576616051cba593327a77bc2ebd153d3f6a7ef3839af",
+    "tdf-hq/src/TDF/Server.hs": "e6ff7cfdf1c79b7af0dd8d09ead32ac2b469272ee270f1589aaa97667c963062",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
@@ -29865,8 +29875,8 @@
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "f6ed880698126fbfbc409ca4b1098c5f5052b0ea22cd44cade3d3e17de0db6cb",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
-    "tdf-hq/src/TDF/ServerAdmin.hs": "430a48624f32ee0f0350dc368fd6b49a55b377a4c5624f06c2f74b849fef7712",
-    "tdf-hq/src/TDF/ServerAuth.hs": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
+    "tdf-hq/src/TDF/ServerAdmin.hs": "7ac0b9e10bceeb3d90db939fb6ba851398cf52790e36fe5566624e54934857a7",
+    "tdf-hq/src/TDF/ServerAuth.hs": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
     "tdf-hq/src/TDF/ServerExtra.hs": "fac511e58b2072a96962ad2e025ae6c34e568ec8593502a1c0b33e83e572100b",
     "tdf-hq/src/TDF/ServerFanClub.hs": "fd0030b5c216270bf2381982e7eec4202afc7a8607e4a581398723692a3cb461",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
@@ -29901,7 +29911,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "b67cda5d8695e231e113b25e5bab8cab96ba65f71cc39ec7da098630d8f653f8",
+    "tdf-hq/tdf-hq.cabal": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -29978,7 +29988,7 @@
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "4746db879d19f0d2387b5198f6d402b7262b7ed2f50b4ec7772b6585172ae474",
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "09827463e1afa9c80342e2d1d12ab74a172c8f338e1195af6733eb1276585042",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
-    "tdf-hq/test/TDF/ServerSpec.hs": "418fb28efc492393a668a1cdd7811cf4f9b7ddb2625d278408a5ff66d70062ba",
+    "tdf-hq/test/TDF/ServerSpec.hs": "0c8208720533a0ed4f5e1daef883b778bc9333ff5752c39807a065222af8c274",
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
@@ -29993,7 +30003,7 @@
     "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": "42b2da69c834ae9d60c4d88e4573c06aedd68e14e0dd6b4579cef5da89fdd21b",
     "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "8a3d61f60286b5846516d8ea0bfd68154fa62172354f69232dc385e4615daad2",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
-    "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
+    "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "793ceed7d044f4ae86b61fd5bcbdf200fc833977d1408d6461f5536ac3c500fd",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
     "tdf-hq/test/TicketConfirmationSmtpMain.hs": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
@@ -38184,6 +38194,12 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/check-messaging-token.mjs": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/instagram-token-workflows.test.mjs": [
       {
         "requirement": "OPS-CLIENT-001",
@@ -39483,6 +39499,10 @@
     "tdf-hq/src/TDF/CampaignAutomation.hs": [
       {
         "requirement": "PRIV-WHATSAPP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-ADMIN-WHATSAPP-001",
         "relationship": "implementation"
       },
       {
@@ -43056,6 +43076,10 @@
       {
         "requirement": "MSG-WHATSAPP-REDELIVERY-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MSG-STAFF-OUTBOUND-001",
+        "relationship": "tests"
       }
     ],
     "scripts/test-whatsapp-redelivery.sh": [
@@ -46462,7 +46486,19 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/lib/studio-audit-safety.mjs": [
+      {
+        "requirement": "OPS-INTERN-AUDIT-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-studio-internship-audit-migration.sh": [
+      {
+        "requirement": "OPS-INTERN-AUDIT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/studio-internship-audit.test.mjs": [
       {
         "requirement": "OPS-INTERN-AUDIT-001",
         "relationship": "tests"
@@ -46671,6 +46707,12 @@
       },
       {
         "requirement": "AUTH-PASSWORD-RECOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Auth/ClientAddress.hs": [
+      {
+        "requirement": "AUTH-CREDENTIAL-INTAKE-001",
         "relationship": "implementation"
       }
     ],
@@ -49017,7 +49059,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "75794018c70149c89c9322f7bd0acf64e9b79ef221db55c14c0b9ee643775139",
+      "sha256": "23ade27a31842e6552e0e12165d01dbca02c127cdd1b018efb4324a31103a7b6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50520,7 +50562,7 @@
     {
       "id": "SURFACE-f6500b8addb3b248",
       "path": "scripts/__tests__/artist-enrichment.test.mjs",
-      "sha256": "493c2727d5e765a6b2c74b822a551d1f54032cb22129277cc4250359ae90f560",
+      "sha256": "045b26e1fbb6697cf16314850fd71df4896aa647f5b90036ddc8f908929c303f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50611,7 +50653,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "1fea1fe89594c6ad5fac1ba12d3056b51481b16dc6c701122edf6b578bdaf525",
+      "sha256": "13e0ebcb2e1c582da01c14aeed5580f29d79cfb3535531fff28b57211b356f79",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51354,7 +51396,7 @@
     {
       "id": "SURFACE-ac7679c947f7408b",
       "path": "scripts/__tests__/instagram-token-workflows.test.mjs",
-      "sha256": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
+      "sha256": "60c2b30195a7b5a1d89b8d26ced251a0152afecdb41806d7eff35aaa629c0b9b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51737,13 +51779,6 @@
       ]
     },
     {
-      "id": "SURFACE-2f21c1c45f5b1cca",
-      "path": "scripts/__tests__/payment-staging-inspection.test.mjs",
-      "sha256": "acb99cc43fbbdca8d24d3d52b7972b0100c5aa1392959ff5c5b91927677db317",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
       "id": "SURFACE-9f80dbca9b5074c0",
       "path": "scripts/__tests__/persistent-uploads.test.mjs",
       "sha256": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
@@ -51910,9 +51945,14 @@
     {
       "id": "SURFACE-2814c9b72c5f2d05",
       "path": "scripts/__tests__/studio-internship-audit.test.mjs",
-      "sha256": "630716fa1e50aa604476b1159a3ac8daed37b79c7dc9ebd557a6af25f2a33a57",
+      "sha256": "17d13b1f02ee443aa724c4378e184f588782fe704c7e330901291a8a2adf1311",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-INTERN-AUDIT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-a1dd9455f7a2ce96",
@@ -52144,7 +52184,7 @@
     {
       "id": "SURFACE-ae1fc3f773e478bd",
       "path": "scripts/artist-enrichment.mjs",
-      "sha256": "9c28bed3f0868cc7669a8a20de22e0336547186081ed98a9ddeb1150ab792d06",
+      "sha256": "7cae285c8ffd2373048ab4d3e4ea2838046b7c62571e795163de86f22516809e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52371,9 +52411,14 @@
     {
       "id": "SURFACE-ccd62b2a303eba94",
       "path": "scripts/check-messaging-token.mjs",
-      "sha256": "f2505fab497e7f96880d22952a6863595548f6e1f6b08725cc5243708f2cec75",
+      "sha256": "feb51d713046b1c1e65df434d1c73c4820bc3a71c90ca4bbfc83bb203e0fafc8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7cf4797085be81ca",
@@ -52819,13 +52864,6 @@
       ]
     },
     {
-      "id": "SURFACE-09f409fc2f5fdd87",
-      "path": "scripts/inspect-payment-staging.mjs",
-      "sha256": "a141c1c20e8c9c0d149c91a6cffec7690fd13388ec5f00a0ecfe0ecc26855317",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
       "id": "SURFACE-6efdc7705573cc29",
       "path": "scripts/inspect-ticketing-event-access.mjs",
       "sha256": "68fab4f9562feecb934a0b1a28afbee2cd2c5e7cfc19aab51f27c8e587eb6521",
@@ -52977,7 +53015,7 @@
     {
       "id": "SURFACE-e51d4870cffa2db7",
       "path": "scripts/lib/auth_throttle_http.py",
-      "sha256": "871129c684a31eeecce2e75cb82e7d26c69f08ef8b0b4be201591b784ef71fbe",
+      "sha256": "c30b34ba0e5057b013ffd601421ed462c61a71e61e51e25f233e130d3c915989",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53505,9 +53543,14 @@
     {
       "id": "SURFACE-4a885036f5208454",
       "path": "scripts/lib/studio-audit-safety.mjs",
-      "sha256": "bc8b2be2d1ba687743be7400b4b4f225f24e5b8fc962471b6a7a4d3072ed3ab7",
+      "sha256": "4cec971d00a5ec16524dd94c490289ffc33d69d9cae32ba9db0910275f3e80d8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-INTERN-AUDIT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-0ebd44c86ad332c6",
@@ -69488,7 +69531,7 @@
     {
       "id": "SURFACE-349b3c6baf0c525b",
       "path": "tdf-hq/Dockerfile",
-      "sha256": "05ff5c843da66ae0781656c36dad94b7a973a72fdb372ebfad2e75d13efd0e1f",
+      "sha256": "505fa666dbdcc1247d871369bc84557d79dc0fca947897d6ab7f3d4aa807af5e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74459,7 +74502,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "14f98ec436c46f5eed2df814ca140ea1125b93a7ac3bcc4ff6f160861a2233ec",
+      "sha256": "5fff27851b528e15bc225b2cbf15a5df9804e87d6419d92c0eb9a87fc2695b20",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75171,9 +75214,21 @@
       ]
     },
     {
+      "id": "SURFACE-81704df539b2da06",
+      "path": "tdf-hq/src/TDF/Auth/ClientAddress.hs",
+      "sha256": "9520084fa6710848f47c40efbf35133af4d889720d9b7806bf5136adf60e904c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-fcdcb342b1a07142",
       "path": "tdf-hq/src/TDF/Auth/Throttle.hs",
-      "sha256": "462dd51867cf0f6634fc2450e7723e297721dbc4544775aa9d2fcbcf12eb0533",
+      "sha256": "32444975e77373416fec2c1c379e5975713cc0857123d82930752bca5b0ef43f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75225,11 +75280,15 @@
     {
       "id": "SURFACE-83024dbf8c244b83",
       "path": "tdf-hq/src/TDF/CampaignAutomation.hs",
-      "sha256": "f6419624116a99987e6e68fb59c39f56073ec1a0392fa9fbb66e4a776a634c8b",
+      "sha256": "2cb7ce3d8732aba8f17708deee5f15bf0b41f5376e95dac0962a8564fce6c9d8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PRIV-WHATSAPP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MSG-ADMIN-WHATSAPP-001",
           "relationship": "implementation"
         },
         {
@@ -76064,7 +76123,7 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "74692f8cd6294d02c8b5b121e3fc0a2089fabbcde9cbdef781e17d090071192d",
+      "sha256": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -77110,7 +77169,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "d760b7f6be41ff776a10576616051cba593327a77bc2ebd153d3f6a7ef3839af",
+      "sha256": "e6ff7cfdf1c79b7af0dd8d09ead32ac2b469272ee270f1589aaa97667c963062",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78273,7 +78332,7 @@
     {
       "id": "SURFACE-b79d63603a30c4ce",
       "path": "tdf-hq/src/TDF/ServerAdmin.hs",
-      "sha256": "430a48624f32ee0f0350dc368fd6b49a55b377a4c5624f06c2f74b849fef7712",
+      "sha256": "7ac0b9e10bceeb3d90db939fb6ba851398cf52790e36fe5566624e54934857a7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78337,7 +78396,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
+      "sha256": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79115,7 +79174,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b67cda5d8695e231e113b25e5bab8cab96ba65f71cc39ec7da098630d8f653f8",
+      "sha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -80774,7 +80833,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "418fb28efc492393a668a1cdd7811cf4f9b7ddb2625d278408a5ff66d70062ba",
+      "sha256": "0c8208720533a0ed4f5e1daef883b778bc9333ff5752c39807a065222af8c274",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81294,11 +81353,15 @@
     {
       "id": "SURFACE-da468ce284927c10",
       "path": "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
-      "sha256": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
+      "sha256": "793ceed7d044f4ae86b61fd5bcbdf200fc833977d1408d6461f5536ac3c500fd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MSG-STAFF-OUTBOUND-001",
           "relationship": "tests"
         }
       ]
@@ -85616,12 +85679,10 @@
     "SURFACE-3875378b2b3df521",
     "SURFACE-2661bcd3e8c66ae8",
     "SURFACE-69900817facd771e",
-    "SURFACE-2f21c1c45f5b1cca",
     "SURFACE-57edc37515705dee",
     "SURFACE-3abf163ab83b446e",
     "SURFACE-bcdd803220771b0c",
     "SURFACE-80b41740576c6c1f",
-    "SURFACE-2814c9b72c5f2d05",
     "SURFACE-d6cb46e6ca8e56e0",
     "SURFACE-c000c38c68fca4c6",
     "SURFACE-0d3a8be771c58138",
@@ -85640,7 +85701,6 @@
     "SURFACE-7972d2e7d13940a5",
     "SURFACE-d79860272960ddbf",
     "SURFACE-74289e89f4a7d171",
-    "SURFACE-ccd62b2a303eba94",
     "SURFACE-254fa49d7ac82af7",
     "SURFACE-e6406d56712d5de9",
     "SURFACE-0540f4b62e8a5c1d",
@@ -85650,7 +85710,6 @@
     "SURFACE-017df03fe878b45b",
     "SURFACE-298863fcec57d5aa",
     "SURFACE-61ce5bdd849d0317",
-    "SURFACE-09f409fc2f5fdd87",
     "SURFACE-6efdc7705573cc29",
     "SURFACE-e10a3732c19671ff",
     "SURFACE-7762cc1d53f882c8",
@@ -85670,7 +85729,6 @@
     "SURFACE-69f81b4cfc6d7588",
     "SURFACE-0fae219dd0862347",
     "SURFACE-f19f1cdea9599922",
-    "SURFACE-4a885036f5208454",
     "SURFACE-f1db2c4adbf5dce0",
     "SURFACE-0aa382713c667a78",
     "SURFACE-8b09001cab518c05",
@@ -88300,7 +88358,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c73c8e1cfe4deb9a0134d60ed9a78f9bd56855ad3c51348417bfcd126b61c3d8",
+      "sourceSha256": "6d9b5eea63fda59850e3a1404bc69ac9d2b2dccce4e17ebe9b9d8b2806b72c85",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -88328,7 +88386,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c73c8e1cfe4deb9a0134d60ed9a78f9bd56855ad3c51348417bfcd126b61c3d8",
+      "sourceSha256": "6d9b5eea63fda59850e3a1404bc69ac9d2b2dccce4e17ebe9b9d8b2806b72c85",
       "definition": {
         "states": [
           "absent",
@@ -88358,7 +88416,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c73c8e1cfe4deb9a0134d60ed9a78f9bd56855ad3c51348417bfcd126b61c3d8",
+      "sourceSha256": "6d9b5eea63fda59850e3a1404bc69ac9d2b2dccce4e17ebe9b9d8b2806b72c85",
       "definition": {
         "export": [
           "queued",
