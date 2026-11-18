@@ -542,12 +542,12 @@ test('manual enrichment uses the current API while retaining both explicit overr
 test('managed image recognition includes the canonical API without trusting lookalike hosts', () => {
   for (const url of [
     'https://api.tdfrecords.net/assets/serve/artist.jpg',
-    'https://tdf-hq.fly.dev/assets/serve/legacy.jpg',
     'https://drive.google.com/file/d/reviewed-file',
   ]) assert.equal(isTdfManagedImageUrl(url), true, url);
   for (const url of [
     'https://api.tdfrecords.net.attacker.invalid/assets/serve/artist.jpg',
     'https://untrusted.example/artist.jpg',
+    'https://retired-host.example/assets/serve/legacy.jpg',
     'not a URL',
   ]) assert.equal(isTdfManagedImageUrl(url), false, url);
 });

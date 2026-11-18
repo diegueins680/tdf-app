@@ -8,6 +8,7 @@ import { advanceAuthSessionEpoch } from '../../session/authEvents';
 const upload = jest.fn<() => Promise<{ eiuPublicUrl: string }>>();
 const readEvent = jest.fn<() => Promise<SocialEventDTO>>();
 jest.unstable_mockModule('../../api/socialEvents', () => ({ SocialEventsAPI: { uploadEventImage: upload, getEvent: readEvent } }));
+jest.unstable_mockModule('../../api/catalogs', () => ({ Catalogs: { getPublicWorkflowStates: () => Promise.resolve({ states: [] }) } }));
 const { default: EventPreparationPanel } = await import('./EventPreparationPanel');
 const url = 'https://api.example.test/assets/psique.png';
 const event: SocialEventDTO = { eventId: '216', eventTitle: 'Psique', eventStart: '2026-11-28T23:00:00Z', eventArtists: [] };
@@ -79,4 +80,13 @@ it('rejects an unsupported file before calling the server', async () => {
   setup(); savePoster(new File(['svg'], 'poster.svg', { type: 'image/svg+xml' }));
   await screen.findByText('Selecciona una imagen JPG, PNG o WebP.');
   expect(upload).not.toHaveBeenCalled();
+});
+
+it('offers the planning workspace only to accounts that can open it', () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  render(<QueryClientProvider client={client}><MemoryRouter><EventPreparationPanel event={event} ownerId={9} canPlanLogistics={false} /></MemoryRouter></QueryClientProvider>);
+  expect(screen.queryByRole('link', { name: 'Cronograma y equipo' })).toBeNull();
+  cleanup();
+  setup();
+  expect(screen.getByRole('link', { name: 'Cronograma y equipo' }).getAttribute('href')).toBe('/social/eventos/216/logistica');
 });

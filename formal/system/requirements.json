@@ -12,8 +12,8 @@
       "implementation": [
         "scripts/production-release.mjs"
       ],
-      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git, immutable images and Fly execution remain trusted.",
-      "evidence": "provider-rollback.test.mjs; formal CI model logs; exact-image release plan/preflight/report",
+      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git and immutable images remain trusted; no release executor is implemented.",
+      "evidence": "provider-rollback.test.mjs; formal CI model logs; exact-image portable preparation report",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -2420,7 +2420,7 @@
       ],
       "forbiddenTransitions": [
         "Never infer release readiness from a successful observation.",
-        "Never execute the retired Fly production lane.",
+        "Never treat the retired release CLI as a production lane.",
         "Ambient Docker contexts or libpq service/host settings must not redirect inspection or inventory away from the verified local daemon and database socket.",
         "Accept shadowing database child mounts, noncanonical PGDATA or differing effective server data_directory."
       ],
@@ -2431,7 +2431,7 @@
       "privacy": "Never print raw container configuration, credentials, command stderr or provider/customer payloads. Protected credential transfer is memory-only through verified SSH; refuse unsafe credential file ownership, type or mode. Catalog and mailbox reports retain aggregate facts, not credentials, raw messages or recipient addresses.",
       "concurrency": "Observations are sequential, not an atomic fleet snapshot; fresh verification is required within a future guarded release.",
       "idempotency": "Read-only repeat observations do not mutate application state. Exclusive receipt creation rejects accidental overwrite.",
-      "failure": "Fail closed on an unexpected target, database identity, image reference or output path; do not fall back to another host/provider.",
+      "failure": "Fail closed on an unexpected target, database identity, image reference or output path; do not fall back to another host/provider. A failed observation may disclose only an allowlisted stage/check code through the complete fixed failure protocol; never publish a partial runtime receipt or reflect remote exception/process output.",
       "recovery": "Retry observation after authorized configuration correction; retain previous receipts. No database restoration or image rollback is performed.",
       "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata. Known backend boolean controls must be represented even when absent; record CORS boolean aliases and preserve absent/empty/false distinctions. Conservative source discovery must reject newly introduced literal controls missing from the collector register.",
       "formalModels": [],
@@ -2500,7 +2500,7 @@
       ],
       "forbiddenTransitions": [
         "Never infer release readiness from a successful observation.",
-        "Never execute the retired Fly production lane."
+        "Never treat the retired release CLI as a production lane."
       ],
       "effects": [
         "Record allowlisted runtime/ledger facts; preserve provider flags and production data."
@@ -2527,11 +2527,13 @@
       },
       "id": "DEPLOY-TARGET-001",
       "title": "Retired providers cannot receive a production release",
-      "statement": "All invocations of the retired Fly release CLI reject before remote tools. Imported source/artifact preparation helpers do not establish deployment eligibility; the guarded Hetzner executor remains an open release obligation.",
-      "property": "Retired Fly commands invoke no git, docker, ssh or flyctl operation before rejecting.",
+      "statement": "All direct invocations of the retired release CLI reject before remote tools. Database commands of the identity reconciliation CLI, whose only transport was the retired provider, reject before any tool or output file. Imported source/artifact preparation helpers do not establish deployment eligibility; the guarded Hetzner executor remains an open release obligation.",
+      "property": "Retired release commands invoke no git, docker or ssh operation before rejecting.",
       "implementation": [
         "scripts/production-release.mjs",
-        "scripts/deploy-stripe-ticketing.sh"
+        "scripts/deploy-stripe-ticketing.sh",
+        "scripts/identity-reconciliation.mjs",
+        "scripts/prepare-portable-restore.mjs"
       ],
       "tests": [
         "scripts/__tests__/hetzner-inspection.test.mjs",
@@ -2991,7 +2993,7 @@
       "concurrency": "Runs once per container start before the server accepts traffic.",
       "idempotency": "Repeated verification of an unchanged database is equivalent.",
       "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
-      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips the batch and the verification unconditionally (the shipped image, Dockerfile and fly.toml set it true; the precheck requires it).",
+      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips the batch and the verification unconditionally (the shipped image, Dockerfile and ops/hetzner/compose.production.yaml set it true; the precheck requires it).",
       "observability": "Fixed exception text names the violated gate class.",
       "formalModels": [
         "formal/event-operations/StartupGates.tla",
@@ -6716,6 +6718,112 @@
       "evidence": "Synthetic filesystem/process controls only, exact source-qualified Linux evidence required."
     },
     {
+      "id": "DEPLOY-RELEASE-001",
+      "title": "A routine backend release keeps users fenced until the candidate is verified and an exact off-host copy exists",
+      "domain": "DEPLOY",
+      "statement": "A routine Hetzner backend release shall serve a maintenance response and stop every compose writer before capturing the stopped database and deployment directory, shall verify an encrypted off-host copy through a fresh connection and an isolated start of the captured database before any migration, shall apply only the candidate's reviewed migration batch, and shall reopen traffic only after the candidate reports its own revision, a healthy database and passing smoke checks; rollback shall be refused once traffic reopens.",
+      "authority": "Owner decisions of 13 November 2026 (pragmatic guarded release, Storage Box, owner-held recovery key, at most 30 minutes downtime)",
+      "source": "formal/system/guarded-release.md",
+      "contract": "formal/system/guarded-release.md",
+      "critical": true,
+      "actors": [
+        "Owner approving each production phase",
+        "Release operator",
+        "Recovery key custodian"
+      ],
+      "preconditions": [
+        "Running API and database match the configured immutable images",
+        "Candidate image published for the exact commit",
+        "Storage Box sub-account key and pinned host key installed root-only on the host",
+        "Custodian holds the private age identity off-host",
+        "API image override, when present, is exactly a three-line api image setting"
+      ],
+      "inputs": [
+        "Candidate commit",
+        "Registry-derived image digest",
+        "Manifest-derived migration ids and hash",
+        "Mobile gitlink",
+        "Committed tool revision",
+        "Public age recipient",
+        "Storage target",
+        "Smoke paths"
+      ],
+      "state": {
+        "states": [
+          "planned",
+          "fenced",
+          "captured",
+          "copied-off-host",
+          "migrated",
+          "candidate-verified",
+          "reopened",
+          "rolled-back",
+          "rejected"
+        ],
+        "initial": "planned",
+        "terminal": [
+          "reopened",
+          "rolled-back",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "planned -> fenced (maintenance, writers stopped, database stopped cleanly)",
+        "fenced -> captured -> copied-off-host (exact read-back) -> isolate verified",
+        "isolate verified -> migrated (every manifest id in ledger) -> candidate-verified -> reopened",
+        "any pre-reopen state -> rolled-back (captured database restored when migrations may have run)"
+      ],
+      "forbiddenTransitions": [
+        "Capture while the API, a database-network peer or a client backend can write",
+        "Migrate before a verified off-host copy and isolated start",
+        "Reopen with a candidate whose revision, health or smoke checks fail",
+        "Roll back after reopen",
+        "Run a phase with tool code or parameters that differ from the journal plan",
+        "Place the private recovery identity on the production host"
+      ],
+      "effects": [
+        "Maintenance edge response",
+        "Compose service stop/start",
+        "Root-private capture and encrypted bundle",
+        "Off-host bundle and record",
+        "Reviewed migrations",
+        "API image change",
+        "Edge restore"
+      ],
+      "authorization": "Each phase needs the candidate revision confirmation given only after owner approval; rollback needs its own confirmation.",
+      "privacy": "Captures stay root-private and leave the host only age-encrypted; outputs carry digests, stage names and fixed messages, never configuration, SQL output or credentials.",
+      "concurrency": "The release journal's permanent lock serializes releases; the physical isolate shares the rehearsal reservation. Privileged host writers outside compose are not fenced.",
+      "idempotency": "Completed stages are skipped; an interrupted stage blocks further phases until rollback or reviewed recovery.",
+      "failure": "Any rejected check stops the phase with a fixed message and leaves a pending journal intent; maintenance stays up.",
+      "recovery": "Rollback before reopen returns to the recovery image, replaying the cold capture when migrations may have run and retaining the post-migration data directory. A journal abandon record is still missing.",
+      "observability": "Per-stage evidence files in the release directory, their hashes in the journal, the trusted bundle record off-host, and a rollback receipt.",
+      "implementation": [
+        "ops/hetzner/guarded-release.py",
+        "scripts/guarded-release.mjs",
+        "scripts/generate-recovery-key.sh"
+      ],
+      "tests": [
+        "scripts/test-guarded-release.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Orchestration controls over the real journal and release files with an in-memory host; fifteen safety-check mutations detected. A read-only inspection on 13 November confirmed the compose override, journal location and capacity. No staging or production execution yet.",
+      "ambiguity": [
+        "Storage Box acceptance and custodian decrypt pending",
+        "Journal abandon record missing",
+        "Edge certificates not captured",
+        "Authenticated login probe optional"
+      ],
+      "verification": "29 controls: full release, ordering and confirmation, interrupted-stage blocking, client/peer fencing, corrupt off-host copy, Caddyfile and parameter drift, missing migration rows, rollback with and without database restore, refusal after reopen, release succession, and the real runtime observation against production-shaped inspect output including the 13 November image override and compose file set.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Executor and driver exist; staging rehearsal and supervised production execution are pending."
+      },
+      "property": "No migration runs before a verified off-host copy of a fenced cold capture, and no traffic reaches a candidate that failed verification.",
+      "evidence": "Synthetic host model only; Docker, PostgreSQL, Caddy and SFTP behaviour need staging and supervised production evidence."
+    },
+    {
       "id": "MOB-ONBOARD-001",
       "title": "Session-bound durable onboarding reconciliation",
       "statement": "Onboarding completion must use confirmed server evidence for the currently rendered account; durable first-value intent survives offline or pending responses and stale account callbacks cannot complete another occurrence.",
@@ -7025,7 +7133,8 @@
         "scripts/test-stripe-integration.sh",
         "scripts/upsert-course.mjs",
         "tdf-hq/scripts/create_artists_from_list.sh",
-        "tdf-hq/src/TDF/Config.hs"
+        "tdf-hq/src/TDF/Config.hs",
+        "scripts/check-messaging-token.mjs"
       ],
       "tests": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -8387,7 +8496,7 @@
       ],
       "authorization": "Upload sessions require authoring permission; signatures are scoped to one key and short-lived.",
       "privacy": "Quarantine and master buckets are private; territory comes from CF-IPCountry only behind Cloudflare, otherwise specific rules fail closed.",
-      "concurrency": "Worker claims one due job FOR UPDATE SKIP LOCKED; every later statement of the run is prefixed by the lease guard (version row FOR NO KEY UPDATE, job row FOR UPDATE, status running, same worker name, same attempt, lease younger than the ttl); multipart completion is idempotent per upload; derivatives are unique per (version, role, sha256).",
+      "concurrency": "Worker claims one due job FOR UPDATE SKIP LOCKED; every later statement of the run is prefixed by the lease guard (version row FOR NO KEY UPDATE, job row FOR UPDATE, status running, same worker name, same attempt, lease younger than the ttl); multipart completion is idempotent per upload; derivatives are unique per (version, role, sha256). Heartbeat shutdown writes an owned stop marker before signalling; initialization checks the marker after installing its trap so a prior stop request is not reset by startup.",
       "idempotency": "Re-running a job reproduces identical derivatives for identical input. A re-upload with the same declared SHA-256 binds to the existing non-promoted asset row and re-points it at the new object before inspection (trg_music_rebind_upload_asset); the asset's queued, retry, running and dead-lettered attempts are cancelled (a cancelled run is stopped by the lease guard).",
       "failure": "Type, size or checksum mismatch fails the attempt without promotion; the job retries with a growing delay until max_attempts, then dead_letter, and the version becomes validation_failed. A lost or expired lease stops the run (lease-lost marker, USR1) and the job is reclaimed.",
       "recovery": "Failed jobs are retried with a growing delay; an expired lease lets another run reclaim the job. Orphan multipart uploads created by the worker's own PUTs are aborted per worker-multipart.md; client upload sessions have no purge (ambiguity). After a checksum-mismatch dead letter, uploading the correct bytes under the same declared hash is inspected and the earlier attempts, running ones included, are cancelled (2026-10-12_music_upload_rebind).",
@@ -8407,7 +8516,8 @@
         "tdf-hq-ui/src/api/musicStorageResponse.ts",
         "tdf-hq-ui/src/utils/incrementalSha256.ts",
         "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
-        "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql"
+        "tdf-hq/sql/2026-10-12_music_upload_rebind_rollback.sql",
+        "scripts/lib/test-child-completion.mjs"
       ],
       "tests": [
         "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs",
@@ -8436,7 +8546,7 @@
         "scripts/test-music-integration-rehearsal.mjs",
         "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs"
       ],
-      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md) Controlled heartbeat shutdown tests require native sleep/SQL reaping under a missed first group delivery, preserve identical lease SQL/options/statuses, and retain the existing completion deadline and stream-close requirement. Live CI descriptor-holder identity remains unestablished; see formal/system/music-worker-heartbeat-shutdown.md.",
+      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md) Controlled heartbeat shutdown tests require native sleep/SQL reaping under a missed first group delivery, preserve identical lease SQL/options/statuses, and retain the existing completion deadline and stream-close requirement. Live CI descriptor-holder identity remains unestablished; see formal/system/music-worker-heartbeat-shutdown.md. Added 2026-11-14: stop_heartbeat sent one TERM to the heartbeat's process group and then waited; a TERM that landed while the heartbeat or its sleep was still being forked was lost and the worker waited out a whole heartbeat interval (30 s by default), which is what the CI failure 'Worker did not stop within 30s' showed. The signal is now repeated every 0.1 s until the group is gone. A minimal copy of the logic reproduced the hang under load (1 in 2500 to 4000 runs) and none in 6000 runs with the repeat; music-worker-heartbeat-shutdown.test.mjs drops the first group signal and requires the worker to stop within 4 s (it fails without the repeat). A controlled lost-startup-signal regression must fail without the retained marker and finish without starting a native heartbeat after the request. This models one race ordering; Linux runtime qualification remains separate.",
       "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); model results and the read of guard/claim/promotion SQL in formal/system/music-asset-processing.md (2026-10-12); re-upload runtime scenario and migration apply/rollback in formal/system/music-upload-rebind.md (2026-10-12, historical local evidence)",
       "confidence": "Medium: lease guard, claim and promotion rules read from source and model-checked in a bounded scope; local-only runtime evidence; no deployed worker or real buckets.",
       "ambiguity": [
@@ -10314,7 +10424,7 @@
       "id": "MKT-AGREEMENT-PAYMENT-001",
       "title": "Marketplace agreement payments on the canonical checkout with a frozen split per charge",
       "domain": "MKT",
-      "statement": "With the marketplace.agreement_payments gate on, an agreement whose provider profile has a ready payout account usable in the agreed currency and whose deposit is positive starts pending_deposit and settled on the platform, with a deposit deadline from the pricing rule; otherwise it starts confirmed and off-platform as in MKT-AGREEMENT-001. The buyer starts the charge the agreement is waiting for (the deposit while pending_deposit, the balance while balance_due). Each charge is one marketplace_agreement_payment row bound to one canonical checkout of domain marketplace_agreement, and freezes its split: the TDF commission due on that charge (as much of the frozen commission as fits in the deposit; on the balance, whatever the paid charges did not actually collect for the platform), the estimated processor fee borne by the configured payer (the service provider by default), and the provider amount, adding up exactly to the charge. Only verified provider evidence bound to that checkout marks a charge paid; a paid deposit confirms the agreement and a paid balance completes it and records the verified interaction. The buyer's confirmation of delivery waits for the balance when one is owed. A participant cannot cancel directly, nor by withdrawing the accepted offer, once a deposit was collected or while a payment attempt may still collect money. A deposit unpaid at its deadline expires the agreement and releases the slot. TDF never holds the provider's part: the agreement domain routes as a marketplace product flow, which requires verified connected-account, split and payout capabilities, and the shared executor refuses agreement checkouts until a split-capable provider flow exists.",
+      "statement": "With the marketplace.agreement_payments gate on, an agreement whose provider profile has a ready payout account usable in the agreed currency and whose deposit is positive starts pending_deposit and settled on the platform, with a deposit deadline from the pricing rule; otherwise it starts confirmed and off-platform as in MKT-AGREEMENT-001. The buyer starts the charge the agreement is waiting for (the deposit while pending_deposit, the balance while balance_due). Each charge is one marketplace_agreement_payment row bound to one canonical checkout of domain marketplace_agreement, and freezes its split: the TDF commission due on that charge (as much of the frozen commission as fits in the deposit; on the balance, whatever the paid charges did not actually collect for the platform), the estimated processor fee borne by the configured payer (the service provider by default), and the provider amount, adding up exactly to the charge. Only verified provider evidence bound to that checkout marks a charge paid; a paid deposit confirms the agreement and a paid balance completes it and records the verified interaction. The buyer's confirmation of delivery waits for the balance when one is owed. A participant cannot cancel directly, nor by withdrawing the accepted offer, once a deposit was collected or while a payment attempt may still collect money. A deposit unpaid at its deadline expires the agreement and releases the slot, when a participant loads agreements and every five minutes from a background job. Disputed agreements are listed for administrators, oldest dispute first, with who opened the dispute, from which state and why. TDF never holds the provider's part: the agreement domain routes as a marketplace product flow, which requires verified connected-account, split and payout capabilities, and the shared executor reads each agreement charge's recipient and provider amount under a row lock, checks them again in the transaction that records the payment attempt, and passes them to the adapter, which carries them in the same provider operation (PayPhone Button transferTo, AES-256-CBC with the store coding password) or refuses them (PayPhone API Sale, PlaceToPay). PayPhone Button references carry the TDFC- prefix and are reconciled with the Button confirmation.",
       "authority": "Product owner decisions of 2026-11-12 (Stripe, PayPhone and DataWeb by currency and user choice; automatic provider payout; DataWeb integrated but closed; split on every charge); ADR 0136; ADR 0115",
       "source": "docs/adr/0136-marketplace-agreement-payments.md; docs/adr/0115-provider-neutral-payment-routing.md",
       "contract": "docs/adr/0136-marketplace-agreement-payments.md",
@@ -10378,6 +10488,7 @@
         "tdf-hq/src/TDF/Directory/Policy.hs",
         "tdf-hq/src/TDF/API/Directory.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
         "tdf-hq/src/TDF/Server/ProviderExecution.hs",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -10387,6 +10498,16 @@
         "tdf-hq-ui/src/api/directory.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs",
+        "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/AgreementDisputesPanel.tsx",
+        "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
+        "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
         "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
         "scripts/lib/production-release.mjs",
@@ -10398,25 +10519,25 @@
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [
         "docs/music-directory/formal-model.yaml"
       ],
-      "verification": "Hspec property tests of the payment transition relation, the split and commission arithmetic, the delivery-confirmation target and the payout identifier shape; routing test that the agreement domain is a marketplace flow; Jest unit tests of the client mirror; static state-machine gate; local PostgreSQL exercise of the migration, rollback, guards and checkout sync triggers with a stubbed evidence function, and of every new statement (PREPARE). No PostgreSQL integration test of the handler transactions and no provider sandbox run yet.",
+      "verification": "Hspec property tests of the payment transition relation, the split and commission arithmetic, the delivery-confirmation target and the payout identifier shape; routing test that the agreement domain is a marketplace flow; Jest unit tests of the client mirror and of the payment starter (PayPhone redirect allowlist, recovery record, disabled gate); Hspec tests of the PayPhone transferTo encryption against openssl and Python cryptography vectors, the Button Prepare request, split refusals by API Sale and PlaceToPay, and the Button confirmation as reconciliation query; static state-machine gate; local PostgreSQL exercise of the migration, rollback, guards and checkout sync triggers with a stubbed evidence function, and of every new statement (PREPARE). No PostgreSQL integration test of the handler transactions and no provider sandbox run yet.",
       "evidence": "Local static gates and PostgreSQL 16 exercise on 2026-11-12; CI on the candidate.",
       "status": "specified and implemented",
       "critical": false,
       "confidence": "Policy verified by property tests; SQL verified against a migrated schema; handler transactions verified by review and CI build; no charge can execute because no split-capable provider flow exists and the gate is off in every environment.",
       "ambiguity": [
         "Whether the processor fee stays with the service provider or moves to the platform is a configurable rule awaiting a final product decision.",
-        "Deposit expiry runs lazily when a participant loads agreements until a worker exists.",
-        "Automatic refunds under the frozen cancellation policy, the PayPhone button flow with transferTo and the canonical Stripe adapter are part B2."
+        "Automatic refunds under the frozen cancellation policy, the payment screen, the PayPhone button flow with transferTo and the canonical Stripe adapter remain open."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Domain, guards, handlers and read-side UI are implemented behind the marketplace.agreement_payments flag, which is off in every environment; split-capable provider execution (PayPhone button, Stripe destination charges), payout onboarding UI, refunds, the dispute panel, PostgreSQL handler integration tests and provider sandbox evidence remain open."
+        "reason": "Domain, guards, handlers and read-side UI are implemented behind the marketplace.agreement_payments flag, which is off in every environment; the PayPhone Button with split is implemented and unit-tested but unverified against PayPhone (no sandbox run, no recorded capability evidence); Stripe destination charges, automatic refunds, PostgreSQL handler integration tests and provider sandbox evidence remain open."
       }
     },
     {
@@ -11234,7 +11355,8 @@
         ".github/workflows/ci.yml",
         "tdf-hq-ui/src/components/ArtistFansList.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts"
+        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "tests": [
         "scripts/test-community-search.py",
@@ -15332,7 +15454,7 @@
     {
       "id": "MEDIA-ARTIST-CATALOG-001",
       "title": "Shared artist catalog and identity projections",
-      "statement": "Profiles, followed feeds and Label share catalog reads and published-release presentation while retaining canonical and legacy source identity, bounded pagination, cancellation and honest partial failures. Artist links use a validated Party identity; shared subscription commands and target/account-scoped invalidation keep audience projections coherent without granting social consent.",
+      "statement": "Profiles, followed feeds and Label share catalog reads and published-release presentation while retaining canonical and legacy source identity, bounded pagination, cancellation and honest partial failures. Artist links use a validated Party identity; shared subscription commands and target/account-scoped invalidation keep audience projections coherent without granting social consent. Artist display names and photos in the web and desktop app link to their public profile wherever the record supplies a profile identity, including Label quick notes and roster. Use the known Party ID when a slug is missing or ambiguous and retain existing visibility rules.",
       "domain": "MEDIA",
       "actors": [
         "Public listener",
@@ -15364,13 +15486,15 @@
       "allowedTransitions": [
         "Load -> complete only after all eligible pages finish.",
         "One source fails -> partial while retaining other available results.",
-        "Committed subscription change -> invalidate its account and target artist projections."
+        "Committed subscription change -> invalidate its account and target artist projections.",
+        "Activate a known artist name or photo -> open that artist’s existing public profile."
       ],
       "forbiddenTransitions": [
         "Same title -> assume cross-source identity.",
         "Failed or cancelled fetch -> assert an empty complete catalog.",
         "Social artist record ID -> substitute as Party ID.",
-        "Subscription -> grant connection consent or club membership."
+        "Subscription -> grant connection consent or club membership.",
+        "An unlinked credit, a name match, or a numeric slug -> link to an unrelated Party."
       ],
       "effects": [
         "Reuse public release cards, bounded public catalog reads, validated profile routes and existing subscription commands."
@@ -15386,25 +15510,42 @@
       "implementation": [
         "tdf-hq-ui/src/api/artistCatalog.ts",
         "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/components/ArtistProfileLink.tsx",
+        "tdf-hq-ui/src/features/fanclubs/FanClubPreview.tsx",
+        "tdf-hq-ui/src/features/fans/FollowedArtists.tsx",
         "tdf-hq-ui/src/features/fans/artistAudience.ts",
         "tdf-hq-ui/src/features/releases/PublishedReleaseCard.tsx",
+        "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/features/releases/catalogQueries.ts",
         "tdf-hq-ui/src/features/releases/useReleaseFeed.ts",
         "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
+        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
         "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
         "tdf-hq-ui/src/utils/artistIdentity.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/api/artistCatalog.test.ts",
+        "tdf-hq-ui/src/features/fanclubs/FanClubPreview.test.tsx",
         "tdf-hq-ui/src/features/fans/artistAudience.test.ts",
         "tdf-hq-ui/src/features/releases/catalogQueries.test.ts",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.test.tsx",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx",
         "tdf-hq-ui/src/utils/artistIdentity.test.ts"
       ],
       "formalModels": [],
@@ -15419,10 +15560,10 @@
         "reason": "Web consolidation is implemented and tested locally; physical data migration, protected integration and production acceptance are not established."
       },
       "critical": false,
-      "authority": "User-authorized source consolidation, preserving existing permissions and data.",
+      "authority": "User-authorized source consolidation, preserving existing permissions and data. User request on 2026-11-10 for artist names and photos to open their profiles.",
       "property": "Shared projections preserve source identity, cancellation, partial-failure truthfulness and account scoping.",
       "contract": "docs/architecture/artist-catalog-unification.md",
-      "verification": "Adapter boundary tests, identity negative cases, cache scoping tests and existing profile/hub/event/label component checks.",
+      "verification": "Adapter boundary tests, identity negative cases, cache scoping tests and existing profile/hub/event/label component checks. Component navigation tests exercise roster and quick-note links, including artists without an account, and verify names and photos on the public platform and directory.",
       "evidence": "Local checks and current-head hosted results must be reported separately; no formal refinement proof is claimed."
     },
     {
@@ -17046,7 +17187,7 @@
       "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
       "source": "formal/system/admin-routes.md",
       "contract": "formal/system/admin-routes.md",
-      "property": "The user or message must exist and resolve to a phone number; a reply must reference that user's message; every call sends through the WhatsApp Cloud API and records an outgoing row, also when sending fails.",
+      "property": "The user or message must exist and resolve to a phone number; a reply must reference that user's message; a number whose WhatsApp consent is withdrawn is refused with 409 before anything is sent or recorded (whatsAppRecipientConsentWithdrawn); otherwise every call sends through the WhatsApp Cloud API and records an outgoing row, also when sending fails.",
       "actors": [
         "Strict administrator"
       ],
@@ -17079,12 +17220,13 @@
       "privacy": "Sends to personal phone numbers without a consent check.",
       "concurrency": "None.",
       "idempotency": "Not idempotent: each call sends again.",
-      "failure": "400 invalid input or unresolvable phone; 404 user or message.",
+      "failure": "400 invalid input or unresolvable phone; 404 user or message; 409 consent withdrawn.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/ServerAdmin.hs",
-        "tdf-hq/src/TDF/WhatsApp/Transport.hs"
+        "tdf-hq/src/TDF/WhatsApp/Transport.hs",
+        "tdf-hq/src/TDF/CampaignAutomation.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerAdminSpec.hs"
@@ -17096,7 +17238,7 @@
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "No WhatsApp consent, opt-out or 24-hour customer-service-window check is applied on this path (PRIV-WHATSAPP-001 governs consent for the public flow only).",
+        "No 24-hour customer-service-window check is applied on this path. (Resolved 2026-11-18: a send or resend to a number whose consent is withdrawn is refused with 409 before anything is sent or recorded.)",
         "A resend may replace the body, so any number ever messaged can be sent arbitrary text."
       ],
       "conformance": {
@@ -19987,12 +20129,14 @@
       "implementation": [
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/src/TDF/ServerInternships.hs",
-        "tdf-hq/src/TDF/API/InternAudit.hs"
+        "tdf-hq/src/TDF/API/InternAudit.hs",
+        "scripts/lib/studio-audit-safety.mjs"
       ],
       "tests": [
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "e2e/web/studio-internship-audit.spec.mjs",
-        "scripts/test-studio-internship-audit-migration.sh"
+        "scripts/test-studio-internship-audit-migration.sh",
+        "scripts/__tests__/studio-internship-audit.test.mjs"
       ],
       "formalModels": [],
       "verification": "scripts/test-studio-internship-audit-api-e2e.mjs drives the real API: plan creation races, cancel/activate races, activation refusals, completion with exception justification and immutability, intern 404/403 boundaries, audit-controlled task and project 409s, concurrent executions and terminal immutability, summary authorization and post-completion refusals.",
@@ -23038,7 +23182,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/identity-routes.md.",
       "source": "formal/system/identity-routes.md",
       "contract": "formal/system/identity-routes.md",
-      "property": "Login validates username (254) and password (72 bytes) shape (400), locks the party and credential, refuses with 429 and Retry-After once ten invalid-credential answers were recorded for the identifier in the current 15-minute window (auth_rate_limit, counted per normalized identifier whether or not the account exists; the count check, the password check and the count run in one transaction under a per-identifier advisory lock, so concurrent attempts cannot pass the limit together), checks the password before the active flag and answers 401 \"Invalid username or password\" alike for an unknown identifier, a wrong password and a disabled account, and mints an api_token (ID-SESSION-004) plus a login activity row without revoking other sessions. Google login validates the ID token shape, terms and intent (400), needs a configured client id (500), verifies the token with Google (401 on any failure, audience, issuer, expiry, verified email), serializes on an advisory lock per issuer and subject, and either logs the bound credential in, links an unbound identity to a password-confirmed TDF account, or creates a new party, customer role by policy, fan profile, credential and identity when createNewAccount and terms are given (401 otherwise). Signup normalizes the email, requires a password of at least 8 characters, the current terms version, a first or last name and an optional E.164 phone (400), refuses claimArtistId (403, ID-ARTIST-CLAIM-001) and unknown fanArtistIds (422), answers 409 when the email exists, inserts party, policy role, follows, credential, fan profile and token in one transaction and emails a welcome. Signup consumes a per-email counter before creating anything and answers 429 past five requests in an hour.",
+      "property": "Login validates username (254) and password (72 bytes) shape (400), locks the party and credential, refuses with 429 and Retry-After once invalid-credential answers in the current 15-minute window reach the limit of any of three counters (auth_rate_limit, whether or not the account exists): ten for the normalized identifier at the client address, fifty for the client address across identifiers, one hundred for the identifier from every address; the client address is the last X-Forwarded-For entry when the TCP peer is a loopback or private address (the reverse proxy) and the peer otherwise, IPv6 keyed by /64 (TDF.Auth.ClientAddress); the count checks, the password check and the counts run in one transaction under the three counters' advisory locks taken in a fixed order, so concurrent attempts cannot pass a limit together, checks the password before the active flag and answers 401 \"Invalid username or password\" alike for an unknown identifier, a wrong password and a disabled account, and mints an api_token (ID-SESSION-004) plus a login activity row without revoking other sessions. Google login validates the ID token shape, terms and intent (400), needs a configured client id (500), verifies the token with Google (401 on any failure, audience, issuer, expiry, verified email), serializes on an advisory lock per issuer and subject, and either logs the bound credential in, links an unbound identity to a password-confirmed TDF account, or creates a new party, customer role by policy, fan profile, credential and identity when createNewAccount and terms are given (401 otherwise). Signup normalizes the email, requires a password of at least 8 characters, the current terms version, a first or last name and an optional E.164 phone (400), refuses claimArtistId (403, ID-ARTIST-CLAIM-001) and unknown fanArtistIds (422), answers 409 when the email exists, inserts party, policy role, follows, credential, fan profile and token in one transaction and emails a welcome. Signup consumes a per-email counter before creating anything and answers 429 past five requests in an hour.",
       "actors": [
         "Anonymous visitor"
       ],
@@ -23087,6 +23231,7 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/src/TDF/Auth.hs",
         "tdf-hq/src/TDF/Auth/Throttle.hs",
+        "tdf-hq/src/TDF/Auth/ClientAddress.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
         "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql"
@@ -23101,13 +23246,13 @@
       "formalModels": [
         "formal/auth/credential_throttle.py"
       ],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema). Z3 proof credential_throttle.py (translation of the pure policy of TDF.Auth.Throttle and of the login transaction, pinned by the hash of those two regions; attempts on one subject assumed serialized by the advisory lock): the failure counter equals the failed password checks of the window and never exceeds ten, a locked-out attempt checks no password, signup admits exactly the first five requests of a window, Retry-After is between one second and the window and reaches the next window; guard necessity checked.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. Added 2026-11-18: the same script (each scenario with its own forwarded address) checks that the owner at another address still signs in after ten failures from one address, that fifty failures from one address across identifiers refuse that address only, that one hundred failures from ten addresses refuse the account from a fresh address, and that only the last forwarded entry counts; the three counters and the client address derivation are unit-tested in ServerSpec. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema). Z3 proof credential_throttle.py (translation of the pure policy of TDF.Auth.Throttle and of the login transaction, pinned by the hash of those two regions; attempts on one subject assumed serialized by the advisory lock): each of the three login counters never exceeds its limit (10, 50, 100) and a failed check moves all three by one, a locked-out attempt checks no password, the owner at a fresh address is refused only by the identifier counter, which needs ten addresses, signup admits exactly the first five requests of a window, Retry-After is between one second and the window and reaches the next window; guard necessity checked.",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "Throttling is per identifier only: the backend has no trusted client address (no proxy-forwarding contract), so one client can still try a few passwords against many accounts, and anyone can lock a known identifier out of password login for up to fifteen minutes by failing ten times. Google login is not throttled.",
+        "Resolved 2026-11-18 (owner decision): failures from one address lock the account only for that address; locking the owner out from everywhere needs one hundred failures in fifteen minutes, so at least ten addresses. That residual lockout remains. The client address relies on the deployment having exactly one reverse proxy that appends the client to X-Forwarded-For (Caddy in production, Fly in staging); a CDN in front would make all clients share its addresses. Google login is not throttled.",
         "Signup still discloses an existing email with 409.",
         "A racing duplicate signup answers 500 instead of 409.",
         "A Google account may share a primary email with a password account, after which email login for that address matches two parties and fails."
@@ -23761,7 +23906,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
       "source": "formal/system/social-messaging-routes.md",
       "contract": "formal/system/social-messaging-routes.md",
-      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false. A WhatsApp reply to a contact whose consent row is withdrawn (consent false with a revocation time) is refused with 409 before anything is sent or recorded (validateWhatsAppReplyConsent); a contact with no consent row, who wrote in but never subscribed, can still be answered.",
+      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false. A WhatsApp reply to a contact whose consent row is withdrawn (consent false with a revocation time) is refused with 409 before anything is sent or recorded (validateWhatsAppReplyConsent); a contact with no consent row, who wrote in but never subscribed, can still be answered. The same check (whatsAppRecipientConsentWithdrawn) runs before every other send to a contact: administrator sends and resends (409), the course-registration auto-reply and the automatic AI reply (not sent; the reply is marked as an error). An operator question goes only to the configured operator phone, so no contact consent applies.",
       "actors": [
         "Social inbox staff",
         "Administrator"
@@ -23812,16 +23957,17 @@
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+        "tdf-hq/test/TDF/ServerExtraSpec.hs",
+        "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateWhatsAppReplyConsent is unit-tested in tdf-hq/test/TDF/ServerSpec.hs.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateWhatsAppReplyConsent is unit-tested in tdf-hq/test/TDF/ServerSpec.hs. Added 2026-11-18: whatsAppRecipientConsentWithdrawn is tested against PostgreSQL in tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs (no row, subscribed, after STOP in both phone spellings, resubscribed, unparseable number).",
       "evidence": "formal/system/social-messaging-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "WhatsApp replies do not mark the inbound message replied; the operator-question route and the administrator send route do not consult consent.",
+        "WhatsApp replies do not mark the inbound message replied. (Resolved 2026-11-18: every send to a contact consults consent; the operator question never messages a contact.)",
         "Staff consent capture sets consent immediately with no double opt-in; opt-out confirms even for a number never subscribed.",
         "Consent and opt-out are gated by the plain Admin role while siblings use strict admin."
       ],
@@ -25321,7 +25467,13 @@
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-        "package.json"
+        "package.json",
+        "tdf-hq-ui/src/utils/artistImage.ts",
+        "tdf-hq-ui/src/api/artistProfileMedia.ts",
+        "tdf-hq-ui/src/components/ArtistCoverPreview.tsx",
+        "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/api/admin.ts",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx"
       ],
       "tests": [
         "scripts/__tests__/artist-enrichment.test.mjs",
@@ -25329,7 +25481,11 @@
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
         "tdf-hq-ui/src/components/ArtistProfileImage.test.tsx",
         "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
-        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
+        "tdf-hq-ui/src/api/fans.test.ts",
+        "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -25529,6 +25685,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq-ui/src/api/inventory.upload.test.ts",
         "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx",
         "tdf-hq-ui/src/api/uploadQueue.test.ts",
         "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
         "tdf-hq-ui/src/session/recoverableDraft.test.ts",
@@ -27459,7 +27616,12 @@
         "package.json",
         "tdf-hq-ui/src/utils/eventLineup.ts",
         "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-        "tdf-hq-ui/src/components/events/EventLineupPicker.tsx"
+        "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
+        "tdf-hq/src/TDF/Courses/Metadata.hs",
+        "tdf-hq/src/TDF/Services/LlmChat.hs",
+        "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
+        "tdf-hq/src/TDF/Ticketing/Issuance.hs"
       ],
       "tests": [
         "scripts/__tests__/architecture-boundaries.test.mjs"
@@ -27473,7 +27635,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "The ratchet is enforced; 11 backend imports, 21 web imports and 17 oversized files remain listed debt."
+        "reason": "The ratchet is enforced; 8 backend imports, 21 web imports and 16 oversized files remain listed debt."
       },
       "authority": "User request 2026-11-10; layer definitions and limits are an engineering decision recorded in ADR 0133, owner confirmation pending.",
       "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",
@@ -27676,6 +27838,101 @@
       "critical": false
     },
     {
+      "id": "GROWTH-FIRST-ACTION-001",
+      "title": "An invited visitor reaches the promised first action after signup",
+      "statement": "A signed-in fan who follows nobody is offered artists to follow before other fan hub content; an event's organizer can publish its non-public event through an explicit confirmed action; planning-workspace links are shown only to the event's managers and to accounts with the Scheduling module; artist profiles that still carry the account placeholder name are left out of the fan hub catalog; new events start in the browser's time zone for accounts that never chose one; and single-task pages are not preceded by the upcoming-events carousel.",
+      "domain": "Growth",
+      "authority": "Product owner request on 2026-11-13 to walk the invitation funnel on production and remove what stops invited people.",
+      "source": "User request: make an invited person able to get real value in one sitting; walk production as a new organizer, fan and artist from the campaign links and fix every blocker.",
+      "property": "After signing up from an invitation, the promised action (follow an artist, publish an event, complete an artist profile) is reachable without a dead end and without scrolling past unrelated sections.",
+      "contract": "formal/system/invited-first-action.md",
+      "actors": [
+        "Fan",
+        "Event organizer",
+        "Delegated event administrator",
+        "Artist"
+      ],
+      "preconditions": [
+        "The visitor is authenticated; existing server authorization for follows and event updates remains authoritative.",
+        "The public event lifecycle catalog exposes states, capabilities and direct transitions."
+      ],
+      "inputs": [
+        "Artist catalog and the viewer's follows",
+        "Event, its workflow state and the lifecycle states",
+        "Session roles and modules",
+        "Account time zone preference and browser time zone"
+      ],
+      "state": {
+        "boundary": "formal/system/invited-first-action.md",
+        "states": [
+          "not public",
+          "confirming publication",
+          "public"
+        ]
+      },
+      "allowedTransitions": [
+        "not public -> confirming publication on request",
+        "confirming publication -> not public on cancel or failure",
+        "confirming publication -> public after the server accepts visibility and the direct workflow transition",
+        "no follows -> starter list shown; the list stays for that viewer after a follow"
+      ],
+      "forbiddenTransitions": [
+        "Publish without an explicit confirmation",
+        "Publish from a state with no direct, review-free transition to a publicly listable state",
+        "Write event fields read before the confirmation instead of the latest stored ones",
+        "Show a planning-workspace link to a signed-in visitor who neither manages the event nor holds the Scheduling module",
+        "Override a time zone the account chose with the browser's",
+        "List an unnamed placeholder artist profile in the fan hub catalog for other viewers"
+      ],
+      "effects": [
+        "Existing follow and unfollow writes from the starter list",
+        "One existing event update that sets visibility and, when needed, the workflow state"
+      ],
+      "authorization": "Unchanged: the event update endpoint enforces organizer or delegated-administrator access and the allowed workflow transition; planning-workspace access rules are unchanged.",
+      "privacy": "Publishing makes the event's title, date, place and poster public, which the confirmation states before the write. No other visibility changes.",
+      "concurrency": "The event is read again immediately before the update; the server rejects a workflow state that changed meanwhile and the confirmation stays open with the reason.",
+      "idempotency": "Publishing an already public event is not offered. A repeated follow tap is ignored while a follow is being saved.",
+      "failure": "A refused or failed publication leaves the event unchanged and shows the server reason; a failed follow keeps the existing recovery behavior.",
+      "recovery": "Retry from the open confirmation, or reload when the event state changed.",
+      "observability": "Published state and public link on the event page; an event_published growth event; pressed state on follow controls.",
+      "implementation": [
+        "tdf-hq-ui/src/components/events/EventPublishControl.tsx",
+        "tdf-hq-ui/src/features/fans/FirstFollowStarter.tsx",
+        "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
+        "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
+        "tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx",
+        "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
+        "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "Component and page tests for the publish target, confirmation, refusal and failure paths, the starter list, gated planning links, the time zone default and carousel suppression; TypeScript and changed-file lint; read-only preview of the local build against production data.",
+      "evidence": "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx; tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx; formal/system/invited-first-action.md.",
+      "confidence": "Local tests cover each behavior. The publish write was not executed against a real server.",
+      "ambiguity": [
+        "A logistics team member who is neither a manager of the event nor holds the Scheduling module can open the planning workspace (EVT-LOGISTICS-ACCESS-001) but is not offered the link on the event page.",
+        "The fan hub wiring of the starter list is covered by a production-data preview, not by a page-level test.",
+        "Unnamed artist profiles still appear in the server-side community directory search and on Mobile.",
+        "The server reports UTC both for an account that never chose a zone and for one that chose UTC. A zone saved from the same browser is remembered locally and kept; on another device a chosen UTC still starts a new event in the browser's zone, which the form lets the organizer change."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local component tests cover the behavior. A real publication through the deployed page and the fan hub wiring remain to be verified after release."
+      },
+      "critical": false
+    },
+    {
       "id": "EVT-LOGISTICS-ACCESS-001",
       "title": "The web logistics page of an event opens by record scope, not by the Scheduling module",
       "domain": "EVT",
@@ -27754,6 +28011,284 @@
         "reason": "The web decision and page behaviour are exercised by Jest and the API refusal by an existing PostgreSQL example; the generated Mobile registry copy is not regenerated, and no browser run against a deployed build was made."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "MEDIA-ARTIST-FEATURED-001",
+      "title": "Artist-owned persisted featured recording preference",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "One preference per artist references an owned canonical recording or eligible legacy public release. Public reads recheck eligibility and conceal unavailable IDs and timestamps; authenticated owner reads retain the saved choice. Only the authenticated Party matching the expected artist can write or clear it. Player ordering and editor behavior remain in dependent PR670.",
+      "authority": "Explicit user instruction to begin artist profiles with the artist-selected featured track and then public playable music.",
+      "source": "docs/music-releases/artist-featured-track.md",
+      "contract": "docs/music-releases/artist-featured-track.md",
+      "property": "An accepted mutation has authenticated actor=expected artist and at most one owned source identity; unavailable public selections expose no reference or timestamp; confirmed-invalid legacy sources cannot be selected until valid revalidation.",
+      "actors": [
+        "Artist owner",
+        "Public listener"
+      ],
+      "preconditions": [
+        "Existing authentication and music_releases.public gate.",
+        "Reviewed migration and published generated Mobile contract before release."
+      ],
+      "inputs": [
+        "Expected artist Party ID",
+        "Optional recording UUID or legacy release ID",
+        "Trusted edge territory",
+        "Current public catalogue",
+        "Authenticated session lifetime"
+      ],
+      "state": {
+        "preference": [
+          "unset",
+          "selected",
+          "unavailable"
+        ]
+      },
+      "allowedTransitions": [
+        "Owner selects a currently eligible owned reference -> persist -> authoritative receipt.",
+        "Owner clears an unavailable reference -> default catalogue order.",
+        "Withdrawal or territory denial -> hide public reference while retaining it for the owner."
+      ],
+      "forbiddenTransitions": [
+        "A switched-account command mutates another artist preference.",
+        "Foreign/ambiguous/unpublished canonical reference is accepted.",
+        "A public request enables private diagnostics.",
+        "Unavailable public reference exposes an ID or updated timestamp.",
+        "Preference lookup failure blocks otherwise available catalogue music.",
+        "Saving forces an automatic playback restart."
+      ],
+      "effects": [
+        "Persist reference preference only; no media grant or publication."
+      ],
+      "authorization": "Servant protected routes derive the database actor from AuthedUser and compare the required expected artist ID. Canonical reference eligibility reuses music_public_asset_accessible and the public release view. Legacy eligibility establishes existing public-release membership; direct-media classification and decoding remain player responsibilities. PUT /music/me/featured-track derives the authenticated artist Party and never grants publication or media access.",
+      "privacy": "Public responses conceal unavailable source IDs and their timestamps; settings are scoped to the authenticated Party. Success responses use private, no-store. No signed URL is persisted or returned by preference endpoints.",
+      "concurrency": "Last successful authorized server write wins. Dependent frontend account-generation fencing remains outside this backend delivery stage.",
+      "idempotency": "Repeated selection has the same chosen reference; clearing an absent choice succeeds. Timestamp may change on an explicit repeated save.",
+      "failure": "Owner settings read failure blocks writes until retry. Public preference read aborts after two seconds and falls back to the normal catalogue. No authoritative media-health verdict is inferred.",
+      "recovery": "Retry settings read/write; replace or clear unavailable selection. Rollback preserves preference rows for reapplication.",
+      "observability": "Client regression cases, shipped-query guard-removal controls and an actual-publication PostgreSQL runner; hosted execution remains required.",
+      "implementation": [
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/sql/2026-10-30_artist_featured_track.sql",
+        "tdf-hq/sql/2026-10-30_artist_featured_track_rollback.sql",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/artist-playback.yaml",
+        ".github/workflows/ci.yml",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs",
+        "tdf-hq/sql/2026-11-07_artist_featured_identity_guard.sql",
+        "tdf-hq/sql/2026-11-07_artist_featured_identity_guard_rollback.sql",
+        "scripts/render-production-schema-verification.mjs"
+      ],
+      "tests": [
+        "scripts/test-artist-featured-track.mjs",
+        "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
+        "scripts/__tests__/production-release.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "PostgreSQL owner/canonical/legacy/public-denial and health-restoration scenarios, HTTP authenticated preference/availability checks, schema rehearsal and generated-client conformance. Fresh candidate CI and review are separate; browser behavior remains in PR670.",
+      "evidence": "docs/music-releases/artist-featured-track.md; PR #670 validation.",
+      "confidence": "Client execution and source-level backend correspondence only until hosted backend/PostgreSQL qualification.",
+      "ambiguity": [
+        "Mobile generated-contract publication is blocked by GitHub integration write permissions (403); the published pin is preserved and the required generated-client gate remains active.",
+        "Canonical eligibility reuses existing delivery authorization; legacy membership does not prove native decoding or persistent media health."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Backend delivery stage: persisted validation, authorization, owner/team/admin diagnostic APIs and featured reference storage are implemented. Frontend controls and universal engine integration remain in PR670. Fresh hosted checks, independent approval and guarded production qualification remain required."
+      }
+    },
+    {
+      "id": "MEDIA-SOURCE-HEALTH-001",
+      "title": "Source-versioned music validation, suppression and restoration",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "Validate ingested and existing music sources with a resumable bounded worker. Persist source-versioned status, diagnosis and timestamps. Public signatures/discovery exclude confirmed invalid media without deleting owner records. Temporary failures never newly suppress a valid source; successful revalidation restores eligibility. Only authorized owner/team/admin commands may queue revalidation; no public handler fetches arbitrary URLs.",
+      "authority": "User authorization to implement, test and publish artist autoplay, resilient playable-source selection and unification of the global player with the radio widget.",
+      "source": "docs/music-releases/universal-player-state.md",
+      "contract": "docs/music-releases/universal-player-state.md",
+      "actors": [
+        "Public listener",
+        "Artist owner",
+        "Authorized release team",
+        "Administrator",
+        "Media validation worker"
+      ],
+      "preconditions": [
+        "Existing publication, territory, asset and entitlement rules remain authoritative.",
+        "PostgreSQL source-health migration is applied and a trusted worker runs with its existing storage credentials."
+      ],
+      "inputs": [
+        "Current source identity/version",
+        "Ingestion and due validation queue",
+        "Bounded public HTTPS bytes",
+        "Local ffprobe/ffmpeg result",
+        "Authenticated revalidation request",
+        "Diagnostic limit1..500 and paired afterKind/afterId cursor"
+      ],
+      "state": {
+        "health": [
+          "pending",
+          "valid",
+          "temporary",
+          "invalid"
+        ],
+        "worker": [
+          "due",
+          "leased",
+          "observed",
+          "expired"
+        ]
+      },
+      "allowedTransitions": [
+        "New source/version -> pending; trusted audio-v2 decoding ingestion -> valid.",
+        "Two matching permanent failures separated by at least 30 minutes -> invalid.",
+        "Temporary failure -> temporary, preserving a previously invalid verdict.",
+        "Successful current-source observation -> valid and restored eligibility.",
+        "Expired lease -> reclaim; authorized revalidation coalesces due work."
+      ],
+      "forbiddenTransitions": [
+        "Temporary/offline/authentication failure newly hides valid media.",
+        "Old source version or expired worker overwrites a new source or claim.",
+        "Successful health check grants publication, private-file or download access.",
+        "Owner revalidation directly clears invalidity.",
+        "Unchecked DNS, private addresses, redirects or media containers initiate server-side network fetches."
+      ],
+      "effects": [
+        "Persist sanitized diagnostic observations.",
+        "Filter canonical grants and public legacy media links.",
+        "Queue at most 100 unobserved identities and validate one due source per worker iteration."
+      ],
+      "authorization": "HTTP owner/team/admin checks derive actor identity from the session; public legacy grants recheck exact current source membership and artist visibility. Canonical signatures retain the existing publication/territory gate. Worker credentials never follow redirects. POST /music/media-health/{sourceKind}/{sourceId}/revalidate derives the actor from authentication and requires current source ownership, release.edit permission or strict administrator access.",
+      "privacy": "Server diagnostics expose only source identity/version, status, fixed reason and timestamps to authorized owners, team members or administrators; raw URLs, object keys and credentials are omitted.",
+      "concurrency": "Database row claims use SKIP LOCKED and a 90s token lease. Observation requires the active token and current source version. Source replacement retains historical observations without inheriting their verdict.",
+      "idempotency": "Source kind/ID/version is the primary key; ingestion and reconciliation insert with conflict coalescing. Revalidation changes only due time and cannot clear verdicts.",
+      "failure": "Network samples stop at 1MiB and a 25s deadline; DNS and local media commands have separate short deadlines. Two spaced missing/unsupported observations confirm invalidity; inconclusive partial containers, transport, timeouts and authentication remain temporary.",
+      "recovery": "A valid observation restores only its current source version. Worker crashes leave a reclaimable lease; source history and the public suppression gate survive application rollback.",
+      "observability": "No-store diagnostics APIs provide kind/ID/version, status, fixed reason and timestamps. Worker logs fixed result codes without locations or credentials. The frontend diagnostic panel remains in PR670.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-06_music_media_health.sql",
+        "scripts/music-media-health.py",
+        "scripts/run-music-release-worker.sh",
+        "tdf-hq/Dockerfile.music-worker",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/docs/openapi/media-health.yaml",
+        "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
+        "tdf-hq/sql/2026-11-06_music_media_health_rollback.sql",
+        "tdf-hq/sql/2026-11-06_music_legacy_source_compatibility.sql",
+        "tdf-hq/sql/2026-11-07_music_featured_source_health.sql",
+        ".github/workflows/ci.yml",
+        "scripts/ci-change-scope.mjs"
+      ],
+      "tests": [
+        "scripts/test-music-media-health.mjs",
+        "scripts/test-music-media-health.py",
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
+        "scripts/test-music-release-api-e2e.sh",
+        "scripts/test-music-release-api-e2e.mjs",
+        "scripts/test-automatic-migrations-production-schema.sh",
+        "scripts/test-event-memory-source-moderation.sh",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/test-music-worker-image.mjs",
+        "scripts/lib/music-worker-image-smoke.sh",
+        "scripts/__tests__/ci-pipeline.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Local SQL/probe/client execution; current-head full integration and deployment pending.",
+      "ambiguity": [
+        "The worker validates a bounded sample rather than every byte of a remote recording.",
+        "Private/provider credentials are refreshed only through existing authorized asset mechanisms; external provider restrictions remain diagnosis, not bypass.",
+        "A complete physical mapping of legacy uploads, canonical recordings and records resources remains a separate reconciliation obligation."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Backend delivery stage: persisted validation, authorization, owner/team/admin diagnostic APIs and featured reference storage are implemented. Frontend controls and universal engine integration remain in PR670. Fresh hosted checks, independent approval and guarded production qualification remain required."
+      },
+      "property": "Current-source lease fencing; public invalid suppression; temporary-failure tolerance; restoration only after success; publication and authorization remain separate from health. Diagnostic pages use bounded source-kind/ID cursors and recheck current owner/team/admin scope on every request; verdict updates do not reorder source identities. Legacy featured references obey the same health gate, while owner preferences survive invalidity and successful revalidation restores eligibility.",
+      "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof. Configured signed storage probes must remain inside the exact operator HTTPS authority and derivative-bucket path, retain pinned peer/default TLS hostname verification, and never follow redirects. Fake-connection/resolver controls cover private DNS and non-443 configured ports, reject namespace/origin/port escapes, and retain all legacy public-only checks; these controls do not establish real storage or TLS acceptance. The final worker image must import the actual health module as its non-root user without networking, with the full Python standard library. Required repository CI builds the image without publication and executes the immutable-image verifier, which also binds the health-script digest. Earlier backend Python controls alone do not establish final-image dependency availability. A premature EOF that contradicts declared HTTP Content-Length, or invalid length framing, is temporary transport failure and cannot establish a complete invalid media object. Exact/close-delimited completion and the existing bounded-prefix behavior remain; fake-transport controls keep native decoding separate. A real HTTP parser socket-pair regression bounds trickled response headers under the overall network deadline and verifies timeout cleanup.",
+      "evidence": "Task-local logs and current-head CI; production/device/provider qualification remains pending."
+    },
+    {
+      "id": "SYS-LOOP-001",
+      "title": "The continuous improvement loop only proposes verified changes as draft pull requests",
+      "statement": "The continuous improvement loop works in its own linked worktree, puts each change on a new branch cut from the remote base branch, runs the configured verification command before committing, and publishes the result only as a draft pull request. It never pushes, merges, rebases or deletes the base branch or any branch it did not create, and it discards a change whose implementation or verification fails.",
+      "domain": "SYS",
+      "actors": [
+        "Maintainer",
+        "Loop supervisor",
+        "Loop runner"
+      ],
+      "preconditions": [
+        "A linked git worktree dedicated to the loop exists and its configuration names a verification command."
+      ],
+      "inputs": [
+        "Loop configuration file",
+        "Remote base branch",
+        "Open and closed loop pull requests"
+      ],
+      "state": {
+        "iteration": "idle | proposing | implementing | verifying | published | discarded",
+        "supervisor": "running | blocked | held by stop file"
+      },
+      "allowedTransitions": [
+        "idle -> proposing -> implementing -> verifying -> published",
+        "proposing | implementing | verifying -> discarded",
+        "blocked -> running once the blocking condition clears"
+      ],
+      "forbiddenTransitions": [
+        "verification failed, missing or skipped -> published",
+        "any state -> push, merge, rebase or deletion of the base branch",
+        "any state -> merge or deletion of a branch the loop did not create",
+        "stop file present -> a new iteration"
+      ],
+      "effects": [
+        "A verified change exists as one commit on a new branch under the loop prefix and as one draft pull request.",
+        "A failed iteration leaves the worktree clean on the remote base commit and publishes nothing."
+      ],
+      "authorization": "The loop may open draft pull requests; it cannot approve or merge them. Merging stays with a maintainer under the protected-branch rules.",
+      "privacy": "Logs and status files hold repository paths, commands and exit codes; credentials are never written to them.",
+      "concurrency": "One supervisor per worktree, enforced by a lock directory with a pid file. At most the configured number of loop pull requests stay open; the loop waits while that limit is reached.",
+      "idempotency": "A target file that already has an open or closed-unmerged loop pull request is not proposed again.",
+      "failure": "Reject the configuration, or discard the iteration and report the failing step; stop after the configured number of consecutive failures. Refuse to start an iteration when free disk space is below the configured minimum.",
+      "recovery": "On start, leftover changes in the loop's own worktree are discarded and the worktree is returned to the remote base commit. A stop file holds the supervisor idle until it is removed.",
+      "observability": "Supervisor log, status file with phase, last result and last error, and the pull request body naming the idea and the verification gates that ran.",
+      "authority": "Owner instruction of 2026-11-13 to review, correct and start the self-improvement loop; pull request #750.",
+      "source": "Owner instruction of 2026-11-13; AI_WORKFLOW.md and README.md sections on the continuous improvement loop",
+      "property": "No loop run changes the base branch or publishes an unverified change.",
+      "contract": "AI_WORKFLOW.md",
+      "implementation": [
+        "scripts/continuous-improvement-loop.mjs",
+        "scripts/lib/continuous-improvement-loop.mjs",
+        "scripts/continuous-improvement-loop-verify.mjs",
+        "scripts/lib/continuous-improvement-loop-verify.mjs",
+        "scripts/continuous-improvement-loop-supervisor.sh",
+        "scripts/start-continuous-improvement-loop.sh",
+        "scripts/install-continuous-improvement-loop-launchd.sh",
+        "scripts/codex-loop-worker.sh",
+        "scripts/discover-improvement-idea.mjs",
+        "scripts/lib/discovery.mjs",
+        "scripts/continuous-improvement-loop.codex.json",
+        "scripts/continuous-improvement-loop.example.json"
+      ],
+      "tests": [
+        "scripts/__tests__/continuous-improvement-loop.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Executable tests against temporary git repositories, including refusal controls; not a whole-program proof.",
+      "evidence": "node --test scripts/__tests__/continuous-improvement-loop.test.mjs on the candidate commit; hosted CI on pull request #750.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "high for the tested git and configuration boundaries; the quality of proposed changes is outside this requirement",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local tests pass; the supervisor's launchd behaviour and disk guard are exercised by shell tests only, and hosted gates remain pending."
+      }
     }
   ]
 }
