@@ -210,29 +210,90 @@ stop_child() {
   kill -9 "$pid" 2>/dev/null || true
 }
 
-# Take the lock before installing the cleanup trap, so a supervisor that loses the race
-# cannot delete the running supervisor's lock or child PID file on its way out.
-if ! mkdir "$LOCK_DIR" 2>/dev/null; then
-  lock_owner="$(cat "$LOCK_DIR/pid" 2>/dev/null || true)"
-  if is_pid_alive "$lock_owner"; then
-    echo "Continuous improvement loop supervisor already running (pid $lock_owner, lock $LOCK_DIR)" >&2
-    exit 1
+# The lock is a directory holding the owner's PID. A supervisor that has just won the
+# mkdir may not have written its PID yet, so an empty owner is treated as initializing
+# for a short grace period, and taking over a stale lock is serialized by a second
+# directory so two starting supervisors cannot both clear it and both run.
+LOCK_INIT_GRACE_SECONDS="${CONTINUOUS_LOOP_LOCK_INIT_GRACE_SECONDS:-5}"
+LOCK_TAKEOVER_DIR="$LOCK_DIR.takeover"
+
+write_lock_pid() {
+  # Write then rename, so a reader never sees a partially written PID.
+  local tmp="$LOCK_DIR/pid.$$.tmp"
+  echo "$$" > "$tmp"
+  mv -f "$tmp" "$LOCK_DIR/pid"
+}
+
+read_lock_owner() {
+  cat "$LOCK_DIR/pid" 2>/dev/null || true
+}
+
+wait_for_lock_owner() {
+  local owner="" tries=$(( LOCK_INIT_GRACE_SECONDS * 10 ))
+  while :; do
+    owner="$(read_lock_owner)"
+    if [ -n "$owner" ] || [ ! -d "$LOCK_DIR" ] || [ "$tries" -le 0 ]; then
+      break
+    fi
+    tries=$(( tries - 1 ))
+    sleep 0.1
+  done
+  printf '%s' "$owner"
+}
+
+report_lock_held() {
+  local owner="$1"
+  if [ -n "$owner" ]; then
+    echo "Continuous improvement loop supervisor already running (pid $owner, lock $LOCK_DIR)" >&2
+  else
+    echo "Continuous improvement loop supervisor lock is being taken at $LOCK_DIR" >&2
+  fi
+  exit 1
+}
+
+acquire_lock() {
+  local owner current
+  if mkdir "$LOCK_DIR" 2>/dev/null; then
+    write_lock_pid
+    return 0
+  fi
+  owner="$(wait_for_lock_owner)"
+  if is_pid_alive "$owner"; then
+    report_lock_held "$owner"
   fi
   # Stale lock from a supervisor that was killed without running its cleanup.
-  rm -rf "$LOCK_DIR"
-  if ! mkdir "$LOCK_DIR" 2>/dev/null; then
-    echo "Continuous improvement loop supervisor lock exists at $LOCK_DIR" >&2
+  if ! mkdir "$LOCK_TAKEOVER_DIR" 2>/dev/null; then
+    echo "Another supervisor is taking over the stale lock at $LOCK_DIR (remove $LOCK_TAKEOVER_DIR if none is starting)" >&2
     exit 1
   fi
-fi
-echo "$$" > "$LOCK_DIR/pid"
+  # Re-check under the takeover guard: another supervisor may have taken the lock since.
+  current="$(read_lock_owner)"
+  if [ -d "$LOCK_DIR" ] && { [ "$current" != "$owner" ] || is_pid_alive "$current"; }; then
+    rmdir "$LOCK_TAKEOVER_DIR" 2>/dev/null || true
+    report_lock_held "$current"
+  fi
+  rm -rf "$LOCK_DIR"
+  if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+    rmdir "$LOCK_TAKEOVER_DIR" 2>/dev/null || true
+    report_lock_held "$(read_lock_owner)"
+  fi
+  write_lock_pid
+  rmdir "$LOCK_TAKEOVER_DIR" 2>/dev/null || true
+}
+
+# Take the lock before installing the cleanup trap, so a supervisor that loses the race
+# cannot delete the running supervisor's lock or child PID file on its way out.
+acquire_lock
 
 child_pid=""
 
 cleanup() {
   stop_child "$child_pid"
   rm -f "$CHILD_PID_FILE"
-  rm -rf "$LOCK_DIR"
+  # Only release a lock this supervisor still owns.
+  if [ "$(read_lock_owner)" = "$$" ]; then
+    rm -rf "$LOCK_DIR"
+  fi
 }
 trap 'cleanup' EXIT
 trap 'exit 143' TERM INT HUP

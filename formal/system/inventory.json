@@ -3986,7 +3986,7 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "d20d121cfa519845dcf92d8dcf9a731ab683c53dda31311d2f1f8ab0a076e8c1",
+      "sha256": "a9f665f14a487ec4b4bf8a0bafb11999250e0d0d816a72cc5426bab57b4082f7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4868,7 +4868,7 @@
     {
       "id": "SURFACE-b3c3757671de3a8f",
       "path": "scripts/continuous-improvement-loop-supervisor.sh",
-      "sha256": "08707c7685af153cabc5d93da8ee490bd0eca6de7f99d16b28df6f5afe881581",
+      "sha256": "5f7ad2ee6a6070463e7fb8e5da4eeda56afc66c00015dc4eb6935b4a0ca4d7b4",
       "semanticConformance": "not-established-by-discovery"
     },
     {

@@ -1595,6 +1595,116 @@ test('a second supervisor leaves the running supervisor lock and child PID file 
   }
 });
 
+function supervisorLockFixtureEnv(tempRoot, stateDir, lockDir, extra = {}) {
+  const env = { ...process.env };
+  delete env.CONTINUOUS_LOOP_WORKTREE;
+  return {
+    ...env,
+    CONTINUOUS_LOOP_STATE_DIR: stateDir,
+    CONTINUOUS_LOOP_LOG_FILE: path.join(tempRoot, 'loop.log'),
+    CONTINUOUS_LOOP_PID_FILE: path.join(tempRoot, 'loop.pid'),
+    CONTINUOUS_LOOP_CHILD_PID_FILE: path.join(stateDir, 'child.pid'),
+    CONTINUOUS_LOOP_STATUS_FILE: path.join(stateDir, 'status.json'),
+    CONTINUOUS_LOOP_STOP_FILE: path.join(stateDir, 'stop'),
+    CONTINUOUS_LOOP_HEARTBEAT_FILE: path.join(stateDir, 'heartbeat.txt'),
+    CONTINUOUS_LOOP_LOCK_DIR: lockDir,
+    CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS: '1',
+    ...extra,
+  };
+}
+
+async function deadPid() {
+  const child = spawn('true', [], { stdio: 'ignore' });
+  await new Promise((resolve) => child.on('exit', resolve));
+  return child.pid;
+}
+
+test('a second supervisor waits for a just-created lock to get its owner instead of stealing it', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-lock-init-test-'));
+  const stateDir = path.join(tempRoot, 'state');
+  const lockDir = path.join(stateDir, 'lock');
+  const supervisorPath = path.resolve(testDir, '..', 'continuous-improvement-loop-supervisor.sh');
+
+  try {
+    // The first supervisor has won the mkdir but has not written its PID yet.
+    await fs.mkdir(lockDir, { recursive: true });
+    const second = execFileAsync('bash', [supervisorPath, path.join(tempRoot, 'missing-config.json')], {
+      env: supervisorLockFixtureEnv(tempRoot, stateDir, lockDir, { CONTINUOUS_LOOP_LOCK_INIT_GRACE_SECONDS: '5' }),
+      timeout: 20000,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await fs.writeFile(path.join(lockDir, 'pid'), `${process.pid}\n`, 'utf8');
+
+    await assert.rejects(() => second, /supervisor already running \(pid \d+/);
+    assert.equal((await fs.readFile(path.join(lockDir, 'pid'), 'utf8')).trim(), String(process.pid));
+    await assert.rejects(() => fs.access(path.join(tempRoot, 'loop.pid')));
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('a supervisor does not clear a stale lock while another supervisor is taking it over', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-lock-takeover-test-'));
+  const stateDir = path.join(tempRoot, 'state');
+  const lockDir = path.join(stateDir, 'lock');
+  const supervisorPath = path.resolve(testDir, '..', 'continuous-improvement-loop-supervisor.sh');
+
+  try {
+    const stalePid = await deadPid();
+    await fs.mkdir(lockDir, { recursive: true });
+    await fs.writeFile(path.join(lockDir, 'pid'), `${stalePid}\n`, 'utf8');
+    await fs.mkdir(`${lockDir}.takeover`);
+
+    await assert.rejects(
+      () =>
+        execFileAsync('bash', [supervisorPath, path.join(tempRoot, 'missing-config.json')], {
+          env: supervisorLockFixtureEnv(tempRoot, stateDir, lockDir),
+          timeout: 20000,
+        }),
+      /taking over the stale lock/,
+    );
+    assert.equal((await fs.readFile(path.join(lockDir, 'pid'), 'utf8')).trim(), String(stalePid));
+    await assert.rejects(() => fs.access(path.join(tempRoot, 'loop.pid')));
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('a supervisor takes over a stale lock and releases it on exit', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-lock-stale-test-'));
+  const stateDir = path.join(tempRoot, 'state');
+  const lockDir = path.join(stateDir, 'lock');
+  const supervisorPath = path.resolve(testDir, '..', 'continuous-improvement-loop-supervisor.sh');
+  let supervisor = null;
+
+  try {
+    await fs.mkdir(lockDir, { recursive: true });
+    await fs.writeFile(path.join(lockDir, 'pid'), `${await deadPid()}\n`, 'utf8');
+
+    supervisor = spawn('bash', [supervisorPath, path.join(tempRoot, 'missing-config.json')], {
+      stdio: 'ignore',
+      env: supervisorLockFixtureEnv(tempRoot, stateDir, lockDir),
+    });
+    const exited = new Promise((resolve) => supervisor.on('exit', resolve));
+
+    let owner = '';
+    for (let attempt = 0; attempt < 100 && owner !== String(supervisor.pid); attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      owner = (await fs.readFile(path.join(lockDir, 'pid'), 'utf8').catch(() => '')).trim();
+    }
+    assert.equal(owner, String(supervisor.pid));
+    await assert.rejects(() => fs.access(`${lockDir}.takeover`));
+
+    supervisor.kill('SIGTERM');
+    await exited;
+    supervisor = null;
+    await assert.rejects(() => fs.access(lockDir));
+  } finally {
+    if (supervisor) supervisor.kill('SIGKILL');
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test('supervisor blocks instead of starting a child when no dedicated worktree is configured', async () => {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-supervisor-block-test-'));
   const stateDir = path.join(tempRoot, 'state');

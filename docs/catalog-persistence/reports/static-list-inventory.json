@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-18T01:00:34.760Z",
+  "generatedAt": "2026-11-18T01:42:21.128Z",
   "repositoryRoot": ".",
   "filesScanned": 2753,
   "candidateCount": 1466,
@@ -46037,7 +46037,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 443,
+      "consumerCount": 444,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -46202,9 +46202,9 @@
         "scripts/check-browser-vendor.mjs",
         "scripts/check-build-trust.mjs",
         "scripts/ci-change-scope.mjs",
+        "scripts/continuous-improvement-loop-supervisor.sh",
         "scripts/deploy-stripe-ticketing.sh",
-        "scripts/diagnose-social.mjs",
-        "scripts/fetch-ddex-ern432-schema.sh"
+        "scripts/diagnose-social.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -46613,7 +46613,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 449,
+      "consumerCount": 450,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -71237,7 +71237,7 @@
       "lines": [
         17
       ],
-      "consumerCount": 518,
+      "consumerCount": 519,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
