@@ -330,7 +330,24 @@ export default function HostedProviderCheckout({
 
   if (methods.length === 0 && !pendingCreation && !selected && !session) return null;
 
-  const navigate = navigateToProvider ?? ((url: string) => window.location.assign(url));
+  const navigate = (provider: ProviderPaymentSession['provider'], url: string) => {
+    if (navigateToProvider) {
+      navigateToProvider(url);
+      return;
+    }
+    if (provider !== 'payphone') {
+      window.location.assign(url);
+      return;
+    }
+    // PayPhone checks the referring origin. Keep the ticket document's private
+    // path and query under its existing referrer policy for all other requests.
+    const link = document.createElement('a');
+    link.href = url;
+    link.referrerPolicy = 'origin';
+    document.body.append(link);
+    link.click();
+    link.remove();
+  };
 
   const startPayment = async (method: HostedPaymentMethodDefinition) => {
     if (busy) return;
@@ -447,7 +464,7 @@ export default function HostedProviderCheckout({
             : 'El proveedor devolvió una redirección insegura. No reintentes con otro método; soporte debe conciliar este intento.');
           return;
         }
-        navigate(redirect);
+        navigate(next.provider, redirect);
       }
     } catch (startError) {
       if (recoveryScopeRef.current !== requestScope) return;
@@ -544,7 +561,7 @@ export default function HostedProviderCheckout({
       {copy && <Alert severity={copy.severity}>{copy.message}</Alert>}
       {error && <Alert severity="warning">{error}</Alert>}
       {existingRedirect && session?.state === 'requires_customer_action' && (
-        <Button variant="contained" onClick={() => navigate(existingRedirect)} disabled={disabled || busy}>
+        <Button variant="contained" onClick={() => navigate(session.provider, existingRedirect)} disabled={disabled || busy}>
           {english ? 'Continue on the secure provider page' : 'Continuar en la página segura del proveedor'}
         </Button>
       )}
