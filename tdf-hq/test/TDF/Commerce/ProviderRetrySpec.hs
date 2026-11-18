@@ -35,6 +35,8 @@ import           Numeric (readHex)
 import qualified Network.HTTP.Client as HC
 import           Servant (Handler, NoContent, ServerError, errHTTPCode, errBody, errHeaders, runHandler, getResponse, getHeaders, (:<|>)(..))
 import           System.Environment (lookupEnv, setEnv, unsetEnv)
+import           System.Process (callProcess)
+import           System.IO.Temp (withSystemTempDirectory)
 import qualified System.Timeout as Timeout
 import           Test.Hspec
 
@@ -423,6 +425,7 @@ spec = do
         closedCheckoutEvidenceSpec
         captureReplaySpec
         ticketLedgerSpec
+        paymentSnapshotRestoreSpec
         ticketAllocationSpec
         legacyStripeRefundSpec
         ticketTierCapacitySpec
@@ -2306,6 +2309,48 @@ assertClosedPaymentEvidence pool payment = do
   where checkoutId = Checkout.checkoutReferenceId (Execution.bppCheckout payment)
 
 -- Zero commercial fees are valid; zero-valued journal lines are not.
+
+-- Deliberately opt-in: full database replacement only in the private lab.
+-- Provider evidence is synthetic. This invokes the canonical backend writer,
+-- not Dataweb HTTP, its callback handler, or its reference parser.
+paymentSnapshotRestoreSpec :: SpecWith ConnectionPool
+paymentSnapshotRestoreSpec = describe "payment snapshot restore laboratory" $
+  it "reconciles post-snapshot Datafast evidence once after a real restore" $ \pool -> do
+    enabled <- lookupEnv "TDF_RECOVERY_RESTORE_LAB"
+    unless (enabled == Just "synthetic-loopback-only") $
+      pendingWith "Requires explicitly isolated synthetic PostgreSQL laboratory"
+    configured <- lookupEnv "TDF_PROVIDER_RETRY_DATABASE_URL"
+    url <- maybe (fail "Missing isolated database URL") pure configured
+    let prefix = "postgresql://synthetic@127.0.0.1:"
+        suffix = "/tdf_provider_retry_test"
+        port = T.stripPrefix prefix (T.pack url) >>= T.stripSuffix suffix
+    unless (maybe False (\value -> not (T.null value) && T.all (\c -> c >= '0' && c <= '9') value) port) $
+      fail "Restore laboratory requires exact synthetic user and loopback URL without options"
+    names <- runSqlPool (rawSql "SELECT current_database()" []) pool :: IO [Single Text]
+    names `shouldBe` [Single "tdf_provider_retry_test"]
+    creation <- newCheckout pool
+    payment <- captureFixtureFromCheckout creation "payment" Checkout.AttemptProcessing pool Checkout.ProviderDatafast
+    before <- runSqlPool (captureSnapshot payment) pool
+    withSystemTempDirectory "tdf-synthetic-payment-restore-" $ \directory -> do
+      let dump = directory <> "/before-confirmation.dump"
+      callProcess "pg_dump" ["--format=custom", "--file", dump, "--dbname", url]
+      runSqlPool (Checkout.recordVerifiedPaymentOrReconcile payment) pool `shouldReturn` Right True
+      confirmed <- runSqlPool (captureSnapshot payment) pool
+      confirmed `shouldNotBe` before
+      -- An actual dump restore discards the post-snapshot confirmation.
+      destroyAllResources pool
+      callProcess "pg_restore" ["--clean", "--if-exists", "--exit-on-error", "--no-owner", "--dbname", url, dump]
+      destroyAllResources pool
+      runSqlPool (captureSnapshot payment) pool `shouldReturn` before
+      let apply = runSqlPool (Checkout.recordVerifiedPaymentOrReconcile payment) pool
+      recovered <- concurrently (replicate 8 apply)
+      length (filter (== Right True) recovered) `shouldBe` 1
+      length (filter (== Right False) recovered) `shouldBe` 7
+      once <- runSqlPool (captureSnapshot payment) pool
+      once `shouldNotBe` before
+      apply `shouldReturn` Right False
+      runSqlPool (captureSnapshot payment) pool `shouldReturn` once
+
 ticketLedgerSpec :: SpecWith ConnectionPool
 ticketLedgerSpec = describe "ticket capture ledger" $
   forM_ [(0,0),(0,261),(100,0),(100,261)] $ \(fee,tax) ->
