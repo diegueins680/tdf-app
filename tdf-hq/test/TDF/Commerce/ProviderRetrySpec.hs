@@ -3,10 +3,10 @@
 -- Real PostgreSQL persistence/concurrency tests; no provider HTTP or credentials.
 module TDF.Commerce.ProviderRetrySpec (spec) where
 
-import Data.List (nub)
+import Data.List (intercalate, isPrefixOf, nub)
 import           Control.Concurrent (MVar, ThreadId, forkFinally, killThread, newEmptyMVar, putMVar, readMVar, takeMVar, threadDelay, tryPutMVar)
 import           Control.Exception (AsyncException(..), IOException, bracket, throwIO, toException, try)
-import           Control.Monad (forM, forM_, unless, when)
+import           Control.Monad (filterM, forM, forM_, unless, when)
 import           Control.Monad.Logger (runNoLoggingT)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, runReaderT)
@@ -34,8 +34,9 @@ import           Network.Socket (SockAddr(..))
 import           Numeric (readHex)
 import qualified Network.HTTP.Client as HC
 import           Servant (Handler, NoContent, ServerError, errHTTPCode, errBody, errHeaders, runHandler, getResponse, getHeaders, (:<|>)(..))
-import           System.Environment (lookupEnv, setEnv, unsetEnv)
-import           System.Process (callProcess)
+import           System.Environment (getEnvironment, lookupEnv, setEnv, unsetEnv)
+import qualified System.Exit as Exit
+import qualified System.Process as Process
 import           System.IO.Temp (withSystemTempDirectory)
 import qualified System.Timeout as Timeout
 import           Test.Hspec
@@ -2333,13 +2334,13 @@ paymentSnapshotRestoreSpec = describe "payment snapshot restore laboratory" $
     before <- runSqlPool (captureSnapshot payment) pool
     withSystemTempDirectory "tdf-synthetic-payment-restore-" $ \directory -> do
       let dump = directory <> "/before-confirmation.dump"
-      callProcess "pg_dump" ["--format=custom", "--file", dump, "--dbname", url]
+      callIsolatedPostgresTool "pg_dump" ["--format=custom", "--file", dump, "--dbname", url]
       runSqlPool (Checkout.recordVerifiedPaymentOrReconcile payment) pool `shouldReturn` Right True
       confirmed <- runSqlPool (captureSnapshot payment) pool
       confirmed `shouldNotBe` before
       -- An actual dump restore discards the post-snapshot confirmation.
       destroyAllResources pool
-      callProcess "pg_restore" ["--clean", "--if-exists", "--exit-on-error", "--no-owner", "--dbname", url, dump]
+      callIsolatedPostgresTool "pg_restore" ["--clean", "--if-exists", "--exit-on-error", "--no-owner", "--dbname", url, dump]
       destroyAllResources pool
       runSqlPool (captureSnapshot payment) pool `shouldReturn` before
       let apply = runSqlPool (Checkout.recordVerifiedPaymentOrReconcile payment) pool
@@ -3530,8 +3531,31 @@ withCompletionEnvironment action = bracket
       , ("PAYPAL_CLIENT_SECRET", "synthetic-secret"), ("PAYPAL_WEBHOOK_ID", "synthetic-webhook")
       , ("COMMERCE_EVENT_ENCRYPTION_KEY", T.unpack recoveryEncryptionKey)]
 
+-- libpq lets PGHOSTADDR, or a service file, pick the server even when the URL
+-- names loopback, so the disposable-database checks would not bind the
+-- connection. Refuse them before any connection opens, whoever runs the spec.
+libpqRoutingOverrides :: [String]
+libpqRoutingOverrides = ["PGHOSTADDR", "PGSERVICE", "PGSERVICEFILE"]
+
+rejectLibpqRoutingOverrides :: IO ()
+rejectLibpqRoutingOverrides = do
+  present <- filterM (fmap (maybe False (not . null)) . lookupEnv) libpqRoutingOverrides
+  unless (null present) $
+    fail ("Unset libpq routing overrides before using the disposable database: " <> intercalate ", " present)
+
+-- Dump and restore get the URL alone: no inherited PG* variable reaches them.
+callIsolatedPostgresTool :: FilePath -> [String] -> IO ()
+callIsolatedPostgresTool tool arguments = do
+  rejectLibpqRoutingOverrides
+  inherited <- getEnvironment
+  let isolated = [binding | binding@(name, _) <- inherited, not ("PG" `isPrefixOf` name)]
+  (code, _, errors) <- Process.readCreateProcessWithExitCode
+    (Process.proc tool arguments) { Process.env = Just isolated } ""
+  unless (code == Exit.ExitSuccess) $ fail (tool <> " failed: " <> errors)
+
 openDatabase :: String -> IO ConnectionPool
 openDatabase url = do
+  rejectLibpqRoutingOverrides
   pool <- runNoLoggingT (createPostgresqlPool (BS.pack url) 4)
   names <- runSqlPool (rawSql "SELECT current_database()" []) pool :: IO [Single Text]
   unless (names == [Single "tdf_provider_retry_test"]) $ do
