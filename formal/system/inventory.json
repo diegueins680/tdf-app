@@ -10380,7 +10380,7 @@
     {
       "id": "SURFACE-0ba61d7e94897ebf",
       "path": "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
-      "sha256": "c4532b0883f136a4762d8dd0e4a2eb40b8344f933f504bc670a175e3de697786",
+      "sha256": "595ba70e087e67e62938c7bec80edae64f0dd727099d32eb7fad6b31890f5ab4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10434,13 +10434,13 @@
     {
       "id": "SURFACE-d689c68a5b5cfbbc",
       "path": "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
-      "sha256": "85c5ac5c573b2b7cf5e88eb38551ecc59f79981a404d6a611dc1c9702b6a235f",
+      "sha256": "88fee49d0de0da73ef830a06ca738bddeb8b94bfabaf317b45f7156c7c483acf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-22fab616d1cda1f8",
       "path": "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
-      "sha256": "20621bc5d448ccaa46aa16cd3000246abe7a389160d4bdbe4158abb7c7323e53",
+      "sha256": "e2ff53cad0f855d869ca9b3278ba0b5c3e8530ba7cefd4809fd6056beba39fa5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17352,7 +17352,7 @@
     {
       "id": "SURFACE-1d441708a9c7e070",
       "path": "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-      "sha256": "29d50650e88731b500f9993f0703f4e6a8145ad2791f93e5ac1813e588d0466f",
+      "sha256": "f45c2b0ddd9a9909682a15fe7197ea5480a28551a4575f7d0fcb2f7193d8ca47",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18522,7 +18522,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "e2d10ab0fc43c6d70de62c293de8647ad1ed71f3eeb04b6d34a728a64a0889c4",
+      "sha256": "36e3b6234bae9d7a786e0fd957c54caa49b2ecf00076ec2dcea36c6828b6a00a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24053,7 +24053,7 @@
     },
     {
       "path": "docs/marketplace/manual-gates.md",
-      "sha256": "0d39feb98db580b06fa019eb793d899e6c9bfb0791dd2dc14307f543151e1b54",
+      "sha256": "66b0ddb90fa536e69f2981420dbe55cf75a5a78a723319bb4d98b7a55013aacd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

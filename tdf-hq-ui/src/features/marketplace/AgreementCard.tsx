@@ -35,7 +35,7 @@ export default function AgreementCard({ agreement, currencies }: AgreementCardPr
     },
   });
   // ADR 0136: the buyer pays the charge the agreement waits for on PayPhone.
-  const pay = useMutation({ mutationFn: () => startAgreementPayment(agreement.id) });
+  const pay = useMutation({ mutationFn: () => startAgreementPayment(agreement) });
   const payable = agreementPayableByBuyer(agreement);
   const actions = agreementActions(agreement.status, agreement.participantRole);
   const terms = describeTerms(agreement.terms, t);

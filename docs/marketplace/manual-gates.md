@@ -94,7 +94,7 @@ pruebas de PayPhone, con dos cuentas y un receptor real:
 | PayPhone acepta `transferTo` con `Amount` numérico en centavos | Revisar en PayPhone Developer que el receptor recibió `provider_amount_minor` |
 | `payWithCard` está en `payphonetodoesposible.com` o `payphone.app` | Si es otro dominio, ampliar `safePayPhoneRedirect` (backend y web) |
 | PayPhone añade `id` y `clientTransactionId` a la URL de respuesta sin romper `tdf_checkout` | La página de retorno ya corta lo que siga a un segundo `?` |
-| La consulta del worker confirma antes de cinco minutos | `COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED=true` y flag `checkout.provider_query_recovery`; medir el tiempo entre pago y confirmación |
+| La consulta del worker confirma antes de cinco minutos | `COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED=true` y flag `checkout.provider_query_recovery`. Las referencias `TDFC-` se confirman cada minuto (`providerQueryRetryDelaySeconds`) durante los 24 intentos, unos 24 minutos; el presupuesto compartido de una consulta por proveedor cada diez segundos sostiene ese ritmo con seis cobros simultáneos y el plazo con unos 25. Medir el tiempo entre pago y confirmación |
 
 Configuración: `PAYPHONE_CODING_PASSWORD` (exactamente 32 caracteres, de PayPhone Developer) además de
 `PAYPHONE_TOKEN`, `PAYPHONE_STORE_ID` y `PAYPHONE_RESPONSE_URL`. Sin la contraseña el método `card`

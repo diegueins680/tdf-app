@@ -49,13 +49,19 @@ export function agreementPayableByBuyer(agreement: Pick<MarketplaceAgreement, 'p
     && (agreement.payoutProviders ?? []).includes('payphone');
 }
 
+/** The agreement and the stage whose charge the buyer pays. */
+export type AgreementPaymentTarget = Pick<MarketplaceAgreement, 'id' | 'status'>;
+
 /**
  * Where the buyer lands after paying one agreement's charge. The agreement id
- * scopes this tab's recovery records, so a retry reuses only that agreement's
- * checkout; the page itself ignores the extra parameter.
+ * and its stage scope this tab's recovery records, so a retry reuses only that
+ * charge's checkout and a deposit record (even one never marked completed,
+ * when the buyer skipped the return page) cannot stand in for the balance. The
+ * page itself ignores the extra parameters.
  */
-export function agreementPaymentReturnPath(agreementId: string): string {
-  return `${AGREEMENT_PAYMENT_RETURN_PATH}&acuerdo=${encodeURIComponent(agreementId)}`;
+export function agreementPaymentReturnPath(agreement: AgreementPaymentTarget): string {
+  return `${AGREEMENT_PAYMENT_RETURN_PATH}&acuerdo=${encodeURIComponent(agreement.id)}`
+    + `&cobro=${encodeURIComponent(agreement.status)}`;
 }
 
 /** How starting a payment ended when it did not throw. */
@@ -92,10 +98,10 @@ const checkoutNoLongerPayable = (error: unknown): boolean =>
  * server answers 503 and nothing is stored.
  */
 export async function startAgreementPayment(
-  agreementId: string,
+  agreement: AgreementPaymentTarget,
   navigate: (url: string) => void = (url) => window.location.assign(url),
 ): Promise<AgreementPaymentStart> {
-  const returnPath = agreementPaymentReturnPath(agreementId);
+  const returnPath = agreementPaymentReturnPath(agreement);
   const open = (session: ProviderPaymentSession): AgreementPaymentStart => {
     // A missing or foreign page is never opened; the charge stays pending.
     const redirect = session.state === 'requires_customer_action' ? safePayPhoneRedirect(session.redirectUrl) : null;
@@ -128,7 +134,7 @@ export async function startAgreementPayment(
       checkout = { checkoutId: pending.checkoutId, lookupToken: pending.lookupToken };
     }
     if (!checkout || !idempotencyKey) {
-      const created = await Directory.createAgreementPayment(agreementId, 'payphone');
+      const created = await Directory.createAgreementPayment(agreement.id, 'payphone');
       checkout = { checkoutId: created.checkoutId, lookupToken: created.lookupToken };
       idempotencyKey = loadOrCreatePaymentIdempotencyKey(checkout.checkoutId, 'payphone', 'card');
       const recorded = saveProviderPaymentPending({
@@ -155,7 +161,7 @@ export async function startAgreementPayment(
       // A replay refused outright means the charge was replaced or ended: start over once.
       if (pending && checkoutNoLongerPayable(error)) {
         forget(pending.checkoutId);
-        return await startAgreementPayment(agreementId, navigate);
+        return await startAgreementPayment(agreement, navigate);
       }
       throw error;
     }

@@ -3265,6 +3265,15 @@ main = hspec $ do
             fmap ProviderAdapter.arUrl (ProviderAdapter.adapterBuildQuery payPhoneSplit adapterContext locator)
               `shouldSatisfy` either (const False) ("/api/Sale/client/" `Data.Text.isInfixOf`)
 
+        it "confirms a PayPhone Button charge every minute instead of backing off (ADR 0136)" $ do
+            let delay = ProviderExecutionStore.providerQueryRetryDelaySeconds
+            map (delay "TDFC-0123456789abcdef0123456789a") [1, 8, 24] `shouldBe` [60, 60, 60]
+            -- 24 attempts a minute apart outlast the ten-minute form plus the
+            -- five-minute confirmation window.
+            sum (map (delay "TDFC-0123456789abcdef0123456789a") [1 .. 24])
+              `shouldSatisfy` (>= 15 * 60)
+            map (delay "TDF-checkout-reference") [1, 2, 8, 24] `shouldBe` [30, 60, 3600, 3600]
+
         it "trusts PayPhone success only after an authenticated exact-binding query" $ do
             let response amount reference currency statusCode = A.object
                   [ "amount" .= (amount :: Int)

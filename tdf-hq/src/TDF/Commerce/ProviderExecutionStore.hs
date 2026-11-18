@@ -36,6 +36,7 @@ module TDF.Commerce.ProviderExecutionStore
   , lockLiveProviderQuery
   , queryRecoveryReady
   , finishProviderQuery
+  , providerQueryRetryDelaySeconds
   , providerQueryOperationTerminal
   ) where
 
@@ -60,6 +61,7 @@ import           Database.Persist.Sql
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.Commerce.ProviderAdapter
   ( AdapterOperation(..), AdapterResult(..), AdapterResultState(..), SplitTransfer(..) )
+import           TDF.Commerce.ProviderAdapter.PayPhone (payPhoneButtonReferencePrefix)
 import           TDF.Commerce.ProviderCapabilities
   ( PaymentMethod, paymentMethodText, ProviderOutcomeCertainty(..) )
 
@@ -300,13 +302,28 @@ providerQueryOperationTerminal claim = do
     \ WHERE id=?::uuid FOR UPDATE" [PersistText (pqcOperationId claim)]
   pure (rows == [Single True])
 
+-- | Seconds until the next authenticated query of an operation, given the
+-- attempt just made. The generic schedule backs off from 30 seconds to an hour.
+-- A PayPhone Button query is its confirmation, and PayPhone reverses a Button
+-- payment that is not confirmed within five minutes of the payment; its form
+-- lives ten minutes from load (ADR 0136). Button references are therefore
+-- confirmed every minute for the whole budget of 24 attempts (about 24
+-- minutes, past the form's life). The shared budget of one query per provider
+-- every ten seconds keeps the minute for six concurrent jobs and stays inside
+-- the five-minute deadline for about 25; a confirmation that still misses it is
+-- reversed by PayPhone, so the buyer is not charged.
+providerQueryRetryDelaySeconds :: Text -> Int -> Int
+providerQueryRetryDelaySeconds reference attempt
+  | payPhoneButtonReferencePrefix `T.isPrefixOf` reference = 60
+  | otherwise = min 3600 (30 * (2 ^ min 7 (max 0 (attempt - 1))))
+
 -- Call only while holding the validated lease row lock. A lease that expires
 -- during this short transaction cannot be stolen until the commit completes.
 finishProviderQuery :: ProviderQueryClaim -> Text -> Text -> SqlPersistT IO ()
 finishProviderQuery claim requestedStatus code = do
   let status = if requestedStatus == "retry" && pqcAttemptCount claim >= 24
         then "dead_letter" else requestedStatus
-      delaySeconds = min 3600 (30 * (2 ^ min 7 (max 0 (pqcAttemptCount claim - 1))) :: Int)
+      delaySeconds = providerQueryRetryDelaySeconds (pqcProviderReference claim) (pqcAttemptCount claim)
   rows <- rawSql
     "UPDATE commerce_provider_query_job SET status=?,lease_token=NULL,lease_expires_at=NULL,\
     \ next_attempt_at=clock_timestamp()+(? * INTERVAL '1 second'),last_error_code=?,\

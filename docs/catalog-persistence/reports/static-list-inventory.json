@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-18T02:00:37.641Z",
+  "generatedAt": "2026-11-18T03:20:49.730Z",
   "repositoryRoot": ".",
   "filesScanned": 2757,
   "candidateCount": 1467,
@@ -6870,7 +6870,7 @@
       "lines": [
         238
       ],
-      "consumerCount": 139,
+      "consumerCount": 140,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -6935,6 +6935,7 @@
         "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.test.ts",
         "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.ts",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/i18n/locales/es.ts",
