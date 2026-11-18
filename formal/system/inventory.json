@@ -1215,8 +1215,6 @@
       "tdf-hq-ui/src/features/fans/useFanProfile.ts",
       "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx",
       "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts",
-      "tdf-hq-ui/src/features/featureRegistry.test.ts",
-      "tdf-hq-ui/src/features/featureRegistry.ts",
       "tdf-hq-ui/src/features/finance/davidCelayaReport.test.ts",
       "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
       "tdf-hq-ui/src/features/finance/estebanMunozReport.test.ts",
@@ -1687,6 +1685,8 @@
       "tdf-hq-ui/src/utils/eventTicketPricing.ts",
       "tdf-hq-ui/src/utils/externalTicketing.test.ts",
       "tdf-hq-ui/src/utils/externalTicketing.ts",
+      "tdf-hq-ui/src/utils/featureRegistry.test.ts",
+      "tdf-hq-ui/src/utils/featureRegistry.ts",
       "tdf-hq-ui/src/utils/formatPhone.ts",
       "tdf-hq-ui/src/utils/formatters.test.ts",
       "tdf-hq-ui/src/utils/formatters.ts",
@@ -3934,7 +3934,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "f6b701b4c7e09c5f010e2ff0eb8d68ab54c027272f3bd11bbc4c6e9173fd4661",
+      "sha256": "a4d2da55917887e0cdb875e76b33125bde30a56cb0bcb0a7c1ee62d9f0f0725a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7192,7 +7192,7 @@
     {
       "id": "SURFACE-7873643aff696047",
       "path": "scripts/ux-audit-inventory.mjs",
-      "sha256": "2e0188a0da35648c977a692ebc35a58e01aac2c454ba3f7ee65b4ad7c166f528",
+      "sha256": "eba2592a30aab4c034386bcbcc61dd7634ae139ae8387842fc11f8faeda53cca",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8116,7 +8116,7 @@
     {
       "id": "SURFACE-5f61a01aa269f351",
       "path": "tdf-hq-ui/src/api/accessRequests.ts",
-      "sha256": "6989c7101cd4a221461cbcc97f0ef65425aea589a263b86423119707d58461fd",
+      "sha256": "cf15b50d5059fcf4e4e959819aa6d335c7bbc55d436251b5cd305c802a16365b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9430,7 +9430,7 @@
     {
       "id": "SURFACE-86fcc61cfe3835da",
       "path": "tdf-hq-ui/src/components/RegistryBreadcrumbs.tsx",
-      "sha256": "80301e806ff43477630dcb1d66bfa20721e59a19a2bbebff8bafc68ea8930b2a",
+      "sha256": "de8ff69e9cc760218feafdb5d903902ec5bc8a0b9d63c0497cb6dda5d02ce246",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9490,13 +9490,13 @@
     {
       "id": "SURFACE-52ded61d23ac18e9",
       "path": "tdf-hq-ui/src/components/SidebarNav.test.tsx",
-      "sha256": "e3256af3ef5a49bb099438a71f1106c9338c186faa26c22b2464da659a0c1728",
+      "sha256": "6d3c9a552f5cb3a2dea7d80ba9f87c35c74b283a6a808da52a0b765fd5706c18",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-eacab29ef41a9481",
       "path": "tdf-hq-ui/src/components/SidebarNav.tsx",
-      "sha256": "d579734d5562fd3512b424413860a68077f79c4e88b1f2d5e4c5a3d4592c0f62",
+      "sha256": "4fd28900b142d538af4fabeb8bf99924bf1419c6badfec877a4c685182224afd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9562,7 +9562,7 @@
     {
       "id": "SURFACE-22daf3b92079c9ee",
       "path": "tdf-hq-ui/src/components/TopBar.tsx",
-      "sha256": "3103c4693585b90c462206149c79af0e45107a8ff9203afecaf70ebe7fee1fb5",
+      "sha256": "a8004b80c8597e8a74dee21966b17d6438cba756572f3f338d114754f823c479",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10292,18 +10292,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-2ee656af772bf719",
-      "path": "tdf-hq-ui/src/features/featureRegistry.test.ts",
-      "sha256": "3e8ea3f9a0fdd8e13cfb846d7259dd7b4ad723b0154eddd187d99ae1cdb4d368",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-d1ac87354eb95a4d",
-      "path": "tdf-hq-ui/src/features/featureRegistry.ts",
-      "sha256": "d709057904f96995ef7f5b734952b3c588b93dece56ed510f56e409ad035c955",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-f0b1d4c69d524f12",
       "path": "tdf-hq-ui/src/features/finance/davidCelayaReport.test.ts",
       "sha256": "bf25e1dff1ceaa68d386642924890977b0d7e46d519dd08a5d1c96a67a789890",
@@ -10894,7 +10882,7 @@
     {
       "id": "SURFACE-53c8ba4f1cec8bc4",
       "path": "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
-      "sha256": "379838b2ea4d5df4024ff3dde1e95d252a75c92dfc225b37ad6ee54328c8153a",
+      "sha256": "f7877511f53b86714b821d5fe40a5b4f58db6420e458cbbe63b5a432b28cbaad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11416,13 +11404,13 @@
     {
       "id": "SURFACE-4c18f2b9f5e1595b",
       "path": "tdf-hq-ui/src/pages/ForbiddenPage.test.tsx",
-      "sha256": "5e3c4e7dffe175c12044a9ba759e3799f9774aee34b69973508937469e180128",
+      "sha256": "2ba38f5c1c525ecf177bedb9a90bdf80cb05d34532561e036c0567cb643fca7c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1949c186c87f144a",
       "path": "tdf-hq-ui/src/pages/ForbiddenPage.tsx",
-      "sha256": "a231f92aa6be3733bbaa4afe205b48bfca81c7c4d719554c627132a352792421",
+      "sha256": "85aefe25db80e0d38615004356ca9c354425cba95757edb76f62b26b8534be7b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12580,7 +12568,7 @@
     {
       "id": "SURFACE-e21f5f9f9c9cf3d5",
       "path": "tdf-hq-ui/src/routes/AppShell.tsx",
-      "sha256": "44a60a3805ce0af4a4c5a1254482b9bcc140e2b247a120bb5b98abc5b9ad8bc2",
+      "sha256": "7e3330c86a088d74ce54ad3d650314b4e6d259455a46685b953abee187755145",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12820,7 +12808,7 @@
     {
       "id": "SURFACE-74c667377a8a66f7",
       "path": "tdf-hq-ui/src/utils/accessControl.ts",
-      "sha256": "4550fd019b3553b00074186bf7e1614e9209c97cb4c94c5a485cb1ea102536c2",
+      "sha256": "3965505167d4d7ed385fea91a0ad30e2a6c3b2a5023fdc87d261f15570e8186a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13121,6 +13109,18 @@
       "id": "SURFACE-7fcb560ad8ca2dcb",
       "path": "tdf-hq-ui/src/utils/externalTicketing.ts",
       "sha256": "1224ccc2f203440828c55c99dc50b60f02b3a36747c2fa63826c73fde51ed8d5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-500280d3f98d58fc",
+      "path": "tdf-hq-ui/src/utils/featureRegistry.test.ts",
+      "sha256": "3e8ea3f9a0fdd8e13cfb846d7259dd7b4ad723b0154eddd187d99ae1cdb4d368",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3b8899145aa5725f",
+      "path": "tdf-hq-ui/src/utils/featureRegistry.ts",
+      "sha256": "59783b97f00c4d2e07261116d9ee813aea4049c33ed8606660b4ff8f4eeb1c70",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22541,7 +22541,7 @@
     },
     {
       "path": "docs/adr/0133-enforced-module-boundaries.md",
-      "sha256": "0d2979811e3ea371d6426b88ea3388ddd349c649b16ee1c7ef75de426bac48de",
+      "sha256": "f5b35cedad75c5991097f7f9b91e9248071a8f56d30cce4d29a368996503c090",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31529,7 +31529,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a67f69d0d75a30318285eb5603acd08a37b17f9f386088357c0a14cd2a28588b",
+      "sha256": "ab2309d6ac97b18be8cf1d6355d3dd5c77ba2dfdac1fc806f90e9dae61f583d4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

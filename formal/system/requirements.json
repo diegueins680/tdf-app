@@ -1241,7 +1241,7 @@
         "scripts/verify-auth-predicates.py"
       ],
       "tests": [
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "scripts/audit-feature-registry.mjs",
         "scripts/test-auth-predicates.py",
         "scripts/check-admin-guards.py"
@@ -1263,7 +1263,7 @@
       "property": "Registry discovery/view/administer predicates match the backend role and module boundary.",
       "contract": "tdf-hq/assets/feature-registry.json",
       "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation. Conditional source-derived authorization predicate equivalences and supporting cardinality lemmas: formal/system/auth-predicates.md. Full endpoint and refinement obligations remain UNPROVEN. CI gate (check-admin-guards.py) asserts the registry entry admin.video-sources grants discover, view and administer only under strictAdmin with the Admin role and module, and that RecordsIngestion.requireAdmin still requires hasStrictAdminAccess and the Admin module; mutation control on the registry entry.",
-      "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
+      "evidence": "tdf-hq-ui/src/utils/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
     },
     {
       "authority": "audit security correction",
@@ -7548,7 +7548,7 @@
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "tdf-mobile/__tests__/featureRegistry.test.ts",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/CorsSpec.hs",
@@ -10982,7 +10982,7 @@
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "tdf-mobile/__tests__/featureRegistry.test.ts",
         "e2e/web/booking-catalog-recovery.spec.mjs"
       ],
@@ -12354,19 +12354,21 @@
       "property": "Standalone destination coverage, unique concrete paths and per-session access filtering. A fully loaded mobile menu keeps its close control inside the viewport and restores focus after dismissal. Access-request creation without a selected target is excluded; personal request history remains discoverable.",
       "implementation": [
         "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.ts",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/pages/SecurityPage.tsx",
         "tdf-hq-ui/src/components/PublicBranding.tsx",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/components/RegistryBreadcrumbs.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
         "tdf-hq-ui/src/pages/SecurityPage.test.tsx",
         "scripts/audit-feature-registry.mjs",
+        "scripts/ux-audit-inventory.mjs",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "e2e/web/community-discovery.spec.mjs"
       ],
@@ -23270,11 +23272,14 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/Catalog/Security.hs",
-        "tdf-hq/src/TDF/Profiles/Artist.hs"
+        "tdf-hq/src/TDF/Profiles/Artist.hs",
+        "tdf-hq-ui/src/api/accessRequests.ts",
+        "tdf-hq-ui/src/pages/ForbiddenPage.tsx"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs"
+        "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
+        "tdf-hq-ui/src/pages/ForbiddenPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
@@ -26005,7 +26010,7 @@
         "services/campaign-platform/tests/test_domain.py",
         "services/campaign-platform/tests/test_facebook.py",
         "services/campaign-platform/tests/test_http.py",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "services/campaign-platform/tests/test_tiktok.py",
         "scripts/__tests__/campaign-tiktok-ui.test.mjs",
         "services/campaign-platform/tests/test_tiktok_sandbox.py",
@@ -27510,7 +27515,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "The ratchet is enforced; 8 backend imports, 14 web imports and 16 oversized files remain listed debt."
+        "reason": "The ratchet is enforced; 8 backend imports, 10 web imports and 16 oversized files remain listed debt."
       },
       "authority": "User request 2026-11-10; layer definitions and limits are an engineering decision recorded in ADR 0133, owner confirmation pending.",
       "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",
@@ -27764,13 +27769,13 @@
       "observability": "The feature_403_shown analytics event is no longer emitted for this route on a missing module; API 403 responses are unchanged.",
       "implementation": [
         "tdf-hq/assets/feature-registry.json",
-        "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.ts",
         "tdf-hq-ui/src/routes/AppShell.tsx",
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
       "tests": [
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
         "tdf-hq/test/TDF/EventAdminDelegationSpec.hs"
