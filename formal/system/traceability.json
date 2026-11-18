@@ -27727,6 +27727,99 @@
       "critical": false
     },
     {
+      "id": "GROWTH-FIRST-ACTION-001",
+      "title": "An invited visitor reaches the promised first action after signup",
+      "statement": "A signed-in fan who follows nobody is offered artists to follow before other fan hub content; an event's organizer can publish its non-public event through an explicit confirmed action; planning-workspace links are shown only to the event's managers and to accounts with the Scheduling module; new events start in the browser's time zone for accounts that never chose one; and single-task pages are not preceded by the upcoming-events carousel.",
+      "domain": "Growth",
+      "authority": "Product owner request on 2026-11-13 to walk the invitation funnel on production and remove what stops invited people.",
+      "source": "User request: make an invited person able to get real value in one sitting; walk production as a new organizer, fan and artist from the campaign links and fix every blocker.",
+      "property": "After signing up from an invitation, the promised action (follow an artist, publish an event, complete an artist profile) is reachable without a dead end and without scrolling past unrelated sections.",
+      "contract": "formal/system/invited-first-action.md",
+      "actors": [
+        "Fan",
+        "Event organizer",
+        "Delegated event administrator",
+        "Artist"
+      ],
+      "preconditions": [
+        "The visitor is authenticated; existing server authorization for follows and event updates remains authoritative.",
+        "The public event lifecycle catalog exposes states, capabilities and direct transitions."
+      ],
+      "inputs": [
+        "Artist catalog and the viewer's follows",
+        "Event, its workflow state and the lifecycle states",
+        "Session roles and modules",
+        "Account time zone preference and browser time zone"
+      ],
+      "state": {
+        "boundary": "formal/system/invited-first-action.md",
+        "states": [
+          "not public",
+          "confirming publication",
+          "public"
+        ]
+      },
+      "allowedTransitions": [
+        "not public -> confirming publication on request",
+        "confirming publication -> not public on cancel or failure",
+        "confirming publication -> public after the server accepts visibility and the direct workflow transition",
+        "no follows -> starter list shown; the list stays for that viewer after a follow"
+      ],
+      "forbiddenTransitions": [
+        "Publish without an explicit confirmation",
+        "Publish from a state with no direct, review-free transition to a publicly listable state",
+        "Write event fields read before the confirmation instead of the latest stored ones",
+        "Show a planning-workspace link to a signed-in visitor who neither manages the event nor holds the Scheduling module",
+        "Override a time zone the account chose with the browser's"
+      ],
+      "effects": [
+        "Existing follow and unfollow writes from the starter list",
+        "One existing event update that sets visibility and, when needed, the workflow state"
+      ],
+      "authorization": "Unchanged: the event update endpoint enforces organizer or delegated-administrator access and the allowed workflow transition; planning-workspace access rules are unchanged.",
+      "privacy": "Publishing makes the event's title, date, place and poster public, which the confirmation states before the write. No other visibility changes.",
+      "concurrency": "The event is read again immediately before the update; the server rejects a workflow state that changed meanwhile and the confirmation stays open with the reason.",
+      "idempotency": "Publishing an already public event is not offered. A repeated follow tap is ignored while a follow is being saved.",
+      "failure": "A refused or failed publication leaves the event unchanged and shows the server reason; a failed follow keeps the existing recovery behavior.",
+      "recovery": "Retry from the open confirmation, or reload when the event state changed.",
+      "observability": "Published state and public link on the event page; an event_published growth event; pressed state on follow controls.",
+      "implementation": [
+        "tdf-hq-ui/src/components/events/EventPublishControl.tsx",
+        "tdf-hq-ui/src/features/fans/FirstFollowStarter.tsx",
+        "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
+        "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
+        "tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx",
+        "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
+        "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "Component and page tests for the publish target, confirmation, refusal and failure paths, the starter list, gated planning links, the time zone default and carousel suppression; TypeScript and changed-file lint; read-only preview of the local build against production data.",
+      "evidence": "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx; tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx; formal/system/invited-first-action.md.",
+      "confidence": "Local tests cover each behavior. The publish write was not executed against a real server.",
+      "ambiguity": [
+        "A logistics team member who is neither a manager of the event nor holds the Scheduling module can open the planning workspace (EVT-LOGISTICS-ACCESS-001) but is not offered the link on the event page.",
+        "The fan hub wiring of the starter list is covered by a production-data preview, not by a page-level test.",
+        "The server reports UTC both for an account that never chose a zone and for one that chose UTC. A zone saved from the same browser is remembered locally and kept; on another device a chosen UTC still starts a new event in the browser's zone, which the form lets the organizer change."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local component tests cover the behavior. A real publication through the deployed page and the fan hub wiring remain to be verified after release."
+      },
+      "critical": false
+    },
+    {
       "id": "EVT-LOGISTICS-ACCESS-001",
       "title": "The web logistics page of an event opens by record scope, not by the Scheduling module",
       "domain": "EVT",
@@ -29159,8 +29252,10 @@
     "tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx": "00701c2a3d06eaa8ffa8d7a30708f7897e2e39d053ae332e423c1edc3c91bc14",
     "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx": "e2576e0d99326e2412cf3095babcbeec6d808facde8c8d0e3fc83fe28eaa2166",
     "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx": "08b0537bc66aced315fb85d5413231fbdc71691f091cad285e7d804c82432931",
-    "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx": "b7cce2b5b45e93c2d66004eb3ea41754c965f1a78bf555bab59db440a1369c24",
-    "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx": "25e4ccd886c5ac0ac86922dbed23f16d4e705462f6317befe0c59b903865a278",
+    "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx": "7dd090e0d630e421a449d7af4789403ab26bedf4aada4ad94f1b2cd666b37f4d",
+    "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx": "fef66abf570226402f8218edf289b554137342cbe4b2e810a81d3a707f426da0",
+    "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx": "20588666f384e0fd12131c5644cc424d21b8a8c42f944620b0aea60666aa4463",
+    "tdf-hq-ui/src/components/events/EventPublishControl.tsx": "9c621883003a735ec74441167bdedfab111dd60f701425d5340553ddce6ec353",
     "tdf-hq-ui/src/components/events/EventRaciEditor.tsx": "4f5d9809f1955c583981cf9cc97fb0d48ce5b9cbf3df7cb9a0b22bd4cf2a3bb9",
     "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
@@ -29168,8 +29263,8 @@
     "tdf-hq-ui/src/components/events/MyEventsPanel.tsx": "239e397d3fafdbf8176572370f759a4d15be707791a9fc0cac4d0793521a1272",
     "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx": "e2e493ac45bdff3c02d9ecf97d71c43f879984079009bda1cdc9582542022ee7",
     "tdf-hq-ui/src/components/events/TicketPricePreview.tsx": "168852f9c75ee621dbc6c673d26d1b48443c85c45fd75f0ec86c1375b425b5e1",
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "900f0988f08e13f94f6cca72e70b3f8c245f755d64a13bd8ab50cd8fc11e650f",
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "49003b106d8c25a66e4378611e2a9427d18d81128195ff3a56f3f3f4685ff187",
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "5d571852f5782f1e0c4f08acef40b83363bc31ad34209e3047bf24502457b188",
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "bdcfb14c801239f68d83f361f71277a888fdeccb0d8ea021bb330635744befb2",
     "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts": "86da5182e76873a793d6c6637948d169c7b21b6ee989cc521e5600001cd11811",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
@@ -29187,6 +29282,8 @@
     "tdf-hq-ui/src/config/accountDeletionRollout.test.ts": "a32b108366282c451878b0a95dd4c9efb1cdfba44ea779d0069cd03f3b5c913f",
     "tdf-hq-ui/src/config/accountDeletionRollout.ts": "c55e82bd8e87288e48b3ac05b86a9fe1335e4400be3e105d2f4fee71534af911",
     "tdf-hq-ui/src/config/appConfig.ts": "29f5c5e8d461756baa2d66118623a4b7841affeb08ce5f38d0a07a62b664213e",
+    "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts": "40724d6817e05d242a914760487fd7494cef3847d35229a0b78ab1d16f02615d",
+    "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx": "1dc11b1cece10e40c193f15225f92e5b02a5b880c6e7b24239cdb574a64ca06b",
     "tdf-hq-ui/src/desktop/shell.test.ts": "4a3ff436d1a4fc40424786499a45255e8e1b6b5c795408bcacbf17f874d55769",
     "tdf-hq-ui/src/desktop/shell.ts": "72405a96082db143d40b8ccd906d87ad217956a8e095d9b5dd980991255494ae",
     "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts": "bddb9827e9e144876f863e76805139c5ce2f14bc2d5dc65e9ab5ec92d59051a4",
@@ -29202,6 +29299,8 @@
     "tdf-hq-ui/src/features/fanclubs/FanClubPreview.tsx": "d332a4b9f06873ed1fd60cde5dd8ab87b44820648dd267e7cb6bc17b0d0f0fb4",
     "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx": "c12556996684edd36b7dc736ae88cbc2153a3b7b47a095078dbcce9d025e3dba",
     "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx": "9d09b7acdcb9bd3c0d83e5115bd01eac89b32b0f2d133e884c0797f4a5ca9b5d",
+    "tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx": "4a9db8ea6c7155008b4aafc9094d80d05fb3e8314df91402a78c44edda048d55",
+    "tdf-hq-ui/src/features/fans/FirstFollowStarter.tsx": "947bea9efc951f911eeaa7ae9f41698ace9a150541c5a18f813637fdb34b2f34",
     "tdf-hq-ui/src/features/fans/FollowedArtists.tsx": "625d4c58450a76a62d7023e3a11b6ef2e89a10c7ee7a354887a2c586ce35da84",
     "tdf-hq-ui/src/features/fans/ProfileSectionCard.tsx": "c85106ee5581576c6d5d54c5c1b479e91725210b516bd334ad8569c11733e4f0",
     "tdf-hq-ui/src/features/fans/artistAudience.test.ts": "7a159ad02adc92895af13a68e7af525b61b90337d74a2dd3d43aa9c972cec6c2",
@@ -29294,8 +29393,8 @@
     "tdf-hq-ui/src/pages/ClassesPage.tsx": "2c4c084a7e9287144589b96f3ac9a2ff6c3775bc854c0df027f3717bfa85c203",
     "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
     "tdf-hq-ui/src/pages/CmsAdminPage.tsx": "0b2a08ef582f97ec33fb6b9eb8c909f7d8482758655fc6f0958e312838f5744c",
-    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": "bc59b3b38e14b62b9d7b67cc7df546d20082fd124979382aa708a68ac0101ad6",
-    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "2e737d7512df6b298d5cc168d8ce3a8feff9faf34a489b9ad5fb92a9a7813e2a",
+    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": "ea663a2df7cad94f90988660d40dc5258bc0b4f6736805078956c7d39a1a28fb",
+    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "07aa5b0a0e31ac7cae1a0190060cd9cea6e1b25d37923fe99ce53853b806c66c",
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CompaniesPage.tsx": "08964b25803284e26ecb3bafb8968a38b174a0cbd88772529a48cb0cfc951a9c",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
@@ -29323,7 +29422,7 @@
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "bc32c42d85f2702f331c7c170764546c3988000c23596cfd3d691e24b4e2c024",
     "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b7c85fe3881529c7b6c6e601085352dfcd5550ae06509c922eefa0eb60575734",
     "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": "70b02ed4fec675ddcbc2a53ad2c167498719c9e9b9363c2517c0b29a033e1fdb",
-    "tdf-hq-ui/src/pages/FanHubPage.tsx": "2d844a3ba1ac5068af2df207a4752d95fe67237ccc52b426dcac0773f509b3cb",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx": "808f4fe698e3cdda8a8228dc7fb2c9b0b63a1cdd563517ee1189607b16b7dda0",
     "tdf-hq-ui/src/pages/GoogleDriveCallbackPage.tsx": "edceff3b6fe2336ec1b234dbc421fb13a559fbbc56e1156321bb899dcf25ad39",
     "tdf-hq-ui/src/pages/InstagramConnectPage.tsx": "c1e3000474b70b1cfa4a4e41f521762b406d1faaf2ac42966aff9c9df2b87fcf",
     "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx": "3fe5deb295874a99afc50f97d06742fad56c75a7c9a810f3fef5da66d5f4ccc1",
@@ -29386,8 +29485,8 @@
     "tdf-hq-ui/src/pages/ResetPasswordPage.tsx": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "6d8f0f2af34f9312217af92971c67e977ec63403ffdef45ed9c908fcf1720c49",
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ffb3da2eefb582087a1338086edc143d046b8c3e1489004d315314f83151ed58",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "86fe863cc9608c5ce0ae086a46f85bb46b559ca823e426345e5fc436226f8fb8",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "59489c52c5b17d71f4cf15de51adec1e3e09c0770a900520dbdd368d174cce7f",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "e7df8eaa6b55334a0debaadf14103030a9b7b123cd08898722403e07f648830f",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "4d9383f448eb9af782f818e311fd4890216b318e407d27d33ffc36557d1a39c9",
     "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx": "15dd2db47fab984029cfbabfd5e60830f3f29e4b8d93753f7da33f7f123c6a66",
     "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": "94ef4c36895a388db4d47e7f8bddb6057ed4594a5aa997694ae57f110cd6d7b3",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "01229e45a124cb6abe0382d9eef00561606deb69ec554d8dd26b4a85de1f06fb",
@@ -29402,8 +29501,8 @@
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "bb3924027457e03a3fc80a02db6471d91c337c06ac0e257af71093bf499347ed",
     "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "d04c9014faf40d54ff34bfdcba72bb77e5812e13437a2b10bdd4d9f97863d891",
     "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "5de2d80b223e90a179d1d66863ecac1a6b73037ffe86fc6598603d70142c7fa2",
-    "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts": "5e24b374e0c7fc4ed86f818d0f815b9c300311e211e01fbcdb48b317ff7acbc4",
-    "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": "46076098f1c935f7ae5cb6bdf946027fd23cc941c826643debf6e8fe387c21fb",
+    "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts": "aab1e9d9166e505604242c195235695eae9720b08f4e311220368f52bf283940",
+    "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": "1b7577906f1f3739f2ae756237f62cca45ae34174039e3dcb94f9d0384644324",
     "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts": "12d0b8e2c66e11b30784646892d3d97f9d6762032243c2f97819b292630b4c7a",
     "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts": "7e4b0da542f427fb13d49fa972d760d093096e1077c19cfbaa6f9a7fa0b9d251",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
@@ -41020,6 +41119,10 @@
       {
         "requirement": "UX-FORM-ACTIONS-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": [
@@ -42166,6 +42269,10 @@
       {
         "requirement": "EVT-DISCOVERY-FILTER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/routes/AppShell.tsx": [
@@ -42207,6 +42314,10 @@
       },
       {
         "requirement": "EVT-DISCOVERY-FILTER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
         "relationship": "tests"
       }
     ],
@@ -44468,6 +44579,10 @@
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/routes/EventCommunityEntry.tsx": [
@@ -44513,6 +44628,10 @@
       },
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
         "relationship": "tests"
       }
     ],
@@ -47002,6 +47121,10 @@
       {
         "requirement": "EVT-CREATE-ENTRY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": [
@@ -47016,11 +47139,19 @@
       {
         "requirement": "SYS-ARCH-BOUNDARY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx": [
       {
         "requirement": "EVT-PLANNING-UX-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
         "relationship": "implementation"
       }
     ],
@@ -47046,6 +47177,10 @@
       {
         "requirement": "EVT-PLANNING-UX-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts": [
@@ -47055,6 +47190,10 @@
       },
       {
         "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
         "relationship": "tests"
       }
     ],
@@ -48789,6 +48928,42 @@
     "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx": [
       {
         "requirement": "UX-PUBLIC-DETAIL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/EventPublishControl.tsx": [
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/features/fans/FirstFollowStarter.tsx": [
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx": [
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx": [
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx": [
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts": [
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
         "relationship": "tests"
       }
     ],
@@ -62114,11 +62289,15 @@
     {
       "id": "SURFACE-2cea66b752634961",
       "path": "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
-      "sha256": "b7cce2b5b45e93c2d66004eb3ea41754c965f1a78bf555bab59db440a1369c24",
+      "sha256": "7dd090e0d630e421a449d7af4789403ab26bedf4aada4ad94f1b2cd666b37f4d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-PLANNING-UX-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
           "relationship": "tests"
         }
       ]
@@ -62126,11 +62305,39 @@
     {
       "id": "SURFACE-e16e275f767e9623",
       "path": "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
-      "sha256": "25e4ccd886c5ac0ac86922dbed23f16d4e705462f6317befe0c59b903865a278",
+      "sha256": "fef66abf570226402f8218edf289b554137342cbe4b2e810a81d3a707f426da0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-PLANNING-UX-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-fe18db8ab1db5749",
+      "path": "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
+      "sha256": "20588666f384e0fd12131c5644cc424d21b8a8c42f944620b0aea60666aa4463",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-dcda7eb130c8a2d6",
+      "path": "tdf-hq-ui/src/components/events/EventPublishControl.tsx",
+      "sha256": "9c621883003a735ec74441167bdedfab111dd60f701425d5340553ddce6ec353",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
           "relationship": "implementation"
         }
       ]
@@ -62243,7 +62450,7 @@
     {
       "id": "SURFACE-c608b83dcf4b5559",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-      "sha256": "900f0988f08e13f94f6cca72e70b3f8c245f755d64a13bd8ab50cd8fc11e650f",
+      "sha256": "5d571852f5782f1e0c4f08acef40b83363bc31ad34209e3047bf24502457b188",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62253,13 +62460,17 @@
         {
           "requirement": "EVT-DISCOVERY-FILTER-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-2393bd3c8b025098",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-      "sha256": "49003b106d8c25a66e4378611e2a9427d18d81128195ff3a56f3f3f4685ff187",
+      "sha256": "bdcfb14c801239f68d83f361f71277a888fdeccb0d8ea021bb330635744befb2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62268,6 +62479,10 @@
         },
         {
           "requirement": "EVT-DISCOVERY-FILTER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
           "relationship": "implementation"
         }
       ]
@@ -62650,16 +62865,26 @@
     {
       "id": "SURFACE-9efb18a7c5a4508f",
       "path": "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts",
-      "sha256": "e71866ff798e2187e308fc2e70d1c5756065d5991a017319f4aa917e75420634",
+      "sha256": "40724d6817e05d242a914760487fd7494cef3847d35229a0b78ab1d16f02615d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-0ffaefaddac14c70",
       "path": "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx",
-      "sha256": "a72cf8aa239817c1ae62038f6d35aa54093fdf6b745d5388a03667296f2a426e",
+      "sha256": "1dc11b1cece10e40c193f15225f92e5b02a5b880c6e7b24239cdb574a64ca06b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-bc08fa3e626b4cbd",
@@ -62917,6 +63142,30 @@
         },
         {
           "requirement": "UX-FORM-ACTIONS-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-46dc5a1b952c5ccc",
+      "path": "tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx",
+      "sha256": "4a9db8ea6c7155008b4aafc9094d80d05fb3e8314df91402a78c44edda048d55",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d4b80b5196ba914e",
+      "path": "tdf-hq-ui/src/features/fans/FirstFollowStarter.tsx",
+      "sha256": "947bea9efc951f911eeaa7ae9f41698ace9a150541c5a18f813637fdb34b2f34",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
           "relationship": "implementation"
         }
       ]
@@ -64710,7 +64959,7 @@
     {
       "id": "SURFACE-78d796fee86d9367",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
-      "sha256": "bc59b3b38e14b62b9d7b67cc7df546d20082fd124979382aa708a68ac0101ad6",
+      "sha256": "ea663a2df7cad94f90988660d40dc5258bc0b4f6736805078956c7d39a1a28fb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64722,7 +64971,7 @@
     {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "2e737d7512df6b298d5cc168d8ce3a8feff9faf34a489b9ad5fb92a9a7813e2a",
+      "sha256": "07aa5b0a0e31ac7cae1a0190060cd9cea6e1b25d37923fe99ce53853b806c66c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64731,6 +64980,10 @@
         },
         {
           "requirement": "EVT-CREATE-ENTRY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
           "relationship": "implementation"
         }
       ]
@@ -65387,7 +65640,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "2d844a3ba1ac5068af2df207a4752d95fe67237ccc52b426dcac0773f509b3cb",
+      "sha256": "808f4fe698e3cdda8a8228dc7fb2c9b0b63a1cdd563517ee1189607b16b7dda0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -65444,6 +65697,10 @@
         },
         {
           "requirement": "UX-FORM-ACTIONS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
           "relationship": "implementation"
         }
       ]
@@ -66833,7 +67090,7 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "86fe863cc9608c5ce0ae086a46f85bb46b559ca823e426345e5fc436226f8fb8",
+      "sha256": "e7df8eaa6b55334a0debaadf14103030a9b7b123cd08898722403e07f648830f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66859,13 +67116,17 @@
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "59489c52c5b17d71f4cf15de51adec1e3e09c0770a900520dbdd368d174cce7f",
+      "sha256": "4d9383f448eb9af782f818e311fd4890216b318e407d27d33ffc36557d1a39c9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66898,6 +67159,10 @@
         },
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
           "relationship": "implementation"
         }
       ]
@@ -67298,7 +67563,7 @@
     {
       "id": "SURFACE-9d3cb0d1235509f1",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
-      "sha256": "5e24b374e0c7fc4ed86f818d0f815b9c300311e211e01fbcdb48b317ff7acbc4",
+      "sha256": "aab1e9d9166e505604242c195235695eae9720b08f4e311220368f52bf283940",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67308,13 +67573,17 @@
         {
           "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-7ec18247afed2819",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-      "sha256": "46076098f1c935f7ae5cb6bdf946027fd23cc941c826643debf6e8fe387c21fb",
+      "sha256": "1b7577906f1f3739f2ae756237f62cca45ae34174039e3dcb94f9d0384644324",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67327,6 +67596,10 @@
         },
         {
           "requirement": "SYS-ARCH-BOUNDARY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
           "relationship": "implementation"
         }
       ]
@@ -86034,8 +86307,6 @@
     "SURFACE-1f4f62934e5ce609",
     "SURFACE-2d2dd1ee6f2d4fc7",
     "SURFACE-6292138aaa393539",
-    "SURFACE-9efb18a7c5a4508f",
-    "SURFACE-0ffaefaddac14c70",
     "SURFACE-bc08fa3e626b4cbd",
     "SURFACE-97be8dda570dadfa",
     "SURFACE-ce7bf5da901fefcd",
@@ -88358,7 +88629,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6d9b5eea63fda59850e3a1404bc69ac9d2b2dccce4e17ebe9b9d8b2806b72c85",
+      "sourceSha256": "16f466b471d34172e6f1deedfd9a9a54c734a464a8b3ae39c058ed9ccd0fb573",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -88386,7 +88657,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6d9b5eea63fda59850e3a1404bc69ac9d2b2dccce4e17ebe9b9d8b2806b72c85",
+      "sourceSha256": "16f466b471d34172e6f1deedfd9a9a54c734a464a8b3ae39c058ed9ccd0fb573",
       "definition": {
         "states": [
           "absent",
@@ -88416,7 +88687,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6d9b5eea63fda59850e3a1404bc69ac9d2b2dccce4e17ebe9b9d8b2806b72c85",
+      "sourceSha256": "16f466b471d34172e6f1deedfd9a9a54c734a464a8b3ae39c058ed9ccd0fb573",
       "definition": {
         "export": [
           "queued",
@@ -111631,7 +111902,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 222,
+    "PARTIAL": 223,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
