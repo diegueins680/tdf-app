@@ -80,6 +80,26 @@ async function manifestBeforePlayer() {
   return { ...manifest, migrations: manifest.migrations.filter(row => !playerMigrations.has(row.id)) };
 }
 
+// The continuous improvement loop rework (pull request #750) deleted two automation
+// scripts: their reviews are retired as provenance and one new list is reviewed.
+const LOOP_REWORK_RECONCILIATION = 'continuousImprovementLoopRework20261113';
+
+async function readLoopRework() {
+  return JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8')).reconciliation[LOOP_REWORK_RECONCILIATION];
+}
+
+async function readHistoricalReconciliation() {
+  const current = await readReconciliation();
+  const rework = await readLoopRework();
+  const added = new Set(rework.addedDecisionIds);
+  const active = current.active.filter(row => !added.has(row.id));
+  for (const entry of [...rework.decisions].sort((left, right) => left.position - right.position)) {
+    active.splice(entry.position, 0, entry.decision);
+  }
+  return { ...current, active };
+}
+
 async function readReconciliation(beforePlayer = false) {
   const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-catalog-retirements.json'), 'utf8'));
@@ -102,6 +122,9 @@ async function readReconciliation(beforePlayer = false) {
   // review is a successor under a new id; it stands in for the review it nests.
   const movedPaypalDomains = active.find(row => row.id === 'f562d95dce39e81da4af');
   byId.set(movedPaypalDomains.previousDecision.id, movedPaypalDomains);
+  // The loop rework (pull request #750) retired two reviews of deleted scripts as
+  // provenance; the earlier catalog still lists them, so they stand in for themselves.
+  for (const entry of (await readLoopRework()).decisions) byId.set(entry.decision.id, entry.decision);
   return {
     ledger,
     active: predecessor.map(row => byId.get(row.id)).filter(Boolean),
@@ -1220,4 +1243,25 @@ test('player server preserves both reviewed migration histories and appends only
   const retirement = integration.retirements.find(row => row.source.name === 'migrations');
   assert.equal(retirement.replacementId, actual.id);
   assert.equal(retirement.previousResolution.replacementId, mainReview.id);
+});
+
+test('loop rework retires the reviews of two deleted scripts as provenance and reviews one new list', async () => {
+  const { active } = await readReconciliation();
+  const rework = await readLoopRework();
+  assert.equal(rework.decisions.length, 2);
+  assert.ok(rework.reason.length > 80);
+  for (const entry of rework.decisions) {
+    assert.equal(entry.decision.reviewed, true);
+    assert.ok(!active.some(row => row.id === entry.decision.id));
+    await assert.rejects(fs.access(path.join(workspaceRoot, entry.source.file)), { code: 'ENOENT' });
+  }
+  assert.deepEqual(rework.addedDecisionIds, ['16e3988d48089cc77b7e']);
+  for (const id of rework.addedDecisionIds) {
+    assert.equal(active.find(row => row.id === id)?.reviewed, true);
+  }
+  // The earlier view re-inserts the retired reviews and drops the new one; the catalog
+  // itself keeps growing with main, so only the difference is fixed.
+  const historical = (await readHistoricalReconciliation()).active;
+  assert.equal(historical.length, active.length + rework.decisions.length - rework.addedDecisionIds.length);
+  for (const entry of rework.decisions) assert.deepEqual(historical[entry.position], entry.decision);
 });
