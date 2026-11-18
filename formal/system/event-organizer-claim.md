@@ -100,8 +100,11 @@ shown this on the review screen.
 
 Local run on 2026-11-13 (PostgreSQL, a migrated disposable database with this
 migration applied): 7 examples, 0 failures; the full Hspec suite passed on the
-same build (4418 examples, 0 failures, 25 pending). No hosted run has been
-observed yet.
+same build (4418 examples, 0 failures, 25 pending). The hosted checks of pull
+request #745 passed at head 7c87b8e75 (over main 4dcbaadee), including
+`backend-quality`, `migration-tests`, `specification-contracts`,
+`hardcoded-list-audit` and `persona-web-e2e`. Later merges of main are
+re-verified by the same checks.
 
 - `tdf-hq/test/TDF/EventOrganizerClaimSpec.hs`
   (`scripts/test-event-organizer-claim.sh`, PostgreSQL, fully migrated schema,

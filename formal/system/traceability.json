@@ -4739,7 +4739,7 @@
       "id": "EVT-OWNER-CLAIM-001",
       "title": "Never hand an event without an organizer to the first caller",
       "domain": "EVT",
-      "statement": "An event is managed by its stored organizer and no request path replaces a stored organizer. On an event without an organizer, organizer-only routes refuse and never write; strict administrators keep the administrative routes that never depended on assignment. Only a strict administrator whose edit of the event is accepted becomes its organizer, in the same transaction, through one conditional update whose stored result decides the outcome.",
+      "statement": "An event is managed by its stored organizer and no request path replaces a stored organizer. On an event without an organizer, organizer-only routes refuse and never write; strict administrators keep the administrative routes that never depended on assignment. A missing organizer is filled only through one conditional update whose stored result decides the outcome, in the same transaction as its cause: a strict administrator's accepted edit of the event assigns that administrator, and a strict administrator's approval of another account's claim under EVT-ORGANIZER-CLAIM-001 assigns the claimant.",
       "authority": "Event-operations foundation migration of 2026-09-14 (events without a resolved owner stay disabled until reviewed) and repository audit of 2026-09-14 (remove organizer-null claiming)",
       "source": "formal/system/event-organizer-assignment.md",
       "contract": "formal/system/event-organizer-assignment.md",
@@ -4762,11 +4762,13 @@
         "authority": "PostgreSQL conditional update and row lock"
       },
       "allowedTransitions": [
-        "No organizer -> strict administrator whose edit of the event is accepted"
+        "No organizer -> strict administrator whose edit of the event is accepted",
+        "No organizer -> claimant whose claim a strict administrator other than the claimant approves (EVT-ORGANIZER-CLAIM-001)"
       ],
       "forbiddenTransitions": [
         "No organizer -> any caller of a read route",
-        "No organizer -> ordinary user",
+        "No organizer -> ordinary user without an approved claim",
+        "No organizer -> the caller of any route, on that caller's own request",
         "No organizer -> administrator whose edit was refused",
         "Organizer A -> organizer B through any organizer-only route",
         "Acting as organizer when the stored organizer is another party"
@@ -4775,18 +4777,19 @@
         "Organizer assigned once",
         "updated_at refreshed on assignment"
       ],
-      "authorization": "Organizer-only routes require the stored organizer; an event without one is refused with 403 except for the strict-administrator edit that assigns it. Administrative refund, payment-review, invoice-resend, deletion and invitation routes admit strict administrators as before. A delegated administrator under EVT-ADMIN-DELEGATION-001 passes the organizer check of the operations that requirement lists, only on an event that has a stored organizer; the stored organizer itself is never changed by a grant.",
+      "authorization": "Organizer-only routes require the stored organizer; an event without one is refused with 403 except for the strict-administrator edit that assigns it; a claim under EVT-ORGANIZER-CLAIM-001 passes no organizer check until a strict administrator approves it. Administrative refund, payment-review, invoice-resend, deletion and invitation routes admit strict administrators as before. A delegated administrator under EVT-ADMIN-DELEGATION-001 passes the organizer check of the operations that requirement lists, only on an event that has a stored organizer; the stored organizer itself is never changed by a grant.",
       "privacy": "Buyer, refund and invoice data of an event without an organizer are no longer reachable by an arbitrary signed-in account.",
       "concurrency": "Assignment runs under the event row lock together with the accepted edit and is one UPDATE conditional on the organizer still being missing; the row is reread and the edit proceeds only if the stored organizer is the caller.",
       "idempotency": "Repeating the edit as the assigned organizer is an ordinary organizer request; a second assignment changes nothing.",
       "failure": "403 for an event without an organizer; 403 for a caller who lost a simultaneous assignment; 404 if the event disappeared.",
-      "recovery": "A strict administrator edits the event through the API to become its organizer, or an owner is assigned by a reviewed database change; no shipped client exposes the administrator edit.",
-      "observability": "The organizer field and updated_at; no audit row is written.",
-      "property": "A stored organizer never changes through a request, and a missing organizer is filled at most once and only by a strict administrator.",
+      "recovery": "The account that organizes the event claims it and a strict administrator approves the claim (EVT-ORGANIZER-CLAIM-001, web client available); or a strict administrator edits the event through the API to become its organizer; or an owner is assigned by a reviewed database change. No shipped client exposes the administrator edit.",
+      "observability": "The organizer field and updated_at; an assignment by approved claim is recorded in event_organizer_claim (claimant, reviewer, notes, time); the administrator edit writes no audit row.",
+      "property": "A stored organizer never changes through a request, and a missing organizer is filled at most once, and only with a strict administrator who edits the event or with a claimant whose claim a strict administrator other than the claimant approved.",
       "implementation": [
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "formal/event-operations/EventOrganizer.tla",
-        "scripts/test-event-organizer.sh"
+        "scripts/test-event-organizer.sh",
+        "tdf-hq/src/TDF/Server/EventOrganizerClaim.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/EventOrganizerSpec.hs",
@@ -4810,7 +4813,7 @@
         "How many production events lack an organizer is unknown; none is created by current code.",
         "The assignment is not audited and does not update event_operation_relationship.",
         "The assigning administrator stays organizer; there is no transfer route and no client surface for the assignment.",
-        "Whether a non-administrator should ever be able to request ownership of such an event is a product decision; today the answer is no."
+        "The owner decided on 2026-11-13 that an event without an organizer can be claimed like an artist profile; EVT-ORGANIZER-CLAIM-001 specifies the reviewed claim. The model of this requirement was not extended with the claim path."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -27650,6 +27653,117 @@
       "historicalStatus": null
     },
     {
+      "id": "EVT-ORGANIZER-CLAIM-001",
+      "title": "Reviewed claim of an event without an organizer",
+      "domain": "EVT",
+      "statement": "A signed-in account that can see an event without a stored organizer may submit one open claim on it with evidence. A claim grants nothing: the organizer field, roles, modules and delegated administration are unchanged and organizer-only routes keep refusing the claimant. Only a strict administrator other than the claimant decides a claim. A rejection leaves the event without an organizer. An approval assigns the claimant as organizer through the single conditional assignment of EVT-OWNER-CLAIM-001, only while the event still has no organizer and the claimant's party exists, and closes every other open claim on the event in the same transaction. A decision is recorded once and is not reversed.",
+      "authority": "Owner instruction of 2026-11-13: an event without an administrator can be claimed in the same way an artist profile without an account can be claimed. The artist flow is ID-ARTIST-CLAIM-001 and ID-CLAIM-REVIEW-001 (evidence, no authority from the request, review by a distinct administrator). The text limits, the limits of 5 open claims per account and 20 per event, the queue sizes and the absence of withdrawal, revocation and notification are implementation choices pending owner confirmation.",
+      "source": "formal/system/event-organizer-claim.md",
+      "contract": "formal/system/event-organizer-claim.md",
+      "property": "The organizer of an event without one changes through a claim only by the approval of a strict administrator who is not the claimant, at most once, to the claimant of the approved claim. No claim, pending or rejected, passes an organizer check. At most one claim of an event is approved while its organizer assignment stands.",
+      "actors": [
+        "Claimant: signed-in account that can see the event",
+        "Reviewer: strict administrator other than the claimant",
+        "Other signed-in account",
+        "Stored organizer, once assigned"
+      ],
+      "preconditions": [
+        "Authenticated bearer session on every route",
+        "Event visible to the caller and not hidden, for the two event routes",
+        "Event has no stored organizer (absent or only whitespace) for submission and approval",
+        "Migration tdf-hq/sql/2026-11-13_event_organizer_claim.sql applied"
+      ],
+      "inputs": [
+        "GET /social-events/events/{eventId}/organizer-claim",
+        "POST /social-events/events/{eventId}/organizer-claims",
+        "GET /social-events/organizer-claims",
+        "POST /social-events/organizer-claims/{claimId}/decision",
+        "Evidence: trimmed, 20 to 2000 characters, no control characters other than line breaks and tabs",
+        "Decision: approved or rejected, with review notes of 10 to 2000 trimmed characters"
+      ],
+      "state": {
+        "boundary": "event_organizer_claim rows of one event and social_event.organizer_party_id",
+        "authority": "PostgreSQL rows read and written under the social_event row lock; partial unique index on (event_id, claimant_party_id) for open claims; check constraints on status, evidence length, reviewer distinct from claimant",
+        "claimStatus": "submitted, approved, rejected or superseded"
+      },
+      "allowedTransitions": [
+        "No open claim by the account on the event -> submitted, while the event has no organizer, the account holds fewer than 5 open claims and the event fewer than 20",
+        "submitted -> rejected, by a strict administrator other than the claimant",
+        "submitted -> approved, by a strict administrator other than the claimant, while the event has no organizer and the claimant party exists; the claimant becomes the stored organizer",
+        "submitted -> superseded, for every other open claim of the event, in the transaction that approves one",
+        "rejected -> a new submitted claim by the same account, as a new row"
+      ],
+      "forbiddenTransitions": [
+        "Any change of the organizer field, a role, a module or a delegated-administrator grant by submitting a claim",
+        "Submit a claim on an event that has a stored organizer",
+        "A second open claim by the same account on the same event",
+        "Decide a claim as its claimant, as an ordinary account, or as an administrator who is not a strict administrator",
+        "Approve a claim once the event has an organizer, or for a claimant party that does not exist",
+        "Change a recorded decision, or decide a superseded claim",
+        "Disclose evidence, review notes or another account's claim to an account that is not a strict administrator",
+        "Replace a stored organizer through a claim"
+      ],
+      "effects": [
+        "Insert one event_organizer_claim row with status submitted",
+        "On rejection: set status, reviewer, notes and review time",
+        "On approval: assign social_event.organizer_party_id to the claimant and refresh updated_at through assignMissingEventOrganizer; set status, reviewer, notes and review time; set every other open claim of the event to superseded",
+        "No notification is sent to the claimant or the reviewers; event_operation_relationship is not updated"
+      ],
+      "authorization": "Claim state and submission require a session and the event visibility check. The queue and the decision require hasStrictAdminAccess; the decision additionally refuses the claimant of the claim with 403, and the table refuses an approved or rejected row whose reviewer is missing or equals the claimant. An open or rejected claim is not consulted by requireEventManager or any other organizer check.",
+      "privacy": "The claimant reads only the identifier, status and times of their own claims. Evidence, review notes, claimant party and display name are returned only to strict administrators. Approval makes order, ticket, buyer, refund and finance data of the event readable by the approved claimant, as for any organizer; the review screen states this.",
+      "concurrency": "Submission and decision lock the social_event row FOR UPDATE and read the organizer and the claim again under it. Simultaneous approvals of different claims of one event admit exactly one; the others find an organizer and are refused. The assignment is the conditional update of EVT-OWNER-CLAIM-001 and its reread decides. The per-account limit is counted under the lock of the event being claimed only, so simultaneous submissions for different events can exceed it by the number of requests in flight.",
+      "idempotency": "Submitting again while a claim is open returns that claim and keeps the evidence first recorded. Repeating the recorded decision on a decided claim returns it unchanged and writes nothing.",
+      "failure": "400 invalid evidence, decision or notes; 403 not a strict administrator, or reviewer is the claimant; 404 event missing or hidden, or claim not found; 409 event already has an organizer, open-claim limit reached, claim already decided otherwise or superseded, or claimant party missing. A refused request writes nothing.",
+      "recovery": "A rejected claimant submits a new claim. A wrong approval is not reversible through the API: the organizer field has no clearing route and is corrected by a reviewed database change. The rollback script refuses to drop the table while claims exist.",
+      "observability": "HTTP status; event_organizer_claim rows (claimant, evidence, status, reviewer, notes, submission and review times). No metric, log line or notification is added.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-13_event_organizer_claim.sql",
+        "tdf-hq/sql/2026-11-13_event_organizer_claim_rollback.sql",
+        "tdf-hq/src/TDF/Models/SocialEventsModels.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/EventOrganizerClaim.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/utils/eventOrganizerClaimLimits.ts",
+        "tdf-hq-ui/src/components/events/EventOrganizerClaimCard.tsx",
+        "tdf-hq-ui/src/components/events/EventOrganizerClaimsQueue.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
+        "scripts/test-event-organizer-claim.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/EventOrganizerClaimSpec.hs",
+        "scripts/test-event-organizer-claim.sh",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/components/events/EventOrganizerClaimCard.test.tsx",
+        "tdf-hq-ui/src/components/events/EventOrganizerClaimsQueue.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
+        ".github/workflows/ci.yml"
+      ],
+      "formalModels": [],
+      "verification": "Seven PostgreSQL Hspec examples in tdf-hq/test/TDF/EventOrganizerClaimSpec.hs, run through scripts/test-event-organizer-claim.sh against a fully migrated disposable database: submission only on an event without an organizer, once, granting nothing; review only by a strict administrator other than the claimant; approval assigning the claimant and superseding the other open claims, replay and no reversal; rejection and a renewed claim; refusal once the event has an organizer or the claimant party is missing; six simultaneous approvals of different claims admitting one; the per-account limit. Jest tests cover the client calls, the claim card states, the review queue and the placement of both on their pages.",
+      "evidence": "formal/system/event-organizer-claim.md; local PostgreSQL run of scripts/test-event-organizer-claim.sh on 2026-11-13 (7 examples, 0 failures) against a migrated disposable database, with the organizer-assignment (6) and delegation (6) runners and the full Hspec suite (4418 examples, 0 failures, 25 pending) passing on the same build; Jest, ESLint and TypeScript passed locally for the web files. The runner is a step of .github/workflows/ci.yml; no hosted run of it has been observed yet.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "The handlers reuse the existing event lock and single assignment and the claim lifecycle, the reviewer rule and the approval race are exercised on PostgreSQL; the table constraints are a backstop not exercised directly, and there is no model.",
+      "ambiguity": [
+        "The evidence and notes length limits, 5 open claims per account, 20 per event and the queue sizes are implementation choices; owner confirmation is pending.",
+        "An approval cannot be revoked through the API and a claim cannot be withdrawn or amended; whether either is wanted is undecided.",
+        "The claimant is not notified of the decision and does not see the review notes.",
+        "A strict administrator's edit of an event without an organizer still assigns that administrator and leaves open claims submitted; they can then only be rejected.",
+        "The public event page does not say whether an event has an organizer, so the claim is offered only on the signed-in event page; Mobile has no claim surface and the routes are absent from the OpenAPI document.",
+        "event_operation_relationship still reports owner_missing after an approval."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The claim lifecycle, the distinct-reviewer rule and the simultaneous-approval race are exercised on PostgreSQL (locally; the runner is a hosted workflow step not yet observed) and the web flows by Jest; no model covers the claim state machine and the product limits await owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "UX-PUBLIC-DETAIL-001",
       "title": "Public detail pages open the full image and follow the application language",
       "statement": "On a public event, profile, venue or classified page, activating a real preview image opens a viewer with the whole image, and the page's own text and dates use the application language, Spanish by default, not the browser language.",
@@ -28086,7 +28200,7 @@
     ".github/workflows/check-messaging-token.yml": "68ee6bacc89bb3d49176cd023a289b68c5fcaabf616fe599c645be7b34a20ddf",
     ".github/workflows/check-mobile-distribution.yml": "a02130cf5379c4a451ec8588b989a057a683dcf275fd3d6638b275aaec0ba599",
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
-    ".github/workflows/ci.yml": "23ade27a31842e6552e0e12165d01dbca02c127cdd1b018efb4324a31103a7b6",
+    ".github/workflows/ci.yml": "bf86bb8fe37f072937947666e788f8b11c47fb3fc0b16e1ad3f89cca91b50423",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/event-operations-formal.yml": "16d0f422186a4626e30b8f65f469c3a544aca859037f9a4df099e83c659b87f1",
@@ -28097,7 +28211,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "6d51b8fa8c73aaa4fb88875fcf8859aea108266c0ffbc3dcb68908a9b1391dc7",
+    "docs/catalog-persistence/catalog-list-decisions.json": "86ca55dcdced94eb5f75c17a1084a5ffaba63484e3afe86bc37d8fe06ac65692",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
@@ -28475,14 +28589,14 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
-    "formal/system/compiled-api-surface.json": "e1f03a66b7a2ca7548b3a33f6827b34e5ef57463de9a398a61d9d16b31c6d0ba",
+    "formal/system/compiled-api-surface.json": "9e68de2dc5ccf072ce504234591945de0bb92b98a31b0e89a050a4554f8b2759",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
     "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "15c95ac8cdd4e0add1a6e96bcc75953c859948fd52dcf1474fc5190616228059",
-    "formal/system/route-requirements.json": "4b8541ce4d17b650cac35db612ca295ee3cfd76de201b80ce81a7c7075c10232",
+    "formal/system/recovery-expiry-arithmetic.json": "d745ad3c3a12184cfb6dfdaf89c760efdd06273190742e1b71c76f81ba4fe0e6",
+    "formal/system/route-requirements.json": "7b7e79181844cd889f7876c4cc35c3d99e0b1604056d2406c9d262d19cb822a7",
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -28531,7 +28645,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "13e0ebcb2e1c582da01c14aeed5580f29d79cfb3535531fff28b57211b356f79",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "bfe0fe084f1979001c2a81348824cdfebf05060683a4e51f15643bc70f7b04df",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -28713,7 +28827,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "66eb7f410d6801095d49d3b9f1676e92d0f881dbcd662babaed67aaa0a43710b",
+    "scripts/production-migrations.json": "afd244adb064be9706424baf619652e3cb9928c73c6c07104c7c4e717c1c3563",
     "scripts/production-release.mjs": "3138485773e2944338cdd27d89747955451c8146eba50f252aa1a57e42434771",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
@@ -28779,6 +28893,7 @@
     "scripts/test-event-memory-source-moderation.sh": "a4b1e20b361376bd3ebe8e5ab2481cad6463ffb459044dad6850aafc3d73801c",
     "scripts/test-event-memory-source-permissions.py": "97d8944b7f043879ca56fa4503027195ed99fbf2482ea874634bbbdcdb67d30c",
     "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
+    "scripts/test-event-organizer-claim.sh": "700a5794f9eb1ff66f1d00972161104d2a2558b1abcaf3a112e92cc745f57190",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-event-raci-browser.sh": "1f5732fd0fd9fb56085843be0c3746d92dab1f337973447fec44adca6e8afbd5",
     "scripts/test-google-account-name-verifier.py": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
@@ -29063,8 +29178,8 @@
     "tdf-hq-ui/src/api/reviews.ts": "8fc0a3b74789b159185572e537899ad62139fd8b784a32ec8639d3c6da792dcb",
     "tdf-hq-ui/src/api/session.test.ts": "b00e52d37736c2f913029b4ebd6d327b488b4fb00515e7be468f4788c0bf775e",
     "tdf-hq-ui/src/api/session.ts": "4b3fccc0019fa402a84982b83b569fc47e4342f71dd70e2ddaaee7f327f3c372",
-    "tdf-hq-ui/src/api/socialEvents.test.ts": "94e606bd6901c34bcf460a614294be9f4eb027c39b9ef2110e55df65aef5962b",
-    "tdf-hq-ui/src/api/socialEvents.ts": "94dcbd14805849f075383b163c63f9b06258bf7801a299b4b1d3bb2dd9448bab",
+    "tdf-hq-ui/src/api/socialEvents.test.ts": "bd82c08aa3a7a9ec505e9392483015c28e23bb00896fb54a96a667fbfc237ace",
+    "tdf-hq-ui/src/api/socialEvents.ts": "067b006d3c93af5a32ee204f50b075202f37f910369fa591f6508ab5e6c91c64",
     "tdf-hq-ui/src/api/socialV2.test.ts": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
     "tdf-hq-ui/src/api/uploadFailure.test.ts": "89b50f48d905bb134f2e2a9e43691c564cc1c18cca298998ced25527d2957d11",
@@ -29152,6 +29267,10 @@
     "tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx": "00701c2a3d06eaa8ffa8d7a30708f7897e2e39d053ae332e423c1edc3c91bc14",
     "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx": "e2576e0d99326e2412cf3095babcbeec6d808facde8c8d0e3fc83fe28eaa2166",
     "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx": "08b0537bc66aced315fb85d5413231fbdc71691f091cad285e7d804c82432931",
+    "tdf-hq-ui/src/components/events/EventOrganizerClaimCard.test.tsx": "a9a670e2689c8d37e5d37ac5611a40d6025ceaf371dd351bc596d96d332c0eca",
+    "tdf-hq-ui/src/components/events/EventOrganizerClaimCard.tsx": "05c69182195270f8f3925fc8dd8af9036aa42cedf27363345be03ae41e82f2f2",
+    "tdf-hq-ui/src/components/events/EventOrganizerClaimsQueue.test.tsx": "dd9ed05681792788da49e91aedfd6a0cfb795818df9fd967b539bad12db7a5bd",
+    "tdf-hq-ui/src/components/events/EventOrganizerClaimsQueue.tsx": "0d94b89d68353cf24939f82a8ac6dadb2ca58418c28956dcc0f69b4e79020f1c",
     "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx": "b7cce2b5b45e93c2d66004eb3ea41754c965f1a78bf555bab59db440a1369c24",
     "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx": "25e4ccd886c5ac0ac86922dbed23f16d4e705462f6317befe0c59b903865a278",
     "tdf-hq-ui/src/components/events/EventRaciEditor.tsx": "4f5d9809f1955c583981cf9cc97fb0d48ce5b9cbf3df7cb9a0b22bd4cf2a3bb9",
@@ -29294,8 +29413,8 @@
     "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx": "769a23d6403d4c2cd9d9e31c676e4d9a4174c3057b381f4ca374ceb0d78f0e59",
     "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx": "cbd2e7e62f3c5f709b74795f43d75df15b7a902ad802fa529750c7145253d081",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
-    "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "6346f5a36530f69a754f6f3d3988b95a5fd5ad3a7422d1797d1a2801a933c095",
-    "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "351c03a7f95ddf473ef8d86e01c0e5be7b4e2a0fbd2d842209b09feec1731fcd",
+    "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "d3c4cc81824b60a4b5b69eecf14c12341cece07df939ab3292e10358de977dfc",
+    "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "e0bccb5cc87b488e45af60463333372d979eb34c141c51aea1854a67cf27bad8",
     "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts": "b68dae2863db9239158b04f5a6638623980b1eb23204a96c5cefe4512a50f9f3",
     "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": "da3194d624efc791af6152788a87d684b9ff8cb5737fa0574c236497286b2093",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "e320f4d8a89ddeb92c3d573429ba9c110a725979d97b9974cd356aaf058ee02b",
@@ -29377,8 +29496,8 @@
     "tdf-hq-ui/src/pages/ResetPasswordPage.tsx": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "6d8f0f2af34f9312217af92971c67e977ec63403ffdef45ed9c908fcf1720c49",
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ffb3da2eefb582087a1338086edc143d046b8c3e1489004d315314f83151ed58",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "86fe863cc9608c5ce0ae086a46f85bb46b559ca823e426345e5fc436226f8fb8",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "59489c52c5b17d71f4cf15de51adec1e3e09c0770a900520dbdd368d174cce7f",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "f47437d30bf46d87aa4ba4027085d1f5b8a7758cf5893fc4fe5af311b50d206b",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "e5feb39407ef32b8602c36a04dfaf9808383a80910c0b8b40a3db47d95976335",
     "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx": "15dd2db47fab984029cfbabfd5e60830f3f29e4b8d93753f7da33f7f123c6a66",
     "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": "94ef4c36895a388db4d47e7f8bddb6057ed4594a5aa997694ae57f110cd6d7b3",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "01229e45a124cb6abe0382d9eef00561606deb69ec554d8dd26b4a85de1f06fb",
@@ -29477,6 +29596,7 @@
     "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts": "06ceabc3ed6366b3320f0019d9f9a766d6c0113b34aec21f9e7f23cc034459d9",
     "tdf-hq-ui/src/utils/eventFinanceMoney.ts": "c0a08330089af232d3919c68237e36e61e9f241f98c2706d1e653b233e30c4ed",
     "tdf-hq-ui/src/utils/eventLineup.ts": "8738e19e2da553851c892d5411c188f19bafd7646b1e831399bfb93e0cb35e3c",
+    "tdf-hq-ui/src/utils/eventOrganizerClaimLimits.ts": "5480ce5799e4493378b1f21c01c904ed700abec3f1fab14196483804662bb3fe",
     "tdf-hq-ui/src/utils/eventTicketPricing.test.ts": "47839fafa6fba96ca8fc8f0692d751f1f2f92a3e20fb86d5d32b11633582478f",
     "tdf-hq-ui/src/utils/eventTicketPricing.ts": "4ead75fcba5dc203faa93b300fd0db26f3ea7e28d3bf6772e7f1891dbf8e4abf",
     "tdf-hq-ui/src/utils/externalTicketing.test.ts": "58c361d381fda49a14c4335aecbf3e10f353e53fce94ac615d26bf9d277ca729",
@@ -29709,6 +29829,8 @@
     "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql": "86483222ece86b79a88a693a2cd403cdf3d9b3fd183ef1182df4bf447c873f95",
     "tdf-hq/sql/2026-11-12_marketplace_agreements.sql": "cba023d9107d987ce7f336181505334538bd0a0a00782e596fab1faf4a14fdbf",
     "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql": "47a811221f03817022572f6bee479567c08f714897b56706cea4f75c8b39ac8f",
+    "tdf-hq/sql/2026-11-13_event_organizer_claim.sql": "2ec72bd643c4cbddf998eee8b50f9ff4671f37945b85e8222331a98ea099eb40",
+    "tdf-hq/sql/2026-11-13_event_organizer_claim_rollback.sql": "6b9faa1f1cbc0b15bbb28d063bc2a358b376c78fb02d241705642d6e9b4f0665",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
     "tdf-hq/src/TDF/API.hs": "5fff27851b528e15bc225b2cbf15a5df9804e87d6419d92c0eb9a87fc2695b20",
@@ -29726,7 +29848,7 @@
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/MusicRelease.hs": "20df32dfcf33e6748c09ef59ecc35213479c3f78afe851e6aaf281a2f7789871",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
-    "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "f478a6ef0b343c4884d4f2477c1c9f912e58ee68d76affe2005a04d87b65871e",
+    "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "eefc7cf98b4d1f10076e9cee013c65fdfc2256e12290465a6436039901e1f155",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
     "tdf-hq/src/TDF/App/Boot.hs": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "158b961935c20e95aa6a43637e1ede2f078bb8ecb594de1d5f8abbf91764004f",
@@ -29789,7 +29911,7 @@
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
-    "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "c6300e48bff308344021f7a61cbc00c7859459d087668afe8bdf3a094092f5f3",
+    "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "d23c099fcc5b7ab7a83564884c332cd15a2a5ed3f73978c27e43c63971fe64a8",
     "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs": "79047936e9a4fff6cbf15767563a68cba32c1d4eaff754a2e6f18046615d3a43",
     "tdf-hq/src/TDF/Directory/Policy.hs": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
     "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
@@ -29808,7 +29930,7 @@
     "tdf-hq/src/TDF/Invoice/SessionIssue.hs": "a9abe069d6ea72ca291c7d7fd28ab73c060497be4a349182b50227b28b5f842a",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Models.hs": "0ba4227346e64f32a08e46bc3ad1b03eb5d739e4d7df65bf4ec0279af58b8a4a",
-    "tdf-hq/src/TDF/Models/SocialEventsModels.hs": "c6f0a707566cf96e63d59890c04b499a67362d99d6f9c625380dc36f770473c9",
+    "tdf-hq/src/TDF/Models/SocialEventsModels.hs": "ec04e7f7d93a4b14fcea00b1c195b6bb85c323020a0a8772d43ffd6a8368b534",
     "tdf-hq/src/TDF/ModelsExtra.hs": "d3e32f2ed9802c6b967729235fb4a5ebb9a21541afa73325e0950231539a12dc",
     "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs": "1c3b5fae0cc4e5f4605aea8a1a0118badcafb8d83dbef671fce27f6cbf3d65d2",
     "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs": "91a8b3c360e9175f819599f55f2421f76502e908d76719ff2306c23d2614c329",
@@ -29840,6 +29962,7 @@
     "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs": "3fffa9b76eae802e1629413435696333a45947f8e946a48f28a8170bbe833c83",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
     "tdf-hq/src/TDF/Server/EventAdminDelegation.hs": "46d53f55d6b570e2dbdc7f077549a34d629cef8f157ee0cda991951c36456a2d",
+    "tdf-hq/src/TDF/Server/EventOrganizerClaim.hs": "2ef91902c9d7d8a3278952afe149fb9823a01dba6a437360c3e5a833958c574e",
     "tdf-hq/src/TDF/Server/EventResearch.hs": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
@@ -29857,7 +29980,7 @@
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "ad338e7fb54bcf415d0b2a87f653a2855ab0f0f92219a09c1c22125ab02b7d19",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "790e1d6df83864710f6251d7473976d779a65c25d7e291be540041627dff278f",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "89d8852ed59dc41024a9906c201a6339566bfe59bc94abc6a75f1282769fdd59",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/StripeTicketCapture.hs": "b2a93b8ef71726410abeb79ec0ec07ef8e96d845ada7d7c0a401fda9b5b7c842",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
@@ -29900,7 +30023,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+    "tdf-hq/tdf-hq.cabal": "db18c3fa3fb30510cabcdda1b4a08fb760e356732497d4fc07ea670c160bc8d0",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -29908,7 +30031,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "16d5ee619523893449b1f199beb354f075ccee05eb1fea0c374f8849d27d02df",
+    "tdf-hq/test/Spec.hs": "71dc2cf9634ada60fb17b2d3d6fbbb4a7fe15e8c9095dfd939727fd5b02acd9e",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -29945,6 +30068,7 @@
     "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs": "01a1bacba4c441d49e68162267f0e590b39e2db57f94a29818a7057423ff1065",
     "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "bc4f5e6053643ddcbae742e1690e44f5698c6f527f86874723c3bf014ceda57a",
     "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs": "65bdfb6d20e33eb7a062cebdeef4c1e3dbb48e83b10eda578a9dcdeddd9249dc",
+    "tdf-hq/test/TDF/EventOrganizerClaimSpec.hs": "5fad2c970ed6a1cf16f082cb3bbb5118b221c57472e6a898b92bbd580c05f7e5",
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
@@ -31735,6 +31859,10 @@
         "relationship": "tests"
       },
       {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "tests"
+      },
+      {
         "requirement": "MEDIA-ARTIST-FEATURED-001",
         "relationship": "implementation"
       },
@@ -32913,6 +33041,10 @@
       {
         "requirement": "MKT-AGREEMENT-PAYMENT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/sql/2026-11-02_directory_claim_revocation.sql": [
@@ -32934,6 +33066,10 @@
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": [
       {
         "requirement": "ID-CLAIM-REVIEW-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
         "relationship": "tests"
       }
     ],
@@ -33280,6 +33416,10 @@
       },
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
         "relationship": "tests"
       }
     ],
@@ -36181,6 +36321,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "implementation"
       }
@@ -36285,6 +36429,16 @@
       {
         "requirement": "EVT-OWNER-CLAIM-001",
         "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/EventOrganizerClaim.hs": [
+      {
+        "requirement": "EVT-OWNER-CLAIM-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": [
@@ -39129,6 +39283,10 @@
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API/SocialEventsAPI.hs": [
@@ -39155,6 +39313,10 @@
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": [
@@ -39176,6 +39338,10 @@
       },
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
         "relationship": "implementation"
       }
     ],
@@ -44409,6 +44575,10 @@
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/routes/EventCommunityEntry.tsx": [
@@ -44455,6 +44625,10 @@
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/api/socialEvents.test.ts": [
@@ -44476,6 +44650,10 @@
       },
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
         "relationship": "tests"
       }
     ],
@@ -46228,6 +46406,10 @@
       },
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
         "relationship": "implementation"
       }
     ],
@@ -48733,6 +48915,64 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/sql/2026-11-13_event_organizer_claim.sql": [
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-13_event_organizer_claim_rollback.sql": [
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/eventOrganizerClaimLimits.ts": [
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/EventOrganizerClaimCard.tsx": [
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/EventOrganizerClaimsQueue.tsx": [
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-event-organizer-claim.sh": [
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/EventOrganizerClaimSpec.hs": [
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/EventOrganizerClaimCard.test.tsx": [
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/EventOrganizerClaimsQueue.test.tsx": [
+      {
+        "requirement": "EVT-ORGANIZER-CLAIM-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx": [
       {
         "requirement": "UX-PUBLIC-DETAIL-001",
@@ -49012,7 +49252,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "23ade27a31842e6552e0e12165d01dbca02c127cdd1b018efb4324a31103a7b6",
+      "sha256": "bf86bb8fe37f072937947666e788f8b11c47fb3fc0b16e1ad3f89cca91b50423",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49105,6 +49345,10 @@
         },
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
           "relationship": "tests"
         },
         {
@@ -50606,7 +50850,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "13e0ebcb2e1c582da01c14aeed5580f29d79cfb3535531fff28b57211b356f79",
+      "sha256": "bfe0fe084f1979001c2a81348824cdfebf05060683a4e51f15643bc70f7b04df",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53797,7 +54041,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "66eb7f410d6801095d49d3b9f1676e92d0f881dbcd662babaed67aaa0a43710b",
+      "sha256": "afd244adb064be9706424baf619652e3cb9928c73c6c07104c7c4e717c1c3563",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55572,6 +55816,22 @@
       "sha256": "a3e1b15c7f4d1c91acb4b87510f8fe0b0aa4d45ad7e6a56971a5a114c1785bf9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-dcb61d4dcff5a0cc",
+      "path": "scripts/test-event-organizer-claim.sh",
+      "sha256": "700a5794f9eb1ff66f1d00972161104d2a2558b1abcaf3a112e92cc745f57190",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-5f11b620c3566a19",
@@ -60444,7 +60704,7 @@
     {
       "id": "SURFACE-f2b48a740f534a82",
       "path": "tdf-hq-ui/src/api/socialEvents.test.ts",
-      "sha256": "94e606bd6901c34bcf460a614294be9f4eb027c39b9ef2110e55df65aef5962b",
+      "sha256": "bd82c08aa3a7a9ec505e9392483015c28e23bb00896fb54a96a667fbfc237ace",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60466,13 +60726,17 @@
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "94dcbd14805849f075383b163c63f9b06258bf7801a299b4b1d3bb2dd9448bab",
+      "sha256": "067b006d3c93af5a32ee204f50b075202f37f910369fa591f6508ab5e6c91c64",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60505,6 +60769,10 @@
         },
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
           "relationship": "implementation"
         }
       ]
@@ -62060,6 +62328,54 @@
         },
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6606945d359e84a4",
+      "path": "tdf-hq-ui/src/components/events/EventOrganizerClaimCard.test.tsx",
+      "sha256": "a9a670e2689c8d37e5d37ac5611a40d6025ceaf371dd351bc596d96d332c0eca",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e39c8c4bfaaaa3c0",
+      "path": "tdf-hq-ui/src/components/events/EventOrganizerClaimCard.tsx",
+      "sha256": "05c69182195270f8f3925fc8dd8af9036aa42cedf27363345be03ae41e82f2f2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-76d943c4592372b0",
+      "path": "tdf-hq-ui/src/components/events/EventOrganizerClaimsQueue.test.tsx",
+      "sha256": "dd9ed05681792788da49e91aedfd6a0cfb795818df9fd967b539bad12db7a5bd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f99e3f8f3c301bb0",
+      "path": "tdf-hq-ui/src/components/events/EventOrganizerClaimsQueue.tsx",
+      "sha256": "0d94b89d68353cf24939f82a8ac6dadb2ca58418c28956dcc0f69b4e79020f1c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
           "relationship": "implementation"
         }
       ]
@@ -64838,11 +65154,15 @@
     {
       "id": "SURFACE-bf406241ca9e0491",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
-      "sha256": "6346f5a36530f69a754f6f3d3988b95a5fd5ad3a7422d1797d1a2801a933c095",
+      "sha256": "d3c4cc81824b60a4b5b69eecf14c12341cece07df939ab3292e10358de977dfc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "ID-CLAIM-REVIEW-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
           "relationship": "tests"
         }
       ]
@@ -64850,7 +65170,7 @@
     {
       "id": "SURFACE-34192568166d29c1",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
-      "sha256": "351c03a7f95ddf473ef8d86e01c0e5be7b4e2a0fbd2d842209b09feec1731fcd",
+      "sha256": "e0bccb5cc87b488e45af60463333372d979eb34c141c51aea1854a67cf27bad8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64859,6 +65179,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-PAYMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
           "relationship": "implementation"
         }
       ]
@@ -66762,7 +67086,7 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "86fe863cc9608c5ce0ae086a46f85bb46b559ca823e426345e5fc436226f8fb8",
+      "sha256": "f47437d30bf46d87aa4ba4027085d1f5b8a7758cf5893fc4fe5af311b50d206b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66788,13 +67112,17 @@
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "59489c52c5b17d71f4cf15de51adec1e3e09c0770a900520dbdd368d174cce7f",
+      "sha256": "e5feb39407ef32b8602c36a04dfaf9808383a80910c0b8b40a3db47d95976335",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66827,6 +67155,10 @@
         },
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
           "relationship": "implementation"
         }
       ]
@@ -68616,6 +68948,18 @@
         },
         {
           "requirement": "SYS-ARCH-BOUNDARY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-7afa11840a0c6bda",
+      "path": "tdf-hq-ui/src/utils/eventOrganizerClaimLimits.ts",
+      "sha256": "5480ce5799e4493378b1f21c01c904ed700abec3f1fab14196483804662bb3fe",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
           "relationship": "implementation"
         }
       ]
@@ -74384,6 +74728,30 @@
       ]
     },
     {
+      "id": "SURFACE-9ccdbc4a731dc957",
+      "path": "tdf-hq/sql/2026-11-13_event_organizer_claim.sql",
+      "sha256": "2ec72bd643c4cbddf998eee8b50f9ff4671f37945b85e8222331a98ea099eb40",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c8b193f8abcaca8d",
+      "path": "tdf-hq/sql/2026-11-13_event_organizer_claim_rollback.sql",
+      "sha256": "6b9faa1f1cbc0b15bbb28d063bc2a358b376c78fb02d241705642d6e9b4f0665",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -74901,7 +75269,7 @@
     {
       "id": "SURFACE-200737fdda273f28",
       "path": "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
-      "sha256": "f478a6ef0b343c4884d4f2477c1c9f912e58ee68d76affe2005a04d87b65871e",
+      "sha256": "eefc7cf98b4d1f10076e9cee013c65fdfc2256e12290465a6436039901e1f155",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74926,6 +75294,10 @@
         },
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
           "relationship": "implementation"
         }
       ]
@@ -76220,7 +76592,7 @@
     {
       "id": "SURFACE-3ff9ad29b119eeb6",
       "path": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
-      "sha256": "c6300e48bff308344021f7a61cbc00c7859459d087668afe8bdf3a094092f5f3",
+      "sha256": "d23c099fcc5b7ab7a83564884c332cd15a2a5ed3f73978c27e43c63971fe64a8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76241,6 +76613,10 @@
         },
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
           "relationship": "implementation"
         }
       ]
@@ -76633,7 +77009,7 @@
     {
       "id": "SURFACE-9913c975520e953f",
       "path": "tdf-hq/src/TDF/Models/SocialEventsModels.hs",
-      "sha256": "c6f0a707566cf96e63d59890c04b499a67362d99d6f9c625380dc36f770473c9",
+      "sha256": "ec04e7f7d93a4b14fcea00b1c195b6bb85c323020a0a8772d43ffd6a8368b534",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76642,6 +77018,10 @@
         },
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
           "relationship": "implementation"
         }
       ]
@@ -77566,6 +77946,22 @@
       ]
     },
     {
+      "id": "SURFACE-6ca67648a8d9ff24",
+      "path": "tdf-hq/src/TDF/Server/EventOrganizerClaim.hs",
+      "sha256": "2ef91902c9d7d8a3278952afe149fb9823a01dba6a437360c3e5a833958c574e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-OWNER-CLAIM-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-06aae7ecd0fab607",
       "path": "tdf-hq/src/TDF/Server/EventResearch.hs",
       "sha256": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
@@ -78003,7 +78399,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "790e1d6df83864710f6251d7473976d779a65c25d7e291be540041627dff278f",
+      "sha256": "89d8852ed59dc41024a9906c201a6339566bfe59bc94abc6a75f1282769fdd59",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78144,6 +78540,10 @@
         },
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
           "relationship": "implementation"
         },
         {
@@ -79081,7 +79481,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "sha256": "db18c3fa3fb30510cabcdda1b4a08fb760e356732497d4fc07ea670c160bc8d0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79264,7 +79664,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "16d5ee619523893449b1f199beb354f075ccee05eb1fea0c374f8849d27d02df",
+      "sha256": "71dc2cf9634ada60fb17b2d3d6fbbb4a7fe15e8c9095dfd939727fd5b02acd9e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79405,6 +79805,10 @@
         },
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
           "relationship": "tests"
         }
       ]
@@ -80080,6 +80484,18 @@
       "sha256": "b8ae8271535758e9e40efcd106b9abfd9b3775ed9f55f51a9022039bce8e169a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-97f944e68a39cf16",
+      "path": "tdf-hq/test/TDF/EventOrganizerClaimSpec.hs",
+      "sha256": "5fad2c970ed6a1cf16f082cb3bbb5118b221c57472e6a898b92bbd580c05f7e5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-0b2762494d9e6ae1",
@@ -87067,6 +87483,7 @@
     "UI-CSV-STRING-PREFIX-001",
     "AUTH-APPLE-SIGNIN-001",
     "SYS-DESKTOP-001",
+    "EVT-ORGANIZER-CLAIM-001",
     "MEDIA-ARTIST-FEATURED-001",
     "MEDIA-SOURCE-HEALTH-001"
   ],
@@ -88267,7 +88684,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "16d16260a2490c1921d3a09501cf7f9ab1baed2a576e8640a650d8b0cd579c93",
+      "sourceSha256": "ad012d02bd0f2591cd7724099718159f46bb35a8b5b104a5be3db3106f749a85",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -88295,7 +88712,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "16d16260a2490c1921d3a09501cf7f9ab1baed2a576e8640a650d8b0cd579c93",
+      "sourceSha256": "ad012d02bd0f2591cd7724099718159f46bb35a8b5b104a5be3db3106f749a85",
       "definition": {
         "states": [
           "absent",
@@ -88325,7 +88742,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "16d16260a2490c1921d3a09501cf7f9ab1baed2a576e8640a650d8b0cd579c93",
+      "sourceSha256": "ad012d02bd0f2591cd7724099718159f46bb35a8b5b104a5be3db3106f749a85",
       "definition": {
         "export": [
           "queued",
@@ -111540,7 +111957,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 222,
+    "PARTIAL": 223,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
