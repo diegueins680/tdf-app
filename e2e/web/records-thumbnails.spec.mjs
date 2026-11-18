@@ -68,8 +68,13 @@ test('Records handles failed images and decoded placeholders with bounded reques
   await expect(control).toBeVisible();
   await expect.poll(() => control.evaluate(i => i.naturalWidth)).toBe(480);
   expect(requests.every(p => /\/vi\/(ooPsIHsikYU|Cb7VGZJ6apo|f2BabxM1Pjc)\/(hqdefault|mqdefault)\.jpg/.test(p))).toBe(true);
-  // Compact + card instances can each request a candidate once; never retry endlessly.
-  expect(requests.length).toBeLessThanOrEqual(10);
+  // Each video renders a compact preview, a card thumbnail and a player poster.
+  // Each of those may request a candidate once; never retry endlessly. The
+  // browser cache can merge some of them, so bound each image, not the total.
+  const renderingsPerVideo = 3;
+  const perImage = new Map();
+  for (const path of requests) perImage.set(path, (perImage.get(path) ?? 0) + 1);
+  for (const [path, count] of perImage) expect(count, path).toBeLessThanOrEqual(renderingsPerVideo);
 });
 
 test('Records preserves source identities, keyboard links and responsive unavailable states @critical', async ({ page, baseURL }) => {
