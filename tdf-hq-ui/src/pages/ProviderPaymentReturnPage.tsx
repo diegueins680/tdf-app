@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
-import { getProviderPaymentSession, safePlaceToPayRedirect } from '../api/providerPaymentSessions';
+import { getProviderPaymentSession, safeProviderRedirect } from '../api/providerPaymentSessions';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import {
   clearPaymentIdempotencyKey,
@@ -70,9 +70,7 @@ export default function ProviderPaymentReturnPage() {
     || (session?.state === 'failed' && session.canRetryOrFallback);
   const ambiguous = session?.state === 'ambiguous'
     || Boolean(session && !session.canRetryOrFallback && !succeeded);
-  const redirect = session?.provider === 'placetopay'
-    ? safePlaceToPayRedirect(session.redirectUrl)
-    : null;
+  const redirect = safeProviderRedirect(session?.provider, session?.redirectUrl);
   const canReleaseAttempt = paymentAttemptCanBeReleased(
     session?.state,
     session?.canRetryOrFallback,

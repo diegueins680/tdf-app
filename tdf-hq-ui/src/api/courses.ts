@@ -190,6 +190,7 @@ export interface CourseCheckoutResponse {
     | 'placetopay_bank_redirect'
     | 'placetopay_deuna_qr'
     | 'payphone_wallet'
+    | 'payphone_card'
   )[];
   checkoutAvailable: boolean;
 }

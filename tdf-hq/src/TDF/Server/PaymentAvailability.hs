@@ -115,8 +115,8 @@ runtimeReady environment flow method activation = case paProvider activation of
     liftIO (runtimeProviderMethodConfigured environment Checkout.ProviderPlaceToPay
       method)
   Checkout.ProviderPayPhone -> do
-    -- The Button ('MethodCard') is configured only with its coding password
-    -- (ADR 0136); the wallet alone must not open the card route.
+    -- The Button ('MethodCard') is confirmed only by the query worker, so the
+    -- card route also needs that worker (ADR 0136); the wallet does not.
     configured <- liftIO (runtimeProviderMethodConfigured environment
       Checkout.ProviderPayPhone method)
     if configured && method == MethodCard
@@ -166,6 +166,7 @@ publicPaymentRouteLabel route = case (routeProvider route, routeMethod route) of
     Just "placetopay_bank_redirect"
   (Checkout.ProviderPlaceToPay, MethodDeunaQr) -> Just "placetopay_deuna_qr"
   (Checkout.ProviderPayPhone, MethodPayPhoneWallet) -> Just "payphone_wallet"
+  (Checkout.ProviderPayPhone, MethodCard) -> Just "payphone_card"
   (Checkout.ProviderBankTransfer, MethodManualBankTransfer) ->
     Just "bank_transfer"
   _ -> Nothing

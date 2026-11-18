@@ -17,7 +17,7 @@ const getMock = jest.fn();
 
 jest.unstable_mockModule('../api/providerPaymentSessions', () => ({
   getProviderPaymentSession: getMock,
-  safePlaceToPayRedirect: () => null,
+  safeProviderRedirect: () => null,
 }));
 
 jest.unstable_mockModule('../contexts/LocalePreferencesContext', () => ({

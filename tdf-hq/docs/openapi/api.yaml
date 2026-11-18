@@ -12312,7 +12312,7 @@ components:
         depositPaidAt: { type: string, format: date-time, nullable: true }
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card] }
     PublicDomoPaypalCaptureRequest:
       type: object
       additionalProperties: false
@@ -12459,7 +12459,7 @@ components:
         quote: { $ref: '#/components/schemas/PublicEventTicketQuote' }
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, bank_transfer] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card, bank_transfer] }
         tickets:
           type: array
           description: Empty until fulfillment issues tickets after verified payment.
@@ -12656,7 +12656,7 @@ components:
           type: array
           description: Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown.
           uniqueItems: true
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, bank_transfer] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card, bank_transfer] }
         manualPayment:
           allOf: [{ $ref: '#/components/schemas/PublicBookingManualPayment' }]
           nullable: true
@@ -17541,7 +17541,7 @@ components:
           nullable: true
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card] }
         checkoutAvailable: { type: boolean }
     CoursePaypalCaptureRequest:
       type: object
