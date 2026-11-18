@@ -3033,7 +3033,29 @@
       {
         "ordinal": 46,
         "path": "/login",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Forwarded-For",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
         "bodies": [
           {
             "modifiers": [
@@ -3063,7 +3085,9 @@
           }
         ],
         "authCombinators": [],
-        "internalInputs": [],
+        "internalInputs": [
+          "remote-host"
+        ],
         "method": "POST",
         "successStatus": 200,
         "contentTypes": [
@@ -29338,7 +29362,7 @@
             },
             {
               "args": [],
-              "module": "TDF.Server.TicketPaymentReceipt",
+              "module": "TDF.DTO.TicketPaymentReceipt",
               "name": "TicketPaymentReceipt"
             }
           ],
