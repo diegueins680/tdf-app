@@ -169,6 +169,17 @@ spec = describe "Provider adapter binding admission (PAY-ADAPTER-BINDING-001)" $
                       _ -> (AdapterUnknown, ProviderAmbiguous))
                  Left err -> counterexample (show err) False
                else property (isLeft result)
+    it "never reports a button payment as succeeded from a query (PAY-PAYPHONE-BUTTON-001)" $
+      property $ forAll genExpected $ \expected -> forAll (genReported expected) $ \reported ->
+        forAll (chooseInt (0, 5)) $ \code ->
+          let result = adapterParseResponse payPhone AdapterQuery (locatorFor "Pay-7_prepared" expected)
+                (toJSON [payPhoneQuery reported code])
+          in case result of
+               Right r -> counterexample (show (adapterResultState r)) $
+                 adapterResultState r /= AdapterSucceeded
+                   && adapterResultCertainty r /= ProviderSucceeded
+                   && adapterResultExternalId r == "Pay-7_prepared"
+               Left _ -> property True
     it "never authenticates a callback" $
       property $ forAll genExpected $ \expected ->
         let callback = object ["TransactionId" .= (7 :: Int64), "ClientTransactionId" .= epReference expected, "StatusCode" .= (3 :: Int)]

@@ -18615,7 +18615,7 @@
     {
       "id": "SURFACE-5d36ee6901338dab",
       "path": "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
-      "sha256": "407fabc72a9c195886fefdfb6b3d20f0b709a6dd18e69487f7ae5f06c33a5501",
+      "sha256": "1cb4546f80f43585db6ba37baad7e3615ba34a6d5223d5a169db617a3ef441ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31522,7 +31522,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "16d16260a2490c1921d3a09501cf7f9ab1baed2a576e8640a650d8b0cd579c93",
+      "sha256": "019d0e998b0ca1624ff3d15cdaedeb1a2baa6aa7af462a3ad4594692738021c7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
