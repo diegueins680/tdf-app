@@ -3,7 +3,7 @@ EXTENDS Integers, FiniteSets
 CONSTANT Scenario, Unsafe
 VARIABLES edges, version, history, completed, plan, proposal, date, audit, leak
 vars == <<edges,version,history,completed,plan,proposal,date,audit,leak>>
-Actors == {"producer","engineer","artist","outside"}
+Actors == {"producer","engineer","artist","client","outside"}
 Versions == {3,4}
 Choices == {"approved","changes"}
 Nodes == {1,2,3}
@@ -20,9 +20,9 @@ Publish == /\ version=3 /\ version'=4 /\ completed'=FALSE
 Decide(actor,seen,choice) ==
     LET old == {h \in history : h[1]=seen}
         record == <<seen,actor,choice>>
-    IN /\ actor="artist"
+    IN /\ (actor="artist" \/ (actor="client" /\ choice="changes"))
        /\ IF record \in old THEN UNCHANGED <<history,completed>>
-             ELSE /\ (Unsafe \/ seen=version) /\ old={}
+             ELSE /\ ((Unsafe /\ Scenario="review") \/ seen=version) /\ ((Unsafe /\ Scenario="decision") \/ old={})
                   /\ history'=history \cup {record} /\ completed'=(choice="approved")
        /\ UNCHANGED <<edges,version,plan,proposal,date,audit,leak>>
 Propose == /\ proposal'=plan
@@ -39,7 +39,7 @@ Read(actor,p,v) ==
     IN /\ (allowed \/ Unsafe) /\ leak'=~allowed
        /\ UNCHANGED <<edges,version,history,completed,plan,proposal,date,audit>>
 Next == CASE Scenario="graph" -> \E e \in Arcs : Edge(e)
-          [] Scenario="review" -> Publish \/ \E a \in Actors,v \in Versions,c \in Choices : Decide(a,v,c)
+          [] Scenario \in {"review","decision"} -> Publish \/ \E a \in Actors,v \in Versions,c \in Choices : Decide(a,v,c)
           [] Scenario="plan" -> Propose \/ Edit \/ \E a \in Actors : Confirm(a)
           [] OTHER -> \E a \in Actors,p \in {"P","Q"},v \in Versions : Read(a,p,v)
 Spec == Init /\ [][Next]_vars

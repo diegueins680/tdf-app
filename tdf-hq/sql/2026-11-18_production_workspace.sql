@@ -1,23 +1,25 @@
+BEGIN;
+SET LOCAL lock_timeout='10s';
 -- Additive private workspace. Existing label notes, songs and orders retain their owners.
-CREATE TABLE production_project (
+CREATE TABLE IF NOT EXISTS production_project (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   title text NOT NULL CHECK (length(trim(title)) BETWEEN 1 AND 240),
   format text NOT NULL CHECK (format IN ('Sencillo','EP','Álbum')),
   delivery date NOT NULL, revision bigint NOT NULL DEFAULT 0
 );
-CREATE TABLE production_member (
+CREATE TABLE IF NOT EXISTS production_member (
   project uuid NOT NULL REFERENCES production_project,
   person bigint NOT NULL REFERENCES party,
   role text NOT NULL CHECK (role IN ('producer','engineer','client')),
   PRIMARY KEY(project,person)
 );
-CREATE TABLE production_song (
+CREATE TABLE IF NOT EXISTS production_song (
   project uuid NOT NULL REFERENCES production_project,
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   title text NOT NULL CHECK (length(trim(title)) BETWEEN 1 AND 240),
   label_track_id uuid REFERENCES label_track, UNIQUE(project,id)
 );
-CREATE TABLE production_task (
+CREATE TABLE IF NOT EXISTS production_task (
   project uuid NOT NULL REFERENCES production_project,
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(), UNIQUE(project,id),
   title text NOT NULL CHECK (length(trim(title)) BETWEEN 1 AND 240),
@@ -29,59 +31,59 @@ CREATE TABLE production_task (
   FOREIGN KEY(project,owner) REFERENCES production_member(project,person),
   FOREIGN KEY(project,approver) REFERENCES production_member(project,person)
 );
-CREATE TABLE production_task_song (
+CREATE TABLE IF NOT EXISTS production_task_song (
   project uuid NOT NULL, task uuid NOT NULL, song uuid NOT NULL,
   PRIMARY KEY(task,song),
   FOREIGN KEY(project,task) REFERENCES production_task(project,id),
   FOREIGN KEY(project,song) REFERENCES production_song(project,id)
 );
-CREATE TABLE production_collaborator (
+CREATE TABLE IF NOT EXISTS production_collaborator (
   project uuid NOT NULL, task uuid NOT NULL, person bigint NOT NULL,
   PRIMARY KEY(task,person),
   FOREIGN KEY(project,task) REFERENCES production_task(project,id),
   FOREIGN KEY(project,person) REFERENCES production_member(project,person)
 );
-CREATE TABLE production_dependency (
+CREATE TABLE IF NOT EXISTS production_dependency (
   project uuid NOT NULL, task uuid NOT NULL, needs uuid NOT NULL,
   PRIMARY KEY(task,needs), CHECK(task<>needs),
   FOREIGN KEY(project,task) REFERENCES production_task(project,id),
   FOREIGN KEY(project,needs) REFERENCES production_task(project,id)
 );
-CREATE TABLE production_version (
+CREATE TABLE IF NOT EXISTS production_version (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(), task uuid NOT NULL REFERENCES production_task,
   number integer NOT NULL CHECK(number>0), file_id uuid NOT NULL REFERENCES content_storage_upload,
   created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(task,number)
 );
-CREATE TABLE production_share (
+CREATE TABLE IF NOT EXISTS production_share (
   version uuid NOT NULL REFERENCES production_version, person bigint NOT NULL REFERENCES party,
   PRIMARY KEY(version,person)
 );
-CREATE TABLE production_feedback (
+CREATE TABLE IF NOT EXISTS production_feedback (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(), version uuid NOT NULL REFERENCES production_version,
   actor bigint NOT NULL REFERENCES party, kind text NOT NULL CHECK(kind IN ('comment','changes','approve')),
   note text NOT NULL CHECK(length(note)<=8000 AND (kind='approve' OR length(trim(note))>0)),
   request_id uuid NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(actor,request_id)
 );
-CREATE UNIQUE INDEX production_one_decision ON production_feedback(version) WHERE kind<>'comment';
-CREATE TABLE production_proposal (
+CREATE UNIQUE INDEX IF NOT EXISTS production_one_decision ON production_feedback(version) WHERE kind<>'comment';
+CREATE TABLE IF NOT EXISTS production_proposal (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(), project uuid NOT NULL REFERENCES production_project,
-  source uuid NOT NULL REFERENCES production_task, base_revision bigint NOT NULL,
+  source uuid REFERENCES production_task, base_revision bigint NOT NULL,
   changes jsonb NOT NULL, delivery date NOT NULL, confirmed boolean NOT NULL DEFAULT false
 );
 
 -- Identical predicate for the review history and for opening the file.
-CREATE FUNCTION production_visible_version(who bigint, v uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION production_visible_version(who bigint, v uuid) RETURNS boolean
 LANGUAGE sql STABLE AS $$
   SELECT EXISTS (SELECT FROM production_version r JOIN production_task t ON t.id=r.task
     JOIN production_member m ON m.project=t.project AND m.person=who WHERE r.id=v
     AND (m.role<>'client' OR EXISTS(SELECT FROM production_share s WHERE s.version=v AND s.person=who)))
 $$;
 
-CREATE FUNCTION production_fail(code int, message text) RETURNS jsonb LANGUAGE sql IMMUTABLE AS $$
+CREATE OR REPLACE FUNCTION production_fail(code int, message text) RETURNS jsonb LANGUAGE sql IMMUTABLE AS $$
   SELECT jsonb_build_object('error',code,'message',message)
 $$;
 
-CREATE FUNCTION production_create(who bigint, body jsonb) RETURNS jsonb LANGUAGE plpgsql AS $$
+CREATE OR REPLACE FUNCTION production_create(who bigint, body jsonb) RETURNS jsonb LANGUAGE plpgsql AS $$
 DECLARE p production_project; song_id uuid; song jsonb; stage jsonb; following uuid; task_id uuid;
         finish date; track uuid; song_title text;
 BEGIN
@@ -118,7 +120,7 @@ END $$;
 
 -- Source is a projected finish, in calendar days. Propagate only when a successor
 -- has exhausted its slack. Retain the immediate predecessor for each explanation.
-CREATE FUNCTION production_forecast(p uuid, source_task uuid, finish date) RETURNS jsonb LANGUAGE sql STABLE AS $$
+CREATE OR REPLACE FUNCTION production_forecast(p uuid, source_task uuid, finish date) RETURNS jsonb LANGUAGE sql STABLE AS $$
   WITH RECURSIVE impact(id,suggested,cause) AS (
     SELECT id,finish,NULL::uuid FROM production_task WHERE project=p AND id=source_task AND finish>due AND status<>'Completada'
     UNION
@@ -131,12 +133,28 @@ CREATE FUNCTION production_forecast(p uuid, source_task uuid, finish date) RETUR
   FROM worst w JOIN production_task t USING(id) LEFT JOIN production_task c ON c.id=w.cause
 $$;
 
-CREATE FUNCTION production_command(who bigint, studio boolean, p uuid, body jsonb)
+-- Latest finish of each unfinished predecessor is the earliest latest-start
+-- of any successor. An isolated project task is itself a delivery milestone.
+CREATE OR REPLACE FUNCTION production_backward(p uuid, target date) RETURNS jsonb LANGUAGE sql STABLE AS $$
+  WITH RECURSIVE dates(id,finish,successor) AS (
+    SELECT t.id,target,NULL::uuid FROM production_task t WHERE t.project=p AND t.status<>'Completada'
+      AND NOT EXISTS(SELECT FROM production_dependency d JOIN production_task s ON s.id=d.task
+        WHERE d.needs=t.id AND s.status<>'Completada')
+    UNION
+    SELECT n.id,a.finish-s.duration,s.id FROM dates a JOIN production_task s ON s.id=a.id
+      JOIN production_dependency d ON d.task=s.id JOIN production_task n ON n.id=d.needs WHERE n.status<>'Completada'
+  ), limits AS (SELECT DISTINCT ON(id) * FROM dates ORDER BY id,finish,successor)
+  SELECT coalesce(jsonb_agg(jsonb_build_object('task',t.id,'title',t.title,'current',t.due,'suggested',l.finish,
+    'cause',s.title,'booking',t.booking_id) ORDER BY l.finish,t.id),'[]') FROM limits l JOIN production_task t USING(id)
+    LEFT JOIN production_task s ON s.id=l.successor WHERE t.due<>l.finish
+$$;
+
+CREATE OR REPLACE FUNCTION production_command(who bigint, studio boolean, p uuid, body jsonb)
 RETURNS jsonb LANGUAGE plpgsql AS $$
 DECLARE
   project_row production_project; member_role text; op text := body->>'op';
   t production_task; v production_version; f production_feedback; proposal production_proposal;
-  task_id uuid := (body->>'task')::uuid; version_id uuid := (body->>'version')::uuid;
+  task_id uuid; version_id uuid;
   person_id bigint; file_id_input uuid; booking_input bigint; choice text; previous uuid;
   changes jsonb; item jsonb; note_text text := coalesce(body->>'note','');
 BEGIN
@@ -145,6 +163,8 @@ BEGIN
     WHERE q.id=p AND m.person=who FOR UPDATE OF q;
   IF NOT FOUND THEN RETURN production_fail(404,'Proyecto no disponible.'); END IF;
   SELECT role INTO member_role FROM production_member WHERE project=p AND person=who;
+  task_id := (body->>'task')::uuid;
+  version_id := (body->>'version')::uuid;
   IF op='feedback' THEN
     SELECT * INTO v FROM production_version WHERE id=version_id;
     SELECT * INTO t FROM production_task WHERE id=v.task AND project=p;
@@ -156,7 +176,9 @@ BEGIN
       RETURN jsonb_build_object('id',f.id,'kind',f.kind);
     END IF;
     IF choice IN ('changes','approve') THEN
-      IF t.approver IS DISTINCT FROM who THEN RETURN production_fail(403,'Solo el aprobador designado puede decidir.'); END IF;
+      IF t.approver IS DISTINCT FROM who AND (choice='approve' OR member_role<>'client') THEN
+        RETURN production_fail(403,'Esta decisión corresponde al aprobador designado.');
+      END IF;
       IF t.status<>'En revisión' OR EXISTS(SELECT FROM production_version WHERE task=t.id AND number>v.number)
         OR EXISTS(SELECT FROM production_feedback WHERE version=v.id AND kind<>'comment') THEN
         RETURN production_fail(409,'La revisión ya cambió. Consulta la versión y su decisión en el historial.');
@@ -173,7 +195,7 @@ BEGIN
   END IF;
 
   IF member_role='client' THEN RETURN production_fail(403,'Esta acción requiere un integrante del equipo de producción.'); END IF;
-  IF op IN ('invite','task','edit','confirm','dependency') AND member_role<>'producer' THEN RETURN production_fail(403,'Solo el productor puede modificar el plan.'); END IF;
+  IF op IN ('invite','task','edit','confirm','dependency','backplan') AND member_role<>'producer' THEN RETURN production_fail(403,'Solo el productor puede modificar el plan.'); END IF;
   IF op IN ('progress','block','publish','propose','edit','dependency') THEN
     SELECT * INTO t FROM production_task WHERE id=task_id AND project=p;
     IF NOT FOUND THEN RETURN production_fail(404,'Tarea no disponible.'); END IF;
@@ -235,6 +257,12 @@ BEGIN
     IF EXISTS(WITH RECURSIVE ancestors(id) AS (SELECT previous UNION SELECT d.needs FROM production_dependency d JOIN ancestors a ON d.task=a.id)
       SELECT FROM ancestors WHERE id=t.id) THEN RETURN production_fail(409,'Esta dependencia formaría un ciclo.'); END IF;
     INSERT INTO production_dependency VALUES(p,t.id,previous) ON CONFLICT DO NOTHING;
+  ELSIF op='backplan' THEN
+    IF (body->>'finish')::date IS NULL THEN RETURN production_fail(400,'Indica la entrega final.'); END IF;
+    changes := production_backward(p,(body->>'finish')::date);
+    INSERT INTO production_proposal(project,base_revision,changes,delivery)
+      VALUES(p,project_row.revision,changes,(body->>'finish')::date) RETURNING * INTO proposal;
+    RETURN jsonb_build_object('id',proposal.id);
   ELSIF op='propose' THEN
     changes := production_forecast(p,t.id,(body->>'finish')::date);
     IF changes='[]' THEN RETURN production_fail(400,'Indica una fecha posterior para una tarea pendiente.'); END IF;
@@ -279,7 +307,7 @@ EXCEPTION WHEN data_exception OR integrity_constraint_violation THEN
   RETURN production_fail(400,'Comprueba los datos, fechas, destinatarios y vínculos del proyecto.');
 END $$;
 
-CREATE FUNCTION production_workspace(who bigint) RETURNS jsonb LANGUAGE sql STABLE AS $$
+CREATE OR REPLACE FUNCTION production_workspace(who bigint) RETURNS jsonb LANGUAGE sql STABLE AS $$
   WITH mine AS (SELECT p.*,m.role FROM production_project p JOIN production_member m ON m.project=p.id WHERE m.person=who),
   revisions AS (
     SELECT v.id,v.task,v.number,u.media_type,t.project,
@@ -311,7 +339,30 @@ CREATE FUNCTION production_workspace(who bigint) RETURNS jsonb LANGUAGE sql STAB
         'engineer',b.engineer_party_id) FROM booking b WHERE b.id=t.booking_id AND m.role<>'client'),
       'versions',coalesce((SELECT jsonb_agg(to_jsonb(r)-'task'-'project' ORDER BY r.number DESC) FROM revisions r WHERE r.task=t.id),'[]')
     ) ORDER BY t.due,t.title,t.id) FROM visible t WHERE t.project=m.id),'[]'),
-    'proposals',coalesce((SELECT jsonb_agg(jsonb_build_object('id',pr.id,'base',pr.base_revision,'changes',pr.changes,'delivery',pr.delivery,'confirmed',pr.confirmed)
+    'proposals',coalesce((SELECT jsonb_agg(jsonb_build_object('id',pr.id,'base',pr.base_revision,'changes',pr.changes,'delivery',pr.delivery,'confirmed',pr.confirmed,'backward',pr.source IS NULL)
       ORDER BY pr.base_revision DESC,pr.id) FROM production_proposal pr WHERE pr.project=m.id AND m.role<>'client'),'[]')
   ) ORDER BY m.delivery,m.title,m.id),'[]') FROM mine m
 $$;
+
+-- Party reconciliation guards use the same canonical trigger as other raw-SQL domains.
+CREATE OR REPLACE TRIGGER identity_archive_reference_guard BEFORE INSERT OR UPDATE ON production_member
+  FOR EACH ROW EXECUTE FUNCTION identity_reject_archived_reference('person');
+CREATE OR REPLACE TRIGGER identity_archive_reference_guard BEFORE INSERT OR UPDATE ON production_share
+  FOR EACH ROW EXECUTE FUNCTION identity_reject_archived_reference('person');
+CREATE OR REPLACE TRIGGER identity_archive_reference_guard BEFORE INSERT OR UPDATE ON production_feedback
+  FOR EACH ROW EXECUTE FUNCTION identity_reject_archived_reference('actor');
+
+-- Protect historical bytes even if an older application process is deleting files.
+CREATE OR REPLACE FUNCTION production_retain_file() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF EXISTS(SELECT FROM production_version WHERE file_id=OLD.id) THEN
+    RAISE EXCEPTION 'File is part of a production revision' USING ERRCODE='23514';
+  END IF;
+  RETURN NEW;
+END $$;
+CREATE INDEX IF NOT EXISTS production_version_file ON production_version(file_id);
+CREATE OR REPLACE TRIGGER production_version_retention BEFORE UPDATE OF status,visibility,sha256,destination ON content_storage_upload
+  FOR EACH ROW WHEN (OLD.status='completed' AND (OLD.status,OLD.visibility,OLD.sha256,OLD.destination)
+    IS DISTINCT FROM (NEW.status,NEW.visibility,NEW.sha256,NEW.destination))
+  EXECUTE FUNCTION production_retain_file();
+COMMIT;

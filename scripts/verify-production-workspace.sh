@@ -6,10 +6,10 @@ root=$(mktemp -d)
 trap 'rm -rf "$root"' EXIT
 cp formal/production/{*.cfg,*.tla} "$root/"
 cd "$root"
-for scenario in graph review plan read; do
-  java -cp "$jar" tlc2.TLC -workers 1 -config "$scenario.cfg" Workspace.tla
+for scenario in graph review decision plan read; do
+  java -Djava.io.tmpdir="$root" -cp "$jar" tlc2.TLC -workers 1 -config "$scenario.cfg" Workspace.tla
   sed 's/Unsafe = FALSE/Unsafe = TRUE/' "$scenario.cfg" > unsafe.cfg
-  if java -cp "$jar" tlc2.TLC -workers 1 -config unsafe.cfg Workspace.tla > negative.log; then
+  if java -Djava.io.tmpdir="$root" -cp "$jar" tlc2.TLC -workers 1 -config unsafe.cfg Workspace.tla > negative.log; then
     echo "Negative control passed unexpectedly: $scenario" >&2
     exit 1
   fi
