@@ -75,7 +75,7 @@ def scenario(browser, api, web, actors, offering):
     page.get_by_text('Nueva producción',exact=True).click()
     page.get_by_label('Nombre del proyecto').fill('EP · Tres canciones')
     page.get_by_label('Formato',exact=True).select_option('EP')
-    page.get_by_label('Entrega final',exact=True).fill(delivery)
+    page.get_by_label('Entrega final').fill(delivery)
     page.get_by_label('Canciones, una por línea').fill('Luna\nMar\nSal')
     with page.expect_response(lambda res: res.url==api+'/productions' and res.request.method=='POST') as created:
         page.get_by_role('button',name='Crear producción privada').click()
@@ -251,7 +251,7 @@ def main():
             raise RuntimeError('Timed out starting '+log)
         base_env={k:os.environ[k] for k in ['PATH','LANG','HOME','LD_LIBRARY_PATH'] if k in os.environ}
         start([str(binary),'+RTS','-N2','-RTS'],dict(base_env,DATABASE_URL=f'postgresql://postgres:{password}@127.0.0.1:{port}/production_test',
-            APP_PORT=str(api_port),APP_ENV='test',RUN_MIGRATIONS='false',RESET_DB='false',SEED_DB='false',HQ_ASSETS_DIR=str(ROOT/'tdf-hq/assets'),
+            APP_PORT=str(api_port),APP_ENV='test',DEFAULT_LOCALE='es',RUN_MIGRATIONS='false',RESET_DB='false',SEED_DB='false',HQ_ASSETS_DIR=str(ROOT/'tdf-hq/assets'),
             ALLOWED_ORIGINS=web,ALLOW_ALL_ORIGINS='false',EVENT_DISCOVERY_ENABLED='false'),tmp,api+'/health','api.log')
         start([str(ROOT/'node_modules/.bin/vite'),'--host','127.0.0.1','--port',str(web_port),'--strictPort'],
               dict(base_env,VITE_API_BASE=api),ROOT/'tdf-hq-ui',web,'vite.log')

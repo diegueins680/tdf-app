@@ -16,6 +16,10 @@ test('touching sessions share a due date without a time conflict, overlapping se
   expect(calendarEntries([first,other]).load[0]).toHaveLength(2);
   other.tasks[0]!.booking = booking(2,'10:59','12:00');
   expect(calendarEntries([first,other]).conflicts).toHaveLength(1);
+  other.tasks[0]!.owner = 8;
+  other.tasks[0]!.booking = { ...other.tasks[0]!.booking, engineer: 8, resources: [9] };
+  expect(calendarEntries([first,other]).overlaps).toHaveLength(1);
+  expect(calendarEntries([first,other]).conflicts).toHaveLength(0);
   expect(calendarEntries([first]).load).toHaveLength(0);
 });
 test('overdue mix propagates past mastering slack and changes revision ownership', () => {

@@ -33,6 +33,16 @@ El verificador valida el SHA-256 del JAR. TLC exploró por separado 1.087 estado
 
 La prueba de persistencia crea un contenedor PostgreSQL 17 sin red y utiliza conexiones independientes que se solapan dentro de la transacción. Comprueba el EP, una única tarea de batería para tres canciones, el aprobador, dos identificadores de archivo, v3/v4, tres carreras, retención del archivo, planificación inversa y privacidad del segundo proyecto. La prueba de calendario de la interfaz separa extremos de sesión contiguos, horarios que se solapan y tareas que comparten un vencimiento. Los criterios de reproducción en navegador y operación en producción se registran por separado en la PR.
 
+## Evidencia del recorrido en navegador
+
+Con el backend compilado, las dependencias de la raíz instaladas, Docker, Chromium y el paquete Python Playwright, ejecutar desde la raíz:
+
+```sh
+python3 scripts/test-production-workspace-browser.py --backend /ruta/absoluta/tdf-hq-exe
+```
+
+La prueba crea un PostgreSQL desechable a partir del esquema de producción y aplica las 259 migraciones. Arranca el backend real y la aplicación web, crea cuatro sesiones autenticadas y abre el EP desde la navegación web. La artista usa una ventana de 390 píxeles. La ingeniera comparte dos WAV de un segundo. Chromium decodificó y reprodujo v3 (330 Hz, SHA-256 `ea23a0b81765da59b1526c576ddd3bf1e16e8f185eed6f31754b32fdc58246f7`), v4 (550 Hz, `334e25294fa6db746bae4e044ebd12fb60b7247aabb086f6c9a5697f0d2fedf1`) y de nuevo la v3 histórica. Se verificaron las próximas acciones desde ambas cuentas, el rechazo de una decisión obsoleta, el historial, la reserva compartida, la modificación de la reserva antes del ajuste, la carga entre dos proyectos y la denegación de acceso desde una cuenta ajena. El recorrido combina la interfaz con llamadas autenticadas a la API para preparar el equipo, las tareas y las reservas. Se ejecutó sobre la restauración local.
+
 ## Migración y recuperación
 
 El manifiesto de migraciones añade `2026-11-18_production_workspace`. La migración conserva los registros existentes. Para revertir la interfaz, usar una imagen web anterior. Para el servicio, usar el procedimiento de recuperación de Hetzner y conservar las tablas y los archivos históricos. El disparador de retención sigue protegiendo un audio ya vinculado al volver a una imagen anterior. La comprobación del manifiesto y del esquema debe ejecutarse sobre una restauración aislada antes de liberar el backend.

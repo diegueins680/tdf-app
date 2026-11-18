@@ -67,6 +67,12 @@ const PLAYER_SERVER_MAIN_BASE = '2ebb5c38bef08f3205877dc9521026b40b68d4ef';
 const PLAYER_SERVER_REVIEW_HEAD = '85255658262166ab4aeb0e7e167b3a93c4a33d61';
 const manifestPath = 'scripts/production-migrations.json';
 const catalogPath = 'docs/catalog-persistence/catalog-list-decisions.json';
+const workspaceBase = '83cbffdeb8570f621927b528ff90e070963dafd9';
+const workspaceEntry = '2026-11-18_production_workspace';
+async function manifestBeforeWorkspace() {
+  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  return { ...current, migrations: current.migrations.filter(row => row.id !== workspaceEntry) };
+}
 const playerMigrations = new Set([
   '2026-10-30_artist_featured_track',
   '2026-11-06_music_media_health',
@@ -76,7 +82,7 @@ const playerMigrations = new Set([
 ]);
 
 async function manifestBeforePlayer() {
-  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  const manifest = await manifestBeforeWorkspace();
   return { ...manifest, migrations: manifest.migrations.filter(row => !playerMigrations.has(row.id)) };
 }
 
@@ -100,19 +106,21 @@ async function readHistoricalReconciliation() {
   return { ...current, active };
 }
 
-async function readReconciliation(beforePlayer = false) {
+async function readReconciliation(beforePlayer = false, live = false) {
+  // Source-drift tests use the live register. Earlier reconciliations refer to
+  // the immutable register and resolution pointers at their review boundary.
+  const readRegister = file => live
+    ? fs.readFile(path.join(workspaceRoot, file), 'utf8').then(JSON.parse)
+    : reviewedJson(workspaceBase, file);
   const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-catalog-retirements.json'), 'utf8'));
-  const register = JSON.parse(await fs.readFile(path.join(workspaceRoot,
-    'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
+  const register = (await readRegister('docs/catalog-persistence/catalog-list-decisions.json'));
   const active = register.decisions;
   // Reviews whose source list was deleted outright (no successor list). They
   // leave the active register and are kept, unchanged, as history.
   const retired = (register.reconciliation.sourceRemovalRetirements ?? []).flatMap(entry => entry.decisions);
-  const successors = JSON.parse(await fs.readFile(path.join(workspaceRoot,
-    'docs/catalog-persistence/event-catalog-current-successors.json'), 'utf8')).successors;
-  const integration = JSON.parse(await fs.readFile(path.join(workspaceRoot,
-    'docs/catalog-persistence/event-integration-retirements.json'), 'utf8'));
+  const successors = (await readRegister('docs/catalog-persistence/event-catalog-current-successors.json')).successors;
+  const integration = (await readRegister('docs/catalog-persistence/event-integration-retirements.json'));
   if (!beforePlayer) return { ledger, active, retired, successors, integration };
 
   // Earlier reviews retain their own manifest fingerprint and catalog size.
@@ -571,7 +579,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
 });
 
 test('event catalog retirement ledger preserves evidence and distinct reviewed successors', async () => {
-  const { ledger, active, successors } = await readReconciliation();
+  const { ledger, active, successors } = await readReconciliation(false, true);
   assert.equal(ledger.schemaVersion, 1);
   assert.equal(ledger.retirements.length, 9);
   assert.match(ledger.parentRevision, /^[a-f0-9]{40}$/);
@@ -604,7 +612,7 @@ test('event catalog retirement ledger preserves evidence and distinct reviewed s
 });
 
 test('reconciled fingerprints match current sources; retired decisions still fail the gate', async () => {
-  const { ledger, active, successors } = await readReconciliation();
+  const { ledger, active, successors } = await readReconciliation(false, true);
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'catalog-reconciliation-test-'));
   const repoDir = path.join(tempRoot, 'repo');
   const reportPath = path.join(tempRoot, 'report.json');
@@ -644,7 +652,7 @@ test('reconciled fingerprints match current sources; retired decisions still fai
 
 
 test('main integration archives exact old decisions and retains reviewed successors or source-removal evidence', async () => {
-  const { active, integration } = await readReconciliation();
+  const { active, integration } = await readReconciliation(false, true);
   assert.equal(integration.retirements.length, 11);
   for (const entry of integration.retirements) {
     assert.equal(createHash('sha256').update(JSON.stringify(entry.originalDecision)).digest('hex'), entry.originalDecisionSha256);
@@ -1227,7 +1235,7 @@ test('marketplace agreement payments append one migration to the protected 252-e
 test('player server preserves both reviewed migration histories and appends only reviewed SQL', async () => {
   const main = await reviewedJson(PLAYER_SERVER_MAIN_BASE, manifestPath);
   const player = await reviewedJson(PLAYER_SERVER_REVIEW_HEAD, manifestPath);
-  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  const current = await manifestBeforeWorkspace();
   const extension = player.migrations.filter(row => playerMigrations.has(row.id));
   assert.deepEqual(extension.map(row => row.id), [...playerMigrations]);
   assert.deepEqual(current, { ...main, migrations: [...main.migrations, ...extension] });
@@ -1273,4 +1281,48 @@ test('loop rework retires the reviews of two deleted scripts as provenance and r
   const historical = (await readHistoricalReconciliation()).active;
   assert.equal(historical.length, active.length + rework.decisions.length - rework.addedDecisionIds.length);
   for (const entry of rework.decisions) assert.deepEqual(historical[entry.position], entry.decision);
+});
+
+test('private productions append one migration and preserve both predecessor reviews', async () => {
+  const before = await reviewedJson(workspaceBase, manifestPath);
+  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  const addition = { id: workspaceEntry, path: 'tdf-hq/sql/2026-11-18_production_workspace.sql',
+    introducedBy: '0a3d2e57686f8f165f0ca48b0756f905f73fbfdb' };
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, addition] });
+  await execFileAsync('git', ['merge-base', '--is-ancestor', addition.introducedBy, 'HEAD'], { cwd: workspaceRoot });
+  const { stdout: sql } = await execFileAsync('git', ['show', addition.introducedBy + ':' + addition.path], { cwd: workspaceRoot });
+  assert.equal(await fs.readFile(path.join(workspaceRoot, addition.path), 'utf8'), sql);
+  const { stdout: raw } = await execFileAsync('git', ['show', workspaceBase + ':' + catalogPath],
+    { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 });
+  const hash = value => createHash('sha256').update(value).digest('hex');
+  const canonical = value => JSON.stringify(value, (_key, item) =>
+    item && typeof item === 'object' && !Array.isArray(item)
+      ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
+  const { active, successors, integration } = await readReconciliation(false, true);
+  const prior = JSON.parse(raw).decisions;
+  const successorIds = new Map([['912cda11c7b6eb622f76', 'b4e8eb26808372aa8032'],
+    ['a00fcee87036af5dfa95', '6560fb5fbc6a2969ca2e']]);
+  const expected = new Set();
+  for (const decision of prior) {
+    const id = successorIds.get(decision.id) ?? decision.id;
+    expected.add(id);
+    const live = active.find(row => row.id === id);
+    if (id === decision.id) assert.deepEqual(live, decision);
+    else {
+      assert.ok(live.reviewed);
+      const ref = live.sourceReviewReferences.find(row => row.sourceRevision === workspaceBase);
+      assert.equal(ref.sourceFile, catalogPath);
+      assert.equal(ref.sourceEntry.id, decision.id);
+      assert.equal(ref.sourceFileSha256, hash(raw));
+      assert.equal(ref.sourceEntryCanonicalSha256, hash(canonical(decision)));
+    }
+  }
+  const added = active.filter(row => !expected.has(row.id));
+  assert.equal(added.length, 6);
+  for (const row of added) assert.ok(row.reviewed && row.reviewBatch === 'music-production-workspace');
+  const pointer = successors.find(row => row.name === 'migrations');
+  const retirement = integration.retirements.find(row => row.source.name === 'migrations');
+  assert.equal(pointer.currentId, successorIds.get(pointer.previousCurrentId));
+  assert.equal(retirement.replacementId, pointer.currentId);
+  assert.equal(pointer.valueCount, current.migrations.length);
 });

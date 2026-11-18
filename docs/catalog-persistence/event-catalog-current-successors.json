@@ -402,12 +402,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "912cda11c7b6eb622f76",
+      "currentId": "b4e8eb26808372aa8032",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 258,
-      "change": "Preserve all 253 protected-main migration rows and their review history. Append the five previously reviewed player migrations in their original order with identical SQL and introduction commits. Preserve both parent manifest reviews and keep activation separate.",
+      "valueCount": 259,
+      "change": "Append the private production workspace to the 258-entry migration ledger. The complete previous resolution remains at protected main 83cbffdeb8570f621927b528ff90e070963dafd9.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
@@ -564,7 +564,8 @@
         "4dc5a2f26154a0f125db",
         "52d96d4b31e677ac5948",
         "bc5e5bd4f9d8795d2166",
-        "24372f27958a74bdfc29"
+        "24372f27958a74bdfc29",
+        "912cda11c7b6eb622f76"
       ],
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
@@ -36869,7 +36870,8 @@
           ]
         }
       ],
-      "previousCurrentId": "f2a4dfbd31904f6f478e"
+      "previousCurrentId": "912cda11c7b6eb622f76",
+      "priorResolutionRevision": "83cbffdeb8570f621927b528ff90e070963dafd9"
     }
   ],
   "appleSignInMainf615History": {

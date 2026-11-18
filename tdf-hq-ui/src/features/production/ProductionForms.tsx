@@ -9,7 +9,7 @@ export function Field({ name, title, value, type = 'text', required = true }: { 
   return <TextField size="small" name={name} label={title} defaultValue={value} type={type} required={required} InputLabelProps={{ shrink: true }} />;
 }
 export function SelectField({ name, title, value, multiple, children }: { name: string; title: string; value?: string | number | string[]; multiple?: boolean; children: ReactNode }) {
-  return <label>{title}<select name={name} defaultValue={value} multiple={multiple} style={{ display: 'block', padding: 8, maxWidth: '100%' }}>{children}</select></label>;
+  return <label>{title}<select aria-label={title} name={name} defaultValue={value} multiple={multiple} style={{ display: 'block', padding: 8, maxWidth: '100%' }}>{children}</select></label>;
 }
 export function Form({ action, submit, children }: { action: (data: FormData) => void; submit: string; children: ReactNode }) {
   function onSubmit(event: FormEvent<HTMLFormElement>) {

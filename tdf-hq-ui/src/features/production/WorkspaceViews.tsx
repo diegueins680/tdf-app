@@ -64,10 +64,12 @@ export function Timeline({ p, save }: { p: Project; save: Save }) {
 }
 
 export function Calendar({ projects }: { projects: Project[] }) {
-  const { sessions, conflicts, load } = calendarEntries(projects);
+  const { sessions, overlaps, conflicts, load } = calendarEntries(projects);
   return <Stack spacing={1}><Typography variant="h6">Sesiones con horario</Typography>
     {!sessions.length && <p>Sin reservas vinculadas.</p>}
     {sessions.map(({ p, t }) => <div key={t.id}>{p.title} · {t.title} · {new Date(t.booking!.start).toLocaleString('es-EC')} – {new Date(t.booking!.end).toLocaleString('es-EC')}</div>)}
+    {overlaps.filter(pair => !pair.conflict).map(({ left, right }) => <div key={left.t.id+right.t.id}>
+      Sesiones simultáneas con equipos y recursos distintos · {left.p.title} / {left.t.title} y {right.p.title} / {right.t.title}</div>)}
     <Typography variant="h6">Conflictos de agenda</Typography>
     {!conflicts.length && <p>Sin superposiciones de horario para un mismo responsable o recurso.</p>}
     {conflicts.map(({ left, right }) => <div key={left.t.id+right.t.id}>{left.p.title} / {left.t.title} ↔ {right.p.title} / {right.t.title}</div>)}

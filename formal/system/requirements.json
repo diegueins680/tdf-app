@@ -28246,7 +28246,8 @@
         "scripts/verify-production-workspace.sh",
         "scripts/test-production-workspace.py",
         "tdf-hq-ui/src/api/productions.test.ts",
-        "scripts/test-production-workspace-browser.py"
+        "scripts/test-production-workspace-browser.py",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [
         "formal/production/decision.cfg",

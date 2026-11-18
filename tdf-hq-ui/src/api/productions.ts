@@ -35,12 +35,14 @@ export const workingDate = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'A
 export function calendarEntries(projects: Project[]) {
   const entries = projects.flatMap(p => p.tasks.map(t => ({ p, t })));
   const sessions = entries.filter(({ t }) => t.booking && !['Cancelled', 'NoShow'].includes(t.booking.status));
-  const conflicts = sessions.flatMap((left, i) => sessions.slice(i + 1).filter(right => {
+  const overlaps = sessions.flatMap((left, i) => sessions.slice(i + 1).flatMap(right => {
     const a = left.t.booking, b = right.t.booking;
-    if (!a || !b || Date.parse(a.start) >= Date.parse(b.end) || Date.parse(b.start) >= Date.parse(a.end)) return false;
-    return left.t.owner === right.t.owner || (a.engineer != null && a.engineer === b.engineer)
-      || a.resources.some(resource => b.resources.includes(resource));
-  }).map(right => ({ left, right })));
+    if (!a || !b || Date.parse(a.start) >= Date.parse(b.end) || Date.parse(b.start) >= Date.parse(a.end)) return [];
+    const participants = [left.t.owner, ...left.t.collaborators, a.engineer].filter(id => id !== null);
+    const sharedPerson = [right.t.owner, ...right.t.collaborators, b.engineer].some(id => id !== null && participants.includes(id));
+    return [{ left, right, conflict: sharedPerson || a.resources.some(resource => b.resources.includes(resource)) }];
+  }));
+  const conflicts = overlaps.filter(pair => pair.conflict);
   const load = new Map<string, typeof entries>();
   for (const entry of entries) {
     const person = nextPerson(entry.t);
@@ -48,7 +50,7 @@ export function calendarEntries(projects: Project[]) {
     const key = [person, entry.t.due].join('/');
     load.set(key, [...(load.get(key) ?? []), entry]);
   }
-  return { conflicts, sessions, load: [...load.values()].filter(group => group.length > 1) };
+  return { overlaps, conflicts, sessions, load: [...load.values()].filter(group => group.length > 1) };
 }
 
 // Longest unfinished path, respecting each task's slack. No committed date is mutated.

@@ -697,19 +697,19 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "912cda11c7b6eb622f76",
-      "reason": "Preserve all 253 protected-main migration rows and their review history. Append the five previously reviewed player migrations in their original order with identical SQL and introduction commits. Preserve both parent manifest reviews and keep activation separate.",
-      "previousReplacementId": "f2a4dfbd31904f6f478e",
+      "replacementId": "b4e8eb26808372aa8032",
+      "reason": "Append the private production workspace to the 258-entry migration ledger. The complete previous resolution remains at protected main 83cbffdeb8570f621927b528ff90e070963dafd9.",
+      "previousReplacementId": "912cda11c7b6eb622f76",
       "currentResolution": {
-        "id": "912cda11c7b6eb622f76",
-        "valueCount": 258,
+        "id": "b4e8eb26808372aa8032",
+        "valueCount": 259,
         "sourceParents": [
           "d4bb96030b1182e165ff39b614315c6a2554aee7",
           "26c83d9e6525d859b0da0bebf959ad6d1c806159"
         ],
         "justification": "Preserve the entire 252-entry manifest and its complete review graph unchanged; append only the forward marketplace agreement payments migration (processor fee rules, payout accounts, agreement payments with a frozen split, verified-payment guards and checkout sync triggers, the confirmed to balance_due agreement transition; ADR 0136) introduced at 26c83d9e6525d859b0da0bebf959ad6d1c806159, after the event administrator delegation entry that protected main integrated at d4bb96030b1182e165ff39b614315c6a2554aee7. No existing SQL, manifest entry or introduction ancestor changes. No seed beyond the PayPhone processor fee rule, no feature activation, deployment or release waiver; the marketplace.agreement_payments runtime flag stays disabled in every environment and no payment can be collected."
       },
-      "change": "Preserve all 253 protected-main migration rows and their review history. Append the five previously reviewed player migrations in their original order with identical SQL and introduction commits. Preserve both parent manifest reviews and keep activation separate.",
+      "change": "Append the private production workspace to the 258-entry migration ledger. The complete previous resolution remains at protected main 83cbffdeb8570f621927b528ff90e070963dafd9.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
@@ -871,9 +871,10 @@
         "4dc5a2f26154a0f125db",
         "52d96d4b31e677ac5948",
         "bc5e5bd4f9d8795d2166",
-        "24372f27958a74bdfc29"
+        "24372f27958a74bdfc29",
+        "912cda11c7b6eb622f76"
       ],
-      "previousReason": "Preserve the entire 252-entry manifest and its complete review graph unchanged; append only the forward marketplace agreement payments migration (processor fee rules, payout accounts, agreement payments with a frozen split, verified-payment guards and checkout sync triggers, the confirmed to balance_due agreement transition; ADR 0136) introduced at 26c83d9e6525d859b0da0bebf959ad6d1c806159, after the event administrator delegation entry that protected main integrated at d4bb96030b1182e165ff39b614315c6a2554aee7. No existing SQL, manifest entry or introduction ancestor changes. No seed beyond the PayPhone processor fee rule, no feature activation, deployment or release waiver; the marketplace.agreement_payments runtime flag stays disabled in every environment and no payment can be collected.",
+      "previousReason": "Preserve all 253 protected-main migration rows and their review history. Append the five previously reviewed player migrations in their original order with identical SQL and introduction commits. Preserve both parent manifest reviews and keep activation separate.",
       "previousCurrentResolution": {
         "id": "f2a4dfbd31904f6f478e",
         "valueCount": 253,
@@ -2276,7 +2277,8 @@
             }
           }
         }
-      }
+      },
+      "priorResolutionRevision": "83cbffdeb8570f621927b528ff90e070963dafd9"
     }
   ],
   "appleSignInMainf615History": {
