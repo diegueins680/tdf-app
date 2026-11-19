@@ -109,8 +109,21 @@ def scenario(browser, api, web, actors, offering):
         form.get_by_role('button',name='Añadir tarea').click()
     assert created_task.value.status==200,created_task.value.text()
     drums=created_task.value.json()['id']
-    pg=accounts['Ingeniera'].new_page()
-    pg.goto(web+'/producciones')
+    def open_ep(name):
+        pg=accounts[name].new_page()
+        # Route readiness and an authenticated workspace are separate events.
+        # Observe the real projection before asserting its rendered task count.
+        with pg.expect_response(lambda res: res.url==api+'/productions' and res.request.method=='GET',timeout=45000) as loaded:
+            pg.goto(web+'/producciones')
+        assert loaded.value.status==200, loaded.value.text()
+        assert any(item['id']==pid for item in loaded.value.json())
+        selection=pg.locator('select').filter(has=pg.locator(f'option[value="{pid}"]'))
+        expect(selection).to_be_visible(timeout=45000)
+        selection.select_option(pid)
+        expect(pg.get_by_role('heading',name='EP · Tres canciones',exact=True)).to_be_visible()
+        return pg
+
+    pg=open_ep('Ingeniera')
     cards=pg.locator('.MuiCard-root').filter(has=pg.get_by_role('heading',name='Batería compartida',exact=True))
     expect(cards).to_have_count(3)
     cards.first.locator('summary').first.click()
@@ -132,8 +145,7 @@ def scenario(browser, api, web, actors, offering):
     assert mix('Ingeniera')['owner']==engineer and not project('Artista')['tasks']
 
     def task_page(name):
-        page=accounts[name].new_page()
-        page.goto(web+'/producciones')
+        page=open_ep(name)
         card=page.locator('.MuiCard-root').filter(has=page.get_by_role('heading',name='Mezcla de Luna',exact=True)).last
         card.locator('summary').first.click(timeout=45000)
         return page,card

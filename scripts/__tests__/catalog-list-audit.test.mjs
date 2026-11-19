@@ -87,6 +87,36 @@ async function manifestBeforePlayer() {
   return { ...manifest, migrations: manifest.migrations.filter(row => !playerMigrations.has(row.id)) };
 }
 
+// Lists whose source file moved without any change to their values (ADR 0133).
+// A list id follows its file, so each move is recorded as a successor review
+// that nests the exact earlier review; checks against an earlier main read the
+// successor back to that review.
+const MOVED_FILE_REVIEW_BATCHES = new Set([
+  'paypal-webhook-domain-module-2026-11-10',
+  'web-auth-state-layer-2026-11-17',
+  'web-feature-registry-layer-2026-11-17',
+]);
+
+function movedFileSuccessors(active) {
+  const moved = active.filter(row => MOVED_FILE_REVIEW_BATCHES.has(row.reviewBatch));
+  for (const row of moved) {
+    assert.equal(row.reviewMethod, 'successor-of-reviewed-decision');
+    assert.ok(row.previousDecision?.reviewed, `moved list ${row.id} must nest a reviewed decision`);
+    assert.equal(row.classification, row.previousDecision.classification);
+    assert.equal(row.disposition, row.previousDecision.disposition);
+  }
+  return moved;
+}
+
+// Every moved list whose earlier review protected main held nests that exact review.
+function assertMovedListsNest(active, priorMain) {
+  const prior = new Map(priorMain.map(row => [row.id, row]));
+  return movedFileSuccessors(active).filter(row => prior.has(row.previousDecision.id)).map(row => {
+    assert.deepEqual(row.previousDecision, prior.get(row.previousDecision.id));
+    return row.previousDecision.id;
+  });
+}
+
 // The continuous improvement loop rework (pull request #750) deleted two automation
 // scripts: their reviews are retired as provenance and one new list is reviewed.
 const LOOP_REWORK_RECONCILIATION = 'continuousImprovementLoopRework20261113';
@@ -131,10 +161,8 @@ async function readReconciliation(beforePlayer = false, live = false) {
   const retirement = integration.retirements.find(row => row.source.name === 'migrations');
   const byId = new Map(active.map(row => row === tip ? row.previousDecision : row)
     .map(row => [row.id, row]));
-  // The PayPal webhook domain list moved files unchanged (ADR 0133), so its
-  // review is a successor under a new id; it stands in for the review it nests.
-  const movedPaypalDomains = active.find(row => row.id === 'f562d95dce39e81da4af');
-  byId.set(movedPaypalDomains.previousDecision.id, movedPaypalDomains);
+  // A moved list's successor stands in for the review it nests.
+  for (const row of movedFileSuccessors(active)) byId.set(row.previousDecision.id, row);
   // The loop rework (pull request #750) retired two reviews of deleted scripts as
   // provenance; the earlier catalog still lists them, so they stand in for themselves.
   for (const entry of (await readLoopRework()).decisions) byId.set(entry.decision.id, entry.decision);
@@ -1150,15 +1178,11 @@ test('event administrator delegation appends one migration to the protected 251-
   const client = active.find(row => row.id === successors.find(row => row.name === 'SocialEventsAPI').currentId);
   assert.equal(client.evidence.valueCount, 86);
   assert.deepEqual(client.previousDecision, priorMain.find(row => row.id === '2511cbba2fc7279bc28a'));
-  // The PayPal webhook domain types moved unchanged to TDF.Commerce.PaypalWebhook
-  // (ADR 0133); the list id follows the file, so its review is a successor that
-  // nests the exact review of protected main.
-  const movedPaypalDomains = active.find(row => row.id === 'f562d95dce39e81da4af');
-  assert.deepEqual(movedPaypalDomains.previousDecision, priorMain.find(row => row.id === 'a43462622b60606b37d9'));
+  // Moved lists (ADR 0133) nest the exact review of protected main.
+  const movedReviews = assertMovedListsNest(active, priorMain);
   // Every other review of protected main is retained exactly; three lists are new.
   const history = new Map([...active, ...retired].map(row => [row.id, row]));
-  const replaced = new Set([current.previousDecision.id, client.previousDecision.id,
-    movedPaypalDomains.previousDecision.id]);
+  const replaced = new Set([current.previousDecision.id, client.previousDecision.id, ...movedReviews]);
   for (const row of priorMain) {
     if (replaced.has(row.id)) assert.ok(!history.has(row.id));
     else assert.deepEqual(history.get(row.id), row);
@@ -1210,12 +1234,9 @@ test('marketplace agreement payments append one migration to the protected 252-e
   // Every other review of protected main is retained exactly; nine lists are
   // new (payment provider, fee payer, payout and payment CHECK lists and the
   // two Policy sum types) and reviewed by the deterministic policy.
-  // The PayPal webhook domain types moved unchanged to TDF.Commerce.PaypalWebhook
-  // (ADR 0133); that review is a successor nesting the exact review of protected main.
-  const movedPaypalDomains = active.find(row => row.id === 'f562d95dce39e81da4af');
-  assert.deepEqual(movedPaypalDomains.previousDecision, priorMain.find(row => row.id === 'a43462622b60606b37d9'));
+  // Moved lists (ADR 0133) nest the exact review of protected main.
   const history = new Map([...active, ...retired].map(row => [row.id, row]));
-  const replaced = new Set([current.previousDecision.id, movedPaypalDomains.previousDecision.id]);
+  const replaced = new Set([current.previousDecision.id, ...assertMovedListsNest(active, priorMain)]);
   for (const row of priorMain) {
     if (replaced.has(row.id)) assert.ok(!history.has(row.id));
     else assert.deepEqual(history.get(row.id), row);
@@ -1301,7 +1322,7 @@ test('private productions append one migration and preserve both predecessor rev
     item && typeof item === 'object' && !Array.isArray(item)
       ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
   const { active, retired, successors, integration } = await readReconciliation(false, true);
-  const prior = JSON.parse(raw).decisions;
+  const prior = (await reviewedJson('432d5741ca68ff77ee52863e4100c822e92646cc', catalogPath)).decisions;
   const successorIds = new Map([['912cda11c7b6eb622f76', 'b4e8eb26808372aa8032'],
     ['a00fcee87036af5dfa95', '6560fb5fbc6a2969ca2e']]);
   const expected = new Set();

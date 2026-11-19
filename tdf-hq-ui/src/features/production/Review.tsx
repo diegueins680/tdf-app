@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
 import { buildAuthorizationHeader } from '../../api/authHeader';
 import { API_BASE_URL } from '../../api/client';
-import { getAuthSessionEpoch } from '../../session/authEvents';
+import { getAuthSessionEpoch } from '../../auth/authEvents';
 import { newUploadKey, normalizeUploadFailure, uploadFailureMessage } from '../../api/uploadFailure';
 import { uploadToDrive } from '../../api/drive';
 import type { Action, Project, Task, Version } from '../../api/productions';

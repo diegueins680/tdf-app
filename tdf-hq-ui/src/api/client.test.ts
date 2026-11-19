@@ -32,7 +32,7 @@ const {
   postForm,
   subscribeToApiActivity,
 } = await import('./client');
-const { advanceAuthSessionEpoch, AUTH_SESSION_EXPIRED_EVENT } = await import('../session/authEvents');
+const { advanceAuthSessionEpoch, AUTH_SESSION_EXPIRED_EVENT } = await import('../auth/authEvents');
 
 interface MockResponseOptions {
   ok?: boolean;

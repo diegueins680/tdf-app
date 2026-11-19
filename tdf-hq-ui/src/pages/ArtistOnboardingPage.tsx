@@ -1,4 +1,4 @@
-import { getLogoutRevision, hasLogoutIntent, ownsLogoutRevision } from '../session/logoutIntent';
+import { getLogoutRevision, hasLogoutIntent, ownsLogoutRevision } from '../auth/logoutIntent';
 import { Alert, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import EditIcon from '@mui/icons-material/Edit';
