@@ -63,6 +63,7 @@ const asReviewedBeforeRegistryRefresh = entries => entries.map(entry => {
   return reviewed;
 });
 
+const DELIVERY_PROTOCOL_REVIEW = '755cf14ac92e4f590879';
 const PLAYER_SERVER_MAIN_BASE = '2ebb5c38bef08f3205877dc9521026b40b68d4ef';
 const PLAYER_SERVER_REVIEW_HEAD = '85255658262166ab4aeb0e7e167b3a93c4a33d61';
 const manifestPath = 'scripts/production-migrations.json';
@@ -1156,8 +1157,9 @@ test('event administrator delegation appends one migration to the protected 251-
   }
   assert.equal(priorMain.length, 1449);
   // 1452 after this review, plus the nine agreement payments reviews (ADR 0136),
-  // less the reviews retired with their deleted source lists.
-  assert.equal(active.length, 1461 - retired.length);
+  // less the reviews retired with their deleted source lists; the delivery
+  // protocol review (SYS-VERIFY-002) is counted separately.
+  assert.equal(active.filter(row => row.id !== DELIVERY_PROTOCOL_REVIEW).length, 1461 - retired.length);
 });
 
 test('marketplace agreement payments append one migration to the protected 252-entry manifest', async () => {
@@ -1220,7 +1222,7 @@ test('marketplace agreement payments append one migration to the protected 252-e
     assert.match(history.get(id).reviewMethod, /^deterministic-policy-v\d+$/);
   }
   assert.equal(priorMain.length, 1452);
-  assert.equal(active.length, 1461 - retired.length);
+  assert.equal(active.filter(row => row.id !== DELIVERY_PROTOCOL_REVIEW).length, 1461 - retired.length);
 });
 
 
@@ -1273,4 +1275,21 @@ test('loop rework retires the reviews of two deleted scripts as provenance and r
   const historical = (await readHistoricalReconciliation()).active;
   assert.equal(historical.length, active.length + rework.decisions.length - rework.addedDecisionIds.length);
   for (const entry of rework.decisions) assert.deepEqual(historical[entry.position], entry.decision);
+});
+
+// One explicit review classifies the delivery protocol; it is new, unique and
+// carries its requirement. The rest of the catalog follows main.
+test('delivery evidence protocol adds exactly one reviewed list', async () => {
+  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
+  const baseline = await reviewedJson('5084d8a8a4d7a7a3b8d30d1f55ae5d9c8c032b9b', catalogPath);
+  assert.ok(!baseline.decisions.some(row => row.id === DELIVERY_PROTOCOL_REVIEW));
+  const additions = current.decisions.filter(row => row.id === DELIVERY_PROTOCOL_REVIEW);
+  assert.equal(additions.length, 1);
+  assert.equal(additions[0].classification, 'genuine-technical-constant');
+  assert.equal(additions[0].disposition, 'explicit-allowlist');
+  assert.equal(additions[0].reviewed, true);
+  assert.equal(additions[0].evidence.file, 'scripts/lib/delivery-matrix.mjs');
+  assert.equal(additions[0].evidence.name, 'DELIVERY_CHECKS');
+  assert.match(additions[0].justification, /SYS-VERIFY-002/);
+  assert.equal(current.decisions.filter(row => row.evidence?.file === 'scripts/lib/delivery-matrix.mjs').length, 1);
 });

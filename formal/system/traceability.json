@@ -145,9 +145,12 @@
         "formal/system/proof-certificates.md",
         "scripts/lib/alloy-controls.mjs",
         "scripts/verify-alloy-controls.mjs",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/delivery-matrix.mjs",
+        "scripts/lib/delivery-matrix.mjs",
+        "docs/release/delivery-evidence-matrix.md"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks fourteen formula obligations (twelve distinct inputs), with all complete implementation/refinement obligations still UNPROVEN and all source/refinement limitations retained. Every event-operations Alloy assertion has an assertion-preserving fact/predicate mutation; the pinned solver must produce the named counterexample at unchanged scopes. Coverage and result-admission negative tests reject missing, failed and mismatched runs.",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks fourteen formula obligations (twelve distinct inputs), with all complete implementation/refinement obligations still UNPROVEN and all source/refinement limitations retained. Every event-operations Alloy assertion has an assertion-preserving fact/predicate mutation; the pinned solver must produce the named counterexample at unchanged scopes. Coverage and result-admission negative tests reject missing, failed and mismatched runs. The delivery evidence inventory rejects missing, skipped, source-mismatched and wrong-level receipts, preserves BLOCKED formal decisions and never authorizes a release. Receipt consistency does not authenticate execution or prove implementation/refinement. The shared source manifest includes desktop, auxiliary services, edge and media source roots.",
       "evidence": "formal CI source/result manifests and regression output; independent CPC result.json, exact SMT/proof/signature hashes, reference-binding and incompleteness controls",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -190,7 +193,8 @@
         "formal/system/receipt-admission-counterexample.json",
         "scripts/test-proof-certificates.py",
         "scripts/__tests__/alloy-controls.test.mjs",
-        "scripts/__tests__/event-raci-editor-context-runner.test.mjs"
+        "scripts/__tests__/event-raci-editor-context-runner.test.mjs",
+        "scripts/__tests__/delivery-matrix.test.mjs"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
@@ -28299,7 +28303,7 @@
     ".github/workflows/ci.yml": "23ade27a31842e6552e0e12165d01dbca02c127cdd1b018efb4324a31103a7b6",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
-    ".github/workflows/event-operations-formal.yml": "16d0f422186a4626e30b8f65f469c3a544aca859037f9a4df099e83c659b87f1",
+    ".github/workflows/event-operations-formal.yml": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -28307,10 +28311,11 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "95e749b691ff7deac9a0940df0a80d911de7040d9c769081f2c89c3b4de523ee",
+    "docs/catalog-persistence/catalog-list-decisions.json": "de838a2fe7ec98dbb682a11f1d0da14b02d893e1a18db2788a759963dc70548e",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
+    "docs/release/delivery-evidence-matrix.md": "6044ad469758e8e6459c413acd7d3fe290920af123a3ed29d388e88d133b2015",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/desktop/helpers/api-fixture.mjs": "67b6cd86c8383a4c7c6e8c228f5340aef5c43559c4987015ab031cc5e8792071",
     "e2e/desktop/helpers/shell.mjs": "75eb52ddb9d0823965f816cced846d2a164eb45971612aacad9bf98980d482d5",
@@ -28724,7 +28729,7 @@
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "4f2f99e39788cd1f67da2623474d725e06e51757b409474118f82d3c9a43aa1d",
-    "package.json": "862ea41afa019dcf0edea194b2dfc0f75f3a593886e3603403bc9b2a22af4c92",
+    "package.json": "3b75451201352914e57227c19008fee7c8e8747ff00bf81ae3a43a7a3512fa6b",
     "playwright.config.mjs": "37eb4ab6c22dc0a3f2e575361426a045ad760a32920fe4a3b36a1f50e660e71b",
     "playwright.desktop.config.mjs": "74292833e979da0f81610adcedcddcfe6a7053cd5dfa6a34b36b2f1ddbddeb92",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
@@ -28742,7 +28747,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "13e0ebcb2e1c582da01c14aeed5580f29d79cfb3535531fff28b57211b356f79",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "2da277a5eb00e60db2b2b4349484ece84d066bbe866dfcd7f44906df33485fb6",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -28752,6 +28757,7 @@
     "scripts/__tests__/content-storage-model.test.mjs": "003db1f4799160041440c36b8e9f3f5492719528c445a96cf32b9997c40b1981",
     "scripts/__tests__/content-storage-reconciliation.test.mjs": "e495bbdecb4c88ad8c178c8d06d17cfebafc71148e2fcebeca1423b4558c27da",
     "scripts/__tests__/continuous-improvement-loop.test.mjs": "a9f665f14a487ec4b4bf8a0bafb11999250e0d0d816a72cc5426bab57b4082f7",
+    "scripts/__tests__/delivery-matrix.test.mjs": "37dfd759fd9d46dac0b539dc88e9b8d8d64a6c2f777b7034d1f60c541fc2aac9",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
@@ -28824,7 +28830,7 @@
     "scripts/__tests__/torrent-fixture-lifecycle.test.mjs": "fd7a2afdb437fe48c4b91da21a53494c804efcf4692c8c326f0c8a1b7689a5e0",
     "scripts/__tests__/torrent-worker-routing.test.mjs": "39cf49236f79edeb7a9599dc07c37965cfe824725cb452a71c32ff7890fef784",
     "scripts/__tests__/ui-worker-memory.test.mjs": "159c331fe6c0ae0817b2e4eb3479e62409c44ceec8efe4dca73a2813ed583183",
-    "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
+    "scripts/__tests__/verification-evidence.test.mjs": "d844c7be68115d503729dc5fc97f7d86766d53d52f641e21f7eeb5c9b1fbe14b",
     "scripts/__tests__/video-campaign-access.test.mjs": "618dec9d2f28c82b786b66403ad33350ca97949a9abb37cb32f9ff03c9522b04",
     "scripts/__tests__/video-campaign-postgres-runner.test.mjs": "72e9e3fe9f0dad70d85a921b9b479465dcc60ba09dd34c7c564eb56af054c0a3",
     "scripts/artist-enrichment.mjs": "7cae285c8ffd2373048ab4d3e4ea2838046b7c62571e795163de86f22516809e",
@@ -28859,6 +28865,7 @@
     "scripts/continuous-improvement-loop.codex.json": "bb03117ee8f488069cca81703f8e70f96fb7412902f9bfb78b7f1363ed9a1af2",
     "scripts/continuous-improvement-loop.example.json": "6f0a787a68041a7413c53b447854f77ce09accaf37efb14aee92bc90334a2a3d",
     "scripts/continuous-improvement-loop.mjs": "f2618194f28d356e0d5d9c856bf92397f7b69b7b6e2bbde1a2745ea58cbc79c6",
+    "scripts/delivery-matrix.mjs": "b69aeaee6ffcfc23ea4a86a5060a6c170cbc2a60d80f4df77a9a744819536cf2",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
@@ -28884,6 +28891,7 @@
     "scripts/lib/compiled-api-surface.mjs": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
     "scripts/lib/continuous-improvement-loop-verify.mjs": "3db41dd0683f33d1a03d46f402e6cd9c25a4e07cd2b690a179ba8e6744fc9f97",
     "scripts/lib/continuous-improvement-loop.mjs": "658148df4d0bf1c8df6e19da2d1266673158ba934f2191186b3b57b5e2e36fae",
+    "scripts/lib/delivery-matrix.mjs": "0052f89b9b64323d3d7fa9fc14d9837087edbbbe602c479dfabc7125147ad8de",
     "scripts/lib/discovery.mjs": "347304302f3a0e0161a6b8fc95d311a1eca12b6cd11bb3ffec378b862878ac4b",
     "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
     "scripts/lib/formal-methods-audit.mjs": "301296514fcc6671134fff772258867d7a6f3ca1fddffb99ed1cd7d2579c3361",
@@ -28912,7 +28920,7 @@
     "scripts/lib/studio-audit-safety.mjs": "4cec971d00a5ec16524dd94c490289ffc33d69d9cae32ba9db0910275f3e80d8",
     "scripts/lib/test-child-completion.mjs": "b2254b43a28ad96b7c522a18fd57fa17479bfd783513f1f4bd056bc6c4fbf039",
     "scripts/lib/test-process-session.mjs": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
-    "scripts/lib/verification-evidence.mjs": "aa2a84a1fa5fa06242b406b77fe9e730a760c67cad073661c9ad61bd904bf100",
+    "scripts/lib/verification-evidence.mjs": "c68d746491dff899357e144f373a8f49225cb0aef1198538cf1d2fa120acf35c",
     "scripts/lib/whatsapp_consent_conformance.py": "e7e6f0221bb7bcf5ef631827e2dfa6c329d5b4c16733fa5bca6e61bdb748c4a8",
     "scripts/load-payment-test-schema.sh": "8f8e8385a59b6b118c049ab7ac5f48e5525152c45fc8a15d882c37f78b0330d7",
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
@@ -28933,7 +28941,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "81348be6b8c5455ac84d984b3f7b148263c2f17e7ee8e102bf415327d2a46c78",
+    "scripts/quality-repo.sh": "0af61bd6fd80e7c38365c2ed7de377bbc97f9b1f4a715788553c030d36522d61",
     "scripts/quality-ui.sh": "4361a3180ecaf177a227915374253d8c0e4ec9eb21e87fc52c52442e31d04fda",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
@@ -30735,6 +30743,24 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/delivery-matrix.mjs": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/lib/delivery-matrix.mjs": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
+    "docs/release/delivery-evidence-matrix.md": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/verification-evidence.test.mjs": [
       {
         "requirement": "SYS-VERIFY-002",
@@ -30772,6 +30798,12 @@
       }
     ],
     "scripts/__tests__/event-raci-editor-context-runner.test.mjs": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/delivery-matrix.test.mjs": [
       {
         "requirement": "SYS-VERIFY-002",
         "relationship": "tests"
@@ -49522,7 +49554,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "16d0f422186a4626e30b8f65f469c3a544aca859037f9a4df099e83c659b87f1",
+      "sha256": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50820,7 +50852,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "862ea41afa019dcf0edea194b2dfc0f75f3a593886e3603403bc9b2a22af4c92",
+      "sha256": "3b75451201352914e57227c19008fee7c8e8747ff00bf81ae3a43a7a3512fa6b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50989,7 +51021,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "13e0ebcb2e1c582da01c14aeed5580f29d79cfb3535531fff28b57211b356f79",
+      "sha256": "2da277a5eb00e60db2b2b4349484ece84d066bbe866dfcd7f44906df33485fb6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51202,6 +51234,18 @@
       "requirements": [
         {
           "requirement": "SYS-LOOP-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-16a9cdb8e79980cc",
+      "path": "scripts/__tests__/delivery-matrix.test.mjs",
+      "sha256": "37dfd759fd9d46dac0b539dc88e9b8d8d64a6c2f777b7034d1f60c541fc2aac9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
           "relationship": "tests"
         }
       ]
@@ -52414,7 +52458,7 @@
     {
       "id": "SURFACE-ba099638d09bac1d",
       "path": "scripts/__tests__/verification-evidence.test.mjs",
-      "sha256": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
+      "sha256": "d844c7be68115d503729dc5fc97f7d86766d53d52f641e21f7eeb5c9b1fbe14b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52996,6 +53040,18 @@
       ]
     },
     {
+      "id": "SURFACE-5a0c7f10ee9b584c",
+      "path": "scripts/delivery-matrix.mjs",
+      "sha256": "b69aeaee6ffcfc23ea4a86a5060a6c170cbc2a60d80f4df77a9a744819536cf2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-45b3849f78ceb2dd",
       "path": "scripts/deploy-stripe-ticketing.sh",
       "sha256": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
@@ -53425,6 +53481,18 @@
       "requirements": [
         {
           "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ee31b4ec099109f8",
+      "path": "scripts/lib/delivery-matrix.mjs",
+      "sha256": "0052f89b9b64323d3d7fa9fc14d9837087edbbbe602c479dfabc7125147ad8de",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
           "relationship": "implementation"
         }
       ]
@@ -53962,7 +54030,7 @@
     {
       "id": "SURFACE-51ff2aecc0e6e208",
       "path": "scripts/lib/verification-evidence.mjs",
-      "sha256": "aa2a84a1fa5fa06242b406b77fe9e730a760c67cad073661c9ad61bd904bf100",
+      "sha256": "c68d746491dff899357e144f373a8f49225cb0aef1198538cf1d2fa120acf35c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54401,7 +54469,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "81348be6b8c5455ac84d984b3f7b148263c2f17e7ee8e102bf415327d2a46c78",
+      "sha256": "0af61bd6fd80e7c38365c2ed7de377bbc97f9b1f4a715788553c030d36522d61",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -88838,7 +88906,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "818b1179099c543b4bd4dfeafa8679da9e8982dc91ad28e7f642207f65f2380e",
+      "sourceSha256": "697c0a964c0af7c91a4237629168b761940ba24a094f74aecd7f2008e6e4cc8c",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -88866,7 +88934,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "818b1179099c543b4bd4dfeafa8679da9e8982dc91ad28e7f642207f65f2380e",
+      "sourceSha256": "697c0a964c0af7c91a4237629168b761940ba24a094f74aecd7f2008e6e4cc8c",
       "definition": {
         "states": [
           "absent",
@@ -88896,7 +88964,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "818b1179099c543b4bd4dfeafa8679da9e8982dc91ad28e7f642207f65f2380e",
+      "sourceSha256": "697c0a964c0af7c91a4237629168b761940ba24a094f74aecd7f2008e6e4cc8c",
       "definition": {
         "export": [
           "queued",
