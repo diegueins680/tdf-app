@@ -667,6 +667,10 @@ jobs:
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: sh scripts/test-event-admin-delegation.sh
+      - name: Paid ticket sale requests and their approval
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-event-ticket-sale.sh
       - name: Chat recipient notifications and repeated messages
         env:
           TDF_CHAT_NOTIFICATION_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
