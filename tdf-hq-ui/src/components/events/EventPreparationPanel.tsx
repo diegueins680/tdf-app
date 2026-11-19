@@ -4,10 +4,13 @@ import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Stack, T
 import { Link as RouterLink } from 'react-router-dom';
 import { SocialEventsAPI, type SocialEventDTO } from '../../api/socialEvents';
 import { useOwnedSessionDraft } from '../../session/useOwnedSessionDraft';
+import EventPublishControl from './EventPublishControl';
 
 interface PosterAttempt { file: File; isCurrentOwner: () => boolean }
 
-export default function EventPreparationPanel({ event, ownerId }: { event: SocialEventDTO; ownerId: number }) {
+// `canPlanLogistics` is false when the account lacks access to the planning
+// workspace: a link there would only lead the organizer to a 403 page.
+export default function EventPreparationPanel({ event, ownerId, canPlanLogistics = true }: { event: SocialEventDTO; ownerId: number; canPlanLogistics?: boolean }) {
   const eventId = event.eventId!;
   const queryClient = useQueryClient();
   const input = useRef<HTMLInputElement>(null);
@@ -69,7 +72,7 @@ export default function EventPreparationPanel({ event, ownerId }: { event: Socia
         <Chip label={event.eventImageUrl ? 'Afiche cargado' : 'Falta el afiche'} color={event.eventImageUrl ? 'success' : 'warning'} />
         <Chip label={event.eventTicketPurchaseEnabled ? 'Venta habilitada' : 'Venta pendiente'} />
       </Stack>
-      <Typography variant="body2">Guarda el afiche aquí y prepara el cronograma y las publicaciones. Revisa la visibilidad, los cupos y las condiciones de venta antes de difundir el enlace.</Typography>
+      <Typography variant="body2">Guarda el afiche, crea tus entradas más abajo y publica el evento cuando esté listo. Revisa los cupos y las condiciones de venta antes de difundir el enlace.</Typography>
       <Box>
         <Typography component="label" htmlFor="event-poster-file" variant="body2" fontWeight={700}>Afiche del evento</Typography>
         <input id="event-poster-file" ref={input} type="file" accept="image/jpeg,image/png,image/webp" disabled={!draft.ready || mutation.isPending} onChange={(change) => {
@@ -86,8 +89,9 @@ export default function EventPreparationPanel({ event, ownerId }: { event: Socia
         <Button variant="contained" disabled={!draft.ready || !draft.draft || mutation.isPending} onClick={() => {
           if (draft.draft) mutation.mutate({ file: draft.draft, isCurrentOwner: draft.isCurrentOwner });
         }}>{mutation.isPending ? <><CircularProgress size={16} sx={{ mr: 1 }} color="inherit" />Guardando afiche…</> : mutation.isError ? 'Reintentar afiche' : 'Guardar afiche'}</Button>
-        <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`}>Cronograma y equipo</Button>
+        {canPlanLogistics && <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`}>Cronograma y equipo</Button>}
       </Stack>
+      <EventPublishControl event={event} />
     </Stack></CardContent>
   </Card>;
 }

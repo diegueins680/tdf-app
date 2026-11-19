@@ -264,3 +264,14 @@ appended. The two Cabal registrations and the explicit middleware/wiring/API/tes
 manifest are unchanged from `ce763107100e39a94c7caae7876d2632ae9c47de`. Other main handler/test
 changes prevent a whole-backend identity claim. Fresh predicate verification
 binds the final composition; older execution receipts retain their identities.
+
+## Ticket order lookup-key module — 2026-11-19
+
+Against protected main `6ccd1e55af264fd5a6a83b82ec732bf8a5f66239`, the Cabal manifest adds only
+`TDF.Ticketing.LookupToken` to the library exposed modules; removing that line
+reproduces the main file byte for byte. The module holds the guest ticket order
+lookup-key derivation moved verbatim out of `TDF.Server.EventTicketCheckout`
+and imports no authorization or recovery module. Dependencies, flags, source
+paths and every other reviewed source are unchanged. The manifest pin is
+refreshed after reviewing that diff; all obligations require fresh execution.
+Reviewed by the change author only.

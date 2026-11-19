@@ -30756,7 +30756,130 @@
       "playerRevision": "85255658262166ab4aeb0e7e167b3a93c4a33d61",
       "currentDecisionId": "912cda11c7b6eb622f76",
       "executionAllowed": false
-    }
+    },
+    "continuousImprovementLoopRework20261113": {
+      "sourceMain": "65e5517c5c30e00c95c9f3c4063987ff4ccfc545",
+      "reason": "The continuous improvement loop rework (pull request #750) deleted scripts/continuous-improvement-loop-forever.mjs and scripts/lib/continuous-improvement-loop-dirty-worktree.mjs, so these fingerprints have no current candidate. The exact decisions, their positions and their source locators are preserved as history. No catalog values are deleted: both lists were command-line and process-state mechanics of removed automation.",
+      "decisions": [
+        {
+          "position": 45,
+          "decision": {
+            "id": "c8eb2cd455c6586eb633",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+            "reviewed": true
+          },
+          "source": {
+            "file": "scripts/continuous-improvement-loop-forever.mjs",
+            "name": "runnerState",
+            "line": 32,
+            "values": [
+              "mode",
+              "pid",
+              "state",
+              "root",
+              "configPath",
+              "intervalSeconds",
+              "stopPollSeconds",
+              "cycleTimeoutSeconds",
+              "cycleKillGraceSeconds",
+              "startedAt",
+              "updatedAt",
+              "heartbeatAt",
+              "cycleCount",
+              "pidFile",
+              "stopFile",
+              "heartbeatFile",
+              "runnerLogFile",
+              "statusFile",
+              "stateDir",
+              "childArgs"
+            ]
+          }
+        },
+        {
+          "position": 63,
+          "decision": {
+            "id": "02f3751b46f8a4867bec",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+            "reviewed": true
+          },
+          "source": {
+            "file": "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
+            "name": "dirtyStatus",
+            "line": 214,
+            "values": [
+              "status",
+              "--porcelain"
+            ]
+          }
+        }
+      ],
+      "addedDecisionIds": [
+        "16e3988d48089cc77b7e"
+      ]
+    },
+    "sourceRemovalRetirements": [
+      {
+        "reason": "The Fly staging inspection script (scripts/inspect-staging-config.mjs) was deleted when Fly was retired as a hosting target, so these two lists have no current candidate. The full reviewed decisions are preserved here as history; no catalog values are affected.",
+        "decisions": [
+          {
+            "id": "d6ad7e3315a241e6d802",
+            "classification": "security-system-registry",
+            "disposition": "retain-as-fixed-staging-target-allowlist",
+            "specializedModel": "version-controlled nonproduction inspection targets",
+            "priority": "P0-security",
+            "risk": "A mutable or unrestricted app target could send hosting credentials to an unintended scope or inspect production configuration.",
+            "justification": "The two exact app names are an intentionally closed security boundary for read-only staging inspection, not a merchant-selectable payment catalog. Tests reject every other target; any expansion requires code review and app-scoped credentials.",
+            "reviewed": true
+          },
+          {
+            "id": "f0efc071b84fe0a2cb13",
+            "classification": "security-system-registry",
+            "disposition": "retain-as-redacted-provider-status-projection",
+            "specializedModel": "Fly app and machine operational status vocabulary",
+            "priority": "P0-security",
+            "risk": "Echoing arbitrary status strings from hosting payloads could disclose sensitive or attacker-controlled content in CI logs and artifacts.",
+            "justification": "This fixed output vocabulary redacts all unrecognized app/machine states to unknown. It is not a payment state machine or business catalog, does not control availability, and cannot authorize a payment or deployment.",
+            "reviewed": true
+          }
+        ]
+      },
+      {
+        "reason": "The Fly release executor and its deploy-plan builders (scripts/production-release.mjs, scripts/lib/production-release.mjs) were deleted when Fly was retired as a hosting target, so these two lists have no current candidate. The full reviewed decisions are preserved here as history; no catalog values are affected.",
+        "decisions": [
+          {
+            "id": "4ee0861b0a41a45d76aa",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+            "reviewed": true
+          },
+          {
+            "id": "3391a96825357d78f794",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+            "reviewed": true
+          }
+        ]
+      }
+    ]
   },
   "decisions": [
     {
@@ -31399,16 +31522,6 @@
       }
     },
     {
-      "id": "c8eb2cd455c6586eb633",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
-      "reviewed": true
-    },
-    {
       "id": "25bd48ebe5582108498d",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -31559,36 +31672,6 @@
       "reviewed": true
     },
     {
-      "id": "d6ad7e3315a241e6d802",
-      "classification": "security-system-registry",
-      "disposition": "retain-as-fixed-staging-target-allowlist",
-      "specializedModel": "version-controlled nonproduction inspection targets",
-      "priority": "P0-security",
-      "risk": "A mutable or unrestricted app target could send hosting credentials to an unintended scope or inspect production configuration.",
-      "justification": "The two exact app names are an intentionally closed security boundary for read-only staging inspection, not a merchant-selectable payment catalog. Tests reject every other target; any expansion requires code review and app-scoped credentials.",
-      "reviewed": true
-    },
-    {
-      "id": "f0efc071b84fe0a2cb13",
-      "classification": "security-system-registry",
-      "disposition": "retain-as-redacted-provider-status-projection",
-      "specializedModel": "Fly app and machine operational status vocabulary",
-      "priority": "P0-security",
-      "risk": "Echoing arbitrary status strings from hosting payloads could disclose sensitive or attacker-controlled content in CI logs and artifacts.",
-      "justification": "This fixed output vocabulary redacts all unrecognized app/machine states to unknown. It is not a payment state machine or business catalog, does not control availability, and cannot authorize a payment or deployment.",
-      "reviewed": true
-    },
-    {
-      "id": "02f3751b46f8a4867bec",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
-      "reviewed": true
-    },
-    {
       "id": "46f44cbe05d5ee91971e",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -31641,16 +31724,6 @@
       },
       "reviewBatch": "music-release-platform-sync-2026-10-07",
       "reviewMethod": "manual-source-review"
-    },
-    {
-      "id": "4ee0861b0a41a45d76aa",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
-      "reviewed": true
     },
     {
       "id": "1a41ca8ee4fc59546171",
@@ -74759,16 +74832,6 @@
       ]
     },
     {
-      "id": "3391a96825357d78f794",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
-      "reviewed": true
-    },
-    {
       "id": "86fcd97588e8b1c4bd10",
       "classification": "governed-reference-data",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -92128,6 +92191,26 @@
       }
     },
     {
+      "id": "755cf14ac92e4f590879",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing or making the required evidence checks editable can silently weaken delivery evidence validation.",
+      "justification": "DELIVERY_CHECKS is the versioned evidence-review protocol for SYS-VERIFY-002: stable check identifiers, required verification levels and acceptance criteria consumed by the read-only delivery inventory. It is not a user-selectable business catalog, product taxonomy or production feature configuration. Changes must be reviewed with the receipt validator and negative controls; receipt consistency never grants release authority. The scanner reports nine direct objects; four native-platform checks are generated by map expressions and remain covered by the delivery-matrix tests.",
+      "reviewed": true,
+      "reviewMethod": "manual-technical-boundary-review",
+      "reviewBatch": "delivery-evidence-protocol-2026-11-14",
+      "evidence": {
+        "file": "scripts/lib/delivery-matrix.mjs",
+        "line": 2,
+        "kind": "array",
+        "name": "DELIVERY_CHECKS",
+        "valueCount": 9,
+        "consumerCount": 2
+      }
+    },
+    {
       "id": "853a5f768e09d0c32259",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -94989,6 +95072,16 @@
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "16e3988d48089cc77b7e",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
       "reviewed": true
     }
   ]

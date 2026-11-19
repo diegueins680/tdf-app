@@ -255,6 +255,7 @@ library
     TDF.Calendar.Models
     TDF.Calendar.TokenCipher
     TDF.Auth.Throttle
+    TDF.Auth.ClientAddress
     TDF.CMS.Models
     TDF.Catalog.Models
     TDF.Catalog.CountryReferenceSeed

@@ -79,10 +79,14 @@ Entrega en dos partes (decisión del 2026-11-12):
 - **Parte B2a — operación (implementada):** vencimiento del depósito en segundo plano, cola de
   disputas de acuerdos para administración y registro de la cuenta de cobro de PayPhone en la
   pestaña Acuerdos.
-- **Parte B2b — ejecución y reembolsos (pendiente, requiere credenciales de sandbox):** Botón de
-  PayPhone con `transferTo`, adaptador Stripe canónico con cargo destino y onboarding de cuentas
-  conectadas, pantalla de pago y reembolsos automáticos según la política congelada. DataWeb
-  (Datafast) queda conectado al ruteo y cerrado hasta que contrate un split verificable.
+- **Parte B2b-1 — Botón de PayPhone con split (implementado, sin verificar contra PayPhone):**
+  Prepare con `transferTo` cifrado, confirmación como consulta autenticada, reparto leído y
+  revalidado por el ejecutor compartido, botón «Pagar» del comprador en la tarjeta del acuerdo.
+  Cerrado por la contraseña de codificación, la evidencia de capacidades y el gate.
+- **Parte B2b-2 — Stripe y reembolsos (pendiente, requiere credenciales de sandbox):** adaptador
+  Stripe canónico con cargo destino y onboarding de cuentas conectadas, reembolsos automáticos
+  según la política congelada. DataWeb (Datafast) queda conectado al ruteo y cerrado hasta que
+  contrate un split verificable.
 
 Alcance:
 - Tabla `marketplace_agreement` creada al aceptar una oferta cuando el gate está activo: partes,
