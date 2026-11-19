@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "c07b698ec0560d7d2c142508bfd03d58433dda3392414a4f034a3fd7ebc24c2d",
+    "tdf-hq/tdf-hq.cabal": "73bcd37bc0d58d9d9f66d44ff3241349f93527b66e9756a3c716608f92c25cb9",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -678,6 +678,24 @@
       "change": "Register TDF.API.Production and TDF.Server.Production in exposed-modules. Removing the two new lines reproduces the protected-main manifest byte for byte.",
       "semanticReview": "The module names are distinct. Source paths, compiler options, dependency versions and the bindings translated for this contract retain their reviewed definitions.",
       "qualification": "Fresh source-bound solver execution, serialized replay and mutation controls are required for these scoped predicates."
+    },
+    {
+      "reviewedAgainst": "65317ec2e4febf920292ecace7df466153ae5046",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "currentSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "change": "Register the library module TDF.Server.EventTicketSale in exposed-modules and the test module TDF.EventTicketSaleSpec in the tdf-hq-test other-modules list for EVT-TICKET-SALE-001.",
+      "semanticReview": "Removing exactly those two module lines reproduces protected main Cabal bytes. Every other reviewed source byte and hash matches protected main. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed; the added library module holds paid ticket sale request and approval handlers only, calls hasStrictAdminAccess without changing it, and is not imported by any reviewed source.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "reviewedAgainst": "96706a7216e807d09e76fd5f6fb05934f6bc0611",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "currentSha256": "73bcd37bc0d58d9d9f66d44ff3241349f93527b66e9756a3c716608f92c25cb9",
+      "change": "Compose the two production module registrations with the EventTicketSale library/test registrations. Removing only the production lines reproduces protected main exactly; removing only the EventTicketSale lines reproduces f96abae10 exactly.",
+      "semanticReview": "All other contract source hashes and obligations are identical across the parents. Compiler options, dependency versions and source paths remain exact. This is a module-registration correspondence check, not complete implementation refinement.",
+      "qualification": "Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required."
     }
   ]
 }

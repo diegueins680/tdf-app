@@ -224,6 +224,7 @@ library
     TDF.ServerInternships
     TDF.ServerInternAudit
     TDF.Server.EventAdminDelegation
+    TDF.Server.EventTicketSale
     TDF.Server.SocialEventsHandlers
     TDF.Server.StripeTicketCapture
     TDF.Server.EventResearch
@@ -424,6 +425,7 @@ test-suite tdf-hq-test
     TDF.ReadinessSpec
     TDF.TicketConfirmationSpec
     TDF.EventAdminDelegationSpec
+    TDF.EventTicketSaleSpec
     TDF.EventOrganizerSpec
     TDF.InvoiceDatilSpec
     TDF.TicketManualReviewSpec
