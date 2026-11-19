@@ -4,6 +4,41 @@
  */
 
 export interface paths {
+    "/public/event-demo-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Check if event demo requests can currently be received */
+        get: operations["getEventDemoAvailability"];
+        put?: never;
+        /** Receive a request for an event demo without booking an appointment */
+        post: operations["createEventDemoRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/event-demo-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List demo requests as the configured owner with admin access */
+        get: operations["listEventDemoRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/music/artists/{artistPartyId}/featured-track": {
         parameters: {
             query?: never;
@@ -17617,6 +17652,135 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getEventDemoAvailability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Event demo intake is enabled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        available: boolean;
+                    };
+                };
+            };
+            /** @description Event demo intake is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createEventDemoRequest: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    /** Format: email */
+                    email: string;
+                    message: string;
+                    /** @enum {string} */
+                    channel?: "instagram-organizador" | "instagram-publico" | "tiktok-organizador" | "tiktok-publico";
+                };
+            };
+        };
+        responses: {
+            /** @description Request received or idempotently replayed; no appointment is booked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "requested";
+                    };
+                };
+            };
+            /** @description Invalid intake */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key already recorded a different payload */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No owner is configured for the intake */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventDemoRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The owner's recent demo requests */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        inquiryId: number;
+                        /** Format: date-time */
+                        createdAt: string;
+                        name?: string | null;
+                        email?: string | null;
+                        message?: string | null;
+                        channel?: string | null;
+                        status: string;
+                    }[];
+                };
+            };
+            /** @description Caller is not the authorized owner or lacks admin access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No owner is configured for the intake */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getArtistFeaturedTrack: {
         parameters: {
             query?: never;

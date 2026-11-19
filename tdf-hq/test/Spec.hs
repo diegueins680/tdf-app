@@ -394,6 +394,7 @@ import TDF.Courses.Metadata (buildWhatsappCtaFor)
 import TDF.Services.LlmChat (extractApiErrorMessage, shouldRetryWithFallbackModel)
 import TDF.Server
     ( assetsServePathAllowed,
+      validateAdsInquiryRequestKey,
       loadCourseRegistrationReceiptCounts,
       toCourseRegistrationDTOWithReceiptCount,
       DriveApiResp (..),
@@ -10431,6 +10432,16 @@ main = hspec $ do
                 Right value ->
                     expectationFailure
                         ("Expected punctuation-only buyerName to fail, got " <> show value)
+
+    describe "event demo receipt key isolation" $ do
+      it "keeps the Ads public key grammar unchanged and refuses the demo namespace" $ do
+        let check key = either (Left . errHTTPCode) Right (validateAdsInquiryRequestKey (Just key))
+            legacyKey = "ae210a9d-aec3-4d0a-9118-cadba6335237"
+        check legacyKey `shouldBe` Right legacyKey
+        check (Data.Text.replicate 16 "a") `shouldBe` Right (Data.Text.replicate 16 "a")
+        check (Data.Text.replicate 128 "a") `shouldBe` Right (Data.Text.replicate 128 "a")
+        check ("demo:" <> legacyKey) `shouldBe` Left 400
+        check (Data.Text.replicate 129 "a") `shouldBe` Left 400
 
     describe "validateAdsAssistChannel" $ do
         it "accepts omitted or supported channels and rejects explicit blank fallback channels" $ do

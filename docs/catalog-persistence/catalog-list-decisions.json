@@ -30883,6 +30883,20 @@
   },
   "decisions": [
     {
+      "id": "c522a3bba721db511900",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Attribution drift would misclassify demo requests or permit arbitrary UTM values in persisted records.",
+      "justification": "This is an input boundary for four agreed campaign attribution labels, not a catalog of channels or choices: the landing and API normalize the same closed set. Expanding the pilot requires review of the corresponding UI and API wire contract.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 56
+      }
+    },
+    {
       "id": "c3d1e41b543e7cbdaf00",
       "classification": "dynamic-business-catalog",
       "disposition": "consumer-update",
@@ -31796,21 +31810,31 @@
       "reviewed": true
     },
     {
-      "id": "912cda11c7b6eb622f76",
+      "id": "66d22fee30fafcbedc05",
       "classification": "security-system-registry",
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "justification": "Preserve all 253 protected-main migration rows and their review history. Append the five previously reviewed player migrations in their original order with identical SQL and introduction commits. Preserve both parent manifest reviews and keep activation separate.",
+      "justification": "Preserve all 258 existing manifest entries and applied SQL bytes. Append only the exact forward constraint migration introduced at 85ef91ab777575e2828654613189522630775c8a. Ads keeps its wire grammar; the narrower rollback refuses to lose demo receipts. This admission review neither activates production nor waives release checks.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "player-server-main-integration-20261116",
+      "reviewBatch": "event-demo-receipt-namespace-20261119",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 258
+        "valueCount": 259
+      },
+      "supersededManifestReview": {
+        "sourceRevision": "8f12f473a95d4da03ee06fca576af00083290b0b",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "a36f93ae4fb499b20dfedc356aa12d0069e674a441008435bb20bafccce1aea4",
+        "sourceEntry": {
+          "id": "912cda11c7b6eb622f76"
+        },
+        "sourceEntryCanonicalSha256": "3c2f539985558c2fc29d53f33ab1e2c70696282473d894cebf8a14ab73072300",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
       },
       "previousDecision": {
         "id": "f2a4dfbd31904f6f478e",

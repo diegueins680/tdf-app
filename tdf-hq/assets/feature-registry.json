@@ -94,6 +94,93 @@
   },
   "features": [
     {
+      "id": "events.event-demo-intake",
+      "webRoute": "/demo-eventos",
+      "routeType": "technical",
+      "classification": "technical-route",
+      "label": {
+        "es": "Demo para eventos",
+        "en": "Event demo"
+      },
+      "synonyms": {
+        "es": [],
+        "en": []
+      },
+      "keywords": [
+        "demo",
+        "eventos"
+      ],
+      "icon": "event",
+      "breadcrumb": [],
+      "requiredAuth": "public",
+      "requiredModules": [],
+      "permissions": {
+        "discover": {},
+        "view": {},
+        "submit": {}
+      },
+      "globalMenu": false,
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "accessRequestEligible": false,
+      "searchable": false,
+      "maturity": "experimental",
+      "technical": true,
+      "mobilePresentation": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Dedicated gated web-only acquisition pilot."
+      }
+    },
+    {
+      "id": "admin.event-demo-inbox",
+      "webRoute": "/admin/demo-eventos",
+      "routeType": "technical",
+      "classification": "technical-route",
+      "label": {
+        "es": "Solicitudes de demos",
+        "en": "Demo inquiries"
+      },
+      "synonyms": {
+        "es": [],
+        "en": []
+      },
+      "keywords": [
+        "demo",
+        "eventos"
+      ],
+      "icon": "event",
+      "breadcrumb": [],
+      "requiredAuth": "authenticated",
+      "requiredModules": [
+        "Admin"
+      ],
+      "permissions": {
+        "discover": {
+          "modulesAll": [
+            "Admin"
+          ]
+        },
+        "view": {
+          "modulesAll": [
+            "Admin"
+          ]
+        }
+      },
+      "globalMenu": false,
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "accessRequestEligible": false,
+      "searchable": false,
+      "maturity": "experimental",
+      "technical": true,
+      "mobilePresentation": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Dedicated gated web-only acquisition pilot."
+      }
+    },
+    {
       "id": "public.mobile",
       "parentId": null,
       "webRoute": "/app",

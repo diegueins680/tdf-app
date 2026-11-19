@@ -121,6 +121,8 @@ type InputListAPI = InputListPublicAPI :<|> InputListSeedAPI
 
 type AdsPublicAPI =
        "ads" :> "inquiry" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] AdsInquiry :> Post '[JSON] AdsInquiryOut
+  :<|> "public" :> "event-demo-requests" :> Get '[JSON] Value
+  :<|> "public" :> "event-demo-requests" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] AdsInquiry :> Post '[JSON] Value
 
 -- | Staff assistance draws on internal campaign, ad, studio-knowledge and
 -- schedule context, so it is served only to authenticated Social Inbox staff.
@@ -128,6 +130,7 @@ type AdsAdminAPI =
        "ads" :> "assist" :> ReqBody '[JSON] AdsAssistRequest :> Post '[JSON] AdsAssistResponse
 
   :<|> "ads" :> "inquiries" :> Get '[JSON] [AdsInquiryDTO]
+  :<|> "admin" :> "event-demo-requests" :> Get '[JSON] [AdsInquiryDTO]
   :<|> "ads" :> "campaigns" :> Get '[JSON] [CampaignDTO]
   :<|> "ads" :> "campaigns" :> ReqBody '[JSON] CampaignUpsert :> Post '[JSON] CampaignDTO
   :<|> "ads" :> "campaigns" :> Capture "campaignId" Int64 :> Get '[JSON] CampaignDTO

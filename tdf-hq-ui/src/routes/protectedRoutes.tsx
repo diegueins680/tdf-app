@@ -8,6 +8,7 @@ const ConfigurationIndexRedirect = lazy(() => import('./AppShell').then((module)
 
 const NotificationPage = lazy(() => import('../pages/NotificationPage'));
 const AboutPage = lazy(() => import('../pages/AboutPage'));
+const EventDemoInboxPage = lazy(() => import('../pages/EventDemoInboxPage'));
 const AdsInboxPage = lazy(() => import('../pages/AdsInboxPage'));
 const AdminDiagnosticsPage = lazy(() => import('../pages/AdminDiagnosticsPage'));
 const AdminTokenPage = lazy(() => import('../pages/AdminTokenPage'));
@@ -157,6 +158,7 @@ export function renderProtectedRoutes() {
         <Route path="/practicas/auditorias/:planId" element={<InternAuditPlanPage />} />
         <Route path="/feedback/interno" element={<InternalFeedbackPage />} />
         <Route path="/feedback/interno/:reportId" element={<InternalFeedbackPage />} />
+        <Route path="/admin/demo-eventos" element={<EventDemoInboxPage />} />
         <Route path="/admin/diagnosticos" element={<AdminDiagnosticsPage />} />
         <Route path="/admin/commerce/provider-events" element={<CommerceProviderEventsPage />} />
         <Route path="/admin/merch" element={<MerchAdminPage />} />

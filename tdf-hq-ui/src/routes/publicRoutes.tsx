@@ -26,6 +26,7 @@ const EventCommunityEntry = lazy(() => import('./EventCommunityEntry'));
 const SocialEventWorkspacePage = lazy(() => import('../pages/SocialEventWorkspacePage'));
 const FanClubPage = lazy(() => import('../pages/FanClubPage'));
 const FanHubPage = lazy(() => import('../pages/FanHubPage'));
+const EventDemoPage = lazy(() => import('../pages/EventDemoPage'));
 const FeedbackPage = lazy(() => import('../pages/FeedbackPage'));
 const GoogleDriveCallbackPage = lazy(() => import('../pages/GoogleDriveCallbackPage'));
 const InscripcionPage = lazy(() => import('../pages/inscripcion/InscripcionPage'));
@@ -151,6 +152,7 @@ export function renderPublicRoutes() {
       <Route path="/live-sessions/registro" element={<PublicBranding><LiveSessionPublicPage /></PublicBranding>} />
       <Route path="/app" element={<PublicBranding><MobileAppPage /></PublicBranding>} />
       <Route path="/cuenta/eliminar" element={<PublicBranding><AccountDeletionPage /></PublicBranding>} />
+      <Route path="/demo-eventos" element={<PublicBranding><EventDemoPage /></PublicBranding>} />
       <Route path="/feedback" element={<PublicBranding><FeedbackPage /></PublicBranding>} />
       <Route path="/privacidad" element={<PublicBranding><PublicReputationRightsPage /></PublicBranding>} />
       <Route path="/apelaciones" element={<PublicBranding><PublicReputationRightsPage view="appeal" /></PublicBranding>} />

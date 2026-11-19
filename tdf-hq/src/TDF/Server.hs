@@ -14068,7 +14068,29 @@ loadUserRoleSummaries = do
         }
 
 adsPublicServer :: ServerT AdsPublicAPI AppM
-adsPublicServer = adsInquiryPublic
+adsPublicServer = adsInquiryPublic :<|> eventDemoAvailability :<|> eventDemoRequestPublic
+
+eventDemoAvailability :: AppM Value
+eventDemoAvailability = do
+  _ <- eventDemoOwner
+  pure $ object ["available" .= True]
+
+eventDemoRequestPublic :: Maybe Text -> AdsInquiry -> AppM Value
+eventDemoRequestPublic maybeKey rawInquiry = do
+  _ <- eventDemoOwner
+  inquiry <- either throwError pure (validateAdsInquiry rawInquiry)
+  requestKey <- either throwError pure (validateAdsInquiryRequestKey maybeKey)
+  case (aiName inquiry, aiEmail inquiry, aiMessage inquiry, aiPhone inquiry, aiCourse inquiry) of
+    (Just _, Just _, Just _, Nothing, Nothing) -> pure ()
+    _ -> throwError err400 { errBody = "A demo request requires a name, email and event." }
+  case aiChannel inquiry of
+    Nothing -> pure ()
+    Just source | source `elem` ["instagram-organizador", "instagram-publico", "tiktok-organizador", "tiktok-publico"] -> pure ()
+    _ -> throwError err400 { errBody = "Invalid campaign attribution." }
+  now <- liftIO getCurrentTime
+  _ <- runDB (createPublicInquiryDb "event_demo_request" "completed" ("demo:" <> requestKey) inquiry now)
+       >>= either throwError pure
+  pure $ object ["status" .= ("requested" :: Text)]
 
 validateAdsInquiry :: AdsInquiry -> Either ServerError AdsInquiry
 validateAdsInquiry AdsInquiry{..} = do
@@ -14117,7 +14139,10 @@ validateAdsInquiryRequestKey (Just key)
 validateAdsInquiryRequestKey _ = Left err400 { errBody = "Refresh the form before submitting: a valid Idempotency-Key is required." }
 
 createAdsInquiryDb :: Text -> AdsInquiry -> UTCTime -> SqlPersistT IO (Either ServerError (Bool, AdsInquiryOut))
-createAdsInquiryDb requestKey inquiry now = do
+createAdsInquiryDb = createPublicInquiryDb "ad_inquiry" "dispatching"
+
+createPublicInquiryDb :: Text -> Text -> Text -> AdsInquiry -> UTCTime -> SqlPersistT IO (Either ServerError (Bool, AdsInquiryOut))
+createPublicInquiryDb interestType notificationState requestKey inquiry now = do
   let payload = TE.decodeUtf8 (BL.toStrict (encode inquiry))
   _ <- (rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended('public-ads:' || ?, 0))" [PersistText requestKey] :: SqlPersistT IO [Single Int64])
   saved <- (rawSql "SELECT request_payload=?::jsonb, response_payload::text FROM identity_ads_request WHERE request_key=?" [PersistText payload,PersistText requestKey] :: SqlPersistT IO [(Single Bool, Single Text)])
@@ -14131,20 +14156,20 @@ createAdsInquiryDb requestKey inquiry now = do
       case partyResult of
         Left err -> pure (Left err)
         Right partyId -> do
-          (subjectKey, _) <- resolveSubject (aiCourse inquiry)
+          (subjectKey, _) <- if interestType == "ad_inquiry" then resolveSubject (aiCourse inquiry) else pure (Nothing, Nothing)
           inquiryId <- insert (Trials.LeadInterest
             { Trials.leadInterestPartyId = partyId
-            , Trials.leadInterestInterestType = "ad_inquiry"
+            , Trials.leadInterestInterestType = interestType
             , Trials.leadInterestSubjectId = subjectKey
             , Trials.leadInterestDetails = fmap T.strip (aiMessage inquiry)
-            , Trials.leadInterestSource = T.toLower (fromMaybe "ads" (aiChannel inquiry))
+            , Trials.leadInterestSource = T.toLower (fromMaybe (if interestType == "ad_inquiry" then "ads" else "direct") (aiChannel inquiry))
             , Trials.leadInterestDriveLink = Nothing
             , Trials.leadInterestStatus = "Open"
             , Trials.leadInterestCreatedAt = now
             })
           let response = AdsInquiryOut True (entityKeyInt inquiryId) (entityKeyInt partyId) []
-          rawExecute "INSERT INTO identity_ads_request(request_key,party_id,lead_interest_id,request_payload,response_payload,notification_state) VALUES (?,?,?,?::jsonb,?::jsonb,'dispatching')"
-            [PersistText requestKey,toPersistValue partyId,toPersistValue inquiryId,PersistText payload,PersistText (TE.decodeUtf8 (BL.toStrict (encode response)))]
+          rawExecute "INSERT INTO identity_ads_request(request_key,party_id,lead_interest_id,request_payload,response_payload,notification_state) VALUES (?,?,?,?::jsonb,?::jsonb,?)"
+            [PersistText requestKey,toPersistValue partyId,toPersistValue inquiryId,PersistText payload,PersistText (TE.decodeUtf8 (BL.toStrict (encode response))),PersistText notificationState]
           pure $ Right (True,response)
     _ -> pure $ Left err500 { errBody = "Inquiry identity requires review" }
 
@@ -14386,6 +14411,7 @@ adsAdminServer :: AuthedUser -> ServerT AdsAdminAPI AppM
 adsAdminServer user =
        adsAssistStaff user
   :<|> adsListInquiries user
+  :<|> eventDemoInbox user
   :<|> adsListCampaigns user
   :<|> adsUpsertCampaign user
   :<|> adsGetCampaign user
@@ -14402,10 +14428,26 @@ adsAdminServer user =
   :<|> adsUpdateAutomationStatus user
   :<|> adsUpdateAutomationEnrollmentStatus user
 
+eventDemoOwner :: AppM M.PartyId
+eventDemoOwner = do
+  setting <- liftIO (lookupEnv "TDF_EVENT_DEMO_OWNER_PARTY_ID")
+  case setting >>= readMaybe of
+    Just value | value > 0 -> pure (toSqlKey value)
+    _ -> throwError err503 { errBody = "Event demo intake unavailable." }
+
+eventDemoInbox :: AuthedUser -> AppM [AdsInquiryDTO]
+eventDemoInbox user = do
+  owner <- eventDemoOwner
+  unless (auPartyId user == owner) $ throwError err403
+  adsListInquiriesByType "event_demo_request" user
+
 adsListInquiries :: AuthedUser -> AppM [AdsInquiryDTO]
-adsListInquiries user = do
+adsListInquiries = adsListInquiriesByType "ad_inquiry"
+
+adsListInquiriesByType :: Text -> AuthedUser -> AppM [AdsInquiryDTO]
+adsListInquiriesByType interestType user = do
   requireModule user ModuleAdmin
-  rows <- runDB $ selectList [Trials.LeadInterestInterestType ==. "ad_inquiry"] [Desc Trials.LeadInterestCreatedAt, LimitTo 200]
+  rows <- runDB $ selectList [Trials.LeadInterestInterestType ==. interestType] [Desc Trials.LeadInterestCreatedAt, LimitTo 200]
   let partyIds = map (Trials.leadInterestPartyId . entityVal) rows
       subjectIds = mapMaybe (Trials.leadInterestSubjectId . entityVal) rows
   parties <- if null partyIds then pure [] else runDB (selectList [M.PartyId <-. partyIds] [])
