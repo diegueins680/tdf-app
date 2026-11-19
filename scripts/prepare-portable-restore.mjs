@@ -12,9 +12,7 @@ const [sha, recoverySha, directory] = process.argv.slice(2);
 if (!sha || !recoverySha || !directory || process.argv.length !== 5) {
   throw new Error('Usage: node scripts/prepare-portable-restore.mjs <full-sha> <recovery-sha> <new-output-directory>');
 }
-const context = await resolveReleaseContext({
-  mode: 'plan', sha, recoverySha, app: 'tdf-hq', dbApp: 'tdf-hq-db', database: 'tdf_hq',
-});
+const context = await resolveReleaseContext({ sha, recoverySha });
 // Load the schema builders from the reviewed revision, never the caller's HEAD.
 // This module imports only Node built-ins and is loaded without writing source files.
 const builderSource = execFileSync('git', ['show', context.sha + ':scripts/lib/production-release.mjs'], { encoding: 'utf8' });

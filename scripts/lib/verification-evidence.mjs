@@ -8,9 +8,9 @@ export function sourceManifest(root) {
   // Include untracked implementation work locally; CI uses a clean checkout.
   const paths = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
     { cwd: root, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }).split('\0').filter(Boolean);
-  const selected = paths.filter(p => /^(formal\/|scripts\/|tdf-hq\/|tdf-hq-ui\/|ops\/|\.github\/)/.test(p)
+  const selected = paths.filter(p => /^(formal\/|scripts\/|tdf-hq\/|tdf-hq-ui\/|tdf-desktop\/|services\/|functions\/|streaming\/|tidal-agent\/|e2e\/|test\/|ops\/|\.github\/)/.test(p)
     || /^docs\/.*\.(md|yaml|json)$/.test(p)
-    || /^(package(-lock)?\.json|specs\.yaml|fly[^/]*\.toml|\.gitmodules|FORMAL_VERIFICATION\.md)$/.test(p));
+    || /^(package(-lock)?\.json|specs\.yaml|\.gitmodules|FORMAL_VERIFICATION\.md)$/.test(p));
   const files = {};
   for (const p of [...new Set(selected)].sort()) {
     // Receipts are outputs, not proof inputs; never recursively hash the run's receipt.

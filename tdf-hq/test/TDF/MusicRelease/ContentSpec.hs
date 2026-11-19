@@ -3,6 +3,7 @@
 module TDF.MusicRelease.ContentSpec (spec) where
 
 import Data.Aeson (eitherDecode)
+import Data.Either (isLeft)
 import Data.Time (UTCTime)
 import qualified Data.Text as Text
 import Test.Hspec
@@ -12,6 +13,18 @@ import TDF.MusicRelease.ContentValidation (validateMusicReleaseContent)
 
 spec :: Spec
 spec = describe "music release catalog payload" $ do
+  it "requires the expected artist identity for featured-track writes" $ do
+    case eitherDecode "{\"artistPartyId\":17,\"recordingId\":null,\"legacyReleaseId\":null}" of
+      Left failure -> expectationFailure failure
+      Right selection -> do
+        musicFeaturedArtistPartyId selection `shouldBe` 17
+        musicFeaturedRecordingId selection `shouldBe` Nothing
+        musicFeaturedLegacyReleaseId selection `shouldBe` Nothing
+    (eitherDecode "{\"recordingId\":null}" :: Either String MusicArtistFeaturedTrackRequest)
+      `shouldSatisfy` isLeft
+    (eitherDecode "{\"artistPartyId\":17,\"ownerOverride\":18}" :: Either String MusicArtistFeaturedTrackRequest)
+      `shouldSatisfy` isLeft
+
   it "decodes the documented partyId and partyKind request fields" $
     case eitherDecode "{\"clientRef\":\"external\",\"partyId\":null,\"tdfPartyId\":null,\"displayName\":\"External Artist\",\"legalName\":null,\"partyKind\":\"person\",\"identifiers\":[]}" of
       Left failure -> expectationFailure failure

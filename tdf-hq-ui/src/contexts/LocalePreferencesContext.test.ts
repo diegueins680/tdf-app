@@ -1,5 +1,5 @@
 import type { LocalePreferences } from '../api/preferences';
-import { normalizePreferences } from './LocalePreferencesContext';
+import { normalizePreferences, rememberChosenTimezone, wasTimezoneChosenOnThisDevice } from './LocalePreferencesContext';
 
 const fallback: LocalePreferences = {
   localeId: '',
@@ -41,5 +41,22 @@ describe('normalizePreferences', () => {
       countryId: false,
       countryCode: [],
     }, fallback)).toEqual(fallback);
+  });
+});
+
+describe('time zone chosen on this device', () => {
+  beforeEach(() => { window.localStorage.clear(); });
+
+  it('tells a saved zone apart from the server placeholder', () => {
+    expect(wasTimezoneChosenOnThisDevice('UTC')).toBe(false);
+    rememberChosenTimezone(' UTC ');
+    expect(wasTimezoneChosenOnThisDevice('UTC')).toBe(true);
+    expect(wasTimezoneChosenOnThisDevice('America/Guayaquil')).toBe(false);
+  });
+
+  it('ignores an empty zone', () => {
+    rememberChosenTimezone('  ');
+    rememberChosenTimezone(null);
+    expect(wasTimezoneChosenOnThisDevice('')).toBe(false);
   });
 });

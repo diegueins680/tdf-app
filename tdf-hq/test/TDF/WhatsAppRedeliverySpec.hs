@@ -22,6 +22,7 @@ import TDF.Server
   ( WhatsAppReceipt(..), claimWhatsAppAutoReply, receiveWhatsAppInbound
   , whatsAppCourseRegistrationAdmitted, whatsAppCourseRegistrationKey, whatsAppSentRequestNote )
 import qualified TDF.ModelsExtra as ME
+import TDF.CampaignAutomation (whatsAppRecipientConsentWithdrawn)
 import TDF.WhatsApp.History (IncomingWhatsAppRecord(..))
 
 -- Deliveries are given to the function the webhook calls after it has checked
@@ -67,6 +68,22 @@ spec = describe "whatsapp-redelivery-postgresql" $ do
           fresh <- deliver pool phone "m2" "stop"
           warFirst fresh `shouldBe` True
           consentOf pool phone `shouldReturn` [False]
+
+        it "treats a contact who sent STOP as withdrawn until they subscribe again" $ \pool -> do
+          phone <- newPhone
+          let withdrawn number = runSqlPool (whatsAppRecipientConsentWithdrawn number) pool
+              metaSender = T.drop 1 phone
+          -- No consent row: the contact withdrew nothing.
+          withdrawn phone `shouldReturn` False
+          subscribe pool phone
+          withdrawn phone `shouldReturn` False
+          _ <- deliver pool phone "m1" "STOP"
+          -- The webhook gives the sender without the plus sign; both spellings agree.
+          withdrawn phone `shouldReturn` True
+          withdrawn metaSender `shouldReturn` True
+          subscribe pool phone
+          withdrawn phone `shouldReturn` False
+          withdrawn "not a phone" `shouldReturn` False
 
         it "stores a redelivered message and its audit entry once" $ \pool -> do
           phone <- newPhone

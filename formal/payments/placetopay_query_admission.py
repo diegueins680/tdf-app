@@ -37,9 +37,9 @@ PINNED = '4.13.3'
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = {
     'tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs':
-        '58979fe9954101dc83c6ee6f24d61c424d0f5a16258b2eeb3a7e76fff71dcea9',
+        'a4e9cf99c043b8d75235efc2e14f27472083b2bbc6e315503e37b9c586199e0f',
     'tdf-hq/src/TDF/Commerce/ProviderAdapter.hs':
-        '16971d54ba7ab0eccd890a33511cf88b9884599e8b5274cb91ef291736a0a720',
+        'e6a563fa7b78d1386db2a378899752150086249dd112ecaad11fecbb4d9902c8',
 }
 N = 3  # transactions encoded per response
 

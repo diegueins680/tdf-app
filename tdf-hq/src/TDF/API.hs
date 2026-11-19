@@ -442,7 +442,11 @@ type McpAPI = ReqBody '[JSON] Value :> Post '[JSON] Value
 
 type SessionCookieHeaders = Headers '[Header "Set-Cookie" Text]
 
-type LoginAPI = ReqBody '[JSON] LoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
+-- The forwarded header and the peer give the client address of the
+-- per-address login limit (TDF.Auth.ClientAddress).
+type LoginAPI =
+  Header "X-Forwarded-For" Text :> RemoteHost
+    :> ReqBody '[JSON] LoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 type GoogleLoginAPI = ReqBody '[JSON] GoogleLoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 type AppleLoginAPI = ReqBody '[JSON] AppleLoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 

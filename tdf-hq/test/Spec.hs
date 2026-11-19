@@ -391,9 +391,10 @@ import TDF.ServerInstagramOAuth
       validateInstagramMediaUrl,
       validateInstagramRedirectUri,
       validateInstagramUsername )
+import TDF.Courses.Metadata (buildWhatsappCtaFor)
+import TDF.Services.LlmChat (extractApiErrorMessage, shouldRetryWithFallbackModel)
 import TDF.Server
     ( assetsServePathAllowed,
-      buildWhatsappCtaFor,
       loadCourseRegistrationReceiptCounts,
       toCourseRegistrationDTOWithReceiptCount,
       DriveApiResp (..),
@@ -441,9 +442,7 @@ import TDF.Server
       validateStoredGoogleCalendarAccessToken,
       validateStoredGoogleCalendarRefreshToken,
       expiredGoogleCalendarSyncRetryState,
-      extractApiErrorMessage,
-      chatKitSessionErrorMessage,
-      shouldRetryWithFallbackModel )
+      chatKitSessionErrorMessage )
 import TDF.Server.Reviews
     ( eligibilitySql
     , publicReviewTargetStatement
@@ -2448,9 +2447,11 @@ main = hspec $ do
                 cardRequest)
 
         it "routes domestic cards deterministically through the selected portfolio" $
+            -- ADR 0136: the PayPhone Button backs the card method, last in priority.
             providerOrder `shouldBe`
               [ CheckoutStore.ProviderDatafast
               , CheckoutStore.ProviderPlaceToPay
+              , CheckoutStore.ProviderPayPhone
               ]
 
         it "uses exact public labels for each executable provider-method pair" $ do
@@ -2884,6 +2885,7 @@ main = hspec $ do
               , ProviderAdapter.cpBuyerCountryCode = Just "593"
               , ProviderAdapter.cpIpAddress = "192.0.2.10"
               , ProviderAdapter.cpUserAgent = "TDF contract test"
+              , ProviderAdapter.cpTransfers = []
               }
             expected = ProviderAdapter.ExpectedPayment
               { ProviderAdapter.epReference = "TDF-payment-001"
@@ -2906,7 +2908,25 @@ main = hspec $ do
               (PayPhoneAdapter.payPhoneAdapter PayPhoneAdapter.PayPhoneConfig
                 { PayPhoneAdapter.payPhoneToken = "test-token"
                 , PayPhoneAdapter.payPhoneStoreId = "test-store"
+                , PayPhoneAdapter.payPhoneCodingPassword = Nothing
                 })
+            -- ADR 0136: the Button with split needs the store coding password.
+            payPhoneSplit = fromRight (error "valid PayPhone split fixture config")
+              (PayPhoneAdapter.payPhoneAdapter PayPhoneAdapter.PayPhoneConfig
+                { PayPhoneAdapter.payPhoneToken = "test-token"
+                , PayPhoneAdapter.payPhoneStoreId = "test-store"
+                , PayPhoneAdapter.payPhoneCodingPassword = Just "0123456789abcdef0123456789abcdef"
+                })
+            buttonPayment = createPayment
+              { ProviderAdapter.cpReference = "TDFC-0123456789abcdef0123456789a"
+              , ProviderAdapter.cpTransfers =
+                  [ ProviderAdapter.SplitTransfer
+                      { ProviderAdapter.stIdentifier = "1712345678"
+                      , ProviderAdapter.stByPhone = False
+                      , ProviderAdapter.stAmountMinor = 1827
+                      }
+                  ]
+              }
 
         it "uses exact minor-unit arithmetic and rejects unbalanced components" $ do
             ProviderAdapter.decimalToMinor (ProviderAdapter.minorToDecimal 12515)
@@ -3123,6 +3143,163 @@ main = hspec $ do
               (ProviderAdapter.adapterBuildCreate payPhone adapterContext createPayment)
               `shouldBe` True
 
+        it "encrypts PayPhone split recipients exactly as its PHP and JavaScript samples (ADR 0136)" $ do
+            -- AES-256-CBC, UTF-8 coding password as key, all-zero IV, PKCS#7,
+            -- Base64. Vectors computed with openssl enc and Python cryptography.
+            PayPhoneAdapter.encryptPayPhoneTransfers "0123456789abcdef0123456789abcdef"
+              [ ProviderAdapter.SplitTransfer "1712345678" False 1827 ]
+              `shouldBe` Right "mXeeunl/Uic5D0M8YU/UFREWUyoL6+84BAUvfxds3lANgFBqzZ/P+J0PDqpaRmaZLaCcx1DBQvRe6LGiFZslhg=="
+            PayPhoneAdapter.encryptPayPhoneTransfers "0123456789abcdef0123456789abcdef"
+              [ ProviderAdapter.SplitTransfer "+593991234567" True 6597 ]
+              `shouldBe` Right "jYytdFiZo7nmgStBuyupihgCaoPOQdYPk91X2Sb/gmo6nYN5dyu9WkNpqq5sLGV390TvePksOlhBq95DEo33Pg=="
+            PayPhoneAdapter.encryptPayPhoneTransfers "too-short"
+              [ ProviderAdapter.SplitTransfer "1712345678" False 1827 ]
+              `shouldSatisfy` isLeft
+            isLeft (PayPhoneAdapter.payPhoneAdapter PayPhoneAdapter.PayPhoneConfig
+              { PayPhoneAdapter.payPhoneToken = "test-token"
+              , PayPhoneAdapter.payPhoneStoreId = "test-store"
+              , PayPhoneAdapter.payPhoneCodingPassword = Just "not-thirty-two-bytes"
+              }) `shouldBe` True
+
+        it "prepares a PayPhone Button charge with its encrypted split and a hosted page (ADR 0136)" $ do
+            let request = fromRight (error "valid PayPhone Button fixture")
+                  (ProviderAdapter.adapterBuildCreate payPhoneSplit adapterContext buttonPayment)
+                encodedBody = maybe "" (BL.unpack . A.encode) (ProviderAdapter.arBody request)
+            ProviderAdapter.arUrl request
+              `shouldBe` "https://pay.payphonetodoesposible.com/api/button/Prepare"
+            ProviderAdapter.arRetryPolicy request `shouldBe` ProviderAdapter.QueryBeforeRetry
+            encodedBody `shouldContain` "\"amount\":12515"
+            encodedBody `shouldContain` "\"clientTransactionId\":\"TDFC-0123456789abcdef0123456789a\""
+            encodedBody `shouldContain` "\"transferTo\":\"mXeeunl/Uic5D0M8YU/UFREWUyoL6+84BAUvfxds3lANgFBqzZ/P+J0PDqpaRmaZLaCcx1DBQvRe6LGiFZslhg==\""
+            -- The recipient never travels in clear.
+            encodedBody `shouldNotContain` "1712345678"
+            -- Without a split the Button sends no transferTo.
+            let whole = fromRight (error "valid PayPhone Button without split")
+                  (ProviderAdapter.adapterBuildCreate payPhone adapterContext
+                    buttonPayment { ProviderAdapter.cpTransfers = [] })
+            maybe "" (BL.unpack . A.encode) (ProviderAdapter.arBody whole)
+              `shouldNotContain` "transferTo"
+            let prepared = A.object
+                  [ "paymentId" .= ("GSizecyUkIAkxTj3SQ" :: Text)
+                  , "payWithCard" .= ("https://pay.payphonetodoesposible.com/PayWithCard/abc" :: Text)
+                  , "payWithPayPhone" .= ("https://pay.payphonetodoesposible.com/PayWithPayPhone/abc" :: Text)
+                  ]
+                parsed = ProviderAdapter.adapterParseResponse payPhoneSplit
+                  ProviderAdapter.AdapterCreate locator prepared
+            -- The documented preparation ID is opaque text, never the transaction ID.
+            fmap ProviderAdapter.adapterResultExternalId parsed `shouldBe` Right "GSizecyUkIAkxTj3SQ"
+            fmap ProviderAdapter.adapterResultState parsed
+              `shouldBe` Right ProviderAdapter.AdapterRequiresCustomerAction
+            fmap ProviderAdapter.adapterResultRedirectUrl parsed
+              `shouldBe` Right (Just "https://pay.payphonetodoesposible.com/PayWithCard/abc")
+            fmap ProviderAdapter.adapterResultCertainty parsed
+              `shouldBe` Right ProviderCapabilities.ProviderAmbiguous
+            ProviderAdapter.adapterParseResponse payPhoneSplit ProviderAdapter.AdapterCreate locator
+              (A.object
+                [ "paymentId" .= (23178284 :: Int)
+                , "payWithCard" .= ("https://pay.example.com@evil.test/PayWithCard" :: Text)
+                ])
+              `shouldSatisfy` isLeft
+
+        it "refuses a PayPhone split it cannot carry safely (ADR 0136)" $ do
+            let build adapter payment = ProviderAdapter.safeRequestSummary
+                  <$> ProviderAdapter.adapterBuildCreate adapter adapterContext payment
+                transfer identifier byPhone amount = ProviderAdapter.SplitTransfer identifier byPhone amount
+            -- No coding password: the split cannot be encrypted.
+            build payPhone buttonPayment `shouldSatisfy` isLeft
+            -- API Sale has no split; the wallet refuses recipients.
+            build payPhoneSplit buttonPayment
+              { ProviderAdapter.cpPaymentMethod = ProviderCapabilities.MethodPayPhoneWallet
+              , ProviderAdapter.cpReference = "TDF-payment-001"
+              } `shouldSatisfy` isLeft
+            -- A Button charge needs a Button reference, and a wallet charge must not use one.
+            build payPhoneSplit buttonPayment { ProviderAdapter.cpReference = "TDF-payment-001" }
+              `shouldSatisfy` isLeft
+            -- Recipients never receive more than the charge, nothing, or an invalid identifier.
+            build payPhoneSplit buttonPayment
+              { ProviderAdapter.cpTransfers = [transfer "1712345678" False 12516] } `shouldSatisfy` isLeft
+            build payPhoneSplit buttonPayment
+              { ProviderAdapter.cpTransfers = [transfer "1712345678" False 0] } `shouldSatisfy` isLeft
+            build payPhoneSplit buttonPayment
+              { ProviderAdapter.cpTransfers = [transfer "17123" False 100] } `shouldSatisfy` isLeft
+            build payPhoneSplit buttonPayment
+              { ProviderAdapter.cpTransfers = [transfer "0991234567" True 100] } `shouldSatisfy` isLeft
+            build payPhoneSplit buttonPayment
+              { ProviderAdapter.cpTransfers = [transfer "+593991234567" True 100] } `shouldSatisfy` isRight
+            -- PlaceToPay has no split either.
+            build ptp buttonPayment { ProviderAdapter.cpReference = "TDF-payment-001" }
+              `shouldSatisfy` isLeft
+
+        it "finds a PayPhone Button charge by its reference and confirms it before applying it (ADR 0136)" $ do
+            let buttonLocator = locator
+                  { ProviderAdapter.plExternalId = "GSizecyUkIAkxTj3SQ"
+                  , ProviderAdapter.plExpected = expected
+                      { ProviderAdapter.epReference = "TDFC-0123456789abcdef0123456789a" }
+                  }
+                status transactionId statusCode amount = A.object
+                  [ "transactionId" .= (transactionId :: Int)
+                  , "clientTransactionId" .= ("TDFC-0123456789abcdef0123456789a" :: Text)
+                  , "amount" .= (amount :: Int)
+                  , "currency" .= ("USD" :: Text)
+                  , "statusCode" .= (statusCode :: Int)
+                  , "transactionStatus" .= ("Approved" :: Text)
+                  ]
+                followUp = ProviderAdapter.adapterQueryFollowUp payPhoneSplit adapterContext
+                summary = fmap (fmap (ProviderAdapter.safeRequestSummary . ProviderAdapter.followUpRequest))
+            -- The preparation ID is not a transaction: the status read uses the reference.
+            fmap ProviderAdapter.arUrl
+              (ProviderAdapter.adapterBuildQuery payPhoneSplit adapterContext buttonLocator)
+              `shouldBe` Right
+                "https://pay.payphonetodoesposible.com/api/Sale/client/TDFC-0123456789abcdef0123456789a"
+            -- An approved, matching answer is confirmed with its transaction ID first.
+            confirm <- case followUp buttonLocator (status 23178284 3 12515) of
+              Right (Just step) -> pure step
+              _ -> fail "Expected a PayPhone confirmation request for the approved status"
+            let request = ProviderAdapter.followUpRequest confirm
+            ProviderAdapter.arUrl request
+              `shouldBe` "https://pay.payphonetodoesposible.com/api/button/V2/Confirm"
+            ProviderAdapter.arBody request `shouldBe` Just (A.object
+              [ "id" .= (23178284 :: Int)
+              , "clientTxId" .= ("TDFC-0123456789abcdef0123456789a" :: Text) ])
+            -- A cancelled answer is final; a mismatched one is never confirmed.
+            summary (followUp buttonLocator (status 23178284 2 12515)) `shouldBe` Right Nothing
+            summary (followUp buttonLocator (status 23178284 3 100)) `shouldSatisfy` isLeft
+            -- API Sale answers are final as they are.
+            summary (followUp locator (status 23178284 3 12515)) `shouldBe` Right Nothing
+            -- The confirmation answer settles the Button binding by its preparation ID.
+            let settled transactionId code =
+                  ProviderAdapter.parseFollowUpResponse confirm (status transactionId code 12515)
+            fmap ProviderAdapter.adapterResultState (settled 23178284 3)
+              `shouldBe` Right ProviderAdapter.AdapterSucceeded
+            fmap ProviderAdapter.adapterResultExternalId (settled 23178284 3)
+              `shouldBe` Right "GSizecyUkIAkxTj3SQ"
+            fmap ProviderAdapter.adapterResultState (settled 23178284 2)
+              `shouldBe` Right ProviderAdapter.AdapterCancelled
+            -- Even with the same merchant reference, amount and currency, a different
+            -- transaction can neither settle this order nor release it for another charge.
+            forM_ [2, 3] $ \code ->
+              settled 23178285 code `shouldSatisfy` isLeft
+            ProviderAdapter.parseFollowUpResponse confirm (status 23178284 3 100)
+              `shouldSatisfy` isLeft
+            ProviderAdapter.adapterParseResponse payPhoneSplit ProviderAdapter.AdapterQuery
+              buttonLocator (status 23178284 3 12515) `shouldSatisfy` isLeft
+            -- A Button charge is never cancelled through API Sale.
+            (ProviderAdapter.safeRequestSummary
+              <$> ProviderAdapter.adapterBuildCancel payPhoneSplit adapterContext buttonLocator)
+              `shouldSatisfy` isLeft
+            -- API Sale references keep the API Sale status query.
+            fmap ProviderAdapter.arUrl (ProviderAdapter.adapterBuildQuery payPhoneSplit adapterContext locator)
+              `shouldSatisfy` either (const False) ("/api/Sale/client/" `Data.Text.isInfixOf`)
+
+        it "confirms a PayPhone Button charge every minute instead of backing off (ADR 0136)" $ do
+            let delay = ProviderExecutionStore.providerQueryRetryDelaySeconds
+            map (delay "TDFC-0123456789abcdef0123456789a") [1, 8, 24] `shouldBe` [60, 60, 60]
+            -- 24 attempts a minute apart outlast the ten-minute form plus the
+            -- five-minute confirmation window.
+            sum (map (delay "TDFC-0123456789abcdef0123456789a") [1 .. 24])
+              `shouldSatisfy` (>= 15 * 60)
+            map (delay "TDF-checkout-reference") [1, 2, 8, 24] `shouldBe` [30, 60, 3600, 3600]
+
         it "trusts PayPhone success only after an authenticated exact-binding query" $ do
             let response amount reference currency statusCode = A.object
                   [ "amount" .= (amount :: Int)
@@ -3260,8 +3437,32 @@ main = hspec $ do
                   }
                 placeToPayCapabilities = ProviderCapabilities.providerCapabilities
                   CheckoutStore.ProviderPlaceToPay
-            ProviderCapabilities.routePayments [activePayPhone]
-              (requestFor ProviderCapabilities.MethodCard) `shouldBe` []
+            -- ADR 0136: the PayPhone Button backs the card method; it still
+            -- routes only with verified evidence for every capability.
+            map ProviderCapabilities.routeProvider
+              (ProviderCapabilities.routePayments [activePayPhone]
+                (requestFor ProviderCapabilities.MethodCard))
+              `shouldBe` [CheckoutStore.ProviderPayPhone]
+            map ProviderCapabilities.routeProvider
+              (ProviderCapabilities.routePayments [activePayPhone]
+                (requestFor ProviderCapabilities.MethodCard)
+                  { ProviderCapabilities.prFlow = ProviderCapabilities.FlowMarketplace })
+              `shouldBe` [CheckoutStore.ProviderPayPhone]
+            ProviderCapabilities.routePayments
+              [activePayPhone { ProviderCapabilities.paVerifiedMethodCapabilities =
+                  [ (method, capability)
+                  | method <- [minBound .. maxBound]
+                  , capability <- [minBound .. maxBound]
+                  , capability /= ProviderCapabilities.CapabilitySplitSettlement
+                  ] }]
+              (ProviderCapabilities.requireCheckoutCompletion (requestFor ProviderCapabilities.MethodCard)
+                { ProviderCapabilities.prFlow = ProviderCapabilities.FlowMarketplace })
+              `shouldBe` []
+            map ProviderCapabilities.routeProvider
+              (ProviderCapabilities.routePayments [activePayPhone]
+                (ProviderCapabilities.requireCheckoutCompletion (requestFor ProviderCapabilities.MethodPayPhoneWallet)
+                  { ProviderCapabilities.prFlow = ProviderCapabilities.FlowMarketplace }))
+              `shouldBe` []
             map ProviderCapabilities.routeProvider
               (ProviderCapabilities.routePayments [activePayPhone]
                 (requestFor ProviderCapabilities.MethodPayPhoneWallet))
