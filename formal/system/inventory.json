@@ -88,9 +88,6 @@
       "e2e/web/video-campaigns.spec.mjs",
       "e2e/web/webtorrent-browser.spec.mjs"
     ],
-    "fly.toml": [
-      "fly.toml"
-    ],
     "functions": [
       "functions/.well-known/apple-app-site-association.js",
       "functions/.well-known/assetlinks.json.js",
@@ -115,6 +112,7 @@
       "ops/hetzner/cloud-init.yaml",
       "ops/hetzner/compose.production.yaml",
       "ops/hetzner/compose.restore.yaml",
+      "ops/hetzner/guarded-release.py",
       "ops/hetzner/inspect-runtime.py",
       "ops/hetzner/isolated-application-canary.py",
       "ops/hetzner/migrate-owned-urls.sql",
@@ -157,6 +155,7 @@
       "scripts/__tests__/content-storage-model.test.mjs",
       "scripts/__tests__/content-storage-reconciliation.test.mjs",
       "scripts/__tests__/continuous-improvement-loop.test.mjs",
+      "scripts/__tests__/delivery-matrix.test.mjs",
       "scripts/__tests__/dependency-security.test.mjs",
       "scripts/__tests__/diagnose-social.test.mjs",
       "scripts/__tests__/directory-event-search-http.mjs",
@@ -232,7 +231,6 @@
       "scripts/__tests__/operations-worker-tick-postgres.mjs",
       "scripts/__tests__/payment-query-report-contract.test.mjs",
       "scripts/__tests__/payment-readiness-helper.test.mjs",
-      "scripts/__tests__/payment-staging-inspection.test.mjs",
       "scripts/__tests__/persistent-uploads.test.mjs",
       "scripts/__tests__/persona-test-program.test.mjs",
       "scripts/__tests__/playwright-image.test.mjs",
@@ -308,6 +306,7 @@
       "scripts/continuous-improvement-loop.codex.json",
       "scripts/continuous-improvement-loop.example.json",
       "scripts/continuous-improvement-loop.mjs",
+      "scripts/delivery-matrix.mjs",
       "scripts/deploy-stripe-ticketing.sh",
       "scripts/diagnose-instagram.mjs",
       "scripts/diagnose-social.mjs",
@@ -322,13 +321,14 @@
       "scripts/generate-identity-party-reference-view.mjs",
       "scripts/generate-mobile-feature-registry.mjs",
       "scripts/generate-notification-navigation.mjs",
+      "scripts/generate-recovery-key.sh",
       "scripts/generate-sri-invoice.mjs",
       "scripts/get-admin-token.sh",
       "scripts/get-instagram-token.mjs",
+      "scripts/guarded-release.mjs",
       "scripts/identity-reconciliation.mjs",
       "scripts/inspect-compiled-api.mjs",
       "scripts/inspect-hetzner-production.mjs",
-      "scripts/inspect-payment-staging.mjs",
       "scripts/inspect-ticketing-event-access.mjs",
       "scripts/instagram-lifecycle-artifact.mjs",
       "scripts/instagram-openclaw-cdp.mjs",
@@ -350,6 +350,7 @@
       "scripts/lib/compiled-api-surface.mjs",
       "scripts/lib/continuous-improvement-loop-verify.mjs",
       "scripts/lib/continuous-improvement-loop.mjs",
+      "scripts/lib/delivery-matrix.mjs",
       "scripts/lib/discovery.mjs",
       "scripts/lib/disposable-postgres-url.mjs",
       "scripts/lib/flyctl-cli.mjs",
@@ -573,6 +574,7 @@
       "scripts/test-event-task-revisioned-read-migration.sh",
       "scripts/test-feature-migrations.sh",
       "scripts/test-google-account-name-verifier.py",
+      "scripts/test-guarded-release.py",
       "scripts/test-hetzner-backup.py",
       "scripts/test-hetzner-inspection.py",
       "scripts/test-hetzner-restore.py",
@@ -1128,6 +1130,8 @@
       "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx",
       "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
       "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
+      "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
+      "tdf-hq-ui/src/components/events/EventPublishControl.tsx",
       "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
@@ -1203,6 +1207,8 @@
       "tdf-hq-ui/src/features/fanclubs/LegacyClubReactions.tsx",
       "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx",
       "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
+      "tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx",
+      "tdf-hq-ui/src/features/fans/FirstFollowStarter.tsx",
       "tdf-hq-ui/src/features/fans/FollowedArtists.tsx",
       "tdf-hq-ui/src/features/fans/ProfileSectionCard.tsx",
       "tdf-hq-ui/src/features/fans/artistAudience.test.ts",
@@ -1237,6 +1243,8 @@
       "tdf-hq-ui/src/features/marketplace/OfferForm.tsx",
       "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx",
       "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+      "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+      "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
       "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
       "tdf-hq-ui/src/features/marketplace/agreements.ts",
       "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts",
@@ -2349,6 +2357,7 @@
       "tdf-hq/src/TDF/Artists/Promotion.hs",
       "tdf-hq/src/TDF/Auth.hs",
       "tdf-hq/src/TDF/Auth/AccountName.hs",
+      "tdf-hq/src/TDF/Auth/ClientAddress.hs",
       "tdf-hq/src/TDF/Auth/Throttle.hs",
       "tdf-hq/src/TDF/CMS/Models.hs",
       "tdf-hq/src/TDF/Calendar/Models.hs",
@@ -3194,13 +3203,13 @@
     {
       "id": "SURFACE-562c5d7f20f572bc",
       "path": ".github/workflows/check-messaging-token.yml",
-      "sha256": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
+      "sha256": "68ee6bacc89bb3d49176cd023a289b68c5fcaabf616fe599c645be7b34a20ddf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0ad43ac6597144d2",
       "path": ".github/workflows/check-mobile-distribution.yml",
-      "sha256": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
+      "sha256": "a02130cf5379c4a451ec8588b989a057a683dcf275fd3d6638b275aaec0ba599",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3212,7 +3221,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "75794018c70149c89c9322f7bd0acf64e9b79ef221db55c14c0b9ee643775139",
+      "sha256": "23ade27a31842e6552e0e12165d01dbca02c127cdd1b018efb4324a31103a7b6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3230,7 +3239,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "16d0f422186a4626e30b8f65f469c3a544aca859037f9a4df099e83c659b87f1",
+      "sha256": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3642,12 +3651,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-660f7078dc0b381a",
-      "path": "fly.toml",
-      "sha256": "3d64e80552e75e29e68d012d579456a353ff17b104afd3839b5d554c83f6318e",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-0d1b6286746163ff",
       "path": "functions/.well-known/apple-app-site-association.js",
       "sha256": "18c334dbf8c003b76d7feba177a21db99886a2d674d58732e823da6c8d67bbdc",
@@ -3774,6 +3777,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-05424790f9d7fc44",
+      "path": "ops/hetzner/guarded-release.py",
+      "sha256": "4551cec5f09215463ad98ea7a4dc3e3c47417b02fc5ccbd50fad63c20e15239b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
       "sha256": "96a65fcb9a8fcced995341e4ad639bfa8df7298d6a28b543fc1be1adf569f8b4",
@@ -3854,7 +3863,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "862ea41afa019dcf0edea194b2dfc0f75f3a593886e3603403bc9b2a22af4c92",
+      "sha256": "3b75451201352914e57227c19008fee7c8e8747ff00bf81ae3a43a7a3512fa6b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3890,7 +3899,7 @@
     {
       "id": "SURFACE-f6500b8addb3b248",
       "path": "scripts/__tests__/artist-enrichment.test.mjs",
-      "sha256": "493c2727d5e765a6b2c74b822a551d1f54032cb22129277cc4250359ae90f560",
+      "sha256": "045b26e1fbb6697cf16314850fd71df4896aa647f5b90036ddc8f908929c303f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3932,7 +3941,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "509bb7d39be464053315cfe1a6adf2cc16ba7b6a861a41e86f64f2fd4920cc5a",
+      "sha256": "5b17e4f43c6f4f997685d20dd3a7c8312b598632429ccc1e5dc176a5637d7c98",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3987,6 +3996,12 @@
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
       "sha256": "a9f665f14a487ec4b4bf8a0bafb11999250e0d0d816a72cc5426bab57b4082f7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-16a9cdb8e79980cc",
+      "path": "scripts/__tests__/delivery-matrix.test.mjs",
+      "sha256": "37dfd759fd9d46dac0b539dc88e9b8d8d64a6c2f777b7034d1f60c541fc2aac9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4208,7 +4223,7 @@
     {
       "id": "SURFACE-30ba86b00dd5f4d7",
       "path": "scripts/__tests__/hetzner-inspection.test.mjs",
-      "sha256": "53e255cde8b47686eaeaa0122f9348b6df387b5b6ccf4be7059c655c466309c4",
+      "sha256": "3b5d14abc6ed94e31c39154a16d43669adc6471088fb81525febabde158be593",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4244,7 +4259,7 @@
     {
       "id": "SURFACE-ac7679c947f7408b",
       "path": "scripts/__tests__/instagram-token-workflows.test.mjs",
-      "sha256": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
+      "sha256": "60c2b30195a7b5a1d89b8d26ced251a0152afecdb41806d7eff35aaa629c0b9b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4440,12 +4455,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-2f21c1c45f5b1cca",
-      "path": "scripts/__tests__/payment-staging-inspection.test.mjs",
-      "sha256": "acb99cc43fbbdca8d24d3d52b7972b0100c5aa1392959ff5c5b91927677db317",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-9f80dbca9b5074c0",
       "path": "scripts/__tests__/persistent-uploads.test.mjs",
       "sha256": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
@@ -4478,13 +4487,13 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "05a092b3e5184f54ed8ccc2e94c383ff03057a3e6baa2d9c5d01192562a0517b",
+      "sha256": "a3f9e6057844ca35e81874ea9836969c641641ab6a54c40839c0b72087853ec2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1615c0a50aabc162",
       "path": "scripts/__tests__/provider-rollback.test.mjs",
-      "sha256": "f1dc29ea2b20a71b88a3ae50552c130a0802c6d8ae00e90075af2bd4d2291910",
+      "sha256": "bb6614e2b8bf986d87f3db00b88da105e2ec0beee4c7dffc6bf508ec334361c9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4520,7 +4529,7 @@
     {
       "id": "SURFACE-2814c9b72c5f2d05",
       "path": "scripts/__tests__/studio-internship-audit.test.mjs",
-      "sha256": "630716fa1e50aa604476b1159a3ac8daed37b79c7dc9ebd557a6af25f2a33a57",
+      "sha256": "17d13b1f02ee443aa724c4378e184f588782fe704c7e330901291a8a2adf1311",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4592,7 +4601,7 @@
     {
       "id": "SURFACE-ba099638d09bac1d",
       "path": "scripts/__tests__/verification-evidence.test.mjs",
-      "sha256": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
+      "sha256": "d844c7be68115d503729dc5fc97f7d86766d53d52f641e21f7eeb5c9b1fbe14b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4670,7 +4679,7 @@
     {
       "id": "SURFACE-ae1fc3f773e478bd",
       "path": "scripts/artist-enrichment.mjs",
-      "sha256": "9c28bed3f0868cc7669a8a20de22e0336547186081ed98a9ddeb1150ab792d06",
+      "sha256": "7cae285c8ffd2373048ab4d3e4ea2838046b7c62571e795163de86f22516809e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4784,7 +4793,7 @@
     {
       "id": "SURFACE-ccd62b2a303eba94",
       "path": "scripts/check-messaging-token.mjs",
-      "sha256": "f2505fab497e7f96880d22952a6863595548f6e1f6b08725cc5243708f2cec75",
+      "sha256": "feb51d713046b1c1e65df434d1c73c4820bc3a71c90ca4bbfc83bb203e0fafc8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4838,7 +4847,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "2b3f252c0a76468b8edb5e7a2792f8332da13496899976a930db6fa4dad680a6",
+      "sha256": "47b7dd05d77ffc41c579262355871bd3d7c429f6315cb4df6a090cbb2078ea51",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4893,6 +4902,12 @@
       "id": "SURFACE-655b9679c92bd422",
       "path": "scripts/continuous-improvement-loop.mjs",
       "sha256": "f2618194f28d356e0d5d9c856bf92397f7b69b7b6e2bbde1a2745ea58cbc79c6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5a0c7f10ee9b584c",
+      "path": "scripts/delivery-matrix.mjs",
+      "sha256": "b69aeaee6ffcfc23ea4a86a5060a6c170cbc2a60d80f4df77a9a744819536cf2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4980,6 +4995,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-e0c190071be51379",
+      "path": "scripts/generate-recovery-key.sh",
+      "sha256": "74a581a9bce5b64e0eb2e26bfe432e766256ec41aec4693f96183658bd1e2595",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-298863fcec57d5aa",
       "path": "scripts/generate-sri-invoice.mjs",
       "sha256": "a60cf9d9c304055fe8b907ab6cf2e93dd1b0c64f96f714cccb4b7ec20114386c",
@@ -4998,9 +5019,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-bce169431baa7297",
+      "path": "scripts/guarded-release.mjs",
+      "sha256": "636c8c39c80a6919efd7b5830682c6a4e0691ade8c8c34ff886a39e74cd384e8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-61ce5bdd849d0317",
       "path": "scripts/identity-reconciliation.mjs",
-      "sha256": "de08f261b6ac2cc4e96b288e6c43276a1ad1f8ca08ff77454ae8cfbf2100d155",
+      "sha256": "7d4c598975768955f9b392c6b21679fab99a8eef1d288211461e401ec2b6d89e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5013,12 +5040,6 @@
       "id": "SURFACE-f9faf7061e36724c",
       "path": "scripts/inspect-hetzner-production.mjs",
       "sha256": "aae57b63c56cacfba8c47c4603b2f99301c6325ffcff1594da560660239fcae4",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-09f409fc2f5fdd87",
-      "path": "scripts/inspect-payment-staging.mjs",
-      "sha256": "a141c1c20e8c9c0d149c91a6cffec7690fd13388ec5f00a0ecfe0ecc26855317",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5126,7 +5147,7 @@
     {
       "id": "SURFACE-e51d4870cffa2db7",
       "path": "scripts/lib/auth_throttle_http.py",
-      "sha256": "871129c684a31eeecce2e75cb82e7d26c69f08ef8b0b4be201591b784ef71fbe",
+      "sha256": "c30b34ba0e5057b013ffd601421ed462c61a71e61e51e25f233e130d3c915989",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5145,6 +5166,12 @@
       "id": "SURFACE-596444d6be3be153",
       "path": "scripts/lib/continuous-improvement-loop.mjs",
       "sha256": "658148df4d0bf1c8df6e19da2d1266673158ba934f2191186b3b57b5e2e36fae",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ee31b4ec099109f8",
+      "path": "scripts/lib/delivery-matrix.mjs",
+      "sha256": "0052f89b9b64323d3d7fa9fc14d9837087edbbbe602c479dfabc7125147ad8de",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5318,7 +5345,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "abd17a16599ae5a93f137da7845696f1578e20f73c78f97e432f47992e29806d",
+      "sha256": "32bea4fc79e9c4df0b01926dc4b29101c60514e7d69e39efc398be64599d8372",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5348,7 +5375,7 @@
     {
       "id": "SURFACE-4a885036f5208454",
       "path": "scripts/lib/studio-audit-safety.mjs",
-      "sha256": "bc8b2be2d1ba687743be7400b4b4f225f24e5b8fc962471b6a7a4d3072ed3ab7",
+      "sha256": "4cec971d00a5ec16524dd94c490289ffc33d69d9cae32ba9db0910275f3e80d8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5378,7 +5405,7 @@
     {
       "id": "SURFACE-51ff2aecc0e6e208",
       "path": "scripts/lib/verification-evidence.mjs",
-      "sha256": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
+      "sha256": "c68d746491dff899357e144f373a8f49225cb0aef1198538cf1d2fa120acf35c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5480,7 +5507,7 @@
     {
       "id": "SURFACE-1ef043656b0c0dd7",
       "path": "scripts/prepare-portable-restore.mjs",
-      "sha256": "e0e7cfad0b09971d8b9a92a5018ea4d8d0a82d010a190f084d086e8f7f0c3db3",
+      "sha256": "1252da31e0a681646345b8fc9fa2dad124ead25a7371d67ece335ca5e63ae60d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5528,7 +5555,7 @@
     {
       "id": "SURFACE-566be2960a2d6029",
       "path": "scripts/production-release.mjs",
-      "sha256": "3138485773e2944338cdd27d89747955451c8146eba50f252aa1a57e42434771",
+      "sha256": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5558,7 +5585,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "0ce489265374520c8891534780643135f53b38d92fb6cd400f7007b7745bac7b",
+      "sha256": "0af61bd6fd80e7c38365c2ed7de377bbc97f9b1f4a715788553c030d36522d61",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6038,7 +6065,7 @@
     {
       "id": "SURFACE-d18ca1829df72762",
       "path": "scripts/specification-inventory.py",
-      "sha256": "89b5afa51ac9efb2dd5a504b763bd0eddfc8503b592b9d929af7125126c2eb9b",
+      "sha256": "0ce276017ebb1e0ab2a01ed08fb36dae0ad8173c935edef5819d5690eec74b7f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6483,6 +6510,12 @@
       "id": "SURFACE-25d21d29a24eded2",
       "path": "scripts/test-google-account-name-verifier.py",
       "sha256": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b3d437c938c87672",
+      "path": "scripts/test-guarded-release.py",
+      "sha256": "072a3aea42d088aac1cb00825bf34c7f3d08ff9fff21c630017f2ee5c9977a74",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7892,7 +7925,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "502e4dda174a92d73630a760132a485cebaa58bfca7fcf2345f9283e98430aff",
+      "sha256": "076cb7a81ebfaec803ff40d3d9c4ebd48c8ecdd184a383ac4b80977500126b17",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9758,13 +9791,25 @@
     {
       "id": "SURFACE-2cea66b752634961",
       "path": "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
-      "sha256": "6cac0e3a90c8572ad919f9ff4723d183b802036cc85195c8171884e9c168f092",
+      "sha256": "1baf06b6a7702932cc355f3099b5ede216c64114be3aaeb5879e661b4a4bdc52",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-e16e275f767e9623",
       "path": "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
-      "sha256": "25e4ccd886c5ac0ac86922dbed23f16d4e705462f6317befe0c59b903865a278",
+      "sha256": "fef66abf570226402f8218edf289b554137342cbe4b2e810a81d3a707f426da0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fe18db8ab1db5749",
+      "path": "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
+      "sha256": "deadea2e72df3939783f6a29c075d3038537e39e1065bea3ea7898f54ceb9fc6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dcda7eb130c8a2d6",
+      "path": "tdf-hq-ui/src/components/events/EventPublishControl.tsx",
+      "sha256": "9f009c12badf37e22f1261a2e35c7437f5b3e22b2a8df6988236b6a0aa95b718",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9830,13 +9875,13 @@
     {
       "id": "SURFACE-c608b83dcf4b5559",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-      "sha256": "900f0988f08e13f94f6cca72e70b3f8c245f755d64a13bd8ab50cd8fc11e650f",
+      "sha256": "5d571852f5782f1e0c4f08acef40b83363bc31ad34209e3047bf24502457b188",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2393bd3c8b025098",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-      "sha256": "49003b106d8c25a66e4378611e2a9427d18d81128195ff3a56f3f3f4685ff187",
+      "sha256": "bdcfb14c801239f68d83f361f71277a888fdeccb0d8ea021bb330635744befb2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10070,13 +10115,13 @@
     {
       "id": "SURFACE-9efb18a7c5a4508f",
       "path": "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts",
-      "sha256": "e71866ff798e2187e308fc2e70d1c5756065d5991a017319f4aa917e75420634",
+      "sha256": "40724d6817e05d242a914760487fd7494cef3847d35229a0b78ab1d16f02615d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0ffaefaddac14c70",
       "path": "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx",
-      "sha256": "a72cf8aa239817c1ae62038f6d35aa54093fdf6b745d5388a03667296f2a426e",
+      "sha256": "1dc11b1cece10e40c193f15225f92e5b02a5b880c6e7b24239cdb574a64ca06b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10215,6 +10260,18 @@
       "id": "SURFACE-31c68c4911bce31c",
       "path": "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
       "sha256": "9d09b7acdcb9bd3c0d83e5115bd01eac89b32b0f2d133e884c0797f4a5ca9b5d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-46dc5a1b952c5ccc",
+      "path": "tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx",
+      "sha256": "4a9db8ea6c7155008b4aafc9094d80d05fb3e8314df91402a78c44edda048d55",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d4b80b5196ba914e",
+      "path": "tdf-hq-ui/src/features/fans/FirstFollowStarter.tsx",
+      "sha256": "947bea9efc951f911eeaa7ae9f41698ace9a150541c5a18f813637fdb34b2f34",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10370,7 +10427,7 @@
     {
       "id": "SURFACE-0ba61d7e94897ebf",
       "path": "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
-      "sha256": "6eb367f0c4978e2a7f4a6de724ea863134bdb5124f240821d1c9173ed47bf505",
+      "sha256": "595ba70e087e67e62938c7bec80edae64f0dd727099d32eb7fad6b31890f5ab4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10419,6 +10476,18 @@
       "id": "SURFACE-c50428b63aa94e4d",
       "path": "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
       "sha256": "c79a98df646ecf1c975ac23972fc06af6c7f8b9dfe8dbe9540211d6ca1d55fed",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d689c68a5b5cfbbc",
+      "path": "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
+      "sha256": "88fee49d0de0da73ef830a06ca738bddeb8b94bfabaf317b45f7156c7c483acf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-22fab616d1cda1f8",
+      "path": "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
+      "sha256": "e2ff53cad0f855d869ca9b3278ba0b5c3e8530ba7cefd4809fd6056beba39fa5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10754,13 +10823,13 @@
     {
       "id": "SURFACE-98d71404b05bdcb7",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
-      "sha256": "5a7cce5525e8388e7628c8f01a049d77abe51a6c780776e58facb4450f24c6c3",
+      "sha256": "174c6bef13379941b6f2fde43eab6686acbb3c916c5f2fadd9b6ebb4a44b3178",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f132c3ba830ae795",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
-      "sha256": "f25b169e9dcdf7ede7c3c6017078998a092c87c9b10147e7c4864fbe74dd0440",
+      "sha256": "73a958d76e024bea3545b2c33d7764fe9b3d69843898f56058d147d8e83c2d93",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10808,7 +10877,7 @@
     {
       "id": "SURFACE-faf0ef2a53a46622",
       "path": "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
-      "sha256": "a7844e2cb801a09d98e3764f370f044cbebeda40d1157b324d87934f3f096ae4",
+      "sha256": "c81a5cffc51ead4b65c1a35f1303908b71a160d3ff6075327d41aa08b35752f2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11072,13 +11141,13 @@
     {
       "id": "SURFACE-78d796fee86d9367",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
-      "sha256": "bc59b3b38e14b62b9d7b67cc7df546d20082fd124979382aa708a68ac0101ad6",
+      "sha256": "ea663a2df7cad94f90988660d40dc5258bc0b4f6736805078956c7d39a1a28fb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "2e737d7512df6b298d5cc168d8ce3a8feff9faf34a489b9ad5fb92a9a7813e2a",
+      "sha256": "07aa5b0a0e31ac7cae1a0190060cd9cea6e1b25d37923fe99ce53853b806c66c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11360,7 +11429,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "c2f7ae9b67ddc89615065345a7a3f5fb6c62e4ad45e982a057f1c8c62eecd519",
+      "sha256": "cd9eb15dbfda661f7672a549e21bd5ca61850b894d13ede798616930bb954b28",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11912,7 +11981,7 @@
     {
       "id": "SURFACE-6b97ed3a68e676f6",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-      "sha256": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
+      "sha256": "e364ac13f4e7f9cf0148ebd20085c9a070c7eb9aab222994a63f0b15031846c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12110,13 +12179,13 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "7d37937d5e270b5a5184a853b339efe80a3e43837dc83a7fb9b9a6be69ec4031",
+      "sha256": "3669d6b87ba74e18540e685bbe282821e815e3c3800faf65c6a5931665aadfa5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "7da709ab59e91a3748f6b2786c6b2cd1d76a27ea9f215224d446050eb19df507",
+      "sha256": "5eef53e77303278042cd3df3781bf374086f0ebe39e340f70e4289aec68e9297",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12344,13 +12413,13 @@
     {
       "id": "SURFACE-9d3cb0d1235509f1",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
-      "sha256": "5e24b374e0c7fc4ed86f818d0f815b9c300311e211e01fbcdb48b317ff7acbc4",
+      "sha256": "aab1e9d9166e505604242c195235695eae9720b08f4e311220368f52bf283940",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7ec18247afed2819",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-      "sha256": "46076098f1c935f7ae5cb6bdf946027fd23cc941c826643debf6e8fe387c21fb",
+      "sha256": "1b7577906f1f3739f2ae756237f62cca45ae34174039e3dcb94f9d0384644324",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12788,7 +12857,7 @@
     {
       "id": "SURFACE-a14b7188c2af7d0c",
       "path": "tdf-hq-ui/src/utils/accessControl.test.ts",
-      "sha256": "633c8a7d0f6e20eb90fdd06a18eb198731096e5b2bcbc040d78bb452311e463c",
+      "sha256": "be57cad0e4e85b33a1204d7ec6c49200bdac8bbac3f6cd6ebcc305254dbf92e2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12812,13 +12881,13 @@
     {
       "id": "SURFACE-a4ae75705e817d87",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
-      "sha256": "3d73b8ce3626b8466daf28a2bf37dfadb2e37b547f3d9587b7cbb6cba1b4d115",
+      "sha256": "790d21daa491d64c77e09a77a6a3e194c6695aa3c422e60cb37abbfe9dfa9360",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-46e2a7583543c04e",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.ts",
-      "sha256": "ccbc0da7f4944f842ef115a7c3257fced61fc3e8ec08e8de510ab061de39fa7e",
+      "sha256": "614af6cecdaa948bada5c998e0ca1e18bf54410a6561136842d0b43c5af82c4b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13412,7 +13481,7 @@
     {
       "id": "SURFACE-1db49bff24529d0b",
       "path": "tdf-hq-ui/src/utils/signupFields.ts",
-      "sha256": "802cf6e1249668d29769e82560aedd167821646da839f825b8159dcb6809ed8c",
+      "sha256": "af56138c4a10328afa7b1290aa5353a04fd8ed1864fb683bea7afaca31560089",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13568,7 +13637,7 @@
     {
       "id": "SURFACE-349b3c6baf0c525b",
       "path": "tdf-hq/Dockerfile",
-      "sha256": "05ff5c843da66ae0781656c36dad94b7a973a72fdb372ebfad2e75d13efd0e1f",
+      "sha256": "505fa666dbdcc1247d871369bc84557d79dc0fca947897d6ab7f3d4aa807af5e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16748,7 +16817,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "14f98ec436c46f5eed2df814ca140ea1125b93a7ac3bcc4ff6f160861a2233ec",
+      "sha256": "5fff27851b528e15bc225b2cbf15a5df9804e87d6419d92c0eb9a87fc2695b20",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17082,9 +17151,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-81704df539b2da06",
+      "path": "tdf-hq/src/TDF/Auth/ClientAddress.hs",
+      "sha256": "9520084fa6710848f47c40efbf35133af4d889720d9b7806bf5136adf60e904c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-fcdcb342b1a07142",
       "path": "tdf-hq/src/TDF/Auth/Throttle.hs",
-      "sha256": "462dd51867cf0f6634fc2450e7723e297721dbc4544775aa9d2fcbcf12eb0533",
+      "sha256": "32444975e77373416fec2c1c379e5975713cc0857123d82930752bca5b0ef43f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17108,7 +17183,7 @@
     {
       "id": "SURFACE-83024dbf8c244b83",
       "path": "tdf-hq/src/TDF/CampaignAutomation.hs",
-      "sha256": "f6419624116a99987e6e68fb59c39f56073ec1a0392fa9fbb66e4a776a634c8b",
+      "sha256": "2cb7ce3d8732aba8f17708deee5f15bf0b41f5376e95dac0962a8564fce6c9d8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17270,7 +17345,7 @@
     {
       "id": "SURFACE-1f329e23e5aba24d",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
-      "sha256": "16971d54ba7ab0eccd890a33511cf88b9884599e8b5274cb91ef291736a0a720",
+      "sha256": "e6a563fa7b78d1386db2a378899752150086249dd112ecaad11fecbb4d9902c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17288,19 +17363,19 @@
     {
       "id": "SURFACE-9038b2dbdf428e2c",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
-      "sha256": "901c237849c3a4b102ea5e0bdc16c029bfce1096fec5ccb40d0e8e3aa9d2f5cf",
+      "sha256": "348dde3af9dbc28c982df9db1669b830291970d4b346577f098b4bd651261b3b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f3e27f9ed209afef",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
-      "sha256": "58979fe9954101dc83c6ee6f24d61c424d0f5a16258b2eeb3a7e76fff71dcea9",
+      "sha256": "a4e9cf99c043b8d75235efc2e14f27472083b2bbc6e315503e37b9c586199e0f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-163048cc75f29b92",
       "path": "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
-      "sha256": "f0bcce416a0df53c74183d21292504c356c3374a40bfb00d484164fb16584744",
+      "sha256": "0845b9639d054fbb4e43af1a86abf9b9b1587306e8f2ee0200ad529d2fd17fd3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17324,19 +17399,19 @@
     {
       "id": "SURFACE-1d441708a9c7e070",
       "path": "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-      "sha256": "8aa336a90bef5184592fb3d468b69bfa67e92875f05748044d2943bb632c3ac7",
+      "sha256": "983df8a6ae7a9054a8caa8626c55f0a6b6b1d7d2099330ded3efc6d48f6dc8e8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-24ec334e6417bf04",
       "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-      "sha256": "7bc73d48a3903741855811eff1c285b88ed6241c309a4c75756d1c5817807426",
+      "sha256": "e683710d467e99bef533498a64d1220fbd18286fa91f9580f68dfa6eb46c4043",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b3ab13afc655164b",
       "path": "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs",
-      "sha256": "f872cf68ae160595bdd18782cc55c93d351492b659e2aa60fee93640b208f61e",
+      "sha256": "3a583134de0b5428438b46725fc42b670b4b5147adc6cacc969c62ed4c1fd917",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17432,7 +17507,7 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "74692f8cd6294d02c8b5b121e3fc0a2089fabbcde9cbdef781e17d090071192d",
+      "sha256": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17888,7 +17963,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "d760b7f6be41ff776a10576616051cba593327a77bc2ebd153d3f6a7ef3839af",
+      "sha256": "e6ff7cfdf1c79b7af0dd8d09ead32ac2b469272ee270f1589aaa97667c963062",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17918,7 +17993,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "ea7b71a9b509d0495035e527f7a5ede89a413de035d47ce07070b58ec3300d5d",
+      "sha256": "a1c9f48cdd53e5a387a2ee3625b73370edc7743352be79debcec3c79bb7a7cc4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18002,7 +18077,7 @@
     {
       "id": "SURFACE-576775b1139a1557",
       "path": "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
-      "sha256": "f0e50cb9103b6da489980440202a50e7c4431bc19f0fdce666be6f738bb763ef",
+      "sha256": "96ec36b859349cf4c9edbd090f5d4a1ab9cc6d8b77a97d77bf92efd8aff2a671",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18014,7 +18089,7 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "d50b351b163c882e69ff5bd23b8fcae5843ca70fd4959bd8f702768f090df8c2",
+      "sha256": "d5129a96d1450d4c428ff8d6886abb1311116c24c43f40b8ae3e01327dfd3116",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18092,13 +18167,13 @@
     {
       "id": "SURFACE-b79d63603a30c4ce",
       "path": "tdf-hq/src/TDF/ServerAdmin.hs",
-      "sha256": "430a48624f32ee0f0350dc368fd6b49a55b377a4c5624f06c2f74b849fef7712",
+      "sha256": "7ac0b9e10bceeb3d90db939fb6ba851398cf52790e36fe5566624e54934857a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
+      "sha256": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18416,7 +18491,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b67cda5d8695e231e113b25e5bab8cab96ba65f71cc39ec7da098630d8f653f8",
+      "sha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18494,7 +18569,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "16d5ee619523893449b1f199beb354f075ccee05eb1fea0c374f8849d27d02df",
+      "sha256": "b13833107a3981a2d559af8d9a768ab8bb8c1e8a9c13026279c62feef1aff4db",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18608,13 +18683,13 @@
     {
       "id": "SURFACE-5d36ee6901338dab",
       "path": "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
-      "sha256": "407fabc72a9c195886fefdfb6b3d20f0b709a6dd18e69487f7ae5f06c33a5501",
+      "sha256": "5b0a405f5a8e81e439655b8aac0384c828258113c625cfa1f1d4acb0376a3cde",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "47d38612aa0a48167ea6dfc83ce3c67a44339a3541632b6c32fb952b4e0d1691",
+      "sha256": "1d44b71cfda45994856a9657043c1da774f32399a7dcec5bc0b54e7d9b47afff",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18956,7 +19031,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "418fb28efc492393a668a1cdd7811cf4f9b7ddb2625d278408a5ff66d70062ba",
+      "sha256": "0c8208720533a0ed4f5e1daef883b778bc9333ff5752c39807a065222af8c274",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19070,7 +19145,7 @@
     {
       "id": "SURFACE-da468ce284927c10",
       "path": "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
-      "sha256": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
+      "sha256": "793ceed7d044f4ae86b61fd5bcbdf200fc833977d1408d6461f5536ac3c500fd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21974,7 +22049,7 @@
     },
     {
       "path": "DEPLOYMENT_GUIDE.md",
-      "sha256": "cb020fe6d2f5516a2655289c6e54ca631e3b4abb52d79e5fc7d806052e9c7817",
+      "sha256": "56a959b5ff095100964f4952bb7969c89f30f93d3a60d33c54cb0eb068a74c0a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22176,13 +22251,6 @@
       "kind": "requirement-candidate"
     },
     {
-      "path": "VERIFICATION.md",
-      "sha256": "03dd8aa2436dd0d1399a14a963bb1b701d62d13cb2f5acd7cd4575fe764849f2",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
       "path": "docs/BAR_OPS_UI.md",
       "sha256": "372316fc0782eaeabd46c0772332cdd347abefd5a59b4ee73f6c05aac96404cd",
       "authority": "inferred",
@@ -22191,7 +22259,7 @@
     },
     {
       "path": "docs/CHANGELOG.md",
-      "sha256": "5d47d013cfb27413bc4a55c95149f97ac66e24f6f845f103f6f8ff1731de4721",
+      "sha256": "f283dd5de981f58133770b98320b7f120a2453ff6eb40c6e4fe81f51250b6201",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22219,7 +22287,7 @@
     },
     {
       "path": "docs/INSTAGRAM_TOKEN_SETUP.md",
-      "sha256": "96df0fdb94aece332d69b649bc587d58ddbeece255bd13b7f0d22186d162b54c",
+      "sha256": "250fa39b32c2c8cc24569410ae85bb19f522e27bde4631435362b23d30d73de3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22548,7 +22616,7 @@
     },
     {
       "path": "docs/adr/0136-marketplace-agreement-payments.md",
-      "sha256": "2d569df4885e986d1b97d373cbc0fb3c0bf48b6505c8e237594f33a54284ee85",
+      "sha256": "a191654fa51153c1a429aa1c24d87f07082c374dd3fe2886104093637aa918e3",
       "authority": "inferred",
       "authorityBasis": "Estado: propuesto; diseño aprobado por el dueño del producto el 2026-11-12, implementación en curso.",
       "kind": "requirement-candidate"
@@ -23717,7 +23785,7 @@
     },
     {
       "path": "docs/identity/reconciliation.md",
-      "sha256": "9461aa35047f4b863dc4e24ffd5fe470fb114245c6b8efeaa0e475519076d881",
+      "sha256": "56b0e00a2ce3e5291789efd5c3478cf09eb44b4fb28e7c8714761175e65cd5dc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23780,7 +23848,7 @@
     },
     {
       "path": "docs/internships/studio-audit/DEPLOYMENT.md",
-      "sha256": "ae970898e50c4979b124b4923d6174cb1a4a407ffcf0951ba70fba0f6250113b",
+      "sha256": "a18de4ba6b784555df13540bab7040df2562ceac222dd5224df5e52474cfdcfd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23997,7 +24065,7 @@
     },
     {
       "path": "docs/marketplace/01-plan-por-fases.md",
-      "sha256": "bb20b865bdb1155114eff59c027b5a8d78ffa4daeafbf2de3febc827e34cf25e",
+      "sha256": "faedd8a6e846cd398207cb87422ae6cb033ae27e2a4438279ca7737a0ed55b77",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24025,7 +24093,7 @@
     },
     {
       "path": "docs/marketplace/manual-gates.md",
-      "sha256": "88d0692633a914b7017a4e9bf91e0b670e5b5fed0934573559a8a9c74e2ee756",
+      "sha256": "f0c70150c7e005806675054c6ba2b208b5dff12bbaa01a33811ddb1ff3e2b149",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24074,7 +24142,7 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "0c09a70585ce00a86a0ce86804141d44ef6d160429079d0cee439efd0317eaae",
+      "sha256": "decd831e8497ef5dad0bf81802a7707b1592d58b9fcfe8bc1483b6366bcf5bf7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24732,7 +24800,7 @@
     },
     {
       "path": "docs/payments/operator-runbooks.md",
-      "sha256": "6463e16da525ad0fe3902be8f8dc02e5e6b6b519f7f07c83baa9f753a0348b5d",
+      "sha256": "93bb6d80efda7caa0e068d6a77757b6975c41e711475d75811027a774c339430",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24978,6 +25046,13 @@
     {
       "path": "docs/records-ingestion/youtube-provider.md",
       "sha256": "58f7f33b656c8c5b042bd2be4a46380ce95bf6ca28cc1f38098ffee07486a17b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/release/delivery-evidence-matrix.md",
+      "sha256": "6044ad469758e8e6459c413acd7d3fe290920af123a3ed29d388e88d133b2015",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25642,7 +25717,7 @@
     },
     {
       "path": "formal/auth/README.md",
-      "sha256": "e0b37777b755bc7cf461b6c8c5598be9575e9cacc4677866d3a19c533492bddb",
+      "sha256": "7580c88db17a714b530d4ba70f264cb984da2776778bd6004ada846dc0c9c179",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30500,7 +30575,7 @@
     },
     {
       "path": "formal/system/audit-2026-10-31-phase1.md",
-      "sha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "authority": "inferred",
       "authorityBasis": "Estado: 28 obligaciones de modelo en `verify:inductive-proofs` (cuatro modelos, todos con prueba inductiva y control negativo).",
       "kind": "requirement-candidate"
@@ -30891,6 +30966,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/guarded-release.md",
+      "sha256": "fda6464005909d04710696ca44e14801956ac6d3d2f4c8534825c638ba8b68da",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/history-2026-09-20.md",
       "sha256": "90cac67147210c90fbb604934c5f6a998d936396d70fec554c235187554d4d53",
       "authority": "historical",
@@ -30942,6 +31024,13 @@
     {
       "path": "formal/system/internships-routes.md",
       "sha256": "ac4337ce6156ae772e99fb182ee6054a18625f223d2b8380e74fc4cb6a00fdda",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/invited-first-action.md",
+      "sha256": "01c5135ad37637c91fc23fc52a3795a294c211f5ba7d16ff048a32aa171768e5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31515,7 +31604,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "788c419bed3fb9625f14ea43931e2a71fb63b03813729e102e00394ad9e9b962",
+      "sha256": "a39c45910255b6c7e2b6fa46e20860c147cad81e6fecea0f6ac816f97a859c2e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -31557,14 +31646,14 @@
     },
     {
       "path": "formal/system/social-messaging-routes.md",
-      "sha256": "019aa7af6d2bf2d89fb6bf9cff16850af98cea8558afd148a19c1f6242f192e3",
+      "sha256": "c0d688d2ebc31b062fd790c4f3d7480f5954641bbf81cc4f583262274218e0b2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/startup-gates.md",
-      "sha256": "326b5b7a555c0e571bc0b1387daaa134450e2bc7a70ed2493fdf2d163e10dba2",
+      "sha256": "c6102f5b90542b4e2425b212217e91cd05cb530df756a0a97203a445b1da00b2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31711,7 +31800,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "774ab7e42fae8947ce8f0b91c0e5633f1178d3942c8ce26ea2d08bc3ba748ff1",
+      "sha256": "d38ba84deb384f436025ac0b1e80d9d32715a337738cc20e9c83981d49186f19",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -33370,8 +33459,8 @@
       "gap": "Per-clause implementation correspondence not discharged by inventory"
     },
     {
-      "id": "0136-marketplace-agreement-payments:aeeffac10501",
-      "statement": "1. **El cobro usa el checkout canónico.** Cada cobro de un acuerdo es una fila `marketplace_agreement_payment` (`kind` = `deposit` | `balance`) con su `commerce_checkout_session` de `domain_type='marketplace_agreement'` y `domain_order_id` = id del cobro. `productFlowForDomain` lo mapea a `FlowMarketplace`, de modo que el ruteo existente solo ofrece un proveedor cuando su cuenta, contrato, credenciales y las tres capacidades de marketplace están verificadas para ese método y entorno. Ningún módulo del marketplace llama a un proveedor directamente. 2. **Reparto congelado por cobro.** Al crear el cobro se guarda `platform_fee_minor`, `provider_amount_minor` y `processing_fee_minor`: - depósito: `platform_fee = min(commission_minor, deposit_minor)`; - saldo: `platform_fee = commission_minor − lo que los cobros pagados ya recaudaron para la plataforma` (0 con la tarifa por defecto; más que el resto nominal cuando la comisión del procesador se comió parte de un depósito menor que la comisión); - `provider_amount = monto − platform_fee − processing_fee`, nunca negativo. `processing_fee` sale de `marketplace_payment_fee_rule` (por proveedor: bps + fijo + quién la asume). Por defecto la asume el proveedor del servicio, porque en el cobro del saldo TDF no recibe nada de lo que descontarla. La regla es editable sin desplegar. 3. **Cuenta de cobro del proveedor.** `marketplace_payout_account` (perfil, proveedor, referencia, estado). PayPhone: el proveedor declara su identificación (tipo 3) o teléfono (tipo 4). Stripe: cuenta Express con onboarding alojado (reutiliza `Services.Stripe`). Sin una cuenta lista para algún proveedor ofrecible en la moneda del acuerdo, el acuerdo nace como en la parte A (`off_platform`, `confirmed`); no se bloquea la aceptación. 4. **Estados.** Con el gate `marketplace.agreement_payments` activo y cuenta de cobro lista, el acuerdo nace `pending_deposit` + `platform`, con `deposit_due_at` según la tarifa. - Depósito verificado → `confirmed`. - Depósito sin pagar al vencer → `expired`: retira la oferta y libera el cupo (misma rutina que cancelar). Corre al cargar los acuerdos de un participante y, para todos los acuerdos, cada cinco minutos en un job del servidor (`startAgreementDepositExpiryJob`). - El proveedor inicia (`in_progress`). El comprador confirma la entrega: con saldo pendiente pasa a `balance_due` y se crea el cobro del saldo; el saldo verificado lo lleva a `completed` y registra la interacción verificada. Sin saldo, pasa directo a `completed`. Mientras espera el saldo, cualquiera de las partes puede abrir una disputa: el cobro pendiente se cancela y un administrador resuelve. Las disputas abiertas se listan para administración en `GET /directory/admin/agreements/disputes` (más antigua primero, con quién la abrió, desde qué estado y por qué) y se resuelven con la ruta de estado del acuerdo. - Ningún participante ni administrador puede marcar un cobro como pagado: solo la reconciliación con consulta autenticada al proveedor (trigger `marketplace_agreement_payment_require_verified_payment`, mismo patrón que reservas y entradas). 5. **Proveedores.** - **PayPhone:** el adaptador añade `transferTo` cifrado cuando el checkout trae reparto. Queda cerrado hasta que PayPhone autorice el split para la tienda y se registre la evidencia de capacidad; se exige la modalidad «al día siguiente» para conservar el reverso del primer día. - **Stripe:** adaptador canónico con Checkout Session alojada y cargo destino (`transfer_data.destination`, `application_fee_amount`); se entrega en un segundo PR (B2) junto con reembolsos y panel de disputas, porque incorpora Stripe al runtime canónico. - **DataWeb:** el dominio queda conectado al ruteo, y por tanto cerrado: no hay capacidad de split verificable. Se abre registrando evidencia cuando Datafast la contrate, sin código nuevo en el marketplace. 6. **Cancelación con dinero cobrado.** En B1, un acuerdo `platform` con depósito pagado no se cancela por los participantes, ni directamente ni retirando la oferta aceptada: abre disputa y un administrador resuelve. Tampoco se cancela ni se retira mientras un intento de pago pueda cobrar todavía. El reembolso automático según la política congelada (`cancellation_policy`) llega en B2, cuando exista la reversión del reparto por proveedor. 7. **Orden de bloqueo.** anuncio → oferta → acuerdo → cobro. La reconciliación bloquea checkout e intento primero (regla existente) y después el cobro y el acuerdo; ningún camino del marketplace toma un bloqueo de checkout mientras sostiene el acuerdo, salvo la creación del checkout, que es una inserción.",
+      "id": "0136-marketplace-agreement-payments:bb22743bbb61",
+      "statement": "1. **El cobro usa el checkout canónico.** Cada cobro de un acuerdo es una fila `marketplace_agreement_payment` (`kind` = `deposit` | `balance`) con su `commerce_checkout_session` de `domain_type='marketplace_agreement'` y `domain_order_id` = id del cobro. `productFlowForDomain` lo mapea a `FlowMarketplace`, de modo que el ruteo existente solo ofrece un proveedor cuando su cuenta, contrato, credenciales y las tres capacidades de marketplace están verificadas para ese método y entorno. Ningún módulo del marketplace llama a un proveedor directamente. 2. **Reparto congelado por cobro.** Al crear el cobro se guarda `platform_fee_minor`, `provider_amount_minor` y `processing_fee_minor`: - depósito: `platform_fee = min(commission_minor, deposit_minor)`; - saldo: `platform_fee = commission_minor − lo que los cobros pagados ya recaudaron para la plataforma` (0 con la tarifa por defecto; más que el resto nominal cuando la comisión del procesador se comió parte de un depósito menor que la comisión); - `provider_amount = monto − platform_fee − processing_fee`, nunca negativo. `processing_fee` sale de `marketplace_payment_fee_rule` (por proveedor: bps + fijo + quién la asume). Por defecto la asume el proveedor del servicio, porque en el cobro del saldo TDF no recibe nada de lo que descontarla. La regla es editable sin desplegar. 3. **Cuenta de cobro del proveedor.** `marketplace_payout_account` (perfil, proveedor, referencia, estado). PayPhone: el proveedor declara su identificación (tipo 3) o teléfono (tipo 4). Stripe: cuenta Express con onboarding alojado (reutiliza `Services.Stripe`). Sin una cuenta lista para algún proveedor ofrecible en la moneda del acuerdo, el acuerdo nace como en la parte A (`off_platform`, `confirmed`); no se bloquea la aceptación. 4. **Estados.** Con el gate `marketplace.agreement_payments` activo y cuenta de cobro lista, el acuerdo nace `pending_deposit` + `platform`, con `deposit_due_at` según la tarifa. - Depósito verificado → `confirmed`. - Depósito sin pagar al vencer → `expired`: retira la oferta y libera el cupo (misma rutina que cancelar). Corre al cargar los acuerdos de un participante y, para todos los acuerdos, cada cinco minutos en un job del servidor (`startAgreementDepositExpiryJob`). - El proveedor inicia (`in_progress`). El comprador confirma la entrega: con saldo pendiente pasa a `balance_due` y se crea el cobro del saldo; el saldo verificado lo lleva a `completed` y registra la interacción verificada. Sin saldo, pasa directo a `completed`. Mientras espera el saldo, cualquiera de las partes puede abrir una disputa: el cobro pendiente se cancela y un administrador resuelve. Las disputas abiertas se listan para administración en `GET /directory/admin/agreements/disputes` (más antigua primero, con quién la abrió, desde qué estado y por qué) y se resuelven con la ruta de estado del acuerdo. - Ningún participante ni administrador puede marcar un cobro como pagado: solo la reconciliación con consulta autenticada al proveedor (trigger `marketplace_agreement_payment_require_verified_payment`, mismo patrón que reservas y entradas). 5. **Proveedores.** - **PayPhone:** el adaptador añade `transferTo` cifrado cuando el checkout trae reparto. Queda cerrado hasta que PayPhone autorice el split para la tienda y se registre la evidencia de capacidad; se exige la modalidad «al día siguiente» para conservar el reverso del primer día. Implementación (B2b-1): el método `card` de PayPhone es el Botón de Pagos (`/api/button/Prepare` con `transferTo` = JSON `[{Identifier, Type 3|4, Amount}]` cifrado AES-256-CBC con la `PAYPHONE_CODING_PASSWORD` de 32 bytes como clave, IV en cero, PKCS#7, Base64). El ejecutor compartido lee el receptor y el neto del cobro bajo bloqueo y los vuelve a comprobar en la transacción que registra el intento; API Sale (billetera) y PlaceToPay rechazan un reparto. Las referencias del Botón empiezan con `TDFC-`. `Prepare` solo devuelve un `paymentId` opaco, que identifica la preparación y no la transacción; la conciliación busca la transacción por la referencia (`GET /api/Sale/client/{clientTransactionId}`) y, si está aprobada y coinciden referencia, monto y moneda, la confirma con su `transactionId` (`/api/button/V2/Confirm`) en el mismo intento. Para aplicar la respuesta de Confirm deben coincidir el ID enviado a Confirm, la referencia del comercio, el monto y la moneda. PayPhone exige confirmar en los cinco minutos siguientes al pago o revierte el cobro. Por eso el Botón solo se ofrece con el worker de consultas activo (proceso y flag `checkout.provider_query_recovery`), la página solo se entrega durante diez minutos desde la preparación y el vencimiento del depósito vuelve a comprobar los intentos vivos bajo el bloqueo del acuerdo. El método solo se ofrece con la contraseña de codificación configurada y con evidencia verificada de todas las capacidades de marketplace para `payphone`/`card`. - **Stripe:** adaptador canónico con Checkout Session alojada y cargo destino (`transfer_data.destination`, `application_fee_amount`); se entrega en un segundo PR (B2) junto con reembolsos y panel de disputas, porque incorpora Stripe al runtime canónico. - **DataWeb:** el dominio queda conectado al ruteo, y por tanto cerrado: no hay capacidad de split verificable. Se abre registrando evidencia cuando Datafast la contrate, sin código nuevo en el marketplace. 6. **Cancelación con dinero cobrado.** En B1, un acuerdo `platform` con depósito pagado no se cancela por los participantes, ni directamente ni retirando la oferta aceptada: abre disputa y un administrador resuelve. Tampoco se cancela ni se retira mientras un intento de pago pueda cobrar todavía. El reembolso automático según la política congelada (`cancellation_policy`) llega en B2, cuando exista la reversión del reparto por proveedor. 7. **Orden de bloqueo.** anuncio → oferta → acuerdo → cobro. La reconciliación bloquea checkout e intento primero (regla existente) y después el cobro y el acuerdo; ningún camino del marketplace toma un bloqueo de checkout mientras sostiene el acuerdo, salvo la creación del checkout, que es una inserción, y el inicio de una sesión de pago: el ejecutor bloquea acuerdo y cobro, vuelve a comprobar que el acuerdo espera ese cobro y después bloquea el checkout para registrar el intento. Así cancelar, vencer o reemplazar el cobro ve el intento o espera a que exista. Si eso coincide con la reconciliación del mismo checkout, PostgreSQL detecta el interbloqueo y aborta una de las dos transacciones; ambas se reintentan sin efectos parciales.",
       "source": "docs/adr/0136-marketplace-agreement-payments.md#decisión",
       "status": "inferred",
       "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
@@ -37456,7 +37545,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 118,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-01",
@@ -37487,7 +37576,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 119,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-02",
@@ -37518,7 +37607,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 120,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-03",
@@ -37549,7 +37638,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 121,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-04",
@@ -37580,7 +37669,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 122,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-05",
@@ -37611,7 +37700,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 123,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-06",
@@ -37642,7 +37731,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 124,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-07",
@@ -37673,7 +37762,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 125,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-08",
@@ -37704,7 +37793,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 126,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-09",
@@ -37735,7 +37824,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 127,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-10",
@@ -37766,7 +37855,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 128,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-11",
@@ -37797,7 +37886,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 162,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-12",
@@ -37826,7 +37915,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 163,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-13",
@@ -37855,7 +37944,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 195,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-14",
@@ -37884,7 +37973,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 196,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-15",
@@ -37913,7 +38002,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 197,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-16",
@@ -37942,7 +38031,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 205,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-17",
@@ -37971,7 +38060,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 211,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-18",
@@ -38000,7 +38089,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 212,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-19",
@@ -38029,7 +38118,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 222,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-21",
@@ -38058,7 +38147,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 223,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-22",

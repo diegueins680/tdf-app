@@ -1678,8 +1678,11 @@ whatsappWebhookServer =
                   , acceptedTermsVersion = Nothing
                   }
                 let incomingMsg = entityVal incomingEntity
-                claimed <- liftIO $ flip runSqlPool envPool $
-                  claimWhatsAppAutoReply now (entityKey incomingEntity)
+                -- The registration is kept; a contact who withdrew consent
+                -- gets no automated reply (MSG-STAFF-OUTBOUND-001).
+                claimed <- liftIO $ flip runSqlPool envPool $ do
+                  withdrawn <- CampaignAutomation.whatsAppRecipientConsentWithdrawn phone
+                  if withdrawn then pure False else claimWhatsAppAutoReply now (entityKey incomingEntity)
                 when claimed $ do
                   (replyTxt, replyRes) <- sendWhatsappReply cfg phone
                   liftIO $ flip runSqlPool envPool $ do
@@ -1803,7 +1806,7 @@ whatsappManualReplyHandler user WhatsAppReplyReq{..} = do
 validateWhatsAppReplyConsent :: Maybe ME.WhatsAppConsent -> Either ServerError ()
 validateWhatsAppReplyConsent mConsent
   | CampaignAutomation.whatsAppConsentWithdrawn mConsent =
-      Left err409 { errBody = "El contacto retiró su consentimiento para recibir mensajes de WhatsApp" }
+      Left err409 { errBody = BL.fromStrict (TE.encodeUtf8 CampaignAutomation.whatsAppConsentWithdrawnMessage) }
   | otherwise = Right ()
 
 whatsappOperatorQuestionHandler :: AuthedUser -> WhatsAppOperatorQuestionReq -> AppM Value
