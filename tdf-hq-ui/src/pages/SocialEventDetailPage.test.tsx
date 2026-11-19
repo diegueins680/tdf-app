@@ -4,7 +4,7 @@ jest.unstable_mockModule('../components/events/EventMemoryInvitations', () => ({
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import type { EventAdminAccessDTO, EventAdminRosterDTO, SocialEventDTO, SocialEventMomentDTO, SocialTicketTierDTO } from '../api/socialEvents';
+import type { EventTicketSaleDTO, EventAdminAccessDTO, EventAdminRosterDTO, SocialEventDTO, SocialEventMomentDTO, SocialTicketTierDTO } from '../api/socialEvents';
 
 const preferenceMock = jest.fn(async () => ({ inApp: false, supportsExtendedMoments: true }));
 const uploadMomentMediaMock = jest.fn<(eventId: string, file: File) => Promise<{ eiuPublicUrl: string }>>();
@@ -13,6 +13,9 @@ let activeSession: { partyId: number; modules?: string[] } | null = null;
 jest.unstable_mockModule('../api/eventMemoryInvitations', () => ({ EventMemoryInvitations: { preferences: preferenceMock } }));
 const getEventMock = jest.fn<(eventId: string) => Promise<SocialEventDTO>>();
 const listMomentsMock = jest.fn<(eventId: string) => Promise<SocialEventMomentDTO[]>>();
+const getTicketSaleMock = jest.fn<(eventId: string) => Promise<EventTicketSaleDTO>>();
+const createTicketTierMock = jest.fn<(eventId: string, payload: SocialTicketTierDTO) => Promise<SocialTicketTierDTO>>();
+const updateTicketTierMock = jest.fn<(eventId: string, tierId: string, payload: SocialTicketTierDTO) => Promise<SocialTicketTierDTO>>();
 const listTicketTiersMock = jest.fn<(eventId: string) => Promise<SocialTicketTierDTO[]>>();
 const getEventAdminAccessMock = jest.fn<(eventId: string) => Promise<EventAdminAccessDTO>>();
 const listEventAdminsMock = jest.fn<(eventId: string) => Promise<EventAdminRosterDTO>>();
@@ -26,7 +29,9 @@ jest.unstable_mockModule('../api/socialEvents', () => ({
     createMoment: createMomentMock,
     uploadMomentImage: jest.fn(),
     uploadMomentMedia: uploadMomentMediaMock,
-    createTicketTier: jest.fn(),
+    createTicketTier: createTicketTierMock,
+    updateTicketTier: updateTicketTierMock,
+    getTicketSale: getTicketSaleMock,
     getEventAdminAccess: (eventId: string) => getEventAdminAccessMock(eventId),
     listEventAdmins: (eventId: string) => listEventAdminsMock(eventId),
     listArtists: jest.fn(async () => []),
@@ -87,6 +92,19 @@ const tierFixture: SocialTicketTierDTO = {
   ticketTierActive: true,
 };
 
+const saleEligibility = (hasPaidTier: boolean): EventTicketSaleDTO => ({
+  etsEventId: '121',
+  etsStatus: 'none',
+  etsCanRequest: hasPaidTier,
+  etsCanDecide: false,
+  etsBlockedReason: hasPaidTier ? null : 'no_paid_tier',
+  etsTerms: {
+    etstCurrency: 'USD', etstBuyerFeeBps: 200, etstOrganizerFeeBps: 200, etstTaxBps: 0,
+    etstHoldMinutes: 15, etstMaxTicketsPerOrder: 100, etstRefundPolicy: 'Reembolso total.',
+    etstTermsSummary: 'Resumen',
+  },
+});
+
 const renderPage = (entry = '/social/eventos/121') => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -118,12 +136,67 @@ describe('SocialEventDetailPage ticket sharing', () => {
     uploadMomentMediaMock.mockReset();
     getEventMock.mockReset().mockResolvedValue(eventFixture);
     listMomentsMock.mockReset().mockResolvedValue([]);
+    getTicketSaleMock.mockReset().mockRejectedValue(new ApiError('Forbidden', 403));
+    createTicketTierMock.mockReset();
+    updateTicketTierMock.mockReset();
     listTicketTiersMock.mockReset().mockResolvedValue([tierFixture]);
     getStorefrontMock.mockReset().mockResolvedValue({ checkoutAvailable: true });
     getEventAdminAccessMock.mockReset().mockResolvedValue({ eaaEventId: '121', eaaAccess: 'none' });
     listEventAdminsMock.mockReset().mockResolvedValue({ earAccess: 'admin', earAdmins: [], earInvitations: [] });
     Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
+  });
+
+  it('enables the sale request after creating the first paid tier without reloading', async () => {
+    activeSession = { partyId: 7 };
+    getEventAdminAccessMock.mockResolvedValue({ eaaEventId: '121', eaaAccess: 'owner' });
+    let paidTierCreated = false;
+    listTicketTiersMock.mockImplementation(async () => paidTierCreated ? [tierFixture] : []);
+    getTicketSaleMock.mockImplementation(async () => saleEligibility(paidTierCreated));
+    createTicketTierMock.mockImplementation(async () => {
+      paidTierCreated = true;
+      return tierFixture;
+    });
+    const view = renderPage();
+    const request = await screen.findByRole('button', { name: 'Solicitar venta de entradas pagadas' });
+    expect(request.hasAttribute('disabled')).toBe(true);
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Precio' }), { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Crear tickets' }));
+
+    await waitFor(() => expect(request.hasAttribute('disabled')).toBe(false));
+    expect(createTicketTierMock).toHaveBeenCalledWith('121', expect.objectContaining({
+      ticketTierCurrency: 'USD', ticketTierPriceCents: 500, ticketTierActive: true,
+    }));
+    expect(getTicketSaleMock).toHaveBeenCalledTimes(2);
+    view.unmount();
+  });
+
+  it('disables the sale request after deactivating the last paid tier', async () => {
+    activeSession = { partyId: 7 };
+    getEventAdminAccessMock.mockResolvedValue({ eaaEventId: '121', eaaAccess: 'owner' });
+    const originalTier = { ...tierFixture, ticketTierDescription: 'Descripción existente', ticketTierPosition: 2 };
+    let tier = originalTier;
+    listTicketTiersMock.mockImplementation(async () => [tier]);
+    getTicketSaleMock.mockImplementation(async () => saleEligibility(tier.ticketTierActive));
+    updateTicketTierMock.mockImplementation(async (_, __, payload) => {
+      tier = { ...originalTier, ...payload };
+      return tier;
+    });
+    const view = renderPage();
+    const request = await screen.findByRole('button', { name: 'Solicitar venta de entradas pagadas' });
+    expect(request.hasAttribute('disabled')).toBe(false);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar General' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Categoría activa' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+
+    await waitFor(() => expect(request.hasAttribute('disabled')).toBe(true));
+    expect(updateTicketTierMock).toHaveBeenCalledWith('121', 'tier-general', {
+      ...originalTier, ticketTierActive: false,
+    });
+    expect(getTicketSaleMock).toHaveBeenCalledTimes(2);
+    view.unmount();
   });
 
   it.each([403, 404])('keeps a planning event visible when memories return HTTP %i', async (status) => {
@@ -279,7 +352,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
     fireEvent.mouseDown(kind);
     fireEvent.click(await screen.findByRole('option', { name: 'Solo texto' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Describe tu publicación' }), { target: { value: 'Private draft for A' } });
-    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    const { advanceAuthSessionEpoch } = await import('../auth/authEvents');
     advanceAuthSessionEpoch();
     activeSession = { partyId: 10 };
     // Credentials change synchronously; the old button can still exist until
@@ -297,7 +370,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
     const view = renderPage();
     await screen.findByRole('combobox', { name: 'Tipo de recuerdo' });
     fireEvent.change(view.container.querySelector('input[type="file"]')!, { target: { files: [new File(['synthetic'], 'private-A.png', { type: 'image/png' })] } });
-    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    const { advanceAuthSessionEpoch } = await import('../auth/authEvents');
     advanceAuthSessionEpoch(); activeSession = { partyId: 10 };
     fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
     await waitFor(() => expect(Boolean(screen.queryByText('Tu sesión cambió. Vuelve al evento antes de publicar.')) || uploadMomentMediaMock.mock.calls.length > 0).toBe(true));
@@ -332,7 +405,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
     fireEvent.change(view.container.querySelector('input[type="file"]')!, { target: { files: [new File(['synthetic'], 'memory.png', { type: 'image/png' })] } });
     fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
     await waitFor(() => expect(uploadMomentMediaMock).toHaveBeenCalledTimes(1));
-    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    const { advanceAuthSessionEpoch } = await import('../auth/authEvents');
     advanceAuthSessionEpoch();
     finishUpload({ eiuPublicUrl: 'https://assets.persona.test/previous-account.png' });
     await screen.findByText('Tu sesión cambió. Vuelve al evento antes de publicar.');
@@ -376,7 +449,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Describe tu publicación' }), { target: { value: 'Synthetic account A draft' } });
     fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
     await waitFor(() => expect(createMomentMock).toHaveBeenCalledTimes(1));
-    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    const { advanceAuthSessionEpoch } = await import('../auth/authEvents');
     advanceAuthSessionEpoch(); activeSession = { partyId: 10 };
     view.rerender(<QueryClientProvider client={view.queryClient}><MemoryRouter initialEntries={['/social/eventos/121']}>
       <Routes><Route path="/social/eventos/:eventId" element={<SocialEventDetailPage />} /></Routes>

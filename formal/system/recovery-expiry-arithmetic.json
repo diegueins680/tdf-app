@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "365540cb811429b6b7ddd51c9ca5d7672ea8ce99d4e8038c06270254ea2014e7",
+    "tdf-hq/tdf-hq.cabal": "c4c3308b0b745aa41bb1f1be0f4db41cad817e99b42f7a46f116682199ba399b",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -671,6 +671,15 @@
       "semanticReview": "recoveryWindowValid, createPasswordResetToken, the recovery challenge insert, signup, passwordReset and every expression the restricted translator reads are byte-identical to the previous review; the edits are confined to the login handler and the import list. No token is issued on a path that did not issue one before. The recovery expiry SQL, identity-lifecycle contract and Stack/lock are unchanged. Reviewed by the change author only; no independent review was performed. Fresh source-bound solver/replay/control execution remains required."
     },
     {
+      "reviewedAgainst": "65317ec2e4febf920292ecace7df466153ae5046",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "currentSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "change": "Register the library module TDF.Server.EventTicketSale in exposed-modules and the test module TDF.EventTicketSaleSpec in the tdf-hq-test other-modules list for EVT-TICKET-SALE-001.",
+      "semanticReview": "Removing exactly those two module lines reproduces protected main Cabal bytes. Every other reviewed source byte and hash matches protected main. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed; the added library module holds paid ticket sale request and approval handlers only, calls hasStrictAdminAccess without changing it, and is not imported by any reviewed source.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
       "reviewedAgainst": "5084d8a8a4d7a7a3b8d30d1f55ae5d9c8c032b9b",
       "source": "tdf-hq/tdf-hq.cabal",
       "previousSha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
@@ -685,6 +694,15 @@
       "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
       "currentSha256": "365540cb811429b6b7ddd51c9ca5d7672ea8ce99d4e8038c06270254ea2014e7",
       "change": "Reconcile current protected main while retaining the single exposed module TDF.Server.TicketSalesWindow.",
+      "semanticReview": "Removing exactly the named module registration reproduces current main Cabal bytes. Dependencies, flags, source paths, compiler options, toolchain and all existing registrations are unchanged. This is an author source-context review; it supplies no independent approval. Current protected-main authorization and recovery sources are retained. Obligation objects are equal to both parents and remain unchanged.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "966fb55dca70a49c0a340b674f8cc133cc413a2d",
+      "previousSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "currentSha256": "c4c3308b0b745aa41bb1f1be0f4db41cad817e99b42f7a46f116682199ba399b",
+      "change": "Reconcile current protected main while retaining the reviewed TDF.Server.TicketSalesWindow Cabal additions.",
       "semanticReview": "Removing exactly the named module registration reproduces current main Cabal bytes. Dependencies, flags, source paths, compiler options, toolchain and all existing registrations are unchanged. This is an author source-context review; it supplies no independent approval. Current protected-main authorization and recovery sources are retained. Obligation objects are equal to both parents and remain unchanged.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
     }

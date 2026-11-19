@@ -1,4 +1,5 @@
 import ArtistProfileLink from '../components/ArtistProfileLink';
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import { canonicalMusicMinor, formatMusicMinor, type MusicMinorUnits } from '../utils/musicMoney';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -285,7 +286,7 @@ export default function MusicReleasePublicPage() {
           }}><PlaylistAddIcon /></IconButton>
           <Button startIcon={<QueueMusicIcon />} onClick={() => play(track.trackId)} disabled={track.sources.length === 0}>Reproducir</Button>
           {offer?.downloadPolicy === 'free' && <Button startIcon={<DownloadIcon />} onClick={() => void freeDownload(offer)} disabled={purchaseBusy}>Descargar</Button>}
-          {offer?.downloadPolicy === 'purchase' && offer.priceMinor !== null && offer.currency && <Button startIcon={<ShoppingCartIcon />} onClick={() => { setSelectedOffer(offer); setPaypalPurchase(null); setPurchaseTermsAccepted(false); }} disabled={purchaseBusy || canonicalMusicMinor(offer.priceMinor) === null || offer.currency !== 'USD'}>Comprar {formatMinorMoney(offer.priceMinor, offer.currency)}</Button>}
+          {offer?.downloadPolicy === 'purchase' && offer.priceMinor !== null && offer.currency && <Button startIcon={<ShoppingCartIcon />} onClick={() => { setSelectedOffer(offer); setPaypalPurchase(null); setPurchaseTermsAccepted(false); setPlayError(null); }} disabled={purchaseBusy || canonicalMusicMinor(offer.priceMinor) === null || offer.currency !== 'USD'}>Comprar {formatMinorMoney(offer.priceMinor, offer.currency)}</Button>}
         </Stack>;
       })}
     </Stack></CardContent></Card>
@@ -302,6 +303,10 @@ export default function MusicReleasePublicPage() {
         {selectedOffer?.priceMinor !== null && selectedOffer?.currency && <Typography variant="h5">{formatMinorMoney(selectedOffer.priceMinor, selectedOffer.currency)}</Typography>}
         <Alert severity="info">TDF solo habilita la descarga después de verificar en servidor el proveedor, importe, moneda y referencia de esta orden.</Alert>
         <FormControlLabel control={<Checkbox checked={purchaseTermsAccepted} onChange={(event) => setPurchaseTermsAccepted(event.target.checked)} disabled={purchaseBusy || paypalPurchase !== null} />} label="Acepto los términos vigentes de la compra y descarga digital." />
+        {playError && <>
+          <Alert severity="warning">{playError}</Alert>
+          <PaymentAlternativesNotice methods={[]} failedMethod="paypal" blocked={Boolean(paypalPurchase)} />
+        </>}
         {paypalPurchase && <Box ref={paypalButtonRef} sx={{ minHeight: 48 }} />}
       </Stack></DialogContent>
       <DialogActions>
