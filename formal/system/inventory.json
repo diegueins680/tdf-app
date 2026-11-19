@@ -2502,6 +2502,7 @@
       "tdf-hq/src/TDF/Server/CommerceOperations.hs",
       "tdf-hq/src/TDF/Server/CourseCheckout.hs",
       "tdf-hq/src/TDF/Server/DDEX.hs",
+      "tdf-hq/src/TDF/Server/DatafastCheckoutContext.hs",
       "tdf-hq/src/TDF/Server/Directory.hs",
       "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs",
       "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
@@ -18028,6 +18029,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-e93fd0a9fb518a64",
+      "path": "tdf-hq/src/TDF/Server/DatafastCheckoutContext.hs",
+      "sha256": "9a97fe04a57add6ba76518a1dd9dc5342951a7f0bf060ad8964ed1a417f3855b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
       "sha256": "a1c9f48cdd53e5a387a2ee3625b73370edc7743352be79debcec3c79bb7a7cc4",
@@ -18150,7 +18157,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "d5c9e01ef312d4dacf480bf2fbeca0ac4e1a051637bb3df7619e723ad38ddd7e",
+      "sha256": "35befc2709d20d2373042feb8f9e37fcfec81a53688962967ae23abf9994fb85",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18528,7 +18535,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "a18d212a721deca9191d5a5b9c3375e60581935ec0ecbcfb5d61ce7335155752",
+      "sha256": "fe4fffcbd7ad67e223c342c36ef314018f1646cde368c02dbe18665799d0d01f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31653,7 +31660,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c98d3e99a2d7c104e9933b3c13ae697a228143fe57ff157c5bb84ec27ab43348",
+      "sha256": "cd4f937e0ee4f9d4c0bb40ed0c41cdb3f899ecba11e58c440586e2ffb842a44d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

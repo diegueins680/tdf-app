@@ -25878,7 +25878,8 @@
         "tdf-hq/src/TDF/Routes/EventTickets.hs",
         "ops/hetzner/Caddyfile.production",
         "scripts/lib/compiled-api-surface.mjs",
-        "formal/system/compiled-api-surface.json"
+        "formal/system/compiled-api-surface.json",
+        "tdf-hq/src/TDF/Server/DatafastCheckoutContext.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
@@ -28730,7 +28731,7 @@
     "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "fd133b5ace0272bf122d3a02ddfc8669b62eb637c8747b177edc83da88907d5f",
+    "formal/system/recovery-expiry-arithmetic.json": "a191a1f74eca1e8c7748b36315404cb76841009d32561094d7fb2d7680301c03",
     "formal/system/route-requirements.json": "4b8541ce4d17b650cac35db612ca295ee3cfd76de201b80ce81a7c7075c10232",
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -30112,6 +30113,7 @@
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
+    "tdf-hq/src/TDF/Server/DatafastCheckoutContext.hs": "9a97fe04a57add6ba76518a1dd9dc5342951a7f0bf060ad8964ed1a417f3855b",
     "tdf-hq/src/TDF/Server/Directory.hs": "a1c9f48cdd53e5a387a2ee3625b73370edc7743352be79debcec3c79bb7a7cc4",
     "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs": "3fffa9b76eae802e1629413435696333a45947f8e946a48f28a8170bbe833c83",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "fa39efff149548a881181b653d5e0e0fd11040911bb912804051a2f707b4605c",
@@ -30131,7 +30133,7 @@
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "f42c6b0bf7913cf6f0a0deeae6aa6c14785644edf2d50d97dd840d1202080cae",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
-    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "d5c9e01ef312d4dacf480bf2fbeca0ac4e1a051637bb3df7619e723ad38ddd7e",
+    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "35befc2709d20d2373042feb8f9e37fcfec81a53688962967ae23abf9994fb85",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
     "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "790e1d6df83864710f6251d7473976d779a65c25d7e291be540041627dff278f",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
@@ -30176,7 +30178,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "a18d212a721deca9191d5a5b9c3375e60581935ec0ecbcfb5d61ce7335155752",
+    "tdf-hq/tdf-hq.cabal": "fe4fffcbd7ad67e223c342c36ef314018f1646cde368c02dbe18665799d0d01f",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -47912,6 +47914,12 @@
       }
     ],
     "ops/hetzner/Caddyfile.production": [
+      {
+        "requirement": "PAY-DATAFAST-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/DatafastCheckoutContext.hs": [
       {
         "requirement": "PAY-DATAFAST-001",
         "relationship": "implementation"
@@ -78329,6 +78337,18 @@
       ]
     },
     {
+      "id": "SURFACE-e93fd0a9fb518a64",
+      "path": "tdf-hq/src/TDF/Server/DatafastCheckoutContext.hs",
+      "sha256": "9a97fe04a57add6ba76518a1dd9dc5342951a7f0bf060ad8964ed1a417f3855b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-DATAFAST-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
       "sha256": "a1c9f48cdd53e5a387a2ee3625b73370edc7743352be79debcec3c79bb7a7cc4",
@@ -78826,7 +78846,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "d5c9e01ef312d4dacf480bf2fbeca0ac4e1a051637bb3df7619e723ad38ddd7e",
+      "sha256": "35befc2709d20d2373042feb8f9e37fcfec81a53688962967ae23abf9994fb85",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79972,7 +79992,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "a18d212a721deca9191d5a5b9c3375e60581935ec0ecbcfb5d61ce7335155752",
+      "sha256": "fe4fffcbd7ad67e223c342c36ef314018f1646cde368c02dbe18665799d0d01f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -89178,7 +89198,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c98d3e99a2d7c104e9933b3c13ae697a228143fe57ff157c5bb84ec27ab43348",
+      "sourceSha256": "cd4f937e0ee4f9d4c0bb40ed0c41cdb3f899ecba11e58c440586e2ffb842a44d",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -89206,7 +89226,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c98d3e99a2d7c104e9933b3c13ae697a228143fe57ff157c5bb84ec27ab43348",
+      "sourceSha256": "cd4f937e0ee4f9d4c0bb40ed0c41cdb3f899ecba11e58c440586e2ffb842a44d",
       "definition": {
         "states": [
           "absent",
@@ -89236,7 +89256,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c98d3e99a2d7c104e9933b3c13ae697a228143fe57ff157c5bb84ec27ab43348",
+      "sourceSha256": "cd4f937e0ee4f9d4c0bb40ed0c41cdb3f899ecba11e58c440586e2ffb842a44d",
       "definition": {
         "export": [
           "queued",

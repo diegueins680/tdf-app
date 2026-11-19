@@ -25877,7 +25877,8 @@
         "tdf-hq/src/TDF/Routes/EventTickets.hs",
         "ops/hetzner/Caddyfile.production",
         "scripts/lib/compiled-api-surface.mjs",
-        "formal/system/compiled-api-surface.json"
+        "formal/system/compiled-api-surface.json",
+        "tdf-hq/src/TDF/Server/DatafastCheckoutContext.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",

@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "a18d212a721deca9191d5a5b9c3375e60581935ec0ecbcfb5d61ce7335155752"
+    "tdf-hq/tdf-hq.cabal": "fe4fffcbd7ad67e223c342c36ef314018f1646cde368c02dbe18665799d0d01f"
   },
   "obligations": [
     {
@@ -637,6 +637,14 @@
       "change": "Reconcile current protected main while retaining the reviewed Dataweb Cabal additions.",
       "semanticReview": "The DatafastClientIP library and test modules are registered, iproute is added to library and tests and wai-extra to tests, using their existing snapshot versions. Removing those exact five lines reproduces current main Cabal bytes. No other dependency, flag, source path, compiler option or toolchain change exists. Current protected-main authorization and recovery sources are retained. Obligation objects are equal to both parents and remain unchanged. This is an author source-context review, not independent approval.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "a18d212a721deca9191d5a5b9c3375e60581935ec0ecbcfb5d61ce7335155752",
+      "currentSha256": "fe4fffcbd7ad67e223c342c36ef314018f1646cde368c02dbe18665799d0d01f",
+      "change": "Register the extracted DatafastCheckoutContext module to keep the storefront below the enforced module size limit.",
+      "semanticReview": "The immutable cart projection, recheck, saved service checkout reuse and trusted client-IP loader bodies move verbatim from ServiceStorefront to a small Server-layer module and are re-exported unchanged. This adds one module registration to the existing five reviewed Dataweb Cabal additions; no dependency, resolver, compiler flag or other source-context change. No obligation object changes; this author review supplies no independent approval.",
+      "qualification": "Fresh source-bound checks, compiler validation and hosted CI remain required."
     }
   ]
 }

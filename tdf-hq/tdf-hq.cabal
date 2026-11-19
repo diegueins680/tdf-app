@@ -234,6 +234,7 @@ library
     TDF.Server.MerchReputation
     TDF.Server.Catalog
     TDF.Server.ServiceStorefront
+    TDF.Server.DatafastCheckoutContext
     TDF.Server.ProviderTransport
     TDF.Server.TicketManualPayments
     TDF.Server.TicketPaymentReceipt
