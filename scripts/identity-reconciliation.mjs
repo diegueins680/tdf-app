@@ -4,7 +4,6 @@ import { spawnSync } from 'node:child_process';
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { candidateGroups, operatorGroups, inventorySummary, sqlText, assertUuid } from './lib/identity-reconciliation.mjs';
-import { buildDatabaseSqlInvocation } from './lib/production-release.mjs';
 
 const { values } = parseArgs({ options: {
   command: { type: 'string', default: 'summary' }, inventory: { type: 'string' },
@@ -82,15 +81,8 @@ if (values.command === 'inventory') {
 } else if (values.command === 'list') {
   sql = 'SELECT jsonb_agg(jsonb_build_object(\'id\',id,\'members\',member_ids,\'status\',status,\'reason\',reason)) FROM identity_reconciliation_case;';
 } else throw new Error('Unknown command');
-const readOnly = ['inventory', 'dry-run', 'list', 'links', 'link-dry-run'].includes(values.command);
-const invocation = buildDatabaseSqlInvocation({ dbApp: values['db-app'], database: values.database },
-  `BEGIN${readOnly ? ' READ ONLY' : ''};\nSET LOCAL standard_conforming_strings=on;\nSET LOCAL lock_timeout='5s';\nSET LOCAL statement_timeout='60s';\n${sql}\nCOMMIT;`, { tuplesOnly: true });
-writeFileSync(values.output, '', { mode: 0o600, flag: 'wx' });
-const result = spawnSync(invocation.argv[0], invocation.argv.slice(1), { input: invocation.input, encoding: 'utf8', timeout: 90000, maxBuffer: 16 * 1024 * 1024 });
-writeFileSync(values.output, result.stdout ?? '', { mode: 0o600 });
-if (result.status !== 0) {
-  // PostgreSQL errors can contain contact values. Keep diagnostics private too.
-  writeFileSync(`${values.output}.error`, result.stderr ?? String(result.error), { mode: 0o600, flag: 'wx' });
-  throw new Error('Database operation failed; inspect the private error artifact');
-}
-console.log(JSON.stringify({ command: values.command, result: values.output, verifiedExitCode: 0 }));
+// The only database transport this command had was the retired provider's
+// remote console. Fail closed until a reviewed production transport exists;
+// nothing is written and no database is contacted.
+void sql;
+throw new Error('Database commands are unavailable: the previous database transport is retired and no production transport is implemented. See ops/hetzner/README.md.');

@@ -98,6 +98,24 @@ const isIntlTimeZone = (zone: string): boolean => {
 const errorMessage = (reason: unknown, fallback = 'No se pudo conceder acceso.') =>
   reason instanceof Error && reason.message ? reason.message : fallback;
 
+/**
+ * The zone a new event starts in. An account that never chose a zone carries
+ * the server placeholder (UTC); a physical event is far more likely to happen
+ * where its organizer is, so the browser's zone wins over that placeholder.
+ * The server does not say whether UTC was chosen, so `preferenceWasChosen`
+ * carries what this browser knows: a zone saved from it is kept, UTC included.
+ */
+export function resolveEventCreatorTimezone(
+  preferred: string,
+  browser: string | null | undefined,
+  preferenceWasChosen = false,
+): string {
+  const preference = preferred.trim();
+  if (preference && (preference !== 'UTC' || preferenceWasChosen)) return preference;
+  const local = browser?.trim() ?? '';
+  return local && isIntlTimeZone(local) ? local : preference || 'UTC';
+}
+
 export function buildInitialCollaborativeEventDraft(
   now: DateTime = DateTime.local(),
 ): CollaborativeEventDraft {
