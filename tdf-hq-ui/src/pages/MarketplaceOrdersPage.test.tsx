@@ -4,6 +4,8 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import type {
+  MarketplaceDepositSettlementDTO,
+  MarketplaceDepositSettlementSubmitPayload,
   MarketplaceFulfillmentUpdatePayload,
   MarketplaceOrderDTO,
   MarketplaceOrderUpdatePayload,
@@ -20,6 +22,13 @@ const updateFulfillmentMock = jest.fn<
 const updateRentalMock = jest.fn<
   (orderId: string, payload: MarketplaceRentalUpdatePayload) => Promise<MarketplaceOrderDTO>
 >();
+const listDepositSettlementsMock = jest.fn<(orderId: string) => Promise<MarketplaceDepositSettlementDTO[]>>();
+const submitDepositSettlementMock = jest.fn<(
+  orderId: string, payload: MarketplaceDepositSettlementSubmitPayload, key: string,
+) => Promise<MarketplaceDepositSettlementDTO>>();
+const reviewDepositSettlementMock = jest.fn<(
+  orderId: string, settlementId: string, action: 'approve' | 'reject' | 'requires_reconciliation', notes: string,
+) => Promise<MarketplaceDepositSettlementDTO>>();
 
 jest.unstable_mockModule('../api/marketplace', () => ({
   getMarketplaceDepositIdempotencyKey: () => 'marketplace-deposit-idempotency-0001',
@@ -32,6 +41,14 @@ jest.unstable_mockModule('../api/marketplace', () => ({
     ),
     updateRental: (orderId: string, payload: MarketplaceRentalUpdatePayload) => (
       updateRentalMock(orderId, payload)
+    ),
+    listDepositSettlements: (orderId: string) => listDepositSettlementsMock(orderId),
+    submitDepositSettlement: (orderId: string, payload: MarketplaceDepositSettlementSubmitPayload, key: string) => (
+      submitDepositSettlementMock(orderId, payload, key)
+    ),
+    reviewDepositSettlement: (orderId: string, settlementId: string,
+      action: 'approve' | 'reject' | 'requires_reconciliation', notes: string) => (
+      reviewDepositSettlementMock(orderId, settlementId, action, notes)
     ),
   },
 }));
@@ -100,6 +117,14 @@ const buildOrder = (overrides: Partial<MarketplaceOrderDTO> = {}): MarketplaceOr
   moUpdatedAt: '2030-01-01T12:00:00.000Z',
   moItems: [buildOrderItem()],
   ...overrides,
+});
+
+const buildSettlement = (overrides: Partial<MarketplaceDepositSettlementDTO> = {}): MarketplaceDepositSettlementDTO => ({
+  mdsSettlementId: 'settlement-1', mdsOrderId: 'order-1', mdsCheckoutId: 'checkout-1',
+  mdsCurrency: 'USD', mdsDepositAmountMinor: 5000, mdsDeductionAmountMinor: 1250, mdsRefundAmountMinor: 3750,
+  mdsSettlementMethod: 'bank_transfer', mdsExternalReference: 'SYNTHETIC-REFERENCE',
+  mdsEvidenceUrl: 'https://example.test/private/synthetic-evidence.pdf', mdsStatus: 'submitted',
+  mdsSubmittedBy: 101, mdsSubmittedAt: '2030-01-01T12:00:00Z', ...overrides,
 });
 
 const orderSearchLabel = 'Buscar por comprador, contacto o pedido';
@@ -362,6 +387,9 @@ describe('MarketplaceOrdersPage', () => {
     updateOrderMock.mockReset();
     updateFulfillmentMock.mockReset();
     updateRentalMock.mockReset();
+    listDepositSettlementsMock.mockReset().mockResolvedValue([]);
+    submitDepositSettlementMock.mockReset();
+    reviewDepositSettlementMock.mockReset();
     listOrdersMock.mockResolvedValue([buildOrder()]);
     updateOrderMock.mockResolvedValue(buildOrder({ moStatus: 'paid', moPaidAt: '2030-01-01T13:00:00.000Z' }));
     updateFulfillmentMock.mockResolvedValue(buildOrder());
@@ -3202,6 +3230,84 @@ describe('MarketplaceOrdersPage', () => {
       expect(queryActionByText(document.body, 'Guardar transición de renta')?.hasAttribute('disabled')).toBe(true);
       expect(document.body.textContent).toContain('Los importes guardados no están disponibles con precisión.');
       expect(updateRentalMock).not.toHaveBeenCalled();
+    } finally { await cleanup(); }
+  });
+
+  it('labels pending deposit evidence without changing review action codes or claiming settlement', async () => {
+    const order = buildOrder({ moOrderKind: 'rental', moStatus: 'paid', moCheckoutStatus: 'paid',
+      moFulfillmentStatus: 'deposit_refund_due', moSecurityDepositUsdCents: 5000,
+      moDepositStatus: 'partial_refund_due', moDepositDeductionUsdCents: 1250 });
+    listOrdersMock.mockResolvedValue([order]);
+    listDepositSettlementsMock.mockResolvedValue([buildSettlement()]);
+    reviewDepositSettlementMock.mockResolvedValue(buildSettlement({ mdsStatus: 'requires_reconciliation',
+      mdsReviewNotes: 'Conciliar la evidencia con el registro.' }));
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(queryActionByText(container, 'Abrir orden')).not.toBeNull());
+      await clickFirstOrderRow(container);
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Estado del depósito: Devolución parcial pendiente');
+        expect(document.body.textContent).toContain('Evidencia en revisión');
+        expect(document.body.textContent).toContain('Transferencia bancaria · devolución');
+        expect(document.body.textContent).toContain('Esto no ejecuta ni afirma un reembolso de Datafast o PayPal.');
+        expect(queryActionByText(document.body, 'Verificar evidencia real')?.hasAttribute('disabled')).toBe(true);
+      });
+      expect(reviewDepositSettlementMock).not.toHaveBeenCalled();
+      await setTextareaValue(getTextareaByLabel(document.body, 'Notas de revisión independiente'), '  Conciliar la evidencia con el registro.  ');
+      await clickActionByText(document.body, 'Requiere conciliación');
+      await waitForExpectation(() => {
+        expect(reviewDepositSettlementMock).toHaveBeenCalledWith('order-1', 'settlement-1',
+          'requires_reconciliation', 'Conciliar la evidencia con el registro.');
+        expect(document.body.textContent).toContain('Estado del depósito: Devolución parcial pendiente');
+        expect(queryActionByText(document.body, 'Verificar evidencia real')).toBeNull();
+      });
+      expect(submitDepositSettlementMock).not.toHaveBeenCalled();
+      expect(updateOrderMock).not.toHaveBeenCalled(); expect(updateRentalMock).not.toHaveBeenCalled();
+    } finally { await cleanup(); }
+  });
+
+  it('labels verified forfeiture as evidence and retains the provider-refund warning', async () => {
+    listOrdersMock.mockResolvedValue([buildOrder({ moOrderKind: 'rental', moStatus: 'paid', moCheckoutStatus: 'paid',
+      moFulfillmentStatus: 'closed', moSecurityDepositUsdCents: 5000,
+      moDepositStatus: 'forfeited', moDepositDeductionUsdCents: 5000 })]);
+    listDepositSettlementsMock.mockResolvedValue([buildSettlement({ mdsStatus: 'verified', mdsSettlementMethod: 'forfeiture',
+      mdsDeductionAmountMinor: 5000, mdsRefundAmountMinor: 0 })]);
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(queryActionByText(container, 'Abrir orden')).not.toBeNull());
+      await clickFirstOrderRow(container);
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Estado del depósito: Depósito retenido');
+        expect(document.body.textContent).toContain('Evidencia verificada');
+        expect(document.body.textContent).toContain('Retención total documentada · devolución');
+        expect(document.body.textContent).toContain('Esto no ejecuta ni afirma un reembolso de Datafast o PayPal.');
+      });
+      expect(queryActionByText(document.body, 'Verificar evidencia real')).toBeNull();
+      expect(reviewDepositSettlementMock).not.toHaveBeenCalled(); expect(submitDepositSettlementMock).not.toHaveBeenCalled();
+    } finally { await cleanup(); }
+  });
+
+  it('preserves unknown evidence codes and does not invent a deposit state when data is absent', async () => {
+    listOrdersMock.mockResolvedValue([buildOrder({ moOrderKind: 'rental', moStatus: 'paid', moCheckoutStatus: 'paid',
+      moFulfillmentStatus: 'closed', moDepositStatus: null, moSecurityDepositUsdCents: 5000 })]);
+    listDepositSettlementsMock.mockResolvedValue([buildSettlement({
+      mdsStatus: 'future_status' as MarketplaceDepositSettlementDTO['mdsStatus'],
+      mdsSettlementMethod: 'future_method' as MarketplaceDepositSettlementDTO['mdsSettlementMethod'],
+    })]);
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(queryActionByText(container, 'Abrir orden')).not.toBeNull());
+      await clickFirstOrderRow(container);
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Estado del depósito: Sin información');
+        expect(document.body.textContent).toContain('future_status');
+        expect(document.body.textContent).toContain('future_method');
+      });
+      expect(queryActionByText(document.body, 'Verificar evidencia real')).toBeNull();
+      expect(reviewDepositSettlementMock).not.toHaveBeenCalled(); expect(submitDepositSettlementMock).not.toHaveBeenCalled();
     } finally { await cleanup(); }
   });
 

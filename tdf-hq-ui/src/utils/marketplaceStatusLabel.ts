@@ -47,6 +47,20 @@ const DEPOSIT_STATUS_LABELS: Record<string, string> = {
   disputed: 'En disputa',
 };
 
+const DEPOSIT_SETTLEMENT_STATUS_LABELS: Record<string, string> = {
+  submitted: 'Evidencia en revisión',
+  verified: 'Evidencia verificada',
+  rejected: 'Evidencia rechazada',
+  requires_reconciliation: 'Requiere conciliación',
+};
+
+const DEPOSIT_SETTLEMENT_METHOD_LABELS: Record<string, string> = {
+  bank_transfer: 'Transferencia bancaria',
+  cash: 'Efectivo',
+  pos: 'POS',
+  forfeiture: 'Retención total documentada',
+};
+
 // Missing and unfamiliar values must never imply payment, custody or settlement.
 function displayLabel(labels: Record<string, string>, value?: string | null): string {
   if (!value) return 'Sin información';
@@ -59,4 +73,12 @@ export function marketplaceFulfillmentStatusLabel(value?: string | null, orderKi
 
 export function marketplaceDepositStatusLabel(value?: string | null): string {
   return displayLabel(DEPOSIT_STATUS_LABELS, value);
+}
+
+export function marketplaceDepositSettlementStatusLabel(value?: string | null): string {
+  return displayLabel(DEPOSIT_SETTLEMENT_STATUS_LABELS, value);
+}
+
+export function marketplaceDepositSettlementMethodLabel(value?: string | null): string {
+  return displayLabel(DEPOSIT_SETTLEMENT_METHOD_LABELS, value);
 }

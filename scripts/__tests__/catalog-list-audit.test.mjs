@@ -44,10 +44,11 @@ async function readReconciliation() {
     'docs/catalog-persistence/event-catalog-retirements.json'), 'utf8'));
   const currentActive = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8')).decisions;
-  // These historical reconciliation tests replay the reviewed pre-extraction
-  // view. The separate marketplace test below verifies every complete current
-  // decision against that parent, including the two exact predecessors.
-  const active = currentActive.flatMap(row => {
+  // Each presentation follow-up has its own complete-parent preservation test.
+  // Historical reconciliation tests replay their exact earlier reviewed view.
+  const labelExtractionView = currentActive.filter(row =>
+    row.id !== 'f42409396fc972bf4d31' && row.id !== '399cc2b7d2c27f5143c1');
+  const active = labelExtractionView.flatMap(row => {
     if (row.id === 'e4eadc75e199657bbd8a') return [];
     if (row.id === '91c81c283f19a583aa11' || row.id === 'edd06ad23b93dfcc632a') return [row.previousDecision];
     return [row];
@@ -56,11 +57,37 @@ async function readReconciliation() {
     'docs/catalog-persistence/event-catalog-current-successors.json'), 'utf8')).successors;
   const integration = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-integration-retirements.json'), 'utf8'));
-  return { ledger, active, currentActive, successors, integration };
+  return { ledger, active, currentActive, labelExtractionView, successors, integration };
 }
 
+test('staff settlement display preserves every parent review and only labels existing SQL codes', async () => {
+  const { currentActive, labelExtractionView } = await readReconciliation();
+  const parent = JSON.parse((await execFileAsync('git', ['show',
+    'f11327af1ad809147f23b50e988dcc631d416836:docs/catalog-persistence/catalog-list-decisions.json'],
+    { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions;
+  assert.deepEqual(labelExtractionView, parent, 'all1430 complete parent reviews must remain byte-for-byte equivalent');
+  assert.equal(currentActive.length, parent.length + 2);
+  const schema = (await fs.readFile(path.join(workspaceRoot,
+    'tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql'), 'utf8'))
+    .split('CREATE TABLE IF NOT EXISTS marketplace_rental_deposit_settlement (')[1];
+  assert.ok(schema, 'the canonical settlement schema must exist');
+  const rows = currentActive.filter(row => row.id === 'f42409396fc972bf4d31' || row.id === '399cc2b7d2c27f5143c1');
+  assert.equal(rows.length, 2);
+  for (const row of rows) {
+    assert.equal(row.classification, 'dynamic-business-catalog');
+    assert.equal(row.reviewMethod, 'individual-source-review');
+    assert.equal(row.evidence.file, 'tdf-hq-ui/src/utils/marketplaceStatusLabel.ts');
+    const pattern = row.evidence.name === 'DEPOSIT_SETTLEMENT_STATUS_LABELS'
+      ? /status TEXT NOT NULL DEFAULT 'submitted' CHECK \(status IN \(([\s\S]*?)\)\)/
+      : /settlement_method TEXT NOT NULL CHECK \(settlement_method IN \(([\s\S]*?)\)\)/;
+    const allowed = [...schema.match(pattern)[1].matchAll(/'([^']+)'/g)].map(match => match[1]);
+    assert.deepEqual(row.evidence.values, allowed);
+    assert.equal(row.evidence.valueCount, 4);
+  }
+});
+
 test('marketplace label extraction preserves all complete reviews and the backend deposit vocabulary', async () => {
-  const { active, currentActive } = await readReconciliation();
+  const { active, labelExtractionView: currentActive } = await readReconciliation();
   const parent = JSON.parse((await execFileAsync('git',
     ['show', '4669d12deaf891f31a78f4d49140d59d260e50da:docs/catalog-persistence/catalog-list-decisions.json'],
     { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions;

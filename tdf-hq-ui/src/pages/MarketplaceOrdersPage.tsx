@@ -74,7 +74,12 @@ import {
   summarizeMarketplaceOrderList,
   type MarketplaceOrderFilters,
 } from '../utils/marketplace';
-import { marketplaceFulfillmentStatusLabel } from '../utils/marketplaceStatusLabel';
+import {
+  marketplaceDepositSettlementMethodLabel,
+  marketplaceDepositSettlementStatusLabel,
+  marketplaceDepositStatusLabel,
+  marketplaceFulfillmentStatusLabel,
+} from '../utils/marketplaceStatusLabel';
 import ConfirmDialog from '../components/ConfirmDialog';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 
@@ -1791,8 +1796,8 @@ export default function MarketplaceOrdersPage() {
                             <Typography variant="body2">
                               <strong>Cargo:</strong> {formatMoney(selectedOrder.moRentalChargeUsdCents ?? 0, 'USD')} · <strong>depósito:</strong> {formatMoney(rentalDeposit, 'USD')}
                             </Typography>
-                            <Typography variant="body2">
-                              <strong>Estado del depósito:</strong> {selectedOrder.moDepositStatus ?? '—'}
+                            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                              <strong>Estado del depósito:</strong> {marketplaceDepositStatusLabel(selectedOrder.moDepositStatus)}
                               {(selectedOrder.moDepositDeductionUsdCents ?? 0) > 0
                                 ? ` · deducción propuesta ${formatMoney(selectedOrder.moDepositDeductionUsdCents, 'USD')}`
                                 : ''}
@@ -2340,12 +2345,12 @@ export default function MarketplaceOrdersPage() {
                                   event.target.value as MarketplaceDepositSettlementSubmitPayload['mdssSettlementMethod'],
                                 )}
                               >
-                                <MenuItem value="bank_transfer">Transferencia bancaria</MenuItem>
-                                <MenuItem value="cash">Efectivo</MenuItem>
-                                <MenuItem value="pos">POS</MenuItem>
+                                <MenuItem value="bank_transfer">{marketplaceDepositSettlementMethodLabel('bank_transfer')}</MenuItem>
+                                <MenuItem value="cash">{marketplaceDepositSettlementMethodLabel('cash')}</MenuItem>
+                                <MenuItem value="pos">{marketplaceDepositSettlementMethodLabel('pos')}</MenuItem>
                                 {(selectedOrder.moDepositDeductionUsdCents ?? 0)
                                   === (selectedOrder.moSecurityDepositUsdCents ?? 0) && (
-                                  <MenuItem value="forfeiture">Retención total documentada</MenuItem>
+                                  <MenuItem value="forfeiture">{marketplaceDepositSettlementMethodLabel('forfeiture')}</MenuItem>
                                 )}
                               </Select>
                             </FormControl>
@@ -2378,12 +2383,13 @@ export default function MarketplaceOrdersPage() {
                           </>
                         )}
                         {depositSettlementsQuery.data?.map((settlement) => (
-                          <Paper key={settlement.mdsSettlementId} variant="outlined" sx={{ p: 1.5 }}>
+                          <Paper key={settlement.mdsSettlementId} variant="outlined" sx={{ p: 1.5, minWidth: 0, overflowWrap: 'anywhere' }}>
                             <Stack spacing={1}>
                               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-                                <Chip size="small" label={settlement.mdsStatus.replace(/_/g, ' ')} />
+                                <Chip size="small" label={marketplaceDepositSettlementStatusLabel(settlement.mdsStatus)}
+                                  sx={{ maxWidth: '100%', height: 'auto', '& .MuiChip-label': { whiteSpace: 'normal', overflowWrap: 'anywhere', py: 0.5 } }} />
                                 <Typography variant="body2">
-                                  {settlement.mdsSettlementMethod.replace(/_/g, ' ')} · devolución {formatMoney(settlement.mdsRefundAmountMinor, settlement.mdsCurrency)} · deducción {formatMoney(settlement.mdsDeductionAmountMinor, settlement.mdsCurrency)}
+                                  {marketplaceDepositSettlementMethodLabel(settlement.mdsSettlementMethod)} · devolución {formatMoney(settlement.mdsRefundAmountMinor, settlement.mdsCurrency)} · deducción {formatMoney(settlement.mdsDeductionAmountMinor, settlement.mdsCurrency)}
                                 </Typography>
                               </Stack>
                               <Typography variant="body2">

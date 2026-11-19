@@ -72,6 +72,7 @@
       "e2e/web/legacy-provider-playback.spec.mjs",
       "e2e/web/live-session-contact.spec.mjs",
       "e2e/web/marketplace-cart.spec.mjs",
+      "e2e/web/marketplace-deposit-labels.spec.mjs",
       "e2e/web/marketplace-reference-recovery.spec.mjs",
       "e2e/web/marketplace-request-recovery.spec.mjs",
       "e2e/web/merch-delivery-validation.spec.mjs",
@@ -3516,6 +3517,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-abf214e2ac584f50",
+      "path": "e2e/web/marketplace-deposit-labels.spec.mjs",
+      "sha256": "92d5bada7e0d78e5bbb92a2ab0cda00cc507f48c5bd158c4eea670e98e1b881e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7477a33f5664fcd2",
       "path": "e2e/web/marketplace-reference-recovery.spec.mjs",
       "sha256": "5e87b2c8e1d1bc3060412acb19934a2c41406b557515f1b06a43425cf78562f2",
@@ -3986,7 +3993,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "1c2ef850a9ca01d41745a4fd051d6cc38b370bddc5cfe6b2f695fac79c45ba6b",
+      "sha256": "0c9ff2d511de4f1fa871f6ebfbb4e71706b620f9d78baf6466ea6788d16b281a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11456,13 +11463,13 @@
     {
       "id": "SURFACE-b76dc0f541131283",
       "path": "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx",
-      "sha256": "5dffd9165ed71c3cd34be4af5aa43ccf616b0f8bc1f7002b3ce31e8cbca66246",
+      "sha256": "aa61a6d514dd02dce39ae947021816bc0cf354efdef9c5c656578474d33bbb6e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-e91e712671f722c0",
       "path": "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx",
-      "sha256": "6c560e2abf736e7def396f220c4bc2fdfd224acdc46a13bd188fe0f0bcf6475b",
+      "sha256": "fc643fa113b098e38f275d22ff6ba2af2217e92ce0f618d2168ac9859a3c128e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13166,7 +13173,7 @@
     {
       "id": "SURFACE-e277ede931c2fb9c",
       "path": "tdf-hq-ui/src/utils/marketplaceStatusLabel.ts",
-      "sha256": "44342ddb2e7ee87c5e162486622a76973619fb38a4a312dd7c572ee78b1dac94",
+      "sha256": "9f81719d52da46cdc04ceb2010442a19e4533b5fd080e236c9cefb72939da681",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31144,7 +31151,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "07155e1932eecfe753cd69ea0d5384fc347c9b87f1a14b17b36900241333e765",
+      "sha256": "31d5a7aa10bea9b5214c62e8ac0d020e7a578a4c3ccb843b4faa9328fa0e9680",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

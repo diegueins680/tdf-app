@@ -7129,6 +7129,20 @@
           "previousId": null
         }
       ]
+    },
+    "marketplaceSettlementDisplay": {
+      "sourceRevision": "f11327af1ad809147f23b50e988dcc631d416836",
+      "scope": "Two individually reviewed display maps for existing SQL/API codes. All1430 prior whole decision objects remain unchanged. No lifecycle or catalog authority is granted.",
+      "newReviews": [
+        {
+          "id": "f42409396fc972bf4d31",
+          "name": "DEPOSIT_SETTLEMENT_STATUS_LABELS"
+        },
+        {
+          "id": "399cc2b7d2c27f5143c1",
+          "name": "DEPOSIT_SETTLEMENT_METHOD_LABELS"
+        }
+      ]
     }
   },
   "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
@@ -38100,6 +38114,56 @@
           "disputed"
         ],
         "sourceReview": "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql: rental_status/deposit_status constraints; tdf-hq/src/TDF/Server.hs: rental closure requires verified terminal deposit evidence. Author source review only; no independent approval or deployment."
+      }
+    },
+    {
+      "id": "f42409396fc972bf4d31",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Misleading evidence copy can imply a provider refund or bypass independent review.",
+      "justification": "Display labels for the four existing immutable marketplace deposit settlement codes only. No method, status, action, permission, API or selectable option is added. The existing note requirements, submitted-only review controls, idempotency and server independent-review/settlement guards remain authoritative. Missing values are explicit and unfamiliar codes remain unchanged; evidence receipt never implies a provider refund. All previous complete catalog reviews remain unchanged.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-staff-deposit-display-20261119",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/marketplaceStatusLabel.ts",
+        "kind": "object-registry",
+        "name": "DEPOSIT_SETTLEMENT_STATUS_LABELS",
+        "valueCount": 4,
+        "values": [
+          "submitted",
+          "verified",
+          "rejected",
+          "requires_reconciliation"
+        ],
+        "sourceReview": "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql: marketplace_rental_deposit_settlement constraints and independent review guard; tdf-hq-ui/src/api/types.ts: MarketplaceDepositSettlementDTO and SubmitPayload. Author source review only, not independent PR approval."
+      }
+    },
+    {
+      "id": "399cc2b7d2c27f5143c1",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Misleading evidence copy can imply a provider refund or bypass independent review.",
+      "justification": "Display labels for the four existing immutable marketplace deposit settlement codes only. No method, status, action, permission, API or selectable option is added. The existing note requirements, submitted-only review controls, idempotency and server independent-review/settlement guards remain authoritative. Missing values are explicit and unfamiliar codes remain unchanged; evidence receipt never implies a provider refund. All previous complete catalog reviews remain unchanged.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-staff-deposit-display-20261119",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/marketplaceStatusLabel.ts",
+        "kind": "object-registry",
+        "name": "DEPOSIT_SETTLEMENT_METHOD_LABELS",
+        "valueCount": 4,
+        "values": [
+          "bank_transfer",
+          "cash",
+          "pos",
+          "forfeiture"
+        ],
+        "sourceReview": "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql: marketplace_rental_deposit_settlement constraints and independent review guard; tdf-hq-ui/src/api/types.ts: MarketplaceDepositSettlementDTO and SubmitPayload. Author source review only, not independent PR approval."
       }
     }
   ]
