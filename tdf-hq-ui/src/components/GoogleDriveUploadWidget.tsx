@@ -4,7 +4,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import { useOptionalSession } from '../session/SessionContext';
 import { useSessionOwner } from '../session/useSessionOwner';
 import { useOwnedTabDraft } from '../session/useOwnedTabDraft';
-import { getAuthSessionEpoch } from '../session/authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 import { newUploadKey, normalizeUploadFailure, uploadFailureMessage } from '../api/uploadFailure';
 import {
   Alert,

@@ -7,11 +7,11 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
-test('retired Fly preflight and execution stop before any remote tool', t => {
+test('retired release preflight and execution stop before any remote tool', t => {
   const dir = mkdtempSync(path.join(tmpdir(), 'tdf-retired-deploy-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const marker = path.join(dir, 'called');
-  for (const tool of ['flyctl', 'docker', 'ssh', 'git']) {
+  for (const tool of ['docker', 'ssh', 'git']) {
     writeFileSync(path.join(dir, tool), '#!/bin/sh\n: > "$MARKER"\nexit 97\n', { mode: 0o700 });
   }
   for (const mode of ['preflight', 'release']) {
@@ -20,8 +20,30 @@ test('retired Fly preflight and execution stop before any remote tool', t => {
       env: { PATH: `${dir}:${process.env.PATH}`, MARKER: marker }, encoding: 'utf8',
     });
     assert.equal(result.status, 1);
-    assert.match(result.stderr, /The Fly release CLI is retired/);
+    assert.match(result.stderr, /The release CLI is retired/);
     assert.match(result.stderr, /Preparation does not deploy or authorize database changes/);
+    assert.equal(existsSync(marker), false);
+  }
+});
+
+test('identity reconciliation database commands stop before any tool or output file', t => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'tdf-retired-reconciliation-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const marker = path.join(dir, 'called');
+  for (const tool of ['docker', 'ssh', 'psql']) {
+    writeFileSync(path.join(dir, tool), '#!/bin/sh\n: > "$MARKER"\nexit 97\n', { mode: 0o700 });
+  }
+  const operation = '00000000-0000-4000-8000-000000000001';
+  for (const command of [['list'], ['inventory'], ['rollback', '--operation', operation]]) {
+    const output = path.join(dir, `${command[0]}.json`);
+    const result = spawnSync(process.execPath, [path.join(root, 'scripts/identity-reconciliation.mjs'),
+      '--command', ...command, '--db-app', 'retired-db', '--database', 'tdf_hq', '--output', output], {
+      env: { PATH: `${dir}:${process.env.PATH}`, MARKER: marker }, encoding: 'utf8',
+    });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Database commands are unavailable/);
+    assert.equal(result.stdout, '');
+    assert.equal(existsSync(output), false);
     assert.equal(existsSync(marker), false);
   }
 });

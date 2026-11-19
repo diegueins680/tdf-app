@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import { fireEvent } from '@testing-library/react';
 import { saveArtistProfileMedia } from './artistProfileMedia';
-import { advanceAuthSessionEpoch, getAuthSessionEpoch } from '../session/authEvents';
+import { advanceAuthSessionEpoch, getAuthSessionEpoch } from '../auth/authEvents';
 
 let image: HTMLImageElement;
 beforeEach(() => {
