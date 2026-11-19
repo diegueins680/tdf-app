@@ -68,6 +68,13 @@ import {
 } from '../utils/torrentAudio';
 import LazyPaginatedList from './LazyPaginatedList';
 import { PLAYER_TAKEOVER_EVENT, RADIO_TAKEOVER_EVENT } from '../player/types';
+import {
+  claimPlaybackSession,
+  releasePlaybackSession,
+  updatePlaybackSession,
+  type PlaybackSessionHandlers,
+  type PlaybackSessionState,
+} from '../player/playbackSession';
 
 interface Prompt {
   text: string;
@@ -1378,6 +1385,40 @@ export default function RadioWidget() {
     window.addEventListener(PLAYER_TAKEOVER_EVENT, stopAllAudio);
     return () => window.removeEventListener(PLAYER_TAKEOVER_EVENT, stopAllAudio);
   }, [stopAllAudio]);
+
+  // System media controls (hardware keys, Now Playing, desktop shell menu) act
+  // on the radio while it is the most recently started audio. The handlers read
+  // the latest closures through a ref so the session owner stays stable.
+  const radioCommandsRef = useRef({
+    play: () => undefined as void,
+    pause: () => undefined as void,
+    next: () => undefined as void,
+    previous: () => undefined as void,
+  });
+  radioCommandsRef.current = {
+    play: () => { if (!isPlayingRef.current) togglePlay(); },
+    pause: () => { if (isPlayingRef.current) togglePlay(); },
+    next: jumpToNextStation,
+    previous: jumpToPreviousStation,
+  };
+  const radioPlaybackHandlers = useMemo<PlaybackSessionHandlers>(() => ({
+    play: () => { radioCommandsRef.current.play(); },
+    pause: () => { radioCommandsRef.current.pause(); },
+    next: () => { radioCommandsRef.current.next(); },
+    previous: () => { radioCommandsRef.current.previous(); },
+  }), []);
+  useEffect(() => {
+    const state: PlaybackSessionState = {
+      status: isPlaying ? 'playing' : 'paused',
+      title: activeStation.name,
+      artist: 'Radio TDF',
+      album: null,
+      artworkUrl: null,
+    };
+    if (isPlaying) claimPlaybackSession('radio', radioPlaybackHandlers, state);
+    else updatePlaybackSession('radio', state, radioPlaybackHandlers);
+  }, [activeStation.name, isPlaying, radioPlaybackHandlers]);
+  useEffect(() => () => { releasePlaybackSession('radio'); }, []);
 
   const startInputTest = useCallback(async () => {
     if (!mediaDevicesSupported || !navigator.mediaDevices?.getUserMedia) {

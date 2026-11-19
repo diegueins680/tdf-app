@@ -32,6 +32,10 @@ let sessionMock: SessionUser | null = {
   partyId: 42,
 };
 
+// The events panel has its own suite; this stand-in only records where the hub mounts it.
+jest.unstable_mockModule('../components/events/MyEventsPanel', () => ({
+  default: ({ partyId }: { partyId: number }) => <div data-testid="my-events-panel" data-party={partyId} />,
+}));
 jest.unstable_mockModule('../api/directory', () => ({ Directory: { taxonomies: async () => ({ cities: [], genres: [] }), search: directorySearchMock } }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
@@ -344,6 +348,21 @@ describe('FanHubPage authoritative onboarding continuity', () => {
     closeOnboardingAlert();
     await waitFor(() => expect(screen.queryByText('Primeros pasos')).toBeNull());
     view.queryClient.clear();
+  });
+
+  it('puts event creation and management on the signed-in hub only once the session is confirmed', async () => {
+    sessionLoading = true;
+    const view = renderPage();
+    expect(screen.queryByTestId('my-events-panel')).toBeNull();
+
+    sessionLoading = false;
+    view.rerenderPage();
+    expect((await screen.findByTestId('my-events-panel')).getAttribute('data-party')).toBe('42');
+    cleanup();
+
+    sessionMock = null;
+    renderPage();
+    expect(screen.queryByTestId('my-events-panel')).toBeNull();
   });
 
   it('does not read or show account guidance until session hydration completes', async () => {

@@ -6,11 +6,6 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      inspect_payment_staging:
-        description: Read-only metadata and secret-name inspection of the two fixed staging apps.
-        required: false
-        default: false
-        type: boolean
       force_backend:
         description: Build the backend even when path classification would skip it.
         type: boolean
@@ -29,12 +24,6 @@ on:
         required: false
       DOCKERHUB_TOKEN:
         required: false
-      FLY_STAGING_API_TOKEN:
-        required: false
-      FLY_STAGING_WEB_TOKEN:
-        required: false
-      KOYEB_API_TOKEN:
-        required: false
     inputs:
       force_backend:
         description: Always build and test the backend, even when path classification would skip it.
@@ -52,41 +41,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  payment-staging-inspection:
-    if: github.event_name == 'workflow_dispatch' && inputs.inspect_payment_staging == true
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-      - name: Verify staging target and redaction guards
-        run: node --test scripts/__tests__/payment-staging-inspection.test.mjs
-      - name: Install official Fly CLI
-        uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1
-        with:
-          version: '0.4.103'
-      - name: Inspect only existing staging metadata
-        env:
-          FLY_STAGING_API_TOKEN: ${{ secrets.FLY_STAGING_API_TOKEN }}
-          FLY_STAGING_WEB_TOKEN: ${{ secrets.FLY_STAGING_WEB_TOKEN }}
-          KOYEB_API_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
-          NO_COLOR: '1'
-        run: node scripts/inspect-payment-staging.mjs
-      - name: Upload allowlisted staging access report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: payment-staging-access-${{ github.sha }}
-          path: artifacts/payment-staging/access-report.json
-          if-no-files-found: ignore
-          retention-days: 7
-
   changes:
     runs-on: ubuntu-latest
     outputs:
@@ -175,6 +129,16 @@ jobs:
           docker pull "$tdf_physical_image"
           sudo install -d -m 700 /opt/tdf/backups
           sudo env TDF_PHYSICAL_TEST_IMAGE="$tdf_physical_image" PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-physical-postgres-docker.py
+
+      - name: Build and verify the music worker runtime image without publication
+        if: needs.changes.outputs.backend == 'true'
+        timeout-minutes: 30
+        env:
+          DOCKER_BUILDKIT: '1'
+        run: |
+          tdf_worker_test_image="tdf-music-worker:ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker build --file tdf-hq/Dockerfile.music-worker --tag "$tdf_worker_test_image" .
+          node scripts/test-music-worker-image.mjs "$tdf_worker_test_image"
 
   ui-quality:
     needs: changes
@@ -386,6 +350,23 @@ jobs:
       - name: Install backend verification dependencies
         run: npm ci --ignore-scripts
 
+      - name: Verify music worker recovery, fencing and DDEX diagnostics
+        env:
+          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_worker_test
+        run: |
+          node --test scripts/__tests__/music-test-database.test.mjs
+          node --test scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs
+          run_music_worker_runtime_gate() {
+            local music_worker_baseline_status=0
+            MUSIC_WORKER_STOP_DIAGNOSTICS=false npm run test:music-worker-runtime || music_worker_baseline_status=$?
+            if [ "$music_worker_baseline_status" -ne 0 ]; then
+              printf '%s\n' 'Untraced music-worker runtime failed; collecting optional shutdown diagnostics.' || true
+              MUSIC_WORKER_STOP_DIAGNOSTICS=true npm run test:music-worker-runtime || true
+            fi
+            return "$music_worker_baseline_status"
+          }
+          run_music_worker_runtime_gate
+
       - name: Restore immutable Stack dependencies
         uses: actions/cache@v6
         with:
@@ -405,14 +386,6 @@ jobs:
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
 
-      - name: Verify music worker recovery, fencing and DDEX diagnostics
-        env:
-          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_worker_test
-        run: |
-          node --test scripts/__tests__/music-test-database.test.mjs
-          node --test scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs
-          npm run test:music-worker-runtime
-
       - name: Verify authorized music catalog recording search
         env:
           TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_search_test
@@ -422,6 +395,19 @@ jobs:
         env:
           TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_worker_test
         run: node scripts/test-music-source-projection.mjs
+
+      - name: Verify artist featured-track persistence and public selection
+        env:
+          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_featured_test
+        run: node scripts/test-artist-featured-track.mjs
+
+      - name: Verify media health suppression and restoration
+        env:
+          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_health_test
+        run: node scripts/test-music-media-health.mjs
+
+      - name: Verify bounded SSRF-safe media probes
+        run: python3 scripts/test-music-media-health.py
 
       - name: Verify authorized recording search and metadata boundaries
         env:
@@ -438,6 +424,14 @@ jobs:
         run: |
           export TDF_AUDIT_E2E_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
           sh scripts/test-studio-internship-audit-api-e2e.sh
+
+      - name: Verify login lockout, disabled-account answer and signup and reset limits over HTTP
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          TDF_AUTH_THROTTLE_BACKEND_EXE: ${{ env.BACKEND_BINARY_OUT }}
+        run: sh scripts/test-auth-throttle-http.sh
 
       - name: Inspect the compiled Servant API against documented operations
         run: |
@@ -669,6 +663,10 @@ jobs:
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: sh scripts/test-event-organizer.sh
+      - name: Verify delegated event administration, single-use links and courtesy tickets
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-event-admin-delegation.sh
       - name: Chat recipient notifications and repeated messages
         env:
           TDF_CHAT_NOTIFICATION_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test

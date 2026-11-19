@@ -12,23 +12,27 @@ import ShareIcon from '@mui/icons-material/Share';
 import { Alert, Avatar, Box, Button, ButtonBase, Card, CardContent, Chip, CircularProgress, Divider, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { Link as RouterLink, useLocation, useParams } from 'react-router-dom';
 import PageShell, { EmptyState } from '../components/PageShell';
+import { ApiError } from '../api/client';
 import { SocialEventsAPI, type SocialEventMomentCreateDTO, type SocialTicketTierDTO } from '../api/socialEvents';
 import { EventTickets } from '../api/eventTickets';
 import { Catalogs } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
+import { canAccessPath } from '../utils/accessControl';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { formatCurrency } from '../utils/formatters';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventMemoryInvitationControls from '../components/events/EventMemoryInvitations';
 import { EventMemoryInvitations } from '../api/eventMemoryInvitations';
-import { getAuthSessionEpoch } from '../session/authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 import { useOwnedSessionDraft } from '../session/useOwnedSessionDraft';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { formatInEventTimeZone } from '../utils/dateTime';
 import TicketPricePreview from '../components/events/TicketPricePreview';
 import EventPreparationPanel from '../components/events/EventPreparationPanel';
 import EventLineupEditor from '../components/events/EventLineupEditor';
+import EventAdminsCard from '../components/events/EventAdminsCard';
+import EventCourtesyTicketsCard from '../components/events/EventCourtesyTicketsCard';
 import { estimateTicketFees, parseOptionalPriceCents } from '../utils/eventTicketPricing';
 
 const formatDate = (value: string | null | undefined, locale: string, timezone: string) => {
@@ -47,11 +51,14 @@ interface PublicationAttempt { eventId: string; scope: string; draft: MomentDraf
 interface OwnMomentAction { id: string; mode: 'edit' | 'delete'; caption: string; updatedAt: string }
 interface OwnMomentAttempt { eventId: string; action: OwnMomentAction; isCurrentOwner: () => boolean }
 const sessionChanged = () => new Error('Tu sesión cambió. Vuelve al evento antes de publicar.');
+const memoriesUnavailable = (error: unknown) =>
+  error instanceof ApiError && (error.status === 403 || error.status === 404);
 
 export default function SocialEventDetailPage() {
   const { eventId = '' } = useParams();
-  const { search, pathname, hash } = useLocation();
+  const { search, pathname, hash, key: routeEntryKey } = useLocation();
   const captionInput = useRef<HTMLInputElement>(null);
+  const lastComposerFocus = useRef<string | null>(null);
   const requestedMoment = new URLSearchParams(search).get('moment');
   const focusedMomentRef = useRef<HTMLDivElement>(null);
   const lastFocusedMoment = useRef<string | null>(null);
@@ -91,7 +98,8 @@ export default function SocialEventDetailPage() {
   const momentsQuery = useQuery({
     queryKey: ['social-event-moments', eventId, accountScope],
     queryFn: () => SocialEventsAPI.listMoments(eventId),
-    enabled: Boolean(eventId),
+    enabled: eventQuery.isSuccess,
+    retry: false,
   });
   useEffect(() => {
     const key = `${eventId}:${requestedMoment ?? ''}`;
@@ -104,6 +112,14 @@ export default function SocialEventDetailPage() {
     queryKey: ['social-event-ticket-tiers', eventId],
     queryFn: () => SocialEventsAPI.listTicketTiers(eventId),
     enabled: Boolean(eventId),
+  });
+  // Delegated administration is granted per event by its organizer, so it is
+  // asked of the server instead of being derived from the session roles.
+  const adminAccessQuery = useQuery({
+    queryKey: ['social-event-admin-access', eventId, accountScope],
+    queryFn: () => SocialEventsAPI.getEventAdminAccess(eventId),
+    enabled: Boolean(eventId && session),
+    retry: false,
   });
   const numericEventId = Number(eventId);
   const ticketStorefrontPrerequisitesMet = Number.isSafeInteger(numericEventId)
@@ -201,20 +217,39 @@ export default function SocialEventDetailPage() {
 
   const event = eventQuery.data;
   const eventEnded = Boolean(event?.eventEnd && Date.parse(event.eventEnd) <= Date.now());
+  const composeFocusKey = eventQuery.isSuccess && momentsQuery.isSuccess && session && new URLSearchParams(search).get('compose') === '1'
+    ? `${routeEntryKey}:${eventId}:${accountScope}` : null;
   useEffect(() => {
-    if (event && session && new URLSearchParams(search).get('compose') === '1') {
-      captionInput.current?.scrollIntoView?.({ block: 'center' });
-      captionInput.current?.focus();
-    }
-  }, [event, session, search]);
+    if (!composeFocusKey) { lastComposerFocus.current = null; return; }
+    const input = captionInput.current;
+    if (!composer.ready || !input || input.disabled || lastComposerFocus.current === composeFocusKey) return;
+    // A return intent focuses once for this account and navigation entry.
+    // Later session/event snapshots must not interrupt a menu or move a reader.
+    lastComposerFocus.current = composeFocusKey;
+    input.scrollIntoView?.({ block: 'center' });
+    input.focus();
+  }, [composeFocusKey, composer.ready]);
   const isOrganizer = Boolean(session?.partyId && event?.eventOrganizerPartyId && String(session.partyId) === String(event.eventOrganizerPartyId));
+  const adminAccess = session ? adminAccessQuery.data?.eaaAccess ?? 'none' : 'none';
+  // Organizer or delegated administrator: event editing, poster, ticket tiers
+  // and courtesies. Memory campaigns and moderation stay with `isOrganizer`.
+  const canManageEvent = isOrganizer || adminAccess === 'admin';
+  // The planning workspace is a separate, access-controlled section: without
+  // access its links only lead to a 403 page.
+  const canPlanLogistics = canAccessPath(`/social/eventos/${eventId ?? ''}/logistica`, session?.roles, session?.modules, session?.featureFlags);
+  // The server admits the organizer, delegated administrators and the logistics
+  // team. Offer the link to those this page can recognise (managers, and staff
+  // with scheduling access, as before), not to every signed-in visitor.
+  const showPlanningLink = canPlanLogistics
+    && (canManageEvent || (session?.modules ?? []).some((module) => module.toLowerCase() === 'scheduling'));
   const canShareTickets = ticketStorefrontPrerequisitesMet
     && storefrontQuery.data?.checkoutAvailable === true;
   const ticketPurchaseUrl = typeof window === 'undefined'
     ? ''
     : new URL(`/eventos/${encodeURIComponent(eventId)}/entradas`, window.location.origin).toString();
   const sessionBoundaryError = postMutation.error instanceof Error && postMutation.error.message === sessionChanged().message;
-  const error = eventQuery.error ?? momentsQuery.error ?? (postMutation.variables?.scope === editorScope || sessionBoundaryError ? postMutation.error : null);
+  const publicationError = postMutation.variables?.scope === editorScope || sessionBoundaryError
+    ? postMutation.error : null;
 
   const shareTicketPurchaseLink = async () => {
     if (!event || !ticketPurchaseUrl) return;
@@ -246,11 +281,30 @@ export default function SocialEventDetailPage() {
     }
   };
 
-  const memories = <>
-        <Card id="momentos" variant="outlined">
+  const memories = eventQuery.isSuccess && (
+    <Stack id="momentos" spacing={1.5}>
+      {momentsQuery.isError && (
+        <>
+          <Typography variant="h5">Recuerdos de la comunidad</Typography>
+          {memoriesUnavailable(momentsQuery.error) ? (
+            <Alert severity="info" role="status">Los recuerdos de este evento no están disponibles para tu cuenta.</Alert>
+          ) : (
+            <Alert severity="error" action={
+              <Button color="inherit" size="small" disabled={momentsQuery.isFetching}
+                onClick={() => { void momentsQuery.refetch(); }}>Reintentar</Button>
+            }>No se pudieron cargar los recuerdos del evento.</Alert>
+          )}
+        </>
+      )}
+      {momentsQuery.isPending && <CircularProgress size={24} aria-label="Cargando recuerdos del evento" />}
+      {momentsQuery.isSuccess && (
+        <Card variant="outlined">
           <CardContent>
             <Stack spacing={1.5}>
               <Typography variant="h6">Compartir un recuerdo</Typography>
+              {publicationError && (
+                <Alert severity="error">{publicationError.message}</Alert>
+              )}
               {!session ? (
                 <Stack spacing={1}><Typography>Comparte imágenes o enlaces de video con la comunidad de este evento.</Typography><Button component={RouterLink} to={buildLoginRedirectPath(`${pathname}${search}${hash}`)} variant="contained">Iniciar sesión o crear una cuenta</Button></Stack>
               ) : (
@@ -274,16 +328,17 @@ export default function SocialEventDetailPage() {
             </Stack>
           </CardContent>
         </Card>
-
+      )}
+      {momentsQuery.isSuccess && (
         <Stack spacing={1.5}>
           <Typography variant="h5">Recuerdos de la comunidad</Typography>
           <InteractionPanel kind="event" entityKey={eventId} />
-          {requestedMoment && momentsQuery.isSuccess && !momentsQuery.data.some((moment) => moment.emId === requestedMoment) && (
+          {requestedMoment && !momentsQuery.data.some((moment) => moment.emId === requestedMoment) && (
             <Alert severity="info" role="status">Esta publicación ya no está disponible o no tienes acceso.</Alert>
           )}
-          {momentsQuery.isLoading ? <CircularProgress size={24} /> : momentsQuery.data?.length === 0 ? (
+          {momentsQuery.data.length === 0 ? (
             <EmptyState icon={<ImageIcon fontSize="inherit" />} title="Todavía no hay publicaciones" description="Sé la primera persona en compartir un momento de este evento." />
-          ) : momentsQuery.data?.map((moment) => (
+          ) : momentsQuery.data.map((moment) => (
             <Card key={moment.emId ?? `${moment.emAuthorPartyId}-${moment.emCreatedAt}`} variant="outlined"
               ref={moment.emId === requestedMoment ? focusedMomentRef : undefined}
               tabIndex={moment.emId === requestedMoment ? -1 : undefined}
@@ -328,7 +383,9 @@ export default function SocialEventDetailPage() {
             </Card>
           ))}
         </Stack>
-  </>;
+      )}
+    </Stack>
+  );
 
   return (
     <PageShell
@@ -346,12 +403,18 @@ export default function SocialEventDetailPage() {
             Compartir entradas
           </Button>
         )}
-        {session && <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`} startIcon={<RouteIcon />} variant="contained">Logística</Button>}
+        {session && showPlanningLink && <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`} startIcon={<RouteIcon />} variant="contained">Logística</Button>}
       </Stack>}
     >
       <Stack spacing={2.5}>
         {eventEnded && <Alert severity="info">Este evento ya terminó. Comparte tus recuerdos, conversa con la comunidad y descubre próximas experiencias.</Alert>}
-        {error && <Alert severity="error">{error instanceof Error ? error.message : 'No se pudo cargar el evento.'}</Alert>}
+        {eventQuery.isError && (
+          <Alert severity="error">
+            {eventQuery.error instanceof ApiError && eventQuery.error.status === 404
+              ? 'No se encontró el evento.'
+              : eventQuery.error instanceof Error ? eventQuery.error.message : 'No se pudo cargar el evento.'}
+          </Alert>
+        )}
         {shareFeedback && (
           <Alert severity={shareFeedback.severity} onClose={() => setShareFeedback(null)}>
             {shareFeedback.message}
@@ -388,8 +451,8 @@ export default function SocialEventDetailPage() {
           </Card>
         )}
 
-        {event && isOrganizer && session?.partyId && <EventPreparationPanel key={editorScope} event={event} ownerId={session.partyId} />}
-        {event && isOrganizer && session?.partyId && <EventLineupEditor key={`lineup:${editorScope}`} event={event} ownerId={session.partyId} />}
+        {event && canManageEvent && session?.partyId && <EventPreparationPanel key={editorScope} event={event} ownerId={session.partyId} canPlanLogistics={canPlanLogistics} />}
+        {event && canManageEvent && session?.partyId && <EventLineupEditor key={`lineup:${editorScope}`} event={event} ownerId={session.partyId} />}
         {eventEnded && memories}
         {event && <Card variant="outlined">
           <CardContent>
@@ -424,7 +487,7 @@ export default function SocialEventDetailPage() {
                   })}
                 </Stack>
               ) : <Typography color="text.secondary">Aún no hay tickets para este evento.</Typography>}
-              {isOrganizer && <>
+              {canManageEvent && <>
                 <Divider />
                 <Typography variant="subtitle1" fontWeight={700}>Crear tipo de ticket</Typography>
                 {ticketTierMutation.error && <Alert severity="error">{ticketTierMutation.error instanceof Error ? ticketTierMutation.error.message : 'No se pudo crear el ticket.'}</Alert>}
@@ -439,6 +502,15 @@ export default function SocialEventDetailPage() {
             </Stack>
           </CardContent>
         </Card>
+
+        {event && adminAccess !== 'none' && <EventCourtesyTicketsCard key={`courtesy:${editorScope}`} eventId={eventId} tiers={tiersQuery.data ?? []} tiersLoading={tiersQuery.isLoading} />}
+        {event && adminAccess !== 'none' && <EventAdminsCard
+          key={`admins:${editorScope}`}
+          eventId={eventId}
+          access={adminAccess}
+          accountScope={accountScope}
+          formatDate={(value) => formatDate(value, locale, event.eventTimezone ?? timezone)}
+        />}
 
         {event && <ExperienceReviews targetKind="event" targetId={eventId} title="Reseñas del evento" />}
 

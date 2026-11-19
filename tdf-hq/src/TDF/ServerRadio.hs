@@ -22,6 +22,8 @@ module TDF.ServerRadio
   , validateRadioMetadataRefreshLimit
   , resolveRadioNowPlayingFetchResult
   , parseIcyMetaIntHeader
+  , validateRadioCatalogAccess
+  , hardenRadioFetchRequest
   ) where
 
 import           Control.Applicative    ((<|>))
@@ -51,7 +53,7 @@ import           Database.Persist       (Entity(..), PersistValue(PersistText), 
                                          SelectOpt(Asc, Desc, LimitTo), deleteBy, getBy, insert, repsert,
                                          get, selectFirst, selectList, update, updateWhere)
 import           Database.Persist.Sql   (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
-import           Servant                (NoContent(..), ServerError, ServerT, err400, err500, err502, err503, errBody, throwError, (:<|>)(..))
+import           Servant                (NoContent(..), ServerError, ServerT, err400, err403, err500, err502, err503, errBody, throwError, (:<|>)(..))
 import           Network.HTTP.Client    (BodyReader, Manager, brRead, httpLbs, parseRequest, responseBody,
                                          responseHeaders, responseTimeoutMicro, requestHeaders, withResponse, Request(..))
 import           Network.HTTP.Types.URI (urlDecode)
@@ -64,7 +66,7 @@ import           TDF.API.Types          (RadioAutoStopOptionDTO(..), RadioAutoSt
                                          RadioMetadataRefreshRequest(..), RadioMetadataRefreshResult(..),
                                          RadioNowPlayingRequest(..), RadioNowPlayingResult(..),
                                          RadioTransmissionRequest(..), RadioTransmissionInfo(..))
-import           TDF.Auth               (AuthedUser(..))
+import           TDF.Auth               (AuthedUser(..), ModuleAccess, hasModuleAccess)
 import qualified TDF.Catalog.Models     as Catalog
 import           TDF.DB                 (Env(..), sharedTlsManager)
 import           TDF.Models
@@ -828,6 +830,28 @@ splitStreamTitle title =
        (artist, track):_ -> (Just artist, Just track)
        [] -> (Nothing, Nothing)
 
+-- | The shared radio catalog (stream upserts, imports, metadata refreshes)
+-- and the server-side stream fetches behind them are staff tools: the caller
+-- must hold at least one module grant under a coherent role set. Accounts
+-- with no module (Fan, Promoter, Agency, ...) keep their own presence routes
+-- and the read-only search, but cannot rewrite the catalog or make the server
+-- fetch URLs on their behalf.
+-- | Every server-side radio fetch goes to a URL that was checked lexically
+-- against private and reserved hosts. A redirect would move the request to a
+-- host that was never checked, so none is followed: the 3xx answer is read as
+-- it is. No cookie is kept between fetches.
+hardenRadioFetchRequest :: Request -> Request
+hardenRadioFetchRequest req = req { redirectCount = 0, cookieJar = Nothing }
+
+validateRadioCatalogAccess :: AuthedUser -> Either ServerError ()
+validateRadioCatalogAccess user
+  | fromSqlKey (auPartyId user) <= 0 =
+      Left err403 { errBody = "Valid authenticated party required" }
+  | not (any (`hasModuleAccess` user) [minBound .. maxBound :: ModuleAccess]) =
+      -- hasModuleAccess already requires coherent, unique role grants.
+      Left err403 { errBody = "Radio catalog changes require a staff module grant" }
+  | otherwise = Right ()
+
 radioServer
   :: forall m.
      ( MonadReader Env m
@@ -932,6 +956,7 @@ radioServer user =
 
     upsertActive :: RadioStreamUpsert -> m RadioStreamDTO
     upsertActive payload = do
+      either throwError pure (validateRadioCatalogAccess user)
       streamUrl <- either throwError pure (validateRadioStreamUrl (rsuStreamUrl payload))
       when (isLegacyBroadcastUrl streamUrl) $ throwError nativeBroadcastUnavailable
       name <- either throwError pure $
@@ -961,6 +986,7 @@ radioServer user =
 
     importStreams :: RadioImportRequest -> m RadioImportResult
     importStreams RadioImportRequest{..} = do
+      either throwError pure (validateRadioCatalogAccess user)
       cleanedSources <- either throwError pure (validateRadioImportSources rirSources)
       cap <- either throwError pure (validateRadioImportLimit rirLimit)
       manager <- pure sharedTlsManager
@@ -1011,6 +1037,7 @@ radioServer user =
 
     refreshMetadata :: RadioMetadataRefreshRequest -> m RadioMetadataRefreshResult
     refreshMetadata RadioMetadataRefreshRequest{..} = do
+      either throwError pure (validateRadioCatalogAccess user)
       cap <- either throwError pure (validateRadioMetadataRefreshLimit rmrLimit)
       let onlyMissing = fromMaybe False rmrOnlyMissing
       now <- liftIO getCurrentTime
@@ -1024,7 +1051,10 @@ radioServer user =
                 else rows
       manager <- pure sharedTlsManager
       results <- forM candidates $ \(Entity sid stream) -> do
-        metaResult <- liftIO $ fetchStreamMetadata manager (radioStreamStreamUrl stream)
+        -- Stored URLs predate or bypass the current host rules; check again before fetching.
+        metaResult <- case validateRadioStreamUrl (radioStreamStreamUrl stream) of
+          Left _ -> pure (Left "radio_stream_url_rejected")
+          Right safeUrl -> liftIO $ fetchStreamMetadata manager safeUrl
         case metaResult of
           Left _ -> do
             liftIO $ flip runSqlPool envPool $
@@ -1053,6 +1083,7 @@ radioServer user =
 
     nowPlaying :: RadioNowPlayingRequest -> m RadioNowPlayingResult
     nowPlaying RadioNowPlayingRequest{..} = do
+      either throwError pure (validateRadioCatalogAccess user)
       streamUrl <- either throwError pure (validateRadioStreamUrl rnpStreamUrl)
       manager <- pure sharedTlsManager
       result <- liftIO $ fetchNowPlaying manager streamUrl
@@ -1281,8 +1312,8 @@ radioServer user =
 
     fetchSource :: Manager -> Text -> IO [RadioImportCandidate]
     fetchSource manager src = do
-      req <- parseRequest (T.unpack (canonicalRadioImportSource src))
-      resp <- httpLbs req manager
+      req0 <- parseRequest (T.unpack (canonicalRadioImportSource src))
+      resp <- httpLbs (hardenRadioFetchRequest req0 { responseTimeout = responseTimeoutMicro 10000000 }) manager
       let bodyTxt = TE.decodeUtf8 (BL.toStrict (responseBody resp))
           csvItems = parseCsvStreams bodyTxt
       if not (null csvItems)
@@ -1348,7 +1379,7 @@ radioServer user =
     fetchStreamMetadata manager url = do
       result <- fixedFailure "radio_fetch_failed" $ do
         req0 <- parseRequest (T.unpack url)
-        let req = req0
+        let req = (hardenRadioFetchRequest req0)
               { requestHeaders = ("Icy-MetaData","1") : ("User-Agent","tdf-radio-metadata/1.0") : requestHeaders req0
               , responseTimeout = responseTimeoutMicro 5000000
               }
@@ -1367,7 +1398,7 @@ radioServer user =
     fetchNowPlaying manager url = do
       result <- fixedFailure "radio_fetch_failed" $ do
         req0 <- parseRequest (T.unpack url)
-        let req = req0
+        let req = (hardenRadioFetchRequest req0)
               { requestHeaders = ("Icy-MetaData","1") : ("User-Agent","tdf-radio-now-playing/1.0") : requestHeaders req0
               , responseTimeout = responseTimeoutMicro 5000000
               }

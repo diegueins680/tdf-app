@@ -13,6 +13,7 @@ module TDF.Server where
 
 import qualified TDF.VideoCampaigns as VideoCampaigns
 import qualified TDF.ContentStorage as ContentStorage
+import qualified TDF.Calendar.TokenCipher as CalendarTokenCipher
 import qualified TDF.Social.Chat as SocialChat
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
@@ -44,12 +45,10 @@ import           Data.Ord (Down(..))
 import           Data.Foldable (for_, toList)
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
-  , digitToInt
   , generalCategory
   , isAscii
   , isControl
   , isDigit
-  , isHexDigit
   , isAlphaNum
   , isAsciiLower
   , isAsciiUpper
@@ -59,10 +58,10 @@ import           Data.Char
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import           Data.Either (isLeft)
 import qualified Data.Set as Set
-import           Data.Aeson (ToJSON(..), Value(..), Object, defaultOptions, object, (.=), decodeStrict', eitherDecodeStrict', eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
+import           Data.Aeson (ToJSON(..), Value(..), Object, object, (.=), decodeStrict', eitherDecodeStrict', eitherDecode, FromJSON(..), Result(..), encode, fromJSON)
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKeyMap
-import           Data.Aeson.Types (Parser, camelTo2, fieldLabelModifier, parseEither, parseMaybe, withObject, (.:), (.:?), (.!=))
+import           Data.Aeson.Types (Parser, parseEither, parseMaybe, withObject, (.:), (.:?), (.!=))
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -73,7 +72,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Scientific as Sci
 import           Data.Time
-  ( Day, NominalDiffTime, UTCTime (..), ZonedTime, addDays, addUTCTime, diffTimeToPicoseconds, diffUTCTime, fromGregorian
+  ( Day, NominalDiffTime, UTCTime (..), ZonedTime, addUTCTime, diffTimeToPicoseconds, diffUTCTime, fromGregorian
   , getCurrentTime, secondsToDiffTime, toGregorian, utctDay, zonedTimeToUTC
   )
 import           Data.Time.Format (defaultTimeLocale, formatTime)
@@ -126,13 +125,12 @@ import           TDF.Catalog.Security
   , selectCanonicalPartyIdsByRole
   )
 import qualified TDF.Courses.Production as ProductionCourse
+import           TDF.Courses.Metadata
+import           TDF.Services.LlmChat
 import qualified TDF.Courses.PublicMetadata as CoursePublic
 import qualified TDF.Internationalization as Internationalization
 import           TDF.Config ( AppConfig(..)
-                            , courseInstructorAvatarFallback
-                            , courseMapFallback
                             , courseSlugFallback
-                            , llmChatModelCandidates
                             , normalizeLlmApiBase
                             , normalizeConfiguredGraphNodeId
                             , normalizeConfiguredGoogleClientId
@@ -171,6 +169,7 @@ import           TDF.Auth
   , hasModuleAccess
   , hasOperationsAccess
   , hasSocialInboxAccess
+  , hasStrictAdminAccess
   , moduleName
   , modulesForRoles
   , validateModuleAccess
@@ -271,8 +270,6 @@ import           TDF.Routes.Courses ( CoursesPublicAPI
                                     , WhatsAppHooksAPI
                                     , WhatsAppWebhookAPI
                                     , CourseMetadata(..)
-                                    , CourseSession(..)
-                                    , SyllabusItem(..)
                                     , CourseRegistrationRequest(..)
                                     , CourseRegistrationResponse(..)
                                     , CourseRegistrationStatusUpdate(..)
@@ -754,6 +751,7 @@ server env =
   :<|> AuthServer.sessionServer
   :<|> AuthServer.login
   :<|> AuthServer.googleLogin
+  :<|> AuthServer.appleLogin
   :<|> AuthServer.signup
   :<|> AuthServer.changePassword
   :<|> AuthServer.authV1Server
@@ -1053,20 +1051,31 @@ listInventory mFieldParam mSessionParam mChannelParam = do
   Env{..} <- ask
   liftIO $ flip runSqlPool envPool (InputList.listInventoryDB parsedField Nothing Nothing)
 
-seedInventory :: Maybe Text -> AppM NoContent
-seedInventory rawToken = do
+seedInventory :: AuthedUser -> Maybe Text -> AppM NoContent
+seedInventory user rawToken = do
+  either throwError pure (validateSeedOperator user)
   requireSeedToken rawToken
   Env{..} <- ask
   liftIO $ flip runSqlPool envPool InputList.seedInventoryDB
   pure NoContent
 
-seedHQ :: Maybe Text -> AppM NoContent
-seedHQ rawToken = do
+seedHQ :: AuthedUser -> Maybe Text -> AppM NoContent
+seedHQ user rawToken = do
+  either throwError pure (validateSeedOperator user)
   requireSeedToken rawToken
   Env{..} <- ask
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool envPool (InputList.seedHQDB now)
   pure NoContent
+
+-- | Every seed route needs what POST /admin/seed needs: a strict
+-- administrator session with the Admin module, and then the seed token
+-- (OPS-SEED-ROUTES-001). The shared token alone no longer seeds anything.
+validateSeedOperator :: AuthedUser -> Either ServerError ()
+validateSeedOperator user
+  | not (hasStrictAdminAccess user) = Left err403 { errBody = "Admin role required" }
+  | not (hasModuleAccess ModuleAdmin user) = Left err403 { errBody = "Missing required module access" }
+  | otherwise = Right ()
 
 requireSeedToken :: Maybe Text -> AppM ()
 requireSeedToken rawToken = do
@@ -1117,7 +1126,17 @@ fanPublicServer =
       Env pool _ <- ask
       liftIO $ flip runSqlPool pool $ do
         releases <- selectList [ArtistReleaseArtistPartyId ==. toSqlKey artistIdValid] [Desc ArtistReleaseCreatedAt]
-        pure (map toArtistReleaseDTO releases)
+        -- Keep invalid references for owner/admin reads; public callers receive
+        -- only currently eligible media. A changed URL has a different version.
+        invalid <- rawSql
+          "SELECT s.source_id FROM music_media_source s JOIN music_media_health h USING(source_kind,source_id,source_version) WHERE s.source_kind='legacy' AND s.artist_party_id=? AND h.status='invalid'"
+          [PersistInt64 artistIdValid] :: SqlPersistT IO [Single Text]
+        let unavailable key slot = Single (T.pack (show (fromSqlKey key)) <> ":" <> slot) `elem` invalid
+            publicRelease entity@(Entity key _) = let dto = toArtistReleaseDTO entity in dto
+              { arSpotifyUrl = if unavailable key "spotify" then Nothing else arSpotifyUrl dto
+              , arYoutubeUrl = if unavailable key "youtube" then Nothing else arYoutubeUrl dto
+              }
+        pure (map publicRelease releases)
 
     fanArtistFans :: Int64 -> Maybe Int -> Maybe Int -> AppM ArtistFansResponse
     fanArtistFans artistId mPage mPageSize = do
@@ -1659,8 +1678,11 @@ whatsappWebhookServer =
                   , acceptedTermsVersion = Nothing
                   }
                 let incomingMsg = entityVal incomingEntity
-                claimed <- liftIO $ flip runSqlPool envPool $
-                  claimWhatsAppAutoReply now (entityKey incomingEntity)
+                -- The registration is kept; a contact who withdrew consent
+                -- gets no automated reply (MSG-STAFF-OUTBOUND-001).
+                claimed <- liftIO $ flip runSqlPool envPool $ do
+                  withdrawn <- CampaignAutomation.whatsAppRecipientConsentWithdrawn phone
+                  if withdrawn then pure False else claimWhatsAppAutoReply now (entityKey incomingEntity)
                 when claimed $ do
                   (replyTxt, replyRes) <- sendWhatsappReply cfg phone
                   liftIO $ flip runSqlPool envPool $ do
@@ -1741,6 +1763,12 @@ whatsappManualReplyHandler user WhatsAppReplyReq{..} = do
     Just extId -> runDB $ getBy (ME.UniqueWhatsAppMessage extId)
   mReplyTarget <- either throwError pure $
     validateWhatsAppReplyTarget recipient mExternalId mReplyTargetRaw
+  -- A contact who opted out receives nothing further, staff replies included
+  -- (MSG-STAFF-OUTBOUND-001). Nothing is sent or recorded.
+  mConsent <- case normalizeWhatsAppPhone recipient of
+    Nothing -> pure Nothing
+    Just consentPhone -> runDB $ getBy (ME.UniqueWhatsAppConsent consentPhone)
+  either throwError pure (validateWhatsAppReplyConsent (entityVal <$> mConsent))
   now <- liftIO getCurrentTime
   waEnv <- liftIO loadWhatsAppEnv
   sendResult <- sendWhatsAppText waEnv recipient body
@@ -1774,6 +1802,12 @@ whatsappManualReplyHandler user WhatsAppReplyReq{..} = do
         , "messageId" .= fromSqlKey (entityKey sentEntity)
         , "deliveryStatus" .= ME.whatsAppMessageDeliveryStatus (entityVal sentEntity)
         ])
+
+validateWhatsAppReplyConsent :: Maybe ME.WhatsAppConsent -> Either ServerError ()
+validateWhatsAppReplyConsent mConsent
+  | CampaignAutomation.whatsAppConsentWithdrawn mConsent =
+      Left err409 { errBody = BL.fromStrict (TE.encodeUtf8 CampaignAutomation.whatsAppConsentWithdrawnMessage) }
+  | otherwise = Right ()
 
 whatsappOperatorQuestionHandler :: AuthedUser -> WhatsAppOperatorQuestionReq -> AppM Value
 whatsappOperatorQuestionHandler user WhatsAppOperatorQuestionReq{..} = do
@@ -4874,6 +4908,32 @@ validateGoogleCalendarSyncCursor (Just rawCursor)
 maxGoogleCalendarSyncCursorChars :: Int
 maxGoogleCalendarSyncCursorChars = 4096
 
+-- | Google Calendar tokens are stored sealed (TDF.Calendar.TokenCipher). No
+-- token is written without the key; a missing key makes the integration
+-- unavailable instead of falling back to plaintext.
+sealCalendarTokenForStorage :: Text -> AppM Text
+sealCalendarTokenForStorage plain = do
+  -- Only a token the stored-token validator will accept back is sealed.
+  when (CalendarTokenCipher.calendarTokenIsSealed plain
+          || isLeft (validateStoredGoogleCalendarOAuthToken "token" plain)) $
+    throwError err502 { errBody = "Google OAuth returned an unusable token" }
+  mKey <- liftIO CalendarTokenCipher.loadCalendarTokenKey
+  case mKey of
+    Nothing -> throwError (calendarTokenCipherError CalendarTokenCipher.CalendarTokenKeyMissing)
+    Just key -> liftIO (CalendarTokenCipher.sealCalendarToken key plain)
+
+openStoredCalendarToken :: Text -> AppM Text
+openStoredCalendarToken stored = do
+  mKey <- liftIO CalendarTokenCipher.loadCalendarTokenKey
+  either (throwError . calendarTokenCipherError) pure
+    (CalendarTokenCipher.openCalendarToken mKey stored)
+
+calendarTokenCipherError :: CalendarTokenCipher.CalendarTokenError -> ServerError
+calendarTokenCipherError CalendarTokenCipher.CalendarTokenKeyMissing =
+  err503 { errBody = "Google Calendar token encryption key is not configured" }
+calendarTokenCipherError CalendarTokenCipher.CalendarTokenUnreadable =
+  err503 { errBody = "Stored Google Calendar token cannot be read; reconnect the calendar" }
+
 validateStoredGoogleCalendarAccessToken :: Maybe Text -> Either ServerError Text
 validateStoredGoogleCalendarAccessToken Nothing =
   Left err401 { errBody = "No hay access_token para Google Calendar." }
@@ -4887,7 +4947,7 @@ validateStoredGoogleCalendarRefreshToken =
 validateStoredGoogleCalendarOAuthToken :: Text -> Text -> Either ServerError Text
 validateStoredGoogleCalendarOAuthToken label rawToken
   | T.null tokenVal = invalid
-  | T.length tokenVal > maxDriveOAuthTokenChars = invalid
+  | T.length tokenVal > CalendarTokenCipher.calendarTokenStoredLimit maxDriveOAuthTokenChars tokenVal = invalid
   | T.any isSpace tokenVal = invalid
   | T.any isControl tokenVal = invalid
   | T.any isHiddenDriveOAuthTokenChar tokenVal = invalid
@@ -5034,13 +5094,15 @@ calendarServer user =
             , token_type = gTokenType
             } = token
           expiresAt = addUTCTime . fromIntegral <$> gExpiresIn <*> pure now
+      sealedAccessToken <- sealCalendarTokenForStorage gAccessToken
+      sealedRefreshToken <- traverse sealCalendarTokenForStorage gRefreshToken
       mExisting <- runDB $ getBy (Cal.UniqueCalendar calendarId)
       cfgId <- case mExisting of
         Nothing -> runDB $ insert Cal.GoogleCalendarConfig
           { Cal.googleCalendarConfigOwnerId = Just (auPartyId user)
           , Cal.googleCalendarConfigCalendarId = calendarId
-          , Cal.googleCalendarConfigAccessToken = Just gAccessToken
-          , Cal.googleCalendarConfigRefreshToken = gRefreshToken
+          , Cal.googleCalendarConfigAccessToken = Just sealedAccessToken
+          , Cal.googleCalendarConfigRefreshToken = sealedRefreshToken
           , Cal.googleCalendarConfigTokenType = gTokenType
           , Cal.googleCalendarConfigTokenExpiresAt = expiresAt
           , Cal.googleCalendarConfigSyncCursor = Nothing
@@ -5050,8 +5112,8 @@ calendarServer user =
           }
         Just (Entity eid oldCfg) -> do
           runDB $ update eid
-            [ Cal.GoogleCalendarConfigAccessToken =. Just gAccessToken
-            , Cal.GoogleCalendarConfigRefreshToken =. (gRefreshToken <|> Cal.googleCalendarConfigRefreshToken oldCfg)
+            [ Cal.GoogleCalendarConfigAccessToken =. Just sealedAccessToken
+            , Cal.GoogleCalendarConfigRefreshToken =. (sealedRefreshToken <|> Cal.googleCalendarConfigRefreshToken oldCfg)
             , Cal.GoogleCalendarConfigTokenType =. gTokenType
             , Cal.GoogleCalendarConfigTokenExpiresAt =. expiresAt
             , Cal.GoogleCalendarConfigUpdatedAt =. now
@@ -5154,7 +5216,8 @@ calendarServer user =
         _ -> do
           case Cal.googleCalendarConfigRefreshToken cfg of
             Nothing -> throwError err401 { errBody = "No hay refresh_token para Google Calendar." }
-            Just rt -> do
+            Just storedRt -> do
+              rt <- openStoredCalendarToken storedRt
               refreshToken <- either throwError pure (validateStoredGoogleCalendarRefreshToken rt)
               refreshAccessToken cid sec redirect cfg refreshToken now
 
@@ -5174,8 +5237,13 @@ calendarServer user =
             , token_type = gTokenType
             } = token
           expiresAt = addUTCTime . fromIntegral <$> gExpiresIn <*> pure now
-          updatedCfg = cfg
-            { Cal.googleCalendarConfigAccessToken = Just gAccessToken
+      sealedAccessToken <- sealCalendarTokenForStorage gAccessToken
+      -- Seal the refresh token again too: a row written before encryption
+      -- existed stops holding plaintext at its first refresh.
+      sealedRefreshToken <- sealCalendarTokenForStorage rt
+      let updatedCfg = cfg
+            { Cal.googleCalendarConfigAccessToken = Just sealedAccessToken
+            , Cal.googleCalendarConfigRefreshToken = Just sealedRefreshToken
             , Cal.googleCalendarConfigTokenType = gTokenType
             , Cal.googleCalendarConfigTokenExpiresAt = expiresAt
             , Cal.googleCalendarConfigUpdatedAt = now
@@ -5183,6 +5251,7 @@ calendarServer user =
       _ <- runDB $ updateWhere
         [Cal.GoogleCalendarConfigCalendarId ==. Cal.googleCalendarConfigCalendarId cfg]
         [ Cal.GoogleCalendarConfigAccessToken =. Cal.googleCalendarConfigAccessToken updatedCfg
+        , Cal.GoogleCalendarConfigRefreshToken =. Cal.googleCalendarConfigRefreshToken updatedCfg
         , Cal.GoogleCalendarConfigTokenType =. Cal.googleCalendarConfigTokenType updatedCfg
         , Cal.GoogleCalendarConfigTokenExpiresAt =. Cal.googleCalendarConfigTokenExpiresAt updatedCfg
         , Cal.GoogleCalendarConfigUpdatedAt =. now
@@ -5192,8 +5261,9 @@ calendarServer user =
     syncFromGoogle :: Cal.GoogleCalendarConfig -> Maybe UTCTime -> Maybe UTCTime -> UTCTime -> AppM (Int, Int, Int, Maybe Text)
     syncFromGoogle cfg fromTs toTs now = do
       manager <- pure sharedTlsManager
+      openedAccessToken <- traverse openStoredCalendarToken (Cal.googleCalendarConfigAccessToken cfg)
       token <- either throwError pure $
-        validateStoredGoogleCalendarAccessToken (Cal.googleCalendarConfigAccessToken cfg)
+        validateStoredGoogleCalendarAccessToken openedAccessToken
       (events, cursor) <-
         fetchAllPages
           manager
@@ -5480,202 +5550,6 @@ encodeGooglePathSegment :: Text -> Text
 encodeGooglePathSegment =
   TE.decodeUtf8 . urlEncode True . TE.encodeUtf8
 
-productionCourseSlug :: AppConfig -> Text
-productionCourseSlug = courseSlugFallback
-productionCoursePrice :: Double
-productionCoursePrice = fromIntegral ProductionCourse.productionCoursePriceCents / 100
-productionCourseCapacity :: Int
-productionCourseCapacity = ProductionCourse.productionCourseCapacity
-
--- Backward-compatible helpers used by cron jobs
-buildLandingUrl :: AppConfig -> Text
-buildLandingUrl cfg = buildLandingUrlFor cfg (productionCourseSlug cfg)
-
-courseMetadataFor :: AppConfig -> Maybe Text -> Text -> Maybe CourseMetadata
-courseMetadataFor cfg mWaContact slugVal =
-  let fallbackSlug = productionCourseSlug cfg
-      startDate = firstSaturdayOfConfiguredProductionSlug fallbackSlug
-  in if normalizeSlug slugVal == fallbackSlug
-       then Just (productionCourseMetadataForStartDate cfg mWaContact fallbackSlug startDate Nothing)
-       else Nothing
-
-courseMetaSlug :: CourseMetadata -> Text
-courseMetaSlug Courses.CourseMetadata{Courses.slug = value} = value
-
-courseMetaTitle :: CourseMetadata -> Text
-courseMetaTitle Courses.CourseMetadata{Courses.title = value} = value
-
-courseMetaSubtitle :: CourseMetadata -> Text
-courseMetaSubtitle Courses.CourseMetadata{Courses.subtitle = value} = value
-
-courseMetaFormat :: CourseMetadata -> Text
-courseMetaFormat Courses.CourseMetadata{Courses.format = value} = value
-
-courseMetaDuration :: CourseMetadata -> Text
-courseMetaDuration Courses.CourseMetadata{Courses.duration = value} = value
-
-courseMetaPrice :: CourseMetadata -> Double
-courseMetaPrice Courses.CourseMetadata{Courses.price = value} = value
-
-courseMetaCurrency :: CourseMetadata -> Text
-courseMetaCurrency Courses.CourseMetadata{Courses.currency = value} = value
-
-courseMetaCapacity :: CourseMetadata -> Int
-courseMetaCapacity Courses.CourseMetadata{Courses.capacity = value} = value
-
-courseMetaSessionStartHour :: CourseMetadata -> Int
-courseMetaSessionStartHour Courses.CourseMetadata{Courses.sessionStartHour = value} = value
-
-courseMetaSessionDurationHours :: CourseMetadata -> Int
-courseMetaSessionDurationHours Courses.CourseMetadata{Courses.sessionDurationHours = value} = value
-
-courseMetaLocationLabel :: CourseMetadata -> Text
-courseMetaLocationLabel Courses.CourseMetadata{Courses.locationLabel = value} = value
-
-courseMetaLocationMapUrl :: CourseMetadata -> Text
-courseMetaLocationMapUrl Courses.CourseMetadata{Courses.locationMapUrl = value} = value
-
-courseMetaDaws :: CourseMetadata -> [Text]
-courseMetaDaws Courses.CourseMetadata{Courses.daws = value} = value
-
-courseMetaIncludes :: CourseMetadata -> [Text]
-courseMetaIncludes Courses.CourseMetadata{Courses.includes = value} = value
-
-courseMetaInstructorName :: CourseMetadata -> Maybe Text
-courseMetaInstructorName Courses.CourseMetadata{Courses.instructorName = value} = value
-
-courseMetaInstructorBio :: CourseMetadata -> Maybe Text
-courseMetaInstructorBio Courses.CourseMetadata{Courses.instructorBio = value} = value
-
-courseMetaInstructorAvatarUrl :: CourseMetadata -> Maybe Text
-courseMetaInstructorAvatarUrl Courses.CourseMetadata{Courses.instructorAvatarUrl = value} = value
-
-courseMetaSessions :: CourseMetadata -> [CourseSession]
-courseMetaSessions Courses.CourseMetadata{Courses.sessions = value} = value
-
-courseMetaSyllabus :: CourseMetadata -> [SyllabusItem]
-courseMetaSyllabus Courses.CourseMetadata{Courses.syllabus = value} = value
-
-courseMetaWhatsappCtaUrl :: CourseMetadata -> Text
-courseMetaWhatsappCtaUrl Courses.CourseMetadata{Courses.whatsappCtaUrl = value} = value
-
-courseMetaLandingUrl :: CourseMetadata -> Text
-courseMetaLandingUrl Courses.CourseMetadata{Courses.landingUrl = value} = value
-
-courseSessionLabel :: CourseSession -> Text
-courseSessionLabel Courses.CourseSession{Courses.label = value} = value
-
-courseSessionDate :: CourseSession -> Day
-courseSessionDate Courses.CourseSession{Courses.date = value} = value
-
-syllabusItemTitle :: SyllabusItem -> Text
-syllabusItemTitle Courses.SyllabusItem{Courses.title = value} = value
-
-syllabusItemTopics :: SyllabusItem -> [Text]
-syllabusItemTopics Courses.SyllabusItem{Courses.topics = value} = value
-
-productionCourseMetadataForStartDate
-  :: AppConfig
-  -> Maybe Text
-  -> Text
-  -> Day
-  -> Maybe CourseMetadata
-  -> CourseMetadata
-productionCourseMetadataForStartDate cfg mWaContact slugVal startDate mTemplate =
-  let landing = buildLandingUrlFor cfg slugVal
-      templateText field defaultValue =
-        case mTemplate of
-          Just meta ->
-            let value = field meta
-            in if T.null (T.strip value) then defaultValue else value
-          Nothing -> defaultValue
-      templateList field defaultValue =
-        case mTemplate of
-          Just meta ->
-            let values = filter (not . T.null . T.strip) (field meta)
-            in if null values then defaultValue else values
-          Nothing -> defaultValue
-      templateMaybe field defaultValue =
-        case cleanOptional (mTemplate >>= field) of
-          Just value -> Just value
-          Nothing -> defaultValue
-      templateInt field defaultValue =
-        case mTemplate of
-          Just meta | field meta > 0 -> field meta
-          _ -> defaultValue
-      templatePrice =
-        case mTemplate of
-          Just meta | courseMetaPrice meta >= 0 -> courseMetaPrice meta
-          _ -> productionCoursePrice
-      sessions =
-        [ CourseSession labelTxt dayVal
-        | (labelTxt, dayVal) <- ProductionCourse.productionCourseSessions startDate
-        ]
-      syllabus =
-        [ SyllabusItem titleTxt topics
-        | (titleTxt, topics) <- ProductionCourse.productionCourseSyllabus
-        ]
-      titleVal = templateText courseMetaTitle ProductionCourse.productionCourseTitle
-  in CourseMetadata
-      { slug = slugVal
-      , title = titleVal
-      , subtitle = ProductionCourse.productionCourseSubtitleForStartDate startDate
-      , format = templateText courseMetaFormat ProductionCourse.productionCourseFormat
-      , duration = templateText courseMetaDuration ProductionCourse.productionCourseDuration
-      , price = templatePrice
-      , currency = templateText courseMetaCurrency (defaultCurrency cfg)
-      , capacity = templateInt courseMetaCapacity ProductionCourse.productionCourseCapacity
-      , remaining = templateInt courseMetaCapacity ProductionCourse.productionCourseCapacity
-      , sessionStartHour = templateInt courseMetaSessionStartHour ProductionCourse.productionCourseSessionStartHour
-      , sessionDurationHours = templateInt courseMetaSessionDurationHours ProductionCourse.productionCourseSessionDurationHours
-      , locationLabel = templateText courseMetaLocationLabel ProductionCourse.productionCourseLocationLabel
-      , locationMapUrl = templateText courseMetaLocationMapUrl (courseMapFallback cfg)
-      , daws = templateList courseMetaDaws ProductionCourse.productionCourseDaws
-      , includes = templateList courseMetaIncludes ProductionCourse.productionCourseIncludes
-      , instructorName = templateMaybe courseMetaInstructorName (Just ProductionCourse.productionCourseInstructorName)
-      , instructorBio = templateMaybe courseMetaInstructorBio (Just ProductionCourse.productionCourseInstructorBio)
-      , instructorAvatarUrl = templateMaybe courseMetaInstructorAvatarUrl (Just (courseInstructorAvatarFallback cfg))
-      , sessions = sessions
-      , syllabus = syllabus
-      , whatsappCtaUrl = buildWhatsappCtaFor mWaContact titleVal landing
-      , landingUrl = landing
-      , checkoutTerms = Nothing
-      }
-
-firstSaturdayOfConfiguredProductionSlug :: Text -> Day
-firstSaturdayOfConfiguredProductionSlug slugVal =
-  let fallback = fromGregorian 2026 6 6
-      parts = T.splitOn "-" slugVal
-      mYear = readMaybe . T.unpack =<< listToMaybe (reverse parts)
-      mMonth = listToMaybe (mapMaybe monthSlugToNumber parts)
-  in case (mYear, mMonth) of
-       (Just y, Just m) -> nextSaturdayOnOrAfterDay (fromGregorian y m 1)
-       _ -> fallback
-
-monthSlugToNumber :: Text -> Maybe Int
-monthSlugToNumber "ene" = Just 1
-monthSlugToNumber "feb" = Just 2
-monthSlugToNumber "mar" = Just 3
-monthSlugToNumber "abr" = Just 4
-monthSlugToNumber "may" = Just 5
-monthSlugToNumber "jun" = Just 6
-monthSlugToNumber "jul" = Just 7
-monthSlugToNumber "ago" = Just 8
-monthSlugToNumber "sep" = Just 9
-monthSlugToNumber "oct" = Just 10
-monthSlugToNumber "nov" = Just 11
-monthSlugToNumber "dic" = Just 12
-monthSlugToNumber _ = Nothing
-
-nextSaturdayOnOrAfterDay :: Day -> Day
-nextSaturdayOnOrAfterDay day =
-  fromMaybe day . listToMaybe $
-    [ candidate
-    | offset <- [0..6]
-    , let candidate = addDays offset day
-    , formatTime defaultTimeLocale "%u" candidate == "6"
-    ]
-
 ensureCurrentProductionCourseMetadata
   :: AppConfig
   -> WhatsAppEnv
@@ -5878,94 +5752,6 @@ loadCourseMetadataFromDB cfg waEnv slugVal = do
           [Trials.CourseSyllabusItemCourseId ==. cid]
           [Asc Trials.CourseSyllabusItemOrder, Asc Trials.CourseSyllabusItemId]
         pure $ Just (toCourseMetadata cfg waEnv course sessions syllabus)
-
-toCourseMetadata
-  :: AppConfig
-  -> WhatsAppEnv
-  -> Trials.Course
-  -> [Entity Trials.CourseSessionModel]
-  -> [Entity Trials.CourseSyllabusItem]
-  -> CourseMetadata
-toCourseMetadata cfg waEnv course sessions syllabus =
-  let slugVal = Trials.courseSlug course
-      landingUrlVal =
-        fromMaybe
-          (buildLandingUrlFor cfg slugVal)
-          (sanitizeStoredCoursePublicUrl "landingUrl" (Trials.courseLandingUrl course))
-      whatsappUrl =
-        fromMaybe
-          (buildWhatsappCtaFor (waContactNumber waEnv) (Trials.courseTitle course) landingUrlVal)
-          (sanitizeStoredCoursePublicUrl "whatsappCtaUrl" (Trials.courseWhatsappCtaUrl course))
-      dawsList = filter (not . T.null) (maybe [] (map T.strip) (Trials.courseDaws course))
-      includesList = filter (not . T.null) (maybe [] (map T.strip) (Trials.courseIncludes course))
-      instructorNameVal = cleanOptional (Trials.courseInstructorName course)
-      instructorBioVal = cleanOptional (Trials.courseInstructorBio course)
-      instructorAvatarVal =
-        sanitizeStoredCoursePublicUrl "instructorAvatarUrl" (Trials.courseInstructorAvatarUrl course)
-      toSession (Entity _ s) =
-        CourseSession
-          { label = Trials.courseSessionModelLabel s
-          , date = Trials.courseSessionModelDate s
-          }
-      toSyllabus (Entity _ s) =
-        SyllabusItem
-          { title = Trials.courseSyllabusItemTitle s
-          , topics = filter (not . T.null . T.strip) (Trials.courseSyllabusItemTopics s)
-          }
-  in CourseMetadata
-      { slug = slugVal
-      , title = Trials.courseTitle course
-      , subtitle = fromMaybe "" (Trials.courseSubtitle course)
-      , format = fromMaybe "" (Trials.courseFormat course)
-      , duration = fromMaybe "" (Trials.courseDuration course)
-      , price = fromIntegral (Trials.coursePriceCents course) / 100
-      , currency = Trials.courseCurrency course
-      , capacity = Trials.courseCapacity course
-      , remaining = Trials.courseCapacity course
-      , sessionStartHour = fromMaybe 0 (Trials.courseSessionStartHour course)
-      , sessionDurationHours = fromMaybe 0 (Trials.courseSessionDurationHours course)
-      , locationLabel = fromMaybe "" (Trials.courseLocationLabel course)
-      , locationMapUrl =
-          fromMaybe
-            (courseMapFallback cfg)
-            (sanitizeStoredCoursePublicUrl "locationMapUrl" (Trials.courseLocationMapUrl course))
-      , daws = dawsList
-      , includes = includesList
-      , instructorName = instructorNameVal
-      , instructorBio = instructorBioVal
-      , instructorAvatarUrl = instructorAvatarVal
-      , sessions = map toSession sessions
-      , syllabus = map toSyllabus syllabus
-      , whatsappCtaUrl = whatsappUrl
-      , landingUrl = landingUrlVal
-      , checkoutTerms = Nothing
-      }
-
-buildLandingUrlFor :: AppConfig -> Text -> Text
-buildLandingUrlFor cfg slugVal =
-  let base = resolveConfiguredAppBase cfg
-  in base <> "/curso/" <> slugVal
-
-buildWhatsappCtaFor :: Maybe Text -> Text -> Text -> Text
-buildWhatsappCtaFor mNumber courseTitle landingUrl =
-  let msg = "INSCRIBIRME " <> courseTitle <> " " <> landingUrl
-      encoded = TE.decodeUtf8 (urlEncode True (TE.encodeUtf8 msg))
-  in case resolveWhatsappCtaNumber mNumber of
-       Just num -> "https://wa.me/" <> num <> "?text=" <> encoded
-       Nothing  -> "https://wa.me/?text=" <> encoded
-
-resolveWhatsappCtaNumber :: Maybe Text -> Maybe Text
-resolveWhatsappCtaNumber mNumber =
-  case mNumber >>= normalizeCourseRegistrationPhoneInput of
-    Just phone ->
-      let digitsOnly = T.filter isAsciiPhoneDigit phone
-      in if isInternationalWhatsappCtaNumber digitsOnly
-           then Just digitsOnly
-           else Nothing
-    Nothing -> Nothing
-
-isInternationalWhatsappCtaNumber :: Text -> Bool
-isInternationalWhatsappCtaNumber = CoursePublic.isInternationalWhatsappCtaNumber
 
 saveCourse :: CourseUpsert -> AppM CourseMetadata
 saveCourse Courses.CourseUpsert{..} = do
@@ -7302,12 +7088,6 @@ normalizePhone = normalizeWhatsAppPhone
 
 normalizeCourseRegistrationPhoneInput :: Text -> Maybe Text
 normalizeCourseRegistrationPhoneInput = CoursePhone.normalizeInternationalPhoneInput
-
-isAsciiPhoneDigit :: Char -> Bool
-isAsciiPhoneDigit ch = ch >= '0' && ch <= '9'
-
-normalizeSlug :: Text -> Text
-normalizeSlug = T.toLower . T.strip
 
 validateCourseSlug :: Text -> Either ServerError Text
 validateCourseSlug rawSlug =
@@ -9013,8 +8793,9 @@ claimReferral emailVal mUser rawCode = do
 throwNotFound :: Text -> AppM a
 throwNotFound msg = throwError err404 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
-seedTrigger :: Maybe Text -> AppM NoContent
-seedTrigger rawToken = do
+seedTrigger :: AuthedUser -> Maybe Text -> AppM NoContent
+seedTrigger user rawToken = do
+  either throwError pure (validateSeedOperator user)
   requireSeedToken rawToken
   Env{..} <- ask
   liftIO $ flip runSqlPool envPool seedAll
@@ -9622,8 +9403,7 @@ serviceMarketplaceServer user =
 
 listServiceAds :: AppM [Api.ServiceAdDTO]
 listServiceAds = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     ads <- selectList [ServiceAdActive ==. True] [Desc ServiceAdCreatedAt]
     let providerIds = map (serviceAdProviderPartyId . entityVal) ads
     providers <- if null providerIds then pure [] else selectList [PartyId <-. providerIds] []
@@ -9672,8 +9452,24 @@ resolveServiceMarketplaceBookingEntity rawBookingId = do
     pure
     mBooking
 
+-- | Roles that staff assign to people who sell a service. Publishing an ad
+-- or its slots needs one of them; a self-registered Customer or Fan account
+-- cannot advertise (SVCMKT-PROVIDER-ADS-001).
+serviceAdProviderRoles :: [RoleEnum]
+serviceAdProviderRoles =
+  [ Admin, Manager, StudioManager, Engineer, Teacher, Producer, LiveSessionsProducer
+  , Artist, Artista, Songwriter, DJ, Photographer, Publicist, TourManager
+  , StageManager, RoadCrew, Promotor, Promoter, Agency, Vendor
+  ]
+
+validateServiceAdProvider :: AuthedUser -> Either ServerError ()
+validateServiceAdProvider user
+  | fromSqlKey (auPartyId user) > 0 && any (`elem` serviceAdProviderRoles) (auRoles user) = Right ()
+  | otherwise = Left err403 { errBody = "Service ads require an approved provider role" }
+
 createServiceAd :: AuthedUser -> Api.ServiceAdCreateReq -> AppM Api.ServiceAdDTO
 createServiceAd user Api.ServiceAdCreateReq{..} = do
+  either throwError pure (validateServiceAdProvider user)
   when (T.null (T.strip sacRoleTag) || T.null (T.strip sacHeadline)) $
     throwError err400 { errBody = "roleTag and headline are required" }
   when (sacFeeCents <= 0) $ throwError err400 { errBody = "feeCents must be > 0" }
@@ -9684,9 +9480,8 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
     throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
   slotMinutes <- either throwError pure (validateServiceAdSlotMinutes sacSlotMinutes)
   now <- liftIO getCurrentTime
-  pool <- asks envPool
   let catalogKey = toSqlKey catalogId
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     mCatalog <- get catalogKey
     case validateServiceMarketplaceCatalog mCatalog of
       Left serverErr -> liftIO $ throwIO serverErr
@@ -9703,7 +9498,7 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
         , serviceAdActive = True
         , serviceAdCreatedAt = now
         }
-  dto <- liftIO $ flip runSqlPool pool $ do
+  dto <- runDB $ do
     adId <- insert record
     ent <- getJustEntity adId
     mProvider <- get (auPartyId user)
@@ -9714,16 +9509,15 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
 
 listServiceAdSlots :: Int64 -> AppM [Api.ServiceAdSlotDTO]
 listServiceAdSlots adId = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     Entity adKey _ <- resolveServiceAdEntity adId
     slots <- selectList [ServiceAdSlotAdId ==. adKey] [Asc ServiceAdSlotStartsAt]
     pure (map toServiceAdSlotDTO slots)
 
 createServiceAdSlot :: AuthedUser -> Int64 -> Api.ServiceAdSlotCreateReq -> AppM Api.ServiceAdSlotDTO
 createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  either throwError pure (validateServiceAdProvider user)
+  runDB $ do
     ad@(Entity adKey _) <- resolveServiceAdEntity adId
     when (serviceAdProviderPartyId (entityVal ad) /= auPartyId user) $
       liftIO $ throwIO err403
@@ -9749,8 +9543,7 @@ createServiceMarketplaceBooking _ _ =
 
 completeServiceMarketplaceBooking :: AuthedUser -> Int64 -> AppM Api.ServiceMarketplaceBookingDTO
 completeServiceMarketplaceBooking user rawBookingId = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     Entity bookingKey booking <- resolveServiceMarketplaceBookingEntity rawBookingId
     escrowEnt <- getBy (UniqueServiceEscrowBooking bookingKey)
     escrow <- either (liftIO . throwIO) pure (requireServiceEscrowForBooking escrowEnt)
@@ -11318,12 +11111,8 @@ selectPublicBookingManualPayment
 selectPublicBookingManualPayment
     rawBookingId mLookupToken Api.PublicBookingManualPaymentReq{..} = do
   context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
-  let method = T.toLower (T.strip pbmprPaymentMethod)
-  unless (method == "bank_transfer") $
-    throwError err400 { errBody = "Only bank transfer is available for public manual payment" }
-  when (sbpcCheckoutStatus context == "processing") $
-    throwError err409
-      { errBody = "Another payment rail is currently processing; verify it before switching methods" }
+  either throwError pure
+    (validatePublicManualPaymentSelection (sbpcCheckoutStatus context) pbmprPaymentMethod)
   ensureNoActiveServiceBookingOnlineAttempt context
   requireServiceBookingProvider
     context (sbpcEnvironment context) Checkout.ProviderBankTransfer
@@ -11552,12 +11341,9 @@ createServiceBookingCheckoutTransaction
       :: IO (Either SomeException (Either ServerError (Key Booking))))
   case result of
     Right value -> pure value
-    Left exception -> case fromException exception :: Maybe SomeAsyncException of
-      Just _ -> liftIO (throwIO exception)
-      Nothing -> case fromException exception :: Maybe SqlError of
-        Just sqlError | sqlState sqlError == "23P01" -> pure (Left err409
-          { errBody = "The selected room or resource was reserved by another request" })
-        _ -> liftIO (throwIO exception)
+    Left exception -> case publicBookingTransactionFailure exception of
+      Just serverErr -> pure (Left serverErr)
+      Nothing -> liftIO (throwIO exception)
   where
     transactionBody = do
       _ <- (rawSql
@@ -11794,6 +11580,45 @@ createPublicBooking mIdempotency PublicBookingReq{..} = do
   when createdNow (notifyEngineerIfNeeded dto)
   pure dto
 
+-- | SQL failures a public booking transaction turns into 409 instead of a
+-- generic 500: the calendar exclusion (23P01), the lifecycle and snapshot
+-- triggers (23514) and serialization or deadlock aborts (40001, 40P01), the
+-- same set the staff path maps in runBookingTransaction.
+-- | Every refusal a public booking transaction can raise: a ServerError thrown
+-- with throwIO inside the transaction (servant's runHandler does not catch
+-- those, so without this mapping they answered a generic 500), or a SQL
+-- conflict the calendar turns into 409. Asynchronous exceptions and anything
+-- else propagate.
+publicBookingTransactionFailure :: SomeException -> Maybe ServerError
+publicBookingTransactionFailure exception =
+  case fromException exception :: Maybe SomeAsyncException of
+    Just _ -> Nothing
+    Nothing ->
+      case fromException exception of
+        Just serverErr -> Just serverErr
+        Nothing -> fromException exception >>= publicBookingSqlConflict
+
+publicBookingSqlConflict :: SqlError -> Maybe ServerError
+publicBookingSqlConflict sqlError
+  | sqlState sqlError == "23P01" =
+      Just err409 { errBody = "The selected room or resource was reserved by another request" }
+  | sqlState sqlError `elem` ["23514", "40001", "40P01"] =
+      Just err409 { errBody = "Booking conflicts with the resource calendar or checkout lifecycle" }
+  | otherwise = Nothing
+
+-- | Admission for a public bank-transfer selection: only bank transfer, never
+-- on a paid deposit, and not while another rail is processing.
+validatePublicManualPaymentSelection :: Text -> Text -> Either ServerError ()
+validatePublicManualPaymentSelection checkoutStatus rawMethod
+  | T.toLower (T.strip rawMethod) /= "bank_transfer" =
+      Left err400 { errBody = "Only bank transfer is available for public manual payment" }
+  | checkoutStatus == "paid" =
+      Left err409 { errBody = "This booking deposit is already paid" }
+  | checkoutStatus == "processing" =
+      Left err409
+        { errBody = "Another payment rail is currently processing; verify it before switching methods" }
+  | otherwise = Right ()
+
 createPublicTentativeBookingTransaction
   :: Text
   -> Text
@@ -11812,12 +11637,9 @@ createPublicTentativeBookingTransaction
       :: IO (Either SomeException (Either ServerError (Key Booking, Bool))))
   case result of
     Right value -> pure value
-    Left exception -> case fromException exception :: Maybe SomeAsyncException of
-      Just _ -> liftIO (throwIO exception)
-      Nothing -> case fromException exception :: Maybe SqlError of
-        Just sqlError | sqlState sqlError == "23P01" -> pure (Left err409
-          { errBody = "The selected room or resource was reserved by another request" })
-        _ -> liftIO (throwIO exception)
+    Left exception -> case publicBookingTransactionFailure exception of
+      Just serverErr -> pure (Left serverErr)
+      Nothing -> liftIO (throwIO exception)
   where
     transactionBody = do
       _ <- (rawSql
@@ -14862,12 +14684,6 @@ adsUpdateAutomationEnrollmentStatus
         )
     either throwBadRequest pure result
 
-loadAdExamples :: Bool -> [ME.AdCreativeId] -> SqlPersistT IO [Entity ME.AdConversationExample]
-loadAdExamples hasScope adIds
-  | hasScope && null adIds = pure []
-  | null adIds = selectList [] [Desc ME.AdConversationExampleUpdatedAt, LimitTo 6]
-  | otherwise = selectList [ME.AdConversationExampleAdId <-. adIds] [Desc ME.AdConversationExampleUpdatedAt, LimitTo 6]
-
 resolveAdsAssistExampleScope
   :: Maybe ME.AdCreativeId
   -> Maybe ME.CampaignId
@@ -14922,224 +14738,6 @@ adToDTO (Entity aid a) =
     , adStatus = ME.adCreativeStatus a
     , adNotes = ME.adCreativeNotes a
     }
-
-data OpenAIChatMessage = OpenAIChatMessage
-  { role :: Text
-  , content :: Text
-  } deriving (Show, Generic)
-
-instance ToJSON OpenAIChatMessage where
-  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
-instance FromJSON OpenAIChatMessage where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
-
-data ChatCompletionReq = ChatCompletionReq
-  { model :: Text
-  , messages :: [OpenAIChatMessage]
-  , temperature :: Maybe Double
-  } deriving (Show, Generic)
-
-instance ToJSON ChatCompletionReq where
-  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
-
-data ChatChoice = ChatChoice
-  { message :: OpenAIChatMessage
-  } deriving (Show, Generic)
-instance FromJSON ChatChoice where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
-
-data ChatCompletionResp = ChatCompletionResp
-  { choices :: [ChatChoice]
-  } deriving (Show, Generic)
-instance FromJSON ChatCompletionResp where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
-
-runRagChat :: AppConfig -> [Text] -> [Entity ME.AdConversationExample] -> Text -> Maybe Text -> IO Text
-runRagChat cfg kb examples userMsg mChannel = do
-  res <- runRagChatWithStatus cfg kb examples userMsg mChannel
-  pure $
-    case res of
-      Right txt | not (T.null (T.strip txt)) -> T.strip txt
-      _ -> "No pude generar una respuesta automática en este momento."
-
-runRagChatWithStatus
-  :: AppConfig
-  -> [Text]
-  -> [Entity ME.AdConversationExample]
-  -> Text
-  -> Maybe Text
-  -> IO (Either Text Text)
-runRagChatWithStatus cfg kb examples userMsg mChannel =
-  callOpenAIChat cfg (buildRagMessages kb examples userMsg mChannel)
-
-buildRagMessages
-  :: [Text]
-  -> [Entity ME.AdConversationExample]
-  -> Text
-  -> Maybe Text
-  -> [OpenAIChatMessage]
-buildRagMessages kb examples userMsg mChannel =
-  let contextBlock = if null kb then "No hay contexto" else T.intercalate "\n\n" kb
-      exampleMsgs = concatMap exampleToMessages examples
-      channelNote = maybe "" (\ch -> "[Canal: " <> T.strip ch <> "] ") mChannel
-      systemIntro = T.intercalate "\n"
-        [ "Eres un asistente de marketing de TDF Records."
-        , "Responde en el idioma del usuario con un tono cálido y conciso."
-        , "Tu objetivo es ayudar al usuario y, cuando sea relevante, promocionar el Curso de Producción Musical (presencial, cuatro sábados, 16 horas en total, $150 USD, cupos limitados) con link: https://www.tdfrecords.net/curso/produccion-musical-jun-2026"
-        , "REGLA CRÍTICA DE FORMATO: responde SOLO con una de estas dos formas:"
-        , "1) SEND: <tu respuesta final para enviar al usuario>"
-        , "2) HOLD: <por qué no puedes responder todavía>\\nNEED: <lista corta de datos que faltan>"
-        , "No incluyas nada fuera de ese formato."
-        ]
-  in [ mkMsg "system" systemIntro
-     , mkMsg "system" ("Contexto de negocio:\n" <> contextBlock)
-     ] ++ exampleMsgs ++ [mkMsg "user" (channelNote <> userMsg)]
-  where
-    mkMsg r c = OpenAIChatMessage { role = r, content = c }
-    exampleToMessages (Entity _ ex) =
-      [ mkMsg "user" (ME.adConversationExampleUserMessage ex)
-      , mkMsg "assistant" (ME.adConversationExampleAssistantMessage ex)
-      ]
-
-callOpenAIChat :: AppConfig -> [OpenAIChatMessage] -> IO (Either Text Text)
-callOpenAIChat cfg messages =
-  case openAiApiKey cfg of
-    Nothing -> pure (Left "OPENAI_API_KEY no configurada")
-    Just key -> do
-      manager <- pure sharedTlsManager
-      let apiBase = normalizeLlmApiBase (chatKitApiBase cfg)
-      reqBase <- parseRequest (T.unpack (apiBase <> "/v1/chat/completions"))
-      let models = llmChatModelCandidates (openAiModel cfg)
-      tryModels manager reqBase key models Nothing
-  where
-    tryModels :: Manager -> Request -> Text -> [Text] -> Maybe Text -> IO (Either Text Text)
-    tryModels _ _ _ [] lastErr =
-      pure (Left (fromMaybe "No pude generar una respuesta automática en este momento." lastErr))
-    tryModels manager reqBase key (modelName:remaining) _ = do
-      attempt <- requestOpenAIChat manager reqBase key modelName messages
-      case attempt of
-        Right reply -> pure (Right reply)
-        Left (status, msg)
-          | shouldRetryWithFallbackModel status msg && not (null remaining) -> do
-              hPutStrLn stderr
-                ("[openai] Modelo " <> T.unpack modelName <> " no disponible (" <> show status <> "). Intentando fallback.")
-              tryModels manager reqBase key remaining (Just msg)
-          | otherwise ->
-              pure (Left msg)
-
-requestOpenAIChat
-  :: Manager
-  -> Request
-  -> Text
-  -> Text
-  -> [OpenAIChatMessage]
-  -> IO (Either (Int, Text) Text)
-requestOpenAIChat manager reqBase key modelName messages = do
-  let body = encode ChatCompletionReq
-        { model = modelName
-        , messages = messages
-        , temperature = Just 1.0
-        }
-      req =
-        reqBase
-          { method = "POST"
-          , requestHeaders =
-              [ ("Content-Type", "application/json")
-              , ("Authorization", "Bearer " <> TE.encodeUtf8 key)
-              ]
-          , requestBody = RequestBodyLBS body
-          }
-  respResult <- try (httpLbs req manager) :: IO (Either SomeException (Response BL.ByteString))
-  case respResult of
-    Left err ->
-      pure (Left (0, openAIChatRequestErrorMessage err))
-    Right resp -> do
-      let status = statusCode (responseStatus resp)
-          raw = responseBody resp
-      if status >= 200 && status < 300
-        then case (eitherDecode raw :: Either String Value) of
-          Left err ->
-            pure (Left (status, T.pack err))
-          Right payload ->
-            case extractModelReplyText payload of
-              Just reply -> pure (Right reply)
-              Nothing ->
-                pure (Left (status, fromMaybe "Sin respuesta de modelo" (extractApiErrorMessage payload)))
-        else do
-          let baseMsg = "Error al generar respuesta (HTTP " <> T.pack (show status) <> ")"
-              msg = case (eitherDecode raw :: Either String Value) of
-                Right payload -> fromMaybe baseMsg (extractApiErrorMessage payload)
-                Left _ -> baseMsg
-          pure (Left (status, msg))
-
-openAIChatRequestErrorMessage :: SomeException -> Text
-openAIChatRequestErrorMessage err =
-  fromMaybe "OpenAI chat request failed" $
-    sanitizeApiErrorMessage ("OpenAI chat request failed: " <> T.pack (displayException err))
-
-shouldRetryWithFallbackModel :: Int -> Text -> Bool
-shouldRetryWithFallbackModel status rawMessage =
-  statusAllowsFallback && hasMarker && not hasNonFallbackMarker
-  where
-    msg = T.toLower (T.strip rawMessage)
-    statusAllowsFallback = status == 400 || status == 403 || status == 404
-    hasMarker = any (`T.isInfixOf` msg) markers || hasMissingModelMarker
-    hasNonFallbackMarker = any (`T.isInfixOf` msg) nonFallbackMarkers
-    hasMissingModelMarker =
-      "does not exist" `T.isInfixOf` msg
-        && any (`T.isInfixOf` msg)
-          [ "the requested model "
-          , "requested model "
-          , "the model `"
-          , "the model '"
-          , "the model \""
-          ]
-    markers =
-      [ "does not have access to model"
-      , "doesn't have access to model"
-      , "do not have access to model"
-      , "don't have access to model"
-      , "no access to model"
-      , "does not exist or you do not have access"
-      , "model not found"
-      , "unknown model"
-      , "invalid model id"
-      , "invalid model name"
-      , "not a valid model"
-      , "model_not_found"
-      , "temperature is not supported"
-      , "invalid temperature"
-      ]
-    nonFallbackMarkers =
-      [ "rate limit"
-      , "too many requests"
-      , "quota"
-      , "connection"
-      , "connecting"
-      , "network"
-      , "timeout"
-      , "timed out"
-      , "dns"
-      , "tls"
-      , "certificate"
-      , "model response"
-      , "response format"
-      , "authentication_error"
-      , "invalid_api_key"
-      , "invalid api key"
-      , "incorrect api key"
-      , "unauthorized"
-      , "unauthorised"
-      , "permission_denied"
-      , "permission denied"
-      , "forbidden"
-      , "billing"
-      , "billing_hard_limit"
-      , "billing issue"
-      , "payment_required"
-      , "payment required"
-      , "payment method"
-      ]
 
 tidalSystemPrompt :: Text
 tidalSystemPrompt = T.intercalate "\n"
@@ -15280,11 +14878,6 @@ resolveWorkflowId primary fallback =
         Left msg ->
           Left status { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
-nonEmptyText :: Text -> Maybe Text
-nonEmptyText txt =
-  let trimmed = T.strip txt
-  in if T.null trimmed then Nothing else Just trimmed
-
 extractChatKitSession :: Value -> Maybe (Text, Maybe Value)
 extractChatKitSession =
   either (const Nothing) Just . validateChatKitSessionPayload
@@ -15375,248 +14968,6 @@ validateChatKitExpirySeconds :: Int -> Parser ()
 validateChatKitExpirySeconds secondsValue =
   when (secondsValue <= 0) $
     fail "ChatKit response expires_after.seconds must be positive"
-
-extractApiErrorMessage :: Value -> Maybe Text
-extractApiErrorMessage = parseMaybe $ withObject "ApiError" $ \o -> do
-  mErr <- o .:? "error"
-  candidates <- case mErr of
-    Just (String msg) ->
-      pure [msg]
-    Just (Object errObj) -> do
-      let mType = lookupText "type" errObj
-          mCode = lookupText "code" errObj
-          mStatus = lookupText "status" errObj
-          mMessage = lookupText "message" errObj
-      pure (catMaybes [mType, mCode, mStatus, mMessage])
-    _ -> do
-      let mType = lookupText "type" o
-          mCode = lookupText "code" o
-          mStatus = lookupText "status" o
-          mMessage = lookupText "message" o
-      pure (catMaybes [mType, mCode, mStatus, mMessage])
-  requireSanitizedText candidates
-  where
-    lookupText fieldName obj =
-      case AKeyMap.lookup (AKey.fromText fieldName) obj of
-        Just (String txt) -> Just txt
-        _ -> Nothing
-
-    requireSanitizedText values =
-      case nonEmptyText (T.intercalate ": " (map T.strip values)) of
-        Just txt ->
-          maybe (fail "message missing") pure (sanitizeApiErrorMessage txt)
-        Nothing -> fail "message missing"
-
-maxApiErrorMessageChars :: Int
-maxApiErrorMessageChars = 500
-
-sanitizeApiErrorMessage :: Text -> Maybe Text
-sanitizeApiErrorMessage raw =
-  nonEmptyText $
-    if T.length redacted > maxApiErrorMessageChars
-      then T.take maxApiErrorMessageChars redacted <> " [truncated]"
-      else redacted
-  where
-    redacted =
-      redactApiErrorSecrets $
-        T.unwords $
-          T.words $
-            T.map normalizeErrorChar raw
-    normalizeErrorChar ch
-      | isControl ch = ' '
-      | generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator] = ' '
-      | otherwise = ch
-
-redactApiErrorSecrets :: Text -> Text
-redactApiErrorSecrets =
-  redactSensitiveApiErrorFields . redactBearerTokens
-
-redactBearerTokens :: Text -> Text
-redactBearerTokens = go Nothing
-  where
-    go _ textValue
-      | T.null textValue = ""
-    go previous textValue =
-      case matchBearerToken previous textValue of
-        Just (prefix, rest) ->
-          prefix <> "[redacted]" <> go Nothing rest
-        Nothing ->
-          let ch = T.head textValue
-          in T.singleton ch <> go (Just ch) (T.tail textValue)
-
-matchBearerToken :: Maybe Char -> Text -> Maybe (Text, Text)
-matchBearerToken previous textValue
-  | not (isApiErrorSecretBoundary previous) = Nothing
-  | not ("bearer" `T.isPrefixOf` T.toLower textValue) = Nothing
-  | otherwise =
-      let bearerText = T.take 6 textValue
-          afterBearer = T.drop 6 textValue
-          (between, tokenStart) = T.span isSpace afterBearer
-          (openingQuote, tokenText, isValueEnd) = consumeApiErrorValueOpeningQuote tokenStart
-          (tokenValue, rest) = T.break isValueEnd tokenText
-      in if T.null between || T.null tokenValue || not (T.any isApiErrorSecretAtom tokenValue)
-           then Nothing
-           else Just (bearerText <> between <> openingQuote, rest)
-
-redactSensitiveApiErrorFields :: Text -> Text
-redactSensitiveApiErrorFields = go Nothing
-  where
-    go _ textValue
-      | T.null textValue = ""
-    go previous textValue =
-      case matchSensitiveApiErrorField previous textValue of
-        Just (prefix, rest) ->
-          prefix <> "[redacted]" <> go Nothing rest
-        Nothing ->
-          let ch = T.head textValue
-          in T.singleton ch <> go (Just ch) (T.tail textValue)
-
-matchSensitiveApiErrorField :: Maybe Char -> Text -> Maybe (Text, Text)
-matchSensitiveApiErrorField previous textValue
-  | not (isApiErrorSecretBoundary previous) = Nothing
-  | otherwise = firstMatch sensitiveApiErrorFields
-  where
-    lowered = T.toLower textValue
-
-    firstMatch [] = Nothing
-    firstMatch (fieldName:rest) =
-      case parseSensitiveApiErrorField fieldName lowered textValue of
-        Just match -> Just match
-        Nothing -> firstMatch rest
-
-sensitiveApiErrorFields :: [Text]
-sensitiveApiErrorFields =
-  [ "access_token"
-  , "accesstoken"
-  , "api_key"
-  , "api-key"
-  , "apikey"
-  , "authorization"
-  , "bearertoken"
-  , "client_secret"
-  , "clientsecret"
-  , "id_token"
-  , "refresh_token"
-  , "refreshtoken"
-  , "x-api-key"
-  ]
-
-parseSensitiveApiErrorField :: Text -> Text -> Text -> Maybe (Text, Text)
-parseSensitiveApiErrorField fieldName lowered textValue
-  | not (fieldName `T.isPrefixOf` lowered) = Nothing
-  | otherwise = do
-      let fieldLength = T.length fieldName
-          fieldText = T.take fieldLength textValue
-          afterField = T.drop fieldLength textValue
-          (closingQuote, afterClosingQuote) = consumeApiErrorOptionalQuote afterField
-          (beforeSeparator, separatorCandidate) = T.span isSpace afterClosingQuote
-      (separator, afterSeparator) <- T.uncons separatorCandidate
-      if separator == '=' || separator == ':'
-        then
-          let (afterSeparatorSpace, valueStart) = T.span isSpace afterSeparator
-              (openingQuote, valueText, isValueEnd) = consumeApiErrorValueOpeningQuote valueStart
-              (_, rest) = T.break isValueEnd valueText
-              prefix =
-                fieldText
-                  <> closingQuote
-                  <> beforeSeparator
-                  <> T.singleton separator
-                  <> afterSeparatorSpace
-                  <> openingQuote
-          in Just (prefix, rest)
-        else Nothing
-
-isApiErrorSecretBoundary :: Maybe Char -> Bool
-isApiErrorSecretBoundary Nothing = True
-isApiErrorSecretBoundary (Just ch) =
-  not (isAlphaNum ch || ch == '_' || ch == '-')
-
-isApiErrorSecretAtom :: Char -> Bool
-isApiErrorSecretAtom ch =
-  isAlphaNum ch || ch `elem` (".-_~+/=" :: String)
-
-consumeApiErrorOptionalQuote :: Text -> (Text, Text)
-consumeApiErrorOptionalQuote textValue =
-  case T.uncons textValue of
-    Just ('"', rest) -> ("\"", rest)
-    Just ('\'', rest) -> ("'", rest)
-    _ -> ("", textValue)
-
-consumeApiErrorValueOpeningQuote :: Text -> (Text, Text, Char -> Bool)
-consumeApiErrorValueOpeningQuote textValue =
-  case T.uncons textValue of
-    Just ('"', rest) -> ("\"", rest, (== '"'))
-    Just ('\'', rest) -> ("'", rest, (== '\''))
-    _ -> ("", textValue, isUnquotedApiErrorSecretValueEnd)
-
-isUnquotedApiErrorSecretValueEnd :: Char -> Bool
-isUnquotedApiErrorSecretValueEnd ch =
-  isSpace ch || ch `elem` ("&,;}]" :: String)
-
-extractModelReplyText :: Value -> Maybe Text
-extractModelReplyText payload =
-  extractChatCompletionText payload
-    <|> extractResponsesOutputText payload
-
-extractChatCompletionText :: Value -> Maybe Text
-extractChatCompletionText payload = do
-  ChatCompletionResp
-    { choices = (ChatChoice OpenAIChatMessage{role = replyRole, content = reply} : _)
-    } <- parseMaybe parseJSON payload
-  if replyRole == "assistant"
-    then validateModelReplyText reply
-    else Nothing
-
-extractResponsesOutputText :: Value -> Maybe Text
-extractResponsesOutputText payload = parseMaybe parsePayload payload
-  where
-    parsePayload = withObject "ResponsesPayload" $ \o -> do
-      mOutputText <- o .:? "output_text"
-      case mOutputText >>= validateModelReplyText of
-        Just txt -> pure txt
-        Nothing -> do
-          outputs <- o .:? "output" .!= ([] :: [Value])
-          let fragments = concatMap extractOutputFragments outputs
-          case validateModelReplyText (T.intercalate "\n" fragments) of
-            Just txt -> pure txt
-            Nothing -> fail "output text missing"
-
-maxModelReplyTextChars :: Int
-maxModelReplyTextChars = 8192
-
-validateModelReplyText :: Text -> Maybe Text
-validateModelReplyText rawReply = do
-  reply <- nonEmptyText rawReply
-  if T.length reply <= maxModelReplyTextChars
-      && not (T.any invalidModelReplyChar reply)
-    then Just reply
-    else Nothing
-
-invalidModelReplyChar :: Char -> Bool
-invalidModelReplyChar ch =
-  (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
-    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
-
-extractOutputFragments :: Value -> [Text]
-extractOutputFragments value =
-  let directText =
-        catMaybes
-          [ join (parseMaybe (withObject "OutputItemText" (\o -> o .:? "text")) value) >>= nonEmptyText
-          , join (parseMaybe (withObject "OutputItemContentText" (\o -> o .:? "content")) value) >>= nonEmptyText
-          ]
-      contentParts =
-        fromMaybe []
-          (parseMaybe (withObject "OutputItemContent" (\o -> o .:? "content" .!= ([] :: [Value]))) value)
-      partText =
-        concatMap
-          (\part ->
-            catMaybes
-              [ join (parseMaybe (withObject "OutputPartText" (\o -> o .:? "text")) part) >>= nonEmptyText
-              , join (parseMaybe (withObject "OutputPartContentText" (\o -> o .:? "content")) part) >>= nonEmptyText
-              ]
-          )
-          contentParts
-  in directText <> partText
 
 ensurePartyForInquiry :: AdsInquiry -> UTCTime -> SqlPersistT IO (Either ServerError PartyId)
 ensurePartyForInquiry AdsInquiry{..} now = fmap Right $ insert M.Party
@@ -19702,12 +19053,23 @@ resolveMarketplaceOrderPaidAtForStatus now currentStatus mNextStatus currentPaid
         then Left err400 { errBody = "paidAt is required when status is paid" }
         else Right paidAtFinal
 
+-- | A stored order status is either one of the legacy statuses an operator may
+-- set, or one of the canonical checkout statuses that
+-- @trg_marketplace_sync_verified_checkout@ mirrors onto a canonical order
+-- (@awaiting_payment@ at creation, then @processing@ or @failed@). The latter
+-- are never accepted as an update target, but an order carrying one must
+-- still be editable.
 validateStoredMarketplaceOrderStatus :: Text -> Either ServerError Text
-validateStoredMarketplaceOrderStatus rawStatus =
-  case normalizeMarketplaceOrderStatus rawStatus of
-    Just normalized -> Right normalized
-    Nothing ->
-      Left err500 { errBody = "Stored marketplace order status is invalid" }
+validateStoredMarketplaceOrderStatus rawStatus
+  | T.strip rawStatus `elem` canonicalMarketplaceOrderStatuses = Right (T.strip rawStatus)
+  | otherwise =
+      case normalizeMarketplaceOrderStatus rawStatus of
+        Just normalized -> Right normalized
+        Nothing ->
+          Left err500 { errBody = "Stored marketplace order status is invalid" }
+
+canonicalMarketplaceOrderStatuses :: [Text]
+canonicalMarketplaceOrderStatuses = ["holding", "awaiting_payment", "processing"]
 
 isPaidMarketplaceOrderStatus :: Text -> Bool
 isPaidMarketplaceOrderStatus rawStatus =

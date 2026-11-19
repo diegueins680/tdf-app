@@ -64,12 +64,14 @@ import TDF.Ticketing.Confirmation (startTicketConfirmationWorker)
 import TDF.Invoice.Datil (startTaxInvoiceWorker)
 import TDF.Cors (corsPolicy)
 import TDF.CampaignAutomation (startCampaignAutomationJob)
+import qualified TDF.Auth.Throttle as Throttle
 import qualified TDF.CMS.Models as CMS
 import qualified TDF.Catalog.Models as Catalog
 import TDF.Catalog.Integrity (applyCatalogIntegrity)
 import TDF.Catalog.Security (ensureBootstrapSecurityRole, validateSecurityRegistry)
 import TDF.Catalog.Seed (seedCatalogFoundation, validateCatalogRuntimeRegistries)
 import qualified TDF.DDEX.Models as Ddex
+import TDF.Server.Directory (startAgreementDepositExpiryJob)
 import TDF.Cron (
     startCoursePaymentReminderJob,
     startEventDiscoveryJob,
@@ -148,6 +150,7 @@ runBootServer = do
         let env = Env{envPool = pool, envConfig = cfg}
         writeIORef appRef (wrapApp (mkApp env))
         startCoursePaymentReminderJob env
+        startAgreementDepositExpiryJob env
         startRecordsIngestionJob (envPool env)
         startInteractionNotifications (envPool env)
         startEventDiscoveryJob env
@@ -280,6 +283,8 @@ runAllMigrations cfg = do
   syncRegionalDeploymentEnablement cfg
   ensureBrainTagsArray
   runMigration migrateTrials
+  -- The login, signup and reset throttles read this table on every request.
+  Throttle.ensureAuthThrottleSchema
   ensureInternationalColumns
   restoreLegacyPartyRoles legacyRoles
   validateSecurityRegistry

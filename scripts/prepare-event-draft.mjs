@@ -10,6 +10,9 @@ export function assertPrivateDraft(event) {
   }
 }
 export function validateDraftPlan(plan) {
+  if (plan.schemaVersion === 2) {
+    return validateReviewPlan(plan);
+  }
   if (plan.schemaVersion !== 1 || plan.approval !== 'draft-authorized'
       || plan.event.eventIsPublic !== false || !Array.isArray(plan.artists)
       || plan.tier.ticketTierActive !== false || plan.tier.ticketTierQuantitySold !== 0) {
@@ -21,11 +24,60 @@ export function validateDraftPlan(plan) {
     throw new Error('Event and tier dimensions disagree');
   }
 }
+
+function validateReviewPlan(plan) {
+  const { event, tiers } = plan;
+  if (plan.approval !== 'review-only' || event?.eventIsPublic !== false
+      || event.eventTicketUrl != null || event.eventImageUrl != null
+      || !Array.isArray(event.eventArtists) || !Array.isArray(tiers) || tiers.length === 0) {
+    throw new Error('Review plans must be private and must not contain public asset or ticket URLs');
+  }
+  if (typeof event.eventCurrency !== 'string' || event.eventCurrency.length !== 3
+      || !/^[A-Z]{3}$/.test(event.eventCurrency)) {
+    throw new Error('Review currency must be a canonical three-letter uppercase string');
+  }
+  const eventStart = Date.parse(event.eventStart);
+  const eventEnd = Date.parse(event.eventEnd);
+  if (!Number.isFinite(eventStart) || !Number.isFinite(eventEnd) || eventEnd <= eventStart
+      || !Number.isSafeInteger(event.eventCapacity) || event.eventCapacity < 1) {
+    throw new Error('Review plans require an ordered event window and positive integer capacity');
+  }
+  const codes = new Set();
+  let capacity = 0;
+  let lowestPrice = Infinity;
+  for (const tier of tiers) {
+    const code = tier.ticketTierCode?.trim().toUpperCase();
+    const saleStart = tier.ticketTierSalesStart == null ? null : Date.parse(tier.ticketTierSalesStart);
+    const saleEnd = Date.parse(tier.ticketTierSalesEnd);
+    if (!code || codes.has(code) || tier.ticketTierActive !== false || tier.ticketTierQuantitySold !== 0
+        || tier.ticketTierCurrency !== event.eventCurrency
+        || !Number.isSafeInteger(tier.ticketTierPriceCents) || tier.ticketTierPriceCents < 0
+        || !Number.isSafeInteger(tier.ticketTierQuantityTotal) || tier.ticketTierQuantityTotal < 1
+        || !Number.isFinite(saleEnd) || saleEnd > eventEnd
+        || (saleStart !== null && (!Number.isFinite(saleStart) || saleStart >= saleEnd))) {
+      throw new Error('Review tiers require unique codes, inactive zero-sale inventory, matching currency and a valid sale window');
+    }
+    codes.add(code);
+    capacity += tier.ticketTierQuantityTotal;
+    lowestPrice = Math.min(lowestPrice, tier.ticketTierPriceCents);
+  }
+  if (!Number.isSafeInteger(capacity) || capacity > event.eventCapacity || event.eventPriceCents !== lowestPrice) {
+    throw new Error('Review tiers exceed event capacity or the event price differs from the lowest tier price');
+  }
+}
 const normalize = (text) => String(text ?? '').normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase();
 async function main() {
-  const planPath = resolve(process.argv[2] ?? '');
+  const validateOnly = process.argv[2] === '--validate-only';
+  const planPath = resolve(process.argv[validateOnly ? 3 : 2] ?? '');
   const plan = JSON.parse(await readFile(planPath, 'utf8'));
   validateDraftPlan(plan);
+  if (validateOnly) {
+    console.log(JSON.stringify({ valid: true, mode: 'offline', schemaVersion: plan.schemaVersion, mutations: 0 }));
+    return;
+  }
+  if (plan.schemaVersion === 2) {
+    throw new Error('Review plans are offline only. Resolve the organizer, venue, artists and operational inventory before importing through TDF.');
+  }
   // Validate the local asset before any profile/event mutation.
   const flyerBytes = await readFile(resolve(dirname(planPath), plan.flyer));
   const token = process.env.ADMIN_TOKEN;

@@ -17,6 +17,9 @@ module TDF.ServerFanClub
   , validateFanClubReplyParentTarget
   , validateFanClubElectionPathId
   , validateFanClubElectionMutationTarget
+  , FanClubElectionPhase(..)
+  , validateFanClubElectionPhase
+  , lookupFanClubElectionPhaseTarget
   , validateFanClubCandidacyPathId
   , validateFanClubVoteSelectionIds
   , validateFanClubVoteCandidacyTarget
@@ -65,7 +68,7 @@ import           Database.Persist       (Entity(..), Key, (=.), (==.), (+=.), (<
                                          , get, getBy, insert, insertUnique, selectFirst, selectList, update, count
                                          , delete, insert_)
 import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
-import           Servant                (NoContent(..), ServerError, (:<|>)(..), err400, err403, err404, err422, errBody)
+import           Servant                (NoContent(..), ServerError, (:<|>)(..), err400, err403, err404, err409, err422, errBody)
 
 import           Servant                (Handler)
 
@@ -562,7 +565,8 @@ fanClubSecureArtistHandlers user artistId =
     createCandidacy aId electionId req = do
       artistKey <- requireArtistKey aId
       electionKey <- either throwError pure (validateFanClubElectionPathId electionId)
-      targetElection <- runDB $ lookupFanClubElectionMutationTarget artistKey electionKey
+      phaseNow <- liftIO getCurrentTime
+      targetElection <- runDB $ lookupFanClubElectionPhaseTarget ElectionCandidacy phaseNow artistKey electionKey
       _ <- either throwError pure targetElection
       role <- either throwError pure (validateFanClubOfficerRoleInput (fccrRole req))
       mCid <- runDB $ do
@@ -591,7 +595,8 @@ fanClubSecureArtistHandlers user artistId =
     castVote aId electionId req = do
       artistKey <- requireArtistKey aId
       electionKey <- either throwError pure (validateFanClubElectionPathId electionId)
-      targetElection <- runDB $ lookupFanClubElectionMutationTarget artistKey electionKey
+      phaseNow <- liftIO getCurrentTime
+      targetElection <- runDB $ lookupFanClubElectionPhaseTarget ElectionVoting phaseNow artistKey electionKey
       _ <- either throwError pure targetElection
       candidacyKeys <- either throwError pure $
         validateFanClubVoteSelectionIds (fcvCandidacyIds req)
@@ -1875,6 +1880,50 @@ validateFanClubElectionMutationTarget
 validateFanClubElectionMutationTarget clubId (Entity electionId election)
   | fanClubElectionClubId election == clubId = Right electionId
   | otherwise = Left fanClubElectionNotFound
+
+-- | Candidacy and voting are accepted only while the election allows them:
+-- never once it is closed, and only inside the matching window when one is
+-- set. Before 2026-11-07 neither handler looked at the status or the windows.
+data FanClubElectionPhase = ElectionCandidacy | ElectionVoting
+  deriving (Eq, Show)
+
+validateFanClubElectionPhase
+  :: FanClubElectionPhase -> UTCTime -> FanClubElection -> Either ServerError ()
+validateFanClubElectionPhase phase now election
+  | fanClubElectionStatus election == M.Closed =
+      Left err409 { errBody = "Fan club election is closed" }
+  | maybe False (now <) startsAt = Left err409 { errBody = notStarted }
+  | maybe False (now >=) endsAt = Left err409 { errBody = ended }
+  | otherwise = Right ()
+  where
+    (startsAt, endsAt, notStarted, ended) = case phase of
+      ElectionCandidacy ->
+        ( fanClubElectionCandidacyStartsAt election, fanClubElectionCandidacyEndsAt election
+        , "Fan club election candidacy period has not started"
+        , "Fan club election candidacy period has ended" )
+      ElectionVoting ->
+        ( fanClubElectionVotingStartsAt election, fanClubElectionVotingEndsAt election
+        , "Fan club election voting period has not started"
+        , "Fan club election voting period has ended" )
+
+lookupFanClubElectionPhaseTarget
+  :: FanClubElectionPhase
+  -> UTCTime
+  -> PartyId
+  -> FanClubElectionId
+  -> SqlPersistT IO (Either ServerError FanClubElectionId)
+lookupFanClubElectionPhaseTarget phase now artistKey electionId = do
+  mClub <- getBy (UniqueFanClubArtist artistKey)
+  case mClub of
+    Nothing -> pure (Left fanClubElectionNotFound)
+    Just (Entity clubId _) -> do
+      mElection <- get electionId
+      pure $ case mElection of
+        Nothing -> Left fanClubElectionNotFound
+        Just election ->
+          validateFanClubElectionMutationTarget clubId (Entity electionId election)
+            >> validateFanClubElectionPhase phase now election
+            >> Right electionId
 
 fanClubElectionNotFound :: ServerError
 fanClubElectionNotFound =

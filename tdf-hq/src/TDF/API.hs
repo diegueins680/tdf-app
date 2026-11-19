@@ -114,8 +114,8 @@ type InputListPublicAPI =
          :> Get '[JSON] [Entity InventoryItem]
 
 type InputListSeedAPI =
-       "inventory" :> "seed" :> SeedAPI
-  :<|> "sessions" :> "seed" :> SeedAPI
+       "inventory" :> "seed" :> AuthProtect "bearer-token" :> SeedAPI
+  :<|> "sessions" :> "seed" :> AuthProtect "bearer-token" :> SeedAPI
 
 type InputListAPI = InputListPublicAPI :<|> InputListSeedAPI
 
@@ -440,8 +440,13 @@ type McpAPI = ReqBody '[JSON] Value :> Post '[JSON] Value
 
 type SessionCookieHeaders = Headers '[Header "Set-Cookie" Text]
 
-type LoginAPI = ReqBody '[JSON] LoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
+-- The forwarded header and the peer give the client address of the
+-- per-address login limit (TDF.Auth.ClientAddress).
+type LoginAPI =
+  Header "X-Forwarded-For" Text :> RemoteHost
+    :> ReqBody '[JSON] LoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 type GoogleLoginAPI = ReqBody '[JSON] GoogleLoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
+type AppleLoginAPI = ReqBody '[JSON] AppleLoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 
 type SignupAPI = ReqBody '[JSON] SignupRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 
@@ -668,6 +673,7 @@ type API =
   :<|> SessionAPI
   :<|> "login"  :> LoginAPI
   :<|> "login"  :> "google" :> GoogleLoginAPI
+  :<|> "login"  :> "apple" :> AppleLoginAPI
   :<|> "signup" :> SignupAPI
   :<|> "password" :> PasswordAPI
   :<|> "v1" :> AuthV1API
@@ -682,7 +688,7 @@ type API =
   :<|> WhatsAppWebhookAPI
   :<|> MetaAPI
   :<|> AcademyAPI
-  :<|> "seed"   :> SeedAPI
+  :<|> "seed"   :> AuthProtect "bearer-token" :> SeedAPI
   :<|> "input-list" :> InputListAPI
   :<|> AdsPublicAPI
   :<|> CmsPublicAPI

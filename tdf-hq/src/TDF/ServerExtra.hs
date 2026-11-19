@@ -38,6 +38,8 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import qualified Data.ByteString.Char8      as BS
+import qualified TDF.ContentStorage         as ContentStorage
+import           System.IO                  (IOMode (ReadMode), withBinaryFile)
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import           Data.Time                  (Day, UTCTime(..), defaultTimeLocale, getCurrentTime, parseTimeM, utctDay)
@@ -1554,6 +1556,10 @@ storeAssetUpload rawUploadForm = do
       targetPath = targetDir </> T.unpack storedName
   fileSize <- liftIO (getFileSize (fdPayload aufFile))
   either throwError pure (validateInventoryAssetUploadSize fileSize)
+  -- The declared MIME type is the client's claim; the stored file goes to the
+  -- public assets mount, so its leading bytes must be that image format.
+  fileHead <- liftIO $ withBinaryFile (fdPayload aufFile) ReadMode (`BS.hGet` 16)
+  either throwError pure (validateInventoryAssetUploadSignature (fdFileCType aufFile) fileHead)
   liftIO $ createDirectoryIfMissing True targetDir
   liftIO $ copyFile (fdPayload aufFile) targetPath
   let publicUrl = buildAssetUrl assetsBase relPath
@@ -1562,6 +1568,13 @@ storeAssetUpload rawUploadForm = do
     , auPath = relPath
     , auPublicUrl = publicUrl
     }
+
+validateInventoryAssetUploadSignature :: Text -> BS.ByteString -> Either ServerError ()
+validateInventoryAssetUploadSignature rawContentType fileHead =
+  let declared = T.toLower (T.strip (fst (T.breakOn ";" rawContentType)))
+  in case ContentStorage.managedImageExtension declared fileHead of
+       Just _ -> Right ()
+       Nothing -> Left err400 { errBody = "File content does not match its declared media type" }
 
 maxInventoryAssetUploadBytes :: Integer
 maxInventoryAssetUploadBytes = 10 * 1024 * 1024

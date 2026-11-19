@@ -9,6 +9,8 @@ import qualified Data.Set as Set
 import qualified Data.Text as T
 import Database.Persist.Sql (toSqlKey)
 import Test.Hspec
+import Servant (errHTTPCode)
+import TDF.Server.Catalog (validateCatalogApproval)
 
 import TDF.API.Catalog
   ( PartyRoleGrantDraftRequest (..)
@@ -101,6 +103,22 @@ spec = do
         validSnapshot
           { srsAssignedRoleCodes = Set.insert "unknown-role" expectedSecurityRoleCodes
           }
+
+  describe "validateCatalogApproval" $ do
+    it "rejects self-approval on every catalog, sensitive or not, before anything is published" $ do
+      fmap (const ()) (validateCatalogApproval False True False) `shouldSatisfy` isLeft
+      fmap (const ()) (validateCatalogApproval True True False) `shouldSatisfy` isLeft
+      either errHTTPCode (const 0) (validateCatalogApproval False True False) `shouldBe` 403
+
+    it "does not let an emergency override lift the distinct-approver rule" $
+      either errHTTPCode (const 0) (validateCatalogApproval True True True) `shouldBe` 403
+
+    it "rejects an emergency override on a non-sensitive catalog" $
+      either errHTTPCode (const 0) (validateCatalogApproval False False True) `shouldBe` 400
+
+    it "admits a distinct approver" $ do
+      validateCatalogApproval False False False `shouldBe` Right ()
+      validateCatalogApproval True False True `shouldBe` Right ()
 
   describe "security grant JSON contracts" $ do
     it "accepts only canonical role IDs and the complete typed draft shape" $

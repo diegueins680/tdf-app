@@ -99,3 +99,54 @@ export async function completedTestChild(workerProcess, {
     })]);
   } finally { clearTimeout(timer); }
 }
+
+// Synthetic music-worker stderr only. Never forward raw lines or payloads.
+export function createTestStopTraceForwarder({ enabled = false, emit = console.log } = {}) {
+  let remaining = 384, warned = false;
+  const warning = () => {
+    if (warned) return;
+    warned = true;
+    try { emit('Music worker stop diagnostics truncated by fixed capture limits.'); } catch {}
+  };
+  return stderr => {
+    if (enabled !== true || typeof stderr !== 'string') return { forwarded: 0, truncated: false };
+    let text = stderr, truncated = false, forwarded = 0, accepted = 0;
+    if (text.length > 65536) {
+      text = text.slice(-65536);
+      const newline = text.indexOf('\n');
+      text = newline < 0 ? '' : text.slice(newline + 1);
+      truncated = true;
+    }
+    let lines = text.split('\n');
+    if (lines.length > 512) { lines = lines.slice(-512); truncated = true; }
+    for (const raw of lines) {
+      const line = raw.endsWith('\r') ? raw.slice(0, -1) : raw;
+      if (line.length > 256) {
+        if (line.startsWith('{"event":"music_worker_stop"')) truncated = true;
+        continue;
+      }
+      const match = line.match(/^\{"event":"music_worker_stop","stage":"(start|term|wait)","heartbeatPid":([1-9][0-9]{0,9}),"status":(0|[1-9][0-9]{0,2})\}$/);
+      if (!match || Number(match[3]) > 255) continue;
+      if (accepted >= 3 || remaining === 0) { truncated = true; continue; }
+      accepted += 1; remaining -= 1;
+      const record = { event: 'music_worker_stop', stage: match[1],
+        heartbeatPid: Number(match[2]), status: Number(match[3]) };
+      try { emit(JSON.stringify(record)); forwarded += 1; } catch { truncated = true; }
+    }
+    if (truncated) warning();
+    return { forwarded, truncated };
+  };
+}
+
+export async function completedTestChildWithStopTrace(workerProcess, forward, {
+  complete = completedTestChild,
+} = {}) {
+  try {
+    const result = await complete(workerProcess);
+    try { forward(result.stderr); } catch {}
+    return result;
+  } catch (error) {
+    try { forward(workerProcess.snapshot().stderr); } catch {}
+    throw error;
+  }
+}
