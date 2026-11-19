@@ -1,6 +1,6 @@
 import { post } from '../api/client';
 import { getActiveSession } from '../session/SessionContext';
-import { getAuthSessionEpoch } from '../session/authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 import { UploadFailure } from '../api/uploadFailure';
 
 const TOKEN_KEY = 'tdf-google-drive-token';

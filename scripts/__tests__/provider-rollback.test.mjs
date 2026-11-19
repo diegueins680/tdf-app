@@ -1,7 +1,7 @@
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
-import { parseArgs, recoverReleaseMachines, requiredIdentityCommit, disabledEscrowWritesAt, rollbackCompatibility, selectRecoveryTarget, withCompatibleRollback } from '../production-release.mjs';
+import { recoverReleaseMachines, requiredIdentityCommit, disabledEscrowWritesAt, rollbackCompatibility, selectRecoveryTarget, withCompatibleRollback } from '../production-release.mjs';
 
 const legacy = '2f01b20b0c2a2e2088570c3dc5deba6197266452';
 const modern = '5c11577a5d31f079b3e070a7810a6b04a48d99f4';
@@ -86,8 +86,6 @@ test('a compatible immutable fallback replaces only an unsafe prior image', asyn
   assert.equal(deployed, fallback.image);
   const compatible = { ...snapshot, sha: floor, rollbackPolicy: { compatible: true } };
   assert.equal(selectRecoveryTarget(compatible, fallback).sha, floor);
-  const args = parseArgs(['preflight', '--sha', modern, '--recovery-sha', floor]);
-  assert.equal(args.recoverySha, floor);
 });
 
 test('bounded conformance: mixed machine histories, failure order and retries never deploy an unsafe prior', async () => {
