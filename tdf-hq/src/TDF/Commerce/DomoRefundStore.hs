@@ -141,12 +141,12 @@ confirmManualEvidence :: Text -> Int64 -> UTCTime -> SqlPersistT IO R.RefundReco
 confirmManualEvidence quoteId actor now = do
   record <- locked quoteId
   rows <- rawSql
-    "SELECT external_reference,recorded_by,confirmed_by FROM domo_manual_refund_evidence\
+    "SELECT external_reference,recorded_by,confirmed_by,occurred_at FROM domo_manual_refund_evidence\
     \ WHERE refund_id=?::uuid FOR UPDATE"
     [PersistText (R.refundReferenceId (R.rrReference record))]
-    :: SqlPersistT IO [(Single Text,Single Int64,Single (Maybe Int64))]
+    :: SqlPersistT IO [(Single Text,Single Int64,Single (Maybe Int64),Single UTCTime)]
   case rows of
-    [(Single externalRef,Single recorder,Single confirmed)] -> do
+    [(Single externalRef,Single recorder,Single confirmed,Single occurredAt)] -> do
       unless (actor>0 && actor/=recorder && actor/=R.rrRequestedBy record) $
         fail "Receipt confirmation requires independent review"
       case confirmed of
@@ -156,7 +156,7 @@ confirmManualEvidence quoteId actor now = do
           _ <- either (fail . T.unpack) pure =<< R.recordVerifiedRefund R.VerifiedRefund
             { R.vrRefund=R.rrReference record,R.vrProviderRefund=externalRef
             , R.vrAmountMinor=R.rrAmountMinor record,R.vrCurrency=R.rrCurrency record
-            , R.vrOccurredAt=now,R.vrCorrelationId="domo-manual:"<>R.refundReferenceId (R.rrReference record) }
+            , R.vrOccurredAt=occurredAt,R.vrCorrelationId="domo-manual:"<>R.refundReferenceId (R.rrReference record) }
           rawExecute "UPDATE domo_manual_refund_evidence SET confirmed_by=?,confirmed_at=? WHERE refund_id=?::uuid"
             [PersistInt64 actor,PersistUTCTime now,PersistText (R.refundReferenceId (R.rrReference record))]
           refundAudit record actor "manual_evidence_confirmed"

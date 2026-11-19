@@ -655,9 +655,21 @@ databaseSpec = after restoreRecoveryAuthority $ describe "Domo cancellation (PAY
     expectFailure $ runSqlPool (D.recordManualEvidence (fxQuoteId fixture) 2 now evidence {D.meExternalReference="OTHER"}) pool
     expectFailure $ runSqlPool (D.confirmManualEvidence (fxQuoteId fixture) 2 now) pool
     outstanding pool fixture `shouldReturn` "1:0"
-    records <- mapConcurrently (\_ -> runSqlPool (D.confirmManualEvidence (fxQuoteId fixture) 3 now) pool) [1..4::Int]
+    -- Review can occur in a later accounting month; cash belongs to the
+    -- immutable receipt's occurrence time, while approval keeps its own time.
+    let reviewedAt = addUTCTime (35 * 86400) now
+    records <- mapConcurrently (\_ -> runSqlPool (D.confirmManualEvidence (fxQuoteId fixture) 3 reviewedAt) pool) [1..4::Int]
     map R.rrStatus records `shouldBe` replicate 4 "succeeded"
     outstanding pool fixture `shouldReturn` ("0:"<>T.pack (show depositMinor))
+    scalar pool
+      "SELECT count(*)::text FROM domo_manual_refund_evidence evidence\
+      \ JOIN commerce_ledger_transaction txn\
+      \ ON txn.source_type='refund' AND txn.source_id=evidence.refund_id::text\
+      \ JOIN domo_quote_cancellation cancellation ON cancellation.refund_id=evidence.refund_id\
+      \ WHERE cancellation.domo_quote_id=?::uuid AND txn.status='posted'\
+      \ AND txn.effective_at=evidence.occurred_at AND evidence.confirmed_at=?\
+      \ AND date_trunc('month',txn.effective_at)<>date_trunc('month',evidence.confirmed_at)"
+      [PersistText (fxQuoteId fixture),PersistUTCTime reviewedAt] `shouldReturn` "1"
 
   it "fences cancellation during an admitted capture and refuses capture after cancellation" $ \pool -> do
     fixture <- seedQuote pool 40 False

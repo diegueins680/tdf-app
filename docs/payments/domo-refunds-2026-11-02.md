@@ -85,6 +85,8 @@ del registrador y del solicitante verifica el movimiento real y llama
 `POST .../refund/confirm-manual`. Un comprobante externo no puede reutilizarse
 para otra devolución del mismo proveedor, comercio y entorno. Los reintentos y
 confirmaciones concurrentes no duplican el asiento ni la nota de crédito.
+El asiento usa la fecha del movimiento guardada en el comprobante; la fecha
+de revisión se conserva por separado, aunque caiga en otro mes contable.
 Este circuito exige una verificación humana real: el backend no puede comprobar
 por sí solo un documento de un proveedor sin adaptador de consulta.
 
