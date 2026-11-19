@@ -1,3 +1,5 @@
+import type { MarketplaceCustomerRequestDTO, MarketplaceCustomerRequestType } from '../api/types';
+
 // Presentation only. State authority and transitions remain in the backend runtime.
 const FULFILLMENT_STATUS_LABELS: Record<string, string> = {
   on_hold: 'Reserva activa',
@@ -61,6 +63,35 @@ const DEPOSIT_SETTLEMENT_METHOD_LABELS: Record<string, string> = {
   forfeiture: 'Retención total documentada',
 };
 
+const CUSTOMER_REQUEST_TYPE_LABELS: Record<MarketplaceCustomerRequestType, string> = {
+  sale_cancellation: 'Cancelar antes de la entrega',
+  sale_return: 'Solicitar devolución',
+  rental_cancellation: 'Cancelar antes de la entrega del equipo',
+  rental_extension: 'Solicitar extensión de fechas',
+  rental_dispute: 'Disputar condición, cargo o depósito',
+};
+
+const CUSTOMER_REQUEST_STATUS_LABELS: Record<MarketplaceCustomerRequestDTO['mcrStatus'], string> = {
+  submitted: 'En revisión',
+  needs_quote: 'Requiere cotización',
+  approved: 'Aprobada',
+  rejected: 'Rechazada',
+};
+
+const MANUAL_EVIDENCE_STATUS_LABELS: Record<string, string> = {
+  awaiting_evidence: 'Esperando referencia',
+  submitted: 'Referencia recibida',
+  under_review: 'En revisión',
+  approved: 'Evidencia aprobada',
+  rejected: 'Evidencia rechazada',
+};
+
+const MANUAL_PAYMENT_METHOD_LABELS: Record<string, string> = {
+  bank_transfer: 'Transferencia bancaria',
+  cash: 'Efectivo',
+  pos: 'POS',
+};
+
 // Missing and unfamiliar values must never imply payment, custody or settlement.
 function displayLabel(labels: Record<string, string>, value?: string | null): string {
   if (!value) return 'Sin información';
@@ -81,4 +112,20 @@ export function marketplaceDepositSettlementStatusLabel(value?: string | null): 
 
 export function marketplaceDepositSettlementMethodLabel(value?: string | null): string {
   return displayLabel(DEPOSIT_SETTLEMENT_METHOD_LABELS, value);
+}
+
+export function marketplaceCustomerRequestTypeLabel(value?: string | null): string {
+  return displayLabel(CUSTOMER_REQUEST_TYPE_LABELS, value);
+}
+
+export function marketplaceCustomerRequestStatusLabel(value?: string | null): string {
+  return displayLabel(CUSTOMER_REQUEST_STATUS_LABELS, value);
+}
+
+export function marketplaceManualEvidenceStatusLabel(value?: string | null): string {
+  return displayLabel(MANUAL_EVIDENCE_STATUS_LABELS, value);
+}
+
+export function marketplaceManualPaymentMethodLabel(value?: string | null): string {
+  return displayLabel(MANUAL_PAYMENT_METHOD_LABELS, value);
 }

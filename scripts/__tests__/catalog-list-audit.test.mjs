@@ -46,7 +46,11 @@ async function readReconciliation() {
     'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8')).decisions;
   // Each presentation follow-up has its own complete-parent preservation test.
   // Historical reconciliation tests replay their exact earlier reviewed view.
-  const labelExtractionView = currentActive.filter(row =>
+  const settlementDisplayView = currentActive.flatMap(row => {
+    if (row.id === '734ed3533d72f55f1170' || row.id === '95da3806a32123c6e1a5' || row.id === '354146cb038857137555') return [];
+    return [row.id === '295c31c74b0bad95c5c7' ? row.previousDecision : row];
+  });
+  const labelExtractionView = settlementDisplayView.filter(row =>
     row.id !== 'f42409396fc972bf4d31' && row.id !== '399cc2b7d2c27f5143c1');
   const active = labelExtractionView.flatMap(row => {
     if (row.id === 'e4eadc75e199657bbd8a') return [];
@@ -57,11 +61,51 @@ async function readReconciliation() {
     'docs/catalog-persistence/event-catalog-current-successors.json'), 'utf8')).successors;
   const integration = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-integration-retirements.json'), 'utf8'));
-  return { ledger, active, currentActive, labelExtractionView, successors, integration };
+  return { ledger, active, currentActive, settlementDisplayView, labelExtractionView, successors, integration };
 }
 
+test('shared evidence/request display retains the full parent view and existing SQL/API vocabulary', async () => {
+  const { currentActive, settlementDisplayView } = await readReconciliation();
+  const parent = JSON.parse((await execFileAsync('git', ['show',
+    'a4edbe4b107e2f37b1091e02bac0d75fac472554:docs/catalog-persistence/catalog-list-decisions.json'],
+    { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions;
+  assert.deepEqual(settlementDisplayView, parent, 'all1432 complete parent reviews remain reconstructible unchanged');
+  assert.equal(currentActive.length, parent.length + 3);
+  const status = currentActive.find(row => row.id === '295c31c74b0bad95c5c7');
+  assert.deepEqual(status.previousDecision, parent.find(row => row.id === '31fdec804cc113595b2f'));
+  assert.equal(status.classification, status.previousDecision.classification);
+  assert.equal(status.disposition, status.previousDecision.disposition);
+  const labels = await fs.readFile(path.join(workspaceRoot, 'tdf-hq-ui/src/utils/marketplaceStatusLabel.ts'), 'utf8');
+  const oldPage = (await execFileAsync('git', ['show',
+    'a4edbe4b107e2f37b1091e02bac0d75fac472554:tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx'],
+    { cwd: workspaceRoot })).stdout;
+  const body = (text, name) => text.match(new RegExp(String.raw`const ${name}: [^=]+ = \{([\s\S]*?)\n\};`))?.[1];
+  assert.ok(body(labels, 'CUSTOMER_REQUEST_TYPE_LABELS'));
+  assert.ok(body(labels, 'CUSTOMER_REQUEST_STATUS_LABELS'));
+  assert.equal(body(labels, 'CUSTOMER_REQUEST_TYPE_LABELS'), body(oldPage, 'requestLabels'));
+  assert.equal(body(labels, 'CUSTOMER_REQUEST_STATUS_LABELS'), body(oldPage, 'requestStatusLabels'));
+  const requestSchema = (await fs.readFile(path.join(workspaceRoot,
+    'tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql'), 'utf8'))
+    .split('CREATE TABLE IF NOT EXISTS marketplace_customer_request (')[1];
+  const manualSchema = (await fs.readFile(path.join(workspaceRoot,
+    'tdf-hq/sql/2026-08-13_unified_checkout_core.sql'), 'utf8'))
+    .split('CREATE TABLE IF NOT EXISTS commerce_manual_payment_evidence (')[1];
+  const types = await fs.readFile(path.join(workspaceRoot, 'tdf-hq-ui/src/api/types.ts'), 'utf8');
+  const rows = currentActive.filter(row => row.reviewBatch === 'cognitive-load-evidence-request-display-20261119');
+  assert.equal(rows.length, 4);
+  for (const row of rows) {
+    let values;
+    if (row.evidence.name === 'CUSTOMER_REQUEST_TYPE_LABELS') values = requestSchema.match(/request_type TEXT NOT NULL CHECK \(request_type IN \(([\s\S]*?)\)\)/)[1];
+    else if (row.evidence.name === 'CUSTOMER_REQUEST_STATUS_LABELS') values = requestSchema.match(/status TEXT NOT NULL DEFAULT 'submitted' CHECK \(status IN \(([\s\S]*?)\)\)/)[1];
+    else if (row.evidence.name === 'MANUAL_EVIDENCE_STATUS_LABELS') values = manualSchema.match(/status TEXT NOT NULL CHECK \(status IN \(([\s\S]*?)\)\)/)[1];
+    else values = types.match(/mmePaymentMethod:([^;]+);/)[1];
+    assert.deepEqual(row.evidence.values, [...values.matchAll(/'([^']+)'/g)].map(match => match[1]));
+    assert.equal(row.classification, 'dynamic-business-catalog');
+  }
+});
+
 test('staff settlement display preserves every parent review and only labels existing SQL codes', async () => {
-  const { currentActive, labelExtractionView } = await readReconciliation();
+  const { settlementDisplayView: currentActive, labelExtractionView } = await readReconciliation();
   const parent = JSON.parse((await execFileAsync('git', ['show',
     'f11327af1ad809147f23b50e988dcc631d416836:docs/catalog-persistence/catalog-list-decisions.json'],
     { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions;

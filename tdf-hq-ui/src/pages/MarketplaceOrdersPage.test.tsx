@@ -4,6 +4,8 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import type {
+  MarketplaceCommerceDTO,
+  MarketplaceCustomerRequestDTO,
   MarketplaceDepositSettlementDTO,
   MarketplaceDepositSettlementSubmitPayload,
   MarketplaceFulfillmentUpdatePayload,
@@ -29,6 +31,14 @@ const submitDepositSettlementMock = jest.fn<(
 const reviewDepositSettlementMock = jest.fn<(
   orderId: string, settlementId: string, action: 'approve' | 'reject' | 'requires_reconciliation', notes: string,
 ) => Promise<MarketplaceDepositSettlementDTO>>();
+const getCommerceMock = jest.fn<(orderId: string) => Promise<MarketplaceCommerceDTO>>();
+const reviewManualPaymentMock = jest.fn<(
+  orderId: string, action: 'approve' | 'reject', notes: string,
+) => Promise<MarketplaceCommerceDTO>>();
+const listCustomerRequestsMock = jest.fn<(orderId: string) => Promise<MarketplaceCustomerRequestDTO[]>>();
+const reviewCustomerRequestMock = jest.fn<(
+  orderId: string, requestId: string, action: 'approve' | 'reject' | 'needs_quote', notes: string,
+) => Promise<MarketplaceCustomerRequestDTO>>();
 
 jest.unstable_mockModule('../api/marketplace', () => ({
   getMarketplaceDepositIdempotencyKey: () => 'marketplace-deposit-idempotency-0001',
@@ -49,6 +59,15 @@ jest.unstable_mockModule('../api/marketplace', () => ({
     reviewDepositSettlement: (orderId: string, settlementId: string,
       action: 'approve' | 'reject' | 'requires_reconciliation', notes: string) => (
       reviewDepositSettlementMock(orderId, settlementId, action, notes)
+    ),
+    getCommerce: (orderId: string) => getCommerceMock(orderId),
+    reviewManualPayment: (orderId: string, action: 'approve' | 'reject', notes: string) => (
+      reviewManualPaymentMock(orderId, action, notes)
+    ),
+    listCustomerRequestsAdmin: (orderId: string) => listCustomerRequestsMock(orderId),
+    reviewCustomerRequest: (orderId: string, requestId: string,
+      action: 'approve' | 'reject' | 'needs_quote', notes: string) => (
+      reviewCustomerRequestMock(orderId, requestId, action, notes)
     ),
   },
 }));
@@ -125,6 +144,17 @@ const buildSettlement = (overrides: Partial<MarketplaceDepositSettlementDTO> = {
   mdsSettlementMethod: 'bank_transfer', mdsExternalReference: 'SYNTHETIC-REFERENCE',
   mdsEvidenceUrl: 'https://example.test/private/synthetic-evidence.pdf', mdsStatus: 'submitted',
   mdsSubmittedBy: 101, mdsSubmittedAt: '2030-01-01T12:00:00Z', ...overrides,
+});
+
+const buildCommerce = (overrides: Partial<MarketplaceCommerceDTO> = {}): MarketplaceCommerceDTO => ({
+  mpcOrderId: 'order-1', mpcCheckoutId: 'checkout-1', mpcOrderKind: 'sale', mpcPaymentStatus: 'awaiting_payment',
+  mpcHoldExpiresAt: '2030-01-01T12:15:00Z', mpcManualEvidence: null, ...overrides,
+});
+
+const buildRequest = (overrides: Partial<MarketplaceCustomerRequestDTO> = {}): MarketplaceCustomerRequestDTO => ({
+  mcrRequestId: 'request-1', mcrOrderId: 'order-1', mcrOrderKind: 'rental', mcrRequestType: 'rental_extension',
+  mcrStatus: 'submitted', mcrReason: 'Solicitud sintética de extensión.', mcrRequestedEndDate: '2030-01-20',
+  mcrRequestedAt: '2030-01-01T12:00:00Z', ...overrides,
 });
 
 const orderSearchLabel = 'Buscar por comprador, contacto o pedido';
@@ -390,6 +420,10 @@ describe('MarketplaceOrdersPage', () => {
     listDepositSettlementsMock.mockReset().mockResolvedValue([]);
     submitDepositSettlementMock.mockReset();
     reviewDepositSettlementMock.mockReset();
+    getCommerceMock.mockReset().mockImplementation(orderId => Promise.resolve(buildCommerce({ mpcOrderId: orderId })));
+    reviewManualPaymentMock.mockReset();
+    listCustomerRequestsMock.mockReset().mockResolvedValue([]);
+    reviewCustomerRequestMock.mockReset();
     listOrdersMock.mockResolvedValue([buildOrder()]);
     updateOrderMock.mockResolvedValue(buildOrder({ moStatus: 'paid', moPaidAt: '2030-01-01T13:00:00.000Z' }));
     updateFulfillmentMock.mockResolvedValue(buildOrder());
@@ -3308,6 +3342,112 @@ describe('MarketplaceOrdersPage', () => {
       });
       expect(queryActionByText(document.body, 'Verificar evidencia real')).toBeNull();
       expect(reviewDepositSettlementMock).not.toHaveBeenCalled(); expect(submitDepositSettlementMock).not.toHaveBeenCalled();
+    } finally { await cleanup(); }
+  });
+
+  it('shows manual evidence in currency units and preserves rejection codes and note gating', async () => {
+    listOrdersMock.mockResolvedValue([buildOrder({ moPaymentProvider: 'bank_transfer', moOrderKind: 'sale',
+      moCheckoutStatus: 'awaiting_payment', moFulfillmentMethod: 'pickup', moFulfillmentStatus: 'on_hold' })]);
+    const evidence = { mmeEvidenceId: 'manual-1', mmePaymentMethod: 'bank_transfer' as const, mmeStatus: 'under_review' as const,
+      mmeSubmittedAmountMinor: 10000, mmeCurrency: 'EUR', mmeCustomerReference: 'SYNTHETIC-BANK', mmeSubmittedBy: 101 };
+    getCommerceMock.mockResolvedValue(buildCommerce({ mpcManualEvidence: evidence }));
+    reviewManualPaymentMock.mockResolvedValue(buildCommerce({ mpcManualEvidence: { ...evidence, mmeStatus: 'rejected' } }));
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(queryActionByText(container, 'Abrir orden')).not.toBeNull());
+      await clickFirstOrderRow(container);
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('En revisión');
+        expect(document.body.textContent).toContain('Método: Transferencia bancaria');
+        const amount = Array.from(document.body.querySelectorAll('p')).find(node => node.textContent?.startsWith('Monto declarado:'))?.textContent;
+        expect(amount).toMatch(/100[.,]00/); expect(amount).toContain('€'); expect(amount).not.toContain('10000');
+        expect(queryActionByText(document.body, 'Aprobar pago verificado')?.hasAttribute('disabled')).toBe(true);
+      });
+      expect(reviewManualPaymentMock).not.toHaveBeenCalled();
+      await setTextareaValue(getTextareaByLabel(document.body, 'Notas de revisión'), '  Referencia sintética no conciliada.  ');
+      await clickActionByText(document.body, 'Rechazar evidencia');
+      await waitForExpectation(() => {
+        expect(reviewManualPaymentMock).toHaveBeenCalledWith('order-1', 'reject', 'Referencia sintética no conciliada.');
+        expect(document.body.textContent).toContain('Evidencia rechazada');
+        expect(document.body.textContent).toContain('La orden permanece impaga');
+      });
+      expect(updateOrderMock).not.toHaveBeenCalled(); expect(updateRentalMock).not.toHaveBeenCalled();
+    } finally { await cleanup(); }
+  });
+
+  it.each([
+    { amount: null, currency: 'USD', expected: /Sin monto declarado/ },
+    { amount: 0, currency: 'USD', expected: /0[.,]00/ },
+    { amount: Number.MAX_SAFE_INTEGER, currency: 'USD', expected: /409[.,]91/ },
+    { amount: Number.MAX_SAFE_INTEGER + 1, currency: 'USD', expected: /Monto no disponible/ },
+    { amount: 10000, currency: null, expected: /Monto no disponible/ },
+    { amount: -1, currency: 'USD', expected: /Monto no disponible/ },
+  ])('keeps approved evidence separate from canonical payment for declared amount $amount/$currency', async ({ amount, currency, expected }) => {
+    listOrdersMock.mockResolvedValue([buildOrder({ moPaymentProvider: 'bank_transfer', moOrderKind: 'sale',
+      moCheckoutStatus: 'awaiting_payment', moFulfillmentMethod: 'pickup', moFulfillmentStatus: 'on_hold' })]);
+    getCommerceMock.mockResolvedValue(buildCommerce({ mpcManualEvidence: { mmeEvidenceId: 'manual-1',
+      mmePaymentMethod: 'bank_transfer', mmeStatus: 'approved', mmeSubmittedAmountMinor: amount, mmeCurrency: currency } }));
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(queryActionByText(container, 'Abrir orden')).not.toBeNull());
+      await clickFirstOrderRow(container);
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Evidencia aprobada');
+        const text = Array.from(document.body.querySelectorAll('p')).find(node => node.textContent?.startsWith('Monto declarado:'))?.textContent;
+        expect(text).toMatch(expected); expect(text).not.toContain('Gratis');
+      });
+      expect(document.body.textContent).not.toContain('Pago manual verificado.');
+      expect(queryActionByText(document.body, 'Aprobar pago verificado')).toBeNull();
+      expect(reviewManualPaymentMock).not.toHaveBeenCalled(); expect(updateOrderMock).not.toHaveBeenCalled();
+    } finally { await cleanup(); }
+  });
+
+  it('shares request labels while extension review still sends needs_quote and leaves dates unchanged', async () => {
+    listOrdersMock.mockResolvedValue([buildOrder({ moOrderKind: 'rental', moStatus: 'paid', moCheckoutStatus: 'paid',
+      moFulfillmentStatus: 'confirmed', moRentalStartDate: '2030-01-10', moRentalEndDate: '2030-01-12', moRentalDurationDays: 3 })]);
+    listCustomerRequestsMock.mockResolvedValue([buildRequest()]);
+    reviewCustomerRequestMock.mockResolvedValue(buildRequest({ mcrStatus: 'needs_quote' }));
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(queryActionByText(container, 'Abrir orden')).not.toBeNull());
+      await clickFirstOrderRow(container);
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Solicitar extensión de fechas');
+        expect(document.body.textContent).toContain('En revisión');
+        expect(queryActionByText(document.body, 'Requiere cotización')?.hasAttribute('disabled')).toBe(true);
+      });
+      expect(queryActionByText(document.body, 'Aprobar transición')).toBeNull();
+      await setTextareaValue(getTextareaByLabel(document.body, 'Notas para el cliente'), '  Cotización sintética pendiente.  ');
+      await clickActionByText(document.body, 'Requiere cotización');
+      await waitForExpectation(() => {
+        expect(reviewCustomerRequestMock).toHaveBeenCalledWith('order-1', 'request-1', 'needs_quote', 'Cotización sintética pendiente.');
+        expect(document.body.textContent).toContain('Requiere cotización');
+        expect(document.body.textContent).toContain('Fechas: 2030-01-10 → 2030-01-12');
+      });
+      expect(updateRentalMock).not.toHaveBeenCalled(); expect(updateOrderMock).not.toHaveBeenCalled();
+    } finally { await cleanup(); }
+  });
+
+  it('keeps unfamiliar customer-request type and status visible without invented review actions', async () => {
+    listOrdersMock.mockResolvedValue([buildOrder()]);
+    listCustomerRequestsMock.mockResolvedValue([buildRequest({
+      mcrRequestType: 'future_request_type' as MarketplaceCustomerRequestDTO['mcrRequestType'],
+      mcrStatus: 'future_request_status' as MarketplaceCustomerRequestDTO['mcrStatus'],
+    })]);
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(queryActionByText(container, 'Abrir orden')).not.toBeNull());
+      await clickFirstOrderRow(container);
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('future_request_type');
+        expect(document.body.textContent).toContain('future_request_status');
+      });
+      expect(queryActionByText(document.body, 'Aprobar transición')).toBeNull();
+      expect(reviewCustomerRequestMock).not.toHaveBeenCalled();
     } finally { await cleanup(); }
   });
 

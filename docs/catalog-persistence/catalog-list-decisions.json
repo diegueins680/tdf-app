@@ -7143,6 +7143,32 @@
           "name": "DEPOSIT_SETTLEMENT_METHOD_LABELS"
         }
       ]
+    },
+    "marketplaceEvidenceRequestDisplay": {
+      "sourceRevision": "a4edbe4b107e2f37b1091e02bac0d75fac472554",
+      "scope": "Three additional display reviews plus one moved status-map successor; complete parent1432 decision view remains reconstructible. No code gains lifecycle/payment/catalog authority.",
+      "reviews": [
+        {
+          "id": "734ed3533d72f55f1170",
+          "name": "CUSTOMER_REQUEST_TYPE_LABELS",
+          "previousId": null
+        },
+        {
+          "id": "295c31c74b0bad95c5c7",
+          "name": "CUSTOMER_REQUEST_STATUS_LABELS",
+          "previousId": "31fdec804cc113595b2f"
+        },
+        {
+          "id": "95da3806a32123c6e1a5",
+          "name": "MANUAL_EVIDENCE_STATUS_LABELS",
+          "previousId": null
+        },
+        {
+          "id": "354146cb038857137555",
+          "name": "MANUAL_PAYMENT_METHOD_LABELS",
+          "previousId": null
+        }
+      ]
     }
   },
   "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
@@ -12132,14 +12158,39 @@
       "reviewed": true
     },
     {
-      "id": "31fdec804cc113595b2f",
+      "id": "295c31c74b0bad95c5c7",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
-      "reviewed": true
+      "justification": "Display labels for existing closed SQL/API codes only. Request type/status strings are copied exactly from the customer view and shared with staff; manual evidence approval remains separate from canonical paid status. Bank-transfer/cash/POS codes remain the same; unknown text is preserved and no selectable option, role, action, transition or provider operation is added. The prior status review and all earlier catalog obligations are retained without classification changes.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decision",
+      "reviewBatch": "cognitive-load-evidence-request-display-20261119",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/marketplaceStatusLabel.ts",
+        "kind": "object-registry",
+        "name": "CUSTOMER_REQUEST_STATUS_LABELS",
+        "valueCount": 4,
+        "values": [
+          "submitted",
+          "needs_quote",
+          "approved",
+          "rejected"
+        ],
+        "sourceReview": "MarketplaceCustomerRequestDTO and MarketplaceManualEvidenceDTO in api/types.ts; marketplace_customer_request constraints in 2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql; commerce_manual_payment_evidence and loadMarketplaceManualEvidenceRows in Server.hs. Request labels match prior customer source byte-for-byte. Author source review only, not independent PR approval."
+      },
+      "previousDecision": {
+        "id": "31fdec804cc113595b2f",
+        "classification": "dynamic-business-catalog",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+        "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+        "reviewed": true
+      }
     },
     {
       "id": "4fa2620ba78013b14381",
@@ -38164,6 +38215,82 @@
           "forfeiture"
         ],
         "sourceReview": "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql: marketplace_rental_deposit_settlement constraints and independent review guard; tdf-hq-ui/src/api/types.ts: MarketplaceDepositSettlementDTO and SubmitPayload. Author source review only, not independent PR approval."
+      }
+    },
+    {
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Ambiguous display can conflate a customer request or evidence receipt with paid status or an authorized operation.",
+      "reviewed": true,
+      "id": "734ed3533d72f55f1170",
+      "justification": "Display labels for existing closed SQL/API codes only. Request type/status strings are copied exactly from the customer view and shared with staff; manual evidence approval remains separate from canonical paid status. Bank-transfer/cash/POS codes remain the same; unknown text is preserved and no selectable option, role, action, transition or provider operation is added. The prior status review and all earlier catalog obligations are retained without classification changes.",
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-evidence-request-display-20261119",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/marketplaceStatusLabel.ts",
+        "kind": "object-registry",
+        "name": "CUSTOMER_REQUEST_TYPE_LABELS",
+        "valueCount": 5,
+        "values": [
+          "sale_cancellation",
+          "sale_return",
+          "rental_cancellation",
+          "rental_extension",
+          "rental_dispute"
+        ],
+        "sourceReview": "MarketplaceCustomerRequestDTO and MarketplaceManualEvidenceDTO in api/types.ts; marketplace_customer_request constraints in 2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql; commerce_manual_payment_evidence and loadMarketplaceManualEvidenceRows in Server.hs. Request labels match prior customer source byte-for-byte. Author source review only, not independent PR approval."
+      }
+    },
+    {
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Ambiguous display can conflate a customer request or evidence receipt with paid status or an authorized operation.",
+      "reviewed": true,
+      "id": "95da3806a32123c6e1a5",
+      "justification": "Display labels for existing closed SQL/API codes only. Request type/status strings are copied exactly from the customer view and shared with staff; manual evidence approval remains separate from canonical paid status. Bank-transfer/cash/POS codes remain the same; unknown text is preserved and no selectable option, role, action, transition or provider operation is added. The prior status review and all earlier catalog obligations are retained without classification changes.",
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-evidence-request-display-20261119",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/marketplaceStatusLabel.ts",
+        "kind": "object-registry",
+        "name": "MANUAL_EVIDENCE_STATUS_LABELS",
+        "valueCount": 5,
+        "values": [
+          "awaiting_evidence",
+          "submitted",
+          "under_review",
+          "approved",
+          "rejected"
+        ],
+        "sourceReview": "MarketplaceCustomerRequestDTO and MarketplaceManualEvidenceDTO in api/types.ts; marketplace_customer_request constraints in 2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql; commerce_manual_payment_evidence and loadMarketplaceManualEvidenceRows in Server.hs. Request labels match prior customer source byte-for-byte. Author source review only, not independent PR approval."
+      }
+    },
+    {
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Ambiguous display can conflate a customer request or evidence receipt with paid status or an authorized operation.",
+      "reviewed": true,
+      "id": "354146cb038857137555",
+      "justification": "Display labels for existing closed SQL/API codes only. Request type/status strings are copied exactly from the customer view and shared with staff; manual evidence approval remains separate from canonical paid status. Bank-transfer/cash/POS codes remain the same; unknown text is preserved and no selectable option, role, action, transition or provider operation is added. The prior status review and all earlier catalog obligations are retained without classification changes.",
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-evidence-request-display-20261119",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/marketplaceStatusLabel.ts",
+        "kind": "object-registry",
+        "name": "MANUAL_PAYMENT_METHOD_LABELS",
+        "valueCount": 3,
+        "values": [
+          "bank_transfer",
+          "cash",
+          "pos"
+        ],
+        "sourceReview": "MarketplaceCustomerRequestDTO and MarketplaceManualEvidenceDTO in api/types.ts; marketplace_customer_request constraints in 2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql; commerce_manual_payment_evidence and loadMarketplaceManualEvidenceRows in Server.hs. Request labels match prior customer source byte-for-byte. Author source review only, not independent PR approval."
       }
     }
   ]

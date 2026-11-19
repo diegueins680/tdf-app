@@ -75,6 +75,9 @@ import {
   type MarketplaceOrderFilters,
 } from '../utils/marketplace';
 import {
+  marketplaceCustomerRequestStatusLabel,
+  marketplaceCustomerRequestTypeLabel,
+  marketplaceManualEvidenceStatusLabel,
   marketplaceDepositSettlementMethodLabel,
   marketplaceDepositSettlementStatusLabel,
   marketplaceDepositStatusLabel,
@@ -233,6 +236,12 @@ const FIRST_ORDER_EMPTY_STATE_MESSAGE =
 const formatPaymentProvider = (value?: string | null) => (
   normalizeProviderFilterValue(value) ? getMarketplacePaymentProviderLabel(value ?? '') : '—'
 );
+const formatManualEvidenceAmount = (amount?: number | null, currency?: string | null) => {
+  if (amount == null) return 'Sin monto declarado';
+  const code = typeof currency === 'string' ? currency.trim().toUpperCase() : '';
+  if (!Number.isSafeInteger(amount) || amount < 0 || !/^[A-Z]{3}$/.test(code)) return 'Monto no disponible';
+  return formatMoney(amount, code);
+};
 const normalizeOrderCurrency = (value: string) => value.trim().toUpperCase();
 const getOrderCurrencyCaption = (order: Pick<MarketplaceOrderDTO, 'moCurrency' | 'moTotalDisplay'>) => {
   const currency = normalizeOrderCurrency(order.moCurrency);
@@ -2138,8 +2147,9 @@ export default function MarketplaceOrdersPage() {
                         )}
                         {selectedManualEvidence && (
                           <>
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                              <Chip label={selectedManualEvidence.mmeStatus.replace(/_/g, ' ')} size="small" />
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+                              <Chip label={marketplaceManualEvidenceStatusLabel(selectedManualEvidence.mmeStatus)} size="small"
+                                sx={{ maxWidth: '100%', height: 'auto', '& .MuiChip-label': { whiteSpace: 'normal', overflowWrap: 'anywhere', py: 0.5 } }} />
                               <Typography variant="body2">
                                 Método: {formatPaymentProvider(selectedManualEvidence.mmePaymentMethod)}
                               </Typography>
@@ -2153,7 +2163,7 @@ export default function MarketplaceOrdersPage() {
                               <strong>Referencia:</strong> {selectedManualEvidence.mmeCustomerReference ?? '—'}
                             </Typography>
                             <Typography variant="body2">
-                              <strong>Monto declarado:</strong> {selectedManualEvidence.mmeSubmittedAmountMinor ?? '—'} {selectedManualEvidence.mmeCurrency ?? ''}
+                              <strong>Monto declarado:</strong> {formatManualEvidenceAmount(selectedManualEvidence.mmeSubmittedAmountMinor, selectedManualEvidence.mmeCurrency)}
                             </Typography>
                             {selectedManualEvidence.mmeReviewNotes && (
                               <Typography variant="body2" color="text.secondary">
@@ -2226,11 +2236,13 @@ export default function MarketplaceOrdersPage() {
                             || request.mcrStatus === 'needs_quote';
                           const extension = request.mcrRequestType === 'rental_extension';
                           return (
-                            <Paper key={request.mcrRequestId} variant="outlined" sx={{ p: 1.5 }}>
+                            <Paper key={request.mcrRequestId} variant="outlined" sx={{ p: 1.5, minWidth: 0, overflowWrap: 'anywhere' }}>
                               <Stack spacing={1}>
-                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-                                  <Chip size="small" label={request.mcrRequestType.replace(/_/g, ' ')} />
-                                  <Chip size="small" variant="outlined" label={request.mcrStatus.replace(/_/g, ' ')} />
+                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }} alignItems={{ sm: 'center' }}>
+                                  <Chip size="small" label={marketplaceCustomerRequestTypeLabel(request.mcrRequestType)}
+                                    sx={{ maxWidth: '100%', height: 'auto', '& .MuiChip-label': { whiteSpace: 'normal', overflowWrap: 'anywhere', py: 0.5 } }} />
+                                  <Chip size="small" variant="outlined" label={marketplaceCustomerRequestStatusLabel(request.mcrStatus)}
+                                    sx={{ maxWidth: '100%', height: 'auto', '& .MuiChip-label': { whiteSpace: 'normal', overflowWrap: 'anywhere', py: 0.5 } }} />
                                   <Typography variant="caption" color="text.secondary">
                                     {formatDate(request.mcrRequestedAt)}
                                   </Typography>

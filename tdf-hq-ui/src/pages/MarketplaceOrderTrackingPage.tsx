@@ -37,23 +37,8 @@ import {
   loadMarketplaceLookupToken,
 } from '../api/marketplace';
 import { getOrderStatusMeta } from '../utils/marketplace';
-import { marketplaceDepositStatusLabel, marketplaceFulfillmentStatusLabel } from '../utils/marketplaceStatusLabel';
+import { marketplaceCustomerRequestStatusLabel, marketplaceCustomerRequestTypeLabel, marketplaceDepositStatusLabel, marketplaceFulfillmentStatusLabel } from '../utils/marketplaceStatusLabel';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
-
-const requestLabels: Record<MarketplaceCustomerRequestType, string> = {
-  sale_cancellation: 'Cancelar antes de la entrega',
-  sale_return: 'Solicitar devolución',
-  rental_cancellation: 'Cancelar antes de la entrega del equipo',
-  rental_extension: 'Solicitar extensión de fechas',
-  rental_dispute: 'Disputar condición, cargo o depósito',
-};
-
-const requestStatusLabels: Record<MarketplaceCustomerRequestDTO['mcrStatus'], string> = {
-  submitted: 'En revisión',
-  needs_quote: 'Requiere cotización',
-  approved: 'Aprobada',
-  rejected: 'Rechazada',
-};
 
 const availableCustomerRequestTypes = (order: MarketplaceOrderDTO): MarketplaceCustomerRequestType[] => {
   const state = order.moFulfillmentStatus ?? '';
@@ -429,7 +414,7 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
                           variant="outlined"
                         >
                           <Typography variant="body2" fontWeight={700}>
-                            {requestLabels[request.mcrRequestType]} · {requestStatusLabels[request.mcrStatus]}
+                            {marketplaceCustomerRequestTypeLabel(request.mcrRequestType)} · {marketplaceCustomerRequestStatusLabel(request.mcrStatus)}
                           </Typography>
                           <MarkdownText variant="body2">{request.mcrReason}</MarkdownText>
                           {request.mcrRequestedEndDate && (
@@ -462,7 +447,7 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
                                   setRequestTypeError(null); setRequestedEndDateError(null);
                                 }}>
                                 {availableRequestTypes.map((type) => (
-                                  <MenuItem key={type} value={type} sx={{ whiteSpace: 'normal' }}>{requestLabels[type]}</MenuItem>
+                                  <MenuItem key={type} value={type} sx={{ whiteSpace: 'normal' }}>{marketplaceCustomerRequestTypeLabel(type)}</MenuItem>
                                 ))}
                               </Select>
                               <FormHelperText id="marketplace-request-type-help">{requestTypeError ?? 'Las opciones dependen del estado actual de la orden.'}</FormHelperText>
