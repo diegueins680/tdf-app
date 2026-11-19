@@ -131,7 +131,7 @@ COPY tdf-hq/persistent-uploads.sh /app/persistent-uploads.sh
 
 # Render provides PORT; map it to the app's APP_PORT
 ENV APP_PORT=8080
-# Production Docker/Fly deploys use the pre-initialized schema path.
+# Production Docker deploys use the pre-initialized schema path.
 ENV RUN_MIGRATIONS=false
 ENV AUTO_APPLY_PRODUCTION_MIGRATIONS=true
 

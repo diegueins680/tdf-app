@@ -34,6 +34,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 jest.unstable_mockModule('../contexts/LocalePreferencesContext', () => ({
   useLocalePreferences: () => ({ locale: 'es', timezone: 'America/Guayaquil', currency: 'USD' }),
+  wasTimezoneChosenOnThisDevice: () => false,
 }));
 jest.unstable_mockModule('../components/party-selector/PartySelector', () => ({ UserSelector: () => null }));
 jest.unstable_mockModule('../components/events/TicketPricePreview', () => ({ default: () => null }));
