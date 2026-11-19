@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ApiError } from '../api/client';
 import { useSession } from './SessionContext';
-import { getAuthSessionEpoch } from './authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 
 function QueryScope({ children }: { children: ReactNode }) {
   const [client] = useState(() => new QueryClient({

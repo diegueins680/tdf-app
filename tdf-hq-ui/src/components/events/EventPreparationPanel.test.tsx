@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import type { SocialEventDTO } from '../../api/socialEvents';
-import { advanceAuthSessionEpoch } from '../../session/authEvents';
+import { advanceAuthSessionEpoch } from '../../auth/authEvents';
 
 const upload = jest.fn<() => Promise<{ eiuPublicUrl: string }>>();
 const readEvent = jest.fn<() => Promise<SocialEventDTO>>();
