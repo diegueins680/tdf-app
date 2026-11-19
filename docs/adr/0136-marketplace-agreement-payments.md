@@ -58,12 +58,15 @@ Hechos verificados antes de diseñar (fuentes al final):
    acuerdo nace `pending_deposit` + `platform`, con `deposit_due_at` según la tarifa.
    - Depósito verificado → `confirmed`.
    - Depósito sin pagar al vencer → `expired`: retira la oferta y libera el cupo (misma rutina
-     que cancelar).
+     que cancelar). Corre al cargar los acuerdos de un participante y, para todos los acuerdos,
+     cada cinco minutos en un job del servidor (`startAgreementDepositExpiryJob`).
    - El proveedor inicia (`in_progress`). El comprador confirma la entrega: con saldo pendiente
      pasa a `balance_due` y se crea el cobro del saldo; el saldo verificado lo lleva a
      `completed` y registra la interacción verificada. Sin saldo, pasa directo a `completed`.
      Mientras espera el saldo, cualquiera de las partes puede abrir una disputa: el cobro
-     pendiente se cancela y un administrador resuelve.
+     pendiente se cancela y un administrador resuelve. Las disputas abiertas se listan para
+     administración en `GET /directory/admin/agreements/disputes` (más antigua primero, con quién
+     la abrió, desde qué estado y por qué) y se resuelven con la ruta de estado del acuerdo.
    - Ningún participante ni administrador puede marcar un cobro como pagado: solo la
      reconciliación con consulta autenticada al proveedor (trigger
      `marketplace_agreement_payment_require_verified_payment`, mismo patrón que reservas y
@@ -72,6 +75,22 @@ Hechos verificados antes de diseñar (fuentes al final):
    - **PayPhone:** el adaptador añade `transferTo` cifrado cuando el checkout trae reparto. Queda
      cerrado hasta que PayPhone autorice el split para la tienda y se registre la evidencia de
      capacidad; se exige la modalidad «al día siguiente» para conservar el reverso del primer día.
+     Implementación (B2b-1): el método `card` de PayPhone es el Botón de Pagos (`/api/button/Prepare`
+     con `transferTo` = JSON `[{Identifier, Type 3|4, Amount}]` cifrado AES-256-CBC con la
+     `PAYPHONE_CODING_PASSWORD` de 32 bytes como clave, IV en cero, PKCS#7, Base64). El ejecutor
+     compartido lee el receptor y el neto del cobro bajo bloqueo y los vuelve a comprobar en la
+     transacción que registra el intento; API Sale (billetera) y PlaceToPay rechazan un reparto. Las
+     referencias del Botón empiezan con `TDFC-`. `Prepare` solo devuelve un `paymentId` opaco, que
+     identifica la preparación y no la transacción; la conciliación busca la transacción por la
+     referencia (`GET /api/Sale/client/{clientTransactionId}`) y, si está aprobada y coinciden
+     referencia, monto y moneda, la confirma con su `transactionId` (`/api/button/V2/Confirm`) en el
+     mismo intento. Para aplicar la respuesta de Confirm deben coincidir el ID enviado a Confirm,
+     la referencia del comercio, el monto y la moneda. PayPhone exige confirmar en los
+     cinco minutos siguientes al pago o revierte el cobro. Por eso el Botón solo se ofrece con el
+     worker de consultas activo (proceso y flag `checkout.provider_query_recovery`), la página solo se
+     entrega durante diez minutos desde la preparación y el vencimiento del depósito vuelve a comprobar
+     los intentos vivos bajo el bloqueo del acuerdo. El método solo se ofrece con la contraseña de codificación configurada y con evidencia
+     verificada de todas las capacidades de marketplace para `payphone`/`card`.
    - **Stripe:** adaptador canónico con Checkout Session alojada y cargo destino
      (`transfer_data.destination`, `application_fee_amount`); se entrega en un segundo PR (B2) junto
      con reembolsos y panel de disputas, porque incorpora Stripe al runtime canónico.
@@ -87,7 +106,11 @@ Hechos verificados antes de diseñar (fuentes al final):
 7. **Orden de bloqueo.** anuncio → oferta → acuerdo → cobro. La reconciliación bloquea checkout e
    intento primero (regla existente) y después el cobro y el acuerdo; ningún camino del marketplace
    toma un bloqueo de checkout mientras sostiene el acuerdo, salvo la creación del checkout, que es
-   una inserción.
+   una inserción, y el inicio de una sesión de pago: el ejecutor bloquea acuerdo y cobro, vuelve a
+   comprobar que el acuerdo espera ese cobro y después bloquea el checkout para registrar el
+   intento. Así cancelar, vencer o reemplazar el cobro ve el intento o espera a que exista. Si eso
+   coincide con la reconciliación del mismo checkout, PostgreSQL detecta el interbloqueo y aborta
+   una de las dos transacciones; ambas se reintentan sin efectos parciales.
 
 ## Alternativas descartadas
 

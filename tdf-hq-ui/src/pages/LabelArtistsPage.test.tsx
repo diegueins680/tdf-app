@@ -1,3 +1,5 @@
+import { fireEvent, within } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useParams } from 'react-router-dom';
 import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
@@ -27,7 +29,10 @@ const listCatalogItemsMock = jest.fn<() => Promise<{
 jest.unstable_mockModule('../api/admin', () => ({
   Admin: {
     listArtistProfiles: () => listArtistProfilesMock(),
-    upsertArtistProfile: (payload: unknown) => upsertArtistProfileMock(payload),
+    upsertArtistProfile: async (payload: unknown, options?: { beforeWrite?: () => Promise<unknown> }) => {
+      await options?.beforeWrite?.();
+      return upsertArtistProfileMock(payload);
+    },
     listArtistPromoSlots: (artistId: number, day: string) => listArtistPromoSlotsMock(artistId, day),
     createArtistPromoSlot: (artistId: number, payload: unknown) => createArtistPromoSlotMock(artistId, payload),
     updateArtistPromoSlot: (artistId: number, promotionId: number, payload: unknown) =>
@@ -79,6 +84,11 @@ const waitForExpectation = async (assertion: () => void, attempts = 12) => {
   throw lastError;
 };
 
+function ProfileRoute() {
+  const { slugOrId } = useParams();
+  return <h1>{slugOrId}</h1>;
+}
+
 const renderPage = async (container: HTMLElement) => {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -88,7 +98,12 @@ const renderPage = async (container: HTMLElement) => {
   await act(async () => {
     root?.render(
       <QueryClientProvider client={qc}>
-        <LabelArtistsPage />
+        <MemoryRouter initialEntries={['/label/artistas']}>
+          <Routes>
+            <Route path="/label/artistas" element={<LabelArtistsPage />} />
+            <Route path="/a/:slugOrId" element={<ProfileRoute />} />
+          </Routes>
+        </MemoryRouter>
       </QueryClientProvider>,
     );
     await flushPromises();
@@ -317,6 +332,34 @@ describe('LabelArtistsPage', () => {
     }
   });
 
+  it.each([
+    { surface: 'quick notes', slug: 'la-ruta', expected: 'la-ruta' },
+    { surface: 'roster', slug: null, expected: '101' },
+  ])('opens the artist profile from $surface ($expected)', async ({ surface, slug, expected }) => {
+    listArtistProfilesMock.mockResolvedValue([buildArtist({ apSlug: slug, apHasUserAccount: false })]);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const rosterAndNoteLinks = within(container).getAllByRole('link', { name: 'La Ruta' }).slice(0, 2);
+        expect(rosterAndNoteLinks.map((link) => link.getAttribute('href'))).toEqual([
+          `/a/${expected}`, `/a/${expected}`,
+        ]);
+      });
+      await act(async () => {
+        const links = within(container).getAllByRole('link', { name: 'La Ruta' });
+        const link = links.find((candidate) => Boolean(candidate.closest('tbody')) === (surface === 'roster'));
+        if (!link) throw new Error(`Artist link missing from ${surface}`);
+        fireEvent.click(link);
+      });
+      expect(within(container).getByRole('heading', { name: expected })).toBeTruthy();
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('returns focus to the refresh button after reloading artists', async () => {
     let resolveRefresh: (artists: ArtistProfileDTO[]) => void = () => undefined;
     const refreshPromise = new Promise<ArtistProfileDTO[]>((resolve) => {
@@ -441,6 +484,203 @@ describe('LabelArtistsPage', () => {
         expect(container.textContent).toContain('Nota guardada.');
         expect(noteField?.value).toBe('');
       });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  const openEditor = async (container: HTMLElement) => {
+    let editButton: HTMLButtonElement | null = null;
+    await waitForExpectation(() => {
+      editButton = container.querySelector<HTMLButtonElement>('button[aria-label="Editar perfil de La Ruta"]');
+      expect(editButton).not.toBeNull();
+    });
+    await act(async () => {
+      editButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+    });
+    let dialog: HTMLElement | null = null;
+    await waitForExpectation(() => {
+      dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+      expect(dialog).not.toBeNull();
+      expect((getButtonsByText(dialog!, 'Guardar')[0] as HTMLButtonElement | undefined)?.disabled).toBe(false);
+    });
+    return dialog as unknown as HTMLElement;
+  };
+
+  const clickButton = async (root: ParentNode, labelText: string) => {
+    const button = getButtonsByText(root, labelText)[0];
+    if (!button) throw new Error(`Button not found: ${labelText}`);
+    await act(async () => {
+      button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+    });
+  };
+
+  const imageUrlField = (dialog: HTMLElement) => {
+    const field = dialog.querySelector<HTMLInputElement>('input[aria-label="URL de la imagen del artista"]');
+    if (!field) throw new Error('Artist image URL field not found');
+    return field;
+  };
+
+  const changeInput = async (element: HTMLInputElement, value: string) => {
+    const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    if (!valueSetter) throw new Error('Input value setter not found');
+    await act(async () => {
+      valueSetter.call(element, value);
+      element.dispatchEvent(new Event('input', { bubbles: true }));
+      await flushPromises();
+    });
+  };
+
+  const settlePreview = async (dialog: HTMLElement, outcome: 'load' | 'error') => {
+    const preview = dialog.querySelector<HTMLImageElement>('img[alt="Vista previa"]');
+    if (!preview) throw new Error('Preview not found');
+    await act(async () => {
+      preview.dispatchEvent(new Event(outcome));
+      await flushPromises();
+    });
+  };
+
+  const savedHeroImage = () =>
+    (upsertArtistProfileMock.mock.calls[0]?.[0] as { apuHeroImageUrl?: string | null } | undefined)?.apuHeroImageUrl;
+
+  it('saves a hosted picture link and offers no embedded file picker', async () => {
+    listArtistProfilesMock.mockResolvedValue([buildArtist({ apHeroImageUrl: 'https://cdn.example.com/old.jpg' })]);
+    upsertArtistProfileMock.mockResolvedValue(buildArtist());
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      const dialog = await openEditor(container);
+      expect(dialog.querySelector('input[type="file"]')).toBeNull();
+      expect(dialog.textContent).not.toContain('data URL');
+      expect(dialog.querySelector('[data-testid="artist-hero-image-status"]')?.textContent).toBe('Imagen guardada');
+      expect(imageUrlField(dialog).value).toBe('https://cdn.example.com/old.jpg');
+
+      await changeInput(imageUrlField(dialog), '  https://cdn.example.com/new.jpg  ');
+      expect(dialog.querySelector('[data-testid="artist-hero-image-status"]')?.textContent)
+        .toBe('Imagen nueva sin guardar');
+      expect(dialog.querySelector<HTMLImageElement>('img[alt="Vista previa"]')?.getAttribute('src'))
+        .toBe('https://cdn.example.com/new.jpg');
+
+      // A new link cannot be saved while its preview is still loading.
+      await clickButton(dialog, 'Guardar');
+      await waitForExpectation(() => {
+        expect(dialog.textContent).toContain('Espera a que la vista previa de la imagen termine de cargar antes de guardar.');
+      });
+      expect(upsertArtistProfileMock).not.toHaveBeenCalled();
+
+      await settlePreview(dialog, 'load');
+      await clickButton(dialog, 'Guardar');
+      await waitForExpectation(() => expect(upsertArtistProfileMock).toHaveBeenCalledTimes(1));
+      expect(savedHeroImage()).toBe('https://cdn.example.com/new.jpg');
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('refuses to resend a legacy embedded picture and saves once it is removed', async () => {
+    const embedded = `data:image/png;base64,${'A'.repeat(4096)}`;
+    listArtistProfilesMock.mockResolvedValue([buildArtist({ apHeroImageUrl: embedded })]);
+    upsertArtistProfileMock.mockResolvedValue(buildArtist());
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      const dialog = await openEditor(container);
+      expect(dialog.querySelector('[data-testid="artist-hero-image-status"]')?.textContent)
+        .toBe('Imagen embebida heredada');
+      expect(imageUrlField(dialog).value).toBe('');
+      const download = Array.from(dialog.querySelectorAll<HTMLAnchorElement>('a'))
+        .find((link) => buttonText(link) === 'Descargar imagen actual');
+      expect(download?.getAttribute('href')).toBe(embedded);
+      expect(download?.getAttribute('download')).toBe('portada-la-ruta');
+
+      await clickButton(dialog, 'Guardar');
+      await waitForExpectation(() => {
+        expect(dialog.textContent).toContain('Esta imagen está embebida en el perfil y ya no se puede guardar así.');
+      });
+      expect(upsertArtistProfileMock).not.toHaveBeenCalled();
+
+      await clickButton(dialog, 'Quitar');
+      expect(dialog.querySelector('[data-testid="artist-hero-image-status"]')?.textContent).toBe('Sin imagen');
+      await clickButton(dialog, 'Guardar');
+      await waitForExpectation(() => expect(upsertArtistProfileMock).toHaveBeenCalledTimes(1));
+      expect(savedHeroImage()).toBeNull();
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('rejects pasted embedded data and links that are not absolute http URLs', async () => {
+    listArtistProfilesMock.mockResolvedValue([buildArtist()]);
+    upsertArtistProfileMock.mockResolvedValue(buildArtist());
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      const dialog = await openEditor(container);
+      await changeInput(imageUrlField(dialog), 'data:image/png;base64,AAAA');
+      expect(imageUrlField(dialog).value).toBe('');
+      expect(dialog.textContent).toContain('No se pueden pegar imágenes embebidas.');
+
+      await changeInput(imageUrlField(dialog), 'cdn.example.com/foto.jpg');
+      await clickButton(dialog, 'Guardar');
+      await waitForExpectation(() => {
+        expect(dialog.textContent).toContain('El enlace de la imagen debe ser una URL pública completa (https://…).');
+      });
+      expect(upsertArtistProfileMock).not.toHaveBeenCalled();
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('blocks a new link that does not load as an image but not an unchanged stored one', async () => {
+    const stored = 'https://open.spotify.com/artist/abc';
+    listArtistProfilesMock.mockResolvedValue([buildArtist({ apHeroImageUrl: stored })]);
+    upsertArtistProfileMock.mockResolvedValue(buildArtist());
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    const failPreview = (dialog: HTMLElement) => settlePreview(dialog, 'error');
+
+    try {
+      const dialog = await openEditor(container);
+      await changeInput(imageUrlField(dialog), 'https://open.spotify.com/artist/other');
+      await failPreview(dialog);
+      expect(dialog.textContent).toContain('Este enlace no carga como imagen.');
+      await clickButton(dialog, 'Guardar');
+      await waitForExpectation(() => {
+        expect(dialog.textContent).toContain('El enlace de la imagen no carga como imagen.');
+      });
+      expect(upsertArtistProfileMock).not.toHaveBeenCalled();
+
+      // A transient failure is not final: retrying remounts the preview.
+      await clickButton(dialog, 'Reintentar');
+      expect(dialog.textContent).not.toContain('Este enlace no carga como imagen.');
+      expect(dialog.querySelector('img[alt="Vista previa"]')).not.toBeNull();
+      await failPreview(dialog);
+      // Clearing and pasting the same link again also starts a new attempt.
+      await changeInput(imageUrlField(dialog), '');
+      await changeInput(imageUrlField(dialog), 'https://open.spotify.com/artist/other');
+      expect(dialog.textContent).not.toContain('Este enlace no carga como imagen.');
+      expect(dialog.querySelector('img[alt="Vista previa"]')).not.toBeNull();
+
+      await changeInput(imageUrlField(dialog), stored);
+      await failPreview(dialog);
+      expect(dialog.textContent).toContain('Este enlace no carga como imagen.');
+      await clickButton(dialog, 'Guardar');
+      await waitForExpectation(() => expect(upsertArtistProfileMock).toHaveBeenCalledTimes(1));
+      expect(savedHeroImage()).toBe(stored);
     } finally {
       await cleanup();
     }

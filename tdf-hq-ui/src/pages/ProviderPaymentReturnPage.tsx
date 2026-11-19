@@ -25,7 +25,9 @@ export default function ProviderPaymentReturnPage() {
   const { locale } = useLocalePreferences();
   const english = locale.toLowerCase().startsWith('en');
   const [searchParams] = useSearchParams();
-  const checkoutId = searchParams.get('tdf_checkout');
+  // PayPhone appends its own query (id, clientTransactionId) to the response
+  // URL and may do so with a second '?', so keep only the checkout id itself.
+  const checkoutId = searchParams.get('tdf_checkout')?.split('?')[0] ?? null;
   const resume = loadProviderPaymentResume(checkoutId ?? undefined);
   const status = useQuery({
     queryKey: ['provider-payment-session-return', resume?.checkoutId, resume?.attemptId],

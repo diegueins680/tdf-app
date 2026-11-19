@@ -2,6 +2,15 @@
 
 Registro de implementación y distribución. La actualización de analytics siguiente sustituye las observaciones anteriores de PostHog; se conserva el historial con sus horas para trazabilidad.
 
+## Reverificación — 15 de noviembre de 2026, ~20:00 UTC
+
+El manifiesto caducó el 20 de octubre y `/app` dejó de ofrecer los enlaces de tienda durante casi cuatro semanas. Evidencia: [15 de noviembre](distribution-2026-11-15.json).
+
+- **Android (Play Console, sesión del operador, solo lectura):** cuenta personal; Closed testing «Alpha» 1.0.1 (24) «Available to testers on Google Play», 178 países, sin cambios desde el 5 de octubre; Production inactivo; **5 de 12 opt-ins**; «Apply for production» deshabilitado. El código de versión más alto subido es 24. La consola pide declarar el estado de comerciante antes de febrero de 2027 (acción del propietario).
+- **iOS:** la invitación pública de TestFlight responde 200 con «View in TestFlight» y sin aviso de cupo; `itunes.apple.com/lookup` devuelve 0 resultados y la ficha pública 404. App Store Connect sigue sin sesión; no se verificó qué build sirve el enlace, el estado del 32 ni el de App Review.
+- **Builds:** los últimos firmados siguen siendo los del 5 de octubre (`6ebe6c5f`); `TDF-mobile/main` lleva 241 commits más. [TDF-mobile #199](https://github.com/diegueins680/TDF-mobile/pull/199) activa Sign in with Apple en el build firmado de iOS (rechazo 4.8); el perfil de aprovisionamiento guardado es del 18 de septiembre y debe regenerarse con esa capacidad antes de compilar.
+- El manifiesto se renueva hasta el **22 de noviembre** con el mismo estándar aceptado el 11–13 de octubre (iOS solo por la página pública). Es decisión del propietario al aprobar el PR.
+
 ## Estado verificado — 13 de octubre de 2026, ~15:05 UTC
 
 Auditoría del 12 de octubre sobre `tdf-app/main` `86b6611fc` y `TDF-mobile/main` `ece5245e`, **repetida el 13 de octubre** sobre `tdf-app/main` `c0420c9e2` (mismo `TDF-mobile/main` `ece5245e`). Nada de lo descrito aquí se infiere de documentación anterior; cada punto indica cómo se observó. Evidencia agregada sin datos personales: [13 de octubre](distribution-2026-10-13.json), [12 de octubre](distribution-2026-10-12.json).
