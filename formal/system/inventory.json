@@ -543,6 +543,7 @@
       "scripts/test-domo-deposit-policy-validator.sh",
       "scripts/test-domo-quote-checkout-runtime-migration.sh",
       "scripts/test-event-admin-delegation.sh",
+      "scripts/test-event-demo-request-namespace-postgres.py",
       "scripts/test-event-discovery-postgres.mjs",
       "scripts/test-event-ingestion-boundaries.sh",
       "scripts/test-event-memories-http.py",
@@ -2296,6 +2297,8 @@
       "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql",
+      "tdf-hq/sql/2026-11-19_event_demo_request_namespace.sql",
+      "tdf-hq/sql/2026-11-19_event_demo_request_namespace_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -5531,7 +5534,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "66eb7f410d6801095d49d3b9f1676e92d0f881dbcd662babaed67aaa0a43710b",
+      "sha256": "11311844593748a11992501b1fa765aa95f5e2a950ea0fb766c6bbb572fbfb08",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6324,6 +6327,12 @@
       "id": "SURFACE-7c8d17768ac41472",
       "path": "scripts/test-event-admin-delegation.sh",
       "sha256": "1eb28989e4944b78c67624dbf8fb4040deffe3c9fd1e95b73f2eb1bbdea902f8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d2dfdb7406970a55",
+      "path": "scripts/test-event-demo-request-namespace-postgres.py",
+      "sha256": "0f99a5fa10af4735756dd77c8292f296496f2e3c2dc5f3f2f07cd8823c79d740",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16785,6 +16794,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-3caa80431531df2c",
+      "path": "tdf-hq/sql/2026-11-19_event_demo_request_namespace.sql",
+      "sha256": "b1144cfc496a435b142b7e8d809850e4f68f47b3b24573a4180275f3ad0a8a35",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e1042d849c43c551",
+      "path": "tdf-hq/sql/2026-11-19_event_demo_request_namespace_rollback.sql",
+      "sha256": "9a13c145d8f21509d45e98af7f9a4b626b3dbabb5cf9f5536655840e5e679f7a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -18569,7 +18590,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "b13833107a3981a2d559af8d9a768ab8bb8c1e8a9c13026279c62feef1aff4db",
+      "sha256": "8dc958f525bc4998358bb1389fc6be82da1f0a6da7fd1b50b69d8c19762cd32c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30841,7 +30862,7 @@
     },
     {
       "path": "formal/system/event-demo-intake.md",
-      "sha256": "4646b30864fa7242b276b785f3a6af22d2c1c7820d06dc1e4ee459c8719474ee",
+      "sha256": "5babf92d31e7dc22807dc7de6a11baed84bf2e4e35e6c6319a8c686dbf456d5f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31604,7 +31625,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8080d5ec4db6413267dc57a335e9e75b46e1b7e2292c434f50bcb0530390155c",
+      "sha256": "a824ef952551e88fb206fc6cfdd1622383f89651f45d6dfd77e3d080b14c56a1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -45,7 +45,7 @@
       "authorization": "Public availability and gated submission; owner and Admin module for inbox.",
       "privacy": "Private name and email; campaign attribution limited to explicit enumerated source/piece.",
       "concurrency": "Native transaction and namespaced advisory lock.",
-      "idempotency": "Same key and payload returns requested; changed payload conflicts.",
+      "idempotency": "Same key and payload returns requested; changed payload conflicts. Demo receipt keys use a storage-only demo: namespace that Ads cannot submit; neither contract truncates caller keys.",
       "failure": "Invalid or disabled submission does not falsely report success.",
       "recovery": "Retry an unconfirmed response with the original key.",
       "observability": "Availability response, requested receipt and private inbox; booked/qualified are not inferred.",
@@ -57,10 +57,15 @@
         "tdf-hq-ui/src/pages/EventDemoInboxPage.tsx",
         "tdf-hq-ui/src/pages/EventDemoPage.tsx",
         "tdf-hq/src/TDF/API.hs",
-        "tdf-hq/src/TDF/Server.hs"
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/sql/2026-11-19_event_demo_request_namespace.sql",
+        "tdf-hq/sql/2026-11-19_event_demo_request_namespace_rollback.sql",
+        "scripts/production-migrations.json"
       ],
       "tests": [
-        "tdf-hq-ui/src/pages/EventDemoPage.test.tsx"
+        "tdf-hq-ui/src/pages/EventDemoPage.test.tsx",
+        "tdf-hq/test/Spec.hs",
+        "scripts/test-event-demo-request-namespace-postgres.py"
       ],
       "formalModels": [],
       "verification": "Targeted browser-component tests; backend/PostgreSQL and admission pending.",
@@ -28381,7 +28386,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "a36f93ae4fb499b20dfedc356aa12d0069e674a441008435bb20bafccce1aea4",
+    "docs/catalog-persistence/catalog-list-decisions.json": "90c5712386a3ec2e83897b2ffe70bf7dc31e4a1423668a73191886e086c6247b",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
@@ -29002,7 +29007,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "66eb7f410d6801095d49d3b9f1676e92d0f881dbcd662babaed67aaa0a43710b",
+    "scripts/production-migrations.json": "11311844593748a11992501b1fa765aa95f5e2a950ea0fb766c6bbb572fbfb08",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
@@ -29059,6 +29064,7 @@
     "scripts/test-domo-deposit-policy-validator.sh": "b664c8bb09120a506c27f406967a7408e326281d311fcc562f52a97a1720d509",
     "scripts/test-domo-quote-checkout-runtime-migration.sh": "8b51f9e41bcd8fa224dffc3878d24d2587fc3ccce797a67927ad8cd3f96b6680",
     "scripts/test-event-admin-delegation.sh": "1eb28989e4944b78c67624dbf8fb4040deffe3c9fd1e95b73f2eb1bbdea902f8",
+    "scripts/test-event-demo-request-namespace-postgres.py": "0f99a5fa10af4735756dd77c8292f296496f2e3c2dc5f3f2f07cd8823c79d740",
     "scripts/test-event-discovery-postgres.mjs": "45bab4bd40d7f7676b202ca619e9b46036abb54713ebcbb3ce4724b4c3b6a745",
     "scripts/test-event-memories-http.py": "4b7ac919b63bbb78d1ced9033b36d7975ebd1e8d2fed21ca408b4c8a8470ff89",
     "scripts/test-event-memories.sh": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
@@ -30010,6 +30016,8 @@
     "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql": "86483222ece86b79a88a693a2cd403cdf3d9b3fd183ef1182df4bf447c873f95",
     "tdf-hq/sql/2026-11-12_marketplace_agreements.sql": "cba023d9107d987ce7f336181505334538bd0a0a00782e596fab1faf4a14fdbf",
     "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql": "47a811221f03817022572f6bee479567c08f714897b56706cea4f75c8b39ac8f",
+    "tdf-hq/sql/2026-11-19_event_demo_request_namespace.sql": "b1144cfc496a435b142b7e8d809850e4f68f47b3b24573a4180275f3ad0a8a35",
+    "tdf-hq/sql/2026-11-19_event_demo_request_namespace_rollback.sql": "9a13c145d8f21509d45e98af7f9a4b626b3dbabb5cf9f5536655840e5e679f7a",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
     "tdf-hq/src/TDF/API.hs": "6cc5325d17d280b33291b01f9b718dcdbce520c9217e6e3a8b3b6791fe48dc02",
@@ -30211,7 +30219,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "b13833107a3981a2d559af8d9a768ab8bb8c1e8a9c13026279c62feef1aff4db",
+    "tdf-hq/test/Spec.hs": "8dc958f525bc4998358bb1389fc6be82da1f0a6da7fd1b50b69d8c19762cd32c",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -30946,7 +30954,253 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-11-19_event_demo_request_namespace.sql": [
+      {
+        "requirement": "EVT-DEMO-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-19_event_demo_request_namespace_rollback.sql": [
+      {
+        "requirement": "EVT-DEMO-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/production-migrations.json": [
+      {
+        "requirement": "EVT-DEMO-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-SESSION-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-SESSION-004",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-SEARCH-SYNC-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-ARTIST-LISTING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-DEMAND-OFFER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DISCOVERY-NAV-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MUSIC-OUTCOME-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-ADMIN-DELEGATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-ARTIST-FEATURED-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/pages/EventDemoPage.test.tsx": [
+      {
+        "requirement": "EVT-DEMO-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/Spec.hs": [
+      {
+        "requirement": "EVT-DEMO-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "ID-SESSION-004",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PRIV-RAG-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-API-003",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-RETRY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-STREAM-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-READINESS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PRIV-RAG-002",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-MUSIC-TEST-ENTRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-VERSION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-CAPTURE-RECON-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-ADAPTER-BINDING-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-INVITATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "ART-PROFILE-WRITE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-STRIPE-WEBHOOK-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "QA-REPORT-AUTHORING-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "QA-REPORT-EVIDENCE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "FEEDBACK-PUBLIC-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "LIVE-SESSION-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-PLANNING-UX-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-DATAFAST-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-DISCOVERY-FILTER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-ADMIN-DELEGATION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-event-demo-request-namespace-postgres.py": [
       {
         "requirement": "EVT-DEMO-INTAKE-001",
         "relationship": "tests"
@@ -33362,84 +33616,6 @@
         "relationship": "implementation"
       }
     ],
-    "scripts/production-migrations.json": [
-      {
-        "requirement": "ID-SESSION-003",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ID-SESSION-004",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "REC-DDEX-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-INVOICE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DIR-SEARCH-SYNC-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-DEMAND-OFFER-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-AGREEMENT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-AGREEMENT-PAYMENT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "OPS-INBOUND-CAPTURE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DATA-INDEX-DECLARATION-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DISCOVERY-NAV-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MSG-NOTIFY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-MUSIC-MONEY-WIRE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-MUSIC-OUTCOME-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-STORAGE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-APPLE-SIGNIN-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "EVT-ADMIN-DELEGATION-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-ARTIST-FEATURED-001",
-        "relationship": "implementation"
-      }
-    ],
     "scripts/verify-recovery-expiry.py": [
       {
         "requirement": "ID-SESSION-003",
@@ -33528,148 +33704,6 @@
       {
         "requirement": "SOCIAL-RELATIONSHIP-WRITES-001",
         "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/test/Spec.hs": [
-      {
-        "requirement": "ID-SESSION-004",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-RECOVERY-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PRIV-RAG-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "SYS-API-003",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-RETRY-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MEDIA-DRIVE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MEDIA-STREAM-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "EVT-TICKET-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-INVOICE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "DEPLOY-READINESS-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "OPS-CLIENT-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PRIV-INTAKE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MKT-AGREEMENT-PAYMENT-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PRIV-RAG-002",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "SYS-MUSIC-TEST-ENTRY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DEPLOY-VERSION-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "SOCIAL-EVENT-MEMORY-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-TIP-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-CAPTURE-RECON-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-ADAPTER-BINDING-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "EVT-INVITATION-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "ART-PROFILE-WRITE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-STRIPE-WEBHOOK-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "QA-REPORT-AUTHORING-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "QA-REPORT-EVIDENCE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "FEEDBACK-PUBLIC-INTAKE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "LIVE-SESSION-INTAKE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "EVT-PLANNING-UX-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MEDIA-STORAGE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-DATAFAST-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "EVT-DISCOVERY-FILTER-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "AUTH-APPLE-SIGNIN-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "EVT-CREATE-ENTRY-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "EVT-ADMIN-DELEGATION-001",
-        "relationship": "tests"
       }
     ],
     "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": [
@@ -54333,9 +54367,13 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "66eb7f410d6801095d49d3b9f1676e92d0f881dbcd662babaed67aaa0a43710b",
+      "sha256": "11311844593748a11992501b1fa765aa95f5e2a950ea0fb766c6bbb572fbfb08",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "EVT-DEMO-INTAKE-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "ID-SESSION-003",
           "relationship": "implementation"
@@ -55934,6 +55972,18 @@
         },
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d2dfdb7406970a55",
+      "path": "scripts/test-event-demo-request-namespace-postgres.py",
+      "sha256": "0f99a5fa10af4735756dd77c8292f296496f2e3c2dc5f3f2f07cd8823c79d740",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-DEMO-INTAKE-001",
           "relationship": "tests"
         }
       ]
@@ -75110,6 +75160,30 @@
       ]
     },
     {
+      "id": "SURFACE-3caa80431531df2c",
+      "path": "tdf-hq/sql/2026-11-19_event_demo_request_namespace.sql",
+      "sha256": "b1144cfc496a435b142b7e8d809850e4f68f47b3b24573a4180275f3ad0a8a35",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-DEMO-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e1042d849c43c551",
+      "path": "tdf-hq/sql/2026-11-19_event_demo_request_namespace_rollback.sql",
+      "sha256": "9a13c145d8f21509d45e98af7f9a4b626b3dbabb5cf9f5536655840e5e679f7a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-DEMO-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -80020,9 +80094,13 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "b13833107a3981a2d559af8d9a768ab8bb8c1e8a9c13026279c62feef1aff4db",
+      "sha256": "8dc958f525bc4998358bb1389fc6be82da1f0a6da7fd1b50b69d8c19762cd32c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "EVT-DEMO-INTAKE-001",
+          "relationship": "tests"
+        },
         {
           "requirement": "ID-SESSION-004",
           "relationship": "tests"
@@ -89017,7 +89095,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8080d5ec4db6413267dc57a335e9e75b46e1b7e2292c434f50bcb0530390155c",
+      "sourceSha256": "a824ef952551e88fb206fc6cfdd1622383f89651f45d6dfd77e3d080b14c56a1",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -89045,7 +89123,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8080d5ec4db6413267dc57a335e9e75b46e1b7e2292c434f50bcb0530390155c",
+      "sourceSha256": "a824ef952551e88fb206fc6cfdd1622383f89651f45d6dfd77e3d080b14c56a1",
       "definition": {
         "states": [
           "absent",
@@ -89075,7 +89153,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8080d5ec4db6413267dc57a335e9e75b46e1b7e2292c434f50bcb0530390155c",
+      "sourceSha256": "a824ef952551e88fb206fc6cfdd1622383f89651f45d6dfd77e3d080b14c56a1",
       "definition": {
         "export": [
           "queued",
