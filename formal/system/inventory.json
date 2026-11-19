@@ -946,6 +946,7 @@
       "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
       "tdf-hq-ui/src/api/musicStorageResponse.test.ts",
       "tdf-hq-ui/src/api/musicStorageResponse.ts",
+      "tdf-hq-ui/src/api/myTicketOrders.ts",
       "tdf-hq-ui/src/api/navigationPreferences.ts",
       "tdf-hq-ui/src/api/operations.test.ts",
       "tdf-hq-ui/src/api/operations.ts",
@@ -3945,7 +3946,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "5b17e4f43c6f4f997685d20dd3a7c8312b598632429ccc1e5dc176a5637d7c98",
+      "sha256": "4326424a6c25bb23b0c9a3e0f5954c48d38bb073b3bc721e6b73deba25da33e0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8701,6 +8702,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-39de0d450389c157",
+      "path": "tdf-hq-ui/src/api/myTicketOrders.ts",
+      "sha256": "b4f29af5c73605e37fa38f81bc2b44601fd11f8d92f9bcf90cf993845cb0cc14",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-fac7d7003037286f",
       "path": "tdf-hq-ui/src/api/navigationPreferences.ts",
       "sha256": "0d755186d9ece6af4e4b8e69be4e804d32900f914b8c89a81ae3866ace24c489",
@@ -8931,7 +8938,7 @@
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "82bbaf0824afa1c1cda67dd3a01eeba3ffec5074820d0ca9737b900e7f49d55d",
+      "sha256": "94dcbd14805849f075383b163c63f9b06258bf7801a299b4b1d3bb2dd9448bab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11895,13 +11902,13 @@
     {
       "id": "SURFACE-2868173b55cf6317",
       "path": "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx",
-      "sha256": "e17a678db7a03f3cf650435967d41f0091909c76e40334dbe9a7c9ec82248bc8",
+      "sha256": "92ee369920c2a4e0e95a050e870230bd7c794838466f33e01bb284c9586f330c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f2b81d101086b2ae",
       "path": "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
-      "sha256": "5120f53f0a645d5b5437cc8dc3c2e45ad4403a3cad50448d9da845240e90a85f",
+      "sha256": "1a31be06a3ec5e4f6b072ba776aedee56e9b8040763adbb53add0970997bee70",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31632,7 +31639,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "44d4ac340ab316804e079aa3e654d196ac6a0bcf6fceae01bd1a3aadcb1067cf",
+      "sha256": "66314c8c734dfe08561f70088d06dff7a77da5b3119308b335107e06cb5e7e3b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

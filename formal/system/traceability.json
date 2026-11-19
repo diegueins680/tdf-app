@@ -21603,7 +21603,7 @@
       "implementation": [
         "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
         "tdf-hq-ui/src/utils/deviceTicketOrders.ts",
-        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/api/myTicketOrders.ts",
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq/assets/feature-registry.json"
@@ -21611,7 +21611,8 @@
       "tests": [
         "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx",
         "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts",
-        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx"
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [],
       "verification": "Client unit tests",
@@ -28391,7 +28392,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "37387366a073c04310f005b283b234c148bcc334df4bba453509752054cb93dd",
+    "docs/catalog-persistence/catalog-list-decisions.json": "5b52045c2432965cda9ee830444dd5732af6e64edb4f4d8c2ddf11bdda4fca72",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
@@ -28827,7 +28828,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "5b17e4f43c6f4f997685d20dd3a7c8312b598632429ccc1e5dc176a5637d7c98",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "4326424a6c25bb23b0c9a3e0f5954c48d38bb073b3bc721e6b73deba25da33e0",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -29362,6 +29363,7 @@
     "tdf-hq-ui/src/api/musicReleases.upload.test.ts": "8f3721fed84de4ad71f0f087f1f5dc25de44c6c170ad17a091915486d7deab40",
     "tdf-hq-ui/src/api/musicStorageResponse.test.ts": "4d173a68d03907dd1106b079b472a92d6212b2938e8421b360cb78a315797b8f",
     "tdf-hq-ui/src/api/musicStorageResponse.ts": "8f48adb2834adc89083f4ef643dde01dcfae051815f42121ac21bb1e6e233e78",
+    "tdf-hq-ui/src/api/myTicketOrders.ts": "b4f29af5c73605e37fa38f81bc2b44601fd11f8d92f9bcf90cf993845cb0cc14",
     "tdf-hq-ui/src/api/parties.test.ts": "89c70a9266f7700570eda82141accf25ed07b92c7336c4420191868d2bcfb171",
     "tdf-hq-ui/src/api/parties.ts": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
     "tdf-hq-ui/src/api/requestDeadline.ts": "f8294c115c2638bb82dc0f61ad5f2e4a63018b3d17490d1a7ee1f64d56080a99",
@@ -29370,7 +29372,7 @@
     "tdf-hq-ui/src/api/session.test.ts": "b00e52d37736c2f913029b4ebd6d327b488b4fb00515e7be468f4788c0bf775e",
     "tdf-hq-ui/src/api/session.ts": "6eda870f29bab94f61c66905b79eece8247a242f66d8a1b4b9e56a055b81b0a9",
     "tdf-hq-ui/src/api/socialEvents.test.ts": "94e606bd6901c34bcf460a614294be9f4eb027c39b9ef2110e55df65aef5962b",
-    "tdf-hq-ui/src/api/socialEvents.ts": "82bbaf0824afa1c1cda67dd3a01eeba3ffec5074820d0ca9737b900e7f49d55d",
+    "tdf-hq-ui/src/api/socialEvents.ts": "94dcbd14805849f075383b163c63f9b06258bf7801a299b4b1d3bb2dd9448bab",
     "tdf-hq-ui/src/api/socialV2.test.ts": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
     "tdf-hq-ui/src/api/uploadFailure.test.ts": "89b50f48d905bb134f2e2a9e43691c564cc1c18cca298998ced25527d2957d11",
@@ -29672,8 +29674,8 @@
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts": "26ae645bd78e98a19c1659bfad09c7a953aa8ae16bcc95632258380882285dde",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "170361034fe56bbcae7deb08123fd3ed3cf3957bbbd27fdc0663023b40dd1c1c",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx": "d5b2555b6b1e5a0bf27f0a124f3fb57019397d06a9695dbf9e8a417ceb72309c",
-    "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx": "e17a678db7a03f3cf650435967d41f0091909c76e40334dbe9a7c9ec82248bc8",
-    "tdf-hq-ui/src/pages/MyTicketsPage.tsx": "5120f53f0a645d5b5437cc8dc3c2e45ad4403a3cad50448d9da845240e90a85f",
+    "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx": "92ee369920c2a4e0e95a050e870230bd7c794838466f33e01bb284c9586f330c",
+    "tdf-hq-ui/src/pages/MyTicketsPage.tsx": "1a31be06a3ec5e4f6b072ba776aedee56e9b8040763adbb53add0970997bee70",
     "tdf-hq-ui/src/pages/NotFoundPage.test.tsx": "0bb182ef3da26e32894ee7ca9093cf1691afb78b7e6a3ec9129d4dc3f0fa97bc",
     "tdf-hq-ui/src/pages/NotFoundPage.tsx": "1bfa74b3ea1565ef9e00e494bd10ce3154c88ccbfe9508a2e9f77e016e34b7c7",
     "tdf-hq-ui/src/pages/NotificationPage.tsx": "238197064a2439a50fc9cd7d075e511147d7852f46bc116e9ca82922b230d520",
@@ -32315,6 +32317,10 @@
       },
       {
         "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-MY-TICKETS-001",
         "relationship": "tests"
       },
       {
@@ -39527,10 +39533,6 @@
       },
       {
         "requirement": "UI-EVENT-FINANCE-PRECISION-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "EVT-MY-TICKETS-001",
         "relationship": "implementation"
       },
       {
@@ -47080,6 +47082,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/api/myTicketOrders.ts": [
+      {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx": [
       {
         "requirement": "EVT-MY-TICKETS-001",
@@ -51184,7 +51192,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "5b17e4f43c6f4f997685d20dd3a7c8312b598632429ccc1e5dc176a5637d7c98",
+      "sha256": "4326424a6c25bb23b0c9a3e0f5954c48d38bb073b3bc721e6b73deba25da33e0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51201,6 +51209,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-PAYMENT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "tests"
         },
         {
@@ -60818,6 +60830,18 @@
       ]
     },
     {
+      "id": "SURFACE-39de0d450389c157",
+      "path": "tdf-hq-ui/src/api/myTicketOrders.ts",
+      "sha256": "b4f29af5c73605e37fa38f81bc2b44601fd11f8d92f9bcf90cf993845cb0cc14",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-MY-TICKETS-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-fac7d7003037286f",
       "path": "tdf-hq-ui/src/api/navigationPreferences.ts",
       "sha256": "0d755186d9ece6af4e4b8e69be4e804d32900f914b8c89a81ae3866ace24c489",
@@ -61150,7 +61174,7 @@
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "82bbaf0824afa1c1cda67dd3a01eeba3ffec5074820d0ca9737b900e7f49d55d",
+      "sha256": "94dcbd14805849f075383b163c63f9b06258bf7801a299b4b1d3bb2dd9448bab",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61175,10 +61199,6 @@
         },
         {
           "requirement": "UI-EVENT-FINANCE-PRECISION-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "implementation"
         },
         {
@@ -67046,7 +67066,7 @@
     {
       "id": "SURFACE-2868173b55cf6317",
       "path": "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx",
-      "sha256": "e17a678db7a03f3cf650435967d41f0091909c76e40334dbe9a7c9ec82248bc8",
+      "sha256": "92ee369920c2a4e0e95a050e870230bd7c794838466f33e01bb284c9586f330c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67058,7 +67078,7 @@
     {
       "id": "SURFACE-f2b81d101086b2ae",
       "path": "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
-      "sha256": "5120f53f0a645d5b5437cc8dc3c2e45ad4403a3cad50448d9da845240e90a85f",
+      "sha256": "1a31be06a3ec5e4f6b072ba776aedee56e9b8040763adbb53add0970997bee70",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -89157,7 +89177,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "44d4ac340ab316804e079aa3e654d196ac6a0bcf6fceae01bd1a3aadcb1067cf",
+      "sourceSha256": "66314c8c734dfe08561f70088d06dff7a77da5b3119308b335107e06cb5e7e3b",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -89185,7 +89205,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "44d4ac340ab316804e079aa3e654d196ac6a0bcf6fceae01bd1a3aadcb1067cf",
+      "sourceSha256": "66314c8c734dfe08561f70088d06dff7a77da5b3119308b335107e06cb5e7e3b",
       "definition": {
         "states": [
           "absent",
@@ -89215,7 +89235,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "44d4ac340ab316804e079aa3e654d196ac6a0bcf6fceae01bd1a3aadcb1067cf",
+      "sourceSha256": "66314c8c734dfe08561f70088d06dff7a77da5b3119308b335107e06cb5e7e3b",
       "definition": {
         "export": [
           "queued",
