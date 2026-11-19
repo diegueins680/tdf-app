@@ -29,7 +29,7 @@ python3 scripts/test-production-workspace.py
 (cd tdf-hq-ui && npm test -- --runInBand src/api/productions.test.ts src/pages/LabelProjectsPage.test.tsx)
 ```
 
-El verificador valida el SHA-256 del JAR. TLC exploró por separado 1.087 estados distintos del grafo de tres tareas, 20 estados de revisión, 20 del escenario de decisiones, 16 del plan con dos ediciones o confirmaciones como máximo y 6 del permiso de lectura. El escenario de lectura usa dos proyectos y dos versiones. Cada configuración insegura produjo el contraejemplo previsto. La exploración comprueba seguridad en estos límites, sin hipótesis de equidad. Se abstraen la red, los bytes, el sistema de archivos, los relojes reales y el mecanismo de bloqueo de PostgreSQL.
+El verificador valida el SHA-256 del JAR mediante `shasum` y permite seleccionar Java con `JAVA_BIN=/ruta/java`. TLC exploró por separado 1.087 estados distintos del grafo de tres tareas, 20 estados de revisión, 20 del escenario de decisiones, 16 del plan con dos ediciones o confirmaciones como máximo y 6 del permiso de lectura. El escenario de lectura usa dos proyectos y dos versiones. Cada configuración insegura produjo el contraejemplo previsto. La exploración comprueba seguridad en estos límites, sin hipótesis de equidad. Se abstraen la red, los bytes, el sistema de archivos, los relojes reales y el mecanismo de bloqueo de PostgreSQL.
 
 La prueba de persistencia crea un contenedor PostgreSQL 17 sin red y utiliza conexiones independientes que se solapan dentro de la transacción. Comprueba el EP, una única tarea de batería para tres canciones, el aprobador, dos identificadores de archivo, v3/v4, tres carreras, retención del archivo, planificación inversa y privacidad del segundo proyecto. La prueba de calendario de la interfaz separa extremos de sesión contiguos, horarios que se solapan y tareas que comparten un vencimiento. Los criterios de reproducción en navegador y operación en producción se registran por separado en la PR.
 
@@ -46,3 +46,11 @@ La prueba crea un PostgreSQL desechable a partir del esquema de producción y ap
 ## Migración y recuperación
 
 El manifiesto de migraciones añade `2026-11-18_production_workspace`. La migración conserva los registros existentes. Para revertir la interfaz, usar una imagen web anterior. Para el servicio, usar el procedimiento de recuperación de Hetzner y conservar las tablas y los archivos históricos. El disparador de retención sigue protegiendo un audio ya vinculado al volver a una imagen anterior. La comprobación del manifiesto y del esquema debe ejecutarse sobre una restauración aislada antes de liberar el backend.
+
+## Revalidación del 19 de noviembre
+
+La continuación integra la principal protegida `6ccd1e55af264fd5a6a83b82ec732bf8a5f66239` en la PR #784. Conserva las 259 migraciones y los contratos de ambas ramas. Las 17 pruebas del catálogo comprueban también las retiradas históricas de la principal y su nueva clasificación técnica, sin reactivar las listas retiradas.
+
+Se repitieron las cinco exploraciones TLC 1.7.2 (1.087/20/20/16/6 estados distintos) y sus cinco controles negativos, y el ensayo PostgreSQL 17 del EP, archivos exactos, permisos y tres pares de escritores solapados. El modelo sigue siendo acotado; las pruebas de persistencia constituyen evidencia de la implementación, no una prueba general de refinamiento. Los clientes generados coinciden con la revisión móvil fijada. Los workflows ejecutan ahora explícitamente los modelos, las carreras PostgreSQL y el EP de navegador; estos nuevos pasos necesitan su propia ejecución hospedada.
+
+La inspección de solo lectura de Hetzner fue rechazada en `container-api: compose-files`, sin crear recibo. La principal ya contiene el ejecutor protegido de liberación, pero su existencia no satisface identidad, recuperación ni custodia. La admisión serializada observada estaba concedida a #771; #784 continúa esperando su turno. No se ha desplegado esta continuación ni se presenta la vista previa como un flujo operativo en producción.
