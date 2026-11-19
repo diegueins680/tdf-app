@@ -28329,7 +28329,7 @@
       ],
       "authorization": "Project role, team assignment, explicit version grant, active session and booking authority.",
       "privacy": "Private audio remains in managed storage. A client sees only shared revisions in projects they belong to.",
-      "concurrency": "Graph, publication, decision and plan transitions serialize on the project row. The browser disables further commands until both the pending write and its refreshed projection finish.",
+      "concurrency": "Graph, publication, decision and plan transitions serialize on the project row. The browser disables further commands until both the pending write and its refreshed projection finish. Project-specific draft state is bound to the selected project identity; switching projects cannot retarget an old invitation, task or timeline draft.",
       "idempotency": "A prior feedback receipt returns its original result for an identical actor, request, note, kind and revision.",
       "failure": "403 or 404 for denied access; 409 for stale or conflicting transitions.",
       "recovery": "Refresh the scoped projection, inspect the recorded decision or recalculate a schedule.",
@@ -29824,8 +29824,8 @@
     "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts": "4941936bcbb954b17033773cc792520831a6219dd23009d834fcab18318de87d",
     "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx": "b015233958f9b3684f93c132236f99a9378f980ea3c66de9ffe3eeb6d71112c5",
     "tdf-hq-ui/src/pages/PaymentsPage.tsx": "81858d869a98dd7cf676fc970baeb16464ef6d47e6625569a10e20b44831e74c",
-    "tdf-hq-ui/src/pages/ProductionWorkspacePage.test.tsx": "b7bf032343892bda946691757bc17b0cb6568406a785ef63c2bcb621ad751629",
-    "tdf-hq-ui/src/pages/ProductionWorkspacePage.tsx": "758c1a76ad183968ce9ee0761ebf79722c5dbf7ab2affc6d841d5f090ad330a7",
+    "tdf-hq-ui/src/pages/ProductionWorkspacePage.test.tsx": "5fefd3f7c10de0b91d870d2f3f3c70c203a3ea4eac5740f3c0cddbe6fefdf513",
+    "tdf-hq-ui/src/pages/ProductionWorkspacePage.tsx": "bb8f95f6dd19171c60fe63f29766f80c2e35eb5df528a475d42e63071f4e8868",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "9372cb8bd0264e952ae620a49693dda9b4bddf7cc0084117a6614c8058ae3e84",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "93863fe74a110cf7e4ed8016832df87e5a18ee696255a4e90ca04becd50cc612",
     "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": "90b1510bdd853d28f76abcd4a2ca9710a33249d96b43c93e795347810e2d0981",
@@ -67899,7 +67899,7 @@
     {
       "id": "SURFACE-f2321be8a26667c7",
       "path": "tdf-hq-ui/src/pages/ProductionWorkspacePage.test.tsx",
-      "sha256": "b7bf032343892bda946691757bc17b0cb6568406a785ef63c2bcb621ad751629",
+      "sha256": "5fefd3f7c10de0b91d870d2f3f3c70c203a3ea4eac5740f3c0cddbe6fefdf513",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67911,7 +67911,7 @@
     {
       "id": "SURFACE-8f24ea44f9cb1e73",
       "path": "tdf-hq-ui/src/pages/ProductionWorkspacePage.tsx",
-      "sha256": "758c1a76ad183968ce9ee0761ebf79722c5dbf7ab2affc6d841d5f090ad330a7",
+      "sha256": "bb8f95f6dd19171c60fe63f29766f80c2e35eb5df528a475d42e63071f4e8868",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -89941,7 +89941,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "59fbcb6fce1ce4f0c105530c7782017f740792b4737c81af613df7d46161de54",
+      "sourceSha256": "a8f2457739a6e476170d7f0238a470a67d751be5fd76ec42ea1bd05ee2a29767",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -89969,7 +89969,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "59fbcb6fce1ce4f0c105530c7782017f740792b4737c81af613df7d46161de54",
+      "sourceSha256": "a8f2457739a6e476170d7f0238a470a67d751be5fd76ec42ea1bd05ee2a29767",
       "definition": {
         "states": [
           "absent",
@@ -89999,7 +89999,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "59fbcb6fce1ce4f0c105530c7782017f740792b4737c81af613df7d46161de54",
+      "sourceSha256": "a8f2457739a6e476170d7f0238a470a67d751be5fd76ec42ea1bd05ee2a29767",
       "definition": {
         "export": [
           "queued",

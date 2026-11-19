@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Alert, Button, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import PageShell from '../components/PageShell';
@@ -42,7 +42,7 @@ function Workspace({ actor }: { actor: number }) {
       {projects.isError && <Alert severity="error" action={<Button onClick={() => void projects.refetch()}>Reintentar</Button>}>No se pudieron cargar tus producciones.</Alert>}
       {message && <Alert severity="error" onClose={() => setMessage('')}>{message}</Alert>}
       {!projects.isPending && !projects.isError && !p && <p>Aún no tienes proyectos. Crea una producción para empezar.</p>}
-      {p && <>
+      {p && <Fragment key={p.id}>
         <label>Producción <select value={p.id} onChange={e => setSelected(e.target.value)}>{all.map(a => <option key={a.id} value={a.id}>{a.title}</option>)}</select></label>
         <Typography variant="h5">{p.title}</Typography><Typography>{p.format} · Entrega final {p.delivery}</Typography>
         {threatened.length > 0 && <Alert severity="warning">Entrega final en riesgo · {threatened[0]!.task.title} queda para {threatened[0]!.finish}. Causa: {threatened[0]!.cause}.</Alert>}
@@ -67,7 +67,7 @@ function Workspace({ actor }: { actor: number }) {
             <TaskCard p={project} {...{ t,actor }} save={body => save(project,body)} /></CardContent></Card>)}</Stack>}
         {view === 'Cronograma del proyecto' && <Timeline p={p} save={body => save(p,body)} />}
         {view === 'Calendario entre proyectos' && <Calendar projects={all} />}
-      </>}
+      </Fragment>}
     </Stack>
     </fieldset>
   </PageShell>;
