@@ -32,6 +32,8 @@ function Workspace({ actor }: { actor: number }) {
   const mine = all.flatMap(project => project.tasks.filter(t => nextPerson(t) === actor).map(t => ({ project,t })))
     .sort((a,b) => a.t.due.localeCompare(b.t.due));
   return <PageShell title="Producciones musicales" subtitle="Canciones, entregas y revisiones del equipo">
+    {saving && <Typography role="status">Guardando cambios…</Typography>}
+    <fieldset disabled={saving} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
     <Stack spacing={2}>
       <details><summary>Nueva producción</summary><fieldset disabled={saving}><CreateProject save={body => void run(async () => {
         const created = await createProduction(body); setSelected(created.id); setView('Tablero por canción');
@@ -67,6 +69,7 @@ function Workspace({ actor }: { actor: number }) {
         {view === 'Calendario entre proyectos' && <Calendar projects={all} />}
       </>}
     </Stack>
+    </fieldset>
   </PageShell>;
 }
 

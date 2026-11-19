@@ -1500,6 +1500,7 @@
       "tdf-hq-ui/src/pages/PaymentsPage.partySelector.test.ts",
       "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
       "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq-ui/src/pages/ProductionWorkspacePage.test.tsx",
       "tdf-hq-ui/src/pages/ProductionWorkspacePage.tsx",
       "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
       "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
@@ -12034,9 +12035,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f2321be8a26667c7",
+      "path": "tdf-hq-ui/src/pages/ProductionWorkspacePage.test.tsx",
+      "sha256": "b7bf032343892bda946691757bc17b0cb6568406a785ef63c2bcb621ad751629",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8f24ea44f9cb1e73",
       "path": "tdf-hq-ui/src/pages/ProductionWorkspacePage.tsx",
-      "sha256": "6c9c48c89b7a1d14042e716a438620c38db30264dc638f56a45818f22ace0f59",
+      "sha256": "758c1a76ad183968ce9ee0761ebf79722c5dbf7ab2affc6d841d5f090ad330a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30197,7 +30204,7 @@
     },
     {
       "path": "formal/production/README.md",
-      "sha256": "85c108a8ced01561ce8a30580409b6face8a2115999963cca28023dbab937a3b",
+      "sha256": "11b2c95f9231f0e1c9fd3369bb4868f8ce2a3da880dadf65295c9e5a41c2f816",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31744,7 +31751,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "3951233b6057f80a3596c86472284393056bdb0cf6a535290cb9b553d211fcc6",
+      "sha256": "0e0d7e4dde7b3a96dab71bb1e69f69e2f085dc2ec9c0295bcffa4945ffff186e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

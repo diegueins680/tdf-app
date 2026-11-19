@@ -28328,7 +28328,7 @@
       ],
       "authorization": "Project role, team assignment, explicit version grant, active session and booking authority.",
       "privacy": "Private audio remains in managed storage. A client sees only shared revisions in projects they belong to.",
-      "concurrency": "Graph, publication, decision and plan transitions serialize on the project row.",
+      "concurrency": "Graph, publication, decision and plan transitions serialize on the project row. The browser disables further commands until both the pending write and its refreshed projection finish.",
       "idempotency": "A prior feedback receipt returns its original result for an identical actor, request, note, kind and revision.",
       "failure": "403 or 404 for denied access; 409 for stale or conflicting transitions.",
       "recovery": "Refresh the scoped projection, inspect the recorded decision or recalculate a schedule.",
@@ -28368,7 +28368,8 @@
         "scripts/test-production-workspace-browser.py",
         "scripts/__tests__/catalog-list-audit.test.mjs",
         ".github/workflows/event-operations-formal.yml",
-        ".github/workflows/event-raci-browser.yml"
+        ".github/workflows/event-raci-browser.yml",
+        "tdf-hq-ui/src/pages/ProductionWorkspacePage.test.tsx"
       ],
       "formalModels": [
         "formal/production/decision.cfg",
