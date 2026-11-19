@@ -6,7 +6,7 @@ const post = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 jest.unstable_mockModule('../utils/env', () => ({ env: { read: (key: string) => key === 'VITE_DRIVE_VAULT_REQUIRED' ? 'true' : undefined } }));
 jest.unstable_mockModule('../api/client', () => ({ post, del: jest.fn() }));
 jest.unstable_mockModule('../session/SessionContext', () => ({ getActiveSession: () => ({ partyId: owner }) }));
-jest.unstable_mockModule('../session/authEvents', () => ({ getAuthSessionEpoch: () => epoch }));
+jest.unstable_mockModule('../auth/authEvents', () => ({ getAuthSessionEpoch: () => epoch }));
 const drive = await import('./googleDrive');
 const firstHandle = 'tdf-vault-v1_00000000-0000-4000-8000-000000000001';
 const secondHandle = 'tdf-vault-v1_00000000-0000-4000-8000-000000000002';

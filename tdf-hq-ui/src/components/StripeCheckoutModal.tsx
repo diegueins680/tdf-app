@@ -1,3 +1,5 @@
+import PaymentAlternativesNotice from './payments/PaymentAlternativesNotice';
+import StripePaymentAlternativesNotice from './payments/StripePaymentAlternativesNotice';
 import MarkdownText from './MarkdownText';
 import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -55,6 +57,7 @@ interface StripeCheckoutModalProps {
 }
 
 interface CheckoutFormProps {
+  clientSecret: string;
   tier: SocialTicketTierDTO;
   buyerDetails: BuyerDetailsState;
   promoCode: string | null;
@@ -89,11 +92,12 @@ const CHECKOUT_ACTION_SPINNER_SIZE_PX = 2 * 10 + 4;
 const CHECKOUT_SUCCESS_AUTO_CLOSE_DELAY_MS = 2 * 1000;
 
 
-function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBack, onProcessingChange }: CheckoutFormProps) {
-  const { t } = useTranslation();
+function CheckoutForm({ clientSecret, tier, buyerDetails, promoCode, orderId, onSuccess, onBack, onProcessingChange }: CheckoutFormProps) {
+  const { t, i18n } = useTranslation();
   const stripe = useStripe();
   const elements = useElements();
   const paymentInFlight = useRef(false);
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [state, dispatch] = useReducer(checkoutFormReducer, initialCheckoutFormState);
   const paymentSummaryRef = useRef(null) as DivRef;
   const paymentErrorRef = useRef(null) as DivRef;
@@ -177,12 +181,13 @@ function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBac
         )}
       </Box>
 
-      <PaymentElement />
+      <PaymentElement onChange={(event) => setSelectedMethod(event.value.type)} />
 
       {state.error && (
-        <Alert ref={paymentErrorRef} tabIndex={-1} severity="error" sx={{ mt: 2 }}>
-          {state.error}
-        </Alert>
+        <Stack spacing={1.5} sx={{ mt: 2 }}>
+          <Alert ref={paymentErrorRef} tabIndex={-1} severity="error">{state.error}</Alert>
+          <StripePaymentAlternativesNotice clientSecret={clientSecret} failedMethod={selectedMethod} english={i18n.language.startsWith('en')} />
+        </Stack>
       )}
 
       <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
@@ -578,9 +583,10 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
             )}
 
             {state.error && (
-              <Alert ref={buyerErrorRef} tabIndex={-1} severity="error" sx={{ mt: 2 }}>
-                {state.error}
-              </Alert>
+              <Stack spacing={1.5} sx={{ mt: 2 }}>
+                <Alert ref={buyerErrorRef} tabIndex={-1} severity="error">{state.error}</Alert>
+                <PaymentAlternativesNotice methods={[]} failedMethod="stripe" blocked availabilityUnknown english={i18n.language.startsWith('en')} />
+              </Stack>
             )}
           </Box>
         )}
@@ -588,6 +594,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
         {state.activeStep === CHECKOUT_STEP_PAYMENT && state.clientSecret && (
           <Elements stripe={stripeClient} options={stripeOptions}>
             <CheckoutForm
+              clientSecret={state.clientSecret}
               tier={tier}
               buyerDetails={state.buyerDetails}
               promoCode={state.promoCode}

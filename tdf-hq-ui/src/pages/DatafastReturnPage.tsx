@@ -6,6 +6,7 @@ import type { MarketplaceOrderDTO } from '../api/types';
 import { getOrderStatusMeta, isPaidOrderStatus } from '../utils/marketplace';
 import { clearSessionPersonalData, readSessionPersonalData } from '../utils/sessionPersonalData';
 import { clearStoredCart } from '../features/marketplace/cartSummary';
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 
 const MARKETPLACE_BUYER_INFO_KEY = 'tdf-marketplace-buyer';
 
@@ -100,6 +101,9 @@ export default function DatafastReturnPage() {
         )}
         {(status === 'success' || status === 'review') && order && (
           <Stack spacing={2}>
+            {status === 'review' && (
+              <PaymentAlternativesNotice methods={[]} failedMethod="datafast" blocked />
+            )}
             <Alert severity={status === 'success' ? 'success' : orderStatusMeta?.color === 'warning' || orderStatusMeta?.color === 'info' ? 'warning' : 'error'}>
               {status === 'success' ? `${message} Te redirigiremos al marketplace en ${redirectSeconds}s.` : message}
             </Alert>

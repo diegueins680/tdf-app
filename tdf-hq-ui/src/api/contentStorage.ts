@@ -1,7 +1,7 @@
 import { del, get, put } from './client';
 import { buildAuthorizationHeader } from './authHeader';
 import { resolveApiBase } from '../config/apiBase';
-import { getAuthSessionEpoch } from '../session/authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 
 export type StorageDestination = 'tdf' | 'google_drive';
 export interface StorageAccount {

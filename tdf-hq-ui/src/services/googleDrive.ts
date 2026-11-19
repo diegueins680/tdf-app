@@ -1,6 +1,6 @@
 import { del, post } from '../api/client';
 import { getActiveSession } from '../session/SessionContext';
-import { getAuthSessionEpoch } from '../session/authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 import { UploadFailure } from '../api/uploadFailure';
 import { isAcceptedDriveCredentialPair, isDriveConnectionHandle, isDriveVaultRequired, retireLegacyDriveCredentials } from './storageCredentials';
 export { isDriveConnectionHandle } from './storageCredentials';
