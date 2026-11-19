@@ -4477,7 +4477,7 @@
         "tdf-hq-ui/src/session/SessionProviders.tsx",
         "tdf-hq-ui/src/session/SessionQueryProvider.tsx",
         "tdf-hq-ui/src/session/SessionContext.tsx",
-        "tdf-hq-ui/src/session/authEvents.ts",
+        "tdf-hq-ui/src/auth/authEvents.ts",
         "tdf-hq-ui/src/api/client.ts"
       ],
       "verification": "Actual SessionProvider/TanStack components, actual pending mutation callbacks, fake HTTP auth error and bounded three-occurrence TLA model.",
@@ -12640,7 +12640,7 @@
         "Bounded explicit logout request; no automatic retry; existing cache epoch invalidation."
       ],
       "implementation": [
-        "tdf-hq-ui/src/session/logoutIntent.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/session/SessionContext.tsx",
         "tdf-hq-ui/src/api/session.ts",
         "tdf-hq-ui/src/api/client.ts",
@@ -12654,7 +12654,7 @@
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx"
       ],
       "tests": [
-        "tdf-hq-ui/src/session/logoutIntent.test.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
         "tdf-hq-ui/src/api/logoutIntent.test.ts",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
@@ -27638,7 +27638,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "The ratchet is enforced; 8 backend imports, 21 web imports and 16 oversized files remain listed debt."
+        "reason": "The ratchet is enforced; 8 backend imports, 14 web imports and 16 oversized files remain listed debt."
       },
       "authority": "User request 2026-11-10; layer definitions and limits are an engineering decision recorded in ADR 0133, owner confirmation pending.",
       "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",

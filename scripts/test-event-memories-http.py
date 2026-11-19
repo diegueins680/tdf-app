@@ -33,7 +33,7 @@ if a.browser:runtime_paths+=['scripts/test-event-memory-signup-browser.mjs','tdf
 if a.browser:runtime_paths+=['scripts/test-event-memory-recovery-browser.mjs','tdf-hq-ui/src/pages/ResetPasswordPage.tsx','tdf-hq-ui/src/i18n/locales/authEntry.es.ts','tdf-hq/src/TDF/Email.hs','tdf-hq/src/TDF/Email/Service.hs','tdf-hq/src/TDF/Config.hs','tdf-hq/src/TDF/API.hs']
 if a.browser:runtime_paths+=['scripts/test-event-raci-browser.sh','.github/workflows/event-raci-browser.yml']
 if a.browser:runtime_paths+=['tdf-hq-ui/src/routes/EventCommunityEntry.tsx','tdf-hq-ui/src/routes/publicRoutes.tsx','tdf-hq-ui/src/routes/protectedRoutes.tsx','tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx','tdf-hq-ui/src/routes/AppRoutes.tsx','tdf-hq-ui/src/routes/AppShell.tsx']
-if a.browser:runtime_paths+=['tdf-hq-ui/src/session/useSessionOwner.ts','tdf-hq-ui/src/session/useOwnedSessionDraft.ts','tdf-hq-ui/src/session/authEvents.ts','tdf-hq-ui/src/session/SessionContext.tsx','tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx','tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts']
+if a.browser:runtime_paths+=['tdf-hq-ui/src/session/useSessionOwner.ts','tdf-hq-ui/src/session/useOwnedSessionDraft.ts','tdf-hq-ui/src/auth/authEvents.ts','tdf-hq-ui/src/session/SessionContext.tsx','tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx','tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts']
 # Bind the actual complete schema, including protected-main successors, rather
 # than assuming that a successful source-specific request proves migration scope.
 manifest=json.loads((root/'scripts/production-migrations.json').read_text())
