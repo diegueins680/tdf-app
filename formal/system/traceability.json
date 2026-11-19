@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "4d866387ac6938d7aeaad5d1fa2985f8e02932e7",
+  "mobileRevision": "c718aad3b6cf8e80ddc14a64a20952f4d626e876",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -21554,6 +21554,82 @@
       "historicalStatus": null
     },
     {
+      "id": "EVT-MY-TICKETS-001",
+      "title": "Mis entradas on the web lists the buyer's ticket orders without new access",
+      "domain": "EVT",
+      "statement": "/mis-entradas lists, newest first, the ticket orders whose private lookup key this browser saved during guest checkout (at most 30 per visit, each read with its own key through the existing public order endpoint) and, when signed in, the orders returned by GET /social-events/ticket-orders for the account. Each order shows event title, date, venue, ticket count, total and one of three states (paid, payment pending, no valid tickets). A guest order opens its private order page, with 'Completar pago' while payment is pending; an account order opens its event and lists its ticket codes once paid. An order present in both sources is shown once. A paid guest order page links to /mis-entradas. The registry lists social.tickets at /mis-entradas with optional authentication.",
+      "authority": "Owner request 2026-11-10/11: implement the fixes and improvements from the cognitive-load audit (plan item 27, Mis entradas on the web), within its guardrails; owner said 'Continue' on 2026-11-19.",
+      "source": "Cognitive-load audit 2026-11-10, plan item 27.",
+      "contract": "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
+      "actors": [
+        "Visitor with guest purchases in this browser",
+        "Signed-in buyer"
+      ],
+      "preconditions": [
+        "Guest orders: a lookup key saved by PublicEventTicketsPage in this browser",
+        "Account orders: a signed-in session"
+      ],
+      "inputs": [
+        "GET /public/events/{eventId}/ticket-orders/{orderId} with X-Order-Lookup-Token",
+        "GET /public/events/{eventId}/tickets",
+        "GET /social-events/ticket-orders"
+      ],
+      "state": {
+        "order": [
+          "paid",
+          "payment pending",
+          "no valid tickets",
+          "unreadable"
+        ]
+      },
+      "allowedTransitions": [
+        "payment pending -> paid when the server reports a paid order"
+      ],
+      "forbiddenTransitions": [
+        "An order shown as paid without a server-reported paid status",
+        "An unreadable saved order shown with a guessed status"
+      ],
+      "effects": [
+        "None: the page only reads"
+      ],
+      "authorization": "No new access. Guest orders are readable only with the key this browser already holds; account orders come from the existing authenticated endpoint scoped to the caller.",
+      "privacy": "Lookup keys never appear in visible text or URLs; the order page reads its key from browser storage. The page is noindex,nofollow.",
+      "concurrency": "Reads are independent per order; no writes.",
+      "idempotency": "Read-only.",
+      "failure": "An order whose key no longer reads is counted in a notice pointing to its confirmation email and is not listed with a status. A failed account read shows a retry and keeps browser orders. A missing event title falls back to the event number.",
+      "recovery": "Retry for account orders; a reload re-reads browser orders.",
+      "observability": "None beyond existing API telemetry.",
+      "property": "Listed orders are exactly the readable saved-key orders plus the account's orders, each once, with a state derived only from the server status.",
+      "implementation": [
+        "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
+        "tdf-hq-ui/src/utils/deviceTicketOrders.ts",
+        "tdf-hq-ui/src/api/myTicketOrders.ts",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq/assets/feature-registry.json"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx",
+        "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Client unit tests",
+      "evidence": "Local Jest execution",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Medium: unit tests with mocked APIs; not exercised against production data.",
+      "ambiguity": [
+        "Guest web orders are not linked to an account, so a purchase made in another browser appears only through its confirmation email link."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with unit evidence; not deployed."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "QA-REPORT-AUTHORING-001",
       "title": "Internal testing report drafting, editing and submission",
       "statement": "A tester drafts an internal report linked to their active audit task, edits it while it is a draft or needs information, and submits it; administrators triage it through its state machine. Routes: POST /feedback/internal; PATCH /feedback/internal/{reportId}; POST /feedback/internal/{reportId}/submit.",
@@ -28416,7 +28492,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "fd99d6eda5d65ffcdc328d3ab09f1314bd547f1290f4c84bb53ccc6ca8563cd4",
+    "docs/catalog-persistence/catalog-list-decisions.json": "693fc1e1463302ab191aa8a1c96cd6b4b94dfcdc5ddacc07d7c4de50e5d978ce",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
@@ -28852,7 +28928,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "5b17e4f43c6f4f997685d20dd3a7c8312b598632429ccc1e5dc176a5637d7c98",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "4326424a6c25bb23b0c9a3e0f5954c48d38bb073b3bc721e6b73deba25da33e0",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -29327,7 +29403,7 @@
     "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx": "4f7755520e4175cc0d5ffb57e233fc4268a375a9dd85422716db07841b5610c1",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "6782e58671ba4bda52419ad3db29c408bcec37750c9df6b71f5c65d838d7e47b",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "728f59cbb823fa7f2887f8e10ee2f47076795e0c09865433989390943be61b78",
-    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "53db01321e43f5989d4bb555d676025491d773487e198b2627dc8e27ae61126c",
+    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "75829933e007771d3c2c09e2f4e9028ed065d76ee3fabc924533ecc2aae0318c",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "f62308abdcd7611c6d8e5570d2ca4c47b220a345e2177c5deb1cbdaff82a385d",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "b357e6d043fb3bc56474d52410ce3dcba47feaf74cf28a5a5aad56f9bc5fc464",
     "tdf-hq-ui/src/analytics/errorReporting.test.ts": "c56a20ab2521faed8bfd6e435636898248694c6ba0d75ce2ea66514aca688bc8",
@@ -29389,6 +29465,7 @@
     "tdf-hq-ui/src/api/musicReleases.upload.test.ts": "8f3721fed84de4ad71f0f087f1f5dc25de44c6c170ad17a091915486d7deab40",
     "tdf-hq-ui/src/api/musicStorageResponse.test.ts": "4d173a68d03907dd1106b079b472a92d6212b2938e8421b360cb78a315797b8f",
     "tdf-hq-ui/src/api/musicStorageResponse.ts": "8f48adb2834adc89083f4ef643dde01dcfae051815f42121ac21bb1e6e233e78",
+    "tdf-hq-ui/src/api/myTicketOrders.ts": "b4f29af5c73605e37fa38f81bc2b44601fd11f8d92f9bcf90cf993845cb0cc14",
     "tdf-hq-ui/src/api/parties.test.ts": "89c70a9266f7700570eda82141accf25ed07b92c7336c4420191868d2bcfb171",
     "tdf-hq-ui/src/api/parties.ts": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
     "tdf-hq-ui/src/api/requestDeadline.ts": "f8294c115c2638bb82dc0f61ad5f2e4a63018b3d17490d1a7ee1f64d56080a99",
@@ -29706,6 +29783,8 @@
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts": "26ae645bd78e98a19c1659bfad09c7a953aa8ae16bcc95632258380882285dde",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "170361034fe56bbcae7deb08123fd3ed3cf3957bbbd27fdc0663023b40dd1c1c",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx": "d5b2555b6b1e5a0bf27f0a124f3fb57019397d06a9695dbf9e8a417ceb72309c",
+    "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx": "92ee369920c2a4e0e95a050e870230bd7c794838466f33e01bb284c9586f330c",
+    "tdf-hq-ui/src/pages/MyTicketsPage.tsx": "1a31be06a3ec5e4f6b072ba776aedee56e9b8040763adbb53add0970997bee70",
     "tdf-hq-ui/src/pages/NotFoundPage.test.tsx": "0bb182ef3da26e32894ee7ca9093cf1691afb78b7e6a3ec9129d4dc3f0fa97bc",
     "tdf-hq-ui/src/pages/NotFoundPage.tsx": "1bfa74b3ea1565ef9e00e494bd10ce3154c88ccbfe9508a2e9f77e016e34b7c7",
     "tdf-hq-ui/src/pages/NotificationPage.tsx": "238197064a2439a50fc9cd7d075e511147d7852f46bc116e9ca82922b230d520",
@@ -29719,7 +29798,7 @@
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "93863fe74a110cf7e4ed8016832df87e5a18ee696255a4e90ca04becd50cc612",
     "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": "90b1510bdd853d28f76abcd4a2ca9710a33249d96b43c93e795347810e2d0981",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "42df47733f75f44f13d72182bcb89084c2d2533c4ff1939ad6b31d0e8ff31905",
-    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "39096094cf0d8959f2d83b7feaa439a1e83b53a6f663d03e3e39a910c0662ab3",
+    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "3bdc7dd77c058c912c6555abcc9ee1eb5f8322198a333830bd0fa11cde495b48",
     "tdf-hq-ui/src/pages/PublicProfilePage.tsx": "231a90d2da08b7eb5049818d418372a6c05d9069b9b874e8cf37c28824e17164",
     "tdf-hq-ui/src/pages/PublicReputationRightsPage.tsx": "f6de05dae2322ea92e05066bf94073a68dcaa1c437c10b1e9524dfb98867268f",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
@@ -29780,7 +29859,7 @@
     "tdf-hq-ui/src/routes/RouteLoadingFallback.tsx": "d6d3fe537c86d2159ded28cdc4f56543137a55fe1002acc8eb8381bf73b5b4ef",
     "tdf-hq-ui/src/routes/protectedRoutes.tsx": "bd49b500f0243ae6413203205466d5a1a2220c9cd5a10de3e41a3420275cffb3",
     "tdf-hq-ui/src/routes/publicRoutes.test.tsx": "b1d51f44ec9320845ae9fe0027eec9f45e088ae3b3d15b991f986e31448bbb5c",
-    "tdf-hq-ui/src/routes/publicRoutes.tsx": "d257098c3338360560f5382908e43fc0ab08c5eefb631ed3393a66a02db109ae",
+    "tdf-hq-ui/src/routes/publicRoutes.tsx": "a88a66d8753db1d483d1d3d59cf8a197250ee371c90b3e7064cd08ef07abcd48",
     "tdf-hq-ui/src/services/googleDrive.recovery.test.ts": "2c982d140fc8bc88ce3bd786eba6f36f3844d595f49a946982996ec439b72e98",
     "tdf-hq-ui/src/services/googleDrive.ts": "26020ba840041361faaf092b9af7d3eba770b727b6bcc9c437f1d2aeb2345593",
     "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx": "55ee04e76498ddf61a93df24ca0d4b6ecd47003da670706288c9b326e7790c9e",
@@ -29823,6 +29902,8 @@
     "tdf-hq-ui/src/utils/csv.ts": "321c70afb70e94a14be92453214b6897d854235ee93312e5c32aadbfb90052d0",
     "tdf-hq-ui/src/utils/dateTime.test.ts": "5e479a281af5c04429783198977cc0592c08639d49d023b5227c6e13e6c6c855",
     "tdf-hq-ui/src/utils/dateTime.ts": "a75595587356dd2dd3561264d04ea323aa2589f1e739645b103b5799a6ce9677",
+    "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts": "40e20f6588c464a4ca96684322187d18ada3e2ea7750532748caaa3cb3898fe6",
+    "tdf-hq-ui/src/utils/deviceTicketOrders.ts": "7d764b22758889be8431c85be04806b9fcdc3775ef399aceac5313a7b8569b46",
     "tdf-hq-ui/src/utils/directoryPreviewImage.ts": "4b8021888eb9b3d4af5bc955cd613641bc8668e9ddb99eaa819b3583ff395605",
     "tdf-hq-ui/src/utils/eventAdminInvitationLink.ts": "65abbfb75ad614bacb8fcebae716fab91dca6bc47658204c87fd850c3902bb2f",
     "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts": "8e37da4bff606202bf681c4780ddc3cff0dfa412f587bc95b823c1a9f3d28f4d",
@@ -29877,7 +29958,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
-    "tdf-hq/assets/feature-registry.json": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
+    "tdf-hq/assets/feature-registry.json": "11392498d31056c0a3eef9ff2dab3813848b5fa44e8d55176adb57133f7142ca",
     "tdf-hq/config/default.env.example": "43e79e82892aa470110818f593c2784857a1e6324e8ae5a111ff1de063d55364",
     "tdf-hq/docs/openapi/api.yaml": "169df5e00c28e75faeea29e47509f07478a7586da520fae3a30765c5d1215ab5",
     "tdf-hq/docs/openapi/artist-playback.yaml": "16c71adea21002fb54ecff645bba84be251a8537828d38342b1fb67a78acabcf",
@@ -30473,7 +30554,7 @@
     "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
     "tdf-mobile/src/features/directory/previewImage.ts": "c29605bbb2d8a794106068ab2dc1d3e0d568797403168a3e7fee0d7059c37674",
     "tdf-mobile/src/features/featureRegistry.ts": "1e4c7047aaaaf481b1dbeb0c5f07652eb0672bd382926a6863c82042f51f2864",
-    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "7befb5f315c7e165fbbeb77014b7fa1b8306efeeb22439b35f03e5acfbacd796",
+    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "ae4d7ffc3dee6dcd46d9f3cd0a2841973ea1ffcf643b30f189eb6487a6269dcf",
     "tdf-mobile/src/feedback/FeedbackEntry.tsx": "7964eaf7976c58daf264bacf94ea4854af265f0146cfbd16a1429e385bc46e7b",
     "tdf-mobile/src/feedback/metadata.ts": "62336d3a2cf7f055624bdb4f4bd20aedbfd47afc3fbddb2cefaa2d4ce1e26861",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
@@ -32352,6 +32433,10 @@
         "relationship": "tests"
       },
       {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "tests"
+      },
+      {
         "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
         "relationship": "tests"
       },
@@ -32713,6 +32798,10 @@
       },
       {
         "requirement": "EVT-VENUE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-MY-TICKETS-001",
         "relationship": "implementation"
       },
       {
@@ -36866,6 +36955,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "SYS-PAYMENT-ALTERNATIVES-001",
         "relationship": "implementation"
       }
@@ -37151,6 +37244,10 @@
       },
       {
         "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-MY-TICKETS-001",
         "relationship": "tests"
       }
     ],
@@ -39155,6 +39252,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-MY-TICKETS-001",
         "relationship": "implementation"
       },
       {
@@ -47154,6 +47255,36 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq-ui/src/pages/MyTicketsPage.tsx": [
+      {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/deviceTicketOrders.ts": [
+      {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/myTicketOrders.ts": [
+      {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx": [
+      {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts": [
+      {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/sql/2026-08-21_studio_internship_audit.sql": [
       {
         "requirement": "QA-REPORT-AUTHORING-001",
@@ -51324,7 +51455,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "5b17e4f43c6f4f997685d20dd3a7c8312b598632429ccc1e5dc176a5637d7c98",
+      "sha256": "4326424a6c25bb23b0c9a3e0f5954c48d38bb073b3bc721e6b73deba25da33e0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51341,6 +51472,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-PAYMENT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "tests"
         },
         {
@@ -59694,7 +59829,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "53db01321e43f5989d4bb555d676025491d773487e198b2627dc8e27ae61126c",
+      "sha256": "75829933e007771d3c2c09e2f4e9028ed065d76ee3fabc924533ecc2aae0318c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59719,6 +59854,10 @@
         },
         {
           "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "tests"
         }
       ]
@@ -60977,6 +61116,18 @@
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-ASSET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-39de0d450389c157",
+      "path": "tdf-hq-ui/src/api/myTicketOrders.ts",
+      "sha256": "b4f29af5c73605e37fa38f81bc2b44601fd11f8d92f9bcf90cf993845cb0cc14",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "implementation"
         }
       ]
@@ -67319,6 +67470,30 @@
       ]
     },
     {
+      "id": "SURFACE-2868173b55cf6317",
+      "path": "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx",
+      "sha256": "92ee369920c2a4e0e95a050e870230bd7c794838466f33e01bb284c9586f330c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-MY-TICKETS-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f2b81d101086b2ae",
+      "path": "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
+      "sha256": "1a31be06a3ec5e4f6b072ba776aedee56e9b8040763adbb53add0970997bee70",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-MY-TICKETS-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-35214bb78cbc255a",
       "path": "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
       "sha256": "0bb182ef3da26e32894ee7ca9093cf1691afb78b7e6a3ec9129d4dc3f0fa97bc",
@@ -67540,7 +67715,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "39096094cf0d8959f2d83b7feaa439a1e83b53a6f663d03e3e39a910c0662ab3",
+      "sha256": "3bdc7dd77c058c912c6555abcc9ee1eb5f8322198a333830bd0fa11cde495b48",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67569,6 +67744,10 @@
         },
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "implementation"
         },
         {
@@ -68880,7 +69059,7 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "d257098c3338360560f5382908e43fc0ab08c5eefb631ed3393a66a02db109ae",
+      "sha256": "a88a66d8753db1d483d1d3d59cf8a197250ee371c90b3e7064cd08ef07abcd48",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68897,6 +69076,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "implementation"
         },
         {
@@ -69574,6 +69757,30 @@
       "requirements": [
         {
           "requirement": "EVT-PLANNING-UX-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-85c269ba1c50835e",
+      "path": "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts",
+      "sha256": "40e20f6588c464a4ca96684322187d18ada3e2ea7750532748caaa3cb3898fe6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-MY-TICKETS-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-192a29fafc828f47",
+      "path": "tdf-hq-ui/src/utils/deviceTicketOrders.ts",
+      "sha256": "7d764b22758889be8431c85be04806b9fcdc3775ef399aceac5313a7b8569b46",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "implementation"
         }
       ]
@@ -70715,7 +70922,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
+      "sha256": "11392498d31056c0a3eef9ff2dab3813848b5fa44e8d55176adb57133f7142ca",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -70744,6 +70951,10 @@
         },
         {
           "requirement": "EVT-VENUE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "implementation"
         },
         {
@@ -85752,7 +85963,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "7befb5f315c7e165fbbeb77014b7fa1b8306efeeb22439b35f03e5acfbacd796",
+      "sha256": "ae4d7ffc3dee6dcd46d9f3cd0a2841973ea1ffcf643b30f189eb6487a6269dcf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -89410,7 +89621,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "715c78d5bc77179c74a2fd9ab78a0a7413bb7bde86bc9a1a2147e4069fc3ddfb",
+      "sourceSha256": "1c06f6d79348f8210894ebc0726f5243a7518d50e56208413d3193440b0e1b20",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -89438,7 +89649,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "715c78d5bc77179c74a2fd9ab78a0a7413bb7bde86bc9a1a2147e4069fc3ddfb",
+      "sourceSha256": "1c06f6d79348f8210894ebc0726f5243a7518d50e56208413d3193440b0e1b20",
       "definition": {
         "states": [
           "absent",
@@ -89468,7 +89679,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "715c78d5bc77179c74a2fd9ab78a0a7413bb7bde86bc9a1a2147e4069fc3ddfb",
+      "sourceSha256": "1c06f6d79348f8210894ebc0726f5243a7518d50e56208413d3193440b0e1b20",
       "definition": {
         "export": [
           "queued",
@@ -110499,9 +110710,9 @@
     },
     {
       "feature": "social.tickets",
-      "resource": null,
+      "resource": "/mis-entradas",
       "action": "discover",
-      "authentication": "authenticated",
+      "authentication": "optional",
       "rolesAny": [],
       "rolesAll": [],
       "modulesAll": [],
@@ -110521,9 +110732,9 @@
     },
     {
       "feature": "social.tickets",
-      "resource": null,
+      "resource": "/mis-entradas",
       "action": "view",
-      "authentication": "authenticated",
+      "authentication": "optional",
       "rolesAny": [],
       "rolesAll": [],
       "modulesAll": [],
@@ -112683,7 +112894,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 225,
+    "PARTIAL": 226,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

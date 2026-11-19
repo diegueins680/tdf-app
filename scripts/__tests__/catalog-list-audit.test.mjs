@@ -155,6 +155,12 @@ async function readReconciliation(beforePlayer = false) {
     .map(row => [row.id, row]));
   // A moved list's successor stands in for the review it nests.
   for (const row of movedFileSuccessors(active)) byId.set(row.previousDecision.id, row);
+  // Web Mis entradas (EVT-MY-TICKETS-001) succeeds the generated mobile registry
+  // review; the earlier catalog still names that exact review, nested unchanged.
+  for (const row of active.filter(candidate => candidate.reviewBatch === 'web-my-tickets-20261119'
+    && candidate.reviewMethod === 'successor-of-reviewed-decision')) {
+    byId.set(row.previousDecision.id, row.previousDecision);
+  }
   // The loop rework (pull request #750) retired two reviews of deleted scripts as
   // provenance; the earlier catalog still lists them, so they stand in for themselves.
   for (const entry of (await readLoopRework()).decisions) byId.set(entry.decision.id, entry.decision);

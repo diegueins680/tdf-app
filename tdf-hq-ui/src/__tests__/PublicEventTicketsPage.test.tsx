@@ -236,6 +236,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await renderTracking('/eventos/41/orden/92');
     await waitForExpectation(() => expect(container.textContent).toContain('Entradas emitidas'));
     expect(getCheckoutMock).toHaveBeenCalledWith(41, 92, 'secure-lookup-token');
+    expect(container.querySelector('a[href="/mis-entradas"]')?.textContent).toBe('Ver todas mis entradas');
     expect(container.textContent).not.toContain('Elige tus entradas');
   });
 
@@ -245,6 +246,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await renderTracking('/eventos/41/orden/92');
     await waitForExpectation(() => expect(container.textContent).toContain('Estado de la orden'));
     expect(container.textContent).toContain('La orden no está pagada');
+    expect(container.querySelector('a[href="/mis-entradas"]')).toBeNull();
     const actions = Array.from(container.querySelectorAll('button')).map((button) => button.textContent ?? '');
     expect(actions.some((label) => /datafast|paypal|transferencia|tarjeta|pagar/i.test(label))).toBe(false);
     expect(container.textContent).not.toContain('Elige tus entradas');

@@ -725,6 +725,11 @@ export default function PublicEventTicketsPage() {
                     : <Alert severity="warning">{english
                       ? 'Tickets are held temporarily. The order is not paid and no ticket has been issued.'
                       : 'Las entradas están retenidas temporalmente. La orden no está pagada y no se emitió ninguna entrada.'}</Alert>}
+                  {paid && (
+                    <Button component={RouterLink} to="/mis-entradas" size="small" sx={{ alignSelf: 'flex-start' }}>
+                      {english ? 'All my tickets' : 'Ver todas mis entradas'}
+                    </Button>
+                  )}
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                     <Chip label={`${english ? 'Face value' : 'Valor entradas'}: ${money(checkout.quote.netFaceValueMinor, checkout.quote.currency)}`} />
                     <Chip label={`${english ? 'Buyer fee' : 'Tarifa comprador'}: ${money(checkout.quote.buyerPlatformFeeMinor, checkout.quote.currency)}`} />
