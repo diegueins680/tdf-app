@@ -257,17 +257,7 @@ export function PaymentForm({
   return (
     <Card variant="outlined">
       <CardContent>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-          <Typography variant="h6">Nuevo pago manual</Typography>
-          <Button
-            startIcon={<AddCircleIcon />}
-            variant="contained"
-            onClick={handleSubmit}
-            disabled={mutation.isPending}
-          >
-            Registrar pago
-          </Button>
-        </Stack>
+        <Typography variant="h6" sx={{ mb: 2 }}>Nuevo pago manual</Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
               <PartySelector value={selectedParty} onChange={setSelectedParty} field={{ label: 'Contacto', required: true, helperText: fieldHints.party ?? 'Busca por nombre o @username.' }} search={{ context: 'billing_contact', kind: 'any', accountOnly: false }} />
@@ -427,6 +417,15 @@ export function PaymentForm({
             </Stack>
           </Grid>
         </Grid>
+        <Button
+          startIcon={<AddCircleIcon />}
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={mutation.isPending}
+          sx={{ mt: 2 }}
+        >
+          Registrar pago
+        </Button>
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {error}

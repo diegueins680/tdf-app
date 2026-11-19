@@ -9,6 +9,7 @@ import Control.Monad.Trans.Reader (ReaderT, runReaderT)
 import Control.Monad.Trans.Resource (ResourceT)
 import Data.Aeson ((.=))
 import qualified Data.Aeson as A
+import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Either (isLeft)
 import Data.Maybe (isJust)
@@ -149,6 +150,7 @@ import TDF.ServerExtra (
     validateSocialReplyExternalId,
     socialReplyOutcomeFields,
     validateSocialReplySenderId,
+    validateInventoryAssetUploadSignature,
     validateInventoryAssetUploadSize,
     validateInventoryPageParams,
     validatePaymentAmountCents,
@@ -993,6 +995,30 @@ spec = do
           []
           [(mkAssetUploadFile "file.jpg") { fdInputName = "photo" }]
         )
+
+  describe "validateInventoryAssetUploadSignature" $ do
+    let png = BS8.pack "\137PNG\r\n\26\n0000"
+        jpeg = BS8.pack "\255\216\255\224rest"
+        gif = BS8.pack "GIF89a......"
+        webp = BS8.pack "RIFF0000WEBPVP8 "
+    it "accepts each raster format only under its own declared type" $ do
+      validateInventoryAssetUploadSignature "image/png" png `shouldBe` Right ()
+      validateInventoryAssetUploadSignature " Image/JPEG; charset=binary" jpeg `shouldBe` Right ()
+      validateInventoryAssetUploadSignature "image/gif" gif `shouldBe` Right ()
+      validateInventoryAssetUploadSignature "image/webp" webp `shouldBe` Right ()
+
+    it "rejects bytes that are not the declared image format" $ do
+      let assertRejected declared bytes =
+            case validateInventoryAssetUploadSignature declared bytes of
+              Left serverErr -> do
+                errHTTPCode serverErr `shouldBe` 400
+                BL8.unpack (errBody serverErr) `shouldContain` "does not match its declared media type"
+              Right () -> expectationFailure "Expected mismatching upload content to be rejected"
+      assertRejected "image/png" jpeg
+      assertRejected "image/jpeg" (BS8.pack "<html><script>")
+      assertRejected "image/png" (BS8.pack "%PDF-1.7")
+      assertRejected "image/gif" BS8.empty
+      assertRejected "image/svg+xml" (BS8.pack "<svg xmlns=")
 
   describe "validateInventoryAssetUploadSize" $ do
     it "accepts non-empty inventory images up to the managed storage limit" $ do

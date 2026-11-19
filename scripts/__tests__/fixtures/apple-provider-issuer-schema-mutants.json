@@ -1,0 +1,30 @@
+{
+  "scope": "Corruption controls only on the owned disposable full248 fixture; unchanged canonical schema verifier must reject each after the Apple issuer migration is recorded. No production mutation or current-manifest omission is authorized.",
+  "cases": [
+    {
+      "name": "missing_constraint",
+      "sql": "ALTER TABLE public.auth_provider_identity DROP CONSTRAINT auth_provider_identity_issuer_check;"
+    },
+    {
+      "name": "unvalidated_constraint",
+      "sql": "ALTER TABLE public.auth_provider_identity DROP CONSTRAINT auth_provider_identity_issuer_check; ALTER TABLE public.auth_provider_identity ADD CONSTRAINT auth_provider_identity_issuer_check CHECK(issuer IN ('https://accounts.google.com','https://appleid.apple.com')) NOT VALID;"
+    },
+    {
+      "name": "broadened_issuer",
+      "sql": "ALTER TABLE public.auth_provider_identity DROP CONSTRAINT auth_provider_identity_issuer_check; ALTER TABLE public.auth_provider_identity ADD CONSTRAINT auth_provider_identity_issuer_check CHECK(issuer IN ('https://accounts.google.com','https://appleid.apple.com','https://attacker.invalid'));"
+    },
+    {
+      "name": "rolled_back_google_only",
+      "sql": "ALTER TABLE public.auth_provider_identity DROP CONSTRAINT auth_provider_identity_issuer_check; ALTER TABLE public.auth_provider_identity ADD CONSTRAINT auth_provider_identity_issuer_check CHECK(issuer='https://accounts.google.com');"
+    },
+    {
+      "name": "nullable_issuer",
+      "sql": "ALTER TABLE public.auth_provider_identity DROP CONSTRAINT auth_provider_identity_pkey; ALTER TABLE public.auth_provider_identity ALTER COLUMN issuer DROP NOT NULL;",
+      "setup": "PostgreSQL protects NOT NULL while the primary key remains; the transaction drops that fixture key before creating the nullable-column counterexample. All changes roll back."
+    },
+    {
+      "name": "missing_issuer_column",
+      "sql": "ALTER TABLE public.auth_provider_identity RENAME COLUMN issuer TO missing_issuer;"
+    }
+  ]
+}

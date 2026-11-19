@@ -1,0 +1,32 @@
+{
+  "name": "tdf-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TDF Records desktop shell for macOS and Windows",
+  "author": "TDF Records <hola@tdfrecords.net>",
+  "homepage": "https://www.tdfrecords.net",
+  "license": "MIT",
+  "main": "src/main/main.cjs",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test \"test/**/*.test.cjs\"",
+    "lint": "node --check src/main/main.cjs && node --check src/preload/preload.cjs",
+    "prepare:channel": "node scripts/prepare-channel.cjs",
+    "pack": "npm run prepare:channel && electron-builder --config electron-builder.config.cjs --dir",
+    "dist": "npm run prepare:channel && electron-builder --config electron-builder.config.cjs",
+    "dist:mac": "npm run prepare:channel && electron-builder --config electron-builder.config.cjs --mac --x64 --arm64",
+    "dist:win": "npm run prepare:channel && electron-builder --config electron-builder.config.cjs --win --x64 --arm64",
+    "dist:linux": "npm run prepare:channel && electron-builder --config electron-builder.config.cjs --linux AppImage --x64"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11"
+  },
+  "devDependencies": {
+    "electron": "45.2.3",
+    "electron-builder": "26.18.0"
+  }
+}

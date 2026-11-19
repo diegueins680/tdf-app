@@ -608,7 +608,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
-      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
       expect(container.textContent).toContain(
         'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
@@ -623,7 +623,7 @@ describe('CmsAdminPage', () => {
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(0);
       expect(countActionsByText(container, 'Guardar y publicar')).toBe(0);
-      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
       expect(container.textContent).toContain('Editor coincide con versión en vivo');
       expect(container.textContent).toContain(
         'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.',
@@ -832,7 +832,7 @@ describe('CmsAdminPage', () => {
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(1);
       expect(countActionsByText(container, 'Limpiar')).toBe(0);
-      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
     });
 
     await act(async () => {
@@ -864,7 +864,7 @@ describe('CmsAdminPage', () => {
       expect(getInputByLabel(container, 'Payload JSON').value.trim()).toBe('{}');
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(1);
       expect(countActionsByText(container, 'Limpiar')).toBe(0);
-      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
     });
 
     await cleanup();
@@ -944,7 +944,7 @@ describe('CmsAdminPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+        expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
         expect(container.textContent).toContain(
           'Parte de la versión en vivo o empieza un borrador propio antes de guardar.',
         );
@@ -987,7 +987,7 @@ describe('CmsAdminPage', () => {
         'Carga la versión en vivo para editar la estructura publicada desde el formulario.',
       );
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
-      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
       expect(countActionsByText(container, 'Guardar y publicar')).toBe(0);
       expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
       expect(countActionsByText(container, 'Ocultar payload en vivo')).toBe(0);
@@ -1141,7 +1141,7 @@ describe('CmsAdminPage', () => {
       expect(getInputByLabel(container, 'Título').value).toBe('');
       expect(getInputByLabel(container, 'Payload JSON').value.trim()).toBe('{}');
       expect(container.textContent).not.toContain('Base: v4');
-      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
       expect(container.textContent).toContain(
         'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
@@ -1233,7 +1233,7 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('hides the first-version save action until the editor has real content', async () => {
+  it('disables the first-version save action until the editor has real content', async () => {
     listMock.mockResolvedValue([]);
     getPublicMock.mockImplementation(() => Promise.resolve(null as unknown as CmsContentDTO));
 
@@ -1243,7 +1243,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Sin contenido publicado');
-      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
       expect(countLabelsByText(container, 'Estado')).toBe(0);
       expect(container.querySelector('[data-testid="cms-admin-first-version-save-guidance"]')).not.toBeNull();
       expect(container.textContent).toContain(
@@ -1273,7 +1273,7 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps first-version save controls hidden while the live lookup is still unresolved', async () => {
+  it('keeps first-version save disabled while the live lookup is still unresolved', async () => {
     listMock.mockResolvedValue([]);
     getPublicMock.mockImplementation(() => new Promise<CmsContentDTO>(() => undefined));
 
@@ -1291,7 +1291,7 @@ describe('CmsAdminPage', () => {
       expect(container.textContent).toContain(
         'Agrega un título o payload antes de guardar la primera versión.',
       );
-      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
       expect(countActionsByText(container, 'Guardar y publicar')).toBe(0);
       expect(countLabelsByText(container, 'Estado')).toBe(0);
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
@@ -1305,7 +1305,7 @@ describe('CmsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
       expect(countActionsByText(container, 'Guardar y publicar')).toBe(0);
       expect(countLabelsByText(container, 'Estado')).toBe(0);
       expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
@@ -1448,7 +1448,7 @@ describe('CmsAdminPage', () => {
     let rendered = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
     });
 
     await act(async () => {

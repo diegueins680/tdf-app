@@ -15,6 +15,7 @@ import {
   FormControl,
   FormControlLabel,
   InputLabel,
+  Link,
   MenuItem,
   Paper,
   Select,
@@ -84,6 +85,7 @@ interface SearchUrlState {
   q: string;
   profileKind?: DirectorySearchQuery['profileKind'];
   entityType: DirectoryEntityType | 'artist' | 'all';
+  intent?: DirectorySearchQuery['intent'];
   cityId: string | null;
   professionId: string;
   serviceId: string;
@@ -104,6 +106,7 @@ const parseSearchUrl = (search: string): SearchUrlState => {
     entityType: requestedType !== null && requestedType !== 'all' && isEntityTypeKey(requestedType)
       ? (requestedType as DirectoryEntityType)
       : 'all',
+    intent: params.get('intent') === 'seeking' || params.get('intent') === 'offering' ? (params.get('intent') as DirectorySearchQuery['intent']) : undefined,
     cityId: params.get('cityId'),
     professionId: params.get('professionId') ?? '',
     serviceId: params.get('serviceId') ?? '',
@@ -120,6 +123,7 @@ const buildSearchUrl = (state: SearchUrlState, nearby: boolean) => {
   if (state.q) params.set('q', state.q);
   if (state.profileKind) params.set('profileKind', state.profileKind);
   if (state.entityType !== 'all') params.set('entityType', state.entityType);
+  if (state.intent) params.set('intent', state.intent);
   if (state.cityId && !nearby) params.set('cityId', state.cityId);
   if (state.professionId) params.set('professionId', state.professionId);
   if (state.serviceId) params.set('serviceId', state.serviceId);
@@ -222,6 +226,8 @@ export default function DirectorySearchPage() {
     q: query || undefined,
     profileKind: entityType === 'profile' || entityType === 'artist' ? urlState.profileKind : undefined,
     entityType: entityType === 'all' ? undefined : entityType,
+    // ADR 0134: the intent filter only applies to classifieds.
+    intent: entityType === 'classified' || entityType === 'all' ? urlState.intent : undefined,
     cityId: coordinates ? undefined : cityId || undefined,
     professionId: professionId || undefined,
     serviceId: serviceId || undefined,
@@ -455,6 +461,14 @@ export default function DirectorySearchPage() {
             </ToggleButtonGroup>
           </Stack>
 
+          {(entityType === 'classified' || entityType === 'all') && (
+            <ToggleButtonGroup exclusive size="small" value={urlState.intent ?? 'any'} onChange={(_, value: unknown) => { updateSearch({ intent: value === 'seeking' || value === 'offering' ? value : undefined, entityType: value === 'seeking' || value === 'offering' ? 'classified' : entityType }); }} aria-label={t('directorySearch.intentLabel')} data-testid="intent-filter">
+              <ToggleButton value="any">{t('directorySearch.intentAny')}</ToggleButton>
+              <ToggleButton value="seeking">{t('directorySearch.intentSeeking')}</ToggleButton>
+              <ToggleButton value="offering">{t('directorySearch.intentOffering')}</ToggleButton>
+            </ToggleButtonGroup>
+          )}
+
           {sponsored.length > 0 && (
             <Box component="section" aria-labelledby="sponsored-heading">
               <Typography id="sponsored-heading" variant="overline">{t('directorySearch.sponsoredPlural')}</Typography>
@@ -514,6 +528,11 @@ function ResultCard({
   const { t, i18n } = useTranslation();
   const path = resultPath(item);
   const sourceProfile = item.sourceProfile ?? null;
+  const profilePath = sourceProfile
+    ? `/directorio/${encodeURIComponent(sourceProfile.slug)}`
+    : item.type === 'profile' && (item.id.startsWith('artist-') || ['artist', 'band', 'project'].includes(item.profileKind ?? ''))
+      ? path
+      : null;
   const eventDate = item.type === 'event' ? formatEventDate(item.effectiveAt, i18n.resolvedLanguage ?? 'es') : null;
   const favorite = useMutation({
     mutationFn: async ({ ownerPartyId, saved }: { ownerPartyId: number; saved: boolean }) => {
@@ -561,6 +580,25 @@ function ResultCard({
       shareBusy.current = false;
     }
   };
+  const preview = (
+    <DirectoryPreviewImage
+      profileName={item.type === 'profile' ? item.title : undefined}
+      kind={item.type}
+      imageUrl={item.imageUrl}
+      alt={t('directorySearch.photo', { title: item.title })}
+      fallbackAlt={t('directorySearch.fallbackPhoto', { title: item.title })}
+      width={440}
+      height={440}
+      sizes={layout === 'grid' ? '(min-width: 900px) 33vw, 100vw' : '(min-width: 600px) 220px, 100vw'}
+      sx={{
+        width: layout === 'grid' ? '100%' : { xs: '100%', sm: 220 },
+        height: layout === 'grid' ? 220 : { xs: 240, sm: 220 },
+        aspectRatio: 'auto',
+        alignSelf: layout === 'list' ? { sm: 'stretch' } : undefined,
+        minHeight: layout === 'list' ? { sm: 220 } : undefined,
+      }}
+    />
+  );
   return (
     <Card
       variant="outlined"
@@ -571,29 +609,18 @@ function ResultCard({
         overflow: 'hidden',
       }}
     >
-      <DirectoryPreviewImage
-        profileName={item.type === 'profile' ? item.title : undefined}
-        kind={item.type}
-        imageUrl={item.imageUrl}
-        alt={t('directorySearch.photo', { title: item.title })}
-        fallbackAlt={t('directorySearch.fallbackPhoto', { title: item.title })}
-        width={440}
-        height={440}
-        sizes={layout === 'grid' ? '(min-width: 900px) 33vw, 100vw' : '(min-width: 600px) 220px, 100vw'}
-        sx={{
-          width: layout === 'grid' ? '100%' : { xs: '100%', sm: 220 },
-          height: layout === 'grid' ? 220 : { xs: 240, sm: 220 },
-          aspectRatio: 'auto',
-          alignSelf: layout === 'list' ? { sm: 'stretch' } : undefined,
-          minHeight: layout === 'list' ? { sm: 220 } : undefined,
-        }}
-      />
+      {profilePath ? (
+        <Box component={RouterLink} to={profilePath} sx={{ display: 'block', flexShrink: 0 }}>
+          {preview}
+        </Box>
+      ) : preview}
       <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', minWidth: 0 }}>
         <CardContent sx={{ flex: 1 }}>
           <Stack direction="row" justifyContent="space-between" gap={2}>
             <Box>
               <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
                 <Chip size="small" label={t(ENTITY_LABELS[item.type])} />
+                {item.intent && <Chip size="small" color={item.intent === 'seeking' ? 'secondary' : 'info'} label={item.intent === 'seeking' ? t('directorySearch.intentSeeking') : t('directorySearch.intentOffering')} />}
                 {item.sponsored && (
                   <Chip
                     size="small"
@@ -602,7 +629,11 @@ function ResultCard({
                   />
                 )}
               </Stack>
-              <Typography component="h2" variant="h5" fontWeight={850} mt={1}>{item.title}</Typography>
+              <Typography component="h2" variant="h5" fontWeight={850} mt={1}>
+                {profilePath ? (
+                  <Link component={RouterLink} to={profilePath} color="inherit" underline="hover">{item.title}</Link>
+                ) : item.title}
+              </Typography>
               {item.subtitle && <Typography color="text.secondary">{item.subtitle}</Typography>}
             </Box>
             {item.location.distanceKm != null && <Chip label={`≈ ${item.location.distanceKm} km`} color="primary" variant="outlined" />}
@@ -615,8 +646,8 @@ function ResultCard({
           </Stack>
         </CardContent>
         <CardActions sx={{ px: 2, pb: 2, flexWrap: 'wrap' }}>
-          {sourceProfile ? (
-            <Button component={RouterLink} to={sourceProfile.canonicalUrl} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: 'profile', entity_id: sourceProfile.id, sponsored: item.sponsored, via: 'artist_listing' })}>{t('directorySearch.viewProfile')}</Button>
+          {sourceProfile && profilePath ? (
+            <Button component={RouterLink} to={profilePath} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: 'profile', entity_id: sourceProfile.id, sponsored: item.sponsored, via: 'artist_listing' })}>{t('directorySearch.viewProfile')}</Button>
           ) : (
             <Button component={RouterLink} to={path} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: item.type, entity_id: item.id, sponsored: item.sponsored })}>{t('directorySearch.detail')}</Button>
           )}

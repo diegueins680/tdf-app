@@ -29,7 +29,7 @@ import Data.Time (UTCTime, diffUTCTime, getCurrentTime)
 import qualified Data.UUID as UUID
 import Database.Persist
 import Database.Persist.Sql
-  (SqlPersistT, Single(..), fromSqlKey, rawSql, runSqlPool, toSqlKey, updateWhereCount)
+  (SqlPersistT, Single(..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey, updateWhereCount)
 import GHC.Generics (Generic)
 import Network.URI (URI(..), URIAuth(..), parseURI)
 import Servant
@@ -195,10 +195,13 @@ saveCampaign artist key CampaignWrite{..} now = do
   existing <- getBy unique
   case existing of
     Nothing | expectedRevision == 0 -> do
-      inserted <- insertUnique (M.VideoCampaign artist key 1 body now now)
-      case inserted of
-        Just _ -> pure (campaignDTO (M.VideoCampaign artist key 1 body now now))
-        Nothing -> replay body =<< getBy unique
+      -- A prior SELECT is only a discovery hint: two authorized requests can
+      -- both see no row. Do not abort the transaction on that ordinary retry.
+      rawExecute
+        "INSERT INTO video_campaign(artist_party_id,campaign_key,revision,document,created_at,updated_at) VALUES(?,?,1,?,?,?) ON CONFLICT(artist_party_id,campaign_key) DO NOTHING"
+        [toPersistValue artist, PersistText key, PersistText body,
+          PersistUTCTime now, PersistUTCTime now]
+      replay body =<< getBy unique
     Just (Entity rowId row)
       | expectedRevision == M.videoCampaignRevision row -> do
           count <- updateWhereCount
@@ -301,8 +304,10 @@ campaignServer user target = list :<|> (\key ->
                 recent time = time >= M.videoCampaignCreatedAt row
                   && diffUTCTime now time >= 0 && diffUTCTime now time <= 3600
             if validPiece && maybe False recent eventTime then do
-              _ <- insertUnique (M.VideoCampaignConversion campaignId (auPartyId user)
-                kind source piece now)
+              rawExecute
+                "INSERT INTO video_campaign_conversion(campaign_id,viewer_party_id,kind,source,piece,created_at) VALUES(?,?,?,?,?,?) ON CONFLICT(campaign_id,viewer_party_id,kind) DO NOTHING"
+                [toPersistValue campaignId, toPersistValue (auPartyId user),
+                  PersistText kind, PersistText source, PersistText piece, PersistUTCTime now]
               pure (Right NoContent)
             else pure (Left err400)
           _ -> pure (Left err404)

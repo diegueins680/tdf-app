@@ -285,6 +285,9 @@ productFlowForDomain domainType = case domainType of
   "domo_event_quote" -> Just FlowBooking
   "marketplace_sale" -> Just FlowMarketplace
   "marketplace_rental" -> Just FlowMarketplace
+  -- ADR 0136: agreement charges are marketplace money movement, so the
+  -- connected-account, split and payout capabilities are required to route.
+  "marketplace_agreement" -> Just FlowMarketplace
   "merch_order" -> Just FlowMerchandise
   _ -> Nothing
 

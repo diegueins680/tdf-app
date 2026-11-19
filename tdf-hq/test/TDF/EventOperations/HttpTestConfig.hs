@@ -17,6 +17,7 @@ httpTestConfig = AppConfig
   , ragTopK = 1, ragChunkWords = 1, ragChunkOverlap = 0, ragAvailabilityDays = 1
   , ragAvailabilityPerResource = 1, ragRefreshHours = 1, ragEmbedBatchSize = 1
   , emailConfig = Nothing, googleClientId = Nothing
+  , appleSignInAudiences = Nothing, appleSignInJwksUrl = disabledEndpoint
   , facebookAppId = Nothing, facebookAppSecret = Nothing, facebookGraphBase = disabledEndpoint
   , facebookMessagingToken = Nothing, facebookMessagingPageId = Nothing
   , facebookMessagingApiBase = disabledEndpoint, instagramAppToken = Nothing

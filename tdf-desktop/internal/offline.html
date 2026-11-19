@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TDF Records — sin conexión</title>
+    <style>
+      :root { color-scheme: light dark; --accent: #7c3aed; }
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #0f172a; color: #f8fafc; }
+      main { max-width: 440px; padding: 32px 24px; text-align: center; }
+      h1 { font-size: 22px; margin: 0 0 12px; }
+      p { line-height: 1.5; margin: 0 0 20px; color: #cbd5e1; }
+      a.button { display: inline-block; min-height: 44px; line-height: 44px; padding: 0 20px; border-radius: 10px; background: var(--accent); color: #fff; font-weight: 600; text-decoration: none; }
+      small { display: block; margin-top: 24px; color: #94a3b8; }
+    </style>
+  </head>
+  <body>
+    <main role="alert">
+      <h1>No se pudo conectar con TDF Records</h1>
+      <p>La aplicación no encontró conexión con el servicio. Tus borradores guardados en el servidor y tu sesión se conservan; cuando vuelva la conexión, reintentará automáticamente.</p>
+      <a class="button" href="tdf-desktop://internal/retry">Reintentar ahora</a>
+      <small id="detail"></small>
+    </main>
+    <script>
+      (function () {
+        var params = new URLSearchParams(location.search);
+        var code = params.get('code');
+        var detail = document.getElementById('detail');
+        if (code && /^-?\d{1,6}$/.test(code)) detail.textContent = 'Código de red ' + code + '.';
+      })();
+    </script>
+  </body>
+</html>
