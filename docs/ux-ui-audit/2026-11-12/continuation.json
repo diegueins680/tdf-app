@@ -12,7 +12,8 @@
     "webPR": 722,
     "mobilePR": 188,
     "salesClosePR": 735,
-    "productionDeployedByThisContinuation": false
+    "productionDeployedByThisContinuation": false,
+    "ticketOrderEmailPR": 769
   },
   "findings": [
     {
@@ -176,6 +177,60 @@
       "principle": "Vocabulario legible y consistente",
       "finding": "Categorías como apparel o limited_edition aparecían como códigos o inglés sin traducir en filtros públicos, producto, formulario del vendedor y revisión administrativa.",
       "change": "Un vocabulario de presentación compartido en español/inglés muestra Ropa, Edición limitada y los demás rótulos existentes. Las solicitudes conservan códigos originales y opciones; la lista no gana autoridad ni nuevas categorías seleccionables. Códigos desconocidos reciben un rótulo neutral. La migración pendiente del catálogo se conserva."
+    },
+    {
+      "id": "COG-20261117-01",
+      "principle": "Continuidad de tarea, prevención de errores y control explícito",
+      "finding": "Una actualización de stock en segundo plano cambiaba la clave de versión y desmontaba el editor, perdiendo la edición sin aviso.",
+      "change": "La identidad estable conserva texto/estado activo. Valores nuevos bloquean el guardado y muestran comparación con opciones explícitas para conservar la edición o usar los valores actuales. Revisar no escribe; guardar aparte usa la versión revisada. Un conflicto refresca sin reintentar la escritura."
+    },
+    {
+      "id": "COG-20261117-02",
+      "principle": "Prevención de errores y ayuda junto al campo",
+      "finding": "Datos de entrega de mercancía dependían de la validación nativa; un submit directo omitía el bloqueo del botón ante datos inválidos, checkout deshabilitado o stock/entrega no disponibles.",
+      "change": "Errores localizados tras blur/envío y foco en el primer campo inválido al enviar. Texto y límites existentes conservados. El handler comprueba disponibilidad, opciones y solicitudes pendientes antes de crear orden; revisar o corregir no inicia checkout."
+    },
+    {
+      "id": "COG-20261117-03",
+      "principle": "Evitar repetición y representar el estado real",
+      "finding": "El comprador repetía nombre/correo conocidos, y el total de la vista previa se anunciaba como calculado por el servidor aunque se sumaba localmente.",
+      "change": "Contacto editable desde la cuenta montada, sin restaurar borrados deliberados. Total estimado con confirmación final al continuar. El envío captura el payload, bloquea controles pendientes y conserva texto, clave y capacidad privada para reintentar sin cambios; la orden creada sigue pendiente de pago."
+    },
+    {
+      "id": "COG-20261117-04",
+      "principle": "Corrección por campo y continuidad de tarea",
+      "finding": "Reportes y motivos de cancelación de mercancía dependían del botón deshabilitado y no explicaban los errores. Un submit directo omitía ese guard; campos pendientes podían perder su contexto al cambiar de pedido.",
+      "change": "Errores asociados y foco al enviar; texto completo y tipo conservados tras rechazo. Solicitudes capturadas con la misma clave y acceso privado al reintentar sin cambios; operaciones pendientes y lectura fallida bloquean escrituras. Un pedido distinto inicia sus propios borradores, y una respuesta anterior no borra los nuevos."
+    },
+    {
+      "id": "COG-20261117-05",
+      "principle": "Control explícito y prevención de cambios involuntarios",
+      "finding": "Cancelar una orden sin pagar liberaba stock sin confirmar el pedido nombrado. Un reporte de reembolso o cancelación podía confundirse con su ejecución.",
+      "change": "Revisar no escribe. La confirmación nombra pedido y motivo, ofrece Conservar pedido y vuelve a comprobar el estado actual. Pago nuevo bloquea confirmar; durante el envío no se puede duplicar ni cerrar la confirmación. Rechazo conserva el motivo; éxito sigue visible al desaparecer el formulario. Solicitar ayuda no cancela, reembolsa ni confirma un pago."
+    },
+    {
+      "id": "COG-20261117-06",
+      "principle": "Accesibilidad y controles alcanzables",
+      "finding": "Los mensajes largos expandían el textarea fuera de la pantalla; el botón rojo de confirmación presentó contraste3.68:1 en navegador, inferior al mínimo4.5:1.",
+      "change": "Campos de altura acotada con scroll conservan todo el texto. Confirmaciones de peligro usan el rojo oscuro existente del tema y un texto de contraste suficiente en reposo/hover, con estado deshabilitado distinto. Se repite WCAG, teclado, viewport y hit testing sin omitir reglas."
+    },
+    {
+      "id": "COG-20261117-07",
+      "principle": "Revelación progresiva y carga extrínseca",
+      "finding": "La introducción de reserva repetía horario, zonas y contexto de precios antes del contacto; la versión con cotización añadía vocabulario del servidor.",
+      "change": "La instrucción breve y el control nativo Horario y precios ocupan hasta tres líneas de texto en los viewports saludables probados. Detalles de horario físico de Quito, zona del visitante y moneda se abren por teclado sin cambiar datos ni enviar reservas. Estimados, avisos y reintento de catálogo permanecen fuera del contenido plegado; horario y consentimiento conservan sus guías y validaciones."
+    },
+    {
+      "id": "COG-20261117-08",
+      "principle": "Legibilidad y reconocimiento de opciones",
+      "finding": "El selector de reserva combinaba nombre y tarifa en una fila recortada en teléfonos; unidades inglesas y una tarifa de poco contraste en la opción seleccionada dificultaban leer el servicio. El espaciado de contenedores anidados también desplazaba los campos fuera de la columna.",
+      "change": "El valor seleccionado muestra el nombre completo, las opciones separan nombre y tarifa, y los textos largos se ajustan dentro de su columna. El precio seleccionado conserva contraste y las unidades hour, episode, song y package se muestran como hora, episodio, canción y paquete; las unidades desconocidas se conservan. Se mantienen el catálogo, orden, identificadores y cálculo existente, con cotización, depósito y consentimiento."
+    },
+    {
+      "id": "COG-20261118-01",
+      "principle": "Prevención de errores y continuidad del contexto",
+      "finding": "El seguimiento del marketplace deshabilitaba el envío de referencias cortas sin explicarlas junto al campo, limitaba el texto con maxLength y dejaba editarlo durante el envío. El estado del formulario podía reutilizarse al cambiar de orden.",
+      "change": "Validación asociada al campo con foco al enviar, texto completo conservado, límites existentes por carácter Unicode y controles no admitidos, referencia capturada y bloqueada durante el envío y guardia inmediata de duplicados. Un rechazo conserva el borrador para reintento explícito; cada orden tiene estado montado propio y respuestas antiguas no sustituyen la orden actual. El ID completo se ajusta en teléfono y la evidencia recibida sigue pendiente de revisión, sin confirmar pago."
     }
   ],
   "measurements": [
@@ -263,7 +318,7 @@
       "id": 10,
       "item": "Ingreso web",
       "status": "Parcial",
-      "nextOrEvidence": "Ayudas y enlaces duplicados retirados; rutas rápidas D5 pendientes de decisión."
+      "nextOrEvidence": "Ayudas y enlaces duplicados retirados en #722. D5 implementada por recomendación aprobada en #757, sin integrarse ni modificarse en esta continuación."
     },
     {
       "id": 11,
@@ -287,7 +342,7 @@
       "id": 14,
       "item": "Vocabulario compartido",
       "status": "Parcial",
-      "nextOrEvidence": "Asistencia y correo simplificados en web; falta verificar todas las superficies móviles. Categorías de mercancía compartidas en español/inglés en cuatro superficies; filtros y API conservan códigos."
+      "nextOrEvidence": "Asistencia y correo simplificados en web; falta verificar todas las superficies móviles. Categorías de mercancía compartidas en español/inglés en cuatro superficies; filtros y API conservan códigos. Seguimiento de mercancía usa Novedades/Updates y recuperación en lenguaje común, sin mostrar el acceso privado."
     },
     {
       "id": 15,
@@ -299,13 +354,13 @@
       "id": 16,
       "item": "Errores junto al campo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia en entradas; referencia bancaria en reservas, con texto conservado al fallar y campo deshabilitado durante el envío; código/teléfono PayPhone. Quedan otras superficies de pago sin revalidar. Los cuatro precios de renta también muestran error/ayuda por campo. El monto de pago manual y la tarifa por hora tienen errores asociados al campo. Stock, umbral de alerta y peso de mercancía tienen errores accesibles junto al campo."
+      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia en entradas; referencia bancaria en reservas, con texto conservado al fallar y campo deshabilitado durante el envío; código/teléfono PayPhone. Quedan otras superficies de pago sin revalidar. Los cuatro precios de renta también muestran error/ayuda por campo. El monto de pago manual y la tarifa por hora tienen errores asociados al campo. Stock, umbral de alerta y peso de mercancía tienen errores accesibles junto al campo. Contacto y dirección de entrega de mercancía ahora tienen errores por campo, límites, foco al enviar y guard contra submit directo inválido o no disponible. Motivo de cancelación y reporte de pedido tienen límites, errores asociados, foco al enviar y texto sin truncar en campos acotados; confirmación nombrada y guards de estado/lectura/pending. Seguimiento del marketplace: referencia bancaria con error asociado y foco, sin truncar, bloqueo durante envío, reintento explícito y borrador propio por orden; no confirma pago."
     },
     {
       "id": 17,
       "item": "Enlace seguro a la orden por correo",
-      "status": "Pendiente de backend",
-      "nextOrEvidence": "Diseñar expiración, recuperación y verificación; no poner la capacidad privada en analítica ni registros."
+      "status": "Parcial; implementación separada #769",
+      "nextOrEvidence": "PR #769 OPEN DRAFT, cabeza 87bb5ff8a9f19c12b062932b95ffa7cac0fe9635: enlace de acceso a orden de entradas en correo, fragmento #acceso= retirado al abrir y hash verificado antes del envío. Autorización Do it reconciliada en sesión 41891438. No integrado ni desplegado; sin caducidad ni revocación por orden, sin reenvío de correos previos. Faltan revisión e integración; no duplicar aquí."
     },
     {
       "id": 18,
@@ -316,14 +371,14 @@
     {
       "id": 19,
       "item": "App: pestañas y acciones",
-      "status": "Pendiente",
-      "nextOrEvidence": "Eventos como pestaña, menú por rol y detalle; incluye decisiones D7 y D8."
+      "status": "Parcial en móvil #188; dispositivo e integración pendientes",
+      "nextOrEvidence": "PR móvil #188 OPEN DRAFT, cabeza 99f630fb1ca1a84038adc74686d4417212884205, sección 17/nov: Eventos como pestaña para cuentas con sesión; Crear algo nuevo pasa a Explorar conservando las acciones. Detalle y menús por acceso ya implementados allí. No integrado ni ejecutado en dispositivo en esta continuación; no se infiere aprobación adicional de D7/D8."
     },
     {
       "id": 20,
       "item": "App: explorar sin cuenta",
-      "status": "Pendiente",
-      "nextOrEvidence": "Recorrido invitado y simplificación del registro; D10 pendiente de decisión."
+      "status": "Parcial en móvil #188; dispositivo e integración pendientes",
+      "nextOrEvidence": "PR móvil #188 en 99f630fb1ca1a84038adc74686d4417212884205: Explorar sin cuenta abre el directorio público; guardar, responder y pagar piden cuenta. Eventos para invitados sigue limitado por el registro compartido social.events; llegan por el chip del directorio. D10 de registro ya implementada separadamente tras aprobación. Falta integración y prueba nativa."
     },
     {
       "id": 21,
@@ -335,7 +390,7 @@
       "id": 22,
       "item": "Reserva y datos repetidos",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Reserva en 2 pasos con cotización, depósito y consentimiento en Horario. Prefill en mezcla, marketplace, pruebas y correo de Live Sessions tras validar su código. Contacto completo de la cuenta resumido y editable; invitados e incompletos abiertos. Introducción y otras repeticiones aún no revalidadas frente al objetivo de tres líneas; evaluación humana pendiente."
+      "nextOrEvidence": "Reserva en 2 pasos con cotización, depósito y consentimiento en Horario. Prefill en mezcla, marketplace, pruebas y correo de Live Sessions tras validar su código. Contacto completo de la cuenta resumido y editable; invitados e incompletos abiertos. Introducción saludable: instrucción y control de detalles en hasta tres líneas de texto en siete configuraciones. Horario/zona/moneda disponibles por teclado; avisos y estimados visibles. El resto de repeticiones y la evaluación humana siguen pendientes. Carrito de mercancía precarga nombre/correo de la cuenta montada y conserva ediciones y borrados explícitos. Selector de servicio: nombres completos con salto de línea, tarifa aparte en opciones y traducciones de presentación de unidades del catálogo; conserva identificadores y cálculo existente."
     },
     {
       "id": 23,
@@ -346,14 +401,14 @@
     {
       "id": 24,
       "item": "Estudio y fusiones de menú",
-      "status": "Decisión de permisos pendiente",
-      "nextOrEvidence": "No cambiar roles ni fusionar destinos D11–D14/D17 sin revisar pérdida y afectados."
+      "status": "Menú por rol en #757; permisos e integración pendientes",
+      "nextOrEvidence": "D11–D14/D17 aplicadas por recomendación aprobada en #757, solo en menús y por tipo de usuario. Esta continuación no altera acceso, fusiona páginas ni modifica esa rama; permisos y pérdidas de funciones requieren su revisión correspondiente."
     },
     {
       "id": 25,
       "item": "Herramientas del equipo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Servicios, eventos, comercio, música y ahora cursos aceptan moneda exacta según sus contratos; filtros monetarios de operaciones corregidos. Cursos conservan precio y campos descriptivos del borrador, y ediciones posteriores a una publicación pendiente. Estados de mercancía traducidos. Otros componentes/etiquetas y evaluación humana pendientes. Configuración de renta: cuatro importes en USD, conversión exacta y rango de 32 bits según el endpoint existente; reintento conserva valores. Pagos manuales y tarifa de reportes usan centavos exactos. PDF/plantilla bloqueados si tarifa o total no conserva centavos; corte y bloques nuevos usan día local. Stock/peso conservan texto completo, cero explícito, límites y versión autorizada del servidor; rechazo no borra la edición."
+      "nextOrEvidence": "Servicios, eventos, comercio, música y ahora cursos aceptan moneda exacta según sus contratos; filtros monetarios de operaciones corregidos. Cursos conservan precio y campos descriptivos del borrador, y ediciones posteriores a una publicación pendiente. Estados de mercancía traducidos. Otros componentes/etiquetas y evaluación humana pendientes. Configuración de renta: cuatro importes en USD, conversión exacta y rango de 32 bits según el endpoint existente; reintento conserva valores. Pagos manuales y tarifa de reportes usan centavos exactos. PDF/plantilla bloqueados si tarifa o total no conserva centavos; corte y bloques nuevos usan día local. Stock/peso conservan texto completo, cero explícito, límites y versión autorizada del servidor; rechazo no borra la edición. El editor montado conserva borradores frente a refetch y conflicto; exige revisar valores nuevos antes de otro guardado, sin rebases ni reintentos de escritura automáticos."
     },
     {
       "id": 26,
@@ -403,29 +458,39 @@
       "D1"
     ],
     "pending": [
-      "D2",
-      "D3",
-      "D4",
-      "D5",
       "D6",
-      "D7",
-      "D8",
-      "D9",
-      "D10",
-      "D11",
-      "D12",
-      "D13",
-      "D14",
       "D15",
       "D16",
-      "D17",
-      "D18",
-      "D19"
+      "D18"
     ],
     "other": [
       "Redacción de tarifa al organizador y consentimiento",
       "Héroe de /inicio",
       "Restricción por rol de /estudio/*"
+    ],
+    "separateImplementation": {
+      "source": "memory/2026-11-16.md, sesión Claude c2ba77ed",
+      "webPR": 757,
+      "mobilePR": 188,
+      "scopedDecisions": [
+        "D2",
+        "D3",
+        "D5",
+        "D10",
+        "D11",
+        "D12",
+        "D13",
+        "D14",
+        "D17"
+      ],
+      "scope": "Recomendaciones aprobadas por Diego en sesión separada. No se modificaron esas ramas aquí; implementación no implica fusión ni despliegue."
+    },
+    "unreconciled": [
+      "D4",
+      "D7",
+      "D8",
+      "D9",
+      "D19"
     ]
   },
   "verification": {
@@ -435,9 +500,9 @@
       "scope": "Full web checkpoint before the final schedule-disclosure change; affected suites and browser paths rerun afterwards."
     },
     "latestFocusedJest": {
-      "suitesPassed": 4,
-      "testsPassed": 53,
-      "sourceCommit": "7aff2e236d3a73d3d00a22dc57a533dcc4efa0c2"
+      "suitesPassed": 2,
+      "testsPassed": 17,
+      "sourceCommit": "0158b83fc1aaabc3f7f24c324f0bf4d38ccdf372"
     },
     "browser": {
       "passed": 22,
@@ -451,9 +516,9 @@
       "latestBookingDisclosurePassed": 10
     },
     "governance": {
-      "sourceCommit": "7aff2e236d3a73d3d00a22dc57a533dcc4efa0c2",
+      "sourceCommit": "0158b83fc1aaabc3f7f24c324f0bf4d38ccdf372",
       "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-      "mappedChangedMaterialSurfaces": 119,
+      "mappedChangedMaterialSurfaces": 136,
       "inventory": "passed",
       "traceability": "passed",
       "semanticConformance": "not established by these checks"
@@ -470,6 +535,8 @@
       "cases": 28,
       "passed": 28,
       "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
       "configurations": [
         "Chromium desktop",
         "Chromium phone",
@@ -480,39 +547,42 @@
         "WebKit critical"
       ],
       "caseGroups": {
-        "sellerStockAndDraft_es": 7,
-        "sellerStockAndDraft_en": 7,
-        "categoryLabelsAndWire_es": 7,
-        "categoryLabelsAndWire_en": 7
+        "marketplaceReferenceRecovery": 7,
+        "marketplaceOrderIdentity": 7,
+        "existingPayPhoneAndTicketTransferErrors": 14
       },
       "checks": [
-        "Campos vacíos permanecen vacíos y bloquean envío; valores largos no se truncan a una cantidad distinta válida",
-        "Dos solicitudes de borrador simuladas, rechazo422 conserva texto/payload/clave de idempotencia; peso100000 y stock0 llegan como enteros",
-        "En el recorrido sintético, conflicto409 conserva cantidad editada y versión7; se recarga para leer versión8 antes del siguiente intento explícito",
-        "Filtros traducidos conservan GET category=bundle; categoría limitada conserva limited_edition al crear; producto y revisión muestran el mismo rótulo",
-        "WCAG/ARIA tras transiciones, helper asociado, viewport/hit testing normal y sin overflow"
+        "Associated error/helper/focus for invalid reference; all121 input characters retained without maxlength truncation",
+        "Pending reference and submit locked; direct form redispatch creates no second request",
+        "503 preserves raw draft; explicit retry sends identical trimmed reference and same private lookup header; no automatic retry",
+        "Accepted evidence remains unpaid and awaiting review, with no client payment confirmation",
+        "SPA order change starts a fresh draft; old response completion is awaited before checking new draft/order retention",
+        "Full UUID and reference form fit phone card; normal viewport/pointer and keyboard focus checks",
+        "All WCAG tags run after paint, opaque ancestors and finite animations; persistent MuiTouchRipple-childPulsate focus decoration stays active and is the only infinite-animation exception",
+        "Existing PayPhone and ticket reference/file validation browser regressions retained"
       ],
       "harness": {
         "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
         "port": 4189,
         "reuseExistingServer": false,
         "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
-        "identity": "Final owned preview PID55500 had the expected cwd; served /inicio index exactly matched this worktree build."
+        "identity": "Fresh build and strict owned preview required by adapter. Initial live preview64619 cwd and /inicio bytes verified against this worktree; final run rebuilt and owned its preview through the same strict adapter."
       },
-      "log": "/private/tmp/cogload-eleventh-browser-complete.log",
-      "limitations": "Todas las API están interceptadas. Cada recorrido de stock simula dos creaciones de borrador y dos actualizaciones de stock; rechazo y conflicto no cambian registros reales. Los recorridos de categorías no realizan escrituras. Sin publicación, compra, cobro, envío, cambio de inventario real o despliegue."
+      "log": "/private/tmp/cogload-seventeenth-browser-verified.log",
+      "limitations": "All API traffic synthetic; no real reference, order, payment or inbox changed. Browser configurations do not establish native-device/human comprehension acceptance."
     },
     "latestCompletedHostedCheckpoint": {
-      "commit": "d6b5d14ff01cadeee5ef05cb854b407efaf1f36f",
-      "ciRun": 43793114620,
+      "commit": "b847fcb6fcfde142455c1bb5ce1d566d3bd91be1",
+      "ciRun": 44215774402,
       "ciConclusion": "success",
       "webJest": {
-        "suites": 379,
-        "tests": 4370,
+        "suites": 383,
+        "tests": 4433,
         "result": "passed"
       },
+      "backend": "passed",
       "mainBrowser": {
-        "passed": 967,
+        "passed": 1065,
         "skipped": 22,
         "failed": 0
       },
@@ -526,8 +596,8 @@
         "deletion": 10,
         "discovery": 25
       },
-      "specialistWorkflows": "all four passed: catalog43793117652, event43793120934, social43793124235, interaction43793127171",
-      "scope": "Completed hosted results belong only to this prior head; new source requires new verification."
+      "specialistWorkflows": "all four passed: catalog44215778836,event44215783030,social44215787342,interaction44215791734",
+      "scope": "Verified completed workflows and actual completed job logs for this prior head only. Conditional payment-staging and native-Android jobs were skipped; this is not native-device verification."
     },
     "latestNativePlaybackRecheck": {
       "cases": 4,
@@ -547,6 +617,34 @@
         "fixture": "Real generated AAC/FLAC media over loopback; account/catalog/access synthetic."
       },
       "description": "La reverificación local de música nativa aprobó cuatro casos WebKit (dos recorridos repetidos dos veces) con el decodificador y reloj reales. No prueba que el fallo hosted esté resuelto. El primer intento usó el puerto4190 restringido por WebKit, no cargó la app y se detuvo; se excluye como evidencia de producto."
+    },
+    "latestHostedCheckpointSnapshot": {
+      "commit": "b847fcb6fcfde142455c1bb5ce1d566d3bd91be1",
+      "ciRun": 44215774402,
+      "ciConclusion": "success",
+      "webJest": {
+        "suites": 383,
+        "tests": 4433,
+        "result": "passed"
+      },
+      "backend": "passed",
+      "mainBrowser": {
+        "passed": 1065,
+        "skipped": 22,
+        "failed": 0
+      },
+      "nativeMusic": {
+        "passed": 74,
+        "failed": 0
+      },
+      "additionalBrowser": {
+        "storage": 8,
+        "torrent": 21,
+        "deletion": 10,
+        "discovery": 25
+      },
+      "specialistWorkflows": "all four passed: catalog44215778836,event44215783030,social44215787342,interaction44215791734",
+      "scope": "Verified completed workflows and actual completed job logs for this prior head only. Conditional payment-staging and native-Android jobs were skipped; this is not native-device verification."
     }
   },
   "limitations": [
@@ -557,7 +655,7 @@
     "No se creó ninguna compra, reserva, correo ni transacción en producción.",
     "No hay aprobación independiente, fusión ni despliegue en producción de esta continuación.",
     "CourseMetadata.price aún es un número en moneda. Si ya perdió la distinción entre centavos adyacentes, el editor bloquea la publicación hasta una corrección explícita; no se amplió el contrato backend para esa lectura.",
-    "La protección probada de stock cubre el rechazo mientras el snapshot del editor sigue igual. El editor existente se monta con una clave que incluye la versión; un refetch que traiga otra versión puede reiniciarlo. La conciliación de borradores editados frente a snapshots nuevos queda pendiente y no se declara resuelta aquí."
+    "La conservación de stock cubre el editor montado ante refetch, conflicto y respuestas pendientes. Cambiar de tienda/variante o sesión reinicia el borrador; no se añadió recuperación en disco ni persistencia tras recargar o abandonar la página."
   ],
   "screenshots": [
     {
@@ -635,6 +733,46 @@
     {
       "path": "figures/merch-category-label-phone.png",
       "scope": "Categoría Edición limitada en producto sintético; sin compra ni publicación."
+    },
+    {
+      "path": "figures/merch-stock-background-review-phone.png",
+      "scope": "Borrador sintético09/alerta vacía/inactiva conservado ante snapshot8 con valores15/4/activa. Acciones de revisión sin escritura real."
+    },
+    {
+      "path": "figures/merch-delivery-inline-errors-phone.png",
+      "scope": "Carrito sintético con correo inválido, foco y errores asociados de entrega; sin orden ni operación real."
+    },
+    {
+      "path": "figures/merch-order-report-error-phone.png",
+      "scope": "Reporte sintético demasiado largo, sin truncar y con error asociado; ninguna solicitud real."
+    },
+    {
+      "path": "figures/merch-order-cancel-confirmation-phone.png",
+      "scope": "Confirmación sintética nombra pedido y motivo; Conservar pedido no escribe ni libera stock."
+    },
+    {
+      "path": "figures/booking-introduction-collapsed-phone.png",
+      "scope": "Introducción saludable sintética: instrucción breve y resumen plegado, estimado visible."
+    },
+    {
+      "path": "figures/booking-introduction-expanded-phone.png",
+      "scope": "Detalles prácticos sintéticos abiertos por teclado; horario, zona y moneda conservados."
+    },
+    {
+      "path": "figures/booking-service-selected-phone.png",
+      "scope": "Selección sintética en teléfono: nombre completo dentro de la columna y tarifa por hora localizada, con contacto retenido."
+    },
+    {
+      "path": "figures/booking-service-options-phone.png",
+      "scope": "Menú sintético en teléfono: nombres completos, precio seleccionado con contraste, cero, unidad desconocida y servicio sin precio."
+    },
+    {
+      "path": "figures/marketplace-reference-errors-phone.png",
+      "scope": "Referencia sintética de 121 caracteres conservada, error asociado visible y control alcanzable en teléfono; ID completo ajustado."
+    },
+    {
+      "path": "figures/marketplace-reference-retry-phone.png",
+      "scope": "Rechazo sintético: referencia retenida para reintento explícito, con aviso de que la orden sigue impaga."
     }
   ],
   "followups": [
@@ -1483,7 +1621,638 @@
         "semanticConformance": "not established by these checks"
       },
       "hostedCI": "New published head requires its own full workflows."
+    },
+    {
+      "date": "2026-11-17",
+      "baseCommit": "c6fd0eb449a827c8dbaf57600e2426e496fee40d",
+      "scope": "Item25: conciliación del editor de stock montado ante refetch y conflicto; sin API, esquema, autoridad, permisos ni Mobile nuevos.",
+      "regressionVerification": {
+        "suites": 4,
+        "tests": 46,
+        "log": "/private/tmp/cogload-twelfth-unit-verified.log",
+        "checks": [
+          "Dirty raw drafts, invalid values and active state retained across newer snapshots",
+          "Review then separate CAS save; rejected writes refresh reads only",
+          "Pending saves disabled; acknowledged writes cannot roll back to old cache; clean newer snapshot wins",
+          "Store/variant identity resets; SessionQueryProvider principal isolation regressions"
+        ]
+      },
+      "browserVerification": {
+        "cases": 42,
+        "passed": 42,
+        "failed": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "stockBackgroundReview_es": 7,
+          "stockBackgroundReview_en": 7,
+          "sellerStockAndDraft_es": 7,
+          "sellerStockAndDraft_en": 7,
+          "categoryLabelsAndWire_es": 7,
+          "categoryLabelsAndWire_en": 7
+        },
+        "checks": [
+          "Real staleTime/focus refetch retains raw09, blank alert and inactive draft while showing newer current values",
+          "Keyboard keep action restores stock focus; invalid blank stays blocked and neither review choice writes",
+          "Explicit version8 PATCH409 retains edits, invalidates the read query and offers current version9 without automatic write retry",
+          "Use current values resets fields deliberately with no write; separate save sends version9; clean refresh follows version11",
+          "Existing whole-integer, category-code, idempotency, rejection/reload and admin/public regressions",
+          "Scoped WCAG/ARIA after animations, full viewport and hit testing of review action, keyboard focus and no overflow"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Final owned preview PID68679 cwd verified; served /inicio index matched this worktree dist/index.html."
+        },
+        "log": "/private/tmp/cogload-twelfth-browser-final.log",
+        "limitations": "Todas las API interceptadas. Cada recorrido nuevo hace dos PATCH sintéticos (409 y éxito). Sin inventario, producto, compra, cobro, publicación ni despliegue real."
+      },
+      "catalogCandidates": 1429,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "No new decisions. All1429 objects exactly match7aff2e2. Historical Apple projection excludes the separately pinned category review, preserving all older reviews. Canonical inventory/CSV refreshed.",
+      "fixtureCorrections": "First matrix24 passed/18 failed:12 old singular-alert assertions encountered both error and review warnings;6 hit tests sampled a nearest-scroll action behind the fixed radio. Product now consolidates to one review warning once newer values arrive; test scrolls to center and still requires full visibility and pointer hit. Final full matrix rerun retained all WCAG rules and assertion budgets.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "c6fd0eb449a827c8dbaf57600e2426e496fee40d",
+        "ciRun": 43975808931,
+        "ciConclusion": "success",
+        "webJest": {
+          "suites": 379,
+          "tests": 4382,
+          "result": "passed"
+        },
+        "mainBrowser": {
+          "passed": 995,
+          "skipped": 22,
+          "failed": 0
+        },
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "specialistWorkflows": {
+          "catalog": {
+            "run": 43975814905,
+            "conclusion": "failure",
+            "reason": "Historical Apple-view preservation test omitted the new category-label review; 1429 review objects remain unchanged. Test fixed this pass."
+          },
+          "event": {
+            "run": 43975819580,
+            "conclusion": "success"
+          },
+          "social": {
+            "run": 43975825101,
+            "conclusion": "cancelled"
+          },
+          "interaction": {
+            "run": 43975831062,
+            "conclusion": "success"
+          }
+        },
+        "scope": "Results belong only to the recorded prior head; main CI succeeded, all specialist workflows did not."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "55425b854b73b8cabd8caea5d9534c8675689a39",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 122,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "hostedCI": "New published documentation head requires its own full workflows.",
+      "limitations": "La conservación de stock cubre el editor montado ante refetch, conflicto y respuestas pendientes. Cambiar de tienda/variante o sesión reinicia el borrador; no se añadió recuperación en disco ni persistencia tras recargar o abandonar la página."
+    },
+    {
+      "date": "2026-11-17",
+      "baseCommit": "a9666a653f24b62d254491f217672aa7475dccf5",
+      "scope": "Items16/22: validación y continuidad de datos de entrega de mercancía. Sin API, esquema, autoridad de pago/stock, consentimiento, permisos ni Mobile nuevos.",
+      "regressionVerification": {
+        "suites": 3,
+        "tests": 27,
+        "log": "/private/tmp/cogload-thirteenth-unit-third.log",
+        "checks": [
+          "Required/optional recipient bounds, controls and Unicode retain raw text; invalid submit never calls checkout or analytics",
+          "First-invalid focus only on submit; account prefill remains editable without restoring cleared values",
+          "Capability, stock, zone, pending read/removal/checkout guards; exact trimmed request and stable key/token across rejection/retry",
+          "Private recovery and pending payment retained after success; existing session principal isolation regressions"
+        ]
+      },
+      "browserVerification": {
+        "cases": 56,
+        "passed": 56,
+        "failed": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "stockBackgroundReview_es": 7,
+          "stockBackgroundReview_en": 7,
+          "sellerStockAndDraft_es": 7,
+          "sellerStockAndDraft_en": 7,
+          "categoryLabelsAndWire_es": 7,
+          "categoryLabelsAndWire_en": 7,
+          "merchDelivery_es": 7,
+          "merchDelivery_en": 7
+        },
+        "checks": [
+          "Signed-in account contact prefill remains editable; invalid name/email and multiline optional notes retain text and show associated errors",
+          "Only deliberate submit focuses first invalid field; full WCAG rules after form animations, viewport/hit test and no horizontal overflow",
+          "Real background refetch changes stock/capability/shipping options; direct submit cannot bypass any unavailable state",
+          "Pending request locks recipient, delivery, reminder and removal; duplicate direct submit does not start a second checkout",
+          "503 rejection preserves draft; deliberate retry uses identical payload/idempotency key/private cart capability",
+          "Successful synthetic order stores private recovery and remains pending payment; reminder keeps createAccount:false",
+          "Previous42 stock/category/version/idempotency regression journeys"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Owned preview PID13813 cwd verified; served /inicio bytes matched this worktree dist/index.html."
+        },
+        "log": "/private/tmp/cogload-thirteenth-browser.log",
+        "limitations": "API interceptada. Dos POST sintéticos de checkout por recorrido nuevo (503 y orden pendiente). Sin reserva de stock, pago, compra, cuenta, correo, publicación ni despliegue real."
+      },
+      "catalogCandidates": 1429,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "No new/stale decision; all1429 decision objects unchanged. New source staged before scan; canonical JSON/CSV refreshed.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "a9666a653f24b62d254491f217672aa7475dccf5",
+        "ciRun": 44030176415,
+        "ciConclusion": "failure",
+        "attempt": 2,
+        "failedJobRerun": {
+          "attempt": 2,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        "initialFailure": "First attempt failed in backend-quality: music worker did not stop within30s; source backend/worker unchanged by this pass. Failed-job-only rerun requested; no timeout or check weakened.",
+        "webJest": {
+          "suites": 380,
+          "tests": 4390,
+          "result": "passed"
+        },
+        "mainBrowser": {
+          "passed": 1009,
+          "skipped": 22,
+          "failed": 0
+        },
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "specialistWorkflows": "all four passed: catalog44030180326, event44030184241, social44030188230, interaction44030192076",
+        "scope": "Only this recorded prior head. The first main-CI attempt failed; retry outcome recorded separately from successful web/specialist jobs."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "a1946ef07bc2179ca73d324f588a99a767860fca",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 125,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "hostedCI": "New published head requires its own full workflows.",
+      "fixtureCorrections": "Initial test mocks needed the real API client session exports; pending read fixture catches cancellation on cleanup. No production auth or timeout change."
+    },
+    {
+      "date": "2026-11-17",
+      "baseCommit": "73bbc4abb28f931f94cbed346d85836aaed8f75c",
+      "scope": "Items14/16: formularios y recuperación del pedido de mercancía; confirmación accesible. Sin API, esquema, autoridad, opciones, roles, consentimiento ni Mobile nuevos.",
+      "regressionVerification": {
+        "suites": 3,
+        "tests": 29,
+        "log": "/private/tmp/cogload-fourteenth-unit-final.log",
+        "checks": [
+          "Raw invalid/Unicode text, original bounds and associated errors; no direct invalid writes",
+          "Named confirmation/no-write dismissal, stale payment guard, pending duplicate/close guard and global success/error visibility",
+          "Report/cancellation rejection preserves payload/key; report rotates key only on success",
+          "Background read failure retains drafts, order switch isolates state and old response cannot clear a new draft",
+          "Legacy invitation dialog/default labels and session principal isolation regressions"
+        ]
+      },
+      "browserVerification": {
+        "cases": 42,
+        "passed": 42,
+        "failed": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "supportRequest_es": 7,
+          "supportRequest_en": 7,
+          "namedCancellation_es": 7,
+          "namedCancellation_en": 7,
+          "deliveryRegression_es": 7,
+          "deliveryRegression_en": 7
+        },
+        "checks": [
+          "Invalid/oversize report text retained with helper/focus; bounded textarea remains completely visible and reachable",
+          "Failed background read keeps drafts and stale warning; direct submit does not write until read retry succeeds",
+          "Support type refund stays request-only; pending message/type and competing buyer-link controls locked; identical payload/key/private token on503 retry",
+          "Named order/reason confirmation sends no write on review/dismissal; new paid snapshot blocks cancellation",
+          "409 preserves reason; deliberate new review/confirmation reuses the same request; pending dialog ignores Escape and duplicate submits",
+          "Accepted cancellation keeps visible feedback after form removal; server stays payment-authoritative",
+          "Full WCAG/ARIA after modal/form animations, keyboard keep-order action, normal pointer hit testing and no overflow",
+          "Previous14 ES/EN delivery validation/idempotency/private tracking journeys"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Final owned preview PID34611 cwd verified; served /inicio matched this worktree dist/index.html."
+        },
+        "log": "/private/tmp/cogload-fourteenth-browser-final.log",
+        "limitations": "Todas las API interceptadas. Dos POST sintéticos por recorrido de soporte/cancelación, sin pedido, pago, reembolso, liberación/reserva de stock, cuenta o publicación real. No prueba comprensión humana."
+      },
+      "catalogCandidates": 1429,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "All1429 decisions unchanged, no new/stale entries. Final code staged before canonical JSON/CSV scan; unchanged historical reviews preserved.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "73bbc4abb28f931f94cbed346d85836aaed8f75c",
+        "ciRun": 44144953942,
+        "ciConclusion": "success",
+        "webJest": {
+          "suites": 381,
+          "tests": 4409,
+          "result": "passed"
+        },
+        "mainBrowser": {
+          "passed": 1023,
+          "skipped": 22,
+          "failed": 0
+        },
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "specialistWorkflows": "all four passed: catalog44144961317,event44144967615,social44144974511,interaction44144980868",
+        "scope": "Only this recorded prior head. Backend passed the complete new-head run; the older a9666a653 timeout was not fixed by a source/timeout change in this continuation."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "68b66c902f21f0eba576605ec579ffe82b946389",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 129,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "fixtureCorrections": "First browser run was deliberately interrupted after exposing long-field viewport failures and white-on-red3.68:1 contrast. It was not accepted as a completed matrix. Product fixes bound field height without truncating text and use accessible theme contrast. Final full matrix rerun retains all accessibility rules/assertion budgets; modal animation scope includes ancestors. Unit fixtures wait for query notifications and modal dismissal before accessible-role assertions.",
+      "hostedCI": "New published head requires its own full workflows.",
+      "limitations": "Existing UI10-character report minimum is retained although the API requires only nonempty safe text. Same-payload retry verified; editing an uncertain/rejected request does not get a new idempotency policy. Mounted drafts, not disk/reload recovery."
+    },
+    {
+      "date": "2026-11-17",
+      "baseCommit": "7426a7bc1371e07af3110065cda97e86221b9bdc",
+      "scope": "Item22: introducción breve de reserva con detalles prácticos accesibles. Endurecimiento del muestreo WCAG del diálogo de pedidos; sin API, autoridad, permisos, roles, consentimiento ni Mobile nuevos.",
+      "regressionVerification": {
+        "suites": 3,
+        "tests": 32,
+        "log": "/private/tmp/cogload-fifteenth-unit.log",
+        "checks": [
+          "PublicBookingPage: catalog recovery, drafts, quote/deposit/consent/idempotency, service scope and physical timezone regressions",
+          "Existing date-only and booking-status label regressions"
+        ]
+      },
+      "browserVerification": {
+        "cases": 70,
+        "passed": 70,
+        "failed": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "briefIntroduction": 7,
+          "catalogRecoveryAndViewport": 21,
+          "physicalQuitoTimezones": 14,
+          "orderSupportAndCancellation_es_en": 28
+        },
+        "checks": [
+          "Healthy introductory prose plus summary label <=3 visible lines in all7 viewports; title/account card/safety notices excluded from that count",
+          "Native disclosure opens/closes with Enter, retains focus and contact edits, displays Quito hours/currency and never writes",
+          "Price estimate stays visible while details collapsed; schedule guidance and existing create/quote/consent/idempotency flow retained",
+          "Error/empty catalog recovery preserves drafts; zero-tolerance root overflow/tooltip/keyboard regressions retained",
+          "UTC/Madrid DST visitors preserve the same physical Quito opening/closing times and refused UTC payloads",
+          "Order dialog sampled only after paint, opaque ancestors and animation completion; injected600ms fade exercises the readiness guard",
+          "All WCAG/ARIA rules, normal viewport/pointer checks and assertion budgets retained"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Owned preview PID47163 cwd verified; /inicio bytes matched this worktree dist/index.html."
+        },
+        "log": "/private/tmp/cogload-fifteenth-browser.log",
+        "limitations": "Todas las API interceptadas; reservas/órdenes/reportes/cancelaciones sintéticas. No operación real, publicación ni despliegue. El conteo de líneas no abarca título, tarjeta de cuenta, estimado ni avisos de seguridad, ni prueba otros zooms/fuentes o comprensión humana."
+      },
+      "catalogCandidates": 1429,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "No new/stale decisions; all1429 reviewed objects retained. Source staged before strict canonical JSON/CSV scan.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "7426a7bc1371e07af3110065cda97e86221b9bdc",
+        "ciRun": 44191951325,
+        "ciConclusion": "failure",
+        "webJest": {
+          "suites": 382,
+          "tests": 4431,
+          "result": "passed"
+        },
+        "mainBrowser": {
+          "passed": 1050,
+          "skipped": 22,
+          "failed": 1
+        },
+        "mainBrowserFailure": "One WebKit desktop EN cancellation axe sample reported near-black blended text on four nodes (1.01–1.02:1); the failure screenshot shows the fully visible dialog. Consistent with sampling a fade before opacity settled. The old getAnimations-only guard was insufficient; test now samples after paint, requires opaque ancestors and no running animations, and exercises a600ms synthetic fade. No WCAG rule or assertion budget removed.",
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": "skipped after main browser failure",
+          "deletion": "skipped after main browser failure",
+          "discovery": "skipped after main browser failure"
+        },
+        "specialistWorkflows": "all four passed: catalog44191956312,event44191962592,social44191968597,interaction44191974911",
+        "scope": "Only the recorded prior head. Main CI did not pass; backend and all listed successful jobs did."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "02e4d070ab61f643dfa2450124f8356b535e1221",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 130,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "hostedCI": "New published head requires its own full workflows.",
+      "limitations": "No structural/owner decision, navigation or payment-state change. Intro target applies to healthy prose/summary only. Further service-picker localization and containment review remains open."
+    },
+    {
+      "date": "2026-11-17",
+      "baseCommit": "9343be19f661c145b4c25dd44c6e186ff2e77162",
+      "scope": "Item22: service-picker name/price containment, selected-option contrast and Spanish display units. Reconciled separate authorized ticket-email item17 implementation #769 without changing that branch or integrating it.",
+      "regressionVerification": {
+        "suites": 4,
+        "tests": 34,
+        "log": "/private/tmp/cogload-sixteenth-unit-verified.log",
+        "checks": [
+          "PublicBookingPage catalog, service/quote race, authoritative deposit, consent, idempotency, contact drafts and physical timezone regressions",
+          "Billing-unit display/raw-catalog separation, unknown/missing units, date-only and status labels"
+        ]
+      },
+      "browserVerification": {
+        "cases": 49,
+        "passed": 49,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "servicePicker": 7,
+          "briefIntroduction": 7,
+          "catalogRecoveryAndViewport": 21,
+          "physicalQuitoTimezones": 14
+        },
+        "checks": [
+          "Full multiword and unbroken service names measured against actual select/field/card text rectangles, not only root overflow",
+          "Every menu option keeps its full name, catalog order and raw ID; names wrap, rates remain separate, selected rate passes full WCAG contrast",
+          "All option bounds inside viewport and normal pointer hit tests; keyboard Enter/ArrowDown/Escape returns focus and selects the same catalog ID",
+          "Known unit display translation, unchanged hourly reference calculation, zero versus absent rate and unknown unit text",
+          "Contact edits survive selection; selected ID reaches synthetic availability reads without a booking write",
+          "Existing healthy introduction, error/empty catalog recovery, exact overflow negative control and UTC/Madrid physical Quito timezone journeys",
+          "All WCAG/ARIA tags retained; no forced click, disabled accessibility rule or increased assertion budget"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Owned preview PID62589 cwd verified; /inicio bytes matched this worktree dist/index.html."
+        },
+        "log": "/private/tmp/cogload-sixteenth-browser.log",
+        "limitations": "All APIs intercepted and all bookings synthetic/refused. Browser configurations do not establish native-device or human comprehension acceptance."
+      },
+      "catalogCandidates": 1429,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "Manually reviewed display-only hour/episode/song/package labels against ServiceCatalogDTO.scBillingUnit and tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql. Unknown text passes through; no selectable service, unit authority or price rule added. Scanner adds no candidate; all1429 complete decision objects remain unchanged, verified by preservation tests. Canonical JSON/CSV refreshed.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "9343be19f661c145b4c25dd44c6e186ff2e77162",
+        "ciRun": 44210874742,
+        "ciConclusion": "in_progress at documentation preparation",
+        "webJest": {
+          "suites": 382,
+          "tests": 4431,
+          "result": "passed"
+        },
+        "backend": "passed",
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "mainBrowser": "persona-web-e2e still running; no final counts or overall pass established",
+        "specialistWorkflows": "all four passed: catalog44210878915,event44210882981,social44210887632,interaction44210891321",
+        "scope": "Read-only snapshot before publishing this pass. Counts belong only to the recorded prior head. A newer dispatch on the same ref may cancel its unfinished workflow."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "de6336230e60a992083bb7e7e1d666033f20c1e5",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 133,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "separateImplementation": {
+        "pullRequest": 769,
+        "head": "87bb5ff8a9f19c12b062932b95ffa7cac0fe9635",
+        "state": "OPEN DRAFT",
+        "authorization": "Owner Do it in Claude session41891438; read-only context reconciliation",
+        "limits": "Not integrated or deployed; ticket-order link has no per-order expiration/revocation and old receipts are not resent. No real inbox/order verification in this continuation."
+      },
+      "hostedCI": "New published head requires its own full workflows; prior in-progress run is not a pass.",
+      "limitations": "Existing rate estimation policy and backend quote authority retained; this is presentation/local layout. No navigation/role/removal decision, new business option, real reservation, email, merge or deployment. Other forms, integrations, owner decisions, native-device and human comprehension acceptance remain open."
+    },
+    {
+      "date": "2026-11-18",
+      "baseCommit": "b847fcb6fcfde142455c1bb5ce1d566d3bd91be1",
+      "scope": "Item16/22: marketplace transfer-reference inline errors, pending locks, explicit retry and order identity isolation; full order ID containment. Reconciled separate mobile19/20 implementation without integrating or changing its branch.",
+      "regressionVerification": {
+        "suites": 2,
+        "tests": 17,
+        "log": "/private/tmp/cogload-seventeenth-unit-final.log",
+        "checks": [
+          "Inline bounds/control validation, Unicode120-character request and raw overlong retention",
+          "Immediate duplicate guard, immutable pending reference, rejected draft and identical explicit retry",
+          "Missing access, mismatched response, old pending response/read after route change, paid order has no evidence form",
+          "Existing marketplace request list and private-token/API contracts"
+        ]
+      },
+      "browserVerification": {
+        "cases": 28,
+        "passed": 28,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "marketplaceReferenceRecovery": 7,
+          "marketplaceOrderIdentity": 7,
+          "existingPayPhoneAndTicketTransferErrors": 14
+        },
+        "checks": [
+          "Associated error/helper/focus for invalid reference; all121 input characters retained without maxlength truncation",
+          "Pending reference and submit locked; direct form redispatch creates no second request",
+          "503 preserves raw draft; explicit retry sends identical trimmed reference and same private lookup header; no automatic retry",
+          "Accepted evidence remains unpaid and awaiting review, with no client payment confirmation",
+          "SPA order change starts a fresh draft; old response completion is awaited before checking new draft/order retention",
+          "Full UUID and reference form fit phone card; normal viewport/pointer and keyboard focus checks",
+          "All WCAG tags run after paint, opaque ancestors and finite animations; persistent MuiTouchRipple-childPulsate focus decoration stays active and is the only infinite-animation exception",
+          "Existing PayPhone and ticket reference/file validation browser regressions retained"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Fresh build and strict owned preview required by adapter. Initial live preview64619 cwd and /inicio bytes verified against this worktree; final run rebuilt and owned its preview through the same strict adapter."
+        },
+        "log": "/private/tmp/cogload-seventeenth-browser-verified.log",
+        "limitations": "All API traffic synthetic; no real reference, order, payment or inbox changed. Browser configurations do not establish native-device/human comprehension acceptance."
+      },
+      "catalogCandidates": 1429,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "No new business choice/status/list or decision. Existing request/status catalogs and every complete decision object preserved; canonical JSON/CSV refreshed. Reference bounds/control categories checked against Server.hs validatePublicBookingManualReference and submitMarketplaceManualEvidence; wire contract unchanged.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "b847fcb6fcfde142455c1bb5ce1d566d3bd91be1",
+        "ciRun": 44215774402,
+        "ciConclusion": "success",
+        "webJest": {
+          "suites": 383,
+          "tests": 4433,
+          "result": "passed"
+        },
+        "backend": "passed",
+        "mainBrowser": {
+          "passed": 1065,
+          "skipped": 22,
+          "failed": 0
+        },
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "specialistWorkflows": "all four passed: catalog44215778836,event44215783030,social44215787342,interaction44215791734",
+        "scope": "Verified completed workflows and actual completed job logs for this prior head only. Conditional payment-staging and native-Android jobs were skipped; this is not native-device verification."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "0158b83fc1aaabc3f7f24c324f0bf4d38ccdf372",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 136,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "separateImplementation": {
+        "pullRequest": "TDF-mobile#188",
+        "head": "99f630fb1ca1a84038adc74686d4417212884205",
+        "state": "OPEN DRAFT",
+        "scope": "Signed-in Eventos tab, Crear action within Explorar, and guest directory start from Nov17 section of PR. Guest Eventos tab remains limited by shared social.events access registry. D10 signup separately implemented following earlier approval.",
+        "limits": "Read-only source/PR context reconciliation, no new owner approval inferred for D7/D8. Not integrated or run on a native device here. Other root drafts#757/#758/#735/#769 read-only reverified unchanged."
+      },
+      "hostedCI": "New published head requires its own full workflows; prior green results apply only to b847fcb6.",
+      "limitations": "Retention covers the mounted order and failed send. Another order, reload or leaving the page resets the draft; no new storage or automatic retry. Endpoint, private access, payment/stock authority, request types and fulfillment policy unchanged. No merge/deployment, real payment/order/email or native-device acceptance."
     }
   ],
-  "lastUpdated": "2026-11-16"
+  "lastUpdated": "2026-11-18"
 }

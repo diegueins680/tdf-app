@@ -1,3 +1,4 @@
+import VariantStockEditor from '../components/merch/VariantStockEditor';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, Box, Button, Checkbox, Chip, CircularProgress, FormControlLabel, MenuItem, Paper, Stack, Tab, Tabs, TextField, Typography } from '@mui/material';
@@ -5,7 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DownloadIcon from '@mui/icons-material/Download';
 import { useTranslation } from 'react-i18next';
 import { Directory } from '../api/directory';
-import { Merch, createMerchIdempotencyKey, type MerchPermissions, type MerchProduct, type MerchProductRequest } from '../api/merch';
+import { Merch, createMerchIdempotencyKey, type MerchPermissions, type MerchProductRequest } from '../api/merch';
 import { PartySelector } from '../components/party-selector/PartySelector';
 import type { PartySelectorOption } from '../api/partySelector';
 import { buildMerchOrdersCsv, formatMerchMoney, merchLanguage, merchStatusLabel, merchCategoryLabel, readMerchIntegerInput, readMerchMoneyInput, type MerchOrderExportRow } from '../utils/merch';
@@ -37,31 +38,6 @@ function ProductImageUpload({ storeId, productId, onUploaded, language }: { stor
     <TextField size="small" label={language === 'en' ? 'Image description' : 'Descripción de la imagen'} value={altText} onChange={(event) => setAltText(event.target.value)} inputProps={{ maxLength: 500 }} />
     <Button type="submit" size="small" disabled={!file || !altText.trim() || upload.isPending}>{language === 'en' ? 'Upload safely' : 'Subir de forma segura'}</Button>
     {upload.isError && <Alert severity="error">{language === 'en' ? 'The image was rejected or could not be processed.' : 'La imagen fue rechazada o no pudo procesarse.'}</Alert>}
-  </Stack>;
-}
-
-type ManagedVariant = NonNullable<MerchProduct['variants']>[number];
-
-function VariantStockEditor({ storeId, variant, onSaved, language }: { storeId: string; variant: ManagedVariant; onSaved: () => void; language: 'es' | 'en' }) {
-  const [stockOnHand, setStockOnHand] = useState(String(variant.stockOnHand ?? 0));
-  const [reorderThreshold, setReorderThreshold] = useState(String(variant.reorderThreshold ?? 0));
-  const [active, setActive] = useState(variant.active);
-  const stock = readMerchIntegerInput(stockOnHand, language);
-  const threshold = readMerchIntegerInput(reorderThreshold, language);
-  const update = useMutation({
-    mutationFn: () => {
-      if (stock.value === null || threshold.value === null) throw new Error(stock.error ?? threshold.error ?? 'Invalid stock');
-      return Merch.updateVariantStock(storeId, variant.id, { stockOnHand: stock.value, reorderThreshold: threshold.value, active, version: variant.version });
-    },
-    onSuccess: onSaved,
-  });
-  return <Stack component="form" direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }} onSubmit={(event) => { event.preventDefault(); if (stock.value !== null && threshold.value !== null) update.mutate(); }}>
-    <Box flex={1}><Typography fontWeight={700}>{variant.name}</Typography><Typography variant="caption">{variant.sku} · {language === 'en' ? 'reserved' : 'reservado'} {variant.stockReserved ?? 0} · {language === 'en' ? 'sold' : 'vendido'} {variant.stockSold ?? 0}</Typography></Box>
-    <TextField required size="small" inputProps={{ inputMode: 'numeric' }} label={language === 'en' ? 'On hand' : 'Existencia'} value={stockOnHand} onChange={(event) => setStockOnHand(event.target.value)} error={Boolean(stock.error)} helperText={stock.error ?? (language === 'en' ? 'Whole units; enter 0 for none.' : 'Unidades enteras; usa 0 si no hay existencias.')} disabled={update.isPending} />
-    <TextField required size="small" inputProps={{ inputMode: 'numeric' }} label={language === 'en' ? 'Low-stock alert' : 'Alerta de stock'} value={reorderThreshold} onChange={(event) => setReorderThreshold(event.target.value)} error={Boolean(threshold.error)} helperText={threshold.error ?? (language === 'en' ? 'Whole units; enter 0 for no alert.' : 'Unidades enteras; usa 0 para no alertar.')} disabled={update.isPending} />
-    <FormControlLabel control={<Checkbox checked={active} disabled={update.isPending} onChange={(event) => setActive(event.target.checked)} />} label={language === 'en' ? 'Active' : 'Activa'} />
-    <Button type="submit" disabled={update.isPending || stock.value === null || threshold.value === null}>{language === 'en' ? 'Update stock' : 'Actualizar stock'}</Button>
-    {update.isError && <Alert severity="error">{language === 'en' ? 'Stock changed elsewhere or is below reserved/sold units. Reload and retry.' : 'El stock cambió en otro lugar o es menor que las unidades reservadas/vendidas. Recarga e intenta otra vez.'}</Alert>}
   </Stack>;
 }
 
@@ -234,7 +210,7 @@ export default function MerchSellerPage() {
         </Stack>}
 
         {tab === 'settings' && <Stack spacing={3}><Paper component="form" variant="outlined" sx={{ p: 3, borderRadius: 3 }} onSubmit={(event) => { event.preventDefault(); policyMutation.mutate(); }}><Stack spacing={2}><Typography component="h2" variant="h5" fontWeight={800}>{language === 'en' ? 'Versioned policies' : 'Políticas versionadas'}</Typography><Alert severity="info">{language === 'en' ? 'Changes apply only to future orders; existing order snapshots never change.' : 'Los cambios aplican solo a pedidos futuros; los snapshots existentes nunca cambian.'}</Alert><TextField required multiline minRows={3} inputProps={{ minLength: 20 }} label={language === 'en' ? 'Shipping policy' : 'Política de envío'} value={policy.shippingPolicy} onChange={(event) => setPolicy({ ...policy, shippingPolicy: event.target.value })} /><TextField required multiline minRows={3} inputProps={{ minLength: 20 }} label={language === 'en' ? 'Return policy' : 'Política de devoluciones'} value={policy.returnPolicy} onChange={(event) => setPolicy({ ...policy, returnPolicy: event.target.value })} /><TextField type="email" label={language === 'en' ? 'Support email (optional)' : 'Email de soporte (opcional)'} value={policy.supportEmail} onChange={(event) => setPolicy({ ...policy, supportEmail: event.target.value })} />{policyMutation.isSuccess && <Alert severity="success">{language === 'en' ? 'Policy version saved for future orders.' : 'Versión de políticas guardada para pedidos futuros.'}</Alert>}<Button type="submit" variant="contained" disabled={!selectedStore.permissions?.settings || policyMutation.isPending}>{language === 'en' ? 'Save new version' : 'Guardar nueva versión'}</Button></Stack></Paper><Paper component="form" variant="outlined" sx={{ p: 3, borderRadius: 3 }} onSubmit={(event) => { event.preventDefault(); zoneMutation.mutate(); }}><Stack spacing={2}><Typography component="h2" variant="h5" fontWeight={800}>{language === 'en' ? 'Delivery zone' : 'Zona de entrega'}</Typography><TextField required label={language === 'en' ? 'Name' : 'Nombre'} value={zone.name} onChange={(event) => setZone({ ...zone, name: event.target.value })} /><TextField select label={language === 'en' ? 'Method' : 'Método'} value={zone.deliveryMethod} onChange={(event) => setZone({ ...zone, deliveryMethod: event.target.value as typeof zone.deliveryMethod })}><MenuItem value="national_shipping">{language === 'en' ? 'National shipping' : 'Envío nacional'}</MenuItem><MenuItem value="coordinated_pickup">{language === 'en' ? 'Coordinated pickup' : 'Retiro coordinado'}</MenuItem></TextField><TextField required inputProps={{ inputMode: 'decimal', maxLength: 32 }} label={language === 'en' ? 'Rate (USD)' : 'Tarifa (USD)'} error={Boolean(zoneRate.error)} helperText={zoneRate.error ?? (language === 'en' ? 'Up to two decimals; 0 means free delivery.' : 'Hasta dos decimales; 0 indica entrega gratis.')} value={zone.rate} onChange={(event) => setZone({ ...zone, rate: event.target.value })} />{zoneMutation.isSuccess && <Alert severity="success">{language === 'en' ? 'Delivery zone saved.' : 'Zona de entrega guardada.'}</Alert>}<Button type="submit" variant="contained" disabled={!selectedStore.permissions?.settings || zoneMutation.isPending || Boolean(zoneRate.error)}>{language === 'en' ? 'Add delivery zone' : 'Agregar zona'}</Button></Stack></Paper></Stack>}
-        {tab === 'catalog' && selectedStore.permissions?.stock && <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}><Typography component="h2" variant="h5" fontWeight={800} mb={2}>{language === 'en' ? 'Stock control' : 'Control de stock'}</Typography><Stack spacing={2}>{products.data?.flatMap((item) => (item.variants ?? []).map((variant) => <VariantStockEditor key={`${variant.id}:${variant.version}`} storeId={selectedStore.id} variant={variant} language={language} onSaved={() => void client.invalidateQueries({ queryKey: ['merch-seller-products', selectedStore.id] })} />))}{products.data?.every((item) => (item.variants?.length ?? 0) === 0) && <Typography color="text.secondary">{language === 'en' ? 'No variants to manage.' : 'No hay variantes para gestionar.'}</Typography>}</Stack></Paper>}
+        {tab === 'catalog' && selectedStore.permissions?.stock && <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}><Typography component="h2" variant="h5" fontWeight={800} mb={2}>{language === 'en' ? 'Stock control' : 'Control de stock'}</Typography><Stack spacing={2}>{products.data?.flatMap((item) => (item.variants ?? []).map((variant) => <VariantStockEditor key={`${selectedStore.id}:${variant.id}`} storeId={selectedStore.id} variant={variant} language={language} onRefresh={() => void client.invalidateQueries({ queryKey: ['merch-seller-products', selectedStore.id] })} />))}{products.data?.every((item) => (item.variants?.length ?? 0) === 0) && <Typography color="text.secondary">{language === 'en' ? 'No variants to manage.' : 'No hay variantes para gestionar.'}</Typography>}</Stack></Paper>}
       </Stack>
     </Box>
   );

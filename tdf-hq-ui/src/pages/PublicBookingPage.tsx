@@ -52,6 +52,7 @@ import { Engineers, type PublicEngineer } from '../api/engineers';
 import { Services } from '../api/services';
 import { STUDIO_MAP_URL, STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
+import { bookingBillingUnitLabel } from '../utils/bookingBillingUnitLabel';
 import { env } from '../utils/env';
 import { useSession } from '../session/SessionContext';
 import { resolveRuntimeCurrency } from '../utils/formatters';
@@ -821,7 +822,8 @@ export default function PublicBookingPage() {
     services.forEach((svc) => {
       if (svc.priceCents == null) return;
       const display = `${svc.currency} ${(svc.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-      const unit = svc.billingUnit ? ` / ${svc.billingUnit}` : '';
+      const label = bookingBillingUnitLabel(svc.billingUnit);
+      const unit = label ? ` / ${label}` : '';
       map.set(svc.id, `${display}${unit}`);
     });
     return map;
@@ -838,7 +840,8 @@ export default function PublicBookingPage() {
       const total = (svc.priceCents / 100) * hours;
       return `${svc.currency} ${total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} aprox (${hours.toFixed(1)}h)`;
     }
-    return `${base}${svc.billingUnit ? ` / ${svc.billingUnit}` : ''}`;
+    const label = bookingBillingUnitLabel(svc.billingUnit);
+    return `${base}${label ? ` / ${label}` : ''}`;
   }, [authoritativeQuote, form.durationMinutes, form.serviceOfferingId, services]);
   const selectedPrice = servicePriceLookup.get(form.serviceOfferingId);
 
@@ -1713,10 +1716,20 @@ export default function PublicBookingPage() {
   }
 
   const serviceField = (
-    <Grid item xs={12}>
+    <Grid item xs={12} sx={{ minWidth: 0 }} data-testid="booking-service-field">
       <TextField
         label="Servicio"
         select
+        SelectProps={{
+          renderValue: (value) => services.find((service) => service.id === value)?.name ?? '',
+          MenuProps: { PaperProps: { sx: { maxWidth: 'calc(100vw - 32px)' } } },
+        }}
+        sx={{
+          minWidth: 0,
+          '& .MuiInputBase-root': { minWidth: 0 },
+          '& .MuiSelect-select.MuiSelect-select': { whiteSpace: 'normal', overflowWrap: 'anywhere', height: 'auto' },
+          '& .MuiFormHelperText-root': { overflowWrap: 'anywhere' },
+        }}
         value={form.serviceOfferingId}
         onChange={(e) => {
           const nextService = services.find((service) => service.id === e.target.value);
@@ -1740,10 +1753,10 @@ export default function PublicBookingPage() {
         }
       >
         {services.map((svc) => (
-          <MenuItem key={svc.id} value={svc.id}>
-            <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
+          <MenuItem key={svc.id} value={svc.id} sx={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
+            <Stack spacing={0.25} sx={{ width: '100%', minWidth: 0 }}>
               <Typography>{svc.name}</Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.primary">
                 {servicePriceLookup.get(svc.id)}
               </Typography>
             </Stack>
@@ -1767,7 +1780,7 @@ export default function PublicBookingPage() {
         }}
       >
         <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-          <Stack spacing={2.5}>
+          <Stack spacing={2.5} useFlexGap>
             <Stack spacing={0.6}>
               <Typography variant="overline" color="text.secondary">
                 {pageEyebrow}
@@ -1778,19 +1791,28 @@ export default function PublicBookingPage() {
                 </Typography>
                 {bookingStatusChip}
               </Stack>
-              <Typography variant="body1" color="text.secondary">
-                {pageDescription}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Horario del estudio: <strong>08:00–22:00, Quito ({studioZoneLabel})</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {authoritativeQuote ? (
-                  <>Precio y depósito calculados por el servidor en <strong>{authoritativeQuote.currency}</strong>.</>
-                ) : (
-                  <>Precios de referencia en <strong>{studioCurrency}</strong>; confirmamos el total contigo antes de agendar.</>
-                )}
-              </Typography>
+              <Box data-testid="booking-introduction">
+                <Typography data-testid="booking-introduction-copy" variant="body1" color="text.secondary">
+                  {pageDescription}
+                </Typography>
+                <Box component="details" data-testid="booking-practical-details" sx={{ mt: 1 }}>
+                  <Typography component="summary" variant="body2" color="text.secondary" sx={{ cursor: 'pointer', py: 1.25, minHeight: 44, boxSizing: 'border-box' }}>
+                    Horario y precios
+                  </Typography>
+                  <Stack spacing={1} sx={{ pt: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Horario del estudio: <strong>08:00–22:00, Quito ({studioZoneLabel})</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {authoritativeQuote ? (
+                        <>Revisa el precio y el depósito antes de confirmar, en <strong>{authoritativeQuote.currency}</strong>.</>
+                      ) : (
+                        <>Precios de referencia en <strong>{studioCurrency}</strong>; confirmamos el total contigo antes de agendar.</>
+                      )}
+                    </Typography>
+                  </Stack>
+                </Box>
+              </Box>
               {priceBanner && (
                 <Alert severity="info" variant="outlined">
                   {priceBanner}
@@ -1854,7 +1876,7 @@ export default function PublicBookingPage() {
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <form onSubmit={handleFormSubmit}>
-                  <Stack spacing={2.5}>
+                  <Stack spacing={2.5} useFlexGap>
                     {isMobile ? (
                       <Stack spacing={1}>
                         <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1} useFlexGap flexWrap="wrap">
