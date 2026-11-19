@@ -68,7 +68,7 @@ jobs:
           python scripts/test-public-routes.py
           python scripts/check-state-machines.py --static
           python scripts/test-state-machines.py --static
-          node --test scripts/__tests__/verification-evidence.test.mjs scripts/__tests__/legacy-escrow-contract.test.mjs
+          node --test scripts/__tests__/verification-evidence.test.mjs scripts/__tests__/delivery-matrix.test.mjs scripts/__tests__/legacy-escrow-contract.test.mjs
       - name: Verify actual payment arithmetic and negative controls
         timeout-minutes: 5
         run: |

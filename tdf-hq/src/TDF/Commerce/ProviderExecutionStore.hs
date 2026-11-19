@@ -12,6 +12,7 @@ module TDF.Commerce.ProviderExecutionStore
   , ProviderOperationPreparation(..)
   , ProviderOperationClaim(..)
   , loadAuthorizedCheckout
+  , lockCheckoutSplit
   , loadReadyMerchantAccount
   , loadAttemptProviderReference
   , prepareProviderOperation
@@ -35,6 +36,7 @@ module TDF.Commerce.ProviderExecutionStore
   , lockLiveProviderQuery
   , queryRecoveryReady
   , finishProviderQuery
+  , providerQueryRetryDelaySeconds
   , providerQueryOperationTerminal
   ) where
 
@@ -58,7 +60,8 @@ import           Database.Persist.Sql
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.Commerce.ProviderAdapter
-  ( AdapterOperation(..), AdapterResult(..), AdapterResultState(..) )
+  ( AdapterOperation(..), AdapterResult(..), AdapterResultState(..), SplitTransfer(..) )
+import           TDF.Commerce.ProviderAdapter.PayPhone (payPhoneButtonReferencePrefix)
 import           TDF.Commerce.ProviderCapabilities
   ( PaymentMethod, paymentMethodText, ProviderOutcomeCertainty(..) )
 
@@ -75,6 +78,60 @@ data CheckoutExecution = CheckoutExecution
   , ceTotalMinor     :: Int64
   , ceCustomerEmail  :: Text
   } deriving (Eq, Show)
+
+-- | ADR 0136: the split recipients of a checkout, read under a row lock so
+-- the caller can check them again inside the transaction that records the
+-- payment attempt. Only marketplace agreement charges are split; every other
+-- domain keeps its charge whole. An agreement charge is payable only while it
+-- is pending, through the payment provider it was frozen for, for the exact
+-- amount and currency of its checkout. Its service-provider part goes to the
+-- recipient frozen on the charge; a part of zero needs no recipient.
+lockCheckoutSplit
+  :: CheckoutExecution -> Checkout.PaymentProvider
+  -> SqlPersistT IO (Either Text [SplitTransfer])
+lockCheckoutSplit checkout provider
+  | ceDomainType checkout /= "marketplace_agreement" = pure (Right [])
+  | otherwise = do
+      -- Lock order of the marketplace (ADR 0136): agreement, then charge. The
+      -- agreement paths that cancel, expire or replace a charge take the same
+      -- order and check for a live attempt under the agreement lock, so they
+      -- either see the attempt this transaction records or wait for it.
+      agreement <- rawSql
+        "SELECT agreement.status,payment.kind FROM marketplace_agreement agreement\
+        \ JOIN marketplace_agreement_payment payment ON payment.agreement_id=agreement.id\
+        \ WHERE payment.checkout_id=?::uuid AND payment.id::text=? FOR UPDATE OF agreement"
+        [ PersistText (Checkout.checkoutReferenceId (ceCheckout checkout))
+        , PersistText (ceDomainOrderId checkout)
+        ] :: SqlPersistT IO [(Single Text, Single Text)]
+      case agreement of
+        [(Single status, Single kind)]
+          | kind == "deposit" && status == "pending_deposit" -> lockCharge
+          | kind == "balance" && status == "balance_due" -> lockCharge
+          | otherwise -> pure (Left "This agreement is no longer waiting for this charge")
+        _ -> pure (Left "This agreement charge is not available")
+  where
+    lockCharge = do
+      rows <- rawSql
+        "SELECT payment.status,payment.provider,payment.amount_minor,payment.currency,\
+        \ payment.payout_identifier_type,payment.payout_identifier,payment.provider_amount_minor\
+        \ FROM marketplace_agreement_payment payment\
+        \ WHERE payment.checkout_id=?::uuid AND payment.id::text=? FOR UPDATE"
+        [ PersistText (Checkout.checkoutReferenceId (ceCheckout checkout))
+        , PersistText (ceDomainOrderId checkout)
+        ] :: SqlPersistT IO [(Single Text, Single Text, Single Int64, Single Text, Single Text, Single Text, Single Int64)]
+      pure $ case rows of
+        [(Single status, Single chargeProvider, Single amount, Single currency,
+            Single recipientKind, Single recipient, Single providerAmount)]
+          | status /= "pending" -> Left "This agreement charge is no longer payable"
+          | chargeProvider /= Checkout.paymentProviderText provider ->
+              Left "This agreement charge was prepared for another payment provider"
+          | amount /= ceTotalMinor checkout || currency /= ceCurrency checkout ->
+              Left "This agreement charge does not match its checkout"
+          | providerAmount == 0 -> Right []
+          | recipientKind == "identification" -> Right [SplitTransfer recipient False providerAmount]
+          | recipientKind == "phone" -> Right [SplitTransfer recipient True providerAmount]
+          | otherwise -> Left "This agreement charge cannot be paid out through this provider"
+        _ -> Left "This agreement charge is not available"
 
 -- | Immutable identifiers and expected money loaded from the provider
 -- binding. This is the only input accepted by authoritative reconciliation;
@@ -245,13 +302,28 @@ providerQueryOperationTerminal claim = do
     \ WHERE id=?::uuid FOR UPDATE" [PersistText (pqcOperationId claim)]
   pure (rows == [Single True])
 
+-- | Seconds until the next authenticated query of an operation, given the
+-- attempt just made. The generic schedule backs off from 30 seconds to an hour.
+-- A PayPhone Button query is its confirmation, and PayPhone reverses a Button
+-- payment that is not confirmed within five minutes of the payment; its form
+-- lives ten minutes from load (ADR 0136). Button references are therefore
+-- confirmed every minute for the whole budget of 24 attempts (about 24
+-- minutes, past the form's life). The shared budget of one query per provider
+-- every ten seconds keeps the minute for six concurrent jobs and stays inside
+-- the five-minute deadline for about 25; a confirmation that still misses it is
+-- reversed by PayPhone, so the buyer is not charged.
+providerQueryRetryDelaySeconds :: Text -> Int -> Int
+providerQueryRetryDelaySeconds reference attempt
+  | payPhoneButtonReferencePrefix `T.isPrefixOf` reference = 60
+  | otherwise = min 3600 (30 * (2 ^ min 7 (max 0 (attempt - 1))))
+
 -- Call only while holding the validated lease row lock. A lease that expires
 -- during this short transaction cannot be stolen until the commit completes.
 finishProviderQuery :: ProviderQueryClaim -> Text -> Text -> SqlPersistT IO ()
 finishProviderQuery claim requestedStatus code = do
   let status = if requestedStatus == "retry" && pqcAttemptCount claim >= 24
         then "dead_letter" else requestedStatus
-      delaySeconds = min 3600 (30 * (2 ^ min 7 (max 0 (pqcAttemptCount claim - 1))) :: Int)
+      delaySeconds = providerQueryRetryDelaySeconds (pqcProviderReference claim) (pqcAttemptCount claim)
   rows <- rawSql
     "UPDATE commerce_provider_query_job SET status=?,lease_token=NULL,lease_expires_at=NULL,\
     \ next_attempt_at=clock_timestamp()+(? * INTERVAL '1 second'),last_error_code=?,\
@@ -521,7 +593,10 @@ recordCreateResult operationRef checkout attempt provider merchantRef providerRe
             _ -> "payment"
           resourcePath = case provider of
             Checkout.ProviderPlaceToPay -> Just ("/api/session/" <> adapterResultExternalId result)
-            Checkout.ProviderPayPhone -> Just ("/api/Sale/" <> adapterResultExternalId result)
+            Checkout.ProviderPayPhone
+              -- A Button binding holds the opaque preparation ID, not a sale.
+              | payPhoneButtonReferencePrefix `T.isPrefixOf` providerReference -> Nothing
+              | otherwise -> Just ("/api/Sale/" <> adapterResultExternalId result)
             _ -> Nothing
       binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
         { Checkout.pbcAttempt = attempt
@@ -1012,6 +1087,14 @@ loadOperationByPreparation ProviderOperationPreparation{..} = do
     [] -> Left "Provider operation idempotency key conflicts with immutable fields"
     _ -> Left "Provider operation idempotency lookup was ambiguous"
 
+-- A PayPhone Button page is handed out (again) only for ten minutes after the
+-- preparation (ADR 0136). Its form lives ten minutes from load, so a payment
+-- happens at most twenty minutes after preparation and must be confirmed five
+-- minutes later; the query worker reads the reference every minute for 24
+-- attempts (about 24 minutes), which covers that horizon. A session read past
+-- the window gets no page, so TDF never reopens a form whose payment the worker
+-- could no longer confirm. An attempt nobody paid ends in review when the
+-- worker's attempts run out.
 loadOperation
   :: ProviderOperationReference
   -> Text
@@ -1023,11 +1106,15 @@ loadOperation operationRef encryptionKey = do
     \ CASE WHEN review.id IS NOT NULL THEN 'ambiguous' ELSE operation.outcome_certainty END,\
     \ operation.provider_resource_id,\
     \ CASE WHEN review.id IS NOT NULL OR operation.redirect_url_ciphertext IS NULL THEN NULL\
+    \   WHEN left(operation.provider_reference, ?) = ?\
+    \     AND operation.created_at < now() - interval '10 minutes' THEN NULL\
     \   ELSE pgp_sym_decrypt(operation.redirect_url_ciphertext, ?) END\
     \ FROM commerce_provider_operation operation\
     \ LEFT JOIN commerce_reconciliation_exception review ON review.id=?::uuid\
     \ WHERE operation.id = ?::uuid"
-    [ PersistText encryptionKey
+    [ PersistInt64 (fromIntegral (T.length payPhoneButtonReferencePrefix))
+    , PersistText payPhoneButtonReferencePrefix
+    , PersistText encryptionKey
     , PersistText (closedCheckoutApprovalId (providerOperationReferenceId operationRef))
     , PersistText (providerOperationReferenceId operationRef)
     ] :: SqlPersistT IO

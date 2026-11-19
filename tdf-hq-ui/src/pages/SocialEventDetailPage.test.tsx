@@ -9,7 +9,7 @@ import type { EventAdminAccessDTO, EventAdminRosterDTO, SocialEventDTO, SocialEv
 const preferenceMock = jest.fn(async () => ({ inApp: false, supportsExtendedMoments: true }));
 const uploadMomentMediaMock = jest.fn<(eventId: string, file: File) => Promise<{ eiuPublicUrl: string }>>();
 const createMomentMock = jest.fn<(eventId: string, body: unknown) => Promise<SocialEventMomentDTO>>();
-let activeSession: { partyId: number } | null = null;
+let activeSession: { partyId: number; modules?: string[] } | null = null;
 jest.unstable_mockModule('../api/eventMemoryInvitations', () => ({ EventMemoryInvitations: { preferences: preferenceMock } }));
 const getEventMock = jest.fn<(eventId: string) => Promise<SocialEventDTO>>();
 const listMomentsMock = jest.fn<(eventId: string) => Promise<SocialEventMomentDTO[]>>();
@@ -127,7 +127,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
   });
 
   it.each([403, 404])('keeps a planning event visible when memories return HTTP %i', async (status) => {
-    activeSession = { partyId: 9 };
+    activeSession = { partyId: 9, modules: ['Scheduling'] };
     getEventMock.mockResolvedValue({
       ...eventFixture,
       eventWorkflowStateCode: 'planning',
@@ -146,6 +146,16 @@ describe('SocialEventDetailPage ticket sharing', () => {
     view.unmount();
   });
 
+  it('offers planning to the event organizer without any module', async () => {
+    activeSession = { partyId: 7 };
+    getEventMock.mockResolvedValue({ ...eventFixture, eventWorkflowStateCode: 'planning', eventPublicListable: false });
+    const view = renderPage();
+
+    await screen.findByRole('heading', { name: eventFixture.eventTitle });
+    expect(screen.getByRole('link', { name: 'Logística' }).getAttribute('href')).toBe('/social/eventos/121/logistica');
+    view.unmount();
+  });
+
   it('keeps memories available when the API allows access to a planning event', async () => {
     activeSession = { partyId: 9 };
     getEventMock.mockResolvedValue({
@@ -157,6 +167,8 @@ describe('SocialEventDetailPage ticket sharing', () => {
 
     expect(await screen.findByRole('button', { name: 'Publicar' })).toBeTruthy();
     expect(screen.getByText('Todavía no hay publicaciones')).toBeTruthy();
+    // A signed-in visitor who neither manages the event nor has scheduling access is not offered planning.
+    expect(screen.queryByRole('link', { name: 'Logística' })).toBeNull();
     expect(listMomentsMock).toHaveBeenCalledWith('121');
     view.unmount();
   });
@@ -267,7 +279,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
     fireEvent.mouseDown(kind);
     fireEvent.click(await screen.findByRole('option', { name: 'Solo texto' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Describe tu publicación' }), { target: { value: 'Private draft for A' } });
-    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    const { advanceAuthSessionEpoch } = await import('../auth/authEvents');
     advanceAuthSessionEpoch();
     activeSession = { partyId: 10 };
     // Credentials change synchronously; the old button can still exist until
@@ -285,7 +297,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
     const view = renderPage();
     await screen.findByRole('combobox', { name: 'Tipo de recuerdo' });
     fireEvent.change(view.container.querySelector('input[type="file"]')!, { target: { files: [new File(['synthetic'], 'private-A.png', { type: 'image/png' })] } });
-    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    const { advanceAuthSessionEpoch } = await import('../auth/authEvents');
     advanceAuthSessionEpoch(); activeSession = { partyId: 10 };
     fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
     await waitFor(() => expect(Boolean(screen.queryByText('Tu sesión cambió. Vuelve al evento antes de publicar.')) || uploadMomentMediaMock.mock.calls.length > 0).toBe(true));
@@ -320,7 +332,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
     fireEvent.change(view.container.querySelector('input[type="file"]')!, { target: { files: [new File(['synthetic'], 'memory.png', { type: 'image/png' })] } });
     fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
     await waitFor(() => expect(uploadMomentMediaMock).toHaveBeenCalledTimes(1));
-    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    const { advanceAuthSessionEpoch } = await import('../auth/authEvents');
     advanceAuthSessionEpoch();
     finishUpload({ eiuPublicUrl: 'https://assets.persona.test/previous-account.png' });
     await screen.findByText('Tu sesión cambió. Vuelve al evento antes de publicar.');
@@ -364,7 +376,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Describe tu publicación' }), { target: { value: 'Synthetic account A draft' } });
     fireEvent.click(screen.getByRole('button', { name: 'Publicar', exact: true }));
     await waitFor(() => expect(createMomentMock).toHaveBeenCalledTimes(1));
-    const { advanceAuthSessionEpoch } = await import('../session/authEvents');
+    const { advanceAuthSessionEpoch } = await import('../auth/authEvents');
     advanceAuthSessionEpoch(); activeSession = { partyId: 10 };
     view.rerender(<QueryClientProvider client={view.queryClient}><MemoryRouter initialEntries={['/social/eventos/121']}>
       <Routes><Route path="/social/eventos/:eventId" element={<SocialEventDetailPage />} /></Routes>

@@ -30853,6 +30853,31 @@
             "reviewed": true
           }
         ]
+      },
+      {
+        "reason": "The Fly release executor and its deploy-plan builders (scripts/production-release.mjs, scripts/lib/production-release.mjs) were deleted when Fly was retired as a hosting target, so these two lists have no current candidate. The full reviewed decisions are preserved here as history; no catalog values are affected.",
+        "decisions": [
+          {
+            "id": "4ee0861b0a41a45d76aa",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+            "reviewed": true
+          },
+          {
+            "id": "3391a96825357d78f794",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+            "reviewed": true
+          }
+        ]
       }
     ]
   },
@@ -31699,16 +31724,6 @@
       },
       "reviewBatch": "music-release-platform-sync-2026-10-07",
       "reviewMethod": "manual-source-review"
-    },
-    {
-      "id": "4ee0861b0a41a45d76aa",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
-      "reviewed": true
     },
     {
       "id": "1a41ca8ee4fc59546171",
@@ -74817,16 +74832,6 @@
       ]
     },
     {
-      "id": "3391a96825357d78f794",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
-      "reviewed": true
-    },
-    {
       "id": "86fcd97588e8b1c4bd10",
       "classification": "governed-reference-data",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -78195,119 +78200,295 @@
       "reviewed": true
     },
     {
-      "id": "67763a8368c933f80914",
+      "id": "536925426cf9bbbaded2",
       "classification": "security-system-registry",
       "disposition": "consumer-update",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P3-consumer",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-      "reviewed": true
+      "reviewed": true,
+      "justification": "The same roles list, unchanged in value and order, moved verbatim with featureRegistry.test.ts from tdf-hq-ui/src/features to tdf-hq-ui/src/utils (ADR 0133: the feature registry is static data consumed from utils, api and components, so it sits in the utils layer); the reviewed classification and disposition are unchanged.",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/featureRegistry.test.ts",
+        "line": 17
+      },
+      "reviewBatch": "web-feature-registry-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "67763a8368c933f80914",
+        "classification": "security-system-registry",
+        "disposition": "consumer-update",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P3-consumer",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+        "reviewed": true
+      }
     },
     {
-      "id": "63a1d7ad2f5cd665a512",
+      "id": "fe13575eb6531acd80d0",
       "classification": "security-system-registry",
       "disposition": "consumer-update",
       "specializedModel": "feature-registry strict-admin negative fixture",
       "priority": "P3-consumer",
       "risk": "A role fixture must not become a runtime grant source.",
-      "justification": "Reviewed featureRegistry.test.ts cases use Admin, Producer and AandR to verify that the video-source feature remains strictly administrative; no runtime role catalog is created.",
       "reviewed": true,
-      "reviewMethod": "source-review-2026-10-04",
-      "reviewBatch": "specification-conformance-shipped-mobile",
+      "justification": "The same roles list, unchanged in value and order, moved verbatim with featureRegistry.test.ts from tdf-hq-ui/src/features to tdf-hq-ui/src/utils (ADR 0133: the feature registry is static data consumed from utils, api and components, so it sits in the utils layer); the reviewed classification and disposition are unchanged.",
       "evidence": {
-        "file": "tdf-hq-ui/src/features/featureRegistry.test.ts"
+        "file": "tdf-hq-ui/src/utils/featureRegistry.test.ts",
+        "line": 60
+      },
+      "reviewBatch": "web-feature-registry-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "63a1d7ad2f5cd665a512",
+        "classification": "security-system-registry",
+        "disposition": "consumer-update",
+        "specializedModel": "feature-registry strict-admin negative fixture",
+        "priority": "P3-consumer",
+        "risk": "A role fixture must not become a runtime grant source.",
+        "justification": "Reviewed featureRegistry.test.ts cases use Admin, Producer and AandR to verify that the video-source feature remains strictly administrative; no runtime role catalog is created.",
+        "reviewed": true,
+        "reviewMethod": "source-review-2026-10-04",
+        "reviewBatch": "specification-conformance-shipped-mobile",
+        "evidence": {
+          "file": "tdf-hq-ui/src/features/featureRegistry.test.ts"
+        }
       }
     },
     {
-      "id": "284e28589dca279063bb",
+      "id": "d6e1126aca76aea7a244",
       "classification": "security-system-registry",
       "disposition": "consumer-update",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P3-consumer",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-      "reviewed": true
+      "reviewed": true,
+      "justification": "The same modules list, unchanged in value and order, moved verbatim with featureRegistry.test.ts from tdf-hq-ui/src/features to tdf-hq-ui/src/utils (ADR 0133: the feature registry is static data consumed from utils, api and components, so it sits in the utils layer); the reviewed classification and disposition are unchanged.",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/featureRegistry.test.ts",
+        "line": 114
+      },
+      "reviewBatch": "web-feature-registry-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "284e28589dca279063bb",
+        "classification": "security-system-registry",
+        "disposition": "consumer-update",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P3-consumer",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+        "reviewed": true
+      }
     },
     {
-      "id": "c41ef070dcc4765137ff",
+      "id": "c7158b370b14388e6d11",
       "classification": "security-system-registry",
       "disposition": "consumer-update",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P3-consumer",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-      "reviewed": true
+      "reviewed": true,
+      "justification": "The same roles list, unchanged in value and order, moved verbatim with featureRegistry.test.ts from tdf-hq-ui/src/features to tdf-hq-ui/src/utils (ADR 0133: the feature registry is static data consumed from utils, api and components, so it sits in the utils layer); the reviewed classification and disposition are unchanged.",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/featureRegistry.test.ts",
+        "line": 130
+      },
+      "reviewBatch": "web-feature-registry-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "c41ef070dcc4765137ff",
+        "classification": "security-system-registry",
+        "disposition": "consumer-update",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P3-consumer",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+        "reviewed": true
+      }
     },
     {
-      "id": "44897a684b882440a71e",
+      "id": "ba5d92369d06849183f6",
       "classification": "security-system-registry",
       "disposition": "consumer-update",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P3-consumer",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-      "reviewed": true
+      "reviewed": true,
+      "justification": "The same session list, unchanged in value and order, moved verbatim with featureRegistry.test.ts from tdf-hq-ui/src/features to tdf-hq-ui/src/utils (ADR 0133: the feature registry is static data consumed from utils, api and components, so it sits in the utils layer); the reviewed classification and disposition are unchanged.",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/featureRegistry.test.ts",
+        "line": 138
+      },
+      "reviewBatch": "web-feature-registry-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "44897a684b882440a71e",
+        "classification": "security-system-registry",
+        "disposition": "consumer-update",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P3-consumer",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+        "reviewed": true
+      }
     },
     {
-      "id": "b76290fef77574f3b3da",
+      "id": "1fc03dace3b5a87bb1e2",
       "classification": "security-system-registry",
       "disposition": "consumer-update",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P3-consumer",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
-      "reviewed": true
+      "reviewed": true,
+      "justification": "The same actionSession list, unchanged in value and order, moved verbatim with featureRegistry.test.ts from tdf-hq-ui/src/features to tdf-hq-ui/src/utils (ADR 0133: the feature registry is static data consumed from utils, api and components, so it sits in the utils layer); the reviewed classification and disposition are unchanged.",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/featureRegistry.test.ts",
+        "line": 147
+      },
+      "reviewBatch": "web-feature-registry-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "b76290fef77574f3b3da",
+        "classification": "security-system-registry",
+        "disposition": "consumer-update",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P3-consumer",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+        "reviewed": true
+      }
     },
     {
-      "id": "1ec69106d372c098c29a",
+      "id": "4c935f0defdc4af3a24d",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
+      "reviewed": true,
+      "justification": "The same FeatureAction list, unchanged in value and order, moved verbatim with featureRegistry.ts from tdf-hq-ui/src/features to tdf-hq-ui/src/utils (ADR 0133: the feature registry is static data consumed from utils, api and components, so it sits in the utils layer); the reviewed classification and disposition are unchanged.",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/featureRegistry.ts",
+        "line": 4
+      },
+      "reviewBatch": "web-feature-registry-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "1ec69106d372c098c29a",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
     },
     {
-      "id": "a400318cc270ac1edd91",
+      "id": "7573ad43bd25754a4b87",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
+      "reviewed": true,
+      "justification": "The same FeatureAccessState list, unchanged in value and order, moved verbatim with featureRegistry.ts from tdf-hq-ui/src/features to tdf-hq-ui/src/utils (ADR 0133: the feature registry is static data consumed from utils, api and components, so it sits in the utils layer); the reviewed classification and disposition are unchanged.",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/featureRegistry.ts",
+        "line": 23
+      },
+      "reviewBatch": "web-feature-registry-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "a400318cc270ac1edd91",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
     },
     {
-      "id": "c0525989deca2a62a658",
+      "id": "a2100af9d5912efcc962",
       "classification": "governed-reference-data",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P1-cross-platform",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
-      "reviewed": true
+      "reviewed": true,
+      "justification": "The same FeatureLocale list, unchanged in value and order, moved verbatim with featureRegistry.ts from tdf-hq-ui/src/features to tdf-hq-ui/src/utils (ADR 0133: the feature registry is static data consumed from utils, api and components, so it sits in the utils layer); the reviewed classification and disposition are unchanged.",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/featureRegistry.ts",
+        "line": 24
+      },
+      "reviewBatch": "web-feature-registry-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "c0525989deca2a62a658",
+        "classification": "governed-reference-data",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P1-cross-platform",
+        "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+        "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+        "reviewed": true
+      }
     },
     {
-      "id": "42fde9a24a14c375da51",
+      "id": "7073fa98bbc8ab72ec85",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true
+      "reviewed": true,
+      "justification": "The same ROLE_ALIASES list, unchanged in value and order, moved verbatim with featureRegistry.ts from tdf-hq-ui/src/features to tdf-hq-ui/src/utils (ADR 0133: the feature registry is static data consumed from utils, api and components, so it sits in the utils layer); the reviewed classification and disposition are unchanged.",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/featureRegistry.ts",
+        "line": 185
+      },
+      "reviewBatch": "web-feature-registry-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "42fde9a24a14c375da51",
+        "classification": "security-system-registry",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P0-security",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+        "reviewed": true
+      }
     },
     {
-      "id": "314cae2dc6b59c27a200",
+      "id": "c8c56adf087211a710f5",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-      "reviewed": true
+      "reviewed": true,
+      "justification": "The same strictAdminRoles list, unchanged in value and order, moved verbatim with featureRegistry.ts from tdf-hq-ui/src/features to tdf-hq-ui/src/utils (ADR 0133: the feature registry is static data consumed from utils, api and components, so it sits in the utils layer); the reviewed classification and disposition are unchanged.",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/featureRegistry.ts",
+        "line": 212
+      },
+      "reviewBatch": "web-feature-registry-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "314cae2dc6b59c27a200",
+        "classification": "security-system-registry",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P0-security",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+        "reviewed": true
+      }
     },
     {
       "id": "1b3bb4385c2aae33ae0b",
@@ -82223,26 +82404,42 @@
       "reviewed": true
     },
     {
-      "id": "521ae3866b24bfa6a0b8",
+      "id": "c4afa9744b25f84ce57b",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
+      "reviewed": true,
+      "justification": "The same four SESSION_AUTH_FAILURE_MESSAGES, unchanged in value and order, moved verbatim with authEvents.ts from tdf-hq-ui/src/session to tdf-hq-ui/src/auth (ADR 0133: auth-state primitives below the api layer); the reviewed classification and disposition are unchanged.",
+      "evidence": {
+        "file": "tdf-hq-ui/src/auth/authEvents.ts",
+        "line": 7
+      },
+      "reviewBatch": "web-auth-state-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "521ae3866b24bfa6a0b8",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "domain-specific catalog table selected during consumer refactor",
+        "priority": "P2-domain",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
     },
     {
-      "id": "0c91e00629e658db782f",
+      "id": "e9d8659eb044d6177f33",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Changing these protocol states can re-enable automatic cookie restoration or misrepresent unconfirmed server logout.",
-      "justification": "LogoutStatus is the identity-free browser logout/revocation protocol, not selectable booking or community catalog data. The four fixed states must work offline before any server request. Lexical overlaps such as pending/confirmed with booking sources are not consumers of this TypeScript type. Public display copy remains localized independently.",
       "reviewed": true,
+      "justification": "The same LogoutStatus union, unchanged in value and order, moved verbatim with logoutIntent.ts from tdf-hq-ui/src/session to tdf-hq-ui/src/auth (ADR 0133: auth-state primitives below the api layer); the reviewed classification, disposition and justification are unchanged.",
       "evidence": {
-        "file": "tdf-hq-ui/src/session/logoutIntent.ts",
+        "file": "tdf-hq-ui/src/auth/logoutIntent.ts",
         "line": 6,
         "name": "LogoutStatus",
         "kind": "literal-union",
@@ -82253,6 +82450,31 @@
           "confirmed"
         ],
         "contract": "formal/system/logout-intent.md"
+      },
+      "reviewBatch": "web-auth-state-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "0c91e00629e658db782f",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P1-integrity",
+        "risk": "Changing these protocol states can re-enable automatic cookie restoration or misrepresent unconfirmed server logout.",
+        "justification": "LogoutStatus is the identity-free browser logout/revocation protocol, not selectable booking or community catalog data. The four fixed states must work offline before any server request. Lexical overlaps such as pending/confirmed with booking sources are not consumers of this TypeScript type. Public display copy remains localized independently.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/session/logoutIntent.ts",
+          "line": 6,
+          "name": "LogoutStatus",
+          "kind": "literal-union",
+          "values": [
+            "cleared",
+            "pending",
+            "unconfirmed",
+            "confirmed"
+          ],
+          "contract": "formal/system/logout-intent.md"
+        }
       }
     },
     {
@@ -92186,6 +92408,26 @@
       }
     },
     {
+      "id": "755cf14ac92e4f590879",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing or making the required evidence checks editable can silently weaken delivery evidence validation.",
+      "justification": "DELIVERY_CHECKS is the versioned evidence-review protocol for SYS-VERIFY-002: stable check identifiers, required verification levels and acceptance criteria consumed by the read-only delivery inventory. It is not a user-selectable business catalog, product taxonomy or production feature configuration. Changes must be reviewed with the receipt validator and negative controls; receipt consistency never grants release authority. The scanner reports nine direct objects; four native-platform checks are generated by map expressions and remain covered by the delivery-matrix tests.",
+      "reviewed": true,
+      "reviewMethod": "manual-technical-boundary-review",
+      "reviewBatch": "delivery-evidence-protocol-2026-11-14",
+      "evidence": {
+        "file": "scripts/lib/delivery-matrix.mjs",
+        "line": 2,
+        "kind": "array",
+        "name": "DELIVERY_CHECKS",
+        "valueCount": 9,
+        "consumerCount": 2
+      }
+    },
+    {
       "id": "853a5f768e09d0c32259",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -95058,6 +95300,120 @@
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
       "reviewed": true
+    },
+    {
+      "id": "423acf8dc4f4720b343c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "These are test-only provider responses; changing them can weaken coverage of availability and unresolved-payment handling. They do not activate production methods.",
+      "justification": "Bounded test-only response fixture for remaining methods on the original purchase or Stripe intent. Runtime availability is read from the original order/provider; this array is not a production payment catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-18",
+      "reviewBatch": "payment-failure-alternatives",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/checkoutPaymentAlternatives.test.ts",
+        "line": 21,
+        "kind": "array",
+        "name": "paymentMethods",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "4ae9e88f1aa2a44fc670",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "These are test-only provider responses; changing them can weaken coverage of availability and unresolved-payment handling. They do not activate production methods.",
+      "justification": "Bounded test-only response fixture for remaining methods on the original purchase or Stripe intent. Runtime availability is read from the original order/provider; this array is not a production payment catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-18",
+      "reviewBatch": "payment-failure-alternatives",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/checkoutPaymentAlternatives.test.ts",
+        "line": 42,
+        "kind": "array",
+        "name": "paymentMethods",
+        "valueCount": 4
+      }
+    },
+    {
+      "id": "a5ed8dcd08970229f603",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "These are test-only provider responses; changing them can weaken coverage of availability and unresolved-payment handling. They do not activate production methods.",
+      "justification": "Bounded test-only response fixture for remaining methods on the original purchase or Stripe intent. Runtime availability is read from the original order/provider; this array is not a production payment catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-18",
+      "reviewBatch": "payment-failure-alternatives",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/checkoutPaymentAlternatives.test.ts",
+        "line": 47,
+        "kind": "array",
+        "name": "paymentMethods",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "da6c8d41e4fa771dfe66",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "These are test-only provider responses; changing them can weaken coverage of availability and unresolved-payment handling. They do not activate production methods.",
+      "justification": "Bounded test-only response fixture for remaining methods on the original purchase or Stripe intent. Runtime availability is read from the original order/provider; this array is not a production payment catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-18",
+      "reviewBatch": "payment-failure-alternatives",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/payments/StripePaymentAlternativesNotice.test.tsx",
+        "line": 12,
+        "kind": "array",
+        "name": "payment_method_types",
+        "valueCount": 3
+      }
+    },
+    {
+      "id": "e675271d7b00a9f08172",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "These are test-only provider responses; changing them can weaken coverage of availability and unresolved-payment handling. They do not activate production methods.",
+      "justification": "Bounded test-only response fixture for remaining methods on the original purchase or Stripe intent. Runtime availability is read from the original order/provider; this array is not a production payment catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-18",
+      "reviewBatch": "payment-failure-alternatives",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/payments/StripePaymentAlternativesNotice.test.tsx",
+        "line": 21,
+        "kind": "array",
+        "name": "payment_method_types",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "ac7d73f0f4464d7e5194",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "This test-only all-disabled capability response protects the distinction between a successful empty lookup and a failed or pending lookup. It does not enable production payment methods.",
+      "justification": "Reviewed test-only noMethods fixture used to simulate an authoritative capability response with all methods unavailable. Production availability remains server-owned.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-18",
+      "reviewBatch": "payment-failure-alternatives",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.test.tsx",
+        "line": 14,
+        "kind": "object-registry",
+        "name": "noMethods",
+        "valueCount": 7
+      }
     }
   ]
 }

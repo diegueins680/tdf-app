@@ -10,7 +10,7 @@ import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { VideoCampaigns } from '../api/videoCampaigns';
 import { ApiError } from '../api/client';
 import { getActiveSession, useSession, type SessionUser } from '../session/SessionContext';
-import { getAuthSessionEpoch } from '../session/authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 import { hasStrictAdminAccess } from '../utils/accessControl';
 import { campaignLink, prepareMissingCampaignPieces, emptyVideoCampaign, importedCampaignSchema, safeVideoUrl, validateVideoCampaign,
   type SocialChannel, type VideoCampaign, type VideoCampaignDocument, type VideoPiece } from '../features/campaigns/videoCampaign';
