@@ -697,19 +697,19 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "912cda11c7b6eb622f76",
-      "reason": "Preserve all 253 protected-main migration rows and their review history. Append the five previously reviewed player migrations in their original order with identical SQL and introduction commits. Preserve both parent manifest reviews and keep activation separate.",
-      "previousReplacementId": "f2a4dfbd31904f6f478e",
+      "replacementId": "66d22fee30fafcbedc05",
+      "reason": "Preserve all 258 existing manifest entries and applied SQL bytes. Append only the exact forward constraint migration introduced at 85ef91ab777575e2828654613189522630775c8a. Ads keeps its wire grammar; the narrower rollback refuses to lose demo receipts. This admission review neither activates production nor waives release checks.",
+      "previousReplacementId": "912cda11c7b6eb622f76",
       "currentResolution": {
-        "id": "912cda11c7b6eb622f76",
-        "valueCount": 258,
+        "id": "66d22fee30fafcbedc05",
+        "valueCount": 259,
         "sourceParents": [
-          "d4bb96030b1182e165ff39b614315c6a2554aee7",
-          "26c83d9e6525d859b0da0bebf959ad6d1c806159"
+          "db9bf68a06968e43f5d01f825de44a5a1fe8dea3",
+          "85ef91ab777575e2828654613189522630775c8a"
         ],
-        "justification": "Preserve the entire 252-entry manifest and its complete review graph unchanged; append only the forward marketplace agreement payments migration (processor fee rules, payout accounts, agreement payments with a frozen split, verified-payment guards and checkout sync triggers, the confirmed to balance_due agreement transition; ADR 0136) introduced at 26c83d9e6525d859b0da0bebf959ad6d1c806159, after the event administrator delegation entry that protected main integrated at d4bb96030b1182e165ff39b614315c6a2554aee7. No existing SQL, manifest entry or introduction ancestor changes. No seed beyond the PayPhone processor fee rule, no feature activation, deployment or release waiver; the marketplace.agreement_payments runtime flag stays disabled in every environment and no payment can be collected."
+        "justification": "Preserve all 258 existing manifest entries and applied SQL bytes. Append only the exact forward constraint migration introduced at 85ef91ab777575e2828654613189522630775c8a. Ads keeps its wire grammar; the narrower rollback refuses to lose demo receipts. This admission review neither activates production nor waives release checks."
       },
-      "change": "Preserve all 253 protected-main migration rows and their review history. Append the five previously reviewed player migrations in their original order with identical SQL and introduction commits. Preserve both parent manifest reviews and keep activation separate.",
+      "change": "Preserve all 258 existing manifest entries and applied SQL bytes. Append only the exact forward constraint migration introduced at 85ef91ab777575e2828654613189522630775c8a. Ads keeps its wire grammar; the narrower rollback refuses to lose demo receipts. This admission review neither activates production nor waives release checks.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
@@ -829,9 +829,20 @@
           "sourceEntryCanonicalSha256": "24348c04edbc82948052df44400f2c37767b3c06b30123dbe367e4f57baed47c",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Exact prior review retained as provenance; fresh checks and independent approval remain required."
+        },
+        {
+          "sourceRevision": "8f12f473a95d4da03ee06fca576af00083290b0b",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a36f93ae4fb499b20dfedc356aa12d0069e674a441008435bb20bafccce1aea4",
+          "sourceEntry": {
+            "id": "912cda11c7b6eb622f76"
+          },
+          "sourceEntryCanonicalSha256": "3c2f539985558c2fc29d53f33ab1e2c70696282473d894cebf8a14ab73072300",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ],
       "previousReplacementIds": [
+        "912cda11c7b6eb622f76",
         "f2a4dfbd31904f6f478e",
         "2a74f9391e1cb8155c37",
         "e60cbdb9121493f47fa6",
@@ -873,10 +884,10 @@
         "bc5e5bd4f9d8795d2166",
         "24372f27958a74bdfc29"
       ],
-      "previousReason": "Preserve the entire 252-entry manifest and its complete review graph unchanged; append only the forward marketplace agreement payments migration (processor fee rules, payout accounts, agreement payments with a frozen split, verified-payment guards and checkout sync triggers, the confirmed to balance_due agreement transition; ADR 0136) introduced at 26c83d9e6525d859b0da0bebf959ad6d1c806159, after the event administrator delegation entry that protected main integrated at d4bb96030b1182e165ff39b614315c6a2554aee7. No existing SQL, manifest entry or introduction ancestor changes. No seed beyond the PayPhone processor fee rule, no feature activation, deployment or release waiver; the marketplace.agreement_payments runtime flag stays disabled in every environment and no payment can be collected.",
+      "previousReason": "Preserve all 253 protected-main migration rows and their review history. Append the five previously reviewed player migrations in their original order with identical SQL and introduction commits. Preserve both parent manifest reviews and keep activation separate.",
       "previousCurrentResolution": {
-        "id": "f2a4dfbd31904f6f478e",
-        "valueCount": 253,
+        "id": "912cda11c7b6eb622f76",
+        "valueCount": 258,
         "sourceParents": [
           "d4bb96030b1182e165ff39b614315c6a2554aee7",
           "26c83d9e6525d859b0da0bebf959ad6d1c806159"
@@ -2276,6 +2287,16 @@
             }
           }
         }
+      },
+      "previousResolutionReference": {
+        "sourceRevision": "db9bf68a06968e43f5d01f825de44a5a1fe8dea3",
+        "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+        "sourceFileSha256": "59e6944b02f248c43bf342a7e5ae9a4e84223c81e75b5a95be34413bf3b2b498",
+        "sourceEntry": {
+          "replacementId": "912cda11c7b6eb622f76"
+        },
+        "sourceEntryCanonicalSha256": "bd2f25223882cd743dad880b1ef03e4ccb5a6f0f9e8f0e595b64f9d987559dc4",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
       }
     }
   ],

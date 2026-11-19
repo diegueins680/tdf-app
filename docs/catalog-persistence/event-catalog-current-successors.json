@@ -402,12 +402,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "912cda11c7b6eb622f76",
+      "currentId": "66d22fee30fafcbedc05",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 258,
-      "change": "Preserve all 253 protected-main migration rows and their review history. Append the five previously reviewed player migrations in their original order with identical SQL and introduction commits. Preserve both parent manifest reviews and keep activation separate.",
+      "valueCount": 259,
+      "change": "Preserve all 258 existing manifest entries and applied SQL bytes. Append only the exact forward constraint migration introduced at 85ef91ab777575e2828654613189522630775c8a. Ads keeps its wire grammar; the narrower rollback refuses to lose demo receipts. This admission review neither activates production nor waives release checks.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
@@ -527,9 +527,20 @@
           "sourceEntryCanonicalSha256": "24348c04edbc82948052df44400f2c37767b3c06b30123dbe367e4f57baed47c",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Exact prior review retained as provenance; fresh checks and independent approval remain required."
+        },
+        {
+          "sourceRevision": "8f12f473a95d4da03ee06fca576af00083290b0b",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "a36f93ae4fb499b20dfedc356aa12d0069e674a441008435bb20bafccce1aea4",
+          "sourceEntry": {
+            "id": "912cda11c7b6eb622f76"
+          },
+          "sourceEntryCanonicalSha256": "3c2f539985558c2fc29d53f33ab1e2c70696282473d894cebf8a14ab73072300",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ],
       "previousCurrentIds": [
+        "912cda11c7b6eb622f76",
         "f2a4dfbd31904f6f478e",
         "2a74f9391e1cb8155c37",
         "e60cbdb9121493f47fa6",
@@ -36869,7 +36880,17 @@
           ]
         }
       ],
-      "previousCurrentId": "f2a4dfbd31904f6f478e"
+      "previousCurrentId": "912cda11c7b6eb622f76",
+      "previousResolutionReference": {
+        "sourceRevision": "db9bf68a06968e43f5d01f825de44a5a1fe8dea3",
+        "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+        "sourceFileSha256": "029370d0168f0a44ddb40ce1eaffa98616a3b609cf8c85c173b8a2a6fefcea97",
+        "sourceEntry": {
+          "currentId": "912cda11c7b6eb622f76"
+        },
+        "sourceEntryCanonicalSha256": "09a1c240ab2edbf454c8469177f479e6bdcad6fe63175ddd2b8935feaff4d59f",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      }
     }
   ],
   "appleSignInMainf615History": {
