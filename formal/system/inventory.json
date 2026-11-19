@@ -30204,7 +30204,7 @@
     },
     {
       "path": "formal/production/README.md",
-      "sha256": "11b2c95f9231f0e1c9fd3369bb4868f8ce2a3da880dadf65295c9e5a41c2f816",
+      "sha256": "845794f09b905c5d27c995acdf2766b1f2aac6cb94acfae3ac15527eaa169026",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
