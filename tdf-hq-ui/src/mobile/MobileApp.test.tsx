@@ -185,6 +185,29 @@ it('rechecks expiry at click time before sending an admitted tester away', async
   } finally { now.mockRestore(); }
 });
 
+it.each([
+  ['iPhone / iOS', 'Probar beta en TestFlight'],
+  ['Android', 'Ya tengo acceso: abrir Google Play'],
+])('replaces the %s testing link with the request form at expiry', async (platform, linkLabel) => {
+  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => closedConfig() } as Response);
+  const now = jest.spyOn(Date, 'now').mockReturnValue(Date.parse(config.ios.validUntil) - 1);
+  try {
+    const current = mount(<Page />);
+    fireEvent.click(screen.getByRole('button', { name: platform, exact: true }));
+    await screen.findByRole('link', { name: linkLabel });
+    current.unmount();
+
+    now.mockReturnValue(Date.parse(config.ios.validUntil));
+    mount(<Page />);
+    fireEvent.click(screen.getByRole('button', { name: platform, exact: true }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Solicitar acceso' }));
+    expect(await screen.findByRole('textbox', { name: /Correo para coordinar/ })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: linkLabel })).toBeNull();
+  } finally {
+    now.mockRestore();
+  }
+});
+
 it('reports one exposure per visit with the state the visitor saw, and keeps the entry surface allowlisted', async () => {
   mount(<Page />, '/app?surface=nav&utm_source=instagram&utm_campaign=tu_escena&token=secret');
   await screen.findByRole('button', { name: 'Solicitar acceso' });

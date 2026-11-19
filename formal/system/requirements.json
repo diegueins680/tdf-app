@@ -12,8 +12,8 @@
       "implementation": [
         "scripts/production-release.mjs"
       ],
-      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git, immutable images and Fly execution remain trusted.",
-      "evidence": "provider-rollback.test.mjs; formal CI model logs; exact-image release plan/preflight/report",
+      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git and immutable images remain trusted; no release executor is implemented.",
+      "evidence": "provider-rollback.test.mjs; formal CI model logs; exact-image portable preparation report",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -144,9 +144,12 @@
         "formal/system/proof-certificates.md",
         "scripts/lib/alloy-controls.mjs",
         "scripts/verify-alloy-controls.mjs",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/delivery-matrix.mjs",
+        "scripts/lib/delivery-matrix.mjs",
+        "docs/release/delivery-evidence-matrix.md"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks fourteen formula obligations (twelve distinct inputs), with all complete implementation/refinement obligations still UNPROVEN and all source/refinement limitations retained. Every event-operations Alloy assertion has an assertion-preserving fact/predicate mutation; the pinned solver must produce the named counterexample at unchanged scopes. Coverage and result-admission negative tests reject missing, failed and mismatched runs.",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks fourteen formula obligations (twelve distinct inputs), with all complete implementation/refinement obligations still UNPROVEN and all source/refinement limitations retained. Every event-operations Alloy assertion has an assertion-preserving fact/predicate mutation; the pinned solver must produce the named counterexample at unchanged scopes. Coverage and result-admission negative tests reject missing, failed and mismatched runs. The delivery evidence inventory rejects missing, skipped, source-mismatched and wrong-level receipts, preserves BLOCKED formal decisions and never authorizes a release. Receipt consistency does not authenticate execution or prove implementation/refinement. The shared source manifest includes desktop, auxiliary services, edge and media source roots.",
       "evidence": "formal CI source/result manifests and regression output; independent CPC result.json, exact SMT/proof/signature hashes, reference-binding and incompleteness controls",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -189,7 +192,8 @@
         "formal/system/receipt-admission-counterexample.json",
         "scripts/test-proof-certificates.py",
         "scripts/__tests__/alloy-controls.test.mjs",
-        "scripts/__tests__/event-raci-editor-context-runner.test.mjs"
+        "scripts/__tests__/event-raci-editor-context-runner.test.mjs",
+        "scripts/__tests__/delivery-matrix.test.mjs"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
@@ -1241,7 +1245,7 @@
         "scripts/verify-auth-predicates.py"
       ],
       "tests": [
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "scripts/audit-feature-registry.mjs",
         "scripts/test-auth-predicates.py",
         "scripts/check-admin-guards.py"
@@ -1263,7 +1267,7 @@
       "property": "Registry discovery/view/administer predicates match the backend role and module boundary.",
       "contract": "tdf-hq/assets/feature-registry.json",
       "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation. Conditional source-derived authorization predicate equivalences and supporting cardinality lemmas: formal/system/auth-predicates.md. Full endpoint and refinement obligations remain UNPROVEN. CI gate (check-admin-guards.py) asserts the registry entry admin.video-sources grants discover, view and administer only under strictAdmin with the Admin role and module, and that RecordsIngestion.requireAdmin still requires hasStrictAdminAccess and the Admin module; mutation control on the registry entry.",
-      "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
+      "evidence": "tdf-hq-ui/src/utils/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
     },
     {
       "authority": "audit security correction",
@@ -2416,7 +2420,7 @@
       ],
       "forbiddenTransitions": [
         "Never infer release readiness from a successful observation.",
-        "Never execute the retired Fly production lane.",
+        "Never treat the retired release CLI as a production lane.",
         "Ambient Docker contexts or libpq service/host settings must not redirect inspection or inventory away from the verified local daemon and database socket.",
         "Accept shadowing database child mounts, noncanonical PGDATA or differing effective server data_directory."
       ],
@@ -2496,7 +2500,7 @@
       ],
       "forbiddenTransitions": [
         "Never infer release readiness from a successful observation.",
-        "Never execute the retired Fly production lane."
+        "Never treat the retired release CLI as a production lane."
       ],
       "effects": [
         "Record allowlisted runtime/ledger facts; preserve provider flags and production data."
@@ -2523,11 +2527,13 @@
       },
       "id": "DEPLOY-TARGET-001",
       "title": "Retired providers cannot receive a production release",
-      "statement": "All invocations of the retired Fly release CLI reject before remote tools. Imported source/artifact preparation helpers do not establish deployment eligibility; the guarded Hetzner executor remains an open release obligation.",
-      "property": "Retired Fly commands invoke no git, docker, ssh or flyctl operation before rejecting.",
+      "statement": "All direct invocations of the retired release CLI reject before remote tools. Database commands of the identity reconciliation CLI, whose only transport was the retired provider, reject before any tool or output file. Imported source/artifact preparation helpers do not establish deployment eligibility; the guarded Hetzner executor remains an open release obligation.",
+      "property": "Retired release commands invoke no git, docker or ssh operation before rejecting.",
       "implementation": [
         "scripts/production-release.mjs",
-        "scripts/deploy-stripe-ticketing.sh"
+        "scripts/deploy-stripe-ticketing.sh",
+        "scripts/identity-reconciliation.mjs",
+        "scripts/prepare-portable-restore.mjs"
       ],
       "tests": [
         "scripts/__tests__/hetzner-inspection.test.mjs",
@@ -2987,7 +2993,7 @@
       "concurrency": "Runs once per container start before the server accepts traffic.",
       "idempotency": "Repeated verification of an unchanged database is equivalent.",
       "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
-      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips the batch and the verification unconditionally (the shipped image, Dockerfile and fly.toml set it true; the precheck requires it).",
+      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips the batch and the verification unconditionally (the shipped image, Dockerfile and ops/hetzner/compose.production.yaml set it true; the precheck requires it).",
       "observability": "Fixed exception text names the violated gate class.",
       "formalModels": [
         "formal/event-operations/StartupGates.tla",
@@ -4471,7 +4477,7 @@
         "tdf-hq-ui/src/session/SessionProviders.tsx",
         "tdf-hq-ui/src/session/SessionQueryProvider.tsx",
         "tdf-hq-ui/src/session/SessionContext.tsx",
-        "tdf-hq-ui/src/session/authEvents.ts",
+        "tdf-hq-ui/src/auth/authEvents.ts",
         "tdf-hq-ui/src/api/client.ts"
       ],
       "verification": "Actual SessionProvider/TanStack components, actual pending mutation callbacks, fake HTTP auth error and bounded three-occurrence TLA model.",
@@ -6712,6 +6718,112 @@
       "evidence": "Synthetic filesystem/process controls only, exact source-qualified Linux evidence required."
     },
     {
+      "id": "DEPLOY-RELEASE-001",
+      "title": "A routine backend release keeps users fenced until the candidate is verified and an exact off-host copy exists",
+      "domain": "DEPLOY",
+      "statement": "A routine Hetzner backend release shall serve a maintenance response and stop every compose writer before capturing the stopped database and deployment directory, shall verify an encrypted off-host copy through a fresh connection and an isolated start of the captured database before any migration, shall apply only the candidate's reviewed migration batch, and shall reopen traffic only after the candidate reports its own revision, a healthy database and passing smoke checks; rollback shall be refused once traffic reopens.",
+      "authority": "Owner decisions of 13 November 2026 (pragmatic guarded release, Storage Box, owner-held recovery key, at most 30 minutes downtime)",
+      "source": "formal/system/guarded-release.md",
+      "contract": "formal/system/guarded-release.md",
+      "critical": true,
+      "actors": [
+        "Owner approving each production phase",
+        "Release operator",
+        "Recovery key custodian"
+      ],
+      "preconditions": [
+        "Running API and database match the configured immutable images",
+        "Candidate image published for the exact commit",
+        "Storage Box sub-account key and pinned host key installed root-only on the host",
+        "Custodian holds the private age identity off-host",
+        "API image override, when present, is exactly a three-line api image setting"
+      ],
+      "inputs": [
+        "Candidate commit",
+        "Registry-derived image digest",
+        "Manifest-derived migration ids and hash",
+        "Mobile gitlink",
+        "Committed tool revision",
+        "Public age recipient",
+        "Storage target",
+        "Smoke paths"
+      ],
+      "state": {
+        "states": [
+          "planned",
+          "fenced",
+          "captured",
+          "copied-off-host",
+          "migrated",
+          "candidate-verified",
+          "reopened",
+          "rolled-back",
+          "rejected"
+        ],
+        "initial": "planned",
+        "terminal": [
+          "reopened",
+          "rolled-back",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "planned -> fenced (maintenance, writers stopped, database stopped cleanly)",
+        "fenced -> captured -> copied-off-host (exact read-back) -> isolate verified",
+        "isolate verified -> migrated (every manifest id in ledger) -> candidate-verified -> reopened",
+        "any pre-reopen state -> rolled-back (captured database restored when migrations may have run)"
+      ],
+      "forbiddenTransitions": [
+        "Capture while the API, a database-network peer or a client backend can write",
+        "Migrate before a verified off-host copy and isolated start",
+        "Reopen with a candidate whose revision, health or smoke checks fail",
+        "Roll back after reopen",
+        "Run a phase with tool code or parameters that differ from the journal plan",
+        "Place the private recovery identity on the production host"
+      ],
+      "effects": [
+        "Maintenance edge response",
+        "Compose service stop/start",
+        "Root-private capture and encrypted bundle",
+        "Off-host bundle and record",
+        "Reviewed migrations",
+        "API image change",
+        "Edge restore"
+      ],
+      "authorization": "Each phase needs the candidate revision confirmation given only after owner approval; rollback needs its own confirmation.",
+      "privacy": "Captures stay root-private and leave the host only age-encrypted; outputs carry digests, stage names and fixed messages, never configuration, SQL output or credentials.",
+      "concurrency": "The release journal's permanent lock serializes releases; the physical isolate shares the rehearsal reservation. Privileged host writers outside compose are not fenced.",
+      "idempotency": "Completed stages are skipped; an interrupted stage blocks further phases until rollback or reviewed recovery.",
+      "failure": "Any rejected check stops the phase with a fixed message and leaves a pending journal intent; maintenance stays up.",
+      "recovery": "Rollback before reopen returns to the recovery image, replaying the cold capture when migrations may have run and retaining the post-migration data directory. A journal abandon record is still missing.",
+      "observability": "Per-stage evidence files in the release directory, their hashes in the journal, the trusted bundle record off-host, and a rollback receipt.",
+      "implementation": [
+        "ops/hetzner/guarded-release.py",
+        "scripts/guarded-release.mjs",
+        "scripts/generate-recovery-key.sh"
+      ],
+      "tests": [
+        "scripts/test-guarded-release.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Orchestration controls over the real journal and release files with an in-memory host; fifteen safety-check mutations detected. A read-only inspection on 13 November confirmed the compose override, journal location and capacity. No staging or production execution yet.",
+      "ambiguity": [
+        "Storage Box acceptance and custodian decrypt pending",
+        "Journal abandon record missing",
+        "Edge certificates not captured",
+        "Authenticated login probe optional"
+      ],
+      "verification": "29 controls: full release, ordering and confirmation, interrupted-stage blocking, client/peer fencing, corrupt off-host copy, Caddyfile and parameter drift, missing migration rows, rollback with and without database restore, refusal after reopen, release succession, and the real runtime observation against production-shaped inspect output including the 13 November image override and compose file set.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Executor and driver exist; staging rehearsal and supervised production execution are pending."
+      },
+      "property": "No migration runs before a verified off-host copy of a fenced cold capture, and no traffic reaches a candidate that failed verification.",
+      "evidence": "Synthetic host model only; Docker, PostgreSQL, Caddy and SFTP behaviour need staging and supervised production evidence."
+    },
+    {
       "id": "MOB-ONBOARD-001",
       "title": "Session-bound durable onboarding reconciliation",
       "statement": "Onboarding completion must use confirmed server evidence for the currently rendered account; durable first-value intent survives offline or pending responses and stale account callbacks cannot complete another occurrence.",
@@ -7549,7 +7661,7 @@
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "tdf-mobile/__tests__/featureRegistry.test.ts",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/CorsSpec.hs",
@@ -10990,7 +11102,7 @@
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "tdf-mobile/__tests__/featureRegistry.test.ts",
         "e2e/web/booking-catalog-recovery.spec.mjs"
       ],
@@ -12362,19 +12474,21 @@
       "property": "Standalone destination coverage, unique concrete paths and per-session access filtering. A fully loaded mobile menu keeps its close control inside the viewport and restores focus after dismissal. Access-request creation without a selected target is excluded; personal request history remains discoverable.",
       "implementation": [
         "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.ts",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/pages/SecurityPage.tsx",
         "tdf-hq-ui/src/components/PublicBranding.tsx",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/components/RegistryBreadcrumbs.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
         "tdf-hq-ui/src/pages/SecurityPage.test.tsx",
         "scripts/audit-feature-registry.mjs",
+        "scripts/ux-audit-inventory.mjs",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "e2e/web/community-discovery.spec.mjs"
       ],
@@ -12525,7 +12639,7 @@
         "Bounded explicit logout request; no automatic retry; existing cache epoch invalidation."
       ],
       "implementation": [
-        "tdf-hq-ui/src/session/logoutIntent.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/session/SessionContext.tsx",
         "tdf-hq-ui/src/api/session.ts",
         "tdf-hq-ui/src/api/client.ts",
@@ -12539,7 +12653,7 @@
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx"
       ],
       "tests": [
-        "tdf-hq-ui/src/session/logoutIntent.test.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
         "tdf-hq-ui/src/api/logoutIntent.test.ts",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
@@ -23282,11 +23396,14 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/Catalog/Security.hs",
-        "tdf-hq/src/TDF/Profiles/Artist.hs"
+        "tdf-hq/src/TDF/Profiles/Artist.hs",
+        "tdf-hq-ui/src/api/accessRequests.ts",
+        "tdf-hq-ui/src/pages/ForbiddenPage.tsx"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs"
+        "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
+        "tdf-hq-ui/src/pages/ForbiddenPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
@@ -26018,7 +26135,7 @@
         "services/campaign-platform/tests/test_domain.py",
         "services/campaign-platform/tests/test_facebook.py",
         "services/campaign-platform/tests/test_http.py",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "services/campaign-platform/tests/test_tiktok.py",
         "scripts/__tests__/campaign-tiktok-ui.test.mjs",
         "services/campaign-platform/tests/test_tiktok_sandbox.py",
@@ -27523,7 +27640,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "The ratchet is enforced; 8 backend imports, 21 web imports and 16 oversized files remain listed debt."
+        "reason": "The ratchet is enforced; 8 backend imports, 10 web imports and 16 oversized files remain listed debt."
       },
       "authority": "User request 2026-11-10; layer definitions and limits are an engineering decision recorded in ADR 0133, owner confirmation pending.",
       "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",
@@ -27872,13 +27989,13 @@
       "observability": "The feature_403_shown analytics event is no longer emitted for this route on a missing module; API 403 responses are unchanged.",
       "implementation": [
         "tdf-hq/assets/feature-registry.json",
-        "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.ts",
         "tdf-hq-ui/src/routes/AppShell.tsx",
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
       "tests": [
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
         "tdf-hq/test/TDF/EventAdminDelegationSpec.hs"

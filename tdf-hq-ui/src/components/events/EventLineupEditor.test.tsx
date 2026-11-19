@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { SocialEventDTO } from '../../api/socialEvents';
-import { advanceAuthSessionEpoch } from '../../session/authEvents';
+import { advanceAuthSessionEpoch } from '../../auth/authEvents';
 
 const read = jest.fn<() => Promise<SocialEventDTO>>();
 const update = jest.fn<(id: string, event: SocialEventDTO) => Promise<SocialEventDTO>>();
