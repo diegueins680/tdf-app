@@ -58,6 +58,7 @@ import qualified TDF.Commerce.DatafastClientIPSpec as DatafastClientIPSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
 import qualified TDF.EventAdminDelegationSpec as EventAdminDelegationSpec
+import qualified TDF.EventTicketSaleSpec as EventTicketSaleSpec
 import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
 import qualified TDF.TicketManualReviewSpec as TicketManualReviewSpec
@@ -929,6 +930,7 @@ main = hspec $ do
     TicketConfirmationSpec.spec
     EventOrganizerSpec.spec
     EventAdminDelegationSpec.spec
+    EventTicketSaleSpec.spec
     InvoiceDatilSpec.spec
     TicketManualReviewSpec.spec
     TicketPaymentReceiptSpec.spec

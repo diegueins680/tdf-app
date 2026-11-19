@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "fe4fffcbd7ad67e223c342c36ef314018f1646cde368c02dbe18665799d0d01f",
+    "tdf-hq/tdf-hq.cabal": "32a20b70aeebb16aed20c8b37ec2ca287083942632d786146d893c54833ff98d",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -671,6 +671,15 @@
       "semanticReview": "recoveryWindowValid, createPasswordResetToken, the recovery challenge insert, signup, passwordReset and every expression the restricted translator reads are byte-identical to the previous review; the edits are confined to the login handler and the import list. No token is issued on a path that did not issue one before. The recovery expiry SQL, identity-lifecycle contract and Stack/lock are unchanged. Reviewed by the change author only; no independent review was performed. Fresh source-bound solver/replay/control execution remains required."
     },
     {
+      "reviewedAgainst": "65317ec2e4febf920292ecace7df466153ae5046",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "currentSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "change": "Register the library module TDF.Server.EventTicketSale in exposed-modules and the test module TDF.EventTicketSaleSpec in the tdf-hq-test other-modules list for EVT-TICKET-SALE-001.",
+      "semanticReview": "Removing exactly those two module lines reproduces protected main Cabal bytes. Every other reviewed source byte and hash matches protected main. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed; the added library module holds paid ticket sale request and approval handlers only, calls hasStrictAdminAccess without changing it, and is not imported by any reviewed source.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
       "reviewedAgainst": "4dcbaadee2fe22cd6777a9949a9679bf790145b6",
       "source": "tdf-hq/tdf-hq.cabal",
       "previousSha256": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1",
@@ -695,6 +704,15 @@
       "change": "Register the extracted DatafastCheckoutContext module to keep the storefront below the enforced module size limit.",
       "semanticReview": "The immutable cart projection, recheck, saved service checkout reuse and trusted client-IP loader bodies move verbatim from ServiceStorefront to a small Server-layer module and are re-exported unchanged. This adds one module registration to the existing five reviewed Dataweb Cabal additions; no dependency, resolver, compiler flag or other source-context change. No obligation object changes; this author review supplies no independent approval.",
       "qualification": "Fresh source-bound checks, compiler validation and hosted CI remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "966fb55dca70a49c0a340b674f8cc133cc413a2d",
+      "previousSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "currentSha256": "32a20b70aeebb16aed20c8b37ec2ca287083942632d786146d893c54833ff98d",
+      "change": "Reconcile current protected main while retaining the reviewed Dataweb Cabal additions.",
+      "semanticReview": "The DatafastClientIP library and test modules and extracted DatafastCheckoutContext module are registered, iproute is added to library and tests and wai-extra to tests, using their existing snapshot versions. Removing those exact six lines reproduces protected main Cabal bytes. No other dependency, flag, source path, compiler option or toolchain change exists. Protected-main authorization and recovery sources are retained. Obligation objects are equal to both parents and remain unchanged. This is an author source-context review, not independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
     }
   ]
 }

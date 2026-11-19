@@ -1,3 +1,4 @@
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import MarkdownText from '../components/MarkdownText';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useState } from 'react';
@@ -223,6 +224,9 @@ export default function MarketplaceOrderTrackingPage() {
         )}
         {status === 'success' && order && (
           <Stack spacing={2}>
+            {['failed', 'payment_failed', 'declined', 'rejected'].includes(order.moCheckoutStatus ?? order.moStatus) && (
+              <PaymentAlternativesNotice methods={[]} blocked />
+            )}
             <Card variant="outlined">
               <CardContent>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
