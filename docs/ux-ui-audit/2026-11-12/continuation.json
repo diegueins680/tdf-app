@@ -243,6 +243,12 @@
       "principle": "Continuidad de selección y estabilidad visual",
       "finding": "CI capturó una selección de artista perdida en WebKit: el refresco de búsqueda podía retirar temporalmente el nodo pulsado entre mouse-down y mouse-up.",
       "change": "Se mantienen los resultados anteriores del mismo usuario durante la carga. Una opción que sigue coincidiendo conserva su nodo al refrescar los datos; las opciones de otro usuario no se usan como reemplazo. La prueba fuerza el refresco con el puntero presionado y conserva las verificaciones de unión, URL, filtros y búsqueda más allá de cincuenta artistas."
+    },
+    {
+      "id": "COG-20261119-03",
+      "principle": "Reconocimiento, vocabulario común y significado del estado",
+      "finding": "El seguimiento mostraba códigos ingleses de entrega, custodia y depósito. Un depósito sin dato se presentaba como pendiente, y los estados largos estrechaban el historial del teléfono.",
+      "change": "Etiquetas españolas compartidas con la vista de equipo para venta y renta; depósito pendiente/parcial pendiente distinto de devuelto/parcialmente devuelto/retenido. Sin dato muestra Sin información; códigos desconocidos se conservan. El historial se apila y sus etiquetas se ajustan al ancho. Solo presentación; no se modifica el estado ni se inicia una operación."
     }
   ],
   "measurements": [
@@ -354,7 +360,7 @@
       "id": 14,
       "item": "Vocabulario compartido",
       "status": "Parcial",
-      "nextOrEvidence": "Asistencia y correo simplificados en web; falta verificar todas las superficies móviles. Categorías de mercancía compartidas en español/inglés en cuatro superficies; filtros y API conservan códigos. Seguimiento de mercancía usa Novedades/Updates y recuperación en lenguaje común, sin mostrar el acceso privado."
+      "nextOrEvidence": "Asistencia y correo simplificados en web; falta verificar todas las superficies móviles. Categorías de mercancía compartidas en español/inglés en cuatro superficies; filtros y API conservan códigos. Seguimiento de mercancía usa Novedades/Updates y recuperación en lenguaje común, sin mostrar el acceso privado. Estados de entrega y renta compartidos entre seguimiento y equipo; depósito pendiente/parcial pendiente separado de devolución completada, sin inferir estado cuando falta el dato. Historial legible en teléfono; no cambia la autoridad del servidor."
     },
     {
       "id": 15,
@@ -512,9 +518,9 @@
       "scope": "Full web checkpoint before the final schedule-disclosure change; affected suites and browser paths rerun afterwards."
     },
     "latestFocusedJest": {
-      "suitesPassed": 4,
-      "testsPassed": 40,
-      "sourceCommit": "6551e637327ec183e813df2021f1ac14078802e7"
+      "suitesPassed": 3,
+      "testsPassed": 92,
+      "sourceCommit": "2f5ab01bf0e4830f7ef60459a359630358108c53"
     },
     "browser": {
       "passed": 22,
@@ -528,24 +534,24 @@
       "latestBookingDisclosurePassed": 10
     },
     "governance": {
-      "sourceCommit": "6551e637327ec183e813df2021f1ac14078802e7",
+      "sourceCommit": "2f5ab01bf0e4830f7ef60459a359630358108c53",
       "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-      "mappedChangedMaterialSurfaces": 141,
+      "mappedChangedMaterialSurfaces": 142,
       "inventory": "passed",
       "traceability": "passed",
       "semanticConformance": "not established by these checks"
     },
     "catalog": {
-      "candidates": 1429,
+      "candidates": 1430,
       "unreviewed": 0,
       "stale": 0,
-      "preservationTestsPassed": 11
+      "preservationTestsPassed": 12
     },
     "typecheck": "passed",
     "lint": "passed",
     "latestBrowserMatrix": {
-      "cases": 70,
-      "passed": 70,
+      "cases": 35,
+      "passed": 35,
       "failed": 0,
       "skipped": 0,
       "flaky": 0,
@@ -559,67 +565,54 @@
         "WebKit critical"
       ],
       "caseGroups": {
-        "artistPointerRefreshAndUnion": 7,
-        "venueResolutionAndPaging": 7,
-        "searchBeyondFiftyFilterAndLineup": 28,
-        "marketplaceBankReference": 14,
-        "marketplaceCustomerRequest": 14
+        "requestValidationAndRecovery": 14,
+        "bankReferenceRecoveryAndOrderIsolation": 14,
+        "localizedStateAndDepositDisplay": 7
       },
       "checks": [
-        "Pointer held across a deferred search, same matching option node retained and released into canonical7,8 union; URL/city/past/reload/clear assertions kept",
-        "Same-principal placeholders only; existing fifty-selection cap, beyond-fifty search and referenced-venue loading regressions",
-        "Type/reason/date inline association and focus; strict next-calendar-day extension and complete1001-character draft retained",
-        "Pending request capture/locks and immediate duplicate guard;503 retains raw draft/key",
-        "Changed content blocked after uncertainty; restoring the original attempt sends nothing and focuses reason; separate retry uses identical payload/key/private header",
-        "Accepted request stays under review and does not change paid/fulfillment/rental dates; old order completion cannot clear the new draft",
-        "Existing bank reference/route isolation regressions and full WCAG/pointer/viewport checks retained"
+        "Current and historical sale/rental states share the staff labels",
+        "Pending partial deposit return stays distinct from completed partial return and payment",
+        "Missing deposit is Sin información; unknown long code stays complete without horizontal overflow",
+        "History label bounds, normal pointer reachability and WCAG2a/2aa/21aa/22aa checks",
+        "Existing request and bank-reference invalid/pending/rejection/retry/order-isolation regressions",
+        "Only synthetic reads/writes; status presentation itself sends no mutation"
       ],
       "harness": {
         "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
         "port": 4189,
         "reuseExistingServer": false,
         "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
-        "identity": "Fresh strict preview from worktree. Initial preview36794 and final preview62873 cwd and served /inicio bytes verified against this worktree. The main rerun uses the same pre-hardening application build after own heavy checks finish; WCAG rules and timeouts stay unchanged. The affected request cases are rechecked separately on the final build."
+        "identity": "Initial preview64803 and final preview66848 cwd independently verified in this worktree; each served /inicio byte-for-byte equal to tdf-hq-ui/dist/index.html. Adapter builds and owns port4189, with no reused server."
       },
-      "log": "/private/tmp/cogload-eighteenth-browser-final.log",
-      "supplementaryVerification": {
-        "cases": 14,
-        "passed": 14,
-        "failed": 0,
-        "log": "/private/tmp/cogload-eighteenth-request-final.log",
-        "scope": "Affected request scenarios on the final build after retry-key boundary adjustment; unchanged artist/reference paths retain main70-case evidence."
-      },
-      "limitations": "All API traffic synthetic. No real request/order/payment/publication. Browser configurations do not establish native-device or human comprehension acceptance."
+      "log": "/private/tmp/cogload-nineteenth-browser-final.log",
+      "limitations": "Synthetic API/browser checks do not establish native-device or human-comprehension acceptance."
     },
     "latestCompletedHostedCheckpoint": {
-      "commit": "7f564d20af27017a577888cfaee54dd2fee848d7",
-      "ciRun": 44342388741,
-      "ciConclusion": "failure",
+      "commit": "4669d12deaf891f31a78f4d49140d59d260e50da",
+      "ciRun": 44475536949,
+      "ciConclusion": "cancelled",
       "webJest": {
         "suites": 383,
-        "tests": 4438,
+        "tests": 4443,
         "result": "passed"
       },
       "backend": "passed",
       "mainBrowser": {
-        "passed": 1078,
+        "passed": 1093,
         "skipped": 22,
-        "failed": 1
-      },
-      "mainBrowserFailure": "WebKit desktop artist union stayed at7 after the Beta click. Failure screenshot shows Beta still typed and unselected; trace crosses a debounced options refresh during interaction. Matching option nodes are now preserved across the query data gap; the new test forces refresh between pointer down/up and verifies the same node before release. New full hosted result remains required.",
-      "nativeMusic": {
-        "passed": 74,
         "failed": 0
       },
       "additionalBrowser": {
         "storage": 8,
-        "torrent": "skipped after main browser failure",
-        "deletion": "skipped after main browser failure",
-        "discovery": "skipped after main browser failure"
+        "torrent": 21,
+        "deletion": 10,
+        "discovery": 25
       },
-      "specialistWorkflows": "all four passed: catalog44342396276,event44342405355,social44342413169,interaction44342420179",
-      "admission": "Exact-head main admission44342563162 succeeded; other admission occurrences cancelled.",
-      "scope": "Prior7f564d20 only. UI/backend/native/specialist successes do not establish an overall CI pass."
+      "nativeMusic": "Cancelled after reaching case67/74; no completed pass claimed. Job has20-minute timeout; log reports operation cancelled, no definitive cancellation cause established.",
+      "aggregateQuality": "failed because required native-music job was cancelled",
+      "specialistWorkflows": "all four passed: catalog44475540765,event44475544582,social44475548670,interaction44475552720",
+      "admission": "Exact-head source-admission44475364595 succeeded.",
+      "scope": "Prior4669 only. Hosted artist-union and request cases now pass in the main browser matrix, but this is not an overall CI pass."
     },
     "latestNativePlaybackRecheck": {
       "cases": 4,
@@ -641,34 +634,31 @@
       "description": "La reverificación local de música nativa aprobó cuatro casos WebKit (dos recorridos repetidos dos veces) con el decodificador y reloj reales. No prueba que el fallo hosted esté resuelto. El primer intento usó el puerto4190 restringido por WebKit, no cargó la app y se detuvo; se excluye como evidencia de producto."
     },
     "latestHostedCheckpointSnapshot": {
-      "commit": "7f564d20af27017a577888cfaee54dd2fee848d7",
-      "ciRun": 44342388741,
-      "ciConclusion": "failure",
+      "commit": "4669d12deaf891f31a78f4d49140d59d260e50da",
+      "ciRun": 44475536949,
+      "ciConclusion": "cancelled",
       "webJest": {
         "suites": 383,
-        "tests": 4438,
+        "tests": 4443,
         "result": "passed"
       },
       "backend": "passed",
       "mainBrowser": {
-        "passed": 1078,
+        "passed": 1093,
         "skipped": 22,
-        "failed": 1
-      },
-      "mainBrowserFailure": "WebKit desktop artist union stayed at7 after the Beta click. Failure screenshot shows Beta still typed and unselected; trace crosses a debounced options refresh during interaction. Matching option nodes are now preserved across the query data gap; the new test forces refresh between pointer down/up and verifies the same node before release. New full hosted result remains required.",
-      "nativeMusic": {
-        "passed": 74,
         "failed": 0
       },
       "additionalBrowser": {
         "storage": 8,
-        "torrent": "skipped after main browser failure",
-        "deletion": "skipped after main browser failure",
-        "discovery": "skipped after main browser failure"
+        "torrent": 21,
+        "deletion": 10,
+        "discovery": 25
       },
-      "specialistWorkflows": "all four passed: catalog44342396276,event44342405355,social44342413169,interaction44342420179",
-      "admission": "Exact-head main admission44342563162 succeeded; other admission occurrences cancelled.",
-      "scope": "Prior7f564d20 only. UI/backend/native/specialist successes do not establish an overall CI pass."
+      "nativeMusic": "Cancelled after reaching case67/74; no completed pass claimed. Job has20-minute timeout; log reports operation cancelled, no definitive cancellation cause established.",
+      "aggregateQuality": "failed because required native-music job was cancelled",
+      "specialistWorkflows": "all four passed: catalog44475540765,event44475544582,social44475548670,interaction44475552720",
+      "admission": "Exact-head source-admission44475364595 succeeded.",
+      "scope": "Prior4669 only. Hosted artist-union and request cases now pass in the main browser matrix, but this is not an overall CI pass."
     }
   },
   "limitations": [
@@ -805,6 +795,10 @@
     {
       "path": "figures/marketplace-request-recovery-phone.png",
       "scope": "Resultado sintético incierto: cambios bloqueados hasta restaurar el intento original; restaurar no envía la solicitud."
+    },
+    {
+      "path": "figures/marketplace-rental-status-phone.png",
+      "scope": "Historial de renta sintético: devolución de depósito pendiente e inspección diferenciadas; sin mutación financiera real."
     }
   ],
   "followups": [
@@ -2400,8 +2394,138 @@
       "lateHardening": {
         "scope": "The main70-case matrix used the build preceding the final retry-key error-boundary adjustment. A fault-injection unit proves no write and retained draft; full typecheck and focused lint rerun, followed by the affected14 request cases. Unchanged artist/reference paths retain main-matrix evidence."
       },
+      "hostedCI": "Exact4669 CI completed cancelled: browser1093/22 and web383/4443 pass, native-music cancelled; no overall pass.",
+      "limitations": "Uncertain-attempt snapshot exists only in mounted order memory; no persisted payload recovery, key rotation or new backend protocol. Unknown outcome requires restoring/retrying the same attempt before edits. Global SessionQueryProvider still isolates principal/credential/role occurrences. Separate root/mobile drafts unchanged, and outstanding decisions/native/human acceptance remain open.",
+      "hostedVerification": {
+        "commit": "4669d12deaf891f31a78f4d49140d59d260e50da",
+        "ciRun": 44475536949,
+        "ciConclusion": "cancelled",
+        "webJest": {
+          "suites": 383,
+          "tests": 4443,
+          "result": "passed"
+        },
+        "backend": "passed",
+        "mainBrowser": {
+          "passed": 1093,
+          "skipped": 22,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "nativeMusic": "Cancelled after reaching case67/74; no completed pass claimed. Job has20-minute timeout; log reports operation cancelled, no definitive cancellation cause established.",
+        "aggregateQuality": "failed because required native-music job was cancelled",
+        "specialistWorkflows": "all four passed: catalog44475540765,event44475544582,social44475548670,interaction44475552720",
+        "admission": "Exact-head source-admission44475364595 succeeded.",
+        "scope": "Prior4669 only. Hosted artist-union and request cases now pass in the main browser matrix, but this is not an overall CI pass."
+      }
+    },
+    {
+      "date": "2026-11-19",
+      "pass": "nineteenth",
+      "baseCommit": "4669d12deaf891f31a78f4d49140d59d260e50da",
+      "scope": "Shared sale/rental labels, distinct deposit-return copy and contained history labels. No state transition, settlement, permission, payment, API or idempotency change.",
+      "regressionVerification": {
+        "suites": 3,
+        "tests": 92,
+        "log": "/private/tmp/cogload-nineteenth-unit-final.log",
+        "checks": [
+          "Customer tracking current/history and missing/unknown states",
+          "Existing staff order and private marketplace API regressions"
+        ]
+      },
+      "browserVerification": {
+        "cases": 35,
+        "passed": 35,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "requestValidationAndRecovery": 14,
+          "bankReferenceRecoveryAndOrderIsolation": 14,
+          "localizedStateAndDepositDisplay": 7
+        },
+        "checks": [
+          "Current and historical sale/rental states share the staff labels",
+          "Pending partial deposit return stays distinct from completed partial return and payment",
+          "Missing deposit is Sin información; unknown long code stays complete without horizontal overflow",
+          "History label bounds, normal pointer reachability and WCAG2a/2aa/21aa/22aa checks",
+          "Existing request and bank-reference invalid/pending/rejection/retry/order-isolation regressions",
+          "Only synthetic reads/writes; status presentation itself sends no mutation"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Initial preview64803 and final preview66848 cwd independently verified in this worktree; each served /inicio byte-for-byte equal to tdf-hq-ui/dist/index.html. Adapter builds and owns port4189, with no reused server."
+        },
+        "log": "/private/tmp/cogload-nineteenth-browser-final.log",
+        "limitations": "Synthetic API/browser checks do not establish native-device or human-comprehension acceptance."
+      },
+      "catalogCandidates": 1430,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 12,
+      "catalogReview": "Two moved display maps retain exact complete predecessors and their classification/disposition. The one additional deposit map is individually source-reviewed against the existing SQL states; earlier1429 complete decisions remain in current/history. Historical reconciliation tests replay that exact parent; separate current-source test checks extraction, full object preservation and backend vocabulary. No bulk builder/reclassification. Canonical JSON/CSV refreshed from the same final scan.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "4669d12deaf891f31a78f4d49140d59d260e50da",
+        "ciRun": 44475536949,
+        "ciConclusion": "cancelled",
+        "webJest": {
+          "suites": 383,
+          "tests": 4443,
+          "result": "passed"
+        },
+        "backend": "passed",
+        "mainBrowser": {
+          "passed": 1093,
+          "skipped": 22,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "nativeMusic": "Cancelled after reaching case67/74; no completed pass claimed. Job has20-minute timeout; log reports operation cancelled, no definitive cancellation cause established.",
+        "aggregateQuality": "failed because required native-music job was cancelled",
+        "specialistWorkflows": "all four passed: catalog44475540765,event44475544582,social44475548670,interaction44475552720",
+        "admission": "Exact-head source-admission44475364595 succeeded.",
+        "scope": "Prior4669 only. Hosted artist-union and request cases now pass in the main browser matrix, but this is not an overall CI pass."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "2f5ab01bf0e4830f7ef60459a359630358108c53",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 142,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "initialLocalBrowserAttempt": {
+        "passed": 33,
+        "failed": 2,
+        "log": "/private/tmp/cogload-nineteenth-browser.log",
+        "diagnosis": "Two existing recovery cases reached their30s test budgets. Tablet trace shows22.6s in the first button locator before a normal click; WebKit reference case reached its final retry click at the deadline. The entire matrix was repeated with unchanged source/assertions/timeouts; no definitive stall cause established."
+      },
       "hostedCI": "Fresh exact-head workflows required; no new-head overall hosted pass claimed.",
-      "limitations": "Uncertain-attempt snapshot exists only in mounted order memory; no persisted payload recovery, key rotation or new backend protocol. Unknown outcome requires restoring/retrying the same attempt before edits. Global SessionQueryProvider still isolates principal/credential/role occurrences. Separate root/mobile drafts unchanged, and outstanding decisions/native/human acceptance remain open."
+      "limitations": "Unknown state codes stay visible as received; no guessed status or new select option. Earlier request recovery remains mounted-page only. Outstanding owner decisions, native/human acceptance and separate branch integrations remain open."
     }
   ],
   "lastUpdated": "2026-11-19"
