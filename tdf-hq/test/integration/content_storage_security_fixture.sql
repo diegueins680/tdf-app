@@ -2,7 +2,7 @@ CREATE TABLE party(id bigint PRIMARY KEY);
 INSERT INTO party VALUES(1),(2),(3);
 CREATE TABLE api_token(id bigserial PRIMARY KEY,token text UNIQUE NOT NULL,party_id bigint NOT NULL,label text,active boolean NOT NULL,issued_at_epoch bigint,expires_at_epoch bigint);
 INSERT INTO api_token(token,party_id,label,active) VALUES ('storage-owner-a',1,'fixture',true),('storage-owner-b',2,'fixture',true),('storage-admin',3,'fixture',true);
-CREATE TABLE course_registration_receipt(id bigint PRIMARY KEY);
+CREATE TABLE course_registration_receipt(id bigint PRIMARY KEY,registration_id bigint NOT NULL,party_id bigint,file_url text NOT NULL,uploaded_by bigint);
 CREATE TABLE course_registration_follow_up(id bigint PRIMARY KEY);
 CREATE TABLE payment(id bigint PRIMARY KEY);
 CREATE TABLE security_role(id uuid,code text,name_es text,name_en text,description_es text,description_en text,sort_order integer,system_role boolean,emergency_administrator boolean,self_assignable boolean,automatic_assignable boolean,active boolean,workflow_state_id uuid,created_by bigint,updated_by bigint,approved_by bigint,created_at timestamptz,updated_at timestamptz,published_revision integer,version integer);

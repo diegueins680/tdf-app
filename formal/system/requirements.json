@@ -24455,7 +24455,10 @@
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/StorageSecuritySpec.hs"
+        "tdf-hq/test/TDF/StorageSecuritySpec.hs",
+        "scripts/test-content-storage-security-runtime.sh",
+        "tdf-hq/test/integration/content_storage_security_fixture.sql",
+        "tdf-hq/test/integration/content_storage_full_security_fixture.sql"
       ],
       "formalModels": [],
       "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",

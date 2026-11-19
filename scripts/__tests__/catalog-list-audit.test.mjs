@@ -1333,16 +1333,22 @@ async function sourceManifestView() {
     return actual;
   }) };
 }
+const reviewIndexes = new WeakMap();
 function wholeReview(value, expected) {
   if (!value || typeof value !== 'object') return undefined;
-  if (value.id === expected.id && canonicalReview(value) === canonicalReview(expected)) return value;
-  for (const child of Object.values(value)) {
-    if (child && typeof child === 'object') {
-      const found = wholeReview(child, expected);
-      if (found) return found;
-    }
+  let index = reviewIndexes.get(value);
+  if (!index) {
+    index = new Map();
+    const visit = node => {
+      if (!node || typeof node !== 'object') return;
+      if (node.id) index.set(node.id, [...(index.get(node.id) ?? []), node]);
+      for (const child of Object.values(node)) visit(child);
+    };
+    visit(value); reviewIndexes.set(value, index);
   }
+  return (index.get(expected.id) ?? []).find(row => canonicalReview(row) === canonicalReview(expected));
 }
+
 async function sourceReconciliation() {
   const register = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
   const original = await reviewedJson(INTEGRATION_SOURCE, catalogPath);
@@ -1438,22 +1444,74 @@ test('combined registry retains the exact main prefix, original SQL and whole pa
   }
 });
 function wholeResolution(value, expected) {
-  if (!value || typeof value !== 'object') return false;
-  if (canonicalReview(value) === canonicalReview(expected)) return true;
-  return Object.values(value).some(child => wholeResolution(child, expected));
+  return Boolean(findWholeResolution(value, expected));
 }
 
 const canonicalReview = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
   ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
 function findWholeResolution(value, expected) {
   if (!value || typeof value !== 'object') return undefined;
-  if (canonicalReview(value) === canonicalReview(expected)) return value;
+  if ((Object.hasOwn(expected, 'currentId') && value.currentId === expected.currentId || Object.hasOwn(expected, 'replacementId') && value.replacementId === expected.replacementId) && canonicalReview(value) === canonicalReview(expected)) return value;
   for (const child of Object.values(value)) {
     const found = findWholeResolution(child, expected);
     if (found) return found;
   }
 }
 async function mainSourceBytes(file) {
+  if (file === 'tdf-mobile/src/features/generatedFeatureRegistry.ts') {
+    const { stdout } = await execFileAsync('git', ['show', '4d866387ac6938d7aeaad5d1fa2985f8e02932e7:src/features/generatedFeatureRegistry.ts'], { cwd: path.join(workspaceRoot, 'tdf-mobile'), maxBuffer: 16 * 1024 * 1024 });
+    return stdout; // exact dated fixture; the actual mirror has its own successor check below
+  }
   return file === manifestPath ? JSON.stringify(await mainManifestView())
     : fs.readFile(path.join(workspaceRoot, file), 'utf8');
 }
+
+function findHistoricalReview(value, id) {
+  if (!value) return undefined;
+  if (value.id === id) return value;
+  const previous = findHistoricalReview(value.previousDecision, id);
+  if (previous) return previous;
+  for (const branch of value.concurrentReviewHistory ?? []) {
+    const found = findHistoricalReview(branch, id);
+    if (found) return found;
+  }
+}
+
+
+test('actual Mobile mirror matches its generator and stale predecessor cannot authorize the new list', async () => {
+  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'catalog-mobile-mirror-'));
+  const mobileFile = 'tdf-mobile/src/features/generatedFeatureRegistry.ts';
+  const generatedFile = 'src/features/generatedFeatureRegistry.ts';
+  const register = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
+  const current = register.decisions.find(row => row.id === 'ea29c6e8a6cd165802a8');
+  assert.equal(current?.evidence.valueCount, 165);
+  assert.equal(current.previousDecision.id, 'fd606f7d00f82c78cb20');
+  try {
+    const output = path.join(temporary, 'generated');
+    await fs.mkdir(path.join(output, 'src/features'), { recursive: true });
+    await execFileAsync(process.execPath, [path.join(workspaceRoot, 'scripts/generate-mobile-feature-registry.mjs')],
+      { cwd: workspaceRoot, env: { ...process.env, TDF_MOBILE_ROOT: output } });
+    const source = await fs.readFile(path.join(workspaceRoot, mobileFile), 'utf8');
+    assert.equal(source, await fs.readFile(path.join(output, generatedFile), 'utf8'));
+    const repo = path.join(temporary, 'repo');
+    await fs.mkdir(repo);
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: repo });
+    await writeFile(repo, mobileFile, source);
+    await execFileAsync('git', ['add', '--', mobileFile], { cwd: repo });
+    const report = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+      'docs/catalog-persistence/reports/static-list-inventory.json'), 'utf8'));
+    const ids = new Set(report.candidates.filter(row => row.file === mobileFile).map(row => row.id));
+    const selected = register.decisions.filter(row => ids.has(row.id));
+    assert.equal(selected.length, ids.size);
+    assert.ok(ids.has(current.id));
+    const decisions = path.join(temporary, 'decisions.json');
+    await fs.writeFile(decisions, JSON.stringify(selected));
+    const args = [auditScriptPath, '--root', repo, '--decisions', decisions, '--fail-on-unreviewed'];
+    await execFileAsync(process.execPath, args, { cwd: repo });
+    await fs.writeFile(decisions, JSON.stringify(selected.map(row => row.id === current.id ? current.previousDecision : row)));
+    await assert.rejects(execFileAsync(process.execPath, args, { cwd: repo }),
+      error => error.code === 1 && error.stderr.includes('1 unreviewed candidate(s), 1 stale decision(s)'));
+  } finally {
+    await fs.rm(temporary, { recursive: true, force: true });
+  }
+});

@@ -12,7 +12,7 @@ import Data.Maybe (fromJust)
 import qualified Data.Text as T
 import qualified Data.UUID as UUID
 import Database.Persist (PersistValue(..))
-import Database.Persist.Sql (Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool)
+import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
 import Servant ((:<|>)(..), getResponse, ServerError(..))
 import Servant.Multipart (FileData(..))
 import Servant.Server (runHandler)
@@ -23,7 +23,7 @@ import System.IO.Temp (withSystemTempDirectory)
 import Test.Hspec
 import TDF.API.Types (DriveUploadDTO(..), DriveTokenResponse(..))
 import TDF.API.Drive (DriveUploadForm(..))
-import TDF.Auth (loadAuthedUser)
+import TDF.Auth (AuthedUser(..), loadAuthedUser)
 import TDF.Config (loadConfig, assetsRootDir)
 import TDF.ContentStorage
 import TDF.DB (Env(..), makePool, sharedTlsManager)
@@ -244,7 +244,8 @@ spec = do
             denied <- db (bindReference other "https://api.tdfrecords.net" "course_receipt" 1 (Just relative))
             denied `shouldSatisfy` isLeft
             db $ do
-              rawExecute "INSERT INTO course_registration_receipt(id) VALUES(1)" []
+              rawExecute "INSERT INTO course_registration_receipt(id,registration_id,party_id,file_url,uploaded_by) VALUES(1,1,?,?,?)"
+                [PersistInt64 (fromSqlKey (auPartyId owner)),PersistText relative,PersistInt64 (fromSqlKey (auPartyId owner))]
               requireReference owner "https://api.tdfrecords.net" "course_receipt" 1 (Just relative)
             run (readAdmin identifier) >>= \result -> case result of
               Right headers -> getResponse headers `shouldBe` BL.fromStrict binary
@@ -254,7 +255,8 @@ spec = do
             HTTP.responseBody authorizedResponse `shouldBe` BL.fromStrict binary
             run (deleteOwner identifier) >>= expectCode 409
             -- Role revocation after the AuthedUser was captured must still deny.
-            db (rawExecute "UPDATE role_permission SET active=false" [])
+            db (rawExecute "UPDATE party_security_role SET active=false,revoked_at=clock_timestamp() WHERE party_id=?"
+              [PersistInt64 (fromSqlKey (auPartyId admin))])
             run (readAdmin identifier) >>= expectCode 404
             expectHttpDenial (Just "storage-admin") relative 404
             db (rawExecute "DELETE FROM course_registration_receipt WHERE id=1" [])

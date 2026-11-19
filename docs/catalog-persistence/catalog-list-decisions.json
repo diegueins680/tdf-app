@@ -115681,6 +115681,24 @@
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
       ]
+    },
+    {
+      "id": "1dbdc22c2e73a9a2b919",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "risk": "Treating a historical test projection as permission to reorder, skip or execute live migrations would erase deployment authority.",
+      "justification": "This two-entry set is confined to catalog regression tests. It identifies the two unchanged storage migration objects appended to the exact reviewed main prefix so older assertions can inspect their dated schema. The separate unprojected test checks the full combined registry, introduction ancestry, original SQL bytes, and every complete review/resolution from both parents. Production migration execution uses the canonical manifest and applied ledger, never this fixture set.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "storage-main-test-projection-20261119",
+      "evidence": {
+        "file": "scripts/__tests__/catalog-list-audit.test.mjs",
+        "kind": "array",
+        "name": "INTEGRATION_EXTRA_IDS",
+        "line": 1318,
+        "valueCount": 2
+      }
     }
   ]
 }

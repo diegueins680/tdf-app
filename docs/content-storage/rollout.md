@@ -250,3 +250,9 @@ as a view omitting main's three independent additions. Both complete parent
 review graphs and their hashes are retained in the active successor and
 `storage-main-integration-20261104.json`. Earlier build receipts do not certify
 this newly integrated backend; fresh hosted checks are required.
+
+### Full-schema regression qualification (2026-11-19)
+
+`TDF_STORAGE_SECURITY_FULL_DATABASE_URL=postgresql://postgres@127.0.0.1:56439/tdf_storage_full_test sh scripts/test-content-storage-security-runtime.sh` accepts only an empty disposable local/CI database. It applies and replays the complete production manifest, then creates independent synthetic owners and an administrator without replacing the canonical emergency administrators. Custom-label fixture sessions match the existing fixture and are explicitly revoked by the test. The receipt fixture supplies the actual registration and ownership fields; the captured administrator loses its own assignment without revoking every account's permissions. The older bounded fixture remains a separate mode.
+
+The combined 260-migration schema and compiled storage-security suite passed locally (31 examples, including authenticated encryption, OAuth request validation, account isolation, live resource readers, session/role revocation, corrupt bytes and public/static denial). This is synthetic local evidence, not native-device acceptance, credential custody/rotation/recovery approval, provider consent qualification, private CDN rehearsal, upstream Mobile approval or production activation.
