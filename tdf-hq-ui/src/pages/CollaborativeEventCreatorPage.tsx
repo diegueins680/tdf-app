@@ -44,6 +44,7 @@ import {
 import type { PartySelectorOption } from '../api/partySelector';
 import PageShell from '../components/PageShell';
 import EventLineupPicker from '../components/events/EventLineupPicker';
+import EventPublishControl from '../components/events/EventPublishControl';
 import TicketPricePreview from '../components/events/TicketPricePreview';
 import { UserSelector } from '../components/party-selector/PartySelector';
 import { useSession } from '../session/SessionContext';
@@ -278,19 +279,22 @@ export default function CollaborativeEventCreatorPage() {
   });
 
   const retryArtMutation = useMutation({
-    mutationFn: async () => {
-      const eventId = creationResult?.event.eventId?.trim();
-      if (!eventId || !artFile) throw new Error('Vuelve a elegir el arte para subirlo.');
-      await SocialEventsAPI.uploadEventImage(eventId, artFile, artFile.name);
-    },
-    onSuccess: () => {
-      setCreationResult((current) => current && { ...current, artUploaded: true, artError: null });
+    mutationFn: ({ eventId, file }: { eventId: string; file: File }) =>
+      SocialEventsAPI.uploadEventImage(eventId, file, file.name),
+    onSuccess: (_result, { eventId }) => {
+      setCreationResult((current) => current?.event.eventId === eventId
+        ? { ...current, artUploaded: true, artError: null }
+        : current);
       void qc.invalidateQueries({ queryKey: ['social-events'] });
+      void qc.invalidateQueries({ queryKey: ['social-event', eventId] });
+      void qc.invalidateQueries({ queryKey: ['public-upcoming-events'] });
+      void qc.invalidateQueries({ queryKey: ['upcoming-events-carousel'] });
+      void qc.invalidateQueries({ queryKey: ['public-event-ticket-storefront', eventId] });
+      void qc.invalidateQueries({ queryKey: ['public-event-ticket-storefront', Number(eventId)] });
     },
-    onError: (reason) => setCreationResult((current) => current && {
-      ...current,
-      artError: reason instanceof Error ? reason.message : 'No se pudo subir el arte.',
-    }),
+    onError: (reason, { eventId }) => setCreationResult((current) => current?.event.eventId === eventId
+      ? { ...current, artError: reason instanceof Error ? reason.message : 'No se pudo subir el arte.' }
+      : current),
   });
 
   const retryLineupMutation = useMutation({
@@ -356,12 +360,28 @@ export default function CollaborativeEventCreatorPage() {
     setCreationResult(null);
   };
 
+  const artInput = (
+    <input
+      ref={artInputRef}
+      type="file"
+      accept={EVENT_ART_ACCEPT}
+      hidden
+      aria-label="Arte del evento"
+      data-testid="event-art-input"
+      onChange={(event) => {
+        chooseArt(event.target.files?.[0]);
+        event.target.value = '';
+      }}
+    />
+  );
+
   if (creationResult) {
     const eventId = String(creationResult.event.eventId);
+    const published = creationResult.event.eventIsPublic === true && creationResult.event.eventPublicListable === true;
     return (
       <PageShell
         title="Evento creado"
-        subtitle="Tu borrador ya está listo para que el equipo lo desarrolle."
+        subtitle={published ? 'Tu evento ya tiene una página pública.' : 'Tu borrador ya está listo para que el equipo lo desarrolle.'}
         maxWidth="md"
         actions={(
           <Button
@@ -384,7 +404,7 @@ export default function CollaborativeEventCreatorPage() {
                   {creationResult.event.eventTitle}
                 </Typography>
                 <Typography color="text.secondary">
-                  {eventDateLabel(draft)} · guardado como planificación
+                  {eventDateLabel(draft)} · {published ? 'publicado' : 'guardado como planificación'}
                 </Typography>
               </Box>
               <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
@@ -397,8 +417,9 @@ export default function CollaborativeEventCreatorPage() {
                   variant="outlined"
                 />
                 <Chip
-                  icon={draft.isPublic ? <PublicIcon /> : <LockOutlinedIcon />}
-                  label={draft.isPublic ? 'Visible públicamente' : 'Borrador privado'}
+                  icon={published ? <PublicIcon /> : <LockOutlinedIcon />}
+                  label={published ? 'Visible públicamente' : draft.isPublic ? 'Pendiente de publicar' : 'Borrador privado'}
+                  color={published ? 'success' : 'default'}
                   variant="outlined"
                 />
                 {creationResult.artUploaded && (
@@ -415,22 +436,32 @@ export default function CollaborativeEventCreatorPage() {
               </Stack>
 
               {creationResult.artError && (
-                <Alert
-                  severity="warning"
-                  action={(
+                <Stack spacing={1} sx={{ width: '100%' }}>
+                  <Alert severity="warning">
+                    El evento se creó, pero no se pudo subir el arte: {creationResult.artError}
+                  </Alert>
+                  {artInput}
+                  {artFile && <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>{artFile.name}</Typography>}
+                  {artProblem && <Alert severity="error">{artProblem}</Alert>}
+                  <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                     <Button
-                      color="inherit"
-                      size="small"
-                      onClick={() => retryArtMutation.mutate()}
-                      disabled={retryArtMutation.isPending || !artFile}
+                      onClick={() => {
+                        if (creationResult.event.eventId && artFile) {
+                          retryArtMutation.mutate({ eventId: creationResult.event.eventId, file: artFile });
+                        }
+                      }}
+                      disabled={retryArtMutation.isPending || !creationResult.event.eventId || !artFile || Boolean(artProblem)}
                     >
-                      Reintentar
+                      {retryArtMutation.isPending ? 'Subiendo arte…' : 'Reintentar'}
                     </Button>
-                  )}
-                  sx={{ width: '100%' }}
-                >
-                  El evento se creó, pero no se pudo subir el arte: {creationResult.artError}
-                </Alert>
+                    <Button
+                      onClick={() => artInputRef.current?.click()}
+                      disabled={retryArtMutation.isPending}
+                    >
+                      Elegir otro archivo
+                    </Button>
+                  </Stack>
+                </Stack>
               )}
               {creationResult.pendingArtists.length > 0 && (
                 <Alert
@@ -475,12 +506,23 @@ export default function CollaborativeEventCreatorPage() {
                 </Alert>
               )}
 
+              {creationResult.event.eventId && (
+                <EventPublishControl
+                  key={eventId}
+                  event={creationResult.event}
+                  promptAfterSave
+                  artUploadFailed={Boolean(creationResult.artError)}
+                  onPublished={(event) => setCreationResult((current) =>
+                    current?.event.eventId === eventId ? { ...current, event } : current
+                  )}
+                />
+              )}
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                 {canPlanLogistics && (
                   <Button
                     component={RouterLink}
                     to={`/social/eventos/${encodeURIComponent(eventId)}/logistica`}
-                    variant="contained"
+                    variant="outlined"
                     startIcon={<RocketLaunchOutlinedIcon />}
                   >
                     Planificar con el equipo
@@ -489,11 +531,11 @@ export default function CollaborativeEventCreatorPage() {
                 <Button
                   component={RouterLink}
                   to={`/social/eventos/${encodeURIComponent(eventId)}`}
-                  variant={canPlanLogistics ? 'outlined' : 'contained'}
+                  variant="outlined"
                 >
-                  {canPlanLogistics ? 'Ver evento' : 'Preparar y publicar evento'}
+                  Ver evento
                 </Button>
-                <Button onClick={startAnotherEvent}>Crear otro</Button>
+                <Button onClick={startAnotherEvent} disabled={retryArtMutation.isPending}>Crear otro</Button>
               </Stack>
             </Stack>
           </CardContent>
@@ -545,18 +587,7 @@ export default function CollaborativeEventCreatorPage() {
                       Sube el afiche o flyer. Es lo primero que verá el público. JPG, PNG, WebP o GIF de hasta 10 MB.
                     </Typography>
                   </Box>
-                  <input
-                    ref={artInputRef}
-                    type="file"
-                    accept={EVENT_ART_ACCEPT}
-                    hidden
-                    aria-label="Arte del evento"
-                    data-testid="event-art-input"
-                    onChange={(event) => {
-                      chooseArt(event.target.files?.[0]);
-                      event.target.value = '';
-                    }}
-                  />
+                  {artInput}
                   {artFile ? (
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
                       {artPreviewUrl && (
@@ -817,7 +848,7 @@ export default function CollaborativeEventCreatorPage() {
                 <Box>
                   <Typography fontWeight={800}>Detalles opcionales</Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Descripción, capacidad, precio, tickets y visibilidad
+                    Descripción, capacidad, precio y visibilidad
                   </Typography>
                 </Box>
               </AccordionSummary>
@@ -852,12 +883,6 @@ export default function CollaborativeEventCreatorPage() {
                     />
                   </Stack>
                   <TicketPricePreview price={draft.price} currency={currency} locale={locale} />
-                  <TextField
-                    label="Enlace de tickets"
-                    value={draft.ticketUrl}
-                    onChange={(event) => updateDraft('ticketUrl', event.target.value)}
-                    placeholder="https://…"
-                  />
                   <FormControlLabel
                     control={(
                       <Switch
@@ -865,13 +890,32 @@ export default function CollaborativeEventCreatorPage() {
                         onChange={(_, checked) => updateDraft('isPublic', checked)}
                       />
                     )}
-                    label="Mostrar en el catálogo público de eventos"
+                    label="Incluir en el catálogo al publicar"
                   />
                   <Alert severity={draft.isPublic ? 'info' : 'success'}>
                     {draft.isPublic
-                      ? 'El evento será visible de inmediato, aunque seguirá en estado de planificación.'
+                      ? 'El evento aparecerá en el catálogo cuando lo publiques desde su página.'
                       : 'Recomendado: el evento empieza como borrador privado para que el equipo lo prepare.'}
                   </Alert>
+                  <Accordion variant="outlined" disableGutters slotProps={{ transition: { unmountOnExit: true } }}>
+                    <AccordionSummary
+                      id="external-ticketing-toggle"
+                      aria-controls="external-ticketing-details"
+                      expandIcon={<ExpandMoreIcon />}
+                    >
+                      Venta externa de entradas
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <TextField
+                        fullWidth
+                        label="Enlace externo de entradas"
+                        value={draft.ticketUrl}
+                        onChange={(event) => updateDraft('ticketUrl', event.target.value)}
+                        placeholder="https://…"
+                        helperText="Agrega el enlace si usas una boletería externa."
+                      />
+                    </AccordionDetails>
+                  </Accordion>
                 </Stack>
               </AccordionDetails>
             </Accordion>
@@ -927,7 +971,7 @@ export default function CollaborativeEventCreatorPage() {
                       ? <PublicIcon color="action" fontSize="small" />
                       : <LockOutlinedIcon color="action" fontSize="small" />}
                     <Typography variant="body2">
-                      {draft.isPublic ? 'Visible públicamente' : 'Borrador privado'}
+                      {draft.isPublic ? 'Pendiente de publicar' : 'Borrador privado'}
                     </Typography>
                   </Stack>
                 </Stack>
