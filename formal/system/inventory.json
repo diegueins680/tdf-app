@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "4d866387ac6938d7aeaad5d1fa2985f8e02932e7",
+  "mobileRevision": "c718aad3b6cf8e80ddc14a64a20952f4d626e876",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -1478,6 +1478,8 @@
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts",
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx",
+      "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx",
+      "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
       "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
       "tdf-hq-ui/src/pages/NotFoundPage.tsx",
       "tdf-hq-ui/src/pages/NotificationPage.tsx",
@@ -1669,6 +1671,8 @@
       "tdf-hq-ui/src/utils/dateOnly.ts",
       "tdf-hq-ui/src/utils/dateTime.test.ts",
       "tdf-hq-ui/src/utils/dateTime.ts",
+      "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts",
+      "tdf-hq-ui/src/utils/deviceTicketOrders.ts",
       "tdf-hq-ui/src/utils/directoryContactRouting.test.ts",
       "tdf-hq-ui/src/utils/directoryContactRouting.ts",
       "tdf-hq-ui/src/utils/directoryPreviewImage.ts",
@@ -8015,7 +8019,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "53db01321e43f5989d4bb555d676025491d773487e198b2627dc8e27ae61126c",
+      "sha256": "75829933e007771d3c2c09e2f4e9028ed065d76ee3fabc924533ecc2aae0318c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8927,7 +8931,7 @@
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "94dcbd14805849f075383b163c63f9b06258bf7801a299b4b1d3bb2dd9448bab",
+      "sha256": "82bbaf0824afa1c1cda67dd3a01eeba3ffec5074820d0ca9737b900e7f49d55d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11889,6 +11893,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-2868173b55cf6317",
+      "path": "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx",
+      "sha256": "e17a678db7a03f3cf650435967d41f0091909c76e40334dbe9a7c9ec82248bc8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f2b81d101086b2ae",
+      "path": "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
+      "sha256": "5120f53f0a645d5b5437cc8dc3c2e45ad4403a3cad50448d9da845240e90a85f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-35214bb78cbc255a",
       "path": "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
       "sha256": "0bb182ef3da26e32894ee7ca9093cf1691afb78b7e6a3ec9129d4dc3f0fa97bc",
@@ -11999,7 +12015,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "e93f211a8931ebbf60d9c32ecfcdd05066712610e16e505201dc7bcfc288e3c1",
+      "sha256": "bb7b735f75676353353f4a072f9dbebee6f29f478e79d8d053355c88c9b1a1cd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12671,7 +12687,7 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "d257098c3338360560f5382908e43fc0ab08c5eefb631ed3393a66a02db109ae",
+      "sha256": "a88a66d8753db1d483d1d3d59cf8a197250ee371c90b3e7064cd08ef07abcd48",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13032,6 +13048,18 @@
       "id": "SURFACE-9267af1df09b8b64",
       "path": "tdf-hq-ui/src/utils/dateTime.ts",
       "sha256": "a75595587356dd2dd3561264d04ea323aa2589f1e739645b103b5799a6ce9677",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-85c269ba1c50835e",
+      "path": "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts",
+      "sha256": "40e20f6588c464a4ca96684322187d18ada3e2ea7750532748caaa3cb3898fe6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-192a29fafc828f47",
+      "path": "tdf-hq-ui/src/utils/deviceTicketOrders.ts",
+      "sha256": "7d764b22758889be8431c85be04806b9fcdc3775ef399aceac5313a7b8569b46",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13703,7 +13731,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
+      "sha256": "11392498d31056c0a3eef9ff2dab3813848b5fa44e8d55176adb57133f7142ca",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21371,7 +21399,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "7befb5f315c7e165fbbeb77014b7fa1b8306efeeb22439b35f03e5acfbacd796",
+      "sha256": "ae4d7ffc3dee6dcd46d9f3cd0a2841973ea1ffcf643b30f189eb6487a6269dcf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31604,7 +31632,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a39c45910255b6c7e2b6fa46e20860c147cad81e6fecea0f6ac816f97a859c2e",
+      "sha256": "44d4ac340ab316804e079aa3e654d196ac6a0bcf6fceae01bd1a3aadcb1067cf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
