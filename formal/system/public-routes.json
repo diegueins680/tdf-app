@@ -72,6 +72,16 @@
  "debt": {},
  "routes": [
   {
+   "method": "GET",
+   "path": "/public/event-demo-requests",
+   "boundary": "public-read"
+  },
+  {
+   "method": "POST",
+   "path": "/public/event-demo-requests",
+   "boundary": "public-intake"
+  },
+  {
    "method": "POST",
    "path": "/NotificacionPago",
    "boundary": "signed-provider-callback"

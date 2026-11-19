@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 530,
-    "named": 448,
+    "total": 531,
+    "named": 449,
     "path-named": 0,
     "reviewed": 82,
     "unspecified": 0,
-    "covered": 530
+    "covered": 531
   },
   "routes": [
     {
@@ -3002,6 +3002,14 @@
       "basis": "named",
       "requirements": [
         "DOMO-PUBLIC-QUOTE-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/public/event-demo-requests",
+      "basis": "named",
+      "requirements": [
+        "EVT-DEMO-INTAKE-001"
       ]
     },
     {

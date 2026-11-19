@@ -30883,6 +30883,20 @@
   },
   "decisions": [
     {
+      "id": "c522a3bba721db511900",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Attribution drift would misclassify demo requests or permit arbitrary UTM values in persisted records.",
+      "justification": "This is an input boundary for four agreed campaign attribution labels, not a catalog of channels or choices: the landing and API normalize the same closed set. Expanding the pilot requires review of the corresponding UI and API wire contract.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 56
+      }
+    },
+    {
       "id": "c3d1e41b543e7cbdaf00",
       "classification": "dynamic-business-catalog",
       "disposition": "consumer-update",

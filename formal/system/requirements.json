@@ -3,6 +3,80 @@
   "schemaVersion": 2,
   "requirements": [
     {
+      "id": "EVT-DEMO-INTAKE-001",
+      "title": "Gated Quito event demo requests",
+      "statement": "Render and accept only enabled demo intake requests; store an inquiry without sending messages or booking an appointment.",
+      "domain": "EVT",
+      "authority": "Cuco approved Quito pilot and requested a native TDF intake; attribution and durable idempotency are implementation decisions.",
+      "source": "formal/system/event-demo-intake.md",
+      "contract": "formal/system/event-demo-intake.md",
+      "property": "With intake disabled the browser shows no form and POST refuses without write. With intake enabled a validated request persists once per delivery key. Only the configured owner with existing administrative access reads the demo inbox. No appointment, outbound update or checkout is triggered.",
+      "actors": [
+        "Interested event organizer",
+        "Configured owner"
+      ],
+      "preconditions": [
+        "Explicit owner config required for enabled intake; established admin permission for inbox."
+      ],
+      "inputs": [
+        "GET /public/event-demo-requests",
+        "POST /public/event-demo-requests",
+        "GET /admin/event-demo-requests"
+      ],
+      "state": {
+        "initial": "Not received",
+        "terminal": [
+          "Requested",
+          "Not accepted"
+        ]
+      },
+      "allowedTransitions": [
+        "Validate and durably accept an authorized intake request"
+      ],
+      "forbiddenTransitions": [
+        "Accept while disabled",
+        "List as another account",
+        "Automatically book or notify"
+      ],
+      "effects": [
+        "One typed lead inquiry for the owner, separate from school intake"
+      ],
+      "authorization": "Public availability and gated submission; owner and Admin module for inbox.",
+      "privacy": "Private name and email; campaign attribution limited to explicit enumerated source/piece.",
+      "concurrency": "Native transaction and namespaced advisory lock.",
+      "idempotency": "Same key and payload returns requested; changed payload conflicts.",
+      "failure": "Invalid or disabled submission does not falsely report success.",
+      "recovery": "Retry an unconfirmed response with the original key.",
+      "observability": "Availability response, requested receipt and private inbox; booked/qualified are not inferred.",
+      "implementation": [
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/pages/EventDemoInboxPage.tsx",
+        "tdf-hq-ui/src/pages/EventDemoPage.tsx",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/EventDemoPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Targeted browser-component tests; backend/PostgreSQL and admission pending.",
+      "evidence": "formal/system/event-demo-intake.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Local UI evidence only; deployment and backend integration not claimed.",
+      "ambiguity": [
+        "Operational owner and stack verification remain pending."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Provisional implementation contract; backend deployment and integration not claimed."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "SYS-RELEASE-001",
       "statement": "Recovery after deployment must preserve the target's applicable provider and contact identity protections, including retained request receipts and replay behavior.",
       "authority": "approved",
