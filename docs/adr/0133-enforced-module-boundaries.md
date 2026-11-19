@@ -104,8 +104,11 @@ imports, 17 oversized files. Suggested order, each as its own small change:
    The last one, `api/authHeader.ts -> session/SessionContext.tsx`, reads the
    token that `SessionProvider` keeps in module state, and about 25 tests stub
    `SessionContext` to control it; moving it is a separate change.
-5. Web `features/featureRegistry.ts`: it is static registry data used from
-   `utils`, `api` and `components`; move it to a low layer.
+5. Done: `featureRegistry.ts` (static registry data plus pure access
+   evaluation, importing only the registry JSON and `utils/stringValues`) moved
+   from `features/` to `utils/`, its lowest consumer's layer. The four imports
+   of it from `utils` and `components` are gone, and its eleven value lists keep
+   their catalog reviews as successors under the new path.
 6. Split the oversized files along the seams their own section comments mark,
    lowering each ceiling in the same change.
 

@@ -37,7 +37,7 @@ import {
   featureLabel,
   getFeatureById,
   type FeatureAction,
-} from '../features/featureRegistry';
+} from '../utils/featureRegistry';
 import { positiveNotificationId } from '../components/notificationTarget';
 import { useSession } from '../session/SessionContext';
 import { canAccessPath, hasStrictAdminAccess } from '../utils/accessControl';
