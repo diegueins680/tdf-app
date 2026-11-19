@@ -864,7 +864,17 @@ test('ticket main merge retains stale approvals only as provenance', async () =>
   for (const entry of retired.decisions) {
     assert.equal(createHash('sha256').update(JSON.stringify(entry.originalDecision)).digest('hex'), entry.originalDecisionSha256);
     assert.ok(!document.decisions.some(item => item.id === entry.originalDecision.id));
-    if (entry.replacementId) {
+    if (entry.replacementId === 'fd606f7d00f82c78cb20') {
+      // The dated 164-feature replacement is now nested in the explicitly
+      // reviewed canonical 165-feature mirror. It cannot authorize that new
+      // source: the generator/negative-control test below checks this directly.
+      const successor = document.decisions.find(item => item.id === 'ea29c6e8a6cd165802a8');
+      assert.equal(successor?.reviewed, true);
+      const parent = (await reviewedJson(INTEGRATION_MAIN, catalogPath)).decisions
+        .find(item => item.id === entry.replacementId);
+      assert.deepEqual(successor.previousDecision, parent);
+      assert.ok(!document.decisions.some(item => item.id === entry.replacementId));
+    } else if (entry.replacementId) {
       assert.equal(document.decisions.find(item => item.id === entry.replacementId)?.reviewed, true);
     } else {
       assert.equal(entry.originalDecision.id, 'ec1a316784aa9992384a');
@@ -1557,3 +1567,42 @@ function findHistoricalReview(value, id) {
     if (found) return found;
   }
 }
+
+
+test('actual Mobile mirror matches its generator and stale predecessor cannot authorize the new list', async () => {
+  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'catalog-mobile-mirror-'));
+  const mobileFile = 'tdf-mobile/src/features/generatedFeatureRegistry.ts';
+  const generatedFile = 'src/features/generatedFeatureRegistry.ts';
+  const register = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
+  const current = register.decisions.find(row => row.id === 'ea29c6e8a6cd165802a8');
+  assert.equal(current?.evidence.valueCount, 165);
+  assert.equal(current.previousDecision.id, 'fd606f7d00f82c78cb20');
+  try {
+    const output = path.join(temporary, 'generated');
+    await fs.mkdir(path.join(output, 'src/features'), { recursive: true });
+    await execFileAsync(process.execPath, [path.join(workspaceRoot, 'scripts/generate-mobile-feature-registry.mjs')],
+      { cwd: workspaceRoot, env: { ...process.env, TDF_MOBILE_ROOT: output } });
+    const source = await fs.readFile(path.join(workspaceRoot, mobileFile), 'utf8');
+    assert.equal(source, await fs.readFile(path.join(output, generatedFile), 'utf8'));
+    const repo = path.join(temporary, 'repo');
+    await fs.mkdir(repo);
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: repo });
+    await writeFile(repo, mobileFile, source);
+    await execFileAsync('git', ['add', '--', mobileFile], { cwd: repo });
+    const report = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+      'docs/catalog-persistence/reports/static-list-inventory.json'), 'utf8'));
+    const ids = new Set(report.candidates.filter(row => row.file === mobileFile).map(row => row.id));
+    const selected = register.decisions.filter(row => ids.has(row.id));
+    assert.equal(selected.length, ids.size);
+    assert.ok(ids.has(current.id));
+    const decisions = path.join(temporary, 'decisions.json');
+    await fs.writeFile(decisions, JSON.stringify(selected));
+    const args = [auditScriptPath, '--root', repo, '--decisions', decisions, '--fail-on-unreviewed'];
+    await execFileAsync(process.execPath, args, { cwd: repo });
+    await fs.writeFile(decisions, JSON.stringify(selected.map(row => row.id === current.id ? current.previousDecision : row)));
+    await assert.rejects(execFileAsync(process.execPath, args, { cwd: repo }),
+      error => error.code === 1 && error.stderr.includes('1 unreviewed candidate(s), 1 stale decision(s)'));
+  } finally {
+    await fs.rm(temporary, { recursive: true, force: true });
+  }
+});
