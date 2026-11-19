@@ -42,14 +42,51 @@ const asReviewedBeforeRegistryRefresh = entries => entries.map(entry => {
 async function readReconciliation() {
   const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-catalog-retirements.json'), 'utf8'));
-  const active = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+  const currentActive = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8')).decisions;
+  // These historical reconciliation tests replay the reviewed pre-extraction
+  // view. The separate marketplace test below verifies every complete current
+  // decision against that parent, including the two exact predecessors.
+  const active = currentActive.flatMap(row => {
+    if (row.id === 'e4eadc75e199657bbd8a') return [];
+    if (row.id === '91c81c283f19a583aa11' || row.id === 'edd06ad23b93dfcc632a') return [row.previousDecision];
+    return [row];
+  });
   const successors = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-catalog-current-successors.json'), 'utf8')).successors;
   const integration = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-integration-retirements.json'), 'utf8'));
-  return { ledger, active, successors, integration };
+  return { ledger, active, currentActive, successors, integration };
 }
+
+test('marketplace label extraction preserves all complete reviews and the backend deposit vocabulary', async () => {
+  const { active, currentActive } = await readReconciliation();
+  const parent = JSON.parse((await execFileAsync('git',
+    ['show', '4669d12deaf891f31a78f4d49140d59d260e50da:docs/catalog-persistence/catalog-list-decisions.json'],
+    { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions;
+  assert.deepEqual(active, parent, 'every prior complete decision survives unchanged in the current review history');
+  assert.equal(currentActive.length, parent.length + 1);
+  const labels = await fs.readFile(path.join(workspaceRoot, 'tdf-hq-ui/src/utils/marketplaceStatusLabel.ts'), 'utf8');
+  const oldPage = (await execFileAsync('git', ['show',
+    '4669d12deaf891f31a78f4d49140d59d260e50da:tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx'],
+    { cwd: workspaceRoot })).stdout;
+  for (const row of currentActive.filter(row => row.id === '91c81c283f19a583aa11' || row.id === 'edd06ad23b93dfcc632a')) {
+    assert.equal(row.reviewMethod, 'successor-of-reviewed-decision');
+    assert.equal(row.classification, row.previousDecision.classification);
+    assert.equal(row.disposition, row.previousDecision.disposition);
+    assert.equal(row.evidence.file, 'tdf-hq-ui/src/utils/marketplaceStatusLabel.ts');
+    const pattern = new RegExp(String.raw`const ${row.evidence.name}: Record<string, string> = \{([\s\S]*?)\n\};`);
+    assert.equal(labels.match(pattern)?.[1], oldPage.match(pattern)?.[1]);
+    assert.ok(labels.match(pattern), 'the complete copied map must exist in the shared source');
+  }
+  const deposit = currentActive.find(row => row.id === 'e4eadc75e199657bbd8a');
+  assert.equal(deposit.reviewMethod, 'individual-source-review');
+  assert.equal(deposit.classification, 'dynamic-business-catalog');
+  const schema = await fs.readFile(path.join(workspaceRoot,
+    'tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql'), 'utf8');
+  const allowed = [...schema.match(/deposit_status TEXT NOT NULL CHECK \(deposit_status IN \(([\s\S]*?)\)\)/)[1].matchAll(/'([^']+)'/g)].map(match => match[1]);
+  assert.deepEqual(deposit.evidence.values, allowed, 'display covers only the already-persisted deposit states');
+});
 
 test('music/main reconciliation retains both reviews and the protected migration prefix', async () => {
   const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot,

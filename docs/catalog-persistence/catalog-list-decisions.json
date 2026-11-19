@@ -7108,6 +7108,27 @@
           ]
         }
       ]
+    },
+    "marketplaceStatusLabels": {
+      "sourceRevision": "4669d12deaf891f31a78f4d49140d59d260e50da",
+      "scope": "Display-only extraction of two complete unchanged maps plus individually reviewed deposit display labels; earlier complete decisions retained as predecessors. No catalog/lifecycle authority granted.",
+      "successors": [
+        {
+          "name": "FULFILLMENT_STATUS_LABELS",
+          "currentId": "91c81c283f19a583aa11",
+          "previousId": "e999f1d784e81c82db26"
+        },
+        {
+          "name": "RENTAL_STATUS_LABELS",
+          "currentId": "edd06ad23b93dfcc632a",
+          "previousId": "f2263c4938549920d1af"
+        },
+        {
+          "name": "DEPOSIT_STATUS_LABELS",
+          "currentId": "e4eadc75e199657bbd8a",
+          "previousId": null
+        }
+      ]
     }
   },
   "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
@@ -11946,14 +11967,49 @@
       "reviewed": true
     },
     {
-      "id": "e999f1d784e81c82db26",
+      "id": "91c81c283f19a583aa11",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
-      "reviewed": true
+      "justification": "Spanish display labels for the existing closed marketplace runtime codes only. This map cannot create a selectable state, grant permission, transition an order, or settle a deposit. Sale/rental labels are copied byte-for-byte from the prior staff view; deposit labels distinguish due/partial-due from verified returned/partially-returned/forfeited states. Missing values show no information and unknown codes remain unchanged. Backend SQL and handlers remain the only lifecycle and settlement authority.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decision",
+      "reviewBatch": "cognitive-load-marketplace-state-display-20261119",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/marketplaceStatusLabel.ts",
+        "kind": "object-registry",
+        "name": "FULFILLMENT_STATUS_LABELS",
+        "valueCount": 14,
+        "values": [
+          "on_hold",
+          "ready_to_fulfill",
+          "picking",
+          "ready_for_pickup",
+          "shipped",
+          "delivered",
+          "cancellation_requested",
+          "cancelled",
+          "return_requested",
+          "return_authorized",
+          "return_in_transit",
+          "returned",
+          "closed",
+          "expired"
+        ],
+        "sourceReview": "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql: rental_status/deposit_status constraints; tdf-hq/src/TDF/Server.hs: rental closure requires verified terminal deposit evidence. Author source review only; no independent approval or deployment."
+      },
+      "previousDecision": {
+        "id": "e999f1d784e81c82db26",
+        "classification": "dynamic-business-catalog",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+        "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+        "reviewed": true
+      }
     },
     {
       "id": "8ed1df400c6dae184688",
@@ -11966,14 +12022,50 @@
       "reviewed": true
     },
     {
-      "id": "f2263c4938549920d1af",
+      "id": "edd06ad23b93dfcc632a",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
-      "reviewed": true
+      "justification": "Spanish display labels for the existing closed marketplace runtime codes only. This map cannot create a selectable state, grant permission, transition an order, or settle a deposit. Sale/rental labels are copied byte-for-byte from the prior staff view; deposit labels distinguish due/partial-due from verified returned/partially-returned/forfeited states. Missing values show no information and unknown codes remain unchanged. Backend SQL and handlers remain the only lifecycle and settlement authority.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decision",
+      "reviewBatch": "cognitive-load-marketplace-state-display-20261119",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/marketplaceStatusLabel.ts",
+        "kind": "object-registry",
+        "name": "RENTAL_STATUS_LABELS",
+        "valueCount": 15,
+        "values": [
+          "on_hold",
+          "confirmed",
+          "ready_for_handoff",
+          "checked_out",
+          "return_due",
+          "returned_pending_inspection",
+          "damage_review",
+          "deposit_refund_due",
+          "closed",
+          "cancellation_requested",
+          "cancelled",
+          "no_show",
+          "lost",
+          "disputed",
+          "expired"
+        ],
+        "sourceReview": "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql: rental_status/deposit_status constraints; tdf-hq/src/TDF/Server.hs: rental closure requires verified terminal deposit evidence. Author source review only; no independent approval or deployment."
+      },
+      "previousDecision": {
+        "id": "f2263c4938549920d1af",
+        "classification": "dynamic-business-catalog",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+        "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+        "reviewed": true
+      }
     },
     {
       "id": "2fc9975280cb062972db",
@@ -37977,6 +38069,37 @@
           "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql:204"
         ],
         "verification": "e2e/web/merch-stock-category.spec.mjs: localized seller/filter/product/admin labels retain category codes and mutation paths"
+      }
+    },
+    {
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Incorrect display could imply payment, custody or settlement before server confirmation.",
+      "reviewed": true,
+      "id": "e4eadc75e199657bbd8a",
+      "justification": "Spanish display labels for the existing closed marketplace runtime codes only. This map cannot create a selectable state, grant permission, transition an order, or settle a deposit. Sale/rental labels are copied byte-for-byte from the prior staff view; deposit labels distinguish due/partial-due from verified returned/partially-returned/forfeited states. Missing values show no information and unknown codes remain unchanged. Backend SQL and handlers remain the only lifecycle and settlement authority.",
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-marketplace-state-display-20261119",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/marketplaceStatusLabel.ts",
+        "kind": "object-registry",
+        "name": "DEPOSIT_STATUS_LABELS",
+        "valueCount": 10,
+        "values": [
+          "awaiting_payment",
+          "collected",
+          "inspection_pending",
+          "deduction_proposed",
+          "refund_due",
+          "partial_refund_due",
+          "refunded",
+          "partially_refunded",
+          "forfeited",
+          "disputed"
+        ],
+        "sourceReview": "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql: rental_status/deposit_status constraints; tdf-hq/src/TDF/Server.hs: rental closure requires verified terminal deposit evidence. Author source review only; no independent approval or deployment."
       }
     }
   ]

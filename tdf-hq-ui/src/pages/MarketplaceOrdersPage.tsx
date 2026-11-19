@@ -74,6 +74,7 @@ import {
   summarizeMarketplaceOrderList,
   type MarketplaceOrderFilters,
 } from '../utils/marketplace';
+import { marketplaceFulfillmentStatusLabel } from '../utils/marketplaceStatusLabel';
 import ConfirmDialog from '../components/ConfirmDialog';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 
@@ -92,45 +93,10 @@ const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] 
   { value: 'refunded', label: 'Reembolsado', color: 'default' },
 ];
 
-const FULFILLMENT_STATUS_LABELS: Record<string, string> = {
-  on_hold: 'Reserva activa',
-  ready_to_fulfill: 'Lista para preparar',
-  picking: 'En preparación',
-  ready_for_pickup: 'Lista para retiro',
-  shipped: 'Enviada',
-  delivered: 'Entregada',
-  cancellation_requested: 'Cancelación solicitada',
-  cancelled: 'Cancelada',
-  return_requested: 'Devolución solicitada',
-  return_authorized: 'Devolución autorizada',
-  return_in_transit: 'Devolución en tránsito',
-  returned: 'Devuelta',
-  closed: 'Cerrada',
-  expired: 'Reserva vencida',
-};
-
 const FULFILLMENT_METHOD_LABELS: Record<string, string> = {
   pickup: 'Retiro',
   local_delivery: 'Entrega local',
   shipping: 'Envío',
-};
-
-const RENTAL_STATUS_LABELS: Record<string, string> = {
-  on_hold: 'Reserva con vencimiento',
-  confirmed: 'Renta confirmada',
-  ready_for_handoff: 'Lista para entrega',
-  checked_out: 'En custodia del cliente',
-  return_due: 'Devolución pendiente',
-  returned_pending_inspection: 'Devuelta; inspección pendiente',
-  damage_review: 'Daños en revisión',
-  deposit_refund_due: 'Devolución de depósito pendiente',
-  closed: 'Renta cerrada',
-  cancellation_requested: 'Cancelación solicitada',
-  cancelled: 'Renta cancelada',
-  no_show: 'Cliente no se presentó',
-  lost: 'Activo perdido',
-  disputed: 'Renta disputada',
-  expired: 'Reserva vencida',
 };
 
 const RENTAL_TRANSITIONS: Record<string, string[]> = {
@@ -149,7 +115,7 @@ const RENTAL_TRANSITIONS: Record<string, string[]> = {
 };
 
 const rentalStatusLabel = (value?: string | null) => (
-  value ? RENTAL_STATUS_LABELS[value] ?? value : 'Sin runtime de renta'
+  value ? marketplaceFulfillmentStatusLabel(value, 'rental') : 'Sin runtime de renta'
 );
 
 const COMMON_FULFILLMENT_TRANSITIONS: Record<string, string[]> = {
@@ -167,7 +133,7 @@ const COMMON_FULFILLMENT_TRANSITIONS: Record<string, string[]> = {
 };
 
 const fulfillmentStatusLabel = (value?: string | null) => (
-  value ? FULFILLMENT_STATUS_LABELS[value] ?? value : 'Sin runtime de entrega'
+  value ? marketplaceFulfillmentStatusLabel(value, 'sale') : 'Sin runtime de entrega'
 );
 
 const fulfillmentMethodLabel = (value?: string | null) => (

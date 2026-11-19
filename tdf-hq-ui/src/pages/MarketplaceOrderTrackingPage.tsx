@@ -37,6 +37,7 @@ import {
   loadMarketplaceLookupToken,
 } from '../api/marketplace';
 import { getOrderStatusMeta } from '../utils/marketplace';
+import { marketplaceDepositStatusLabel, marketplaceFulfillmentStatusLabel } from '../utils/marketplaceStatusLabel';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
 
 const requestLabels: Record<MarketplaceCustomerRequestType, string> = {
@@ -322,8 +323,8 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
                   </Typography>
                 )}
                 {order.moFulfillmentStatus && (
-                  <Typography variant="body2" color="text.secondary">
-                    {order.moOrderKind === 'rental' ? 'Renta' : 'Entrega'}: {order.moFulfillmentStatus.replace(/_/g, ' ')}
+                  <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+                    {order.moOrderKind === 'rental' ? 'Renta' : 'Entrega'}: {marketplaceFulfillmentStatusLabel(order.moFulfillmentStatus, order.moOrderKind)}
                     {order.moTrackingReference ? ` · Guía: ${order.moTrackingReference}` : ''}
                   </Typography>
                 )}
@@ -392,7 +393,7 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
                   </Box>
                 )}
                 {order.moOrderKind === 'rental' && (
-                  <Alert severity="info" variant="outlined" sx={{ mt: 1.5 }}>
+                  <Alert severity="info" variant="outlined" sx={{ mt: 1.5, '& .MuiAlert-message': { minWidth: 0, overflowWrap: 'anywhere' } }}>
                     <Stack spacing={0.5}>
                       <Typography variant="body2">
                         Fechas: {order.moRentalStartDate} → {order.moRentalEndDate} ({order.moRentalDurationDays} día(s))
@@ -401,7 +402,7 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
                         Renta: {formatMinor(order.moRentalChargeUsdCents)} · depósito reembolsable: {formatMinor(order.moSecurityDepositUsdCents)}
                       </Typography>
                       <Typography variant="body2">
-                        Estado del depósito: {(order.moDepositStatus ?? 'pendiente').replace(/_/g, ' ')}
+                        Estado del depósito: {marketplaceDepositStatusLabel(order.moDepositStatus)}
                         {(order.moDepositDeductionUsdCents ?? 0) > 0
                           ? ` · deducción propuesta ${formatMinor(order.moDepositDeductionUsdCents)}`
                           : ''}
@@ -546,8 +547,9 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
                       {order.moOrderKind === 'rental' ? 'Historial de renta' : 'Historial de entrega'}
                     </Typography>
                     {fulfillmentTimeline.map(([fulfillmentStatus, timestamp]) => (
-                      <Stack key={`${fulfillmentStatus}-${timestamp}`} direction="row" spacing={1} alignItems="center">
-                        <Chip size="small" label={fulfillmentStatus.replace(/_/g, ' ')} />
+                      <Stack key={`${fulfillmentStatus}-${timestamp}`} direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                        <Chip size="small" label={marketplaceFulfillmentStatusLabel(fulfillmentStatus, order.moOrderKind)}
+                          sx={{ maxWidth: '100%', height: 'auto', '& .MuiChip-label': { whiteSpace: 'normal', overflowWrap: 'anywhere', py: 0.5 } }} />
                         <Typography variant="body2" color="text.secondary">
                           {new Date(timestamp).toLocaleString()}
                         </Typography>

@@ -5,7 +5,7 @@ const firstId = '22222222-2222-4222-8222-222222222222';
 const secondId = '33333333-3333-4333-8333-333333333333';
 async function fixture(page, baseURL, rejected = false) {
   const origin = new URL(baseURL).origin;
-  const state = { writes: [], reads: [], completed: [], release: null, statuses: new Map([[firstId, rejected ? 'rejected' : 'awaiting_evidence'], [secondId, 'awaiting_evidence']]) };
+  const state = { orderOverrides: {}, writes: [], reads: [], completed: [], release: null, statuses: new Map([[firstId, rejected ? 'rejected' : 'awaiting_evidence'], [secondId, 'awaiting_evidence']]) };
   await page.addInitScript(({ firstId, secondId }) => {
     localStorage.setItem('tdf-hq-ui/locale', 'es');
     sessionStorage.setItem(`tdf-marketplace-order-lookup:${firstId}`, 'synthetic-first-access');
@@ -21,6 +21,7 @@ async function fixture(page, baseURL, rejected = false) {
     moTrackingReference: null, moFulfillmentHistory: [], moRentalStartDate: '2030-01-01', moRentalEndDate: '2030-01-31',
     moRentalDurationDays: null, moRentalChargeUsdCents: null, moSecurityDepositUsdCents: null, moDepositStatus: null,
     moDepositDeductionUsdCents: null, moRentalTermsVersion: null, moRentalTimezone: 'America/Guayaquil', moConditionOut: null, moConditionIn: null,
+    ...state.orderOverrides,
     moItems: [{ moiListingId: 'synthetic-listing', moiTitle: 'Micrófono sintético', moiQuantity: 1, moiUnitPriceUsdCents: 10000, moiSubtotalCents: 10000, moiUnitPriceDisplay: 'USD $100.00', moiSubtotalDisplay: 'USD $100.00' }],
   });
   await page.route('**/*', async route => {
@@ -141,4 +142,54 @@ test('old customer-request completion cannot clear the new order draft @critical
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await expect(reason).toHaveValue('Borrador de la segunda orden'); await expect(card).not.toContainText('Solicitud de la primera orden');
   expect(state.writes).toHaveLength(1); expect(state.writes[0].id).toBe(firstId); await inspect(page);
+});
+
+
+test('order states distinguish delivery, rental custody and deposit settlement without writes @critical @mobile-flow', async ({ page, baseURL }, info) => {
+  const state = await fixture(page, baseURL);
+  state.orderOverrides = {
+    moFulfillmentStatus: 'deposit_refund_due', moDepositStatus: 'partial_refund_due',
+    moDepositDeductionUsdCents: 1000,
+    moFulfillmentHistory: [['returned_pending_inspection', '2030-01-31T15:00:00Z'], ['deposit_refund_due', '2030-01-31T15:01:00Z']],
+  };
+  const refresh = async () => {
+    await page.reload();
+    await expect(page.getByTestId('marketplace-order-card')).toBeVisible();
+    await page.addScriptTag({ content: axe.source });
+  };
+  await refresh();
+  await expect(page.getByText('Renta: Devolución de depósito pendiente', { exact: true })).toBeVisible();
+  await expect(page.getByText('Devuelta; inspección pendiente', { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Estado del depósito: Devolución parcial pendiente/)).toBeVisible();
+  await expect(page.getByText('El pago, la custodia del equipo y la devolución del depósito se confirman por separado.')).toBeVisible();
+  await inspect(page);
+  const history = page.getByText('Historial de renta', { exact: true }).locator('..');
+  await reachable(history.getByText('Devolución de depósito pendiente', { exact: true }));
+  const historyBounds = await history.boundingBox();
+  for (const chip of await history.locator('.MuiChip-root').all()) {
+    const bounds = await chip.boundingBox();
+    expect(bounds.x).toBeGreaterThanOrEqual(historyBounds.x);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(historyBounds.x + historyBounds.width);
+  }
+  expect(await history.evaluate(async node => (await globalThis.axe.run(node, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] } })).violations.map(v => v.id))).toEqual([]);
+  await page.screenshot({ path: info.outputPath('marketplace-rental-status.png') });
+  state.orderOverrides.moDepositStatus = 'partially_refunded';
+  await refresh();
+  await expect(page.getByText(/^Estado del depósito: Devuelto parcialmente/)).toBeVisible();
+  const futureStatus = 'future_state_' + 'x'.repeat(80);
+  state.orderOverrides = { moFulfillmentStatus: futureStatus, moDepositStatus: null,
+    moFulfillmentHistory: [[futureStatus, '2030-01-31T15:00:00Z']] };
+  await refresh();
+  await expect(page.getByText('Estado del depósito: Sin información', { exact: true })).toBeVisible();
+  await expect(page.getByText(`Renta: ${futureStatus}`, { exact: true })).toBeVisible();
+  await expect(page.getByText(futureStatus, { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  state.orderOverrides = { moOrderKind: 'sale', moFulfillmentStatus: 'ready_for_pickup',
+    moFulfillmentHistory: [['on_hold', '2030-01-01T15:00:00Z'], ['ready_for_pickup', '2030-01-01T15:01:00Z']] };
+  await refresh();
+  await expect(page.getByText('Entrega: Lista para retiro', { exact: true })).toBeVisible();
+  await expect(page.getByText('Reserva activa', { exact: true })).toBeVisible();
+  await expect(page.getByText('Lista para retiro', { exact: true })).toBeVisible();
+  await inspect(page);
+  expect(state.writes).toEqual([]);
 });

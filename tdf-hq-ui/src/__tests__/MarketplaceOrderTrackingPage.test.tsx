@@ -145,6 +145,44 @@ describe('MarketplaceOrderTrackingPage manual payments', () => {
     await act(async () => { setInputValue(referenceInput(), value); });
   };
 
+  it('uses the sale labels for both the current state and delivery history', async () => {
+    getOrderMock.mockResolvedValue({ ...orderFixture('awaiting_evidence'), moFulfillmentHistory: [
+      ['on_hold', '2030-01-01T15:00:00Z'], ['ready_for_pickup', '2030-01-01T15:01:00Z'],
+    ] });
+    await renderPage();
+    expect(container.textContent).toContain('Entrega: Reserva activa');
+    expect(container.textContent).toContain('Lista para retiro');
+    expect(container.textContent).not.toContain('on hold');
+    expect(submitManualEvidenceMock).not.toHaveBeenCalled();
+    expect(submitCustomerRequestMock).not.toHaveBeenCalled();
+  });
+
+  it('distinguishes pending deposit return from settlement and payment in rental history', async () => {
+    getOrderMock.mockResolvedValue({ ...orderFixture('approved'), moOrderKind: 'rental',
+      moStatus: 'paid', moCheckoutStatus: 'paid', moFulfillmentStatus: 'deposit_refund_due',
+      moDepositStatus: 'partial_refund_due', moDepositDeductionUsdCents: 1000,
+      moFulfillmentHistory: [['returned_pending_inspection', '2030-01-01T15:00:00Z'], ['deposit_refund_due', '2030-01-01T15:01:00Z']],
+    });
+    await renderPage();
+    expect(container.textContent).toContain('Renta: Devolución de depósito pendiente');
+    expect(container.textContent).toContain('Devuelta; inspección pendiente');
+    expect(container.textContent).toContain('Estado del depósito: Devolución parcial pendiente');
+    expect(container.textContent).toContain('deducción propuesta');
+    expect(container.textContent).toContain('El pago, la custodia del equipo y la devolución del depósito se confirman por separado.');
+    expect(submitCustomerRequestMock).not.toHaveBeenCalled();
+  });
+
+  it('does not infer pending payment from missing deposit data or unknown state codes', async () => {
+    getOrderMock.mockResolvedValue({ ...orderFixture('approved'), moOrderKind: 'rental', moDepositStatus: null,
+      moFulfillmentStatus: 'future_state', moFulfillmentHistory: [['future_state', '2030-01-01T15:00:00Z']],
+    });
+    await renderPage();
+    expect(container.textContent).toContain('Estado del depósito: Sin información');
+    expect(container.textContent).toContain('Renta: future_state');
+    expect(container.textContent).not.toContain('Estado del depósito: pendiente');
+    expect(submitCustomerRequestMock).not.toHaveBeenCalled();
+  });
+
   it('associates invalid references with their field, retains the full text and focuses without sending', async () => {
     getOrderMock.mockResolvedValue(orderFixture('awaiting_evidence'));
     await renderPage();
