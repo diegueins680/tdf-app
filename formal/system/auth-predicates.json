@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "d103055d35fa3621ca619ba1d5a82485abde749e4883918ab3601e0bfd8ab8c4"
+    "tdf-hq/tdf-hq.cabal": "a6a23d82214ca0e1119787d8b4a7ca969485a3cb57e9aab3e7661aa47ed08da5"
   },
   "obligations": [
     {
@@ -621,6 +621,15 @@
       "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
     },
     {
+      "reviewedAgainst": "65317ec2e4febf920292ecace7df466153ae5046",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "currentSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "change": "Register the library module TDF.Server.EventTicketSale in exposed-modules and the test module TDF.EventTicketSaleSpec in the tdf-hq-test other-modules list for EVT-TICKET-SALE-001.",
+      "semanticReview": "Removing exactly those two module lines reproduces protected main Cabal bytes. Every other reviewed source byte and hash matches protected main. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed; the added library module holds paid ticket sale request and approval handlers only, calls hasStrictAdminAccess without changing it, and is not imported by any reviewed source.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
       "source": "tdf-hq/tdf-hq.cabal",
       "reviewedAgainst": "f615c862b1a7d50406cc0506d21d7650e607fa5f",
       "previousSha256": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
@@ -644,6 +653,15 @@
       "reviewedAgainst": "9399daf147d6c53dab153783e2d5721bebba566f",
       "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
       "currentSha256": "d103055d35fa3621ca619ba1d5a82485abde749e4883918ab3601e0bfd8ab8c4",
+      "change": "Reconcile current protected main while retaining the reviewed DomoRefund Cabal additions.",
+      "semanticReview": "Removing the three Domo refund store, route and server module registrations reproduces protected main Cabal bytes exactly. No dependency, resolver, compiler flag or existing registration changes. All other authorization and recovery reviewed sources are byte-identical to protected main; obligation objects and both complete histories are preserved. This author source-context review does not establish refund-runtime conformance, whole-system safety or independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "966fb55dca70a49c0a340b674f8cc133cc413a2d",
+      "previousSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "currentSha256": "a6a23d82214ca0e1119787d8b4a7ca969485a3cb57e9aab3e7661aa47ed08da5",
       "change": "Reconcile current protected main while retaining the reviewed DomoRefund Cabal additions.",
       "semanticReview": "Removing the three Domo refund store, route and server module registrations reproduces protected main Cabal bytes exactly. No dependency, resolver, compiler flag or existing registration changes. All other authorization and recovery reviewed sources are byte-identical to protected main; obligation objects and both complete histories are preserved. This author source-context review does not establish refund-runtime conformance, whole-system safety or independent approval.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."

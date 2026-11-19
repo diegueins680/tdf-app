@@ -129,6 +129,19 @@ test('discards a pending page change when the search changes before it finishes'
   expect(screen.queryByText('Second page artist')).toBeNull();
 });
 
+test('shows profiles with a picture before those without on the current page', async () => {
+  const item = response('x').items[0]!;
+  const row = (id: string, title: string, imageUrl?: string | null) => ({ ...item, id, title, canonicalPath: `/artista/${id}`, imageUrl });
+  search.mockResolvedValue({ ...response('x'), items: [
+    row('1', 'No picture A'), row('2', 'Pictured B', 'https://cdn.example.test/b.jpg'), row('3', 'Blank C', '  '),
+    row('4', 'Fallback D', '/artist-fallback.svg'), row('5', 'Pictured E', 'https://cdn.example.test/e.jpg'),
+  ] });
+  mount();
+  await screen.findByText('Pictured B');
+  expect(screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent))
+    .toEqual(['Pictured B', 'Pictured E', 'No picture A', 'Blank C', 'Fallback D']);
+});
+
 test('rejects external or malformed canonical destinations', () => {
   const item = response('Artist').items[0]!;
   expect(directoryResultPath({ ...item, canonicalPath: '//evil.example', slug: 'a/b' })).toBe('/directorio/a%2Fb');

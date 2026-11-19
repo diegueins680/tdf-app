@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 536,
-    "named": 454,
+    "total": 539,
+    "named": 457,
     "path-named": 0,
     "reviewed": 82,
     "unspecified": 0,
-    "covered": 536
+    "covered": 539
   },
   "routes": [
     {
@@ -3940,6 +3940,14 @@
     },
     {
       "method": "POST",
+      "path": "/social-events/events/{eventId}/ticket-sale/request",
+      "basis": "named",
+      "requirements": [
+        "EVT-TICKET-SALE-001"
+      ]
+    },
+    {
+      "method": "POST",
       "path": "/social-events/events/{eventId}/ticket-tiers",
       "basis": "named",
       "requirements": [
@@ -4055,6 +4063,22 @@
       "basis": "named",
       "requirements": [
         "PAY-STRIPE-WEBHOOK-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/ticket-sale-requests/{requestId}/approve",
+      "basis": "named",
+      "requirements": [
+        "EVT-TICKET-SALE-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/ticket-sale-requests/{requestId}/decline",
+      "basis": "named",
+      "requirements": [
+        "EVT-TICKET-SALE-001"
       ]
     },
     {

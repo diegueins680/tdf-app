@@ -1245,7 +1245,7 @@
         "scripts/verify-auth-predicates.py"
       ],
       "tests": [
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "scripts/audit-feature-registry.mjs",
         "scripts/test-auth-predicates.py",
         "scripts/check-admin-guards.py"
@@ -1267,7 +1267,7 @@
       "property": "Registry discovery/view/administer predicates match the backend role and module boundary.",
       "contract": "tdf-hq/assets/feature-registry.json",
       "verification": "Route audit plus targeted role-composition tests; backend source inspection; actual HTTP denial remains an open obligation. Conditional source-derived authorization predicate equivalences and supporting cardinality lemmas: formal/system/auth-predicates.md. Full endpoint and refinement obligations remain UNPROVEN. CI gate (check-admin-guards.py) asserts the registry entry admin.video-sources grants discover, view and administer only under strictAdmin with the Admin role and module, and that RecordsIngestion.requireAdmin still requires hasStrictAdminAccess and the Admin module; mutation control on the registry entry.",
-      "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
+      "evidence": "tdf-hq-ui/src/utils/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
     },
     {
       "authority": "audit security correction",
@@ -7661,7 +7661,7 @@
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "tdf-mobile/__tests__/featureRegistry.test.ts",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/CorsSpec.hs",
@@ -11102,7 +11102,7 @@
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "tdf-mobile/__tests__/featureRegistry.test.ts",
         "e2e/web/booking-catalog-recovery.spec.mjs"
       ],
@@ -12474,19 +12474,21 @@
       "property": "Standalone destination coverage, unique concrete paths and per-session access filtering. A fully loaded mobile menu keeps its close control inside the viewport and restores focus after dismissal. Access-request creation without a selected target is excluded; personal request history remains discoverable.",
       "implementation": [
         "tdf-hq-ui/src/components/SidebarNav.tsx",
-        "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.ts",
         "tdf-hq-ui/src/utils/accessControl.ts",
         "tdf-hq-ui/src/pages/SecurityPage.tsx",
         "tdf-hq-ui/src/components/PublicBranding.tsx",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/components/RegistryBreadcrumbs.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
         "tdf-hq-ui/src/pages/SecurityPage.test.tsx",
         "scripts/audit-feature-registry.mjs",
+        "scripts/ux-audit-inventory.mjs",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "e2e/web/community-discovery.spec.mjs"
       ],
@@ -23412,11 +23414,14 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/Catalog/Security.hs",
-        "tdf-hq/src/TDF/Profiles/Artist.hs"
+        "tdf-hq/src/TDF/Profiles/Artist.hs",
+        "tdf-hq-ui/src/api/accessRequests.ts",
+        "tdf-hq-ui/src/pages/ForbiddenPage.tsx"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs"
+        "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
+        "tdf-hq-ui/src/pages/ForbiddenPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
@@ -26148,7 +26153,7 @@
         "services/campaign-platform/tests/test_domain.py",
         "services/campaign-platform/tests/test_facebook.py",
         "services/campaign-platform/tests/test_http.py",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "services/campaign-platform/tests/test_tiktok.py",
         "scripts/__tests__/campaign-tiktok-ui.test.mjs",
         "services/campaign-platform/tests/test_tiktok_sandbox.py",
@@ -27653,7 +27658,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "The ratchet is enforced; 8 backend imports, 14 web imports and 16 oversized files remain listed debt."
+        "reason": "The ratchet is enforced; 8 backend imports, 10 web imports and 16 oversized files remain listed debt."
       },
       "authority": "User request 2026-11-10; layer definitions and limits are an engineering decision recorded in ADR 0133, owner confirmation pending.",
       "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",
@@ -28002,13 +28007,13 @@
       "observability": "The feature_403_shown analytics event is no longer emitted for this route on a missing module; API 403 responses are unchanged.",
       "implementation": [
         "tdf-hq/assets/feature-registry.json",
-        "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.ts",
         "tdf-hq-ui/src/routes/AppShell.tsx",
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
       "tests": [
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/utils/featureRegistry.test.ts",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
         "tdf-hq/test/TDF/EventAdminDelegationSpec.hs"
@@ -28307,6 +28312,207 @@
         "classification": "PARTIAL",
         "reason": "Local tests pass; the supervisor's launchd behaviour and disk guard are exercised by shell tests only, and hosted gates remain pending."
       }
+    },
+    {
+      "id": "SYS-PAYMENT-ALTERNATIVES-001",
+      "title": "Show enabled payment alternatives after a failed attempt",
+      "statement": "After a payment problem, show the other executable methods enabled for the same purchase, excluding the failed option. Preserve unresolved-attempt safety and the original purchase; never infer a failure from a status lookup error or create another payment merely to show alternatives.",
+      "authority": "Owner instruction, 2026-11-18: show the other possible payment methods in every payment flow when a payment fails.",
+      "domain": "PAY",
+      "actors": [
+        "Buyer",
+        "Payment checkout UI",
+        "Payment status provider"
+      ],
+      "preconditions": [
+        "A buyer is viewing an existing payment flow or its original order return page.",
+        "Available methods come from that purchase or the same Stripe PaymentIntent; provider activation remains separately gated."
+      ],
+      "inputs": [
+        "Current order and checkout identity",
+        "Current server-offered methods and browser prerequisites",
+        "Attempted method and authoritative payment/retry status"
+      ],
+      "state": {
+        "payment": "not_started | failed | confirmed_no_charge | pending | ambiguous | succeeded",
+        "alternatives": "available | browser_unchecked | none_enabled | lookup_unavailable"
+      },
+      "allowedTransitions": [
+        "Confirmed no-charge or pre-charge failure -> show remaining available options.",
+        "Pending or unknown result -> preserve recovery lock and request status verification.",
+        "Verified success -> fulfillment/status display without proposing another payment.",
+        "Configured order-offered method with untested browser readiness -> show as an option to check on the original order, separately from ready methods."
+      ],
+      "forbiddenTransitions": [
+        "Timeout or failed status read -> claim a confirmed decline.",
+        "Show an unavailable provider or a method without an executor for this purchase.",
+        "Showing alternatives -> automatic payment, replacement order, price change or provider activation.",
+        "A fresh return document lacking the PayPal SDK -> claim PayPal is unavailable or that no alternative exists.",
+        "Pending or failed availability lookup -> claim no alternative exists, display cached methods as verified, or start a new payment attempt."
+      ],
+      "effects": [
+        "Render remaining method labels adjacent to errors, including provider dialogs.",
+        "Read the original order on supported return paths; preserve checkout identity and private lookup scope."
+      ],
+      "authorization": "The owner requested the UI change; branch review, deployment and existing provider activation controls remain in force.",
+      "privacy": "Do not log lookup tokens, PaymentIntent secrets or card data. Stripe reads use its public SDK for the original intent.",
+      "concurrency": "Retain existing recovery/status locks; do not overlap an unresolved charge with another method.",
+      "idempotency": "Render and read only; preserve the original order and existing idempotency/recovery records.",
+      "failure": "On availability lookup error, show that availability is unknown. If no alternative is enabled, direct the buyer to support with the order reference.",
+      "recovery": "Verify the original attempt before retrying or switching when its result is pending or uncertain.",
+      "observability": "Keep scoped tests, source fingerprints, build/lint results and deployment receipts separate from payment or fulfillment outcomes.",
+      "source": "docs/payments/payment-failure-alternatives.md",
+      "implementation": [
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
+        "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
+        "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
+        "tdf-hq-ui/src/pages/MerchOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
+        "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.tsx",
+        "tdf-hq-ui/src/components/payments/StripePaymentAlternativesNotice.tsx",
+        "tdf-hq-ui/src/api/checkoutPaymentAlternatives.ts",
+        "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+        "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.test.tsx",
+        "tdf-hq-ui/src/components/payments/StripePaymentAlternativesNotice.test.tsx",
+        "tdf-hq-ui/src/api/checkoutPaymentAlternatives.test.ts",
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
+        "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
+        "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped UI/component and read-only lookup coverage; no whole-system or production payment proof.",
+      "ambiguity": [
+        "This UI change does not enable new payment rails. Formal interleaving proof and live transaction qualification remain outside this patch."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and scoped tests are present. New-head hosted review/build and production rollout remain separately required; no handwritten PASS claim."
+      },
+      "critical": true,
+      "property": "A displayed alternative is executable for the original purchase, excludes the failed option and never authorizes a duplicate payment while the original result is unknown.",
+      "contract": "docs/payments/payment-failure-alternatives.md",
+      "verification": "Component tests, original-order lookup tests, existing checkout regressions, lint, type checking and production bundle compilation; no live transaction or formal interleaving proof.",
+      "evidence": "The scoped UI tests and immutable CI job results for the candidate revision; local logs remain private."
+    },
+    {
+      "id": "EVT-TICKET-SALE-001",
+      "title": "Paid ticket sale requests by event managers and their approval by strict administrators",
+      "domain": "EVT",
+      "statement": "The stored organizer of an event, or a delegated administrator of it, requests paid ticket sales under TDF's fixed standard terms (USD, 200 basis points buyer fee, 200 basis points organizer fee, no tax, 15-minute hold, at most 100 tickets per order, full refund, terms version ticket-terms-v1) while the event has an active ticket tier priced above zero in USD. The request is one draft row of event_ticket_checkout_policy with the reserved workflow version and compatible stored terms. Only a strict administrator lists pending requests and approves or declines one; approval makes that row the event's single active approved policy and records the approving party, declining retires it. Approval does not publish the event, enable the commerce flag or configure a payment provider. Routes: GET /social-events/events/{eventId}/ticket-sale; POST /social-events/events/{eventId}/ticket-sale/request; GET /social-events/ticket-sale-requests; POST /social-events/ticket-sale-requests/{requestId}/approve; POST /social-events/ticket-sale-requests/{requestId}/decline.",
+      "authority": "Product owner decision on 2026-11-15: an organizer asks from the event, a TDF administrator approves with one action and no database statement, and the terms are those of the policy approved by hand for event 121. The policy-version format, the 200-request queue limit and e-mail as the only notice are implementation choices.",
+      "source": "formal/system/event-ticket-sale-approval.md",
+      "contract": "formal/system/event-ticket-sale-approval.md",
+      "property": "An event has at most one eligible pending workflow request and at most one active approved policy; a policy becomes approved only through a strict administrator's decision on a pending request carrying the standard terms; an account that neither manages the event nor is a strict administrator reads and writes nothing.",
+      "actors": [
+        "Event organizer",
+        "Delegated event administrator",
+        "Strict administrator",
+        "Other signed-in account"
+      ],
+      "preconditions": [
+        "Authenticated bearer session on every route",
+        "Event visible to the caller and not hidden",
+        "Event has a stored organizer",
+        "An active ticket tier priced above zero in USD for a request and for an approval"
+      ],
+      "inputs": [
+        "GET /social-events/events/{eventId}/ticket-sale",
+        "POST /social-events/events/{eventId}/ticket-sale/request",
+        "GET /social-events/ticket-sale-requests",
+        "POST /social-events/ticket-sale-requests/{requestId}/approve",
+        "POST /social-events/ticket-sale-requests/{requestId}/decline"
+      ],
+      "state": {
+        "boundary": "event_ticket_checkout_policy rows of one event and its event_ticket_tier rows",
+        "authority": "PostgreSQL rows read and written under the social_event row lock; the partial unique index on active policies and the policy validation and lifecycle triggers. Decisions also lock the target policy row before validating stored terms",
+        "saleStatus": "Derived on read: approved, requested, declined or none"
+      },
+      "allowedTransitions": [
+        "none or declined -> requested, by a manager, with an active paid USD tier",
+        "requested -> approved, by a strict administrator, with an active paid USD tier and no other active policy",
+        "requested -> declined, by a strict administrator"
+      ],
+      "forbiddenTransitions": [
+        "Request, or read the sale state, as an account that neither manages the event nor is a strict administrator",
+        "List or decide requests without strict administrator access, including as the event's organizer",
+        "Create a second pending request for an event",
+        "Approve a request that is not pending, or while another policy is active, or without an active paid USD tier",
+        "Approve or request terms other than the standard ones through these routes",
+        "Return an approved or declined request to pending"
+      ],
+      "effects": [
+        "Insert one event_ticket_checkout_policy row with approval_status draft, active false and the standard terms",
+        "Approval: set approval_status approved, active true, approved_at, effective_from and approved_by party:<id> on that row",
+        "Decline: set approval_status retired on that row",
+        "E-mail to strict administrators after a request and to the organizer after a decision, when e-mail is configured"
+      ],
+      "authorization": "Reading the state requires the organizer, a delegated administrator (delegatedEventAdminExists) or hasStrictAdminAccess. Requesting requires the organizer or a delegated administrator and is rechecked under the event lock. Listing and deciding require hasStrictAdminAccess; an organizer without it is refused.",
+      "privacy": "The queue shows strict administrators the event title, start, organizer display name and active tiers. Notices are sent to the primary e-mail of strict administrators and of the organizer and contain the event title and a link to the event. No buyer data is involved.",
+      "concurrency": "Request and decision lock the social_event row FOR UPDATE and re-read policy rows and tiers under it, so simultaneous requests create one draft and simultaneous decisions record one. The partial unique index on active policies and the lifecycle trigger remain in force.",
+      "idempotency": "Requesting while a request is pending or approved returns the current state and writes nothing. Deciding a request the same way again returns the recorded decision and sends no notice; deciding it the other way is refused.",
+      "failure": "403 caller lacks the role for the route; 404 event missing or hidden, or request identifier malformed, unknown or outside the workflow; 409 incompatible terms, no active paid USD tier, request already decided the other way, or another active policy exists.",
+      "recovery": "A declined manager may request again. An approval made in error is undone by an operator retiring the policy; these routes cannot. A failed notice is not retried: the request stays in the administrators' queue.",
+      "observability": "HTTP status; event_ticket_checkout_policy rows and their append-only history; policy_version names the requesting party and approved_by the approving party; a failed notice is written to the log buffer. No metric or audit entry is added.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/EventTicketSale.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/components/events/EventTicketSaleCard.tsx",
+        "tdf-hq-ui/src/components/events/EventTicketSaleRequestsQueue.tsx",
+        "tdf-hq-ui/src/components/events/ticketSaleQueryKeys.ts",
+        "tdf-hq-ui/src/components/events/useSaveTicketTier.ts",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "scripts/test-event-ticket-sale.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
+        "scripts/test-event-ticket-sale.sh",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/components/events/EventTicketSaleCard.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/components/events/EventTicketSaleRequestsQueue.test.tsx",
+        ".github/workflows/ci.yml"
+      ],
+      "formalModels": [],
+      "verification": "Hspec exercises the state derivation. The disposable PostgreSQL runner covers authorized transitions, concurrency, legacy draft isolation, rejection of incompatible terms, and the policy loaded by public checkout. Jest covers the card, queue, and request eligibility after creating or editing a ticket tier. The hosted workflow runs the script after the delegation runner; without its database variable the PostgreSQL group reports one pending example.",
+      "evidence": "formal/system/event-ticket-sale-approval.md; local PostgreSQL 16 run of scripts/test-event-ticket-sale.sh on 2026-11-15 against a copy of the migrated delegation test database (9 examples, 0 failures); Jest run of the card and queue tests on the same day. The runner is a step of .github/workflows/ci.yml; no hosted run of it has been observed yet, and nothing has been exercised on production. The 2026-11-15 evidence predates the review corrections.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "The new module was written against the policy table, its triggers and the storefront's policy query, all read in full; the request and decision lifecycle is exercised on PostgreSQL. Public checkout from an approved request is established by reading the storefront query, not by an end-to-end test, and there is no model.",
+      "ambiguity": [
+        "The standard terms are fixed by the product owner's decision of 2026-11-15; whether they suit every organizer or tax position is not established.",
+        "Pending requests never expire and a decline records no reason.",
+        "E-mail is the only notice; an in-app notification would need a new notification type and migration."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The request and decision lifecycle and its races are exercised on PostgreSQL and the web card and queue by Jest; checkout from an approved request is covered by reading only, no model exists and notice delivery is unverified."
+      },
+      "historicalStatus": null
     }
   ]
 }

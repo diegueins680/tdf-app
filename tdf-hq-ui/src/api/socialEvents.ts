@@ -592,6 +592,41 @@ export interface EventAdminInvitationPreviewDTO {
   eaipExpiresAt: string;
 }
 
+/** Terms TDF applies to every paid ticket sale it approves (EVT-TICKET-SALE-001). */
+export interface EventTicketSaleTermsDTO {
+  etstCurrency: string;
+  etstBuyerFeeBps: number;
+  etstOrganizerFeeBps: number;
+  etstTaxBps: number;
+  etstHoldMinutes: number;
+  etstMaxTicketsPerOrder: number;
+  etstRefundPolicy: string;
+  etstTermsSummary: string;
+}
+export interface EventTicketSaleDTO {
+  etsEventId: string;
+  /** Derived by the server: `none`, `requested`, `approved` or `declined`. */
+  etsStatus: string;
+  etsRequestId?: string | null;
+  etsRequestedAt?: string | null;
+  etsDecidedAt?: string | null;
+  etsCanRequest: boolean;
+  /** `already_approved`, `already_requested`, `not_manager` or `no_paid_tier`. */
+  etsBlockedReason?: string | null;
+  /** True for a strict administrator while the request is pending. */
+  etsCanDecide: boolean;
+  etsTerms: EventTicketSaleTermsDTO;
+}
+export interface EventTicketSaleRequestDTO {
+  etsrRequestId: string;
+  etsrEventId: string;
+  etsrEventTitle: string;
+  etsrEventStartsAt: string;
+  etsrOrganizerName?: string | null;
+  etsrRequestedAt: string;
+  etsrTiers: { etstiName: string; etstiPriceCents: number; etstiCurrency: string; etstiQuantityTotal: number }[];
+  etsrTerms: EventTicketSaleTermsDTO;
+}
 export interface EventCourtesyTicketDTO {
   ectTierId: string;
   /** 1 to 10 tickets per issue. */
@@ -926,6 +961,14 @@ export const SocialEventsAPI = {
       ectHolderEmail: email || null,
     }) as SocialTicketOrderDTO;
   },
+  getTicketSale: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-sale`) as EventTicketSaleDTO,
+  requestTicketSale: async (eventId: string) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-sale/request`, {}) as EventTicketSaleDTO,
+  listTicketSaleRequests: async () =>
+    await getUnknown('/social-events/ticket-sale-requests') as EventTicketSaleRequestDTO[],
+  decideTicketSaleRequest: async (requestId: string, decision: 'approve' | 'decline') =>
+    await postUnknown(`/social-events/ticket-sale-requests/${encodeURIComponent(requestId)}/${decision}`, {}) as EventTicketSaleDTO,
   // QR Codes
   getTicketQR: async (eventId: string, ticketId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tickets/${encodeURIComponent(ticketId)}/qr`) as TicketWithQRDTO,
