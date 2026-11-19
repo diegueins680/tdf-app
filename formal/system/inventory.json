@@ -572,6 +572,7 @@
       "scripts/test-event-task-read-migration.sh",
       "scripts/test-event-task-revision-migration.sh",
       "scripts/test-event-task-revisioned-read-migration.sh",
+      "scripts/test-event-ticket-sale.sh",
       "scripts/test-feature-migrations.sh",
       "scripts/test-google-account-name-verifier.py",
       "scripts/test-guarded-release.py",
@@ -1135,6 +1136,10 @@
       "tdf-hq-ui/src/components/events/EventRsvpFeed.test.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
       "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
+      "tdf-hq-ui/src/components/events/EventTicketSaleCard.test.tsx",
+      "tdf-hq-ui/src/components/events/EventTicketSaleCard.tsx",
+      "tdf-hq-ui/src/components/events/EventTicketSaleRequestsQueue.test.tsx",
+      "tdf-hq-ui/src/components/events/EventTicketSaleRequestsQueue.tsx",
       "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
       "tdf-hq-ui/src/components/events/MyEventsPanel.tsx",
       "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx",
@@ -1142,6 +1147,8 @@
       "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
       "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
       "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
+      "tdf-hq-ui/src/components/events/ticketSaleQueryKeys.ts",
+      "tdf-hq-ui/src/components/events/useSaveTicketTier.ts",
       "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx",
       "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
       "tdf-hq-ui/src/components/merch/MerchReputationSummary.test.tsx",
@@ -2503,6 +2510,7 @@
       "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
       "tdf-hq/src/TDF/Server/EventResearch.hs",
       "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+      "tdf-hq/src/TDF/Server/EventTicketSale.hs",
       "tdf-hq/src/TDF/Server/Merch.hs",
       "tdf-hq/src/TDF/Server/MerchReputation.hs",
       "tdf-hq/src/TDF/Server/MusicRelease.hs",
@@ -2635,6 +2643,7 @@
       "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs",
       "tdf-hq/test/TDF/EventOperations/TypesSpec.hs",
       "tdf-hq/test/TDF/EventOrganizerSpec.hs",
+      "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
       "tdf-hq/test/TDF/FailureBoundarySpec.hs",
       "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
       "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
@@ -3221,7 +3230,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "23ade27a31842e6552e0e12165d01dbca02c127cdd1b018efb4324a31103a7b6",
+      "sha256": "813581940f8c9435bd0813e8cbd0ac517e65a414c874aac4533b1ad0261b36ef",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3941,7 +3950,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "2da277a5eb00e60db2b2b4349484ece84d066bbe866dfcd7f44906df33485fb6",
+      "sha256": "f3cb6a73005b2593aa0204951940cebada7ee4788bff1a41c4de64da5e17267a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6501,6 +6510,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f17125df1397d730",
+      "path": "scripts/test-event-ticket-sale.sh",
+      "sha256": "c0c48f9127eaad19269847d29dafb7b056ba433936e81e96a32f252dc60c5c64",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-ec70a1725f0a44fe",
       "path": "scripts/test-feature-migrations.sh",
       "sha256": "b26598f05f4b69568e4f2d27167212cc644b045bdf8657348d0e8c961b04189f",
@@ -8927,7 +8942,7 @@
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "94dcbd14805849f075383b163c63f9b06258bf7801a299b4b1d3bb2dd9448bab",
+      "sha256": "61c417f97c4915a2a3a09cc59cf731fef5a451cce1e59bc2304a8a0498dbbc8d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9831,6 +9846,30 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-a603775d4e30ef44",
+      "path": "tdf-hq-ui/src/components/events/EventTicketSaleCard.test.tsx",
+      "sha256": "abeb518ad9ba0fed947777c091ee5387c35ea9c312f3acdf9c28892cb82ffe06",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-661e4bf4635aeb99",
+      "path": "tdf-hq-ui/src/components/events/EventTicketSaleCard.tsx",
+      "sha256": "0918c0a57274cea5e57dc1e2eb358745d5642bdb1739d8a5591fc85cd327ab6b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-49d630b64d3b3ad2",
+      "path": "tdf-hq-ui/src/components/events/EventTicketSaleRequestsQueue.test.tsx",
+      "sha256": "1ea4da81b78b5adf6f35991a93d9e04630e0a2cae12649e614a647fe518b8699",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6c91311f8afd3bb6",
+      "path": "tdf-hq-ui/src/components/events/EventTicketSaleRequestsQueue.tsx",
+      "sha256": "22df9abd1df78caaa80142edbe1310ed4840094bee98aa6290f4466a994cdc52",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-a17dfa34ef337c89",
       "path": "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
       "sha256": "65f904a6cf8e33ce7401154167a2ae697e6603beedc52e7fbe1dbe4bdcb7746d",
@@ -9870,6 +9909,18 @@
       "id": "SURFACE-60f6d13fa85fffa5",
       "path": "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
       "sha256": "86da5182e76873a793d6c6637948d169c7b21b6ee989cc521e5600001cd11811",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-41142ed696faa22a",
+      "path": "tdf-hq-ui/src/components/events/ticketSaleQueryKeys.ts",
+      "sha256": "2a9a68f51b204c8dcb4e13761c6a2f00a17e7c7c82585589f8ef884ef6f477d5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-cb90dfdf95af047d",
+      "path": "tdf-hq-ui/src/components/events/useSaveTicketTier.ts",
+      "sha256": "1fa417aea895ebb15eb308ee3f212a4aab69089eef5d748e9f9bed78051ba4fa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12173,13 +12224,13 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "e7df8eaa6b55334a0debaadf14103030a9b7b123cd08898722403e07f648830f",
+      "sha256": "fe6c971357559251da436f382cd190627a5573c3c59343b391dac2e89d32b8cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "4d9383f448eb9af782f818e311fd4890216b318e407d27d33ffc36557d1a39c9",
+      "sha256": "9c04266c5cd79c8a5324a205dea0606e0ee41867a1c5f8387cf32cda741f14df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12209,7 +12260,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "01229e45a124cb6abe0382d9eef00561606deb69ec554d8dd26b4a85de1f06fb",
+      "sha256": "309b788cb21ae6505fff38577913e2bf5e7b23a7a2acf9d6fc704ed3119cd3c9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17063,7 +17114,7 @@
     {
       "id": "SURFACE-200737fdda273f28",
       "path": "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
-      "sha256": "f478a6ef0b343c4884d4f2477c1c9f912e58ee68d76affe2005a04d87b65871e",
+      "sha256": "81bb719a7780e7e6236ff85cb6b87f5479d913afac0af35941ae62bce3bd12cc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17639,7 +17690,7 @@
     {
       "id": "SURFACE-3ff9ad29b119eeb6",
       "path": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
-      "sha256": "c6300e48bff308344021f7a61cbc00c7859459d087668afe8bdf3a094092f5f3",
+      "sha256": "6a299ff4d440fd6abc65602f88049606e79becc9b749db8871f7e5625b567062",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18023,7 +18074,13 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
+      "sha256": "1fd141802cc47305f952b6f518b537f4fa951728f123a22fbcdcdcead4d83b76",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-861bcff9b9aafb09",
+      "path": "tdf-hq/src/TDF/Server/EventTicketSale.hs",
+      "sha256": "add3221a1221ad632c6587688312757d525615adbd239e7eb7ed9d1d21cb3323",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18125,7 +18182,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "790e1d6df83864710f6251d7473976d779a65c25d7e291be540041627dff278f",
+      "sha256": "928c126539e456187c15420669c6259fbda05e7bad7f1abc627b306c2a22bee4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18491,7 +18548,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "sha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18569,7 +18626,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "b13833107a3981a2d559af8d9a768ab8bb8c1e8a9c13026279c62feef1aff4db",
+      "sha256": "510bf67f67d817fd9462bae93cd7d3d141c5c993ca936b8617d44906ea84b9bc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18816,6 +18873,12 @@
       "id": "SURFACE-0b2762494d9e6ae1",
       "path": "tdf-hq/test/TDF/EventOrganizerSpec.hs",
       "sha256": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-78bfd9d40d6ce29d",
+      "path": "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
+      "sha256": "c0645218656951aee61012df54df63ec2f9128b8d787d6899fcd323bc90294dd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30519,7 +30582,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "50a423147a27e5095c96d4592d05eb2048e7d5f8e094678a01b4d80b41ec30df",
+      "sha256": "f174eaed80fbeab91e55ead50dccaeff4662f45c2fa6883a4368d7672d4745ac",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -30919,6 +30982,13 @@
     {
       "path": "formal/system/event-planning-ux.md",
       "sha256": "dafa8fea1fc99b1057fbfab0bd07d37a82c2e7895058095ce1963a4df3cd40db",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/event-ticket-sale-approval.md",
+      "sha256": "431057c377525c46b77b76f35b1f0d4a486865be7604cf2e04bd5153ff59a92c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31604,7 +31674,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "697c0a964c0af7c91a4237629168b761940ba24a094f74aecd7f2008e6e4cc8c",
+      "sha256": "3ab95a2cd0b77a8e402537cb43a160eb77a1025e25f2a3ce012f6c6e1099a11e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
