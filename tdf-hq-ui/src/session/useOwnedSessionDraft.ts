@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import { useSessionOwner } from './useSessionOwner';
-import { getAuthSessionEpoch } from './authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 import { discardRecoverableDraft, readRecoverableDraft, saveRecoverableDraft } from './recoverableDraft';
 
 // A blank form is not evidence that an account has an empty persisted profile.

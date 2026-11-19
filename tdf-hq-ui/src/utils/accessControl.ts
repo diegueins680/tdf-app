@@ -1,4 +1,4 @@
-import { evaluatePathAccess, getFeatureByPath } from '../features/featureRegistry';
+import { evaluatePathAccess, getFeatureByPath } from './featureRegistry';
 
 const INTERNAL_MANAGER_MODULE_KEYS = [
   'admin',

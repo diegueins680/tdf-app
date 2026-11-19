@@ -20,6 +20,7 @@ const CAROUSEL_LIMIT = 8;
 const DISMISS_KEY = 'tdf.upcomingEventsCarousel.dismissed';
 const EVENT_IMAGE_FALLBACK = '/event-fallback.svg';
 export const EVENTS_PATH = '/social/eventos';
+const FOCUSED_TASK_ROUTES = ['/eventos/:eventId', '/artista/crear', '/mi-artista'];
 
 const rsvpLabelKey: Record<SocialRsvpStatus, string> = {
   accepted: 'authEntry.eventsCarousel.going',
@@ -67,8 +68,11 @@ export default function UpcomingEventsCarousel() {
   const queryClient = useQueryClient();
   const [dismissed, setDismissed] = useState(readDismissed);
   const onEventsPage = location.pathname === EVENTS_PATH || location.pathname.startsWith(`${EVENTS_PATH}/`);
+  // A page with one job (one event, or the artist profile being created) starts
+  // with that job: other events above it push it below the first phone screen.
+  const onFocusedTask = FOCUSED_TASK_ROUTES.some((pattern) => matchPath(pattern, location.pathname) !== null);
   // A stored session is only a hint until the server confirms it.
-  const enabled = Boolean(session) && !sessionLoading && !dismissed && !onEventsPage;
+  const enabled = Boolean(session) && !sessionLoading && !dismissed && !onEventsPage && !onFocusedTask;
   const artistRoute = matchPath('/artista/:slugOrId', location.pathname) ?? matchPath('/a/:slugOrId', location.pathname);
   const artistSegment = artistRoute?.params.slugOrId;
   const onArtistProfile = Boolean(artistSegment && artistSegment !== 'crear');

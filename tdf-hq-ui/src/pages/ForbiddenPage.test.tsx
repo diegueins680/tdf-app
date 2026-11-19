@@ -2,7 +2,7 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 
-import { evaluateFeatureAccess } from '../features/featureRegistry';
+import { evaluateFeatureAccess } from '../utils/featureRegistry';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 import ForbiddenPage from './ForbiddenPage';
 
