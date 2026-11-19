@@ -5,6 +5,8 @@
 
 module TDF.Server.EventTicketCheckout
   ( publicEventTicketsServer
+  , ApprovedTicketPolicy(..)
+  , loadApprovedTicketPolicy
   , deriveTicketLookupToken
   , ticketCheckoutAwaitsPayment
   , ticketPaymentAllowed

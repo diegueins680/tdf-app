@@ -26,7 +26,7 @@ for (const file of ['tdf-hq-ui/src/routes/publicRoutes.tsx', 'tdf-hq-ui/src/rout
   };
   walk(source);
 }
-const bundle = await build({ entryPoints: ['tdf-hq-ui/src/features/featureRegistry.ts'], bundle: true, write: false, platform: 'node', format: 'esm', logLevel: 'silent' });
+const bundle = await build({ entryPoints: ['tdf-hq-ui/src/utils/featureRegistry.ts'], bundle: true, write: false, platform: 'node', format: 'esm', logLevel: 'silent' });
 const registry = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'));
 const backendAuth = await read('tdf-hq/src/TDF/Auth.hs');
 const roleModules = [...backendAuth.matchAll(/^modulesForRole\s+(\w+)\s*=\s*(.+)$/gm)].map(([,role, expression]) => ({role, modules: [...expression.matchAll(/Module(\w+)/g)].map(([,name]) => name.toLowerCase())}));

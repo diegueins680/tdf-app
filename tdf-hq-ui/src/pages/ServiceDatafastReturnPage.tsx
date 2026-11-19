@@ -3,6 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { ServiceStorefront, type ServiceStorefrontOrderDTO } from '../api/serviceStorefront';
+import { useQuery } from '@tanstack/react-query';
+import { loadCheckoutPaymentAlternatives } from '../api/checkoutPaymentAlternatives';
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 
 const queryParam = (name: string): string => {
   if (typeof window === 'undefined') return '';
@@ -18,6 +21,15 @@ export default function ServiceDatafastReturnPage() {
   );
   const [order, setOrder] = useState<ServiceStorefrontOrderDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const alternatives = useQuery({
+    queryKey: ['service-datafast-alternatives', orderNumber, order?.ssoCheckoutId],
+    queryFn: () => loadCheckoutPaymentAlternatives({
+      checkoutId: order!.ssoCheckoutId!, lookupToken,
+      returnPath: `/mezcla-mastering/pedido/${encodeURIComponent(orderNumber)}`,
+    }),
+    enabled: Boolean(order?.ssoCheckoutId && order.ssoStatus === 'payment_failed' && !error),
+    retry: false,
+  });
 
   useEffect(() => {
     if (!orderNumber || !resourcePath || !lookupToken) {
@@ -49,6 +61,9 @@ export default function ServiceDatafastReturnPage() {
                     : 'Datafast no confirmó todavía un pago válido. El pedido permanece pendiente o en revisión.'}
                 </Alert>
                 <Typography>Pedido {order.ssoOrderNumber}</Typography>
+                {order.ssoStatus === 'payment_failed' && alternatives.isSuccess && (
+                  <PaymentAlternativesNotice methods={alternatives.data} failedMethod="datafast" blocked />
+                )}
                 <Typography>Estado técnico: {order.ssoStatus}</Typography>
               </Stack>
             </CardContent>

@@ -267,7 +267,7 @@ binds the final composition; older execution receipts retain their identities.
 
 ## Ticket order lookup-key module — 2026-11-19
 
-Against protected main `6ccd1e55af264fd5a6a83b82ec732bf8a5f66239`, the Cabal manifest adds only
+Against protected main `966fb55dca70a49c0a340b674f8cc133cc413a2d`, the Cabal manifest adds only
 `TDF.Ticketing.LookupToken` to the library exposed modules; removing that line
 reproduces the main file byte for byte. The module holds the guest ticket order
 lookup-key derivation moved verbatim out of `TDF.Server.EventTicketCheckout`

@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "b4a1eeaf71ca91723a624a884adc57902a5ab64c890be15cf6f67e52b2c046e8"
+    "tdf-hq/tdf-hq.cabal": "b0b447a372087070171e437869864cdaa8bc5dc56e147fb9c10376ff7ff6f809"
   },
   "obligations": [
     {
@@ -621,10 +621,19 @@
       "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
     },
     {
+      "reviewedAgainst": "65317ec2e4febf920292ecace7df466153ae5046",
       "source": "tdf-hq/tdf-hq.cabal",
-      "reviewedAgainst": "6ccd1e55af264fd5a6a83b82ec732bf8a5f66239",
       "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
-      "currentSha256": "b4a1eeaf71ca91723a624a884adc57902a5ab64c890be15cf6f67e52b2c046e8",
+      "currentSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "change": "Register the library module TDF.Server.EventTicketSale in exposed-modules and the test module TDF.EventTicketSaleSpec in the tdf-hq-test other-modules list for EVT-TICKET-SALE-001.",
+      "semanticReview": "Removing exactly those two module lines reproduces protected main Cabal bytes. Every other reviewed source byte and hash matches protected main. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed; the added library module holds paid ticket sale request and approval handlers only, calls hasStrictAdminAccess without changing it, and is not imported by any reviewed source.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "966fb55dca70a49c0a340b674f8cc133cc413a2d",
+      "previousSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "currentSha256": "b0b447a372087070171e437869864cdaa8bc5dc56e147fb9c10376ff7ff6f809",
       "change": "Add TDF.Ticketing.LookupToken to the library exposed-modules list only; removing that exact line reproduces the protected-main Cabal manifest byte for byte.",
       "semanticReview": "No source search paths, compiler options, CPP flags, dependencies, extensions or toolchain changes. The module holds the guest ticket order lookup-key derivation moved verbatim out of TDF.Server.EventTicketCheckout, plus a hash comparison and an order-link builder used by the ticket confirmation worker; it imports no authorization or recovery module and introduces no authorization or recovery binding. Every other reviewed source is unchanged. Reviewed by the change author only; no independent review was performed.",
       "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."

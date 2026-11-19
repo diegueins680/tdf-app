@@ -88,6 +88,7 @@ async function manifestBeforePlayer() {
 const MOVED_FILE_REVIEW_BATCHES = new Set([
   'paypal-webhook-domain-module-2026-11-10',
   'web-auth-state-layer-2026-11-17',
+  'web-feature-registry-layer-2026-11-17',
 ]);
 
 function movedFileSuccessors(active) {
@@ -154,6 +155,10 @@ async function readReconciliation(beforePlayer = false) {
     .map(row => [row.id, row]));
   // A moved list's successor stands in for the review it nests.
   for (const row of movedFileSuccessors(active)) byId.set(row.previousDecision.id, row);
+  // EVT-TICKET-SALE-001 extended the typed client registry; its successor
+  // review nests the 86-method review unchanged and stands in for it.
+  const ticketSaleClient = active.find(row => row.previousDecision?.id === '083bd1a66e9f23f02866');
+  byId.set(ticketSaleClient.previousDecision.id, ticketSaleClient);
   // The loop rework (pull request #750) retired two reviews of deleted scripts as
   // provenance; the earlier catalog still lists them, so they stand in for themselves.
   for (const entry of (await readLoopRework()).decisions) byId.set(entry.decision.id, entry.decision);
@@ -1166,7 +1171,12 @@ test('event administrator delegation appends one migration to the protected 251-
     'docs/catalog-persistence/event-integration-retirements.json')).retirements
     .find(row => row.source.name === 'migrations'));
   // The typed client registry is the only other successor; it also nests its parent review.
-  const client = active.find(row => row.id === successors.find(row => row.name === 'SocialEventsAPI').currentId);
+  // EVT-TICKET-SALE-001 later added four methods: its 90-method successor keeps
+  // this 86-method review intact as its previousDecision.
+  const clientNow = active.find(row => row.id === successors.find(row => row.name === 'SocialEventsAPI').currentId);
+  assert.equal(clientNow.evidence.valueCount, 90);
+  const client = clientNow.previousDecision;
+  assert.equal(client.id, '083bd1a66e9f23f02866');
   assert.equal(client.evidence.valueCount, 86);
   assert.deepEqual(client.previousDecision, priorMain.find(row => row.id === '2511cbba2fc7279bc28a'));
   // Moved lists (ADR 0133) nest the exact review of protected main.
@@ -1228,8 +1238,12 @@ test('marketplace agreement payments append one migration to the protected 252-e
   // Moved lists (ADR 0133) nest the exact review of protected main.
   const history = new Map([...active, ...retired].map(row => [row.id, row]));
   const replaced = new Set([current.previousDecision.id, ...assertMovedListsNest(active, priorMain)]);
+  // The 86-method client review was since superseded by EVT-TICKET-SALE-001
+  // and is retained exactly as the previousDecision of its successor.
+  const clientSuccessor = active.find(row => row.previousDecision?.id === '083bd1a66e9f23f02866');
   for (const row of priorMain) {
     if (replaced.has(row.id)) assert.ok(!history.has(row.id));
+    else if (row.id === '083bd1a66e9f23f02866') assert.deepEqual(clientSuccessor.previousDecision, row);
     else assert.deepEqual(history.get(row.id), row);
   }
   const payoutReviews = ['d580ad14a8f01218c4a9', 'fbe5e4e4d0289e1caaf4', 'cfa5a05214e95ed07ef0',
