@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-19T22:10:13.084Z",
+  "generatedAt": "2026-11-19T23:05:08.545Z",
   "repositoryRoot": ".",
   "filesScanned": 2794,
   "candidateCount": 1475,
@@ -41832,7 +41832,7 @@
       "domain": "product-navigation",
       "kind": "array",
       "name": "PAGE_SIZE_OPTIONS",
-      "line": 11,
+      "line": 12,
       "values": [
         "12",
         "24",
@@ -41841,7 +41841,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11
+        12
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -41866,7 +41866,7 @@
       "domain": "product-navigation",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 93,
+      "line": 103,
       "values": [
         "artist",
         "band",
@@ -41876,7 +41876,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        93
+        103
       ],
       "consumerCount": 136,
       "backendConsumers": [
@@ -67852,7 +67852,7 @@
       "lines": [
         1063
       ],
-      "consumerCount": 364,
+      "consumerCount": 365,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -67930,6 +67930,7 @@
         "tdf-hq-ui/src/components/reputation/CategoryPriorityPrototype.test.ts",
         "tdf-hq-ui/src/components/reputation/CategoryPriorityPrototype.tsx",
         "tdf-hq-ui/src/components/reputation/ContextualRankingPrototype.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
         "tdf-hq-ui/src/features/fans/FirstFollowStarter.tsx",
         "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx",
         "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
@@ -67954,8 +67955,7 @@
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/CourseBuilderPage.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.sort.test.tsx",
-        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx"
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.sort.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/bookings.tsx",
