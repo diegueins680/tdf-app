@@ -78127,52 +78127,100 @@
       "reviewed": true
     },
     {
-      "id": "382d3969b992e260fde4",
+      "id": "d54adff00e3a240449dd",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Treating an inert capacity-test matrix as editable business data would obscure the fixed supported-channel coverage; the matrix must remain aligned with the existing SocialChannel union.",
-      "justification": "This options tuple is local to a Jest finite capacity regression and enumerates the existing Instagram/TikTok channel combinations. Its values only drive calls to the real generator in tests; it creates no runtime selector, catalog, provider connection, persisted value or publication. User-authored campaign pieces continue through the unchanged server 30-piece cap. The scanner cross-file consumer matches are lexical occurrences, not imports of this test-local tuple.",
       "reviewed": true,
+      "justification": "The same list, unchanged in value and order, moved verbatim with videoCampaign.test.ts from tdf-hq-ui/src/features/campaigns to tdf-hq-ui/src/utils (ADR 0133: the video campaign model is pure data and validation consumed from api, components and pages, so it sits in the utils layer); the reviewed classification and disposition are unchanged.",
       "evidence": {
-        "file": "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
+        "file": "tdf-hq-ui/src/utils/videoCampaign.test.ts",
         "line": 100
       },
-      "reviewBatch": "pr599-piece-cap-2026-11-06",
-      "reviewMethod": "manual-fixture-boundary-review"
+      "reviewBatch": "web-campaign-cart-layer-2026-11-19",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "382d3969b992e260fde4",
+        "classification": "genuine-technical-constant",
+        "disposition": "explicit-allowlist",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P1-integrity",
+        "risk": "Treating an inert capacity-test matrix as editable business data would obscure the fixed supported-channel coverage; the matrix must remain aligned with the existing SocialChannel union.",
+        "justification": "This options tuple is local to a Jest finite capacity regression and enumerates the existing Instagram/TikTok channel combinations. Its values only drive calls to the real generator in tests; it creates no runtime selector, catalog, provider connection, persisted value or publication. User-authored campaign pieces continue through the unchanged server 30-piece cap. The scanner cross-file consumer matches are lexical occurrences, not imports of this test-local tuple.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
+          "line": 100
+        },
+        "reviewBatch": "pr599-piece-cap-2026-11-06",
+        "reviewMethod": "manual-fixture-boundary-review"
+      }
     },
     {
-      "id": "f7bf7d7a483d435dc242",
+      "id": "cb9157047b31e0f8ad4a",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
-      "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
       "reviewed": true,
+      "justification": "The same list, unchanged in value and order, moved verbatim with videoCampaign.ts from tdf-hq-ui/src/features/campaigns to tdf-hq-ui/src/utils (ADR 0133: the video campaign model is pure data and validation consumed from api, components and pages, so it sits in the utils layer); the reviewed classification and disposition are unchanged.",
       "evidence": {
-        "file": "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+        "file": "tdf-hq-ui/src/utils/videoCampaign.ts",
         "line": 2
       },
-      "reviewBatch": "video-campaigns-2026-10-20",
-      "reviewMethod": "manual-boundary-review"
+      "reviewBatch": "web-campaign-cart-layer-2026-11-19",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "f7bf7d7a483d435dc242",
+        "classification": "genuine-technical-constant",
+        "disposition": "explicit-allowlist",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P1-integrity",
+        "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
+        "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+          "line": 2
+        },
+        "reviewBatch": "video-campaigns-2026-10-20",
+        "reviewMethod": "manual-boundary-review"
+      }
     },
     {
-      "id": "4938b423200035b5e47c",
+      "id": "e8af76e0f1ac811d5449",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
-      "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
       "reviewed": true,
+      "justification": "The same list, unchanged in value and order, moved verbatim with videoCampaign.ts from tdf-hq-ui/src/features/campaigns to tdf-hq-ui/src/utils (ADR 0133: the video campaign model is pure data and validation consumed from api, components and pages, so it sits in the utils layer); the reviewed classification and disposition are unchanged.",
       "evidence": {
-        "file": "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
-        "line": 34
+        "file": "tdf-hq-ui/src/utils/videoCampaign.ts",
+        "line": 39
       },
-      "reviewBatch": "video-campaigns-2026-10-20",
-      "reviewMethod": "manual-boundary-review"
+      "reviewBatch": "web-campaign-cart-layer-2026-11-19",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "4938b423200035b5e47c",
+        "classification": "genuine-technical-constant",
+        "disposition": "explicit-allowlist",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P1-integrity",
+        "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
+        "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+          "line": 34
+        },
+        "reviewBatch": "video-campaigns-2026-10-20",
+        "reviewMethod": "manual-boundary-review"
+      }
     },
     {
       "id": "9c81a0d1656a3da224d8",

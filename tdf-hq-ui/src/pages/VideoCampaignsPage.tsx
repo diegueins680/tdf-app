@@ -13,7 +13,7 @@ import { getActiveSession, useSession, type SessionUser } from '../session/Sessi
 import { getAuthSessionEpoch } from '../auth/authEvents';
 import { hasStrictAdminAccess } from '../utils/accessControl';
 import { campaignLink, prepareMissingCampaignPieces, emptyVideoCampaign, importedCampaignSchema, safeVideoUrl, validateVideoCampaign,
-  type SocialChannel, type VideoCampaign, type VideoCampaignDocument, type VideoPiece } from '../features/campaigns/videoCampaign';
+  type SocialChannel, type VideoCampaign, type VideoCampaignDocument, type VideoPiece } from '../utils/videoCampaign';
 
 const steps = ['Video', 'Objetivo y redes', 'Piezas y calendario', 'Revisión'];
 

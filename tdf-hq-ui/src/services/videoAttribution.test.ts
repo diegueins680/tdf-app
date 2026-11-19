@@ -1,5 +1,5 @@
 import { videoAttribution } from './videoAttribution';
-import { buildArtistFollowAuthPath } from '../../utils/artistFollowIntent';
+import { buildArtistFollowAuthPath } from '../utils/artistFollowIntent';
 
 const search = '?utm_campaign=126f208c-2b38-47c1-952b-6ba633122c87&utm_source=instagram&utm_content=instagram-2';
 describe('video campaign registration continuity', () => {

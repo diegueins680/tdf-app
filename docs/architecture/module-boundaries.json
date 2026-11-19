@@ -159,9 +159,6 @@
       "knownViolations": [
         "api/authHeader.ts -> session/SessionContext.tsx",
         "api/drive.ts -> services/googleDrive.ts",
-        "components/MarketplaceCartButton.tsx -> features/marketplace/cartSummary.ts",
-        "components/SessionVideoPreview.tsx -> features/campaigns/videoAttribution.ts",
-        "components/SessionVideoPreview.tsx -> features/campaigns/videoCampaign.ts",
         "utils/chatkit.ts -> api/client.ts",
         "utils/directoryPreviewImage.ts -> api/client.ts",
         "utils/inAppBrowser.ts -> mobile/distribution.ts",

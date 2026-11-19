@@ -1195,10 +1195,6 @@
       "tdf-hq-ui/src/desktop/shell.ts",
       "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.test.ts",
       "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.ts",
-      "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
-      "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
-      "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
-      "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
       "tdf-hq-ui/src/features/ddex/DdexDocumentPage.tsx",
       "tdf-hq-ui/src/features/ddex/DdexInboxPage.tsx",
       "tdf-hq-ui/src/features/ddex/PartnerManagementPage.tsx",
@@ -1253,8 +1249,6 @@
       "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
       "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
       "tdf-hq-ui/src/features/marketplace/agreements.ts",
-      "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts",
-      "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
       "tdf-hq-ui/src/features/marketplace/offers.test.ts",
       "tdf-hq-ui/src/features/marketplace/offers.ts",
       "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
@@ -1616,10 +1610,14 @@
       "tdf-hq-ui/src/routes/protectedRoutes.tsx",
       "tdf-hq-ui/src/routes/publicRoutes.test.tsx",
       "tdf-hq-ui/src/routes/publicRoutes.tsx",
+      "tdf-hq-ui/src/services/cartSummary.test.ts",
+      "tdf-hq-ui/src/services/cartSummary.ts",
       "tdf-hq-ui/src/services/googleDrive.recovery.test.ts",
       "tdf-hq-ui/src/services/googleDrive.ts",
       "tdf-hq-ui/src/services/instagramAuth.test.ts",
       "tdf-hq-ui/src/services/instagramAuth.ts",
+      "tdf-hq-ui/src/services/videoAttribution.test.ts",
+      "tdf-hq-ui/src/services/videoAttribution.ts",
       "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx",
       "tdf-hq-ui/src/session/OnboardingRecovery.tsx",
       "tdf-hq-ui/src/session/SessionContext.reconciliation.test.tsx",
@@ -1763,6 +1761,8 @@
       "tdf-hq-ui/src/utils/torrentWorker.ts",
       "tdf-hq-ui/src/utils/vcard.test.ts",
       "tdf-hq-ui/src/utils/vcard.ts",
+      "tdf-hq-ui/src/utils/videoCampaign.test.ts",
+      "tdf-hq-ui/src/utils/videoCampaign.ts",
       "tdf-hq-ui/src/utils/videoSource.test.ts",
       "tdf-hq-ui/src/utils/videoSource.ts",
       "tdf-hq-ui/src/utils/videoWatch.test.ts",
@@ -3948,7 +3948,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "5b17e4f43c6f4f997685d20dd3a7c8312b598632429ccc1e5dc176a5637d7c98",
+      "sha256": "fc700b3a0fb48cfc7810dd2adf96a20ca3e0e1b3e1aff101d3238ef2a27044d3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9018,7 +9018,7 @@
     {
       "id": "SURFACE-354e08be89f91765",
       "path": "tdf-hq-ui/src/api/videoCampaigns.ts",
-      "sha256": "8ee7fef3bd2d796b66f216817fe73d2e0638f0ddadd76e0f615d75bd4a7b6c64",
+      "sha256": "d216712d901924b3992baf8bff92e15ec4a5de075e803ca4965635ab89b42086",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9294,13 +9294,13 @@
     {
       "id": "SURFACE-de5d7d4bb9406476",
       "path": "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
-      "sha256": "3e64719ad28e77a7720252e86610dcb712a508d0af9d8bd1eed1a715a18c33a3",
+      "sha256": "6fc1c20aeead99c14405bb5cb6352302ab9f3cb18844b249ac147042c7ddee52",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-cd0a274baaa9137b",
       "path": "tdf-hq-ui/src/components/MarketplaceCartButton.tsx",
-      "sha256": "c40979f81f4af476e7a47933a2e86cf3d3889b7674731794e91e1fa3d40dddcd",
+      "sha256": "4d84d78d27d5ce05f3ac7bbd6455ad8af7120783d56e87cddea33f264a293121",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9522,7 +9522,7 @@
     {
       "id": "SURFACE-a64f86cb6be0afe2",
       "path": "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
-      "sha256": "4047d4f6a9ebfd41be4f92b6e7f782db228c0be2d1a09ce08e4f1a178337002b",
+      "sha256": "7c0a354060de778ed182706bafcf32759da550c845ef97aca1c4711740230ef3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10198,30 +10198,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-642ed18b72816afb",
-      "path": "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
-      "sha256": "bddb9827e9e144876f863e76805139c5ce2f14bc2d5dc65e9ab5ec92d59051a4",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-68c571b55ae56bd8",
-      "path": "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
-      "sha256": "243066134ab5d8bd0d98f908dc0706d1a0cb999126e7d106337f34ce555adec5",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-ef8d7dd772a97cb8",
-      "path": "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
-      "sha256": "ea50012625c3e00735db60556e8400db0b697c859d029c8ce398376f1d44fba2",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-6552f4e924597742",
-      "path": "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
-      "sha256": "7aab0af6588a6b078fe8ea4136fd6b9656c7d2996d19e3913041f01125c0d50b",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-82b624b8fce7891b",
       "path": "tdf-hq-ui/src/features/ddex/DdexDocumentPage.tsx",
       "sha256": "c99cd6181ff4c0f036abdc0e19d10132ef5a6241467260ace89eeff4fd1ff8c8",
@@ -10543,18 +10519,6 @@
       "id": "SURFACE-fbfd335398170a3a",
       "path": "tdf-hq-ui/src/features/marketplace/agreements.ts",
       "sha256": "a24989e84d57b01b99145e147e2aa1116245d36bbf962b82b9256c66f42f85c0",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-cae765cc556fec1a",
-      "path": "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts",
-      "sha256": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-a35c2de02e03cc6c",
-      "path": "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
-      "sha256": "fc714335e3d96208fc3ac9f7ec246f94066c4fb744013df330223b515f020ee9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11082,7 +11046,7 @@
     {
       "id": "SURFACE-f23ba2e5ecf07fe3",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
-      "sha256": "d34c07f4c77465f5235473d8e40e504bfe55bf6dce6df130a194d1de5d27fd83",
+      "sha256": "4b6c3ec93afa578e11ac45d43123dd183ede5cee97d09fdea35fb08db44d5f72",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11280,7 +11244,7 @@
     {
       "id": "SURFACE-3a0858e52f7dba9e",
       "path": "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
-      "sha256": "6ae004a992507d66d6498640f83788252cb58900d099658be0bbc3ab846a64d8",
+      "sha256": "7502f83d2089e7f09827d17c4cd6f37d2e82bec39ed5c827b540de18c32bc3be",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11760,7 +11724,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "22994ad2ff6bba4dd34598deaf138895d01cfca50ed51959e3795cff1a48eabf",
+      "sha256": "80347a017c02e7bdf8429424b5f60a0ac3bd5c44974f71727edf632dbf08c213",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12390,13 +12354,13 @@
     {
       "id": "SURFACE-d3678204a317aed3",
       "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
-      "sha256": "d04c9014faf40d54ff34bfdcba72bb77e5812e13437a2b10bdd4d9f97863d891",
+      "sha256": "83ab447bb2495618e93d48cfd3574881733b46cdd78e163be4dbe9a59b8b6a65",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1e42b51a3ed57a58",
       "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
-      "sha256": "ad452283fcfeb4167bfdd0cb8c67f79f7fa0fdd0a16bda61c8657891e8ae1072",
+      "sha256": "6d0278536a97bd73dfa4277f123aa44422ac34120d35ac069e2cfa6b2cb64c1f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12724,6 +12688,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-12a5ae527452ddc9",
+      "path": "tdf-hq-ui/src/services/cartSummary.test.ts",
+      "sha256": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-669e889a0ee796aa",
+      "path": "tdf-hq-ui/src/services/cartSummary.ts",
+      "sha256": "5a5aa5124166fcd225a1119be605a698f5790037a5c7158cd0fbf66092eee069",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-3d3e102f806c7ccf",
       "path": "tdf-hq-ui/src/services/googleDrive.recovery.test.ts",
       "sha256": "2c982d140fc8bc88ce3bd786eba6f36f3844d595f49a946982996ec439b72e98",
@@ -12745,6 +12721,18 @@
       "id": "SURFACE-f33f3db01ba04d18",
       "path": "tdf-hq-ui/src/services/instagramAuth.ts",
       "sha256": "e5ecfe59c4fd3b3787cdbbd6aeb7e48ac9bd1c1467db93074966a0577ad13a6d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3e46b50b7c83cd2e",
+      "path": "tdf-hq-ui/src/services/videoAttribution.test.ts",
+      "sha256": "87c0551a8b177308f227459fc3e1a8e1163416653c52a95fff6b4ef3003b6cf6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-698b393937c7b8b7",
+      "path": "tdf-hq-ui/src/services/videoAttribution.ts",
+      "sha256": "19a4cdbc0817374c43221b896dbd3495c9be0c1f0268e7314f3c16dad1bdf26d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13603,6 +13591,18 @@
       "id": "SURFACE-6caada1aa8461942",
       "path": "tdf-hq-ui/src/utils/vcard.ts",
       "sha256": "04eea6981d1563e975359f94e9dce5c7556254cf03c98f36284d66fd3fd04c05",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d9492af462e77399",
+      "path": "tdf-hq-ui/src/utils/videoCampaign.test.ts",
+      "sha256": "ea50012625c3e00735db60556e8400db0b697c859d029c8ce398376f1d44fba2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1490f16ccf73c785",
+      "path": "tdf-hq-ui/src/utils/videoCampaign.ts",
+      "sha256": "7aab0af6588a6b078fe8ea4136fd6b9656c7d2996d19e3913041f01125c0d50b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22644,7 +22644,7 @@
     },
     {
       "path": "docs/adr/0133-enforced-module-boundaries.md",
-      "sha256": "f5b35cedad75c5991097f7f9b91e9248071a8f56d30cce4d29a368996503c090",
+      "sha256": "1ad8bee679ad95b168f4e90a57d073191cf34eb12c198244bb2d952d19321db8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31660,7 +31660,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "715c78d5bc77179c74a2fd9ab78a0a7413bb7bde86bc9a1a2147e4069fc3ddfb",
+      "sha256": "8439b92e277226597550310d81a92f2f56414e57a55974bafe94143bb55ea75c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
