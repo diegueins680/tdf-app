@@ -96,8 +96,8 @@
     {
       "id": "events.event-demo-intake",
       "webRoute": "/demo-eventos",
-      "routeType": "important-submodule",
-      "classification": "important-submodule",
+      "routeType": "technical",
+      "classification": "technical-route",
       "label": {
         "es": "Demo para eventos",
         "en": "Event demo"
@@ -125,6 +125,7 @@
       "accessRequestEligible": false,
       "searchable": false,
       "maturity": "experimental",
+      "technical": true,
       "mobilePresentation": {
         "kind": "web-only",
         "destination": null,
@@ -134,8 +135,8 @@
     {
       "id": "admin.event-demo-inbox",
       "webRoute": "/admin/demo-eventos",
-      "routeType": "important-submodule",
-      "classification": "important-submodule",
+      "routeType": "technical",
+      "classification": "technical-route",
       "label": {
         "es": "Solicitudes de demos",
         "en": "Demo inquiries"
@@ -172,6 +173,7 @@
       "accessRequestEligible": false,
       "searchable": false,
       "maturity": "experimental",
+      "technical": true,
       "mobilePresentation": {
         "kind": "web-only",
         "destination": null,

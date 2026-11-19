@@ -6,9 +6,18 @@ import {
   featureRegistry,
   getFeatureByPath,
   searchFeatures,
+  standaloneMenuFeatures,
 } from './featureRegistry';
 
 describe('featureRegistry', () => {
+  it('keeps the gated event demo routes available only by their direct URLs', () => {
+    const direct = ['/demo-eventos', '/admin/demo-eventos'];
+    for (const path of direct) {
+      expect(getFeatureByPath(path)?.technical).toBe(true);
+      expect(standaloneMenuFeatures.some((feature) => feature.webRoute === path)).toBe(false);
+    }
+  });
+
   it('makes music campaigns available to every authenticated user without artist or admin roles', () => {
     expect(getFeatureByPath('/social/campanas')?.id).toBe('social.music-campaigns');
     for (const action of ['discover', 'view', 'create', 'edit', 'approve', 'publish'] as const) {
