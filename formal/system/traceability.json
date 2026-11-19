@@ -13,8 +13,8 @@
       "implementation": [
         "scripts/production-release.mjs"
       ],
-      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git, immutable images and Fly execution remain trusted.",
-      "evidence": "provider-rollback.test.mjs; formal CI model logs; exact-image release plan/preflight/report",
+      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git and immutable images remain trusted; no release executor is implemented.",
+      "evidence": "provider-rollback.test.mjs; formal CI model logs; exact-image portable preparation report",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -145,9 +145,12 @@
         "formal/system/proof-certificates.md",
         "scripts/lib/alloy-controls.mjs",
         "scripts/verify-alloy-controls.mjs",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/delivery-matrix.mjs",
+        "scripts/lib/delivery-matrix.mjs",
+        "docs/release/delivery-evidence-matrix.md"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks fourteen formula obligations (twelve distinct inputs), with all complete implementation/refinement obligations still UNPROVEN and all source/refinement limitations retained. Every event-operations Alloy assertion has an assertion-preserving fact/predicate mutation; the pinned solver must produce the named counterexample at unchanged scopes. Coverage and result-admission negative tests reject missing, failed and mismatched runs.",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks fourteen formula obligations (twelve distinct inputs), with all complete implementation/refinement obligations still UNPROVEN and all source/refinement limitations retained. Every event-operations Alloy assertion has an assertion-preserving fact/predicate mutation; the pinned solver must produce the named counterexample at unchanged scopes. Coverage and result-admission negative tests reject missing, failed and mismatched runs. The delivery evidence inventory rejects missing, skipped, source-mismatched and wrong-level receipts, preserves BLOCKED formal decisions and never authorizes a release. Receipt consistency does not authenticate execution or prove implementation/refinement. The shared source manifest includes desktop, auxiliary services, edge and media source roots.",
       "evidence": "formal CI source/result manifests and regression output; independent CPC result.json, exact SMT/proof/signature hashes, reference-binding and incompleteness controls",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -190,7 +193,8 @@
         "formal/system/receipt-admission-counterexample.json",
         "scripts/test-proof-certificates.py",
         "scripts/__tests__/alloy-controls.test.mjs",
-        "scripts/__tests__/event-raci-editor-context-runner.test.mjs"
+        "scripts/__tests__/event-raci-editor-context-runner.test.mjs",
+        "scripts/__tests__/delivery-matrix.test.mjs"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
@@ -2417,7 +2421,7 @@
       ],
       "forbiddenTransitions": [
         "Never infer release readiness from a successful observation.",
-        "Never execute the retired Fly production lane.",
+        "Never treat the retired release CLI as a production lane.",
         "Ambient Docker contexts or libpq service/host settings must not redirect inspection or inventory away from the verified local daemon and database socket.",
         "Accept shadowing database child mounts, noncanonical PGDATA or differing effective server data_directory."
       ],
@@ -2497,7 +2501,7 @@
       ],
       "forbiddenTransitions": [
         "Never infer release readiness from a successful observation.",
-        "Never execute the retired Fly production lane."
+        "Never treat the retired release CLI as a production lane."
       ],
       "effects": [
         "Record allowlisted runtime/ledger facts; preserve provider flags and production data."
@@ -2524,11 +2528,13 @@
       },
       "id": "DEPLOY-TARGET-001",
       "title": "Retired providers cannot receive a production release",
-      "statement": "All invocations of the retired Fly release CLI reject before remote tools. Imported source/artifact preparation helpers do not establish deployment eligibility; the guarded Hetzner executor remains an open release obligation.",
-      "property": "Retired Fly commands invoke no git, docker, ssh or flyctl operation before rejecting.",
+      "statement": "All direct invocations of the retired release CLI reject before remote tools. Database commands of the identity reconciliation CLI, whose only transport was the retired provider, reject before any tool or output file. Imported source/artifact preparation helpers do not establish deployment eligibility; the guarded Hetzner executor remains an open release obligation.",
+      "property": "Retired release commands invoke no git, docker or ssh operation before rejecting.",
       "implementation": [
         "scripts/production-release.mjs",
-        "scripts/deploy-stripe-ticketing.sh"
+        "scripts/deploy-stripe-ticketing.sh",
+        "scripts/identity-reconciliation.mjs",
+        "scripts/prepare-portable-restore.mjs"
       ],
       "tests": [
         "scripts/__tests__/hetzner-inspection.test.mjs",
@@ -2988,7 +2994,7 @@
       "concurrency": "Runs once per container start before the server accepts traffic.",
       "idempotency": "Repeated verification of an unchanged database is equivalent.",
       "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
-      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips the batch and the verification unconditionally (the shipped image, Dockerfile and fly.toml set it true; the precheck requires it).",
+      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips the batch and the verification unconditionally (the shipped image, Dockerfile and ops/hetzner/compose.production.yaml set it true; the precheck requires it).",
       "observability": "Fixed exception text names the violated gate class.",
       "formalModels": [
         "formal/event-operations/StartupGates.tla",
@@ -6711,6 +6717,112 @@
       },
       "property": "No controlled effect invocation precedes durable intent; no unresolved intent admits the next effect or another nonce.",
       "evidence": "Synthetic filesystem/process controls only, exact source-qualified Linux evidence required."
+    },
+    {
+      "id": "DEPLOY-RELEASE-001",
+      "title": "A routine backend release keeps users fenced until the candidate is verified and an exact off-host copy exists",
+      "domain": "DEPLOY",
+      "statement": "A routine Hetzner backend release shall serve a maintenance response and stop every compose writer before capturing the stopped database and deployment directory, shall verify an encrypted off-host copy through a fresh connection and an isolated start of the captured database before any migration, shall apply only the candidate's reviewed migration batch, and shall reopen traffic only after the candidate reports its own revision, a healthy database and passing smoke checks; rollback shall be refused once traffic reopens.",
+      "authority": "Owner decisions of 13 November 2026 (pragmatic guarded release, Storage Box, owner-held recovery key, at most 30 minutes downtime)",
+      "source": "formal/system/guarded-release.md",
+      "contract": "formal/system/guarded-release.md",
+      "critical": true,
+      "actors": [
+        "Owner approving each production phase",
+        "Release operator",
+        "Recovery key custodian"
+      ],
+      "preconditions": [
+        "Running API and database match the configured immutable images",
+        "Candidate image published for the exact commit",
+        "Storage Box sub-account key and pinned host key installed root-only on the host",
+        "Custodian holds the private age identity off-host",
+        "API image override, when present, is exactly a three-line api image setting"
+      ],
+      "inputs": [
+        "Candidate commit",
+        "Registry-derived image digest",
+        "Manifest-derived migration ids and hash",
+        "Mobile gitlink",
+        "Committed tool revision",
+        "Public age recipient",
+        "Storage target",
+        "Smoke paths"
+      ],
+      "state": {
+        "states": [
+          "planned",
+          "fenced",
+          "captured",
+          "copied-off-host",
+          "migrated",
+          "candidate-verified",
+          "reopened",
+          "rolled-back",
+          "rejected"
+        ],
+        "initial": "planned",
+        "terminal": [
+          "reopened",
+          "rolled-back",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "planned -> fenced (maintenance, writers stopped, database stopped cleanly)",
+        "fenced -> captured -> copied-off-host (exact read-back) -> isolate verified",
+        "isolate verified -> migrated (every manifest id in ledger) -> candidate-verified -> reopened",
+        "any pre-reopen state -> rolled-back (captured database restored when migrations may have run)"
+      ],
+      "forbiddenTransitions": [
+        "Capture while the API, a database-network peer or a client backend can write",
+        "Migrate before a verified off-host copy and isolated start",
+        "Reopen with a candidate whose revision, health or smoke checks fail",
+        "Roll back after reopen",
+        "Run a phase with tool code or parameters that differ from the journal plan",
+        "Place the private recovery identity on the production host"
+      ],
+      "effects": [
+        "Maintenance edge response",
+        "Compose service stop/start",
+        "Root-private capture and encrypted bundle",
+        "Off-host bundle and record",
+        "Reviewed migrations",
+        "API image change",
+        "Edge restore"
+      ],
+      "authorization": "Each phase needs the candidate revision confirmation given only after owner approval; rollback needs its own confirmation.",
+      "privacy": "Captures stay root-private and leave the host only age-encrypted; outputs carry digests, stage names and fixed messages, never configuration, SQL output or credentials.",
+      "concurrency": "The release journal's permanent lock serializes releases; the physical isolate shares the rehearsal reservation. Privileged host writers outside compose are not fenced.",
+      "idempotency": "Completed stages are skipped; an interrupted stage blocks further phases until rollback or reviewed recovery.",
+      "failure": "Any rejected check stops the phase with a fixed message and leaves a pending journal intent; maintenance stays up.",
+      "recovery": "Rollback before reopen returns to the recovery image, replaying the cold capture when migrations may have run and retaining the post-migration data directory. A journal abandon record is still missing.",
+      "observability": "Per-stage evidence files in the release directory, their hashes in the journal, the trusted bundle record off-host, and a rollback receipt.",
+      "implementation": [
+        "ops/hetzner/guarded-release.py",
+        "scripts/guarded-release.mjs",
+        "scripts/generate-recovery-key.sh"
+      ],
+      "tests": [
+        "scripts/test-guarded-release.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Orchestration controls over the real journal and release files with an in-memory host; fifteen safety-check mutations detected. A read-only inspection on 13 November confirmed the compose override, journal location and capacity. No staging or production execution yet.",
+      "ambiguity": [
+        "Storage Box acceptance and custodian decrypt pending",
+        "Journal abandon record missing",
+        "Edge certificates not captured",
+        "Authenticated login probe optional"
+      ],
+      "verification": "29 controls: full release, ordering and confirmation, interrupted-stage blocking, client/peer fencing, corrupt off-host copy, Caddyfile and parameter drift, missing migration rows, rollback with and without database restore, refusal after reopen, release succession, and the real runtime observation against production-shaped inspect output including the 13 November image override and compose file set.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Executor and driver exist; staging rehearsal and supervised production execution are pending."
+      },
+      "property": "No migration runs before a verified off-host copy of a fenced cold capture, and no traffic reaches a candidate that failed verification.",
+      "evidence": "Synthetic host model only; Docker, PostgreSQL, Caddy and SFTP behaviour need staging and supervised production evidence."
     },
     {
       "id": "MOB-ONBOARD-001",
@@ -28191,7 +28303,7 @@
     ".github/workflows/ci.yml": "23ade27a31842e6552e0e12165d01dbca02c127cdd1b018efb4324a31103a7b6",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
-    ".github/workflows/event-operations-formal.yml": "16d0f422186a4626e30b8f65f469c3a544aca859037f9a4df099e83c659b87f1",
+    ".github/workflows/event-operations-formal.yml": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -28199,10 +28311,11 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "6d51b8fa8c73aaa4fb88875fcf8859aea108266c0ffbc3dcb68908a9b1391dc7",
+    "docs/catalog-persistence/catalog-list-decisions.json": "de838a2fe7ec98dbb682a11f1d0da14b02d893e1a18db2788a759963dc70548e",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
+    "docs/release/delivery-evidence-matrix.md": "6044ad469758e8e6459c413acd7d3fe290920af123a3ed29d388e88d133b2015",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/desktop/helpers/api-fixture.mjs": "67b6cd86c8383a4c7c6e8c228f5340aef5c43559c4987015ab031cc5e8792071",
     "e2e/desktop/helpers/shell.mjs": "75eb52ddb9d0823965f816cced846d2a164eb45971612aacad9bf98980d482d5",
@@ -28603,6 +28716,7 @@
     "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
+    "ops/hetzner/guarded-release.py": "4551cec5f09215463ad98ea7a4dc3e3c47417b02fc5ccbd50fad63c20e15239b",
     "ops/hetzner/inspect-runtime.py": "96a65fcb9a8fcced995341e4ad639bfa8df7298d6a28b543fc1be1adf569f8b4",
     "ops/hetzner/isolated-application-canary.py": "a21c2ad244d0c2b5a340c6f51b867a3f5b4c1551340e0953836a1c46375ed83f",
     "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
@@ -28615,7 +28729,7 @@
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "4f2f99e39788cd1f67da2623474d725e06e51757b409474118f82d3c9a43aa1d",
-    "package.json": "862ea41afa019dcf0edea194b2dfc0f75f3a593886e3603403bc9b2a22af4c92",
+    "package.json": "3b75451201352914e57227c19008fee7c8e8747ff00bf81ae3a43a7a3512fa6b",
     "playwright.config.mjs": "37eb4ab6c22dc0a3f2e575361426a045ad760a32920fe4a3b36a1f50e660e71b",
     "playwright.desktop.config.mjs": "74292833e979da0f81610adcedcddcfe6a7053cd5dfa6a34b36b2f1ddbddeb92",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
@@ -28633,7 +28747,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "13e0ebcb2e1c582da01c14aeed5580f29d79cfb3535531fff28b57211b356f79",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "2da277a5eb00e60db2b2b4349484ece84d066bbe866dfcd7f44906df33485fb6",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -28643,6 +28757,7 @@
     "scripts/__tests__/content-storage-model.test.mjs": "003db1f4799160041440c36b8e9f3f5492719528c445a96cf32b9997c40b1981",
     "scripts/__tests__/content-storage-reconciliation.test.mjs": "e495bbdecb4c88ad8c178c8d06d17cfebafc71148e2fcebeca1423b4558c27da",
     "scripts/__tests__/continuous-improvement-loop.test.mjs": "a9f665f14a487ec4b4bf8a0bafb11999250e0d0d816a72cc5426bab57b4082f7",
+    "scripts/__tests__/delivery-matrix.test.mjs": "37dfd759fd9d46dac0b539dc88e9b8d8d64a6c2f777b7034d1f60c541fc2aac9",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
@@ -28667,7 +28782,7 @@
     "scripts/__tests__/formal-methods-audit.test.mjs": "130513a03b99243c8992dc830b3f27ada4ec3e19faaa36422c815f6fd2382baa",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
-    "scripts/__tests__/hetzner-inspection.test.mjs": "53e255cde8b47686eaeaa0122f9348b6df387b5b6ccf4be7059c655c466309c4",
+    "scripts/__tests__/hetzner-inspection.test.mjs": "3b5d14abc6ed94e31c39154a16d43669adc6471088fb81525febabde158be593",
     "scripts/__tests__/hetzner-migration-rehearsal.test.mjs": "8fd637e986cb2ee892a6d07641c1365ed929e1e52b840cfa2ea8f420ac2f9e05",
     "scripts/__tests__/hetzner-preparation.test.mjs": "f5c996dbf9fd298e088531bfbde258202d7b54f30832427b2868f1718d82ad36",
     "scripts/__tests__/hetzner-restore.test.mjs": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
@@ -28702,8 +28817,8 @@
     "scripts/__tests__/playwright-image.test.mjs": "dff4fdac0f095e6015f7de4565fa49c52de355720dac9608230f442c8fdabc39",
     "scripts/__tests__/production-catalog-inventory.test.mjs": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
     "scripts/__tests__/production-entrypoint.test.mjs": "33c168dcb5b4a6b3d9eaccec6683d368a90f1dd9b47c1223f949e5e1d234feac",
-    "scripts/__tests__/production-release.test.mjs": "05a092b3e5184f54ed8ccc2e94c383ff03057a3e6baa2d9c5d01192562a0517b",
-    "scripts/__tests__/provider-rollback.test.mjs": "f1dc29ea2b20a71b88a3ae50552c130a0802c6d8ae00e90075af2bd4d2291910",
+    "scripts/__tests__/production-release.test.mjs": "a3f9e6057844ca35e81874ea9836969c641641ab6a54c40839c0b72087853ec2",
+    "scripts/__tests__/provider-rollback.test.mjs": "bb6614e2b8bf986d87f3db00b88da105e2ec0beee4c7dffc6bf508ec334361c9",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
     "scripts/__tests__/startup-gates-postgres.mjs": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
     "scripts/__tests__/studio-internship-audit.test.mjs": "17d13b1f02ee443aa724c4378e184f588782fe704c7e330901291a8a2adf1311",
@@ -28715,7 +28830,7 @@
     "scripts/__tests__/torrent-fixture-lifecycle.test.mjs": "fd7a2afdb437fe48c4b91da21a53494c804efcf4692c8c326f0c8a1b7689a5e0",
     "scripts/__tests__/torrent-worker-routing.test.mjs": "39cf49236f79edeb7a9599dc07c37965cfe824725cb452a71c32ff7890fef784",
     "scripts/__tests__/ui-worker-memory.test.mjs": "159c331fe6c0ae0817b2e4eb3479e62409c44ceec8efe4dca73a2813ed583183",
-    "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
+    "scripts/__tests__/verification-evidence.test.mjs": "d844c7be68115d503729dc5fc97f7d86766d53d52f641e21f7eeb5c9b1fbe14b",
     "scripts/__tests__/video-campaign-access.test.mjs": "618dec9d2f28c82b786b66403ad33350ca97949a9abb37cb32f9ff03c9522b04",
     "scripts/__tests__/video-campaign-postgres-runner.test.mjs": "72e9e3fe9f0dad70d85a921b9b479465dcc60ba09dd34c7c564eb56af054c0a3",
     "scripts/artist-enrichment.mjs": "7cae285c8ffd2373048ab4d3e4ea2838046b7c62571e795163de86f22516809e",
@@ -28741,7 +28856,7 @@
     "scripts/check-route-requirements.py": "75aadc52982aba64747288b42a3e3574260a3cc75dd4b97243f4974bdcb758fe",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
     "scripts/check-webhook-signatures.py": "d19a35c65b5827cba3947286778cfa0bfa18dcf230b5d3539df8cff28920e4d5",
-    "scripts/ci-change-scope.mjs": "2b3f252c0a76468b8edb5e7a2792f8332da13496899976a930db6fa4dad680a6",
+    "scripts/ci-change-scope.mjs": "47b7dd05d77ffc41c579262355871bd3d7c429f6315cb4df6a090cbb2078ea51",
     "scripts/ci-job-admission.mjs": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
     "scripts/codex-loop-worker.sh": "467cb345b75f0afa7d96e98be460d4225374f3dec1c203c0984f62aef16cc282",
     "scripts/content-storage-model.mjs": "9334e46e43c6b6e8dde89381f7fffd024af979e073dd659176f73add943892c8",
@@ -28750,6 +28865,7 @@
     "scripts/continuous-improvement-loop.codex.json": "bb03117ee8f488069cca81703f8e70f96fb7412902f9bfb78b7f1363ed9a1af2",
     "scripts/continuous-improvement-loop.example.json": "6f0a787a68041a7413c53b447854f77ce09accaf37efb14aee92bc90334a2a3d",
     "scripts/continuous-improvement-loop.mjs": "f2618194f28d356e0d5d9c856bf92397f7b69b7b6e2bbde1a2745ea58cbc79c6",
+    "scripts/delivery-matrix.mjs": "b69aeaee6ffcfc23ea4a86a5060a6c170cbc2a60d80f4df77a9a744819536cf2",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
@@ -28758,8 +28874,11 @@
     "scripts/fetch-ddex-ern432-schema.sh": "9a7e2da809fd59d0709067b8fdd75f71a21dd474449d62c28551d1ac1b1f3a84",
     "scripts/generate-app-icons.mjs": "0d85263b6dc6e4d6909b7e7f6378a13c499446521b69eccd7e089ab7b68d5cc0",
     "scripts/generate-identity-party-reference-view.mjs": "980ebaec42704393878751e4dd40238f02f64ada510b3a02d60154d884b07493",
+    "scripts/generate-recovery-key.sh": "74a581a9bce5b64e0eb2e26bfe432e766256ec41aec4693f96183658bd1e2595",
     "scripts/get-admin-token.sh": "168dd8f5ba17d927685a86ac763a03a9aff55736bf4b4426a6d7541817a35110",
     "scripts/get-instagram-token.mjs": "0b00f6cc1ad6793f029339bc006ed520245af87ea55e285658faf48ba978e592",
+    "scripts/guarded-release.mjs": "636c8c39c80a6919efd7b5830682c6a4e0691ade8c8c34ff886a39e74cd384e8",
+    "scripts/identity-reconciliation.mjs": "7d4c598975768955f9b392c6b21679fab99a8eef1d288211461e401ec2b6d89e",
     "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
     "scripts/inspect-hetzner-production.mjs": "aae57b63c56cacfba8c47c4603b2f99301c6325ffcff1594da560660239fcae4",
     "scripts/install-continuous-improvement-loop-launchd.sh": "21408db312b60e4ef2c36cc07796f6f9fb2e342b4f5ab3c3fcd7f59442eaa4f0",
@@ -28772,6 +28891,7 @@
     "scripts/lib/compiled-api-surface.mjs": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
     "scripts/lib/continuous-improvement-loop-verify.mjs": "3db41dd0683f33d1a03d46f402e6cd9c25a4e07cd2b690a179ba8e6744fc9f97",
     "scripts/lib/continuous-improvement-loop.mjs": "658148df4d0bf1c8df6e19da2d1266673158ba934f2191186b3b57b5e2e36fae",
+    "scripts/lib/delivery-matrix.mjs": "0052f89b9b64323d3d7fa9fc14d9837087edbbbe602c479dfabc7125147ad8de",
     "scripts/lib/discovery.mjs": "347304302f3a0e0161a6b8fc95d311a1eca12b6cd11bb3ffec378b862878ac4b",
     "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
     "scripts/lib/formal-methods-audit.mjs": "301296514fcc6671134fff772258867d7a6f3ca1fddffb99ed1cd7d2579c3361",
@@ -28793,14 +28913,14 @@
     "scripts/lib/music_payment_conformance.py": "2d06c9081c0386dcde94a0f39c381baf2c4e33cc8ae59b34d5a4192163588b49",
     "scripts/lib/operations_conformance.py": "1978873ba86472cc29198bf14fcc428102d69db29e6816a197a1140118ef2654",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "abd17a16599ae5a93f137da7845696f1578e20f73c78f97e432f47992e29806d",
+    "scripts/lib/production-release.mjs": "32bea4fc79e9c4df0b01926dc4b29101c60514e7d69e39efc398be64599d8372",
     "scripts/lib/public_routes_conformance.py": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
     "scripts/lib/readiness_conformance.py": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/studio-audit-safety.mjs": "4cec971d00a5ec16524dd94c490289ffc33d69d9cae32ba9db0910275f3e80d8",
     "scripts/lib/test-child-completion.mjs": "b2254b43a28ad96b7c522a18fd57fa17479bfd783513f1f4bd056bc6c4fbf039",
     "scripts/lib/test-process-session.mjs": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
-    "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
+    "scripts/lib/verification-evidence.mjs": "c68d746491dff899357e144f373a8f49225cb0aef1198538cf1d2fa120acf35c",
     "scripts/lib/whatsapp_consent_conformance.py": "e7e6f0221bb7bcf5ef631827e2dfa6c329d5b4c16733fa5bca6e61bdb748c4a8",
     "scripts/load-payment-test-schema.sh": "8f8e8385a59b6b118c049ab7ac5f48e5525152c45fc8a15d882c37f78b0330d7",
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
@@ -28810,17 +28930,18 @@
     "scripts/prepare-content-storage-reconciliation.mjs": "8032784954c085896cee00ab69bea66037443e6ff522941aa55ea244706dad57",
     "scripts/prepare-event-draft.mjs": "5ff4d82ba2c2bde1bbd0ec9da7a657d33a91e6ce27dae7ed450e9884f1cdbeb9",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
+    "scripts/prepare-portable-restore.mjs": "1252da31e0a681646345b8fc9fa2dad124ead25a7371d67ece335ca5e63ae60d",
     "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
     "scripts/process-music-release-artwork.sh": "7f6ff16365627e3a06bc8f629dfc27aee7f5c46d6ff706e3954538554ae4992e",
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
     "scripts/production-migrations.json": "66eb7f410d6801095d49d3b9f1676e92d0f881dbcd662babaed67aaa0a43710b",
-    "scripts/production-release.mjs": "3138485773e2944338cdd27d89747955451c8146eba50f252aa1a57e42434771",
+    "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "0ce489265374520c8891534780643135f53b38d92fb6cd400f7007b7745bac7b",
+    "scripts/quality-repo.sh": "0af61bd6fd80e7c38365c2ed7de377bbc97f9b1f4a715788553c030d36522d61",
     "scripts/quality-ui.sh": "4361a3180ecaf177a227915374253d8c0e4ec9eb21e87fc52c52442e31d04fda",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
@@ -28840,7 +28961,7 @@
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
     "scripts/social/test-http.sh": "79cb3fc47fc8b191182fbe21dd8294acce64697796bdd12a753f7da7821ba457",
     "scripts/specification-conformance.py": "2c9aa59e5ae08fb6357d1fed83e2591e45d7e6fd1791ebfb6dc52dccab5e0fb0",
-    "scripts/specification-inventory.py": "89b5afa51ac9efb2dd5a504b763bd0eddfc8503b592b9d929af7125126c2eb9b",
+    "scripts/specification-inventory.py": "0ce276017ebb1e0ab2a01ed08fb36dae0ad8173c935edef5819d5690eec74b7f",
     "scripts/start-continuous-improvement-loop.sh": "f36c33ec0d9767180c2543c3596964794e02c3e943efa72b3fbb2e970ec81850",
     "scripts/test-account-deletion-api.mjs": "917c2ec0721f5b2d22d9d11fa7c68d2e84579350dabb87f329d9845d6da5d244",
     "scripts/test-api-token-session-expiry-migration.sh": "af72a6da6641bdb8ecd8ba35d70c9f2586ae3b5e056b42ad63dbd07bcdac7036",
@@ -28884,6 +29005,7 @@
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-event-raci-browser.sh": "1f5732fd0fd9fb56085843be0c3746d92dab1f337973447fec44adca6e8afbd5",
     "scripts/test-google-account-name-verifier.py": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
+    "scripts/test-guarded-release.py": "072a3aea42d088aac1cb00825bf34c7f3d08ff9fff21c630017f2ee5c9977a74",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "93fbbdd4918b2e78eec510a2a3710a07fb86ae9fbbe75f6831f530e4577236e4",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
@@ -30038,7 +30160,7 @@
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "5b0a405f5a8e81e439655b8aac0384c828258113c625cfa1f1d4acb0376a3cde",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "720d5b0e565e7aa4cf63f1ffb7dff919c31dbb3e5c68f647eacbf576f326c0c6",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "1d44b71cfda45994856a9657043c1da774f32399a7dcec5bc0b54e7d9b47afff",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -30569,6 +30691,10 @@
         "relationship": "tests"
       },
       {
+        "requirement": "DEPLOY-RELEASE-001",
+        "relationship": "tests"
+      },
+      {
         "requirement": "OPS-INTEGRATION-001",
         "relationship": "implementation"
       },
@@ -30617,6 +30743,24 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/delivery-matrix.mjs": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/lib/delivery-matrix.mjs": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
+    "docs/release/delivery-evidence-matrix.md": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/verification-evidence.test.mjs": [
       {
         "requirement": "SYS-VERIFY-002",
@@ -30654,6 +30798,12 @@
       }
     ],
     "scripts/__tests__/event-raci-editor-context-runner.test.mjs": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/delivery-matrix.test.mjs": [
       {
         "requirement": "SYS-VERIFY-002",
         "relationship": "tests"
@@ -34291,6 +34441,18 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/identity-reconciliation.mjs": [
+      {
+        "requirement": "DEPLOY-TARGET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/prepare-portable-restore.mjs": [
+      {
+        "requirement": "DEPLOY-TARGET-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/production-release.test.mjs": [
       {
         "requirement": "DEPLOY-TARGET-001",
@@ -37921,6 +38083,30 @@
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "formalModels"
+      }
+    ],
+    "ops/hetzner/guarded-release.py": [
+      {
+        "requirement": "DEPLOY-RELEASE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/guarded-release.mjs": [
+      {
+        "requirement": "DEPLOY-RELEASE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/generate-recovery-key.sh": [
+      {
+        "requirement": "DEPLOY-RELEASE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-guarded-release.py": [
+      {
+        "requirement": "DEPLOY-RELEASE-001",
+        "relationship": "tests"
       }
     ],
     "tdf-mobile/src/api/client.ts": [
@@ -49368,7 +49554,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "16d0f422186a4626e30b8f65f469c3a544aca859037f9a4df099e83c659b87f1",
+      "sha256": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50225,13 +50411,6 @@
       ]
     },
     {
-      "id": "SURFACE-660f7078dc0b381a",
-      "path": "fly.toml",
-      "sha256": "3d64e80552e75e29e68d012d579456a353ff17b104afd3839b5d554c83f6318e",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
       "id": "SURFACE-0d1b6286746163ff",
       "path": "functions/.well-known/apple-app-site-association.js",
       "sha256": "18c334dbf8c003b76d7feba177a21db99886a2d674d58732e823da6c8d67bbdc",
@@ -50476,6 +50655,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-05424790f9d7fc44",
+      "path": "ops/hetzner/guarded-release.py",
+      "sha256": "4551cec5f09215463ad98ea7a4dc3e3c47417b02fc5ccbd50fad63c20e15239b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-RELEASE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
       "sha256": "96a65fcb9a8fcced995341e4ad639bfa8df7298d6a28b543fc1be1adf569f8b4",
@@ -50661,7 +50852,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "862ea41afa019dcf0edea194b2dfc0f75f3a593886e3603403bc9b2a22af4c92",
+      "sha256": "3b75451201352914e57227c19008fee7c8e8747ff00bf81ae3a43a7a3512fa6b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50830,7 +51021,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "13e0ebcb2e1c582da01c14aeed5580f29d79cfb3535531fff28b57211b356f79",
+      "sha256": "2da277a5eb00e60db2b2b4349484ece84d066bbe866dfcd7f44906df33485fb6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51043,6 +51234,18 @@
       "requirements": [
         {
           "requirement": "SYS-LOOP-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-16a9cdb8e79980cc",
+      "path": "scripts/__tests__/delivery-matrix.test.mjs",
+      "sha256": "37dfd759fd9d46dac0b539dc88e9b8d8d64a6c2f777b7034d1f60c541fc2aac9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
           "relationship": "tests"
         }
       ]
@@ -51442,7 +51645,7 @@
     {
       "id": "SURFACE-30ba86b00dd5f4d7",
       "path": "scripts/__tests__/hetzner-inspection.test.mjs",
-      "sha256": "53e255cde8b47686eaeaa0122f9348b6df387b5b6ccf4be7059c655c466309c4",
+      "sha256": "3b5d14abc6ed94e31c39154a16d43669adc6471088fb81525febabde158be593",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52017,7 +52220,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "05a092b3e5184f54ed8ccc2e94c383ff03057a3e6baa2d9c5d01192562a0517b",
+      "sha256": "a3f9e6057844ca35e81874ea9836969c641641ab6a54c40839c0b72087853ec2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52053,7 +52256,7 @@
     {
       "id": "SURFACE-1615c0a50aabc162",
       "path": "scripts/__tests__/provider-rollback.test.mjs",
-      "sha256": "f1dc29ea2b20a71b88a3ae50552c130a0802c6d8ae00e90075af2bd4d2291910",
+      "sha256": "bb6614e2b8bf986d87f3db00b88da105e2ec0beee4c7dffc6bf508ec334361c9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52255,7 +52458,7 @@
     {
       "id": "SURFACE-ba099638d09bac1d",
       "path": "scripts/__tests__/verification-evidence.test.mjs",
-      "sha256": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
+      "sha256": "d844c7be68115d503729dc5fc97f7d86766d53d52f641e21f7eeb5c9b1fbe14b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52696,7 +52899,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "2b3f252c0a76468b8edb5e7a2792f8332da13496899976a930db6fa4dad680a6",
+      "sha256": "47b7dd05d77ffc41c579262355871bd3d7c429f6315cb4df6a090cbb2078ea51",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52832,6 +53035,18 @@
       "requirements": [
         {
           "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5a0c7f10ee9b584c",
+      "path": "scripts/delivery-matrix.mjs",
+      "sha256": "b69aeaee6ffcfc23ea4a86a5060a6c170cbc2a60d80f4df77a9a744819536cf2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
           "relationship": "implementation"
         }
       ]
@@ -52975,6 +53190,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-e0c190071be51379",
+      "path": "scripts/generate-recovery-key.sh",
+      "sha256": "74a581a9bce5b64e0eb2e26bfe432e766256ec41aec4693f96183658bd1e2595",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-RELEASE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-298863fcec57d5aa",
       "path": "scripts/generate-sri-invoice.mjs",
       "sha256": "a60cf9d9c304055fe8b907ab6cf2e93dd1b0c64f96f714cccb4b7ec20114386c",
@@ -53006,11 +53233,28 @@
       ]
     },
     {
+      "id": "SURFACE-bce169431baa7297",
+      "path": "scripts/guarded-release.mjs",
+      "sha256": "636c8c39c80a6919efd7b5830682c6a4e0691ade8c8c34ff886a39e74cd384e8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-RELEASE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-61ce5bdd849d0317",
       "path": "scripts/identity-reconciliation.mjs",
-      "sha256": "de08f261b6ac2cc4e96b288e6c43276a1ad1f8ca08ff77454ae8cfbf2100d155",
+      "sha256": "7d4c598975768955f9b392c6b21679fab99a8eef1d288211461e401ec2b6d89e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-TARGET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-0c3b107b729b7e74",
@@ -53237,6 +53481,18 @@
       "requirements": [
         {
           "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ee31b4ec099109f8",
+      "path": "scripts/lib/delivery-matrix.mjs",
+      "sha256": "0052f89b9b64323d3d7fa9fc14d9837087edbbbe602c479dfabc7125147ad8de",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
           "relationship": "implementation"
         }
       ]
@@ -53597,7 +53853,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "abd17a16599ae5a93f137da7845696f1578e20f73c78f97e432f47992e29806d",
+      "sha256": "32bea4fc79e9c4df0b01926dc4b29101c60514e7d69e39efc398be64599d8372",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53774,7 +54030,7 @@
     {
       "id": "SURFACE-51ff2aecc0e6e208",
       "path": "scripts/lib/verification-evidence.mjs",
-      "sha256": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
+      "sha256": "c68d746491dff899357e144f373a8f49225cb0aef1198538cf1d2fa120acf35c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53947,9 +54203,14 @@
     {
       "id": "SURFACE-1ef043656b0c0dd7",
       "path": "scripts/prepare-portable-restore.mjs",
-      "sha256": "e0e7cfad0b09971d8b9a92a5018ea4d8d0a82d010a190f084d086e8f7f0c3db3",
+      "sha256": "1252da31e0a681646345b8fc9fa2dad124ead25a7371d67ece335ca5e63ae60d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-TARGET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6f6080552d114453",
@@ -54105,7 +54366,7 @@
     {
       "id": "SURFACE-566be2960a2d6029",
       "path": "scripts/production-release.mjs",
-      "sha256": "3138485773e2944338cdd27d89747955451c8146eba50f252aa1a57e42434771",
+      "sha256": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54208,7 +54469,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "0ce489265374520c8891534780643135f53b38d92fb6cd400f7007b7745bac7b",
+      "sha256": "0af61bd6fd80e7c38365c2ed7de377bbc97f9b1f4a715788553c030d36522d61",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54245,6 +54506,10 @@
         },
         {
           "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-RELEASE-001",
           "relationship": "tests"
         },
         {
@@ -54968,7 +55233,7 @@
     {
       "id": "SURFACE-d18ca1829df72762",
       "path": "scripts/specification-inventory.py",
-      "sha256": "89b5afa51ac9efb2dd5a504b763bd0eddfc8503b592b9d929af7125126c2eb9b",
+      "sha256": "0ce276017ebb1e0ab2a01ed08fb36dae0ad8173c935edef5819d5690eec74b7f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55910,6 +56175,18 @@
       "requirements": [
         {
           "requirement": "AUTH-ENTRY-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b3d437c938c87672",
+      "path": "scripts/test-guarded-release.py",
+      "sha256": "072a3aea42d088aac1cb00825bf34c7f3d08ff9fff21c630017f2ee5c9977a74",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-RELEASE-001",
           "relationship": "tests"
         }
       ]
@@ -80078,7 +80355,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "720d5b0e565e7aa4cf63f1ffb7dff919c31dbb3e5c68f647eacbf576f326c0c6",
+      "sha256": "1d44b71cfda45994856a9657043c1da774f32399a7dcec5bc0b54e7d9b47afff",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85925,7 +86202,6 @@
     "SURFACE-d8799e5a0806f908",
     "SURFACE-e5280fb6cf4274bc",
     "SURFACE-d3c9dbc473fd46d6",
-    "SURFACE-660f7078dc0b381a",
     "SURFACE-0d1b6286746163ff",
     "SURFACE-cca59b046cc76ace",
     "SURFACE-f4743034f585d310",
@@ -85984,7 +86260,6 @@
     "SURFACE-4a87e40b74f5caa1",
     "SURFACE-017df03fe878b45b",
     "SURFACE-298863fcec57d5aa",
-    "SURFACE-61ce5bdd849d0317",
     "SURFACE-6efdc7705573cc29",
     "SURFACE-e10a3732c19671ff",
     "SURFACE-7762cc1d53f882c8",
@@ -86013,7 +86288,6 @@
     "SURFACE-21491b1a76536f4c",
     "SURFACE-7184e9c3142d1144",
     "SURFACE-5f10ad76a6cd46da",
-    "SURFACE-1ef043656b0c0dd7",
     "SURFACE-6f6080552d114453",
     "SURFACE-bac1f41447e33768",
     "SURFACE-0210b80fb6caf081",
@@ -87365,6 +87639,7 @@
     "EVT-PRESENTATION-001",
     "DEPLOY-FILES-001",
     "DEPLOY-ENVELOPE-001",
+    "DEPLOY-RELEASE-001",
     "MOB-BUILD-001",
     "OPS-CLIENT-001",
     "MEDIA-INVENTORY-001",
@@ -88631,7 +88906,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "2bc472e81f8f346f9e96134e2f58a8a749e01520332330e4c7eaeb1cb38fffe1",
+      "sourceSha256": "697c0a964c0af7c91a4237629168b761940ba24a094f74aecd7f2008e6e4cc8c",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -88659,7 +88934,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "2bc472e81f8f346f9e96134e2f58a8a749e01520332330e4c7eaeb1cb38fffe1",
+      "sourceSha256": "697c0a964c0af7c91a4237629168b761940ba24a094f74aecd7f2008e6e4cc8c",
       "definition": {
         "states": [
           "absent",
@@ -88689,7 +88964,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "2bc472e81f8f346f9e96134e2f58a8a749e01520332330e4c7eaeb1cb38fffe1",
+      "sourceSha256": "697c0a964c0af7c91a4237629168b761940ba24a094f74aecd7f2008e6e4cc8c",
       "definition": {
         "export": [
           "queued",
@@ -111904,7 +112179,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 223,
+    "PARTIAL": 224,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
