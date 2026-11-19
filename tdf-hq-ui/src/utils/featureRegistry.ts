@@ -1,5 +1,5 @@
 import rawRegistry from '../../../tdf-hq/assets/feature-registry.json';
-import { firstNonEmptyString } from '../utils/stringValues';
+import { firstNonEmptyString } from './stringValues';
 
 export type FeatureAction =
   | 'discover'

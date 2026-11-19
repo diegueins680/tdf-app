@@ -9,7 +9,7 @@ import {
   featureLabel,
   getFeatureByPath,
   type FeatureDefinition,
-} from '../features/featureRegistry';
+} from '../utils/featureRegistry';
 
 function resolveBreadcrumbRoute(
   target: FeatureDefinition,

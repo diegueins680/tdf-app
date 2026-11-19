@@ -41,7 +41,7 @@ import {
   featureRegistry,
   featureSearchText,
   normalizeFeatureToken,
-} from '../features/featureRegistry';
+} from '../utils/featureRegistry';
 import appI18n from '../i18n';
 import { getAnalyticsClient } from '../analytics/posthog';
 

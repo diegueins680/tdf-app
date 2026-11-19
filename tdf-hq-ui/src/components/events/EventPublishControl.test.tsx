@@ -11,7 +11,7 @@ const readStates = jest.fn<() => Promise<{ states: WorkflowState[] }>>();
 jest.unstable_mockModule('../../api/socialEvents', () => ({ SocialEventsAPI: { getEvent: readEvent, updateEvent } }));
 jest.unstable_mockModule('../../api/catalogs', () => ({ Catalogs: { getPublicWorkflowStates: readStates } }));
 const { default: EventPublishControl, resolvePublishTarget } = await import('./EventPublishControl');
-const { advanceAuthSessionEpoch } = await import('../../session/authEvents');
+const { advanceAuthSessionEpoch } = await import('../../auth/authEvents');
 
 // Capabilities and transition targets are space-separated here: these are
 // fixtures of the server's lifecycle catalog, not lists the web app owns.
