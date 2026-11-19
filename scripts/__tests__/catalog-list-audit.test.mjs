@@ -1322,7 +1322,7 @@ test('private productions append one migration and preserve both predecessor rev
     item && typeof item === 'object' && !Array.isArray(item)
       ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
   const { active, retired, successors, integration } = await readReconciliation(false, true);
-  const prior = (await reviewedJson('432d5741ca68ff77ee52863e4100c822e92646cc', catalogPath)).decisions;
+  const prior = (await reviewedJson('d0d2ae343ba5564b3f922fd39d99025dd262e55b', catalogPath)).decisions;
   const successorIds = new Map([['912cda11c7b6eb622f76', 'b4e8eb26808372aa8032'],
     ['a00fcee87036af5dfa95', '6560fb5fbc6a2969ca2e']]);
   const expected = new Set();

@@ -95424,6 +95424,120 @@
         "kind": "sql-check-values",
         "name": "CHECK IN"
       }
+    },
+    {
+      "id": "423acf8dc4f4720b343c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "These are test-only provider responses; changing them can weaken coverage of availability and unresolved-payment handling. They do not activate production methods.",
+      "justification": "Bounded test-only response fixture for remaining methods on the original purchase or Stripe intent. Runtime availability is read from the original order/provider; this array is not a production payment catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-18",
+      "reviewBatch": "payment-failure-alternatives",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/checkoutPaymentAlternatives.test.ts",
+        "line": 21,
+        "kind": "array",
+        "name": "paymentMethods",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "4ae9e88f1aa2a44fc670",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "These are test-only provider responses; changing them can weaken coverage of availability and unresolved-payment handling. They do not activate production methods.",
+      "justification": "Bounded test-only response fixture for remaining methods on the original purchase or Stripe intent. Runtime availability is read from the original order/provider; this array is not a production payment catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-18",
+      "reviewBatch": "payment-failure-alternatives",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/checkoutPaymentAlternatives.test.ts",
+        "line": 42,
+        "kind": "array",
+        "name": "paymentMethods",
+        "valueCount": 4
+      }
+    },
+    {
+      "id": "a5ed8dcd08970229f603",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "These are test-only provider responses; changing them can weaken coverage of availability and unresolved-payment handling. They do not activate production methods.",
+      "justification": "Bounded test-only response fixture for remaining methods on the original purchase or Stripe intent. Runtime availability is read from the original order/provider; this array is not a production payment catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-18",
+      "reviewBatch": "payment-failure-alternatives",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/checkoutPaymentAlternatives.test.ts",
+        "line": 47,
+        "kind": "array",
+        "name": "paymentMethods",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "da6c8d41e4fa771dfe66",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "These are test-only provider responses; changing them can weaken coverage of availability and unresolved-payment handling. They do not activate production methods.",
+      "justification": "Bounded test-only response fixture for remaining methods on the original purchase or Stripe intent. Runtime availability is read from the original order/provider; this array is not a production payment catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-18",
+      "reviewBatch": "payment-failure-alternatives",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/payments/StripePaymentAlternativesNotice.test.tsx",
+        "line": 12,
+        "kind": "array",
+        "name": "payment_method_types",
+        "valueCount": 3
+      }
+    },
+    {
+      "id": "e675271d7b00a9f08172",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "These are test-only provider responses; changing them can weaken coverage of availability and unresolved-payment handling. They do not activate production methods.",
+      "justification": "Bounded test-only response fixture for remaining methods on the original purchase or Stripe intent. Runtime availability is read from the original order/provider; this array is not a production payment catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-18",
+      "reviewBatch": "payment-failure-alternatives",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/payments/StripePaymentAlternativesNotice.test.tsx",
+        "line": 21,
+        "kind": "array",
+        "name": "payment_method_types",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "ac7d73f0f4464d7e5194",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "This test-only all-disabled capability response protects the distinction between a successful empty lookup and a failed or pending lookup. It does not enable production payment methods.",
+      "justification": "Reviewed test-only noMethods fixture used to simulate an authoritative capability response with all methods unavailable. Production availability remains server-owned.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-18",
+      "reviewBatch": "payment-failure-alternatives",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.test.tsx",
+        "line": 14,
+        "kind": "object-registry",
+        "name": "noMethods",
+        "valueCount": 7
+      }
     }
   ]
 }
