@@ -15,7 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import { EventTickets } from '../api/eventTickets';
-import { SocialEventsAPI } from '../api/socialEvents';
+import { listMyTicketOrders } from '../api/myTicketOrders';
 import { EVENTS_PATH } from '../components/events/UpcomingEventsCarousel';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -63,7 +63,7 @@ export default function MyTicketsPage() {
 
   const accountOrders = useQuery({
     queryKey: ['my-ticket-orders', session?.partyId ?? null],
-    queryFn: () => SocialEventsAPI.listMyTicketOrders(),
+    queryFn: listMyTicketOrders,
     enabled: signedIn,
     retry: false,
   });

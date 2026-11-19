@@ -13,8 +13,8 @@ let sessionValue: { partyId: number } | null = null;
 jest.unstable_mockModule('../api/eventTickets', () => ({
   EventTickets: { getCheckout: getCheckoutMock, getStorefront: getStorefrontMock },
 }));
-jest.unstable_mockModule('../api/socialEvents', () => ({
-  SocialEventsAPI: { listMyTicketOrders: listMyTicketOrdersMock },
+jest.unstable_mockModule('../api/myTicketOrders', () => ({
+  listMyTicketOrders: listMyTicketOrdersMock,
 }));
 jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => ({ session: sessionValue }),

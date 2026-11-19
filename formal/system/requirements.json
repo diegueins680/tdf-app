@@ -21602,7 +21602,7 @@
       "implementation": [
         "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
         "tdf-hq-ui/src/utils/deviceTicketOrders.ts",
-        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/api/myTicketOrders.ts",
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq/assets/feature-registry.json"
@@ -21610,7 +21610,8 @@
       "tests": [
         "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx",
         "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts",
-        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx"
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [],
       "verification": "Client unit tests",
