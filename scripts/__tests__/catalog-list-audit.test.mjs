@@ -859,18 +859,29 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     assert.equal(review.evidence.file, 'tdf-hq-ui/src/utils/merch.ts');
     assert.equal(review.evidence.valueCount, 2);
   }
+  // The owner-approved sidebar menu rules (page families, tab wording) add six
+  // individually reviewed lists; keep them outside the historical views too.
+  const menuRuleReviews = active.filter(row => row.reviewBatch === 'cognitive-load-owner-decisions-20261116');
+  assert.equal(menuRuleReviews.length, 6);
+  for (const review of menuRuleReviews) {
+    assert.equal(review.reviewMethod, 'individual-source-review');
+    assert.equal(review.disposition, 'retain-in-code');
+    assert.match(review.evidence.file, /^tdf-hq-ui\/src\/components\/(sidebarMenuRules\.ts|MenuFamilyTabs\.test\.tsx)$/);
+  }
+  const menuRuleIds = new Set(menuRuleReviews.map(row => row.id));
   // The category-label consumer adds one separately reviewed presentation map.
   // Preserve the complete pre-existing decision objects, then project it out of
   // the historical financial-label and Apple-policy views.
   const categoryId = '7d5d1e64b79af7288982';
   const categoryParent = await reviewedParent('7aff2e236d3a73d3d00a22dc57a533dcc4efa0c2');
   assert.deepEqual(active.find(row => row.id === categoryId), categoryParent.find(row => row.id === categoryId));
-  assert.deepEqual(active, categoryParent);
+  assert.deepEqual(active.filter(row => !menuRuleIds.has(row.id)), categoryParent);
   const merchLabelIds = new Set([...merchLabelReviews.map(row => row.id), categoryId]);
-  assert.deepEqual(active.filter(row => !merchLabelIds.has(row.id)),
+  assert.deepEqual(active.filter(row => !merchLabelIds.has(row.id) && !menuRuleIds.has(row.id)),
     await reviewedParent('cfbd8d66447585ef4b178c1ea76004b188cdad46'));
   const laterMainIds = new Set([offlineFixture.id, ...routeReviews.map(row => row.id),
-    ...desktopReviews.map(row => row.id), priceFixture.id, eventPriceFixture.id, ...merchLabelIds]);
+    ...desktopReviews.map(row => row.id), priceFixture.id, eventPriceFixture.id, ...merchLabelIds,
+    ...menuRuleIds]);
   // The cognitive-load continuation combines two booking presentation steps.
   // Its successor must preserve the exact earlier classification and review,
   // including in this historical Apple-policy projection.
@@ -887,7 +898,7 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   assert.equal(historicalAppleView.length, 1411);
   assert.deepEqual(historicalAppleView,
     await reviewedParent('15e2228d24080a520d4bed187731cc3db09d474a'));
-  assert.equal(active.length, 1429);
+  assert.equal(active.length, 1435);
   const history = new Map();
   const visit = row => {
     if (!row) return;

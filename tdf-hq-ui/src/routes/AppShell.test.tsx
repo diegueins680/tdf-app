@@ -47,6 +47,10 @@ jest.unstable_mockModule('../components/SidebarNav', () => ({
   default: () => <aside data-testid="sidebar-nav" />,
 }));
 
+jest.unstable_mockModule('../components/MenuFamilyTabs', () => ({
+  default: () => null,
+}));
+
 jest.unstable_mockModule('../components/TopBar', () => ({
   default: () => <header data-testid="top-bar" />,
 }));

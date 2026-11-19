@@ -37978,6 +37978,169 @@
         ],
         "verification": "e2e/web/merch-stock-category.spec.mjs: localized seller/filter/product/admin labels retain category codes and mutation paths"
       }
+    },
+    {
+      "id": "68f51ccc9ae6aa108850",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Individually reviewed all four identifiers: contacts, system, accounts, calendar. They are internal keys naming which sidebar entries are presented as one family of pages. They are never stored, sent to the server, selected by a user or used in an access decision.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-owner-decisions-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/sidebarMenuRules.ts",
+        "line": 9,
+        "kind": "literal-union",
+        "name": "MenuFamilyId",
+        "sourceKind": "production",
+        "valueCount": 4,
+        "values": [
+          "contacts",
+          "system",
+          "accounts",
+          "calendar"
+        ]
+      }
+    },
+    {
+      "id": "b7bd15fde65d088e4193",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Individually reviewed the four switch cases over the same internal family keys (contacts, system, accounts, calendar); each returns the Spanish heading of that family. Presentation only: no stored value, server contract or access decision.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-owner-decisions-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/sidebarMenuRules.ts",
+        "line": 47,
+        "kind": "switch-cases",
+        "name": "family",
+        "sourceKind": "production",
+        "valueCount": 4,
+        "values": [
+          "contacts",
+          "system",
+          "accounts",
+          "calendar"
+        ]
+      }
+    },
+    {
+      "id": "25bf3a1dfd5abe50009d",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-retain",
+      "risk": "Changing navigation or UI constants could break rendering or user experience.",
+      "justification": "Individually reviewed all twelve client routes: three CRM pages, five system pages, two account-administration pages and the calendar with its session list. The switch only groups existing sidebar destinations under one entry and a tab strip. Each route keeps its own access check (canAccessPath and the server); grouping grants nothing and hides nothing from search.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-owner-decisions-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/sidebarMenuRules.ts",
+        "line": 24,
+        "kind": "switch-cases",
+        "name": "path",
+        "sourceKind": "production",
+        "valueCount": 12,
+        "values": [
+          "/crm/contactos",
+          "/crm/empresas",
+          "/crm/leads",
+          "/configuracion/actividad",
+          "/configuracion/logs",
+          "/configuracion/estado",
+          "/admin/diagnosticos",
+          "/admin/commerce/provider-events",
+          "/configuracion/usuarios-admin",
+          "/configuracion/roles-permisos",
+          "/estudio/calendario",
+          "/estudio/ordenes"
+        ]
+      }
+    },
+    {
+      "id": "86d5365ab98f33dbea5d",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-retain",
+      "risk": "Changing navigation or UI constants could break rendering or user experience.",
+      "justification": "Individually reviewed the three client routes whose tab wording differs from the sidebar label (session list, status, users). Display wording for existing destinations only; access remains enforced per route and by the server.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-owner-decisions-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/sidebarMenuRules.ts",
+        "line": 61,
+        "kind": "switch-cases",
+        "name": "item.path",
+        "sourceKind": "production",
+        "valueCount": 3,
+        "values": [
+          "/estudio/ordenes",
+          "/configuracion/estado",
+          "/configuracion/usuarios-admin"
+        ]
+      }
+    },
+    {
+      "id": "a75fadbada935d09bb95",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Synthetic session fixture field names in the page-family tab test follow the existing session contract. Test data only, not a catalog or a grant of access.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-owner-decisions-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/MenuFamilyTabs.test.tsx",
+        "line": 5,
+        "kind": "object-registry",
+        "name": "session",
+        "sourceKind": "test",
+        "valueCount": 5,
+        "values": [
+          "username",
+          "displayName",
+          "roles",
+          "featureFlags",
+          "modules"
+        ]
+      }
+    },
+    {
+      "id": "9b1826ca55900d52662b",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Synthetic module names for the fixture session in the page-family tab test, reset between cases. Test data only; real modules come from the server session.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-owner-decisions-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/MenuFamilyTabs.test.tsx",
+        "line": 10,
+        "kind": "array",
+        "name": "modules",
+        "sourceKind": "test",
+        "valueCount": 3,
+        "values": [
+          "admin",
+          "crm",
+          "scheduling"
+        ]
+      }
     }
   ]
 }

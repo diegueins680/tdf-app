@@ -244,7 +244,7 @@ const en = {
       mix: 'Mix',
     },
   },
-  sessionMenu: {
+  sessionMenu: { help: 'Help and account', manual: 'Manual', docs: 'Documentation', about: 'About', security: 'Security', whatsapp: 'WhatsApp preferences', deleteAccount: 'Delete my account',
     noRoles: 'No roles assigned',
     logout: 'Sign out',
     open: 'Open session menu',

@@ -10,6 +10,7 @@ import { OfflineBanner } from '../components/OfflineBanner';
 import RegistryBreadcrumbs from '../components/RegistryBreadcrumbs';
 import RouteErrorBoundary from '../components/RouteErrorBoundary';
 import SidebarNav from '../components/SidebarNav';
+import MenuFamilyTabs from '../components/MenuFamilyTabs';
 import TopBar from '../components/TopBar';
 import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
@@ -268,6 +269,7 @@ export function Shell() {
         >
           <Container maxWidth="xl" sx={{ pt: { xs: 3, md: 4 }, pb: 6 }}>
             <RegistryBreadcrumbs />
+            {!forbiddenDecision && <MenuFamilyTabs />}
             <SignupMobileInvitation />
             {!forbiddenDecision && <UpcomingEventsCarousel />}
             {forbiddenDecision ? <ForbiddenPage decision={forbiddenDecision} /> : <RouteErrorBoundary><Outlet /></RouteErrorBoundary>}

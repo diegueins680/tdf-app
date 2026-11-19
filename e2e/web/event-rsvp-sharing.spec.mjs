@@ -198,9 +198,20 @@ test('@critical anonymous RSVP survives signup, appears once in the profile, sha
   await expectNoSeriousAxeViolations(page, testInfo, 'event-rsvp-axe.json');
   await page.screenshot({ path: testInfo.outputPath('web-rsvp-event.png'), fullPage: true });
 
-  await page.getByRole('button', { name: 'Copiar enlace' }).click();
-  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('/eventos/42');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).not.toContain('/social/eventos/');
+  // A browser with a share sheet gets one "Compartir" control; one without gets "Copiar enlace" and WhatsApp.
+  if (await page.evaluate(() => typeof navigator.share === 'function')) {
+    await expect(page.getByRole('button', { name: 'Copiar enlace' })).toHaveCount(0);
+    await page.evaluate(() => Object.defineProperty(navigator, 'share', { configurable: true, value: async (data) => { window.__rsvpSharedUrl = data.url; } }));
+    await page.getByRole('button', { name: 'Compartir', exact: true }).click();
+    await expect.poll(() => page.evaluate(() => window.__rsvpSharedUrl)).toContain('/eventos/42');
+    expect(await page.evaluate(() => window.__rsvpSharedUrl)).not.toContain('/social/eventos/');
+  } else {
+    // The only "Compartir" left is the invitation prompt shown after answering.
+    await expect(page.locator('section[aria-labelledby="event-rsvp-title-42"]').getByRole('button', { name: 'Compartir', exact: true })).toHaveCount(await page.getByText('¿Quieres invitar a alguien?').count());
+    await page.getByRole('button', { name: 'Copiar enlace' }).click();
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('/eventos/42');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).not.toContain('/social/eventos/');
+  }
 
   await page.goto('/perfil/101');
   await expect(page.getByText('Va a')).toBeVisible();
@@ -233,7 +244,7 @@ test('private events do not enumerate and cancelled public events disable RSVP a
   await page.goto('/eventos/43');
   await expect(page.getByText('Los eventos cancelados no aceptan nuevas respuestas.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Voy', exact: true })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Compartir' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /^(Compartir|Copiar enlace)$/ }).first()).toBeDisabled();
 });
 
 test('RSVP fixtures block unconfigured APIs and foreign module-shaped requests', async ({ page }, testInfo) => {
