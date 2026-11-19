@@ -4,6 +4,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert, Button, Chip, Divider, Paper, Stack, TextField, Typography } from '@mui/material';
 import HandshakeIcon from '@mui/icons-material/Handshake';
+import PaymentAlternativesNotice from '../../components/payments/PaymentAlternativesNotice';
 
 import { Directory, type AgreementStatus, type DirectoryTaxonomyItem, type MarketplaceAgreement } from '../../api/directory';
 import { agreementActions, agreementChargeDue, bpsToPercent, visibleAgreementPayments } from './agreements';
@@ -88,6 +89,13 @@ export default function AgreementCard({ agreement, currencies }: AgreementCardPr
             {pay.data?.recoveryUnavailable === true && <Alert severity="warning">{t('marketplace.agreement.pay.recoveryUnavailable')}</Alert>}
             {pay.data !== undefined && !pay.data.redirected && !pay.data.notEnabled && !pay.data.inProgress && !pay.data.recoveryUnavailable && <Alert severity="warning">{t('marketplace.agreement.pay.noPage')}</Alert>}
             {pay.error && <Alert severity="error">{pay.error.message}</Alert>}
+            {(pay.isError || (pay.data && !pay.data.redirected)) && <PaymentAlternativesNotice
+              methods={[]}
+              failedMethod="payphone_card"
+              availabilityUnknown={Boolean(pay.isError || pay.data?.notEnabled)}
+              blocked={Boolean(pay.isError || pay.data?.inProgress)}
+              english={i18n.language.toLowerCase().startsWith('en')}
+            />}
           </Stack>
         )}
         {payments.length > 0 && (
