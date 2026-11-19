@@ -766,6 +766,9 @@ export const SocialEventsAPI = {
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-tiers`, payload) as SocialTicketTierDTO,
   updateTicketTier: async (eventId: string, tierId: string, payload: SocialTicketTierDTO) =>
     await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-tiers/${encodeURIComponent(tierId)}`, payload) as SocialTicketTierDTO,
+  /** Orders bought with the signed-in account (the app's purchase path); guest web checkouts are not included. */
+  listMyTicketOrders: async () =>
+    await getUnknown('/social-events/ticket-orders') as SocialTicketOrderDTO[],
   listTicketOrders: async (eventId: string, opts?: { buyerPartyId?: string; status?: string }) => {
     const qs = buildQuery({ buyerPartyId: opts?.buyerPartyId, status: opts?.status });
     return await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders${qs}`) as SocialTicketOrderDTO[];
