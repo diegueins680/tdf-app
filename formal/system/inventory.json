@@ -333,7 +333,6 @@
       "scripts/instagram-lifecycle-artifact.mjs",
       "scripts/instagram-openclaw-cdp.mjs",
       "scripts/install-continuous-improvement-loop-launchd.sh",
-      "scripts/install-flyctl.mjs",
       "scripts/install-proof-checkers.py",
       "scripts/install-recovery-tools.py",
       "scripts/interactions/generate-mobile-shared.mjs",
@@ -353,7 +352,6 @@
       "scripts/lib/delivery-matrix.mjs",
       "scripts/lib/discovery.mjs",
       "scripts/lib/disposable-postgres-url.mjs",
-      "scripts/lib/flyctl-cli.mjs",
       "scripts/lib/formal-methods-audit.mjs",
       "scripts/lib/formal-result-summary.mjs",
       "scripts/lib/hetzner-migration-rehearsal.mjs",
@@ -4025,7 +4023,7 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "a9f665f14a487ec4b4bf8a0bafb11999250e0d0d816a72cc5426bab57b4082f7",
+      "sha256": "5af9e5dc2fda29168ecdaf142b4032214b07cb0b204d6da6f1e85b7a5e8ab382",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5097,12 +5095,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-14082aef6c304d37",
-      "path": "scripts/install-flyctl.mjs",
-      "sha256": "75c2c6f4934ff07fd6f00dec4bb2c8133047ca54c0632bea7739581871d56cdc",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-37ed76fba61da70f",
       "path": "scripts/install-proof-checkers.py",
       "sha256": "1a14b7fa50dd6666db4a0fd5feb8e6993104a779b019b7a0dfd3562cf37736bb",
@@ -5214,12 +5206,6 @@
       "id": "SURFACE-7e5d877bbcc438aa",
       "path": "scripts/lib/disposable-postgres-url.mjs",
       "sha256": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-6f9017626e33d004",
-      "path": "scripts/lib/flyctl-cli.mjs",
-      "sha256": "feaf16e47652a7d1612585af11ef0e6f4d6425813bb0215e5bd6edab6bebc45b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
