@@ -3223,7 +3223,14 @@ test('actual storage/refund composition retains all 261 migrations, immutable SQ
   }
   for (const [reviewFile, key] of preservedFiles) {
     const current = JSON.parse(await fs.readFile(path.join(composedRoot, reviewFile), 'utf8'));
-    for (const ref of COMPOSED_PARENTS) for (const row of (await composedParent(ref, reviewFile))[key])
-      assert.ok(findPreserved(current, row), `Lost whole parent object: ${ref}:${reviewFile}`);
+    for (const ref of COMPOSED_PARENTS) {
+      const prior = await composedParent(ref, reviewFile);
+      for (const row of prior[key]) assert.ok(findPreserved(current, row), `Lost whole parent object: ${ref}:${reviewFile}`);
+      for (const [field, value] of Object.entries(prior)) {
+        if (field === key) continue;
+        if (value && typeof value === 'object') assert.ok(findPreserved(current, value), `Lost whole parent metadata: ${ref}:${reviewFile}:${field}`);
+        else assert.equal(current[field], value, `Lost parent metadata: ${ref}:${reviewFile}:${field}`);
+      }
+    }
   }
 });
