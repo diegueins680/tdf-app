@@ -1092,6 +1092,8 @@
       "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
       "tdf-hq-ui/src/components/StudioGallery.test.tsx",
       "tdf-hq-ui/src/components/StudioGallery.tsx",
+      "tdf-hq-ui/src/components/StudioGalleryEditor.tsx",
+      "tdf-hq-ui/src/components/StudioGalleryManagement.test.tsx",
       "tdf-hq-ui/src/components/TicketCredentialQR.tsx",
       "tdf-hq-ui/src/components/TicketQRDisplay.tsx",
       "tdf-hq-ui/src/components/TicketTransferDialog.tsx",
@@ -1648,6 +1650,7 @@
       "tdf-hq-ui/src/session/useOwnedTabDraft.ts",
       "tdf-hq-ui/src/session/useSessionOwner.ts",
       "tdf-hq-ui/src/test/accessibility.ts",
+      "tdf-hq-ui/src/testFixtures/studioGallery.ts",
       "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
       "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
       "tdf-hq-ui/src/theme/appTheme.ts",
@@ -1762,6 +1765,8 @@
       "tdf-hq-ui/src/utils/socialEventRoutes.ts",
       "tdf-hq-ui/src/utils/stringValues.test.ts",
       "tdf-hq-ui/src/utils/stringValues.ts",
+      "tdf-hq-ui/src/utils/studioGallery.test.ts",
+      "tdf-hq-ui/src/utils/studioGallery.ts",
       "tdf-hq-ui/src/utils/tidalAgent.test.ts",
       "tdf-hq-ui/src/utils/tidalAgent.ts",
       "tdf-hq-ui/src/utils/torrentAudio.test.ts",
@@ -9580,13 +9585,25 @@
     {
       "id": "SURFACE-428957fe77018d21",
       "path": "tdf-hq-ui/src/components/StudioGallery.test.tsx",
-      "sha256": "4f8ca422f7722415c00ccd70540824b25ea3eb5af73f60b34ea53857fa446a48",
+      "sha256": "a4a418f0084338e8fe10b1cee3d57fec1a80d95d523e8a0747d5f76a1344f9e6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-cf86306debf08604",
       "path": "tdf-hq-ui/src/components/StudioGallery.tsx",
-      "sha256": "20cea2f374e690a0f3b65115628b2e76cfc080e31a96ac93cc5dfb2ab3e630b6",
+      "sha256": "e32e4567ed798f570bc040ef189aa9dff8d7dd03e064195af7b060de82a8fd26",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b9a81b0af6c907f7",
+      "path": "tdf-hq-ui/src/components/StudioGalleryEditor.tsx",
+      "sha256": "cee4736a1bc141d0dc7b3aa8ab20703a0590b3e9904ab7057c8fac4eb4fe75d3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3f41bba71c906727",
+      "path": "tdf-hq-ui/src/components/StudioGalleryManagement.test.tsx",
+      "sha256": "ecc2a2d6b44349447a7b2d59a7d5bf6637b7bea4186d57156934b12598188ce0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11224,13 +11241,13 @@
     {
       "id": "SURFACE-10a1b2ad11b92606",
       "path": "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
-      "sha256": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
+      "sha256": "2ad04e5a94b7602f5f13745aaa199acd0a2caef6598811616f84088ef30d88a5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-9ec3af8f42eacde2",
       "path": "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
-      "sha256": "0b2a08ef582f97ec33fb6b9eb8c909f7d8482758655fc6f0958e312838f5744c",
+      "sha256": "6f81df2cd8e0610518ee3b541ac2b4a6a8cb7eafdc4300448758a0e8bcb6603a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12926,6 +12943,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7c4fe7f1b409f809",
+      "path": "tdf-hq-ui/src/testFixtures/studioGallery.ts",
+      "sha256": "2d018881bd274f2e183b0f8c7049b8b342b729fc6bb227e5f032e405f3499c47",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-3ca67f521e3dc4c4",
       "path": "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
       "sha256": "c754f819d6fa85a83c701c2c596bd1818911da85b39868c6dbfcd5df024c61a8",
@@ -13607,6 +13630,18 @@
       "id": "SURFACE-131656bc7b0c9088",
       "path": "tdf-hq-ui/src/utils/stringValues.ts",
       "sha256": "bb37dcd6a7ab5824a49761f9cee589aa43be29ca95a3bcef9b9aa356e69b5858",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3d0c6eff29dbf059",
+      "path": "tdf-hq-ui/src/utils/studioGallery.test.ts",
+      "sha256": "2dfa1260a3a0052aaf0d58f850275fd75a1e66cdfc923665cd763f75ab4af02a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2bcac04e555d45b3",
+      "path": "tdf-hq-ui/src/utils/studioGallery.ts",
+      "sha256": "bb811f20ee26490604c6db8c11e88a220d07e4b5d334e1d2e31e901acdee13b1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18070,7 +18105,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "e6ff7cfdf1c79b7af0dd8d09ead32ac2b469272ee270f1589aaa97667c963062",
+      "sha256": "7c34bb129e3957d6e273492cc466fe0c13cd4b612d37f2e0ee61be01bb39fd1a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19150,7 +19185,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "0c8208720533a0ed4f5e1daef883b778bc9333ff5752c39807a065222af8c274",
+      "sha256": "b27e8ae676ed5b63c2201a04de8a0fe63cdcb9dae89bda33bc853bea1f22e2e6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23134,7 +23169,7 @@
     },
     {
       "path": "docs/engineering/welcome-first-discovery-2026-10-25.md",
-      "sha256": "6949566c6119bc37c0bff69f0c06d3b7db2d5748743823d6f4e1d69fa3267576",
+      "sha256": "c6ada7c2aee8a0b2c8917c4fc9a20cb41d99bf36533d19f47be0fd74b405d075",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31737,7 +31772,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d635c561ab147f92778e8a6fa52843268054be22906de30fadcd1230c09339da",
+      "sha256": "64affd1881b38dc3da38525284d264e557e54c595d985b6089f551cdd5d2fafa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
