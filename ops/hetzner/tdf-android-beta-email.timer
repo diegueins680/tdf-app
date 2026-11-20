@@ -1,0 +1,9 @@
+[Unit]
+Description=Check TDF Mobile Android beta email campaign every 15 minutes
+
+[Timer]
+OnCalendar=*-*-* *:00,15,30,45:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
