@@ -987,10 +987,10 @@ function ClubElections({ artistId, elections }: { artistId: number; elections: F
   const createElection = useMutation({
     mutationFn: () => Fans.createClubElection(artistId, {
       fcelYear: form.year,
-      fcelCandidacyStartsAt: form.candidacyStartsAt || null,
-      fcelCandidacyEndsAt: form.candidacyEndsAt || null,
-      fcelVotingStartsAt: form.votingStartsAt || null,
-      fcelVotingEndsAt: form.votingEndsAt || null,
+      fcelCandidacyStartsAt: form.candidacyStartsAt ? new Date(form.candidacyStartsAt).toISOString() : null,
+      fcelCandidacyEndsAt: form.candidacyEndsAt ? new Date(form.candidacyEndsAt).toISOString() : null,
+      fcelVotingStartsAt: form.votingStartsAt ? new Date(form.votingStartsAt).toISOString() : null,
+      fcelVotingEndsAt: form.votingEndsAt ? new Date(form.votingEndsAt).toISOString() : null,
     }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['fan-club-elections', artistId] });
@@ -1046,7 +1046,7 @@ function ClubElections({ artistId, elections }: { artistId: number; elections: F
                       )}
                       <Typography variant="subtitle2">Mis votos</Typography>
                       {el.fceMyVotes.length === 0 ? (
-                        <Button size="small" variant="outlined" onClick={() => { setVoteOpen(el.fceElectionId); setSelectedCands([]); }}>
+                        <Button size="small" variant="outlined" disabled={el.fceStatus !== 'VotingOpen'} onClick={() => { setVoteOpen(el.fceElectionId); setSelectedCands([]); }}>
                           Votar
                         </Button>
                       ) : (
