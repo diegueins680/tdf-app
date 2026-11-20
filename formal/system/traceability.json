@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "33c70f5d173ee873f73594d8a8c3f0cedece610a",
+  "mobileRevision": "059ef215725d7779e8312c9f7ca0a97f9296a3f6",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -30870,7 +30870,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
-    "tdf-mobile/src/api/generated/types.ts": "380d6d0a2e7fe5afebaeb7ad2760f9393a3c2783704db3aa5c815b1391d0c440",
+    "tdf-mobile/src/api/generated/types.ts": "336834d6d6684dfadd32f0d0ab8a822bc4b922b2616ba836c76f1883d988c08e",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/api/upload.compatibility.test.ts": "21e4e097cea0449549484f2ba0ba09726585c58a5aa9c4cccbdddba8b00600ba",
@@ -86975,7 +86975,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "380d6d0a2e7fe5afebaeb7ad2760f9393a3c2783704db3aa5c815b1391d0c440",
+      "sha256": "336834d6d6684dfadd32f0d0ab8a822bc4b922b2616ba836c76f1883d988c08e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
