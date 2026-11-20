@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module TDF.Studio.Gallery (validateStudioGalleryPayload) where
+module TDF.Studio.Gallery (validateStudioGalleryPayload, studioGalleryImageUrlAllowed) where
 
 import Control.Monad (unless)
 import Data.Aeson (Value(..))
