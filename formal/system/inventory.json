@@ -454,6 +454,7 @@
       "scripts/social/SessionModelCases.hs",
       "scripts/social/SessionSpec.hs",
       "scripts/social/benchmark.sql",
+      "scripts/social/chat-delivery.sql",
       "scripts/social/chat-notifications.sql",
       "scripts/social/check-dm-model.sh",
       "scripts/social/check-dm-reads-model.sh",
@@ -1038,6 +1039,8 @@
       "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
       "tdf-hq-ui/src/components/BrandLogo.tsx",
       "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
+      "tdf-hq-ui/src/components/ChatNotificationChannels.test.tsx",
+      "tdf-hq-ui/src/components/ChatNotificationChannels.tsx",
       "tdf-hq-ui/src/components/ConfirmDialog.tsx",
       "tdf-hq-ui/src/components/DataTable.tsx",
       "tdf-hq-ui/src/components/EnrollmentSuccessDialog.tsx",
@@ -2324,6 +2327,7 @@
       "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql",
+      "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2356,6 +2360,7 @@
       "tdf-hq/src/TDF/API/Merch.hs",
       "tdf-hq/src/TDF/API/MerchReputation.hs",
       "tdf-hq/src/TDF/API/MusicRelease.hs",
+      "tdf-hq/src/TDF/API/NotificationDelivery.hs",
       "tdf-hq/src/TDF/API/PaymentCapabilities.hs",
       "tdf-hq/src/TDF/API/Payments.hs",
       "tdf-hq/src/TDF/API/Pipelines.hs",
@@ -2398,6 +2403,7 @@
       "tdf-hq/src/TDF/Catalog/Security.hs",
       "tdf-hq/src/TDF/Catalog/Seed.hs",
       "tdf-hq/src/TDF/Catalog/Types.hs",
+      "tdf-hq/src/TDF/Chat/Delivery.hs",
       "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
       "tdf-hq/src/TDF/Commerce/ArtistTipStore.hs",
       "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
@@ -2641,6 +2647,7 @@
       "tdf-hq/test/TDF/Catalog/PipelineSpec.hs",
       "tdf-hq/test/TDF/Catalog/RecordsSpec.hs",
       "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
+      "tdf-hq/test/TDF/ChatDeliverySpec.hs",
       "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
       "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs",
       "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
@@ -5591,7 +5598,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "892a12010cecf0235af44bc846a4d78eb9ca2133236b581d14adb6e4508fd77f",
+      "sha256": "1b1af9aa061ca496b4f0f7a9b3de473ec7ec76c1a400535c76c30d9e060c4228",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5838,6 +5845,12 @@
       "id": "SURFACE-c6d8995610ec7a67",
       "path": "scripts/social/benchmark.sql",
       "sha256": "de2c24e9524e62fcae978eac8390507be2cb49544c4deccdb7bc0e9b066ea07d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8cfd686a9c88329c",
+      "path": "scripts/social/chat-delivery.sql",
+      "sha256": "cba67e765456aec7ce04f5b21ff1a35ed0d95aef2a354a3d47f347ff68506f6f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6263,7 +6276,7 @@
     {
       "id": "SURFACE-325b7de63b17b31f",
       "path": "scripts/test-chat-notifications.sh",
-      "sha256": "d01a8cbf2c0852222f53b36bd813a7f2dc8875ae6f3b53ea0ab108fba1f2b552",
+      "sha256": "1fc07b78ce46f1fe6b8dbda96c3a522e57147cd1e29b65b931643f2c5f04b9f5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8369,7 +8382,7 @@
     {
       "id": "SURFACE-b690ccffe85ff16b",
       "path": "tdf-hq-ui/src/api/chat.ts",
-      "sha256": "5e60c9d524b930fa50303f78f4fdd87bcbc876df5a781436be0fed96841f1acc",
+      "sha256": "9bffa39419166e05055c5f508182ed6d5dcd7fe4f6549268c501c9cc2c6af8c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8627,7 +8640,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "336834d6d6684dfadd32f0d0ab8a822bc4b922b2616ba836c76f1883d988c08e",
+      "sha256": "6a0f79ce639fc1dd061bb6194ebd9ecc15ffd14d724b770d31b0b09a767c90f9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9294,6 +9307,18 @@
       "id": "SURFACE-85a789593d432274",
       "path": "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
       "sha256": "0875707b1e3bbb8a2d239f8010d28acf6c00f0d2b4c8987bb6f9727903d26945",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ef37071211d6df64",
+      "path": "tdf-hq-ui/src/components/ChatNotificationChannels.test.tsx",
+      "sha256": "f08be2fa42471413c6fd504b110e25f23c71ad3e2427fc2446bef9912f28eb26",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fc3b4035b6e66ac0",
+      "path": "tdf-hq-ui/src/components/ChatNotificationChannels.tsx",
+      "sha256": "9491df1e5d6131d53888259c1334c57af6dd62f4ab5eaa13c1794fe974377033",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11273,13 +11298,13 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "e3b22e86857e5a41608cb7fbaeb5dad9b91084165b084d4653fcd4d95250ccc9",
+      "sha256": "a6f6bc1e4f6c7720c1210dbf2f17a1b2cab655765b9a9ff7d15d03624fca5075",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "7e1384c2582230276df3cfa8f746381182952b28494c8c60527abc4635c1b4bb",
+      "sha256": "6fc83a5c4b31fb489471645ef0139d92c9f027006ae3c9e7a8e942d5a8d76f16",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13949,7 +13974,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "12ede085314babcc113ec58a29291490e8e3cc2064b3db8a2319d0f0881a4761",
+      "sha256": "b1f1cbbae4c86c997e543d110b40c8012a1f306c84fc162e6c96749423326917",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17001,6 +17026,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-1c1db34e299cc07b",
+      "path": "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
+      "sha256": "3f1c4adb14514ad589b689cbf3003c877077766cb67247b332b033906e2acb61",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -17033,7 +17064,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "ef1ed6b71b5bc4a490c9074808094513c7c6396dbefd58606ae30f954d59ea4e",
+      "sha256": "e3d28f8c6b19b576c53e3a0a90e2db3c55a2aa7fc6bcb6b1b3454fa7331d6759",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17193,6 +17224,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-275635dc99314531",
+      "path": "tdf-hq/src/TDF/API/NotificationDelivery.hs",
+      "sha256": "5e3ae4c9ab2f8fc188b138288c7bcfd7d9597230aa9643492c020496773fc2e3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-076082895c77848b",
       "path": "tdf-hq/src/TDF/API/PaymentCapabilities.hs",
       "sha256": "166e3af4ce0f2152c8dfe048285ba48d453a659d9bc5466a2cb9f3b812ef001d",
@@ -17315,7 +17352,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
+      "sha256": "38e7b8ca5ee1bc51208d95a3b0a8a51cfed76e578a6c208cfe38302ef13f5343",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17442,6 +17479,12 @@
       "id": "SURFACE-68f141730b470989",
       "path": "tdf-hq/src/TDF/Catalog/Types.hs",
       "sha256": "388f43be3b7ef9461b3e63ba8fcdbf43000339c221324da4a866cf936cc8a382",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fd919e749d5f7980",
+      "path": "tdf-hq/src/TDF/Chat/Delivery.hs",
+      "sha256": "99c64ca2c24a85666ce6383b1182c36a907b8b59bfb901329999838d8abd0dc4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18203,7 +18246,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "10cfaf282a49b1b78b23d820b65339cb2cbe5dd0ed5152688362e0ac034b1aa1",
+      "sha256": "3d1dba2122048066f3221fb9fc7d4d41d1e3e3f89be3231669ce4cf585eea669",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18767,7 +18810,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "7c0ee9e661a11f56f2b9f109139f78ad19a1cd7235fb9ca286f1b00a423bb5c8",
+      "sha256": "0c90eab2b8150b865c88196e790a25c3a01e48b008a1eaf8cacf565f8b995871",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18845,7 +18888,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "7ef32ba3699ea33cbe3c1728f8f32db4351651311c8d99fbdeaa75720a936455",
+      "sha256": "99aef738fa51e84f11c886ef62620706b6aec9753f626cd3052c5bd7218a1f37",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18900,6 +18943,12 @@
       "id": "SURFACE-65f05df89af717ae",
       "path": "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
       "sha256": "d2d30b69518718f169d26a18dfa81c8f526fdf8b3c15294f6f6e30ee75cd9d48",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b47e32d28ca04cf0",
+      "path": "tdf-hq/test/TDF/ChatDeliverySpec.hs",
+      "sha256": "cddf18e1c12f6c5fbd83cdabed65b517b05a535f1cacde7fd8214fe6cea71c5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24926,7 +24975,7 @@
     },
     {
       "path": "docs/notifications/chat-delivery-2026-10-13.md",
-      "sha256": "a9c03cc324cd74ecf8d1430d97caf5c18415e96bb98c8701036533fad1427b83",
+      "sha256": "7901a766b0d391dbe2ea5522b09c83033d504234059942742e1fe048df264d35",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31961,7 +32010,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7f51931284d2083352bd27929951b888ef85f99d129db2daead649aed4862b52",
+      "sha256": "33b7e641a47897a83ae0d2bd2148346181f019f34d01fcdf2c0c0658c93d16ed",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32395,7 +32444,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "12ede085314babcc113ec58a29291490e8e3cc2064b3db8a2319d0f0881a4761",
+      "sha256": "b1f1cbbae4c86c997e543d110b40c8012a1f306c84fc162e6c96749423326917",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
