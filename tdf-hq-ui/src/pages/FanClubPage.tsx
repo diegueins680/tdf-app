@@ -105,6 +105,7 @@ export default function FanClubPage() {
     queryKey: ['fan-club-elections', artistIdNum],
     queryFn: () => Fans.listClubElections(artistIdNum),
     enabled: clubReady && tab === 4 && isAuthenticated,
+    refetchInterval: 30_000,
   });
 
   const club = clubQuery.data;
@@ -987,10 +988,10 @@ function ClubElections({ artistId, elections }: { artistId: number; elections: F
   const createElection = useMutation({
     mutationFn: () => Fans.createClubElection(artistId, {
       fcelYear: form.year,
-      fcelCandidacyStartsAt: form.candidacyStartsAt || null,
-      fcelCandidacyEndsAt: form.candidacyEndsAt || null,
-      fcelVotingStartsAt: form.votingStartsAt || null,
-      fcelVotingEndsAt: form.votingEndsAt || null,
+      fcelCandidacyStartsAt: form.candidacyStartsAt ? new Date(form.candidacyStartsAt).toISOString() : null,
+      fcelCandidacyEndsAt: form.candidacyEndsAt ? new Date(form.candidacyEndsAt).toISOString() : null,
+      fcelVotingStartsAt: form.votingStartsAt ? new Date(form.votingStartsAt).toISOString() : null,
+      fcelVotingEndsAt: form.votingEndsAt ? new Date(form.votingEndsAt).toISOString() : null,
     }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['fan-club-elections', artistId] });
@@ -1046,7 +1047,7 @@ function ClubElections({ artistId, elections }: { artistId: number; elections: F
                       )}
                       <Typography variant="subtitle2">Mis votos</Typography>
                       {el.fceMyVotes.length === 0 ? (
-                        <Button size="small" variant="outlined" onClick={() => { setVoteOpen(el.fceElectionId); setSelectedCands([]); }}>
+                        <Button size="small" variant="outlined" disabled={el.fceStatus !== 'VotingOpen'} onClick={() => { setVoteOpen(el.fceElectionId); setSelectedCands([]); }}>
                           Votar
                         </Button>
                       ) : (
@@ -1070,15 +1071,15 @@ function ClubElections({ artistId, elections }: { artistId: number; elections: F
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField label="Año" type="number" value={form.year} onChange={e => setForm(f => ({ ...f, year: parseInt(e.target.value) }))} fullWidth />
-            <TextField label="Inicio candidaturas" type="datetime-local" value={form.candidacyStartsAt} onChange={e => setForm(f => ({ ...f, candidacyStartsAt: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }} />
+            <TextField required label="Inicio candidaturas" type="datetime-local" value={form.candidacyStartsAt} onChange={e => setForm(f => ({ ...f, candidacyStartsAt: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }} />
             <TextField label="Fin candidaturas" type="datetime-local" value={form.candidacyEndsAt} onChange={e => setForm(f => ({ ...f, candidacyEndsAt: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }} />
-            <TextField label="Inicio votación" type="datetime-local" value={form.votingStartsAt} onChange={e => setForm(f => ({ ...f, votingStartsAt: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }} />
+            <TextField required label="Inicio votación" type="datetime-local" value={form.votingStartsAt} onChange={e => setForm(f => ({ ...f, votingStartsAt: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }} />
             <TextField label="Fin votación" type="datetime-local" value={form.votingEndsAt} onChange={e => setForm(f => ({ ...f, votingEndsAt: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }} />
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={() => createElection.mutate()} disabled={createElection.isPending}>
+          <Button variant="contained" onClick={() => createElection.mutate()} disabled={createElection.isPending || !form.candidacyStartsAt || !form.votingStartsAt}>
             Crear
           </Button>
         </DialogActions>
