@@ -4,6 +4,11 @@
 module TDF.Commerce.ProviderRetrySpec (spec) where
 
 import Data.List (intercalate, isPrefixOf, nub)
+import Data.Proxy (Proxy(..))
+import Network.HTTP.Types (status200, status404, status503)
+import qualified Network.Wai as Wai
+import qualified Network.Wai.Test as WaiTest
+import qualified TDF.API.ServiceStorefront as StorefrontAPI
 import           Control.Concurrent (MVar, ThreadId, forkFinally, killThread, newEmptyMVar, putMVar, readMVar, takeMVar, threadDelay, tryPutMVar)
 import           Control.Exception (AsyncException(..), IOException, bracket, throwIO, toException, try)
 import           Control.Monad (filterM, forM, forM_, unless, when)
@@ -31,9 +36,10 @@ import           Database.Persist.Postgresql (createPostgresqlPool)
 import           Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool, toSqlKey)
 import           Database.PostgreSQL.Simple (SqlError(..))
 import           Network.Socket (SockAddr(..))
+import qualified Network.Socket as Socket
 import           Numeric (readHex)
 import qualified Network.HTTP.Client as HC
-import           Servant (Handler, NoContent, ServerError, errHTTPCode, errBody, errHeaders, runHandler, getResponse, getHeaders, (:<|>)(..))
+import           Servant (Handler, NoContent, ServerError, errHTTPCode, errBody, errHeaders, runHandler, getResponse, getHeaders, serve, hoistServer, (:<|>)(..))
 import           System.Environment (getEnvironment, lookupEnv, setEnv, unsetEnv)
 import qualified System.Exit as Exit
 import qualified System.Process as Process
@@ -401,6 +407,21 @@ spec = do
         [Capabilities.CapabilityOneTime, Capabilities.CapabilityCapture]
       Capabilities.prRequiredCapabilities (Capabilities.requireCheckoutCompletion
         (completionRequest MethodManualBankTransfer)) `shouldBe` [Capabilities.CapabilityOneTime]
+  describe "Dataweb saved checkout recheck" $ do
+    it "prefers the latest saved resource after admission" $ do
+      result <- runHandler $ runReaderT
+        (Storefront.recheckDatafastCheckout (pure (Just ("latest" :: Text))) (Left "previous"))
+        (error "Pure checkout recheck must not read environment")
+      case result of
+        Right (Left saved) -> saved `shouldBe` "latest"
+        _ -> expectationFailure "Latest saved checkout was not reused"
+    it "refuses a missing saved resource without allowing a fresh request" $ do
+      result <- runHandler $ runReaderT
+        (Storefront.recheckDatafastCheckout (pure Nothing) (Left ("previous" :: Text)))
+        (error "Pure checkout recheck must not read environment")
+      case result of
+        Left failure -> errHTTPCode failure `shouldBe` 409
+        _ -> expectationFailure "Missing cached checkout became fresh request authority"
   reconciliationReportValidationSpec
   providerQueryReportValidationSpec
   providerTransportSpec
@@ -426,6 +447,8 @@ spec = do
         adminServiceOrderUpdateSpec
         closedCheckoutEvidenceSpec
         captureReplaySpec
+        datafastBoundReferenceSpec
+        datafastClientPreflightSpec
         ticketLedgerSpec
         paymentSnapshotRestoreSpec
         ticketAllocationSpec
@@ -2435,6 +2458,235 @@ ticketLedgerSpec = describe "ticket capture ledger" $
         [captureCheckoutParameter payment]) pool :: IO [Single Int64]
       receiptCounts `shouldBe` [Single 3]
 
+-- The immutable cart contains '&', which the actual cart projection refuses.
+-- This independent backstop prevents gateway HTTP even if an IP-gate
+-- regression gets as far as the builder. The expected IP error and row counts
+-- still distinguish the preflight from that later cart refusal.
+datafastClientFixture :: ConnectionPool -> IO (Text, Text, Checkout.CheckoutReference)
+datafastClientFixture pool = do
+  orderId <- toText <$> nextRandom
+  now <- getCurrentTime
+  let token = "synthetic-client-ip-" <> orderId
+  checkout <- runSqlPool (Checkout.createCheckout Checkout.CheckoutCreation
+    { Checkout.ccDomainType = "mixing_mastering", Checkout.ccDomainOrderId = orderId
+    , Checkout.ccEnvironment = Checkout.CheckoutSandbox, Checkout.ccCurrency = "USD"
+    , Checkout.ccAmountMinor = 12515, Checkout.ccCustomerEmail = "synthetic@example.invalid"
+    , Checkout.ccLookupTokenHash = digestText token, Checkout.ccIdempotencyKey = orderId
+    , Checkout.ccExpiresAt = addUTCTime 1800 now, Checkout.ccProductType = "mixing_mastering"
+    , Checkout.ccProductId = orderId, Checkout.ccProductVersion = "synthetic-v1"
+    , Checkout.ccDescription = "Unsendable & synthetic cart"
+    , Checkout.ccSnapshot = A.object [], Checkout.ccCorrelationId = "synthetic-client-ip"
+    }) pool
+  rows <- runSqlPool (rawSql
+    "INSERT INTO service_storefront_order\
+    \ (id,order_number,buyer_name,buyer_email,package_id,service_kind,tier,\
+    \ price_usd_cents,currency,status,checkout_id,lookup_token_hash)\
+    \ SELECT ?::uuid,?,'Synthetic buyer','synthetic@example.invalid',id,'Mixing','Basic',\
+    \ 12515,'USD','awaiting_payment',?::uuid,?\
+    \ FROM service_storefront_package ORDER BY id LIMIT 1 RETURNING id::text"
+    [PersistText orderId, PersistText orderId,
+     PersistText (Checkout.checkoutReferenceId checkout), PersistText (digestText token)]) pool
+    :: IO [Single Text]
+  rows `shouldBe` [Single orderId]
+  pure (orderId, token, checkout)
+
+datafastClientHttp :: ConnectionPool -> Text -> Text -> IO WaiTest.SResponse
+datafastClientHttp pool orderId token = do
+  config <- Config.loadConfig
+  let proxy = Proxy :: Proxy StorefrontAPI.ServiceStorefrontPublicAPI
+      app = serve proxy (hoistServer proxy
+        (\action -> runReaderT action (Env pool config)) Storefront.serviceStorefrontPublicServer)
+      request = Wai.defaultRequest
+        { Wai.requestMethod = "POST"
+        , Wai.rawPathInfo = TE.encodeUtf8 ("/services/storefront/order/" <> orderId <> "/datafast/checkout")
+        , Wai.pathInfo = ["services","storefront","order",orderId,"datafast","checkout"]
+        , Wai.remoteHost = SockAddrInet 12345 (Socket.tupleToHostAddress (172,18,0,3))
+        , Wai.requestHeaders = [("X-Order-Lookup-Token",TE.encodeUtf8 token),
+            ("X-TDF-Client-IP","1.1.1.1"), ("Content-Type","application/json")]
+        }
+  WaiTest.runSession (WaiTest.srequest (WaiTest.SRequest request "{}")) app
+
+datafastCreationRows :: Checkout.CheckoutReference -> SqlPersistT IO [Single Text]
+datafastCreationRows checkout = rawSql
+  "SELECT jsonb_build_object('attempts',\
+  \ (SELECT jsonb_agg(to_jsonb(a) ORDER BY a.id) FROM commerce_payment_attempt a WHERE a.checkout_id=?::uuid),\
+  \ 'intents',(SELECT jsonb_agg(to_jsonb(i) ORDER BY i.id) FROM commerce_payment_intent i WHERE i.checkout_id=?::uuid),\
+  \ 'bindings',(SELECT jsonb_agg(to_jsonb(b) ORDER BY b.id) FROM commerce_provider_binding b\
+  \ JOIN commerce_payment_attempt a ON a.id=b.payment_attempt_id WHERE a.checkout_id=?::uuid))::text"
+  (replicate 3 (PersistText (Checkout.checkoutReferenceId checkout)))
+
+datafastClientStart
+  :: ConnectionPool -> Text -> Checkout.CheckoutReference -> IO Checkout.PaymentAttemptReference
+datafastClientStart pool orderId checkout = do
+  now <- getCurrentTime
+  let correlation = "service-storefront:" <> orderId <> ":datafast:create"
+  runSqlPool (Runtime.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    { Checkout.pacCheckout = checkout, Checkout.pacProvider = Checkout.ProviderDatafast
+    , Checkout.pacEnvironment = Checkout.CheckoutSandbox, Checkout.pacOperation = Checkout.OperationCreate
+    , Checkout.pacAmountMinor = 12515, Checkout.pacCurrency = "USD"
+    , Checkout.pacMerchantRef = "synthetic-provider-retry-merchant"
+    , Checkout.pacIdempotencyKey = correlation, Checkout.pacCreatedAt = now
+    , Checkout.pacCorrelationId = correlation }) pool >>= requireRight
+
+datafastClientPublish
+  :: Text -> Checkout.CheckoutReference -> Checkout.PaymentAttemptReference -> UTCTime
+  -> SqlPersistT IO Text
+datafastClientPublish orderId checkout attempt now = do
+  let resource = "synthetic-" <> Checkout.paymentAttemptReferenceId attempt
+      correlation = "service-storefront:" <> orderId <> ":datafast:create"
+  result <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
+    { Checkout.pbcAttempt = attempt, Checkout.pbcCheckout = checkout
+    , Checkout.pbcProvider = Checkout.ProviderDatafast, Checkout.pbcEnvironment = Checkout.CheckoutSandbox
+    , Checkout.pbcMerchantRef = "synthetic-provider-retry-merchant", Checkout.pbcResourceType = "checkout"
+    , Checkout.pbcProviderResource = resource, Checkout.pbcResourcePath = Just ("/v1/checkouts/" <> resource)
+    , Checkout.pbcOrderReference = orderId, Checkout.pbcAmountMinor = 12515, Checkout.pbcCurrency = "USD"
+    , Checkout.pbcStage = Checkout.AttemptRequiresCustomerAction, Checkout.pbcOccurredAt = now
+    , Checkout.pbcCorrelationId = correlation }
+  liftIO (result `shouldBe` Right ())
+  rawExecute
+    "UPDATE service_storefront_order SET status='datafast_pending',payment_provider='datafast',\
+    \ datafast_checkout_id=? WHERE id=?::uuid" [PersistText resource,PersistText orderId]
+  pure resource
+
+waitForDatafastCheckoutLock :: ConnectionPool -> Int64 -> Int -> IO Bool
+waitForDatafastCheckoutLock _ _ 0 = pure False
+waitForDatafastCheckoutLock pool holder remaining = do
+  rows <- runSqlPool (rawSql
+    "SELECT EXISTS (SELECT 1 FROM pg_stat_activity activity\
+    \ WHERE activity.datname=current_database() AND activity.pid<>pg_backend_pid()\
+    \ AND activity.wait_event_type='Lock' AND ?::integer=ANY(pg_blocking_pids(activity.pid))\
+    \ AND lower(activity.query) LIKE '%commerce_checkout_session%'\
+    \ AND lower(activity.query) LIKE '%for update%')"
+    [PersistInt64 holder]) pool :: IO [Single Bool]
+  if rows == [Single True] then pure True else
+    threadDelay 25000 >> waitForDatafastCheckoutLock pool holder (remaining-1)
+
+datafastClientPreflightSpec :: SpecWith ConnectionPool
+datafastClientPreflightSpec = describe "Dataweb client IP HTTP preflight" $ do
+  it "rejects an untrusted proxy before allocating a payment attempt or intent" $ \pool ->
+    withCompletionEnvironment $ do
+      (orderId, token, checkout) <- datafastClientFixture pool
+      before <- runSqlPool (datafastCreationRows checkout) pool
+      response <- datafastClientHttp pool orderId token
+      WaiTest.simpleStatus response `shouldBe` status503
+      WaiTest.simpleBody response `shouldBe` "Datafast customer network address could not be verified"
+      runSqlPool (datafastCreationRows checkout) pool `shouldReturn` before
+      counts <- runSqlPool (rawSql
+        "SELECT count(*) FROM commerce_payment_attempt WHERE checkout_id=?::uuid"
+        [PersistText (Checkout.checkoutReferenceId checkout)]) pool :: IO [Single Int64]
+      counts `shouldBe` [Single 0]
+
+  it "preserves order lookup authorization before network preflight" $ \pool ->
+    withCompletionEnvironment $ do
+      (orderId, _, checkout) <- datafastClientFixture pool
+      before <- runSqlPool (datafastCreationRows checkout) pool
+      response <- datafastClientHttp pool orderId "synthetic-wrong-token"
+      WaiTest.simpleStatus response `shouldBe` status404
+      runSqlPool (datafastCreationRows checkout) pool `shouldReturn` before
+
+  it "reuses the saved checkout without a new address, valid proxy configuration or new attempt" $ \pool ->
+    withCompletionEnvironment $ do
+      (orderId, token, checkout) <- datafastClientFixture pool
+      attempt <- datafastClientStart pool orderId checkout
+      now <- getCurrentTime
+      resource <- runSqlPool (datafastClientPublish orderId checkout attempt now) pool
+      before <- runSqlPool (datafastCreationRows checkout) pool
+      setEnv "DATAFAST_TRUSTED_PROXY_IPS" "synthetic-invalid-proxy-setting"
+      response <- datafastClientHttp pool orderId token
+      WaiTest.simpleStatus response `shouldBe` status200
+      case A.eitherDecode (WaiTest.simpleBody response) of
+        Right (A.Object payload) -> KM.lookup "dcCheckoutId" payload `shouldBe` Just (A.String resource)
+        _ -> expectationFailure "Cached Dataweb response is not a checkout object"
+      runSqlPool (datafastCreationRows checkout) pool `shouldReturn` before
+
+  it "reuses a binding committed while payment admission waits for the checkout lock" $ \pool ->
+    withCompletionEnvironment $ do
+      (orderId, token, checkout) <- datafastClientFixture pool
+      attempt <- datafastClientStart pool orderId checkout
+      now <- getCurrentTime
+      setEnv "DATAFAST_TRUSTED_PROXY_IPS" "172.18.0.3"
+      locked <- newEmptyMVar
+      release <- newEmptyMVar
+      publisherFinished <- newEmptyMVar
+      requestFinished <- newEmptyMVar
+      let publish = runSqlPool (do
+            _ <- rawSql "SELECT id::text FROM commerce_checkout_session WHERE id=?::uuid FOR UPDATE"
+              [PersistText (Checkout.checkoutReferenceId checkout)] :: SqlPersistT IO [Single Text]
+            [Single holder] <- rawSql "SELECT pg_backend_pid()::bigint" []
+            liftIO (putMVar locked (holder :: Int64))
+            liftIO (takeMVar release)
+            resource <- datafastClientPublish orderId checkout attempt now
+            snapshot <- datafastCreationRows checkout
+            pure (resource, snapshot)) pool
+          releasePublisher = do
+            _ <- tryPutMVar release ()
+            pure ()
+      bracket (forkFinally publish (putMVar publisherFinished)) (\worker ->
+        releasePublisher >> awaitLegacyRefundWorker worker publisherFinished) $ \_ -> do
+        holder <- Timeout.timeout 5000000 (readMVar locked)
+          >>= maybe (fail "Dataweb fixture did not acquire its checkout lock") pure
+        bracket (forkFinally (datafastClientHttp pool orderId token) (putMVar requestFinished)) (\worker ->
+          releasePublisher >> awaitLegacyRefundWorker worker requestFinished) $ \_ -> do
+          Timeout.timeout 5000000 (waitForDatafastCheckoutLock pool holder 100)
+            `shouldReturn` Just True
+          releasePublisher
+          published <- Timeout.timeout 5000000 (readMVar publisherFinished)
+          (resource, snapshot) <- case published of
+            Just (Right value) -> pure value
+            Just (Left failure) -> fail (show failure)
+            Nothing -> fail "Dataweb fixture did not publish its binding"
+          completed <- Timeout.timeout 5000000 (readMVar requestFinished)
+          response <- case completed of
+            Just (Right value) -> pure value
+            Just (Left failure) -> fail (show failure)
+            Nothing -> fail "Dataweb request did not finish after checkout admission"
+          WaiTest.simpleStatus response `shouldBe` status200
+          case A.eitherDecode (WaiTest.simpleBody response) of
+            Right (A.Object payload) -> KM.lookup "dcCheckoutId" payload `shouldBe` Just (A.String resource)
+            _ -> expectationFailure "Concurrent Dataweb reuse is not a checkout object"
+          runSqlPool (datafastCreationRows checkout) pool `shouldReturn` snapshot
+
+datafastBoundReferenceSpec :: SpecWith ConnectionPool
+datafastBoundReferenceSpec = describe "Dataweb bound reference settlement" $
+  it "admits a saved attempt reference while retaining domain settlement and read-only replay" $ \pool -> do
+    payment <- captureFixture pool Checkout.ProviderDatafast
+    let attemptReference = Checkout.paymentAttemptReferenceId (Checkout.vpAttempt payment)
+        domainReference = Checkout.vpOrderReference payment
+        status reference = Storefront.ServiceDatafastPaymentStatus
+          { Storefront.sdfpsPaymentId = Just "synthetic-dataweb-payment"
+          , Storefront.sdfpsAmount = Just "125.15"
+          , Storefront.sdfpsCurrency = Just "USD"
+          , Storefront.sdfpsMerchantTransactionId = Just reference
+          , Storefront.sdfpsResultCode = "000.100.112"
+          }
+        verify reference = runHandler $ runReaderT
+          (Storefront.validateBoundDatafastSuccessfulPayment (Checkout.vpCheckout payment)
+            Checkout.CheckoutSandbox (Checkout.vpMerchantRef payment)
+            (Checkout.vpProviderResource payment) 12515 "USD" (status reference))
+          (Env pool (error "Reference verification must not read creation configuration"))
+        expectVerified reference = do
+          result <- verify reference
+          fmap (either (const False) (const True)) result `shouldBe` Right True
+    expectVerified attemptReference
+    runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
+    posted <- runSqlPool (rawSql
+      "SELECT checkout.status, checkout.paid_minor,\
+      \ (SELECT count(*) FROM commerce_receipt receipt WHERE receipt.checkout_id=checkout.id),\
+      \ (SELECT count(*) FROM commerce_ledger_transaction txn\
+      \ WHERE txn.source_type='payment_attempt' AND txn.source_id=? AND txn.status='posted')\
+      \ FROM commerce_checkout_session checkout WHERE checkout.id=?::uuid"
+      [PersistText attemptReference, captureCheckoutParameter payment]) pool
+      :: IO [(Single Text, Single Int64, Single Int64, Single Int64)]
+    posted `shouldBe` [(Single "paid", Single 12515, Single 1, Single 1)]
+    snapshot <- runSqlPool (captureSnapshot payment) pool
+    forM_ [attemptReference, domainReference] $ \reference -> do
+      expectVerified reference
+      runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right False
+      runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
+    rejected <- verify "synthetic-unrelated-reference"
+    fmap isLeft rejected `shouldBe` Right True
+    runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
+
 captureReplaySpec :: SpecWith ConnectionPool
 captureReplaySpec = describe "verified capture replay integrity" $
   forM_ [Checkout.ProviderDatafast, Checkout.ProviderPayPal,
@@ -3526,7 +3778,7 @@ withCompletionEnvironment action = bracket
       , ("DATAFAST_BEARER_TOKEN", "synthetic-token"), ("DATAFAST_BASE_URL", "https://test.oppwa.com")
       , ("DATAFAST_MID", "1234567890"), ("DATAFAST_TID", "PD123456")
       , ("DATAFAST_PSERV", "12345678"), ("DATAFAST_USER_DATA2", "Synthetic Merchant")
-      , ("DATAFAST_VERSIONDF", "2")
+      , ("DATAFAST_VERSIONDF", "2"), ("DATAFAST_TRUSTED_PROXY_IPS", "")
       , ("DATAFAST_TEST_MODE", "EXTERNAL"), ("PAYPAL_ENV", "sandbox")
       , ("PAYPAL_MERCHANT_ID", "synthetic-provider-retry-merchant"), ("PAYPAL_CLIENT_ID", "synthetic-client")
       , ("PAYPAL_CLIENT_SECRET", "synthetic-secret"), ("PAYPAL_WEBHOOK_ID", "synthetic-webhook")

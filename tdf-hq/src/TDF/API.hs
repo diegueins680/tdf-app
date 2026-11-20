@@ -6,6 +6,8 @@
 
 module TDF.API where
 
+import TDF.Commerce.DatafastClientIP (DatafastClientRequest)
+
 import qualified TDF.API.Chat as Chat
 import TDF.VideoCampaigns (VideoCampaignAPI)
 import TDF.API.FanFollowing (FollowArtistAPI, UnfollowArtistAPI)
@@ -385,7 +387,7 @@ type BookingPublicAPI =
   :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
          :> "datafast" :> "checkout"
          :> Header "X-Order-Lookup-Token" Text
-         :> Post '[JSON] DatafastCheckoutDTO
+         :> DatafastClientRequest :> Post '[JSON] DatafastCheckoutDTO
   :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
          :> "datafast" :> "status"
          :> Header "X-Order-Lookup-Token" Text

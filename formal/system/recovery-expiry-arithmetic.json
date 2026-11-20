@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "6b854bd59d6db21637a6354b6a8de8a991a84952c687a5e56b55ea506fd29d8a",
+    "tdf-hq/tdf-hq.cabal": "5147ffa627da094f739eec316fed5733b57ea3052988014498c9807155a10c8e",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -717,6 +717,50 @@
       "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
     },
     {
+      "reviewedAgainst": "4dcbaadee2fe22cd6777a9949a9679bf790145b6",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1",
+      "currentSha256": "5c80afe5c145c2bd413c7affe94212ffdaf47ce9dd132e3d2f478fc6d70ea77c",
+      "change": "Expose TDF.Commerce.DatafastClientIP, add direct library iproute, and register DatafastClientIPSpec with test-only iproute/wai-extra. Removing exactly these five lines reproduces the protected main manifest byte for byte; its DirectoryAgreementText registration remains.",
+      "semanticReview": "All other authorization/recovery reviewed sources, Stack resolver and lock are byte-identical to protected main. No source paths, module aliases, CPP/compiler flags, default language or existing dependency selections change. iproute1.7.15 and wai-extra3.1.18 are existing lts-24.42 snapshot packages. The new runtime module imports network/WAI/Servant primitives and defines only its own opaque request combinator and numeric-IP admission; route and hoist delegate the unchanged API and context, construct no AuthedUser and grant no authorization. Test-only wai-extra provides in-process transport probes. Auth/RoleEnum/RecordsIngestion, ServerAuth and recovery SQL/identity contract imports, predicates and time expressions are unchanged. Conditional translations and their existing assumptions remain unchanged; this is not a compiler or whole-endpoint proof.",
+      "qualification": "Requires fresh source-bound solver execution, serialized replay, assertion/counterexample controls and independent CPC checking. Implementation/refinement obligations remain UNPROVEN and release remains BLOCKED; no provider certification, merge or deployment is authorized by this review."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "6ccd1e55af264fd5a6a83b82ec732bf8a5f66239",
+      "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "currentSha256": "a18d212a721deca9191d5a5b9c3375e60581935ec0ecbcfb5d61ce7335155752",
+      "change": "Reconcile current protected main while retaining the reviewed Dataweb Cabal additions.",
+      "semanticReview": "The DatafastClientIP library and test modules are registered, iproute is added to library and tests and wai-extra to tests, using their existing snapshot versions. Removing those exact five lines reproduces current main Cabal bytes. No other dependency, flag, source path, compiler option or toolchain change exists. Current protected-main authorization and recovery sources are retained. Obligation objects are equal to both parents and remain unchanged. This is an author source-context review, not independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "a18d212a721deca9191d5a5b9c3375e60581935ec0ecbcfb5d61ce7335155752",
+      "currentSha256": "fe4fffcbd7ad67e223c342c36ef314018f1646cde368c02dbe18665799d0d01f",
+      "change": "Register the extracted DatafastCheckoutContext module to keep the storefront below the enforced module size limit.",
+      "semanticReview": "The immutable cart projection, recheck, saved service checkout reuse and trusted client-IP loader bodies move verbatim from ServiceStorefront to a small Server-layer module and are re-exported unchanged. This adds one module registration to the existing five reviewed Dataweb Cabal additions; no dependency, resolver, compiler flag or other source-context change. No obligation object changes; this author review supplies no independent approval.",
+      "qualification": "Fresh source-bound checks, compiler validation and hosted CI remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "966fb55dca70a49c0a340b674f8cc133cc413a2d",
+      "previousSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "currentSha256": "32a20b70aeebb16aed20c8b37ec2ca287083942632d786146d893c54833ff98d",
+      "change": "Reconcile current protected main while retaining the reviewed Dataweb Cabal additions.",
+      "semanticReview": "The DatafastClientIP library and test modules and extracted DatafastCheckoutContext module are registered, iproute is added to library and tests and wai-extra to tests, using their existing snapshot versions. Removing those exact six lines reproduces protected main Cabal bytes. No other dependency, flag, source path, compiler option or toolchain change exists. Protected-main authorization and recovery sources are retained. Obligation objects are equal to both parents and remain unchanged. This is an author source-context review, not independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "d65017d10f16e8089c43b82bdbcacf3177d206f5",
+      "previousSha256": "a6a23d82214ca0e1119787d8b4a7ca969485a3cb57e9aab3e7661aa47ed08da5",
+      "currentSha256": "7b74c8a2489454360ad4b6c8cedd4e6883e5b951fb2290e4f294df6c3bce6f83",
+      "change": "Reconcile protected main d65017d10 with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
       "reviewedAgainst": "d05a3964819a8eba675a3dcc399342ad6aba16ef",
       "source": "tdf-hq/tdf-hq.cabal",
       "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
@@ -747,6 +791,20 @@
       "previousSha256": "73bcd37bc0d58d9d9f66d44ff3241349f93527b66e9756a3c716608f92c25cb9",
       "currentSha256": "6b854bd59d6db21637a6354b6a8de8a991a84952c687a5e56b55ea506fd29d8a",
       "change": "Combined the reviewed private production workspace module additions with the protected Domo refund modules. Existing compiler dependencies and the authorization and recovery predicates are preserved."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "d5af932e5fb428afd5052b4eead07ceef910cac4",
+      "previousSha256": "6b854bd59d6db21637a6354b6a8de8a991a84952c687a5e56b55ea506fd29d8a",
+      "currentSha256": "5147ffa627da094f739eec316fed5733b57ea3052988014498c9807155a10c8e",
+      "change": "Combined the two production module registrations with the Dataweb modules, iproute dependency, and test dependencies from protected main. The authorization and recovery predicates retain their definitions."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "2c6dd64b9bd28d3fec6ac8d961eddea338d448d5",
+      "previousSha256": "7b74c8a2489454360ad4b6c8cedd4e6883e5b951fb2290e4f294df6c3bce6f83",
+      "currentSha256": "5147ffa627da094f739eec316fed5733b57ea3052988014498c9807155a10c8e",
+      "change": "Combined the two production module registrations with the Dataweb modules, iproute dependency, and test dependencies from protected main. The authorization and recovery predicates retain their definitions."
     }
   ]
 }
