@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "4d866387ac6938d7aeaad5d1fa2985f8e02932e7",
+  "mobileRevision": "1c374cb54cc0daf9ddc71319c3daa9cf8d1a3dd1",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -14,6 +14,7 @@
       ".github/workflows/ci.yml",
       ".github/workflows/datadog-synthetics.yml",
       ".github/workflows/desktop.yml",
+      ".github/workflows/domo-refund-validation.yml",
       ".github/workflows/event-operations-formal.yml",
       ".github/workflows/event-raci-browser.yml",
       ".github/workflows/interaction-verification.yml",
@@ -2268,6 +2269,8 @@
       "tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql",
       "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql",
       "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql",
+      "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql",
+      "tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql",
       "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql",
       "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql",
       "tdf-hq/sql/2026-11-04_content_storage.sql",
@@ -2391,6 +2394,7 @@
       "tdf-hq/src/TDF/Commerce/DomoCancellation.hs",
       "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
       "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
+      "tdf-hq/src/TDF/Commerce/DomoRefundStore.hs",
       "tdf-hq/src/TDF/Commerce/EventTickets.hs",
       "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
       "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
@@ -2502,6 +2506,7 @@
       "tdf-hq/src/TDF/Routes/Academy.hs",
       "tdf-hq/src/TDF/Routes/Courses.hs",
       "tdf-hq/src/TDF/Routes/DomoQuotes.hs",
+      "tdf-hq/src/TDF/Routes/DomoRefunds.hs",
       "tdf-hq/src/TDF/Routes/EventTickets.hs",
       "tdf-hq/src/TDF/Seed.hs",
       "tdf-hq/src/TDF/Server.hs",
@@ -2512,6 +2517,7 @@
       "tdf-hq/src/TDF/Server/Directory.hs",
       "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs",
       "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
+      "tdf-hq/src/TDF/Server/DomoRefunds.hs",
       "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
       "tdf-hq/src/TDF/Server/EventResearch.hs",
       "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
@@ -3251,6 +3257,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6e2aa20fed937be2",
+      "path": ".github/workflows/domo-refund-validation.yml",
+      "sha256": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
       "sha256": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
@@ -3469,7 +3481,7 @@
     {
       "id": "SURFACE-a759d468f3ebc8d5",
       "path": "e2e/web/event-discovery-filters.spec.mjs",
-      "sha256": "f6e267555a45d88ce4cc4c0d7cf13752f164e1ab3cbfaa7f4d064ada7319af78",
+      "sha256": "295c2354d6390f937686451ac1eb03f257b34c7da509c719c16928489e9d529a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3955,7 +3967,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "3549e483381de0afe200a2b56a6297639472f0a2ab41f3038928de869f323308",
+      "sha256": "427a8f57069b70bbafa92bcf5768f426fd89991ebba8a5e33f500230aae12c54",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5551,7 +5563,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "66eb7f410d6801095d49d3b9f1676e92d0f881dbcd662babaed67aaa0a43710b",
+      "sha256": "ab3ea174ea370ac6753e474f77ce2b8abbe0502d299010364585e83d3b18b5d5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6883,7 +6895,7 @@
     {
       "id": "SURFACE-7d9c91182787e22c",
       "path": "scripts/test-provider-domain-harness.py",
-      "sha256": "b03157a0506bf162b79bc6f6ab4dbb748a5ada9ebe51514f3c2edf1217e99370",
+      "sha256": "1724bf07b1531dc9a52ac5b0df68875c51390bc598988a493cc2a9a050ce6191",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6907,7 +6919,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "6e9f3db759644af6ba162685d6a48aac8a0b8a1b7a25b123e88cfc2f345eabbc",
+      "sha256": "1a0c7d6c1df4bed918bfff6c91a81add3275e2bcf003c82fd2748d93a12c7e38",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7987,7 +7999,7 @@
     {
       "id": "SURFACE-9f2d7ab39b8a5348",
       "path": "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
-      "sha256": "4f7755520e4175cc0d5ffb57e233fc4268a375a9dd85422716db07841b5610c1",
+      "sha256": "152baf8a3d873c419962724362e246a5474d451a62a639ed3ac4fffd370066d2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8551,7 +8563,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "4482b7ebf47ebfe49ff9e4844c9459382477b737bf7762a2b5c4a75cff43aa91",
+      "sha256": "876ecab7412f5a01a1ccf6451496f10277fc492d2dafb8f9c5239577495f3ea7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8947,7 +8959,7 @@
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "3d112d662a0854b1f762445eaf53ec310357051b91f03ef5d602b5ad15bf6f16",
+      "sha256": "61c417f97c4915a2a3a09cc59cf731fef5a451cce1e59bc2304a8a0498dbbc8d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9727,13 +9739,13 @@
     {
       "id": "SURFACE-67b757b19f11e973",
       "path": "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx",
-      "sha256": "7497a1d38c2e6e9a5327bd53405eb76d993fe3c7ea63ca70ed8f0965a29677cd",
+      "sha256": "460e07ee1070d586d1d8f14b4d9fe03c76c2170632a06cae8d1c1273c02497a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8817f81a71124ed7",
       "path": "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
-      "sha256": "4923d21e7f78ebb08e20cd4091fdb19adb6492a3f74d6b1fa810f79be7a29bdd",
+      "sha256": "a27268569f428e752d4fb941ddafd8e299dfa705b91593581b9ecdfeefd27d9b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9841,13 +9853,13 @@
     {
       "id": "SURFACE-9b8b12c0260a498e",
       "path": "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
-      "sha256": "f75c80467a6100dabc54b2331e96c7b22b707af6e10891d2547d85aaf0eda401",
+      "sha256": "6c32a1bcd29848c4e256414e4d982d569e61f2c2c27553de8b7942e3951e2460",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3fb10adaf67ec8d5",
       "path": "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
-      "sha256": "2abee262c973c1c59e1eb26548f04105126307e7ca1ab480bb50f17e377bf7e5",
+      "sha256": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11401,7 +11413,7 @@
     {
       "id": "SURFACE-8f336ec91c101452",
       "path": "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
-      "sha256": "805e39c40e648eaf187345dc3b56537dbad10d671da330c86ddb5cedddf694d2",
+      "sha256": "82536fbbbcd2e520907fcac4bf0f1471c443822511e65107a7f834a4000efa27",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13849,7 +13861,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "da4e5dd846b8af59591bab03a990e613f2a75be06a6671e72b839e42c4e013bc",
+      "sha256": "aa81a26a74007e75960cbf4c6b67b6c8f37d4aa6e6fe63364fb41541fc8484e9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16631,6 +16643,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6af2fb60590d5f42",
+      "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql",
+      "sha256": "889d9636c32bd4fdd78eb8e51590954cf150d71db07ec416a80acdddd7b1ea80",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4e65b4accc811245",
+      "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql",
+      "sha256": "88d7f2a08044f18581dcb49c1298a0c1197a7e302ac0ca8b8835404f6b7ce33b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2bd4ac88b05a1b49",
       "path": "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql",
       "sha256": "7fab9f9568dbb2b2b113044869c2b6b7543e6385e9d77207c11114cbf5c1f3ef",
@@ -16909,7 +16933,7 @@
     {
       "id": "SURFACE-dfe3755c60d368f8",
       "path": "tdf-hq/src/TDF/API/Admin.hs",
-      "sha256": "fadc0f212fce8046e9a116d4d431df510dd3adb0c1df4b0c28d497e089a4862f",
+      "sha256": "6bdbea3f4b2cccc20247f1e4d9a77dcefe0545b4158ff546312ffe7d59db825e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17149,7 +17173,7 @@
     {
       "id": "SURFACE-200737fdda273f28",
       "path": "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
-      "sha256": "b89de6214d43abcd667be184d8b7e4b3ed1dadbad7699c2e88b913b3b84a5769",
+      "sha256": "81bb719a7780e7e6236ff85cb6b87f5479d913afac0af35941ae62bce3bd12cc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17359,13 +17383,19 @@
     {
       "id": "SURFACE-52b27b4edfde0af0",
       "path": "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
-      "sha256": "401427a5cd152d90cf83ae378c70b09e7ff1dad7dd9902212295df32eda1a3e6",
+      "sha256": "62983a66fed8f24be14423b8ce4283acb22039dcf4d5a7ed09730c618d8260c1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-764d135c920e69a2",
       "path": "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
       "sha256": "54da88fdabb8ad1160224d3b930dfa1d44cd656cf491e74cfb0dba35c353eef4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7c2de260230baa84",
+      "path": "tdf-hq/src/TDF/Commerce/DomoRefundStore.hs",
+      "sha256": "67111f57f9e7e86386d63994c9be5678af6dc5f4b3d3fecb70e553b7c8c0f7fa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17503,13 +17533,13 @@
     {
       "id": "SURFACE-dc866f2ee69c9dff",
       "path": "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
-      "sha256": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
+      "sha256": "92c1c8b67ba216a4a5a3f563260f4a83beef6628cfdbbbcb9711b9f6b8bf55ec",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1ed705f31fa3ad8e",
       "path": "tdf-hq/src/TDF/Commerce/RefundStore.hs",
-      "sha256": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
+      "sha256": "7b33d92413ab2ef23d3f4064257448e8ff87109da4098308b752828b679a6edc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18031,7 +18061,13 @@
     {
       "id": "SURFACE-21573408c23f618c",
       "path": "tdf-hq/src/TDF/Routes/DomoQuotes.hs",
-      "sha256": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
+      "sha256": "6ec0f3d0ef1406872f0bc8c2f23c8b683f0f45274e07539a4e14158a7bca3345",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-20cea45d38504230",
+      "path": "tdf-hq/src/TDF/Routes/DomoRefunds.hs",
+      "sha256": "b30e9a615d9ea754e2ffe29a257e272d4fc7342d17ec919e1235a199aeff34fd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18091,7 +18127,13 @@
     {
       "id": "SURFACE-436c77cb88490332",
       "path": "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-      "sha256": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
+      "sha256": "beb7365c1f6b23072bb7c1afc34ed0eb9e711aee3e60425467c9221e7ab4c7bd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ad9b4538d376377d",
+      "path": "tdf-hq/src/TDF/Server/DomoRefunds.hs",
+      "sha256": "6c520cd643346ad24be6ea7b02c1a6e76f4c407f7ab08176fbe48b47c7f9fd4c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18205,7 +18247,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "ad338e7fb54bcf415d0b2a87f653a2855ab0f0f92219a09c1c22125ab02b7d19",
+      "sha256": "0ddaa23d575f3c7cea51c6f5bea1690c66b7932728b5ebc2da4f707263e1a9b8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18217,7 +18259,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "1ffd2c8d5a3bbfb84f41e63c1a11954b63acf0b3d0397520fa2f9ac8440d9558",
+      "sha256": "928c126539e456187c15420669c6259fbda05e7bad7f1abc627b306c2a22bee4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18259,7 +18301,7 @@
     {
       "id": "SURFACE-b79d63603a30c4ce",
       "path": "tdf-hq/src/TDF/ServerAdmin.hs",
-      "sha256": "7ac0b9e10bceeb3d90db939fb6ba851398cf52790e36fe5566624e54934857a7",
+      "sha256": "275d926b7861b10ac4022f8d6f3ddf7d1348fcce214ec9416938cf6e2c43f645",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18583,7 +18625,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "sha256": "a6a23d82214ca0e1119787d8b4a7ca969485a3cb57e9aab3e7661aa47ed08da5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18751,7 +18793,7 @@
     {
       "id": "SURFACE-cf246373db6d4c39",
       "path": "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
-      "sha256": "a4f7f070b8f1d569415a4e82b3a9c2671ada7dcd411e2b9ce9ddd9af9e700e8b",
+      "sha256": "a70b5f9ac0552227fa695f66b5b0876f28be4743303061a822cd9c9a90e98d59",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18781,7 +18823,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "1d44b71cfda45994856a9657043c1da774f32399a7dcec5bc0b54e7d9b47afff",
+      "sha256": "d2359bc8d3bbd90aff2d45d17b640aa458cecd5e110fb97327cf6ecd36559b6f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21121,7 +21163,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "fda193b1304afecae7fb41102ae3ad1eeb498ca83941500cac37634cab7e5b87",
+      "sha256": "876ecab7412f5a01a1ccf6451496f10277fc492d2dafb8f9c5239577495f3ea7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21469,7 +21511,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "7befb5f315c7e165fbbeb77014b7fa1b8306efeeb22439b35f03e5acfbacd796",
+      "sha256": "0c72bbca5adfe3a8a357123c0111d0a7ff552d02af8c34f2788ff739fac59774",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24801,6 +24843,13 @@
     {
       "path": "docs/payments/consolidation-2026-10-15.md",
       "sha256": "916e3353e262c64f53b869ccb3a3c6ca3dcaa628fe0c7dae3013723ccf859896",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/domo-refunds-2026-11-02.md",
+      "sha256": "295216386b960ffa64e440b6f90dd2fc51cbb544be1da62cf079a7fb6d11f0a1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31716,7 +31765,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "32d430917c071934a2205c190f780a6b92d8910f57750d901f19656b67d4fa9c",
+      "sha256": "a910954fe39fb358454a0155da61c5aa6a4a0e62de9f9f78b9c1623fc9761027",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32150,7 +32199,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "da4e5dd846b8af59591bab03a990e613f2a75be06a6671e72b839e42c4e013bc",
+      "sha256": "aa81a26a74007e75960cbf4c6b67b6c8f37d4aa6e6fe63364fb41541fc8484e9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

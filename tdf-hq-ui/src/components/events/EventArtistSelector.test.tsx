@@ -117,3 +117,26 @@ it('does not expose a retired owner’s late artist details after the session qu
   expect(screen.queryByText('Retired private artist')).toBeNull();
   expect(screen.getByText('Current authorized artist')).toBeTruthy();
 });
+
+it('keeps same-owner option nodes during search but never borrows them for a different principal', async () => {
+  let resolveOld!: (artists: SocialArtistDTO[]) => void;
+  let resolveNew!: (artists: SocialArtistDTO[]) => void;
+  listArtists.mockImplementation(options => currentParty === 43
+    ? new Promise(resolve => { resolveNew = resolve; })
+    : options?.name ? new Promise(resolve => { resolveOld = resolve; }) : Promise.resolve([beyond]));
+  const view = setup([]);
+  const input = screen.getByRole('combobox', { name: 'Artistas' });
+  act(() => input.focus()); fireEvent.mouseDown(input);
+  const original = await screen.findByRole('option', { name: 'Beyond initial fifty · #51' });
+  fireEvent.change(input, { target: { value: 'Beyond' } });
+  await waitFor(() => expect(resolveOld).toBeDefined());
+  expect(screen.getByRole('option', { name: 'Beyond initial fifty · #51' })).toBe(original);
+  currentParty = 43;
+  view.rerender(<QueryClientProvider client={client}><FilterControl initial={[]} /></QueryClientProvider>);
+  await waitFor(() => expect(resolveNew).toBeDefined());
+  expect(screen.queryByRole('option', { name: 'Beyond initial fifty · #51' })).toBeNull();
+  await act(async () => resolveOld([{ artistId: '51', artistName: 'Retired private search' }]));
+  expect(screen.queryByText('Retired private search')).toBeNull();
+  await act(async () => resolveNew([{ artistId: '52', artistName: 'Current authorized search' }]));
+  await screen.findByRole('option', { name: 'Current authorized search · #52' });
+});

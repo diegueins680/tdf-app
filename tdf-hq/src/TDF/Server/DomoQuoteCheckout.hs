@@ -724,6 +724,7 @@ loadDomoQuoteLines quoteId = do
 loadDomoQuoteDTO :: Text -> Maybe Text -> AppM Routes.PublicDomoQuoteDTO
 loadDomoQuoteDTO quoteId lookupToken = do
   runtime <- runDB (loadDomoRuntimeView quoteId) >>= maybe (throwError notFound) pure
+  cancellation <- runDB (CancellationStore.loadRecord quoteId)
   quoteLines <- runDB (loadDomoQuoteLines quoteId)
   paymentMethods <- loadDomoPaymentMethods runtime
   pure Routes.PublicDomoQuoteDTO
@@ -752,6 +753,7 @@ loadDomoQuoteDTO quoteId lookupToken = do
     , Routes.termsAcceptedAt = drvTermsAcceptedAt runtime
     , Routes.depositPaidAt = drvDepositPaidAt runtime
     , Routes.paymentMethods = paymentMethods
+    , Routes.cancellation = cancellationDTO <$> cancellation
     }
 
 loadDomoPaymentMethods :: DomoRuntimeView -> AppM [Text]
@@ -1013,10 +1015,9 @@ beginDomoPaymentAttempt
   -> AppM Checkout.PaymentAttemptReference
 beginDomoPaymentAttempt context provider operation merchantRef operationLabel = do
   now <- liftIO getCurrentTime
-  -- PAY-DOMO-CANCEL-001 fence: no attempt for a quote cancelled after this
-  -- request read its context (see CancellationStore.domoAttemptAdmission).
   result <- runDB $ PaymentRuntime.beginPaymentAttemptGuarded
-    (CancellationStore.domoAttemptAdmission (Checkout.checkoutReferenceId (dpcCheckout context)))
+    (CancellationStore.domoPaymentAttemptAdmission (dpcQuoteId context)
+      (Checkout.checkoutReferenceId (dpcCheckout context)) operation)
     Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = dpcCheckout context
     , Checkout.pacProvider = provider
@@ -1315,8 +1316,15 @@ capturePublicDomoPaypalOrder rawQuoteId mLookupToken request = do
         Checkout.OperationCapture merchantRef "capture"
       outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
         sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
-        `catchError` failDomoPaymentAttempt context attempt
-          Checkout.ProviderPayPal "paypal_capture_request"
+        `catchError` (\failure -> do
+          observed <- liftIO getCurrentTime
+          runDB $ do
+            Checkout.recordPaymentProcessing (dpcCheckout context) attempt Checkout.ProviderPayPal
+              (domoPaymentCorrelationId context Checkout.ProviderPayPal "capture-unknown") observed
+            Checkout.recordReconciliationException Checkout.ProviderPayPal paypalEnvironment merchantRef
+              "domo_capture_unknown" (domoReference context) suppliedOrderId
+              (dpcAmountMinor context) Nothing (dpcCurrency context) observed
+          throwError failure)
       now <- liftIO getCurrentTime
       case ServiceStorefront.spcoStatus outcome of
         "COMPLETED" -> do

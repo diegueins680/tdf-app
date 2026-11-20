@@ -6,6 +6,7 @@ test.use({ serviceWorkers: 'block' });
 test('event city, artist union and past filters work at narrow widths @mobile-flow @critical', async ({ page, baseURL }) => {
   const origin = new URL(baseURL).origin;
   const reads = [];
+  let betaRead = false, releaseBeta;
   const artists = [{ artistId: '7', artistName: 'Alpha' }, { artistId: '8', artistName: 'Beta' }];
   const events = [
     { eventId: '21', eventTitle: 'New York futuro', eventVenueId: '225', eventStart: '2099-05-03T20:00:00Z', eventArtists: [artists[0]] },
@@ -33,6 +34,7 @@ test('event city, artist union and past filters work at narrow widths @mobile-fl
     }
     if (url.pathname === '/social-events/artists') {
       const name = (url.searchParams.get('name') ?? '').toLowerCase();
+      if (name === 'beta') { betaRead = true; await new Promise(resolve => { releaseBeta = resolve; }); }
       return route.fulfill({ json: artists.filter(a => a.artistName.toLowerCase().includes(name)) });
     }
     if (url.pathname === '/social-events/venues') throw new Error('The event workspace must not fetch the global venue catalog');
@@ -53,8 +55,20 @@ test('event city, artist union and past filters work at narrow widths @mobile-fl
   // The selector's value comes from the `artists` URL parameter; wait for the
   // first pick to reach the request before adding the second one.
   await expect.poll(() => reads.at(-1)?.artistId).toBe('7');
+  // Start from the broad result so Beta is a legitimate existing option.
+  await input.click();
+  const beta = page.getByRole('option', { name: 'Beta · #8' });
+  await expect(beta).toBeVisible();
   await input.fill('Beta');
-  await page.getByRole('option', { name: 'Beta · #8' }).click();
+  await beta.evaluate(node => { node.dataset.pointerTarget = 'beta-before-refresh'; });
+  await beta.hover(); await page.mouse.down();
+  await expect.poll(() => betaRead).toBe(true);
+  await expect(beta).toBeVisible();
+  const refreshed = page.waitForResponse(response => new URL(response.url()).pathname.endsWith('/social-events/artists') && new URL(response.url()).searchParams.get('name')?.toLowerCase() === 'beta');
+  releaseBeta(); await refreshed;
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await expect(beta).toHaveAttribute('data-pointer-target', 'beta-before-refresh');
+  await page.mouse.up();
   await expect.poll(() => reads.at(-1)?.artistId).toBe('7,8');
   // The switch is controlled by the `past` URL parameter, so its checked state
   // only flips after the router commits; click and let the assertion retry.
