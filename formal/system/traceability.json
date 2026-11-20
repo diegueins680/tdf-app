@@ -16782,7 +16782,8 @@
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/SocialArtistOwnership.hs"
       ],
       "tests": [
         "tdf-hq/test/Spec.hs"
@@ -28922,7 +28923,7 @@
     "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "dadde0ba78806e09c8b059b23a023801029b77d32da6ba7975dfc380e9d0c190",
+    "formal/system/recovery-expiry-arithmetic.json": "8240c00057d59e266b18851745605c2241f9d599f889c1a00ef1758e76e3124d",
     "formal/system/route-requirements.json": "16b1b899c88a58450ae0b4bb90d4e206b488c4cce2d3f08fa13905d418974a60",
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -30347,6 +30348,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "0ddaa23d575f3c7cea51c6f5bea1690c66b7932728b5ebc2da4f707263e1a9b8",
+    "tdf-hq/src/TDF/Server/SocialArtistOwnership.hs": "d6900b5226644c608988dc840a8138ee85973add27284f5763092d39ea50835f",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
     "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "fde79290d238ec4b395f9ecdcc8a4d749ae3177f5b48a058fcdcb8d78abe8999",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
@@ -47020,6 +47022,12 @@
     "tdf-hq/src/TDF/Services/EventLogisticsRoutes.hs": [
       {
         "requirement": "EVT-LOGISTICS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/SocialArtistOwnership.hs": [
+      {
+        "requirement": "ART-PROFILE-WRITE-001",
         "relationship": "implementation"
       }
     ],
@@ -79629,7 +79637,12 @@
       "path": "tdf-hq/src/TDF/Server/SocialArtistOwnership.hs",
       "sha256": "d6900b5226644c608988dc840a8138ee85973add27284f5763092d39ea50835f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ART-PROFILE-WRITE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e4ab6ea991643db1",
@@ -88248,7 +88261,6 @@
     "SURFACE-b5b5aa3bc4cc0232",
     "SURFACE-6f37d3a5f8237996",
     "SURFACE-2c8ed40114d9013d",
-    "SURFACE-a1d43f50c2a775a2",
     "SURFACE-81312ef85a6b405a",
     "SURFACE-3538414933fee775",
     "SURFACE-f53dee8d468f33b8",
@@ -89917,7 +89929,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a910954fe39fb358454a0155da61c5aa6a4a0e62de9f9f78b9c1623fc9761027",
+      "sourceSha256": "2ee323c25be091cb7388cb5f988d56aca46cefa4c06daf7f8f1786d1d070809d",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -89945,7 +89957,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a910954fe39fb358454a0155da61c5aa6a4a0e62de9f9f78b9c1623fc9761027",
+      "sourceSha256": "2ee323c25be091cb7388cb5f988d56aca46cefa4c06daf7f8f1786d1d070809d",
       "definition": {
         "states": [
           "absent",
@@ -89975,7 +89987,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a910954fe39fb358454a0155da61c5aa6a4a0e62de9f9f78b9c1623fc9761027",
+      "sourceSha256": "2ee323c25be091cb7388cb5f988d56aca46cefa4c06daf7f8f1786d1d070809d",
       "definition": {
         "export": [
           "queued",
