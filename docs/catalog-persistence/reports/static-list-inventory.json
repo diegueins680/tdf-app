@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-20T13:59:31.082Z",
+  "generatedAt": "2026-11-20T15:19:37.950Z",
   "repositoryRoot": ".",
-  "filesScanned": 2792,
+  "filesScanned": 2793,
   "candidateCount": 1471,
   "byClassification": {
     "dynamic-business-catalog": 964,
@@ -6300,7 +6300,7 @@
       "lines": [
         80
       ],
-      "consumerCount": 934,
+      "consumerCount": 935,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -6587,7 +6587,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 934,
+      "consumerCount": 935,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -16391,7 +16391,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 950,
+      "consumerCount": 951,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17174,7 +17174,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 943,
+      "consumerCount": 944,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17464,7 +17464,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 943,
+      "consumerCount": 944,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -27016,7 +27016,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 1018,
+      "consumerCount": 1019,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -29712,7 +29712,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1115,
+      "consumerCount": 1116,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -30009,7 +30009,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 1115,
+      "consumerCount": 1116,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -31108,7 +31108,7 @@
       "lines": [
         14
       ],
-      "consumerCount": 1115,
+      "consumerCount": 1116,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -33716,7 +33716,7 @@
       "lines": [
         1411
       ],
-      "consumerCount": 1165,
+      "consumerCount": 1166,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -51458,7 +51458,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 1050,
+      "consumerCount": 1051,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -59043,7 +59043,7 @@
       "lines": [
         343
       ],
-      "consumerCount": 1160,
+      "consumerCount": 1161,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -61926,7 +61926,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 1050,
+      "consumerCount": 1051,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -72259,7 +72259,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 1050,
+      "consumerCount": 1051,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -72559,7 +72559,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 1050,
+      "consumerCount": 1051,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -74173,7 +74173,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 1050,
+      "consumerCount": 1051,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -74728,7 +74728,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 1115,
+      "consumerCount": 1116,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -79604,7 +79604,7 @@
       "lines": [
         706
       ],
-      "consumerCount": 1165,
+      "consumerCount": 1166,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -80879,7 +80879,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 964,
+      "consumerCount": 965,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -169923,7 +169923,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "storedEventMetadataAllowedKeys",
-      "line": 1721,
+      "line": 1722,
       "values": [
         "ticketUrl",
         "imageUrl",
@@ -169934,7 +169934,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        1721
+        1722
       ],
       "consumerCount": 96,
       "backendConsumers": [
@@ -172606,7 +172606,7 @@
       "lines": [
         45
       ],
-      "consumerCount": 26,
+      "consumerCount": 27,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -172619,6 +172619,7 @@
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Server/EventResearch.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/TicketSalesWindow.hs",
         "tdf-hq/test/TDF/Catalog/RecordsSpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
         "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql",
@@ -173144,7 +173145,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 777,
+      "line": 778,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -173156,7 +173157,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        777
+        778
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -174311,7 +174312,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 1050,
+      "consumerCount": 1051,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -175855,7 +175856,7 @@
       "lines": [
         436
       ],
-      "consumerCount": 285,
+      "consumerCount": 286,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -175905,8 +175906,8 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
         "tdf-hq/src/TDF/Server/TicketRefunds.hs",
-        "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs",
-        "tdf-hq/src/TDF/ServerAdmin.hs"
+        "tdf-hq/src/TDF/Server/TicketSalesWindow.hs",
+        "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
