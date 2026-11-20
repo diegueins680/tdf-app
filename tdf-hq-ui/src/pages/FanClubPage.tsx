@@ -105,6 +105,7 @@ export default function FanClubPage() {
     queryKey: ['fan-club-elections', artistIdNum],
     queryFn: () => Fans.listClubElections(artistIdNum),
     enabled: clubReady && tab === 4 && isAuthenticated,
+    refetchInterval: 30_000,
   });
 
   const club = clubQuery.data;
@@ -1070,15 +1071,15 @@ function ClubElections({ artistId, elections }: { artistId: number; elections: F
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField label="Año" type="number" value={form.year} onChange={e => setForm(f => ({ ...f, year: parseInt(e.target.value) }))} fullWidth />
-            <TextField label="Inicio candidaturas" type="datetime-local" value={form.candidacyStartsAt} onChange={e => setForm(f => ({ ...f, candidacyStartsAt: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }} />
+            <TextField required label="Inicio candidaturas" type="datetime-local" value={form.candidacyStartsAt} onChange={e => setForm(f => ({ ...f, candidacyStartsAt: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }} />
             <TextField label="Fin candidaturas" type="datetime-local" value={form.candidacyEndsAt} onChange={e => setForm(f => ({ ...f, candidacyEndsAt: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }} />
-            <TextField label="Inicio votación" type="datetime-local" value={form.votingStartsAt} onChange={e => setForm(f => ({ ...f, votingStartsAt: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }} />
+            <TextField required label="Inicio votación" type="datetime-local" value={form.votingStartsAt} onChange={e => setForm(f => ({ ...f, votingStartsAt: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }} />
             <TextField label="Fin votación" type="datetime-local" value={form.votingEndsAt} onChange={e => setForm(f => ({ ...f, votingEndsAt: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }} />
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={() => createElection.mutate()} disabled={createElection.isPending}>
+          <Button variant="contained" onClick={() => createElection.mutate()} disabled={createElection.isPending || !form.candidacyStartsAt || !form.votingStartsAt}>
             Crear
           </Button>
         </DialogActions>

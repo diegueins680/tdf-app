@@ -539,6 +539,8 @@ fanClubSecureArtistHandlers user artistId =
           votingStart = fcelVotingStartsAt req
           votingEnd = fcelVotingEndsAt req
           invalid cmp lhs rhs = maybe False id (cmp <$> lhs <*> rhs)
+      when (candidacyStart == Nothing || votingStart == Nothing) $
+        throwError err400 { errBody = "Candidacy and voting start times are required" }
       when (invalid (>=) candidacyStart candidacyEnd || invalid (>=) votingStart votingEnd
             || invalid (>) candidacyEnd votingStart || invalid (>=) candidacyStart votingStart
             || invalid (>=) candidacyStart votingEnd || invalid (>=) candidacyEnd votingEnd) $
