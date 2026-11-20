@@ -57,6 +57,7 @@ import qualified TDF.Commerce.DatafastConfigSpec as DatafastConfigSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
 import qualified TDF.EventAdminDelegationSpec as EventAdminDelegationSpec
+import qualified TDF.EventTicketSaleSpec as EventTicketSaleSpec
 import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
 import qualified TDF.TicketManualReviewSpec as TicketManualReviewSpec
@@ -927,6 +928,7 @@ main = hspec $ do
     TicketConfirmationSpec.spec
     EventOrganizerSpec.spec
     EventAdminDelegationSpec.spec
+    EventTicketSaleSpec.spec
     InvoiceDatilSpec.spec
     TicketManualReviewSpec.spec
     TicketPaymentReceiptSpec.spec
@@ -4382,6 +4384,36 @@ main = hspec $ do
                 Nothing
                 Nothing
                 `shouldReturn` Left "country must be a 2-letter ISO code"
+
+        it "builds an Accounts v2 recipient body for payout account creation" $ do
+            let baseFields countryValue =
+                    [ "dashboard" .= ("express" :: Text)
+                    , "identity" .= A.object [ "country" .= (countryValue :: Text) ]
+                    , "defaults" .= A.object
+                        [ "responsibilities" .= A.object
+                            [ "fees_collector" .= ("application" :: Text)
+                            , "losses_collector" .= ("application" :: Text)
+                            ]
+                        ]
+                    , "configuration" .= A.object
+                        [ "recipient" .= A.object
+                            [ "capabilities" .= A.object
+                                [ "stripe_balance" .= A.object
+                                    [ "stripe_transfers" .= A.object
+                                        [ "requested" .= True ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+            Stripe.buildConnectExpressAccountBody "EC" (Just "artist@example.com") Nothing
+                `shouldBe` A.object
+                    (baseFields "ec" <> [ "contact_email" .= ("artist@example.com" :: Text) ])
+            Stripe.buildConnectExpressAccountBody "US" Nothing (Just "artist:42")
+                `shouldBe` A.object
+                    ( baseFields "us"
+                        <> [ "metadata" .= A.object [ "tdf_context" .= ("artist:42" :: Text) ] ]
+                    )
 
         it "rejects invalid account link preconditions before HTTP allocation" $ do
             Stripe.createAccountLink

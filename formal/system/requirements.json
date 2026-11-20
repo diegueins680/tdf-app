@@ -28477,6 +28477,107 @@
       "contract": "docs/payments/payment-failure-alternatives.md",
       "verification": "Component tests, original-order lookup tests, existing checkout regressions, lint, type checking and production bundle compilation; no live transaction or formal interleaving proof.",
       "evidence": "The scoped UI tests and immutable CI job results for the candidate revision; local logs remain private."
+    },
+    {
+      "id": "EVT-TICKET-SALE-001",
+      "title": "Paid ticket sale requests by event managers and their approval by strict administrators",
+      "domain": "EVT",
+      "statement": "The stored organizer of an event, or a delegated administrator of it, requests paid ticket sales under TDF's fixed standard terms (USD, 200 basis points buyer fee, 200 basis points organizer fee, no tax, 15-minute hold, at most 100 tickets per order, full refund, terms version ticket-terms-v1) while the event has an active ticket tier priced above zero in USD. The request is one draft row of event_ticket_checkout_policy with the reserved workflow version and compatible stored terms. Only a strict administrator lists pending requests and approves or declines one; approval makes that row the event's single active approved policy and records the approving party, declining retires it. Approval does not publish the event, enable the commerce flag or configure a payment provider. Routes: GET /social-events/events/{eventId}/ticket-sale; POST /social-events/events/{eventId}/ticket-sale/request; GET /social-events/ticket-sale-requests; POST /social-events/ticket-sale-requests/{requestId}/approve; POST /social-events/ticket-sale-requests/{requestId}/decline.",
+      "authority": "Product owner decision on 2026-11-15: an organizer asks from the event, a TDF administrator approves with one action and no database statement, and the terms are those of the policy approved by hand for event 121. The policy-version format, the 200-request queue limit and e-mail as the only notice are implementation choices.",
+      "source": "formal/system/event-ticket-sale-approval.md",
+      "contract": "formal/system/event-ticket-sale-approval.md",
+      "property": "An event has at most one eligible pending workflow request and at most one active approved policy; a policy becomes approved only through a strict administrator's decision on a pending request carrying the standard terms; an account that neither manages the event nor is a strict administrator reads and writes nothing.",
+      "actors": [
+        "Event organizer",
+        "Delegated event administrator",
+        "Strict administrator",
+        "Other signed-in account"
+      ],
+      "preconditions": [
+        "Authenticated bearer session on every route",
+        "Event visible to the caller and not hidden",
+        "Event has a stored organizer",
+        "An active ticket tier priced above zero in USD for a request and for an approval"
+      ],
+      "inputs": [
+        "GET /social-events/events/{eventId}/ticket-sale",
+        "POST /social-events/events/{eventId}/ticket-sale/request",
+        "GET /social-events/ticket-sale-requests",
+        "POST /social-events/ticket-sale-requests/{requestId}/approve",
+        "POST /social-events/ticket-sale-requests/{requestId}/decline"
+      ],
+      "state": {
+        "boundary": "event_ticket_checkout_policy rows of one event and its event_ticket_tier rows",
+        "authority": "PostgreSQL rows read and written under the social_event row lock; the partial unique index on active policies and the policy validation and lifecycle triggers. Decisions also lock the target policy row before validating stored terms",
+        "saleStatus": "Derived on read: approved, requested, declined or none"
+      },
+      "allowedTransitions": [
+        "none or declined -> requested, by a manager, with an active paid USD tier",
+        "requested -> approved, by a strict administrator, with an active paid USD tier and no other active policy",
+        "requested -> declined, by a strict administrator"
+      ],
+      "forbiddenTransitions": [
+        "Request, or read the sale state, as an account that neither manages the event nor is a strict administrator",
+        "List or decide requests without strict administrator access, including as the event's organizer",
+        "Create a second pending request for an event",
+        "Approve a request that is not pending, or while another policy is active, or without an active paid USD tier",
+        "Approve or request terms other than the standard ones through these routes",
+        "Return an approved or declined request to pending"
+      ],
+      "effects": [
+        "Insert one event_ticket_checkout_policy row with approval_status draft, active false and the standard terms",
+        "Approval: set approval_status approved, active true, approved_at, effective_from and approved_by party:<id> on that row",
+        "Decline: set approval_status retired on that row",
+        "E-mail to strict administrators after a request and to the organizer after a decision, when e-mail is configured"
+      ],
+      "authorization": "Reading the state requires the organizer, a delegated administrator (delegatedEventAdminExists) or hasStrictAdminAccess. Requesting requires the organizer or a delegated administrator and is rechecked under the event lock. Listing and deciding require hasStrictAdminAccess; an organizer without it is refused.",
+      "privacy": "The queue shows strict administrators the event title, start, organizer display name and active tiers. Notices are sent to the primary e-mail of strict administrators and of the organizer and contain the event title and a link to the event. No buyer data is involved.",
+      "concurrency": "Request and decision lock the social_event row FOR UPDATE and re-read policy rows and tiers under it, so simultaneous requests create one draft and simultaneous decisions record one. The partial unique index on active policies and the lifecycle trigger remain in force.",
+      "idempotency": "Requesting while a request is pending or approved returns the current state and writes nothing. Deciding a request the same way again returns the recorded decision and sends no notice; deciding it the other way is refused.",
+      "failure": "403 caller lacks the role for the route; 404 event missing or hidden, or request identifier malformed, unknown or outside the workflow; 409 incompatible terms, no active paid USD tier, request already decided the other way, or another active policy exists.",
+      "recovery": "A declined manager may request again. An approval made in error is undone by an operator retiring the policy; these routes cannot. A failed notice is not retried: the request stays in the administrators' queue.",
+      "observability": "HTTP status; event_ticket_checkout_policy rows and their append-only history; policy_version names the requesting party and approved_by the approving party; a failed notice is written to the log buffer. No metric or audit entry is added.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/EventTicketSale.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/components/events/EventTicketSaleCard.tsx",
+        "tdf-hq-ui/src/components/events/EventTicketSaleRequestsQueue.tsx",
+        "tdf-hq-ui/src/components/events/ticketSaleQueryKeys.ts",
+        "tdf-hq-ui/src/components/events/useSaveTicketTier.ts",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "scripts/test-event-ticket-sale.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
+        "scripts/test-event-ticket-sale.sh",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/components/events/EventTicketSaleCard.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/components/events/EventTicketSaleRequestsQueue.test.tsx",
+        ".github/workflows/ci.yml"
+      ],
+      "formalModels": [],
+      "verification": "Hspec exercises the state derivation. The disposable PostgreSQL runner covers authorized transitions, concurrency, legacy draft isolation, rejection of incompatible terms, and the policy loaded by public checkout. Jest covers the card, queue, and request eligibility after creating or editing a ticket tier. The hosted workflow runs the script after the delegation runner; without its database variable the PostgreSQL group reports one pending example.",
+      "evidence": "formal/system/event-ticket-sale-approval.md; local PostgreSQL 16 run of scripts/test-event-ticket-sale.sh on 2026-11-15 against a copy of the migrated delegation test database (9 examples, 0 failures); Jest run of the card and queue tests on the same day. The runner is a step of .github/workflows/ci.yml; no hosted run of it has been observed yet, and nothing has been exercised on production. The 2026-11-15 evidence predates the review corrections.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "The new module was written against the policy table, its triggers and the storefront's policy query, all read in full; the request and decision lifecycle is exercised on PostgreSQL. Public checkout from an approved request is established by reading the storefront query, not by an end-to-end test, and there is no model.",
+      "ambiguity": [
+        "The standard terms are fixed by the product owner's decision of 2026-11-15; whether they suit every organizer or tax position is not established.",
+        "Pending requests never expire and a decline records no reason.",
+        "E-mail is the only notice; an in-app notification would need a new notification type and migration."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The request and decision lifecycle and its races are exercised on PostgreSQL and the web card and queue by Jest; checkout from an approved request is covered by reading only, no model exists and notice delivery is unverified."
+      },
+      "historicalStatus": null
     }
   ]
 }
