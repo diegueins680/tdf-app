@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type SetStateAction } from 'react';
-import { getAuthSessionEpoch } from './authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 import { discardRecoverableDraft, readRecoverableDraft, saveRecoverableDraft } from './recoverableDraft';
 import { useSessionOwner } from './useSessionOwner';
 

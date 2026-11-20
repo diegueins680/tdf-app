@@ -71,6 +71,7 @@ library
     TDF.Contracts.EventWorkspace
     TDF.Contracts.Server
     TDF.Contracts.Types
+    TDF.Courses.Metadata
     TDF.Courses.Production
     TDF.Courses.PublicMetadata
     TDF.PublicUrl
@@ -89,6 +90,7 @@ library
     TDF.Artists.Promotion
     TDF.Artists.Enrichment
     TDF.Auth
+    TDF.AppleSignIn
     TDF.VideoCampaigns
     TDF.Auth.AccountName
     TDF.CampaignAutomation
@@ -98,6 +100,7 @@ library
     TDF.Commerce.DomoQuotes
     TDF.Commerce.EventTickets
     TDF.Ticketing.Admission
+    TDF.Ticketing.Issuance
     TDF.Ticketing.Refund
     TDF.Ticketing.Confirmation
     TDF.Ticketing.Inventory
@@ -110,6 +113,7 @@ library
     TDF.Commerce.ServiceBookings
     TDF.Commerce.PaymentIntentStore
     TDF.Commerce.PaymentRuntimeStore
+    TDF.Commerce.PaypalWebhook
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
     TDF.Commerce.ProviderCapabilities
@@ -138,6 +142,7 @@ library
     TDF.DTO.EventResearchDTO
     TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
+    TDF.DTO.TicketPaymentReceipt
     TDF.Distribution.StateMachine
     TDF.Email
     TDF.Email.Headers
@@ -192,6 +197,7 @@ library
     TDF.API.RecordsIngestion
     TDF.SocialEventLifecycle
     TDF.Services.EventLogisticsRoutes
+    TDF.Services.LlmChat
     TDF.Services.Stripe
     TDF.RagStore
     TDF.Reputation
@@ -217,10 +223,14 @@ library
     TDF.ServerProposals
     TDF.ServerInternships
     TDF.ServerInternAudit
+    TDF.Server.EventAdminDelegation
+    TDF.Server.EventTicketSale
     TDF.Server.SocialEventsHandlers
+    TDF.Server.StripeTicketCapture
     TDF.Server.EventResearch
     TDF.Server.DDEX
     TDF.Server.Directory
+    TDF.Server.DirectoryAgreementText
     TDF.Server.Merch
     TDF.Server.Reviews
     TDF.Server.MerchReputation
@@ -245,6 +255,9 @@ library
     TDF.Trials.Seed
     TDF.Trials.Server
     TDF.Calendar.Models
+    TDF.Calendar.TokenCipher
+    TDF.Auth.Throttle
+    TDF.Auth.ClientAddress
     TDF.CMS.Models
     TDF.Catalog.Models
     TDF.Catalog.CountryReferenceSeed
@@ -413,6 +426,8 @@ test-suite tdf-hq-test
     TDF.FailureBoundarySpec
     TDF.ReadinessSpec
     TDF.TicketConfirmationSpec
+    TDF.EventAdminDelegationSpec
+    TDF.EventTicketSaleSpec
     TDF.EventOrganizerSpec
     TDF.InvoiceDatilSpec
     TDF.TicketManualReviewSpec
@@ -442,6 +457,7 @@ test-suite tdf-hq-test
     TDF.Commerce.RefundRecoverySpec
     TDF.Server.PaymentAuditSpec
     TDF.ServerAuthSpec
+    TDF.AppleSignInSpec
     TDF.ServerExtraSpec
     TDF.ServerFanClubSpec
     TDF.ServerSpec

@@ -10,7 +10,7 @@ import { ApiError, HTTP_STATUS_REQUEST_TIMEOUT } from '../api/client';
 import { EventWorkspaceAPI, type AgreementContent, type AgreementVersion, type EventAgreement, type EventPlanContent, type EventWorkspace, type WorkspaceCommand } from '../api/eventWorkspace';
 import { useSession } from '../session/SessionContext';
 import { isEventAgreementsEnabled } from '../config/eventAgreementsRollout';
-import { getAuthSessionEpoch } from '../session/authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 import { useSessionOwner } from '../session/useSessionOwner';
 import { useOwnedSessionDraft } from '../session/useOwnedSessionDraft';
 import { parseOptionalPriceCents } from './collaborativeEventCreation';

@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { EventWorkspace, WorkspaceCommand } from '../api/eventWorkspace';
 import { workspaceFixture } from '../api/eventWorkspace.fixture';
-import { advanceAuthSessionEpoch, getAuthSessionEpoch } from '../session/authEvents';
+import { advanceAuthSessionEpoch, getAuthSessionEpoch } from '../auth/authEvents';
 
 let session: { partyId: number } | null = { partyId: 2 };
 const read = jest.fn<(id: string) => Promise<EventWorkspace>>();

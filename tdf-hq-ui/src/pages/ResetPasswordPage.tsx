@@ -1,4 +1,4 @@
-import { getLogoutRevision, ownsLogoutRevision } from '../session/logoutIntent';
+import { getLogoutRevision, ownsLogoutRevision } from '../auth/logoutIntent';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {

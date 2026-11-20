@@ -173,6 +173,7 @@ import           TDF.WhatsApp.History   ( OutgoingWhatsAppRecord(..)
                                         , resolvePartyPhones
                                         )
 import           TDF.WhatsApp.Transport (loadWhatsAppEnv, sendWhatsAppTextIO)
+import qualified TDF.CampaignAutomation as CampaignAutomation
 import qualified TDF.Trials.Server      as TrialsServer
                                             ( hasAmbiguousPublicUrlPath
                                             , isValidHttpUrl
@@ -666,6 +667,8 @@ adminServer user =
             ]
         _ -> throwError err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
 
+    -- A message already answered ("sent") is never put back in the reply queue:
+    -- unholding it would make the auto-reply worker answer it a second time.
     unholdByExternalId channel extId =
       case channel of
         "instagram" -> withPool $ do
@@ -673,6 +676,7 @@ adminServer user =
                 [ InstagramMessageExternalId ==. extId
                 , InstagramMessageDirection ==. "incoming"
                 , InstagramMessageDeletedAt ==. Nothing
+                , InstagramMessageReplyStatus !=. "sent"
                 ]
           mRow <- selectFirst filters []
           case mRow of
@@ -692,6 +696,7 @@ adminServer user =
                 [ ME.FacebookMessageExternalId ==. extId
                 , ME.FacebookMessageDirection ==. "incoming"
                 , ME.FacebookMessageDeletedAt ==. Nothing
+                , ME.FacebookMessageReplyStatus !=. "sent"
                 ]
           mRow <- selectFirst filters []
           case mRow of
@@ -710,6 +715,7 @@ adminServer user =
           let filters =
                 [ ME.WhatsAppMessageExternalId ==. extId
                 , ME.WhatsAppMessageDirection ==. "incoming"
+                , ME.WhatsAppMessageReplyStatus !=. "sent"
                 ]
           mRow <- selectFirst filters []
           case mRow of
@@ -1409,6 +1415,7 @@ adminServer user =
         _ -> pure Nothing
       phone <- either throwError pure $
         resolveAdminWhatsAppSendPhone mode candidatePhones (entityVal <$> replyTarget)
+      rejectWithdrawnWhatsAppRecipient phone
       now <- liftIO getCurrentTime
       waEnv <- liftIO loadWhatsAppEnv
       sendResult <- liftIO $ sendWhatsAppTextIO waEnv phone body
@@ -1444,6 +1451,7 @@ adminServer user =
       resendBody <- either throwError pure $
         validateAdminWhatsAppMessageBody (fromMaybe originalBody (cleanMaybeText awrrMessage))
       targetPhone <- either throwError pure (resolveAdminWhatsAppResendPhone msg)
+      rejectWithdrawnWhatsAppRecipient targetPhone
       now <- liftIO getCurrentTime
       waEnv <- liftIO loadWhatsAppEnv
       sendResult <- liftIO $ sendWhatsAppTextIO waEnv targetPhone resendBody
@@ -1564,6 +1572,18 @@ adminServer user =
         , aersFailedCount = failedCount
         , aersRecipients = recipientResults
         }
+
+-- | An admin send or resend reaches nobody who withdrew WhatsApp consent
+-- (MSG-STAFF-OUTBOUND-001): 409, nothing sent or recorded.
+rejectWithdrawnWhatsAppRecipient
+  :: (MonadReader Env m, MonadIO m, MonadError ServerError m)
+  => Text
+  -> m ()
+rejectWithdrawnWhatsAppRecipient phone = do
+  withdrawn <- withPool (CampaignAutomation.whatsAppRecipientConsentWithdrawn phone)
+  when withdrawn $
+    throwError err409
+      { errBody = BL.fromStrict (TE.encodeUtf8 CampaignAutomation.whatsAppConsentWithdrawnMessage) }
 
 withPool
   :: (MonadReader Env m, MonadIO m)

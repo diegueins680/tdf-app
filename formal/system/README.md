@@ -7,9 +7,14 @@ Historical green results are not current-candidate evidence.
 
 - [audit-2026-10-31-phase1.md](audit-2026-10-31-phase1.md): phase-1 inventory of the system-wide formal audit (docs/prompts/formal-validation.md): measured baseline, P0 money/security coverage gaps, state-machine structure checks, preliminary findings and open owner questions. Measurement only; no conformance claim.
 
+- [desktop-shell.md](desktop-shell.md): Electron shell boundary over the hosted TDF origin, one system playback session shared by release player and radio, reproducible installers with a fail-closed shell update channel (SYS-DESKTOP-001..003); Linux Electron and unit evidence, installed macOS/Windows acceptance pending.
+
 - [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
 
-- [event-planning-ux.md](event-planning-ux.md): explicit event clocks, standard ticket fee estimates and bounded poster retry/session checks, with delegated management still pending.
+- [event-planning-ux.md](event-planning-ux.md): explicit event clocks, standard ticket fee estimates and bounded poster retry/session checks; delegated management is specified separately below.
+
+- [event-admin-delegation.md](event-admin-delegation.md): organizer-issued single-use links that make one account administrator of one event, what that administrator can and cannot do, and courtesy tickets (EVT-ADMIN-DELEGATION-001); PostgreSQL tests, no model, owner confirmation of the limits pending.
+- [event-ticket-sale-approval.md](event-ticket-sale-approval.md): an event manager's request to sell paid tickets under fixed standard terms and its approval or decline by a strict administrator (EVT-TICKET-SALE-001); PostgreSQL tests, no model.
 
 - [assurance-report.md](assurance-report.md): generated four-state proof matrix, replayable source-derived SMT evidence (including payment-validator preconditions) and explicit blocked release decision.
 - [receipt-admission.md](receipt-admission.md): source-bound consumer replay for every SMT suite, false-proof/refutation controls and an auditable synthetic counterexample.

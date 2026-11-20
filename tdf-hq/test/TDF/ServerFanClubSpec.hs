@@ -15,7 +15,7 @@ import Test.Hspec
 
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.Models
-  ( ElectionStatus (Upcoming)
+  ( ElectionStatus (Upcoming, CandidacyOpen, Closed)
   , FanClubCandidacy (..)
   , FanClubElection (..)
   , FanFollow (..)
@@ -30,6 +30,8 @@ import TDF.ServerFanClub
   , validateFanClubArtistPathId
   , validateFanClubCandidacyPathId
   , validateFanClubElectionMutationTarget
+  , FanClubElectionPhase (..)
+  , validateFanClubElectionPhase
   , validateFanClubElectionPathId
   , validateFanClubInboxBodyInput
   , validateFanClubInboxReplyBodyInput
@@ -179,6 +181,29 @@ spec = do
         validateFanClubElectionMutationTarget
           (toSqlKey 11)
           (Entity (toSqlKey 20) (mkElection 10))
+
+  describe "validateFanClubElectionPhase" $ do
+    let hour n = UTCTime (fromGregorian 2026 6 1) (secondsToDiffTime (n * 3600))
+        windowed = (mkElection 10)
+          { fanClubElectionCandidacyStartsAt = Just (hour 1), fanClubElectionCandidacyEndsAt = Just (hour 3)
+          , fanClubElectionVotingStartsAt = Just (hour 5), fanClubElectionVotingEndsAt = Just (hour 7)
+          , fanClubElectionStatus = CandidacyOpen }
+    it "accepts candidacy and votes for an election without windows" $ do
+      validateFanClubElectionPhase ElectionCandidacy testTime (mkElection 10) `shouldBe` Right ()
+      validateFanClubElectionPhase ElectionVoting testTime (mkElection 10) `shouldBe` Right ()
+    it "refuses both once the election is closed" $ do
+      assertRejected 409 "election is closed" $
+        validateFanClubElectionPhase ElectionCandidacy testTime (mkElection 10) { fanClubElectionStatus = Closed }
+      assertRejected 409 "election is closed" $
+        validateFanClubElectionPhase ElectionVoting testTime (mkElection 10) { fanClubElectionStatus = Closed }
+    it "accepts candidacy only inside the candidacy window" $ do
+      assertRejected 409 "candidacy period has not started" $ validateFanClubElectionPhase ElectionCandidacy (hour 0) windowed
+      validateFanClubElectionPhase ElectionCandidacy (hour 2) windowed `shouldBe` Right ()
+      assertRejected 409 "candidacy period has ended" $ validateFanClubElectionPhase ElectionCandidacy (hour 3) windowed
+    it "accepts votes only inside the voting window" $ do
+      assertRejected 409 "voting period has not started" $ validateFanClubElectionPhase ElectionVoting (hour 2) windowed
+      validateFanClubElectionPhase ElectionVoting (hour 6) windowed `shouldBe` Right ()
+      assertRejected 409 "voting period has ended" $ validateFanClubElectionPhase ElectionVoting (hour 7) windowed
 
   describe "validateFanClubVoteCandidacyTarget" $ do
     it "requires vote candidates to belong to the targeted election" $ do

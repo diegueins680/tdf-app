@@ -6,7 +6,7 @@ import {
   accessRequestPath,
   featureLabel,
   type FeatureAccessDecision,
-} from '../features/featureRegistry';
+} from '../utils/featureRegistry';
 import appI18n from '../i18n';
 
 interface ForbiddenPageProps {

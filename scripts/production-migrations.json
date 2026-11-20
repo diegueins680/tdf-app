@@ -1255,6 +1255,66 @@
       "introducedBy": "09fd7babb92e45c1da1b9e5017de53b6378b4f7c"
     },
     {
+      "id": "2026-10-13_apple_sign_in_policy",
+      "path": "tdf-hq/sql/2026-10-13_apple_sign_in_policy.sql",
+      "introducedBy": "161cb8666ed1e96520850df2f985dd14f4bfebdf"
+    },
+    {
+      "id": "2026-11-07_apple_provider_identity_issuer",
+      "path": "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql",
+      "introducedBy": "7c1525edf0f02fe53f985c24862940b91c11cdfa"
+    },
+    {
+      "id": "2026-11-08_marketplace_offers",
+      "path": "tdf-hq/sql/2026-11-08_marketplace_offers.sql",
+      "introducedBy": "5901003189dac2291380604c66fdd66087e4a587"
+    },
+    {
+      "id": "2026-11-10_auth_rate_limit",
+      "path": "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
+      "introducedBy": "a96562115a8f5036e9182a9e43d2e468b31cc05b"
+    },
+    {
+      "id": "2026-11-12_marketplace_agreements",
+      "path": "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
+      "introducedBy": "5ca1a385177711438a8b0e44336ea2739dbd56f5"
+    },
+    {
+      "id": "2026-11-11_event_admin_delegation",
+      "path": "tdf-hq/sql/2026-11-11_event_admin_delegation.sql",
+      "introducedBy": "2703eb3a1ac1604829e902262fe2dbfbbf4f4ca8"
+    },
+    {
+      "id": "2026-11-12_marketplace_agreement_payments",
+      "path": "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
+      "introducedBy": "26c83d9e6525d859b0da0bebf959ad6d1c806159"
+    },
+    {
+      "id": "2026-10-30_artist_featured_track",
+      "path": "tdf-hq/sql/2026-10-30_artist_featured_track.sql",
+      "introducedBy": "1f1b5a48555500144996bd2d51d1f4f660421f2f"
+    },
+    {
+      "id": "2026-11-06_music_media_health",
+      "path": "tdf-hq/sql/2026-11-06_music_media_health.sql",
+      "introducedBy": "46fd778c0e7e12bb7157b8f8021c1bb7e6d3effd"
+    },
+    {
+      "id": "2026-11-06_music_legacy_source_compatibility",
+      "path": "tdf-hq/sql/2026-11-06_music_legacy_source_compatibility.sql",
+      "introducedBy": "51a4813e992c9466f85e8fc7d701bf3369c2dbf5"
+    },
+    {
+      "id": "2026-11-07_music_featured_source_health",
+      "path": "tdf-hq/sql/2026-11-07_music_featured_source_health.sql",
+      "introducedBy": "566dd05c4f630ffdbdb9f0c4a38260cd5274197e"
+    },
+    {
+      "id": "2026-11-07_artist_featured_identity_guard",
+      "path": "tdf-hq/sql/2026-11-07_artist_featured_identity_guard.sql",
+      "introducedBy": "6d7bf89fc4ab5127549f67c5e044f69007f1ac2c"
+    },
+    {
       "id": "2026-11-03_event_agreements",
       "path": "tdf-hq/sql/2026-11-03_event_agreements.sql",
       "introducedBy": "f226bd7b56abcc6a5c26b12f07d1bd3b54606e77"

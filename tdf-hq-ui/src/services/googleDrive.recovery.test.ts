@@ -5,7 +5,7 @@ let epoch = 1;
 const post = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 jest.unstable_mockModule('../api/client', () => ({ post }));
 jest.unstable_mockModule('../session/SessionContext', () => ({ getActiveSession: () => ({ partyId: owner }) }));
-jest.unstable_mockModule('../session/authEvents', () => ({ getAuthSessionEpoch: () => epoch }));
+jest.unstable_mockModule('../auth/authEvents', () => ({ getAuthSessionEpoch: () => epoch }));
 const drive = await import('./googleDrive');
 beforeEach(() => { owner = 10; epoch = 1; localStorage.clear(); post.mockReset(); });
 
