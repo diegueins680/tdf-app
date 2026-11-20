@@ -137,14 +137,16 @@ async function readReconciliation(beforePlayer = false) {
   const register = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
   const mainRegister = await reviewedJson(INTEGRATION_MAIN, catalogPath);
-  const active = mainRegister.decisions.map(row => {
+  // Reviews whose source list was deleted outright (no successor list). They
+  // leave the active register and are kept, unchanged, as history.
+  const retired = (register.reconciliation.sourceRemovalRetirements ?? []).flatMap(entry => entry.decisions);
+  // A review retired after the dated main is history, not an active row.
+  const retiredIds = new Set(retired.map(row => row.id));
+  const active = mainRegister.decisions.filter(row => !retiredIds.has(row.id)).map(row => {
     const found = wholeReview(register, row);
     assert.ok(found, `Dated main review missing: ${row.id}`);
     return found;
   });
-  // Reviews whose source list was deleted outright (no successor list). They
-  // leave the active register and are kept, unchanged, as history.
-  const retired = (register.reconciliation.sourceRemovalRetirements ?? []).flatMap(entry => entry.decisions);
   let successors = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-catalog-current-successors.json'), 'utf8')).successors;
   let integration = JSON.parse(await fs.readFile(path.join(workspaceRoot,
