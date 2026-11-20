@@ -7,7 +7,7 @@ const get = jest.fn(); const put = jest.fn(); const del = jest.fn();
 jest.unstable_mockModule('./client', () => ({ get, put, del }));
 jest.unstable_mockModule('./authHeader', () => ({ buildAuthorizationHeader: () => 'Bearer tdf-session' }));
 jest.unstable_mockModule('../config/apiBase', () => ({ resolveApiBase: () => 'https://api.tdf.test' }));
-jest.unstable_mockModule('../session/authEvents', () => ({ getAuthSessionEpoch: () => epoch }));
+jest.unstable_mockModule('../auth/authEvents', () => ({ getAuthSessionEpoch: () => epoch }));
 const storage = await import('./contentStorage');
 const { default: PrivateAttachmentLink } = await import('../components/PrivateAttachmentLink');
 const identifier = '00000000-0000-4000-8000-000000000001';
