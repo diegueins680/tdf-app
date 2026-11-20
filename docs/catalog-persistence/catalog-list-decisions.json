@@ -95431,6 +95431,25 @@
         "name": "noMethods",
         "valueCount": 7
       }
+    },
+    {
+      "id": "9256b774f7f853c0a060",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "The synthetic workflow response exercises the publication confirmation against an eligible transition.",
+      "justification": "The mocked states and transition are test fixtures for the post-save dialog. The production control reads the workflow states and capabilities from the server catalog.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-19",
+      "reviewBatch": "event-publish-after-save",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
+        "line": 25,
+        "kind": "array",
+        "name": "states",
+        "valueCount": 2
+      }
     }
   ]
 }
