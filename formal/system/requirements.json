@@ -12825,6 +12825,7 @@
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+        "tdf-hq/src/TDF/Studio/Gallery.hs",
         "tdf-hq-ui/src/components/StudioGallery.tsx",
         "tdf-hq-ui/src/pages/NotFoundPage.tsx",
         "tdf-hq-ui/src/components/StudioGalleryEditor.tsx",
