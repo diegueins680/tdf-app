@@ -62,6 +62,8 @@ library
     TDF.API.Drive
     TDF.API.ContentStorage
     TDF.ContentStorage
+    TDF.StorageVault
+    TDF.DriveOAuthClient
     TDF.API.Rooms
     TDF.API.Services
     TDF.API.Sessions
@@ -103,6 +105,7 @@ library
     TDF.Ticketing.Issuance
     TDF.Ticketing.Refund
     TDF.Ticketing.Confirmation
+    TDF.Ticketing.LookupToken
     TDF.Ticketing.Inventory
     TDF.Ticketing.Transfer
     TDF.Commerce.MarketplaceSales
@@ -365,6 +368,7 @@ library
     , tagged
     , crypton
     , memory
+    , unix
     , JuicyPixels
 
 
@@ -413,6 +417,7 @@ test-suite tdf-hq-test
     TDF.InteractionWriteBudgetSpec
     TDF.ChatDeliverySpec
     TDF.MusicPurchaseSpec
+    TDF.StorageSecuritySpec
     TDF.MusicCredentialCacheSpec
     TDF.DriveReplaySpec
     TDF.WhatsAppRedeliverySpec

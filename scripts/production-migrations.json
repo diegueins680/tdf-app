@@ -1320,6 +1320,16 @@
       "introducedBy": "fee3642a70a1eeabf0c4d2efaace5da5d240e23a"
     },
     {
+      "id": "2026-11-06_content_storage_security",
+      "path": "tdf-hq/sql/2026-11-06_content_storage_security.sql",
+      "introducedBy": "a0f18086cb8ded76cc1d3b1d19dc31e813070a20"
+    },
+    {
+      "id": "2026-11-07_content_storage_identity_guards",
+      "path": "tdf-hq/sql/2026-11-07_content_storage_identity_guards.sql",
+      "introducedBy": "a8b31cefcf5c6ce45a3fc38406f23f11a3616b56"
+    },
+    {
       "id": "2026-11-20_chat_external_delivery",
       "path": "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
       "introducedBy": "239fc3974a114d08d3d27d6f4899f9cfcf4fd81e"
