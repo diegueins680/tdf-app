@@ -70984,41 +70984,6 @@
       "requirements": []
     },
     {
-      "id": "SURFACE-ddef40520a4670c5",
-      "path": "tdf-hq/.stack-work-before-main-20261119/config.yaml",
-      "sha256": "b659428c302e5f25458218514855c46821962af0f4a39c1ec79bd0fa3a44fc13",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-2c31341c1874bf93",
-      "path": "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/examples/Scotty.hs",
-      "sha256": "d118323031c669b92e38d62c39b12360676f6e775de9aa2b909c658e3451af53",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-052571ab002ba206",
-      "path": "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/examples/ServantWai.hs",
-      "sha256": "0d84c584b9aaa874f00c258230c4fa9d78e29309beef010266b260002cd75a4f",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-a900a64e3ed63f8e",
-      "path": "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/examples/Wai.hs",
-      "sha256": "1faf86c03a778679fd2ce75cf827c3f13a98c348f6612edb44af1b265220048a",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-670812a7107b6d42",
-      "path": "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/test/phantomjs.js",
-      "sha256": "de4fe3f6cd983a3f836799314a108e70c28f258ea14c672b98c6a0afd5fbe1f0",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
       "id": "SURFACE-349b3c6baf0c525b",
       "path": "tdf-hq/Dockerfile",
       "sha256": "505fa666dbdcc1247d871369bc84557d79dc0fca947897d6ab7f3d4aa807af5e",
@@ -87869,11 +87834,6 @@
     "SURFACE-084ed605284f4be6",
     "SURFACE-c7d9ad67bbab6f41",
     "SURFACE-c6183dfcf6eaddfa",
-    "SURFACE-ddef40520a4670c5",
-    "SURFACE-2c31341c1874bf93",
-    "SURFACE-052571ab002ba206",
-    "SURFACE-a900a64e3ed63f8e",
-    "SURFACE-670812a7107b6d42",
     "SURFACE-e9aa9f40d6e4aec3",
     "SURFACE-20a931f02cd6a32b",
     "SURFACE-a53cc38173461f9a",
