@@ -19046,7 +19046,7 @@
     {
       "id": "SURFACE-78bfd9d40d6ce29d",
       "path": "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
-      "sha256": "c0645218656951aee61012df54df63ec2f9128b8d787d6899fcd323bc90294dd",
+      "sha256": "095512b37114807f4b369298125815e78feb32c23ab0236fc41e3bbc909040bd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
