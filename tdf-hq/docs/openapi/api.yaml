@@ -1880,6 +1880,38 @@ paths:
         '204': { description: RSVP absent after the idempotent operation }
         '401': { description: Authentication required }
         '429': { description: Mutation rate limit exceeded }
+  /social-events/events/{eventId}/attendees:
+    get:
+      tags: [Social events]
+      summary: List visible attendee profiles for one RSVP status
+      operationId: listEventAttendees
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+        - { name: status, in: query, required: true, schema: { type: string, enum: [accepted, maybe] } }
+        - { name: after, in: query, schema: { type: integer, format: int64, minimum: 0 } }
+      responses:
+        '200':
+          description: Up to 20 profiles visible to the viewer, ordered by stable RSVP identifier
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor]
+                properties:
+                  nextCursor: { type: string, nullable: true }
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, name, avatarUrl]
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        avatarUrl: { type: string, nullable: true }
+        '400': { description: Invalid status or cursor }
+        '401': { description: Authentication required }
+        '404': { description: Event is missing or inaccessible }
   /social-events/events/{eventId}/rsvp-summary:
     get:
       tags: [Social events]
