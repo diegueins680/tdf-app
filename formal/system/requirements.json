@@ -24140,6 +24140,89 @@
       "historicalStatus": null
     },
     {
+      "id": "PAY-PAYPHONE-CARD-001",
+      "title": "PayPhone card checkout through the hosted Button, confirmed only by the server",
+      "statement": "A buyer can pay a direct checkout by card through PayPhone's hosted payment Button (route label payphone_card) without a PayPhone account and without giving TDF a phone number. The browser is sent only to a PayPhone-hosted page. The charge counts as paid only after the query worker reads the Button status by its TDFC- reference (a JSON list holding exactly one transaction for that reference) and PayPhone's Confirm answer matches transaction, reference, amount and currency. A split is optional and needs the store coding password.",
+      "domain": "PAY",
+      "authority": "Owner request 2026-11-17 (PayPhone card payments without the app); PayPhone sandbox evidence 2026-11-17/18; ADR 0136 for the Button confirmation design.",
+      "source": "docs/adr/0136-marketplace-agreement-payments.md",
+      "contract": "docs/adr/0136-marketplace-agreement-payments.md",
+      "property": "route label (payphone, card) = payphone_card; card offered iff PayPhone runtime configured and the query worker ready (coding password not required); status list with exactly one entry for the reference is read, otherwise rejected; approved -> Confirm follow-up; Succeeded only from a matching Confirm; hosted redirect host is PayPhone over HTTPS without credentials or port; a card request carries no buyer phone.",
+      "actors": [
+        "Anonymous buyer",
+        "PayPhone",
+        "Query worker"
+      ],
+      "preconditions": [
+        "Checkout lookup token; PayPhone runtime configured; COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED and checkout.provider_query_recovery ready; verified one_time and server_verification capabilities for payphone/card."
+      ],
+      "inputs": [
+        "POST /commerce/checkouts/{checkoutId}/payment-sessions with provider payphone and paymentMethod card"
+      ],
+      "state": {
+        "attempt": [
+          "requires_customer_action",
+          "processing",
+          "succeeded",
+          "confirmed_no_charge",
+          "ambiguous"
+        ]
+      },
+      "allowedTransitions": [
+        "requires_customer_action -> succeeded only from a matching Confirm answer",
+        "requires_customer_action -> confirmed_no_charge from a canceled status"
+      ],
+      "forbiddenTransitions": [
+        "succeeded from a status read alone",
+        "succeeded from browser return parameters",
+        "redirect outside PayPhone hosted pages",
+        "buyer phone sent for a card payment"
+      ],
+      "effects": [
+        "provider Prepare and Confirm calls",
+        "reconciled payment attempt"
+      ],
+      "authorization": "Checkout lookup token (capability-header).",
+      "privacy": "No buyer phone is collected for card payments; the PayPhone token is never logged.",
+      "concurrency": "Shared provider query worker lease and reconciliation path.",
+      "idempotency": "Session creation by idempotency key (PAY-RETRY-001); Confirm is idempotent at PayPhone.",
+      "failure": "Unpaid prepared payments query as HTTP 404 and are retried; unconfirmed approvals are reversed by PayPhone.",
+      "recovery": "The query worker confirms every minute for 24 attempts; an unpaid attempt ends in review.",
+      "observability": "Stored provider operation, query job and reconciliation rows.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs",
+        "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
+        "tdf-hq-ui/src/api/providerPaymentSessions.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
+        "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Unit tests for the status list, follow-up confirmation, route label and card readiness without the coding password; UI tests for the card button without phone fields and the PayPhone redirect allowlist; PayPhone sandbox runs of Prepare, list-shaped status, Confirm and Reverse.",
+      "evidence": "docs/adr/0136-marketplace-agreement-payments.md",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for parsing and routing; end-to-end worker confirmation against the sandbox pending a buyer payment run.",
+      "ambiguity": [
+        "A Button status list with several transactions for one reference is rejected and ends in review.",
+        "Abandoned prepared payments query as HTTP 404 until the job dead-letters."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented and unit-tested; worker confirmation against the live sandbox awaits a recorded run."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-HOSTED-NOTIFICATIONS-001",
       "title": "PlaceToPay and PayPhone notifications",
       "statement": "Provider notifications are authenticated or classified as untrusted, stored once in the provider inbox and applied by the worker after a server-to-server query; the handlers move no money. Routes: POST /commerce/provider-notifications/placetopay; POST /commerce/provider-notifications/payphone; POST /NotificacionPago.",

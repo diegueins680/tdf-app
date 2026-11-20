@@ -65,6 +65,7 @@ export default function ServiceOrderTrackingPage() {
     ...(paymentMethodsQuery.data?.placeToPayCard ? ['placetopay_card'] : []),
     ...(paymentMethodsQuery.data?.placeToPayBankRedirect ? ['placetopay_bank_redirect'] : []),
     ...(paymentMethodsQuery.data?.placeToPayDeunaQr ? ['placetopay_deuna_qr'] : []),
+    ...(paymentMethodsQuery.data?.payPhoneCard ? ['payphone_card'] : []),
     ...(paymentMethodsQuery.data?.payPhoneWallet ? ['payphone_wallet'] : []),
   ], [paymentMethodsQuery.data]);
 

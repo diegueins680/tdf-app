@@ -30878,6 +30878,41 @@
             "reviewed": true
           }
         ]
+      },
+      {
+        "reason": "PayPhone card checkout adds payphone_card to the hosted payment label union, the HOSTED_PAYMENT_METHODS dispatch and its test fixture, so these three fingerprints have no current candidate. Their full reviewed decisions are preserved here unchanged as history; the active successors (reviewBatch payphone-card-2026-11-18) nest them as previousDecision.",
+        "decisions": [
+          {
+            "id": "cbfb2e7629209b469aeb",
+            "classification": "governed-reference-data",
+            "disposition": "consumer-update",
+            "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
+            "priority": "P1-cross-platform",
+            "risk": "A stale public label could disconnect the server-offered method from its client executor or permit an unsafe implicit provider substitution.",
+            "justification": "The labels are exact client consumers of server routing output; availability remains owned by the provider account, method, flow, operation, and environment capability rows.",
+            "reviewed": true
+          },
+          {
+            "id": "97f5e84df29e38480f3f",
+            "classification": "security-system-registry",
+            "disposition": "retain-as-versioned-adapter-dispatch",
+            "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
+            "priority": "P0-security",
+            "risk": "An incorrect label-to-provider-method binding could execute a different rail than the server offered and undermine duplicate-charge and consent controls.",
+            "justification": "This closed dispatch maps server-authorized composite labels to the two implemented hosted adapters; unknown labels fail closed and the database registry remains authoritative for visibility.",
+            "reviewed": true
+          },
+          {
+            "id": "dae3b89dd11670870aa4",
+            "classification": "governed-reference-data",
+            "disposition": "consumer-update",
+            "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
+            "priority": "P3-consumer",
+            "risk": "A stale test fixture could stop verifying exact provider-method dispatch and allow client/server contract drift.",
+            "justification": "The mocked list is test-only evidence for the canonical hosted-method mapping and must change with, but never become authority over, the production server and adapter contract.",
+            "reviewed": true
+          }
+        ]
       }
     ],
     "domoRefundMainF61520261107": {
@@ -116831,24 +116866,56 @@
       "reviewed": true
     },
     {
-      "id": "cbfb2e7629209b469aeb",
+      "id": "8ce113fec3c2b206646b",
       "classification": "governed-reference-data",
       "disposition": "consumer-update",
       "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
       "priority": "P1-cross-platform",
       "risk": "A stale public label could disconnect the server-offered method from its client executor or permit an unsafe implicit provider substitution.",
-      "justification": "The labels are exact client consumers of server routing output; availability remains owned by the provider account, method, flow, operation, and environment capability rows.",
-      "reviewed": true
+      "justification": "Adds payphone_card, the PayPhone hosted-button card label, to the exact client consumers of server routing output; availability remains owned by the provider account, method, flow, operation, and environment capability rows.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/providerPaymentSessions.ts",
+        "line": 9
+      },
+      "reviewBatch": "payphone-card-2026-11-18",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "cbfb2e7629209b469aeb",
+        "classification": "governed-reference-data",
+        "disposition": "consumer-update",
+        "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
+        "priority": "P1-cross-platform",
+        "risk": "A stale public label could disconnect the server-offered method from its client executor or permit an unsafe implicit provider substitution.",
+        "justification": "The labels are exact client consumers of server routing output; availability remains owned by the provider account, method, flow, operation, and environment capability rows.",
+        "reviewed": true
+      }
     },
     {
-      "id": "97f5e84df29e38480f3f",
+      "id": "461b09bfd03dfc53a612",
       "classification": "security-system-registry",
       "disposition": "retain-as-versioned-adapter-dispatch",
       "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
       "priority": "P0-security",
       "risk": "An incorrect label-to-provider-method binding could execute a different rail than the server offered and undermine duplicate-charge and consent controls.",
-      "justification": "This closed dispatch maps server-authorized composite labels to the two implemented hosted adapters; unknown labels fail closed and the database registry remains authoritative for visibility.",
-      "reviewed": true
+      "justification": "Adds the payphone_card -> (payphone, card) binding to the closed dispatch of server-authorized composite labels; no label maps to a different provider or method than the server offered.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/providerPaymentSessions.ts",
+        "line": 22
+      },
+      "reviewBatch": "payphone-card-2026-11-18",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "97f5e84df29e38480f3f",
+        "classification": "security-system-registry",
+        "disposition": "retain-as-versioned-adapter-dispatch",
+        "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
+        "priority": "P0-security",
+        "risk": "An incorrect label-to-provider-method binding could execute a different rail than the server offered and undermine duplicate-charge and consent controls.",
+        "justification": "This closed dispatch maps server-authorized composite labels to the two implemented hosted adapters; unknown labels fail closed and the database registry remains authoritative for visibility.",
+        "reviewed": true
+      }
     },
     {
       "id": "580f3496e20b18a3d57f",
@@ -118168,14 +118235,30 @@
       "reviewed": true
     },
     {
-      "id": "dae3b89dd11670870aa4",
+      "id": "bb442758aac4e8bc0d5c",
       "classification": "governed-reference-data",
       "disposition": "consumer-update",
       "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
       "priority": "P3-consumer",
       "risk": "A stale test fixture could stop verifying exact provider-method dispatch and allow client/server contract drift.",
-      "justification": "The mocked list is test-only evidence for the canonical hosted-method mapping and must change with, but never become authority over, the production server and adapter contract.",
-      "reviewed": true
+      "justification": "The mocked list adds payphone_card with the canonical mapping; it remains test-only evidence and never authority over server routing.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+        "line": 11
+      },
+      "reviewBatch": "payphone-card-2026-11-18",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "dae3b89dd11670870aa4",
+        "classification": "governed-reference-data",
+        "disposition": "consumer-update",
+        "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
+        "priority": "P3-consumer",
+        "risk": "A stale test fixture could stop verifying exact provider-method dispatch and allow client/server contract drift.",
+        "justification": "The mocked list is test-only evidence for the canonical hosted-method mapping and must change with, but never become authority over, the production server and adapter contract.",
+        "reviewed": true
+      }
     },
     {
       "id": "006b2819a8ceb01ee81b",
