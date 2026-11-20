@@ -25,6 +25,13 @@ import {
   type RepeatMode,
 } from './types';
 import { installPlayerAnalyticsBridge } from './analytics';
+import {
+  claimPlaybackSession,
+  releasePlaybackSession,
+  updatePlaybackSession,
+  type PlaybackSessionHandlers,
+  type PlaybackSessionState,
+} from './playbackSession';
 
 const PERSISTENCE_KEY = 'tdf-global-player/v1';
 const TARGET_LOUDNESS_LUFS = -14;
@@ -684,39 +691,39 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
 
   useEffect(() => installPlayerAnalyticsBridge(), []);
 
+  // System media controls (Media Session, desktop shell menu) are shared with
+  // the radio widget through one playback session; see playbackSession.ts.
+  const playbackHandlers = useMemo<PlaybackSessionHandlers>(() => ({
+    play: () => { void play(); }, pause, next, previous, seekTo: seek,
+  }), [next, pause, play, previous, seek]);
+  const claimedTrackRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-    const mediaSession = navigator.mediaSession;
-    if (currentTrack && typeof MediaMetadata !== 'undefined') {
-      mediaSession.metadata = new MediaMetadata({
-        title: currentTrack.title,
-        artist: currentTrack.artist,
-        album: currentTrack.releaseId,
-        artwork: currentTrack.artworkUrl ? [{ src: currentTrack.artworkUrl }] : undefined,
-      });
+    if (!currentTrack) {
+      claimedTrackRef.current = null;
+      releasePlaybackSession('music');
+      return;
+    }
+    const state: PlaybackSessionState = {
+      status: status === 'playing' ? 'playing'
+        : status === 'loading' || status === 'buffering' ? 'loading'
+          : status === 'error' || status === 'unavailable' ? 'error' : 'paused',
+      title: currentTrack.title,
+      artist: currentTrack.artist,
+      album: currentTrack.releaseId ?? null,
+      artworkUrl: currentTrack.artworkUrl ?? null,
+    };
+    // A new selection or an active playback intent makes the release player
+    // the system media owner. A pause caused by a radio takeover only updates
+    // its state, so media keys keep controlling the radio.
+    const active = status === 'playing' || status === 'loading' || status === 'buffering';
+    if (claimedTrackRef.current !== currentTrack.id || active) {
+      claimedTrackRef.current = currentTrack.id;
+      claimPlaybackSession('music', playbackHandlers, state);
     } else {
-      mediaSession.metadata = null;
+      updatePlaybackSession('music', state, playbackHandlers);
     }
-    const handlers: Partial<Record<MediaSessionAction, MediaSessionActionHandler>> = {
-      play: () => { void play(); }, pause, previoustrack: previous, nexttrack: next,
-      seekto: (details) => {
-        if (details.seekTime !== undefined) seek(details.seekTime);
-      },
-    };
-    for (const [action, handler] of Object.entries(handlers)) {
-      try { mediaSession.setActionHandler(action as MediaSessionAction, handler); }
-      catch { /* Some browsers expose only a subset of Media Session actions. */ }
-    }
-    return () => {
-      ['play', 'pause', 'previoustrack', 'nexttrack', 'seekto'].forEach((action) => {
-        try {
-          mediaSession.setActionHandler(action as MediaSessionAction, null);
-        } catch {
-          // Older browsers expose MediaSession with a smaller action set.
-        }
-      });
-    };
-  }, [currentTrack, next, pause, play, previous, seek]);
+  }, [currentTrack, playbackHandlers, status]);
+  useEffect(() => () => { releasePlaybackSession('music'); }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

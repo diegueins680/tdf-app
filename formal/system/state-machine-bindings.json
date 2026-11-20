@@ -194,6 +194,30 @@
       "table": "commerce_ledger_transaction",
       "column": "status",
       "decision": "AUTHORITY-069"
+    },
+    "docs/music-directory/formal-model.yaml#agreement": {
+      "source": "docs/music-directory/formal-model.yaml",
+      "table": "marketplace_agreement",
+      "column": "status",
+      "decision": "ADR-0135-marketplace-agreements",
+      "code": {
+        "file": "tdf-hq/src/TDF/Directory/Policy.hs",
+        "relation": "allowedAgreementTransition",
+        "renderer": "parseAgreementStatus",
+        "rendererFile": "tdf-hq/src/TDF/Server/Directory.hs"
+      }
+    },
+    "docs/music-directory/formal-model.yaml#agreement_payment": {
+      "source": "docs/music-directory/formal-model.yaml",
+      "table": "marketplace_agreement_payment",
+      "column": "status",
+      "decision": "ADR-0136-marketplace-agreement-payments",
+      "code": {
+        "file": "tdf-hq/src/TDF/Directory/Policy.hs",
+        "relation": "allowedAgreementPaymentTransition",
+        "renderer": "parseAgreementPaymentStatus",
+        "rendererFile": "tdf-hq/src/TDF/Server/Directory.hs"
+      }
     }
   },
   "unbound": {

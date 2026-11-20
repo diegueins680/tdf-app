@@ -17,7 +17,7 @@ jest.unstable_mockModule('../../analytics/posthog', () => ({
   getAnalyticsClient: () => ({ ready: false }),
 }));
 
-const { getAuthSessionEpoch, advanceAuthSessionEpoch } = await import('../../session/authEvents');
+const { getAuthSessionEpoch, advanceAuthSessionEpoch } = await import('../../auth/authEvents');
 const { SessionProvider, useSession, getStoredSessionToken } = await import('../../session/SessionContext');
 const { SessionQueryProvider } = await import('../../session/SessionQueryProvider');
 const { useOwnedProfileDraft } = await import('./useOwnedProfileDraft');

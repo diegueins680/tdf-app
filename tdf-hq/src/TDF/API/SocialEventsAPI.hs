@@ -22,6 +22,8 @@ module TDF.API.SocialEventsAPI (
     BudgetRoutes,
     FinanceRoutes,
     LogisticsRoutes,
+    EventAdminRoutes,
+    EventTicketSaleRoutes,
     IdParam,
     EventImageUploadForm (..),
     EventMemoryMediaUploadForm (..),
@@ -57,11 +59,20 @@ import Servant.Multipart (
  )
 import System.FilePath (takeExtension)
 
-import TDF.Server.TicketPaymentReceipt (TicketPaymentReceipt)
+import TDF.DTO.TicketPaymentReceipt (TicketPaymentReceipt)
 
 import TDF.API.EventResearchAPI (EventResearchRoutes)
 
 import TDF.DTO.SocialEventsDTO (
+    EventAdminAccessDTO,
+    EventAdminInvitationCreateDTO,
+    EventAdminInvitationIssuedDTO,
+    EventAdminInvitationPreviewDTO,
+    EventAdminInvitationTokenDTO,
+    EventAdminRosterDTO,
+    EventCourtesyTicketDTO,
+    EventTicketSaleDTO,
+    EventTicketSaleRequestDTO,
     ArtistDTO,
     ArtistFollowRequest,
     ArtistFollowerDTO,
@@ -649,6 +660,27 @@ type LogisticsRoutes =
                 :<|> "verify-routes" :> Post '[JSON] [EventRouteVerificationDTO]
            )
 
+-- Delegated administration of one event and the courtesy tickets its
+-- managers issue. Token routes take the secret in the body, never the URL.
+type EventAdminRoutes =
+    "events" :> Capture "eventId" Text :> "admins" :> Get '[JSON] EventAdminRosterDTO
+        :<|> "events" :> Capture "eventId" Text :> "admin-access" :> Get '[JSON] EventAdminAccessDTO
+        :<|> "events" :> Capture "eventId" Text :> "admin-invitations" :> ReqBody '[JSON] EventAdminInvitationCreateDTO :> Post '[JSON] EventAdminInvitationIssuedDTO
+        :<|> "events" :> Capture "eventId" Text :> "admin-invitations" :> Capture "invitationId" Text :> DeleteNoContent
+        :<|> "events" :> Capture "eventId" Text :> "admins" :> Capture "partyId" Text :> DeleteNoContent
+        :<|> "admin-invitations" :> "preview" :> ReqBody '[JSON] EventAdminInvitationTokenDTO :> Post '[JSON] EventAdminInvitationPreviewDTO
+        :<|> "admin-invitations" :> "accept" :> ReqBody '[JSON] EventAdminInvitationTokenDTO :> Post '[JSON] EventAdminAccessDTO
+        :<|> "events" :> Capture "eventId" Text :> "courtesy-tickets" :> ReqBody '[JSON] EventCourtesyTicketDTO :> Post '[JSON] TicketOrderDTO
+
+-- EVT-TICKET-SALE-001: an event manager asks to sell paid tickets under the
+-- standard terms; a strict administrator approves or declines the request.
+type EventTicketSaleRoutes =
+    "events" :> Capture "eventId" Text :> "ticket-sale" :> Get '[JSON] EventTicketSaleDTO
+        :<|> "events" :> Capture "eventId" Text :> "ticket-sale" :> "request" :> Post '[JSON] EventTicketSaleDTO
+        :<|> "ticket-sale-requests" :> Get '[JSON] [EventTicketSaleRequestDTO]
+        :<|> "ticket-sale-requests" :> Capture "requestId" Text :> "approve" :> Post '[JSON] EventTicketSaleDTO
+        :<|> "ticket-sale-requests" :> Capture "requestId" Text :> "decline" :> Post '[JSON] EventTicketSaleDTO
+
 type SocialEventsAPI =
     EventsRoutes
         :<|> EventCitiesRoutes
@@ -664,4 +696,6 @@ type SocialEventsAPI =
         :<|> BudgetRoutes
         :<|> FinanceRoutes
         :<|> LogisticsRoutes
+        :<|> EventAdminRoutes
         :<|> MemoryInvitationRoutes
+        :<|> EventTicketSaleRoutes

@@ -3,7 +3,7 @@ import { act, isValidElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import type { NavGroup } from './SidebarNav';
-import { featureRegistry } from '../features/featureRegistry';
+import { featureRegistry } from '../utils/featureRegistry';
 import { COURSE_REGISTRATIONS_NAV_LABEL } from '../utils/navigationLabels';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 

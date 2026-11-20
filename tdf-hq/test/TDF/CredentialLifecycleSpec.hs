@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.CredentialLifecycleSpec (spec) where
 
+import Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import Control.Concurrent (newEmptyMVar, putMVar, takeMVar, threadDelay, tryPutMVar)
 import Control.Concurrent.Async (withAsync, wait)
 import Control.Exception (finally)
@@ -13,6 +14,7 @@ import Data.Int (Int64)
 import Data.List (isPrefixOf, isSuffixOf)
 import Data.Pool (destroyAllResources)
 import Data.Text (Text)
+import qualified Data.Text.Encoding as TE
 import qualified Data.UUID as UUID
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (Entity(..), toPersistValue)
@@ -22,9 +24,9 @@ import System.Environment (lookupEnv)
 import System.Timeout (timeout)
 import Test.Hspec
 import TDF.Auth (lockCredentialForSession, revokeInteractiveSessions)
-import TDF.DTO (LoginResponse)
+import TDF.DTO (LoginResponse, LoginRequest(..))
 import TDF.Models (PartyId, UserCredentialId, UserCredential(..))
-import TDF.ServerAuth (GoogleProfile(..), SessionTokenTtl(..), completeGoogleLogin)
+import TDF.ServerAuth (AppleProfile(..), GoogleProfile(..), SessionTokenTtl(..), completeGoogleLogin, completeAppleLogin)
 
 -- This starts after provider cryptographic verification. No provider request is
 -- made, and the database is the same fully migrated synthetic HTTP fixture.
@@ -81,6 +83,96 @@ spec = describe "credential-lifecycle-postgresql" $ do
                   activeGoogleCount pool credential `shouldReturn` 0
                 ) `finally` void (tryPutMVar release ())
               ) `finally` void (tryPutMVar release ())
+
+
+        it "revalidates a bound Apple credential after disable wins the lock" $ \pool -> do
+          (_, credential, profile) <- appleFixture pool
+          ready <- newEmptyMVar
+          release <- newEmptyMVar
+          label <- observerLabel
+          withAsync (runSqlPool (do
+            disable credential
+            liftIO (putMVar ready () >> takeMVar release)) pool) $ \disabling ->
+            (do
+              within (takeMVar ready)
+              withAsync (runSqlPool (observeAs label >> apple profile) pool) $ \login ->
+                (do
+                  waitBlocked pool label
+                  putMVar release ()
+                  within (wait disabling)
+                  within (wait login) >>= (`shouldSatisfy` isLeft)
+                  activeAppleCount pool credential `shouldReturn` 0
+                ) `finally` void (tryPutMVar release ())
+              ) `finally` void (tryPutMVar release ())
+        it "revokes an Apple session when disable follows committed issuance" $ \pool -> do
+          (_, credential, profile) <- appleFixture pool
+          ready <- newEmptyMVar
+          release <- newEmptyMVar
+          label <- observerLabel
+          withAsync (runSqlPool (do
+            result <- apple profile
+            liftIO (putMVar ready () >> takeMVar release)
+            pure result) pool) $ \loggingIn ->
+            (do
+              within (takeMVar ready)
+              withAsync (runSqlPool (observeAs label >> disable credential) pool) $ \disabling ->
+                (do
+                  waitBlocked pool label
+                  putMVar release ()
+                  within (wait loggingIn) >>= (`shouldSatisfy` isRight)
+                  within (wait disabling)
+                  activeAppleCount pool credential `shouldReturn` 0
+                ) `finally` void (tryPutMVar release ())
+              ) `finally` void (tryPutMVar release ())
+        it "issues Apple sessions with the configured database-clock window even without a repeated email claim" $ \pool -> do
+          (partyId, _, profile) <- appleFixture pool
+          runSqlPool (apple profile) pool >>= (`shouldSatisfy` isRight)
+          rows <- runSqlPool (rawSql
+            "SELECT expires_at_epoch-issued_at_epoch, issued_at_epoch<=floor(extract(epoch FROM clock_timestamp()))::bigint, expires_at_epoch>floor(extract(epoch FROM clock_timestamp()))::bigint FROM api_token WHERE party_id=? AND active AND label LIKE 'apple-login:%'"
+            [toPersistValue partyId] :: SqlPersistT IO [(Single Int64, Single Bool, Single Bool)]) pool
+          rows `shouldBe` [(Single 3600, Single True, Single True)]
+        it "refuses unbound Apple account creation without explicit current-terms consent before any account effect" $ \pool -> do
+          profile <- unboundAppleProfile
+          runSqlPool (apple profile) pool >>= (`shouldSatisfy` isLeft)
+          bindings <- runSqlPool (rawSql
+            "SELECT count(*) FROM auth_provider_identity WHERE issuer=? AND subject=?"
+            [toPersistValue (apIssuer profile), toPersistValue (apSubject profile)] :: SqlPersistT IO [Single Int64]) pool
+          bindings `shouldBe` [Single 0]
+          parties <- runSqlPool (rawSql "SELECT count(*) FROM party WHERE primary_email=?"
+            [toPersistValue (apEmail profile)] :: SqlPersistT IO [Single Int64]) pool
+          parties `shouldBe` [Single 0]
+        it "creates exactly one consented Apple customer with a private-data-safe display name on replay" $ \pool -> do
+          profile <- unboundAppleProfile
+          let create = completeAppleLogin (SessionTokenTtl 3600) (Just True)
+                (Just "tdf-account-terms-v1") (Just False) Nothing Nothing profile
+          runSqlPool create pool >>= (`shouldSatisfy` isRight)
+          runSqlPool create pool >>= (`shouldSatisfy` isRight)
+          parties <- runSqlPool (rawSql "SELECT display_name FROM party WHERE primary_email=?"
+            [toPersistValue (apEmail profile)] :: SqlPersistT IO [Single Text]) pool
+          parties `shouldBe` [Single "Cuenta TDF"]
+          roles <- runSqlPool (rawSql
+            "SELECT role.code FROM party_security_role grantrow JOIN security_role role ON role.id=grantrow.role_id JOIN party p ON p.id=grantrow.party_id WHERE p.primary_email=? AND grantrow.active ORDER BY role.code"
+            [toPersistValue (apEmail profile)] :: SqlPersistT IO [Single Text]) pool
+          roles `shouldBe` [Single "customer"]
+        it "links an unbound Apple subject only after correct existing-account password proof" $ \pool -> do
+          (_, credential, googleProfile) <- fixture pool
+          profile <- unboundAppleProfile
+          hashed <- hashPasswordUsingPolicy slowerBcryptHashingPolicy "synthetic-apple-link-password"
+          passwordHash <- maybe (fail "Synthetic password hash unavailable") pure hashed
+          runSqlPool (rawExecute "UPDATE user_credential SET password_hash=? WHERE id=?"
+            [toPersistValue (TE.decodeUtf8 passwordHash), toPersistValue credential]) pool
+          let link password = completeAppleLogin (SessionTokenTtl 3600) Nothing Nothing Nothing Nothing
+                (Just (LoginRequest (gpSubject googleProfile) password)) profile
+          runSqlPool (link "incorrect-synthetic-password") pool >>= (`shouldSatisfy` isLeft)
+          rowsBefore <- runSqlPool (rawSql
+            "SELECT count(*) FROM auth_provider_identity WHERE issuer=? AND subject=?"
+            [toPersistValue (apIssuer profile), toPersistValue (apSubject profile)] :: SqlPersistT IO [Single Int64]) pool
+          rowsBefore `shouldBe` [Single 0]
+          runSqlPool (link "synthetic-apple-link-password") pool >>= (`shouldSatisfy` isRight)
+          rowsAfter <- runSqlPool (rawSql
+            "SELECT credential_id FROM auth_provider_identity WHERE issuer=? AND subject=?"
+            [toPersistValue (apIssuer profile), toPersistValue (apSubject profile)] :: SqlPersistT IO [Single UserCredentialId]) pool
+          rowsAfter `shouldBe` [Single credential]
 
 safeConnection :: String -> Bool
 safeConnection value = not (any (`elem` value) ['?', '#'])
@@ -156,3 +248,30 @@ fixture pool = do
       [toPersistValue subject,toPersistValue credential]
     pure (partyId, credential, GoogleProfile "https://accounts.google.com" subject
       "google-lifecycle@example.test" Nothing Nothing)) pool
+
+apple :: AppleProfile -> SqlPersistT IO (Either Text LoginResponse)
+apple = completeAppleLogin (SessionTokenTtl 3600) Nothing Nothing Nothing Nothing Nothing
+
+activeAppleCount :: ConnectionPool -> UserCredentialId -> IO Int64
+activeAppleCount pool credential = do
+  rows <- runSqlPool (rawSql
+    "SELECT count(*) FROM api_token t JOIN user_credential c ON c.party_id=t.party_id WHERE c.id=? AND t.active AND t.label LIKE 'apple-login:%'"
+    [toPersistValue credential] :: SqlPersistT IO [Single Int64]) pool
+  case rows of
+    [Single count] -> pure count
+    _ -> fail "Expected one Apple token count"
+
+appleFixture :: ConnectionPool -> IO (PartyId, UserCredentialId, AppleProfile)
+appleFixture pool = do
+  (partyId, credential, googleProfile) <- fixture pool
+  runSqlPool (rawExecute
+    "INSERT INTO auth_provider_identity(issuer,subject,credential_id,verification_method) VALUES ('https://appleid.apple.com',?,?,'new-account')"
+    [toPersistValue (gpSubject googleProfile),toPersistValue credential]) pool
+  pure (partyId, credential, AppleProfile "https://appleid.apple.com"
+    (gpSubject googleProfile) Nothing Nothing)
+
+unboundAppleProfile :: IO AppleProfile
+unboundAppleProfile = do
+  subject <- ("synthetic-apple-" <>) . UUID.toText <$> nextRandom
+  pure (AppleProfile "https://appleid.apple.com" subject
+    (Just (subject <> "@example.test")) Nothing)

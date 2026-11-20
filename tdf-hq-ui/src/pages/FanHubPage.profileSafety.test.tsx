@@ -14,6 +14,8 @@ const updateFanProfile = jest.fn<(payload: FanProfileUpdate) => Promise<FanProfi
 let session: SessionUser | null;
 let onUploadComplete: ((files: { publicUrl: string; name: string }[]) => void) | undefined;
 
+// The events panel has its own suite; here it would only add unrelated requests.
+jest.unstable_mockModule('../components/events/MyEventsPanel', () => ({ default: () => null }));
 jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => ({ session, loading: false }),
   getActiveSession: () => session,
@@ -169,7 +171,11 @@ describe('artist profile writes require the current account baseline', () => {
     fireEvent.click(retry[0]!);
     await waitFor(() => expect(artistName().value).toBe('Artist 42'));
     fireEvent.change(screen.getByLabelText('Ciudad'), { target: { value: 'Cuenca' } });
-    fireEvent.click(artistSave());
+    const highlights = screen.getByLabelText('Highlights');
+    const save = artistSave();
+    expect(save.closest('fieldset')).toBe(highlights.closest('fieldset'));
+    expect(highlights.compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(save);
     await waitFor(() => expect(updateArtistProfile).toHaveBeenCalledTimes(1));
     expect(updateArtistProfile.mock.calls[0]![0]).toMatchObject({
       apuArtistId: 42, apuDisplayName: 'Artist 42', apuCity: 'Cuenca',

@@ -547,6 +547,73 @@ try {
   console.log(`Directory claim graph: ${checkedClaimPairs} real HTTP pairs conform to the declared relation.`);
   console.log('Directory review HTTP: Admin-role enforcement, multi-role composition, separated reviewer, serialized decisions and read-only replay passed.');
   console.log('Credential lifecycle HTTP: disable, re-enable, password replacement, scoped revocation, deterministic reset race and issuance rollback passed.');
+  // Campaign retries share the actual PostgreSQL barrier used above. Both
+  // requests discover an absent row before either insert may complete.
+  const videoActors = JSON.parse(sql(`WITH inserted AS (
+    INSERT INTO party(display_name,is_org,created_at) VALUES
+      ('Video HTTP artist A',false,now()),('Video HTTP artist B',false,now())
+    RETURNING id,display_name) SELECT json_object_agg(display_name,id) FROM inserted`));
+  const videoArtist = videoActors['Video HTTP artist A'], videoOther = videoActors['Video HTTP artist B'];
+  const videoToken = `synthetic-video-${randomUUID()}`, videoOtherToken = `synthetic-video-${randomUUID()}`;
+  sql(`INSERT INTO artist_profile(artist_party_id,slug,created_at) VALUES
+    (${videoArtist},'video-http-a-${videoArtist}',now()),(${videoOther},'video-http-b-${videoOther}',now());
+    INSERT INTO party_security_role(party_id,role_id,approval_mode,active)
+      SELECT p.id,r.id,'bootstrap',true FROM party p CROSS JOIN security_role r
+      WHERE p.id IN (${videoArtist},${videoOther}) AND r.code='artist' AND r.active;
+    INSERT INTO api_token(token,party_id,label,active) VALUES
+      ('${videoToken}',${videoArtist},'Synthetic video HTTP',true),
+      ('${videoOtherToken}',${videoOther},'Synthetic video HTTP',true);`);
+  const videoDoc = {title:'Synthetic video retry fixture',status:'draft',videoUrl:'',coverUrl:'',durationSeconds:30,
+    channels:['instagram'],rightsConfirmed:false,technicalReviewed:false,
+    pieces:[{id:'reel-01',channel:'instagram',day:0,format:'vertical-video',caption:'Synthetic fixture only',assetUrl:'',
+      sourceStart:0,sourceEnd:15,status:'draft',publishedUrl:''}]};
+  const videoRequest = (key, document, expectedRevision=0, token=videoToken) => fetch(
+    `${base}/artists/video-campaigns/${key}?artistId=${videoArtist}`, {
+      method:'PUT',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},
+      body:JSON.stringify({expectedRevision,document}),
+    });
+  const retryKey=randomUUID();
+  const identical=await lifecycleRace('video_campaign',`NEW.campaign_key='${retryKey}'`,
+    ()=>videoRequest(retryKey,videoDoc),()=>videoRequest(retryKey,videoDoc));
+  assert.deepEqual(identical.map(r=>r.status),[200,200],'simultaneous identical creation is an ordinary replay, not a unique-key exception');
+  const identicalRows=await Promise.all(identical.map(r=>r.json()));
+  assert.deepEqual(identicalRows[0],identicalRows[1]);
+  assert.equal(sql(`SELECT count(*) FROM video_campaign WHERE artist_party_id=${videoArtist} AND campaign_key='${retryKey}'`),'1');
+  const conflictKey=randomUUID();
+  const conflicts=await lifecycleRace('video_campaign',`NEW.campaign_key='${conflictKey}'`,
+    ()=>videoRequest(conflictKey,videoDoc),()=>videoRequest(conflictKey,{...videoDoc,title:'Competing creation'}));
+  assert.deepEqual(conflicts.map(r=>r.status).sort(),[200,409],'different initial documents conflict without aborting the request transaction');
+  assert.equal(sql(`SELECT count(*) FROM video_campaign WHERE artist_party_id=${videoArtist} AND campaign_key='${conflictKey}'`),'1');
+  assert.equal((await videoRequest(retryKey,videoDoc,0,videoOtherToken)).status,403);
+  const draftFeature=await fetch(`${base}/artists/video-campaigns/${retryKey}/feature?artistId=${videoArtist}`,{
+    method:'POST',headers:{Authorization:`Bearer ${videoToken}`,'Content-Type':'application/json'},body:JSON.stringify({expectedRevision:1})});
+  assert.equal(draftFeature.status,400,'preparation and replay cannot feature an unreviewed video');
+  const conversionKey=randomUUID();
+  const conversionDoc={...videoDoc,status:'ready',videoUrl:'https://media.example.test/fixture.mp4',
+    pieces:videoDoc.pieces.map(p=>({...p,assetUrl:'https://media.example.test/fixture.mp4'}))};
+  assert.equal((await videoRequest(conversionKey,conversionDoc)).status,200);
+  const videoSignup=await fetch(`${base}/signup`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    firstName:'Synthetic',lastName:'Video fan',email:`video-http-${randomUUID()}@example.test`,
+    password:'synthetic-video-fan-password-42',termsAccepted:true,termsVersion:'tdf-account-terms-v1',marketingOptIn:false})});
+  assert.equal(videoSignup.status,200);const videoFan=await videoSignup.json();
+  const conversionId=Number(sql(`SELECT id FROM video_campaign WHERE artist_party_id=${videoArtist} AND campaign_key='${conversionKey}'`));
+  const videoConvert=kind=>fetch(`${base}/artists/video-campaigns/${conversionKey}/conversion?artistId=${videoArtist}`,{
+    method:'POST',headers:{Authorization:`Bearer ${videoFan.token}`,'Content-Type':'application/json'},
+    body:JSON.stringify({kind,source:'instagram',piece:'reel-01'})});
+  assert.equal((await videoConvert('follow')).status,400,'a conversion needs an actual follow');
+  const registrationRetries=await lifecycleRace('video_campaign_conversion',`NEW.campaign_id=${conversionId} AND NEW.kind='registration'`,
+    ()=>videoConvert('registration'),()=>videoConvert('registration'));
+  assert.deepEqual(registrationRetries.map(r=>r.status),[200,200]);
+  sql(`INSERT INTO fan_follow(fan_party_id,artist_party_id,created_at) VALUES(${videoFan.partyId},${videoArtist},now());`);
+  const followRetries=await lifecycleRace('video_campaign_conversion',`NEW.campaign_id=${conversionId} AND NEW.kind='follow'`,
+    ()=>videoConvert('follow'),()=>videoConvert('follow'));
+  assert.deepEqual(followRetries.map(r=>r.status),[200,200]);
+  const videoMetrics=await (await fetch(`${base}/artists/video-campaigns/${conversionKey}/metrics?artistId=${videoArtist}`,
+    {headers:{Authorization:`Bearer ${videoToken}`}})).json();
+  assert.equal(videoMetrics.registrations,1);assert.equal(videoMetrics.follows,1);assert.equal(videoMetrics.byPiece.length,1);
+  assert.equal(sql(`SELECT count(*) FROM video_campaign_conversion WHERE campaign_id=${conversionId}`),'2');
+  assert.equal(sql(`SELECT featured_video_url IS NULL FROM artist_profile WHERE artist_party_id=${videoArtist}`),'t');
+  console.log('Video campaign HTTP: controlled concurrent creation, conflicting bodies, registration/follow deduplication and artist isolation passed; no publication.');
   await verifyCheckoutMoneyHttp({ sql, base });
   console.log('Identity HTTP: authorization, concurrent replay, actor scope, shared details, archival, canonical access and rollback passed.');
 } finally {

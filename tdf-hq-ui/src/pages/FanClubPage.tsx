@@ -1,3 +1,4 @@
+import ArtistProfileLink from '../components/ArtistProfileLink';
 import UserProfileLink from '../components/UserProfileLink';
 import MarkdownText from '../components/MarkdownText';
 import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
@@ -160,18 +161,20 @@ export default function FanClubPage() {
             <CardContent>
               <Stack spacing={2}>
                 {club.fcArtistImageUrl && (
-                  <Box
-                    component="img"
-                    src={club.fcArtistImageUrl}
-                    alt={club.fcName}
-                    sx={{
-                      width: '100%',
-                      height: 280,
-                      objectFit: 'cover',
-                      borderRadius: 2,
-                      mb: 1,
-                    }}
-                  />
+                  <ArtistProfileLink partyId={club.fcArtistId} sx={{ display: 'block' }}>
+                    <Box
+                      component="img"
+                      src={club.fcArtistImageUrl}
+                      alt={club.fcName}
+                      sx={{
+                        width: '100%',
+                        height: 280,
+                        objectFit: 'cover',
+                        borderRadius: 2,
+                        mb: 1,
+                      }}
+                    />
+                  </ArtistProfileLink>
                 )}
                 <Typography variant="h5" fontWeight={600}>{club.fcName}</Typography>
                 {club.fcDescription && (

@@ -423,7 +423,7 @@ recordMusicVerifiedPayment context checkout attempt provider environment merchan
     }
   case bound of
     Left message -> pure (Left message)
-    Right () -> Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+    Right () -> Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
       { Checkout.vpAttempt = attempt, Checkout.vpCheckout = checkout, Checkout.vpProvider = provider
       , Checkout.vpEnvironment = environment, Checkout.vpMerchantRef = merchantRef
       , Checkout.vpResourceType = resourceType, Checkout.vpProviderResource = providerResource

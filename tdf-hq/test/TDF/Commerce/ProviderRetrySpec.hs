@@ -3,10 +3,10 @@
 -- Real PostgreSQL persistence/concurrency tests; no provider HTTP or credentials.
 module TDF.Commerce.ProviderRetrySpec (spec) where
 
-import Data.List (nub)
+import Data.List (intercalate, isPrefixOf, nub)
 import           Control.Concurrent (MVar, ThreadId, forkFinally, killThread, newEmptyMVar, putMVar, readMVar, takeMVar, threadDelay, tryPutMVar)
 import           Control.Exception (AsyncException(..), IOException, bracket, throwIO, toException, try)
-import           Control.Monad (forM, forM_, unless, when)
+import           Control.Monad (filterM, forM, forM_, unless, when)
 import           Control.Monad.Logger (runNoLoggingT)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, runReaderT)
@@ -34,13 +34,16 @@ import           Network.Socket (SockAddr(..))
 import           Numeric (readHex)
 import qualified Network.HTTP.Client as HC
 import           Servant (Handler, NoContent, ServerError, errHTTPCode, errBody, errHeaders, runHandler, getResponse, getHeaders, (:<|>)(..))
-import           System.Environment (lookupEnv, setEnv, unsetEnv)
+import           System.Environment (getEnvironment, lookupEnv, setEnv, unsetEnv)
+import qualified System.Exit as Exit
+import qualified System.Process as Process
+import           System.IO.Temp (withSystemTempDirectory)
 import qualified System.Timeout as Timeout
 import           Test.Hspec
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.API.CommerceOperations
-import           TDF.Auth (AuthedUser(..))
+import           TDF.Auth (AuthedUser(..), modulesForRoles)
 import           TDF.Models (RoleEnum(..))
 import qualified TDF.Server.CommerceOperations as Operations
 import           TDF.API.ProviderExecution (PaymentSessionCreateDTO(..), PaymentSessionDTO(..))
@@ -79,6 +82,7 @@ import qualified TDF.Ticketing.Transfer as Transfer
 import Database.Persist.Sql (toSqlKey, fromSqlKey)
 import qualified TDF.Server.PaymentAvailability as Availability
 import qualified TDF.Server.ServiceStorefront as Storefront
+import           TDF.API.ServiceStorefrontTypes (ServiceStorefrontOrderUpdate(..))
 
 -- In-memory HTTP connection fixtures. These exercise the real HTTP executor,
 -- not a real provider, TLS handshake, socket, merchant account or sandbox.
@@ -418,9 +422,11 @@ spec = do
         reconciliationTransactionSpec
         fullDomainQuerySpec
         hostedServiceOrderSpec
+        adminServiceOrderUpdateSpec
         closedCheckoutEvidenceSpec
         captureReplaySpec
         ticketLedgerSpec
+        paymentSnapshotRestoreSpec
         ticketAllocationSpec
         legacyStripeRefundSpec
         ticketTierCapacitySpec
@@ -790,7 +796,7 @@ notificationMinimizationSpec = describe "provider notification evidence minimiza
       [ "TransactionId" A..= (1234 :: Int), "ClientTransactionId" A..= ("CLIENT-1" :: Text)
       , "StoreId" A..= ("synthetic-store" :: Text) ])
     adapter <- requireRight (PayPhone.payPhoneAdapter
-      (PayPhone.PayPhoneConfig "synthetic-token" "synthetic-store"))
+      (PayPhone.PayPhoneConfig "synthetic-token" "synthetic-store" Nothing))
     value <- requireRight (A.eitherDecodeStrict' retained)
     assessment <- requireRight (Adapter.adapterAssessNotification adapter value)
     Adapter.notificationExternalId assessment `shouldBe` "1234"
@@ -2304,6 +2310,48 @@ assertClosedPaymentEvidence pool payment = do
   where checkoutId = Checkout.checkoutReferenceId (Execution.bppCheckout payment)
 
 -- Zero commercial fees are valid; zero-valued journal lines are not.
+
+-- Deliberately opt-in: full database replacement only in the private lab.
+-- Provider evidence is synthetic. This invokes the canonical backend writer,
+-- not Dataweb HTTP, its callback handler, or its reference parser.
+paymentSnapshotRestoreSpec :: SpecWith ConnectionPool
+paymentSnapshotRestoreSpec = describe "payment snapshot restore laboratory" $
+  it "reconciles post-snapshot Datafast evidence once after a real restore" $ \pool -> do
+    enabled <- lookupEnv "TDF_RECOVERY_RESTORE_LAB"
+    unless (enabled == Just "synthetic-loopback-only") $
+      pendingWith "Requires explicitly isolated synthetic PostgreSQL laboratory"
+    configured <- lookupEnv "TDF_PROVIDER_RETRY_DATABASE_URL"
+    url <- maybe (fail "Missing isolated database URL") pure configured
+    let prefix = "postgresql://synthetic@127.0.0.1:"
+        suffix = "/tdf_provider_retry_test"
+        port = T.stripPrefix prefix (T.pack url) >>= T.stripSuffix suffix
+    unless (maybe False (\value -> not (T.null value) && T.all (\c -> c >= '0' && c <= '9') value) port) $
+      fail "Restore laboratory requires exact synthetic user and loopback URL without options"
+    names <- runSqlPool (rawSql "SELECT current_database()" []) pool :: IO [Single Text]
+    names `shouldBe` [Single "tdf_provider_retry_test"]
+    creation <- newCheckout pool
+    payment <- captureFixtureFromCheckout creation "payment" Checkout.AttemptProcessing pool Checkout.ProviderDatafast
+    before <- runSqlPool (captureSnapshot payment) pool
+    withSystemTempDirectory "tdf-synthetic-payment-restore-" $ \directory -> do
+      let dump = directory <> "/before-confirmation.dump"
+      callIsolatedPostgresTool "pg_dump" ["--format=custom", "--file", dump, "--dbname", url]
+      runSqlPool (Checkout.recordVerifiedPaymentOrReconcile payment) pool `shouldReturn` Right True
+      confirmed <- runSqlPool (captureSnapshot payment) pool
+      confirmed `shouldNotBe` before
+      -- An actual dump restore discards the post-snapshot confirmation.
+      destroyAllResources pool
+      callIsolatedPostgresTool "pg_restore" ["--clean", "--if-exists", "--exit-on-error", "--no-owner", "--dbname", url, dump]
+      destroyAllResources pool
+      runSqlPool (captureSnapshot payment) pool `shouldReturn` before
+      let apply = runSqlPool (Checkout.recordVerifiedPaymentOrReconcile payment) pool
+      recovered <- concurrently (replicate 8 apply)
+      length (filter (== Right True) recovered) `shouldBe` 1
+      length (filter (== Right False) recovered) `shouldBe` 7
+      once <- runSqlPool (captureSnapshot payment) pool
+      once `shouldNotBe` before
+      apply `shouldReturn` Right False
+      runSqlPool (captureSnapshot payment) pool `shouldReturn` once
+
 ticketLedgerSpec :: SpecWith ConnectionPool
 ticketLedgerSpec = describe "ticket capture ledger" $
   forM_ [(0,0),(0,261),(100,0),(100,261)] $ \(fee,tax) ->
@@ -2713,6 +2761,38 @@ hostedServiceOrderSpec = describe "hosted service order reconciliation" $
           runSqlPool (paymentSnapshot payment) pool `shouldReturn` financial
           serviceOrderSnapshot pool payment `shouldReturn` order
 
+-- The admin fulfillment update writes only its own fields in one conditional
+-- transaction: payment fields recorded by capture/reconciliation survive it.
+adminServiceOrderUpdateSpec :: SpecWith ConnectionPool
+adminServiceOrderUpdateSpec = describe "admin service order fulfillment update" $
+  it "keeps payment fields, normalizes the status and refuses payment states" $ \pool -> do
+    payment <- serviceOrderFixture pool Checkout.ProviderPlaceToPay
+    result <- parsedQuery payment Adapter.AdapterSucceeded
+    runSqlPool (Reconciliation.applyQueryResult payment result "admin-update-paid" notificationTime) pool
+      `shouldReturn` Right Reconciliation.ReconciliationProcessed
+    let orderNumber = Execution.bppDomainOrderId payment
+        paymentFields = runSqlPool (rawSql
+          "SELECT payment_provider,paid_at,checkout_id::text FROM service_storefront_order WHERE id=?::uuid"
+          [PersistText orderNumber]) pool :: IO [(Single Text, Single UTCTime, Single Text)]
+        admin = AuthedUser
+          { auPartyId = toSqlKey 1, auRoles = [Admin], auModules = modulesForRoles [Admin]
+          , auApiTokenId = Nothing, auSessionWitness = Nothing }
+        updateOrder request = case Storefront.serviceStorefrontAdminServer admin of
+          _list :<|> update :<|> _ -> runHandler (runReaderT (update orderNumber request)
+            Env { envPool = pool, envConfig = error "envConfig is unused by the admin order update" })
+    before <- paymentFields
+    updated <- updateOrder (ServiceStorefrontOrderUpdate (Just " In_Progress ") Nothing (Just " first pass "))
+    updated `shouldSatisfy` isRight
+    paymentFields `shouldReturn` before
+    runSqlPool (rawSql
+      "SELECT status,notes,(SELECT count(*) FROM service_storefront_order_status_change\
+      \ WHERE order_id=?::uuid AND status='in_progress') FROM service_storefront_order WHERE id=?::uuid"
+      (replicate 2 (PersistText orderNumber))) pool
+      `shouldReturn` [(Single ("in_progress" :: Text), Single (Just ("first pass" :: Text)), Single (1 :: Int64))]
+    refused <- updateOrder (ServiceStorefrontOrderUpdate (Just "paid") Nothing Nothing)
+    fmap errHTTPCode (either Just (const Nothing) refused) `shouldBe` Just 400
+    paymentFields `shouldReturn` before
+
 serviceOrderFixture :: ConnectionPool -> Checkout.PaymentProvider -> IO Execution.BoundProviderPayment
 serviceOrderFixture pool provider = do
   (creation, operation, _) <- replayFixtureForDomain "mixing_mastering" pool provider
@@ -2978,6 +3058,65 @@ reconciliationPipelineSpec = describe "persisted callback to authoritative query
           rows `shouldBe` [(Single (if provider == Checkout.ProviderPlaceToPay then "awaiting_payment" else "processing"), Single (if provider == Checkout.ProviderPlaceToPay
             then "requires_customer_action" else "processing"), Single 1, Single 0)]
 
+      it "leaves one reconciliation exception when a bound event with no exception of its own dead-letters" $ \pool ->
+        withNotificationEnvironment $ do
+          payment <- reconciliationFixture pool provider
+          payload <- reconciliationNotification pool payment
+          let eventRef = Event.pepReference payload
+              reviewCount = runSqlPool (rawSql
+                "SELECT count(*) FROM commerce_reconciliation_exception\
+                \ WHERE internal_reference=? AND exception_type=? AND status='open'"
+                [ PersistText (Checkout.checkoutReferenceId (Execution.bppCheckout payment))
+                , PersistText Reconciliation.deadLetterReviewExceptionType ]) pool :: IO [Single Int64]
+          outcome <- Reconciliation.processProviderEventWith
+            (\_ -> pure (Left (ProviderHttp.AdapterTransportError "SYNTHETIC-PRIVATE timeout"))) getCurrentTime
+            (Env pool (error "Synthetic reconciliation must not use AppConfig")) payload notificationTime
+          Reconciliation.prrDisposition outcome `shouldBe` Reconciliation.ReconciliationRetry
+          Reconciliation.prrReview outcome `shouldBe` Just payment
+          -- Still leased, not a dead letter: the fence records nothing.
+          runSqlPool (Reconciliation.recordDeadLetterReview eventRef 1 payment notificationTime) pool
+          reviewCount `shouldReturn` [Single 0]
+          runSqlPool (Event.markProviderEventDeadLetter eventRef 1 Nothing Nothing Nothing
+            "Synthetic exhausted retries" notificationTime) pool
+          runSqlPool (Reconciliation.recordDeadLetterReview eventRef 1 payment notificationTime) pool
+          runSqlPool (Reconciliation.recordDeadLetterReview eventRef 1 payment notificationTime) pool
+          reviewCount `shouldReturn` [Single 1]
+
+      it "keeps the bound payment for review while the provider reports the payment pending" $ \pool ->
+        withNotificationEnvironment $ do
+          payment <- reconciliationFixture pool provider
+          payload <- reconciliationNotification pool payment
+          outcome <- Reconciliation.processProviderEventWith
+            (\_ -> pure (Right (queryValue payment Adapter.AdapterPending))) getCurrentTime
+            (Env pool (error "Synthetic reconciliation must not use AppConfig")) payload notificationTime
+          Reconciliation.prrDisposition outcome `shouldBe` Reconciliation.ReconciliationRetry
+          Reconciliation.prrReview outcome `shouldBe` Just payment
+
+      it "keeps the bound payment for review when reconciliation throws after the binding" $ \pool ->
+        withNotificationEnvironment $ do
+          payment <- reconciliationFixture pool provider
+          payload <- reconciliationNotification pool payment
+          snapshot <- runSqlPool (paymentSnapshot payment) pool
+          outcome <- Reconciliation.processProviderEventWith
+            (\_ -> pure (Right (queryValue payment Adapter.AdapterSucceeded)))
+            (ioError (userError "SYNTHETIC-PRIVATE clock failure"))
+            (Env pool (error "Synthetic reconciliation must not use AppConfig")) payload notificationTime
+          Reconciliation.prrDisposition outcome `shouldBe` Reconciliation.ReconciliationRetry
+          Reconciliation.prrReview outcome `shouldBe` Just payment
+          show (Reconciliation.prrSummary outcome) `shouldNotContain` "SYNTHETIC-PRIVATE"
+          runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
+      it "does not add a second exception when the query mismatch already recorded one" $ \pool ->
+        withNotificationEnvironment $ do
+          payment <- reconciliationFixture pool provider
+          payload <- reconciliationNotification pool payment
+          outcome <- Reconciliation.processProviderEventWith
+            (\_ -> pure (Right (queryValue payment { Execution.bppAmountMinor = 1 }
+              Adapter.AdapterSucceeded))) getCurrentTime
+            (Env pool (error "Synthetic reconciliation must not use AppConfig")) payload notificationTime
+          Reconciliation.prrDisposition outcome `shouldBe` Reconciliation.ReconciliationDeadLetter
+          Reconciliation.prrReview outcome `shouldBe` Nothing
+
       it "rejects tampered stored callback trust before invoking the query transport" $ \pool ->
         withNotificationEnvironment $ do
           payment <- reconciliationFixture pool provider
@@ -3055,7 +3194,7 @@ parsedQuery :: Execution.BoundProviderPayment -> Adapter.AdapterResultState -> I
 parsedQuery payment state = do
   adapter <- if Execution.bppProvider payment == Checkout.ProviderPlaceToPay
     then requireRight (PlaceToPay.placeToPayAdapter notificationConfig)
-    else requireRight (PayPhone.payPhoneAdapter (PayPhone.PayPhoneConfig "synthetic-token" "synthetic-store"))
+    else requireRight (PayPhone.payPhoneAdapter (PayPhone.PayPhoneConfig "synthetic-token" "synthetic-store" Nothing))
   requireRight (Adapter.adapterParseResponse adapter AdapterQuery
     (Adapter.PaymentLocator (Execution.bppProviderResourceId payment)
       (Adapter.ExpectedPayment (Execution.bppProviderReference payment)
@@ -3392,8 +3531,31 @@ withCompletionEnvironment action = bracket
       , ("PAYPAL_CLIENT_SECRET", "synthetic-secret"), ("PAYPAL_WEBHOOK_ID", "synthetic-webhook")
       , ("COMMERCE_EVENT_ENCRYPTION_KEY", T.unpack recoveryEncryptionKey)]
 
+-- libpq lets PGHOSTADDR, or a service file, pick the server even when the URL
+-- names loopback, so the disposable-database checks would not bind the
+-- connection. Refuse them before any connection opens, whoever runs the spec.
+libpqRoutingOverrides :: [String]
+libpqRoutingOverrides = ["PGHOSTADDR", "PGSERVICE", "PGSERVICEFILE"]
+
+rejectLibpqRoutingOverrides :: IO ()
+rejectLibpqRoutingOverrides = do
+  present <- filterM (fmap (maybe False (not . null)) . lookupEnv) libpqRoutingOverrides
+  unless (null present) $
+    fail ("Unset libpq routing overrides before using the disposable database: " <> intercalate ", " present)
+
+-- Dump and restore get the URL alone: no inherited PG* variable reaches them.
+callIsolatedPostgresTool :: FilePath -> [String] -> IO ()
+callIsolatedPostgresTool tool arguments = do
+  rejectLibpqRoutingOverrides
+  inherited <- getEnvironment
+  let isolated = [binding | binding@(name, _) <- inherited, not ("PG" `isPrefixOf` name)]
+  (code, _, errors) <- Process.readCreateProcessWithExitCode
+    (Process.proc tool arguments) { Process.env = Just isolated } ""
+  unless (code == Exit.ExitSuccess) $ fail (tool <> " failed: " <> errors)
+
 openDatabase :: String -> IO ConnectionPool
 openDatabase url = do
+  rejectLibpqRoutingOverrides
   pool <- runNoLoggingT (createPostgresqlPool (BS.pack url) 4)
   names <- runSqlPool (rawSql "SELECT current_database()" []) pool :: IO [Single Text]
   unless (names == [Single "tdf_provider_retry_test"]) $ do
