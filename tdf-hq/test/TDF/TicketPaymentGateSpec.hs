@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
 module TDF.TicketPaymentGateSpec (spec) where
 
 import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar, threadDelay, tryPutMVar)
@@ -13,7 +14,9 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Either (isLeft)
 import Data.Int (Int64)
+import Data.IORef (newIORef, readIORef, writeIORef)
 import Data.List (isInfixOf)
+import Data.Proxy (Proxy(..))
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime, getCurrentTime)
@@ -21,7 +24,9 @@ import Database.Persist (PersistValue(..))
 import Database.Persist.Postgresql (createPostgresqlPool)
 import Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, toSqlKey, rawExecute, rawSql, runSqlPool)
 import Network.Socket (SockAddr(SockAddrInet), tupleToHostAddress)
-import Servant (Header, Headers, getResponse, getHeaders, Handler, ServerError, errBody, errHTTPCode, runHandler, (:<|>)(..))
+import qualified Network.Wai as Wai
+import qualified Network.Wai.Test as WaiTest
+import Servant (Header, Headers, getResponse, getHeaders, Handler, ServerError, errBody, errHTTPCode, runHandler, serve, Post, PlainText, (:>), (:<|>)(..))
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import System.IO.Temp (withSystemTempDirectory)
 import System.Timeout (timeout)
@@ -29,6 +34,8 @@ import Test.Hspec
 import TDF.Test.DisposablePostgres (isDisposablePostgresUrl)
 
 import TDF.API.ProviderExecution (PaymentSessionCreateDTO(..))
+import TDF.API.Types (DatafastCheckoutDTO)
+import TDF.Commerce.DatafastClientIP (DatafastClientRequest)
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import TDF.Auth (AuthedUser(..), modulesForRoles)
@@ -128,7 +135,7 @@ spec = describe "ticket-payment-gate-postgresql" $ do
         view <- run pool (getOrder (oEvent order) (oOrder order) (Just (oToken order)))
         fmap Routes.paymentStatus view `shouldSatisfy` either (const False) (`elem` ["holding", "awaiting_payment"])
         ticketSalesOpenFor pool order `shouldReturn` True
-        run pool (datafastCreate (oEvent order) (oOrder order) (Just (oToken order))) >>= (`shouldNotSatisfy` salesClosed)
+        runDatafastCreate pool order >>= (`shouldNotSatisfy` salesClosed)
         run pool (paypalCreate (oEvent order) (oOrder order) (Just (oToken order))) >>= (`shouldNotSatisfy` salesClosed)
         run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order))) >>= (`shouldNotSatisfy` salesClosed)
         hostedSession pool order >>= (`shouldNotSatisfy` salesClosed)
@@ -140,7 +147,7 @@ spec = describe "ticket-payment-gate-postgresql" $ do
         fmap Routes.paymentMethods view `shouldBe` Right []
         fmap Routes.orderId view `shouldBe` Right (oOrder order)
         ticketSalesOpenFor pool order `shouldReturn` False
-        run pool (datafastCreate (oEvent order) (oOrder order) (Just (oToken order))) >>= (`shouldSatisfy` salesClosed)
+        runDatafastCreate pool order >>= (`shouldSatisfy` salesClosed)
         run pool (paypalCreate (oEvent order) (oOrder order) (Just (oToken order))) >>= (`shouldSatisfy` salesClosed)
         run pool (bankSelect (oEvent order) (oOrder order) (Just (oToken order))) >>= (`shouldSatisfy` salesClosed)
         run pool (paypalCapture (oEvent order) (oOrder order) (Just (oToken order)) captureRequest)
@@ -152,7 +159,7 @@ spec = describe "ticket-payment-gate-postgresql" $ do
       it "applies the same refusal to a cancelled event" $ \pool -> do
         order <- newOrder pool "cancelled"
         closeSales pool order "cancelled"
-        run pool (datafastCreate (oEvent order) (oOrder order) (Just (oToken order))) >>= (`shouldSatisfy` salesClosed)
+        runDatafastCreate pool order >>= (`shouldSatisfy` salesClosed)
         hostedSession pool order >>= (`shouldSatisfy` salesClosed)
 
       it "sends no new PayPal capture after sales close, even when an earlier attempt was recorded" $ \pool -> do
@@ -232,7 +239,7 @@ spec = describe "ticket-payment-gate-postgresql" $ do
         runSqlPool (rawExecute "UPDATE commerce_checkout_session SET status='processing' WHERE id=?::uuid"
           [PersistText (oCheckout order)]) pool
         closeSales pool order "postponed"
-        run pool (datafastCreate (oEvent order) (oOrder order) (Just (oToken order))) >>= (`shouldNotSatisfy` salesClosed)
+        runDatafastCreate pool order >>= (`shouldNotSatisfy` salesClosed)
 
       it "makes a closure wait for a payment authorization that already holds the event" $ \pool -> do
         order <- newOrder pool "ordering"
@@ -467,6 +474,28 @@ run :: ConnectionPool -> App a -> IO (Either ServerError a)
 run pool action = do
   cfg <- loadConfig
   runHandler (runReaderT action (Env pool cfg))
+
+-- Obtain the opaque argument through its real transport combinator. The
+-- loopback peer and absent assertion cannot authorize a fresh gateway call,
+-- even if an unrelated shell happens to contain merchant credentials.
+type DatafastRequestProbe = DatafastClientRequest :> Post '[PlainText] Text
+
+runDatafastCreate :: ConnectionPool -> Order -> IO (Either ServerError DatafastCheckoutDTO)
+runDatafastCreate pool order = do
+  captured <- newIORef Nothing
+  let handler :: DatafastClientRequest -> Handler Text
+      handler request = do
+        result <- liftIO $ run pool
+          (datafastCreate (oEvent order) (oOrder order) (Just (oToken order)) request)
+        liftIO (writeIORef captured (Just result))
+        pure "captured"
+      app = serve (Proxy :: Proxy DatafastRequestProbe) handler
+      request = Wai.defaultRequest
+        { Wai.requestMethod = "POST"
+        , Wai.remoteHost = SockAddrInet 12345 (tupleToHostAddress (127,0,0,1))
+        }
+  _ <- WaiTest.runSession (WaiTest.srequest (WaiTest.SRequest request "")) app
+  readIORef captured >>= maybe (fail "Dataweb request context was not captured") pure
 
 salesClosed :: Either ServerError a -> Bool
 salesClosed (Left err) = errHTTPCode err == 409 && "no longer on sale" `isInfixOf` BL.unpack (errBody err)
