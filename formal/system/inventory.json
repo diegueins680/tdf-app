@@ -1263,6 +1263,8 @@
       "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
       "tdf-hq-ui/src/features/marketplace/offers.test.ts",
       "tdf-hq-ui/src/features/marketplace/offers.ts",
+      "tdf-hq-ui/src/features/records/RecordDescription.test.tsx",
+      "tdf-hq-ui/src/features/records/RecordDescription.tsx",
       "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
       "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
       "tdf-hq-ui/src/features/records/SelectedRecordPublication.test.tsx",
@@ -10619,6 +10621,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-753c2ab899daa537",
+      "path": "tdf-hq-ui/src/features/records/RecordDescription.test.tsx",
+      "sha256": "24cdf4b7a3859f6262af7fea7c0ac6ca148bedb659844b3b95a20084c004fee1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c83ccd742453ac1a",
+      "path": "tdf-hq-ui/src/features/records/RecordDescription.tsx",
+      "sha256": "43e7c30d57e63f857efd5a4e9dfd5e3af7bca80661b5ed28e749763505fd9a56",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1feafb0155431191",
       "path": "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
       "sha256": "02a247376b7685688d733469e04a0c9444e7042db2f17e8a0097782a3d674c68",
@@ -12169,7 +12183,7 @@
     {
       "id": "SURFACE-56568ee47192d217",
       "path": "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
-      "sha256": "5bffd54fb89d208c192a607c5e921f7c7c862555c7d922dad018d43088a3b85a",
+      "sha256": "5856f66931a8496d04dac6f647c8cd0eebfffab4d20f48e7fc0ca5af5881473e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31765,7 +31779,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a910954fe39fb358454a0155da61c5aa6a4a0e62de9f9f78b9c1623fc9761027",
+      "sha256": "5d42576b61fd05f4134cbf17b569aeb99e3e159dabc865c9adb102e335f44c4c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
