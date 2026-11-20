@@ -30953,7 +30953,7 @@
     },
     {
       "path": "tdf-hq/studio/README.md",
-      "sha256": "57d93bf71c338c8b1a1c3ec092d3e50f6b5bb80cb9ab783fdf5bff0237a84057",
+      "sha256": "ea83f4345160202ead7a7ec88c8ba743759441bf17e6acdfd7dbc7fa02359430",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
