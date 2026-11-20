@@ -5,6 +5,7 @@ import { StrictMode } from 'react';
 
 const navigateMock = jest.fn();
 const captureMock = jest.fn();
+const listAttendees = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const getMyRsvpMock = jest.fn<() => Promise<unknown>>();
 const getRsvpSummaryMock = jest.fn<() => Promise<unknown>>();
 const upsertMyRsvpMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
@@ -25,6 +26,7 @@ jest.unstable_mockModule('../../analytics/useAnalytics', () => ({
 
 jest.unstable_mockModule('../../api/socialEvents', () => ({
   SocialEventsAPI: {
+    listAttendees,
     getMyRsvp: getMyRsvpMock,
     getRsvpSummary: getRsvpSummaryMock,
     upsertMyRsvp: upsertMyRsvpMock,
@@ -69,6 +71,28 @@ describe('EventRsvpControls', () => {
       rsvpShowOnProfile: true,
     });
     deleteMyRsvpMock.mockResolvedValue(undefined);
+  });
+
+  it('opens each status, shows profile pictures and pages through visible attendees', async () => {
+    sessionValue = { partyId: '7' };
+    listAttendees.mockImplementation(async (_event, status, after) => {
+      if (status === 'maybe') return { items: [], nextCursor: null };
+      return after ? { items: [{ id: '22', name: 'Luis', avatarUrl: null }], nextCursor: null }
+        : { items: [{ id: '21', name: 'Ana', avatarUrl: '/ana.jpg' }], nextCursor: '21' };
+    });
+    renderControls();
+    fireEvent.click(await screen.findByRole('button', { name: 'Personas que van (2)' }));
+    expect(await screen.findByText('Ana')).toBeTruthy();
+    expect(screen.getByRole('dialog').querySelector('img')?.getAttribute('src')).toBe('/ana.jpg');
+    fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+    expect(await screen.findByText('Luis')).toBeTruthy();
+    expect(listAttendees).toHaveBeenCalledWith('42', 'accepted', '21');
+    fireEvent.click(screen.getByRole('button', { name: 'Anterior' }));
+    expect(await screen.findByText('Ana')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Personas interesadas (3)' }));
+    expect(await screen.findByText('No hay confirmaciones visibles en esta página.')).toBeTruthy();
+    expect(upsertMyRsvpMock).not.toHaveBeenCalled();
   });
 
   it('preserves an anonymous RSVP intent and opens signup with the public return route', () => {

@@ -1,3 +1,4 @@
+import type { operations } from './generated/types';
 import { assertSafeEventFinanceMoney } from '../utils/eventFinanceMoney';
 import { del, get, post, postForm, put } from './client';
 
@@ -861,6 +862,8 @@ export const SocialEventsAPI = {
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/verify-routes`, {}) as EventRouteVerificationDTO[],
   getMyRsvp: async (eventId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/rsvp`) as SocialRsvpDTO | null,
+  listAttendees: async (eventId: string, status: 'accepted' | 'maybe', after?: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/attendees${buildQuery({ status, after })}`) as operations['listEventAttendees']['responses'][200]['content']['application/json'],
   getRsvpSummary: async (eventId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/rsvp-summary`) as SocialRsvpSummaryDTO,
   upsertMyRsvp: async (eventId: string, input: SocialRsvpWriteDTO) =>

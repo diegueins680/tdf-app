@@ -1331,6 +1331,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social-events/events/{eventId}/attendees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List visible attendee profiles for one RSVP status */
+        get: operations["listEventAttendees"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social-events/events/{eventId}/rsvp-summary": {
         parameters: {
             query?: never;
@@ -22826,6 +22843,59 @@ export interface operations {
             };
             /** @description Mutation rate limit exceeded */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventAttendees: {
+        parameters: {
+            query: {
+                status: "accepted" | "maybe";
+                after?: number;
+            };
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Up to 20 profiles visible to the viewer, ordered by stable RSVP identifier */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        nextCursor: string | null;
+                        items: {
+                            id: string;
+                            name: string;
+                            avatarUrl: string | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Invalid status or cursor */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event is missing or inaccessible */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
