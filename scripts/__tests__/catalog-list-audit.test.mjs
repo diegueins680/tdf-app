@@ -104,7 +104,7 @@ function beforeAgreements({ active, successors, integration, ...rest }) {
     }
     return row;
   };
-  const stepped = row => row.previousCurrentIds?.length && row.concurrentReviewHistory?.some(item =>
+  const stepped = row => row.concurrentReviewHistory?.some(item =>
     item.currentId === '739640d4416fd7a9ffaa' || item.replacementId === '739640d4416fd7a9ffaa')
     ? row.previousResolution : row;
   const registry = row => (row.currentId === 'ec2d69fb10a7f2751902' || row.replacementId === 'ec2d69fb10a7f2751902')
@@ -680,7 +680,7 @@ test('event catalog retirement ledger preserves evidence and distinct reviewed s
 });
 
 test('reconciled fingerprints match current sources; retired decisions still fail the gate', async () => {
-  const { ledger, active, successors } = await readReconciliation();
+  const { ledger, active, successors } = await readReconciliationWithAgreements();
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'catalog-reconciliation-test-'));
   const repoDir = path.join(tempRoot, 'repo');
   const reportPath = path.join(tempRoot, 'report.json');
@@ -1306,7 +1306,9 @@ test('marketplace agreement payments append one migration to the protected 252-e
 test('player server preserves both reviewed migration histories and appends only reviewed SQL', async () => {
   const main = await reviewedJson(PLAYER_SERVER_MAIN_BASE, manifestPath);
   const player = await reviewedJson(PLAYER_SERVER_REVIEW_HEAD, manifestPath);
-  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  const file = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  // The event agreement migrations append afterwards and have their own review.
+  const current = { ...file, migrations: file.migrations.filter(row => !agreementMigrations.has(row.id)) };
   const extension = player.migrations.filter(row => playerMigrations.has(row.id));
   assert.deepEqual(extension.map(row => row.id), [...playerMigrations]);
   assert.deepEqual(current, { ...main, migrations: [...main.migrations, ...extension] });
