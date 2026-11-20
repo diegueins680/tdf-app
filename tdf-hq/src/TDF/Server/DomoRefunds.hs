@@ -4,7 +4,7 @@
 
 -- All endpoints inherit bearer authentication and additionally require strict
 -- admin scope. Provider POST, provider readback and manual review are separate.
-module TDF.Server.DomoRefunds (domoRefundAdminServer, domoRefundAdminServerWithManager) where
+module TDF.Server.DomoRefunds (domoRefundAdminServer, domoRefundAdminServerWithManager, domoCancellationView) where
 
 import Control.Exception.Safe (tryAny)
 import Control.Monad (unless, when)
@@ -30,6 +30,7 @@ import TDF.Internationalization (formatMinorUnitsDecimal)
 import TDF.Routes.DomoRefunds
 import qualified TDF.Commerce.CheckoutStore as C
 import qualified TDF.Commerce.DomoRefundStore as D
+import qualified TDF.Commerce.DomoCancellationStore as DomoCancel
 import qualified TDF.Commerce.RefundStore as R
 import qualified TDF.Commerce.RefundReconciliation as Recovery
 import qualified TDF.Commerce.ProviderAdapter.PayPalRefund as Q
@@ -252,3 +253,25 @@ manualEvidenceView ref = do
         , "recordedBy" .= recorder,"recordedAt" .= recorded
         , "confirmedBy" .= confirmer,"confirmedAt" .= confirmed ]
     _ -> fail "Manual refund evidence is ambiguous"
+
+-- Shared response shape for the existing administrator cancellation endpoint.
+domoCancellationView :: DomoCancel.DomoCancellationRecord -> Value
+domoCancellationView record = object
+  [ "quoteId" .= DomoCancel.dcrQuoteId record
+  , "quoteStatus" .= DomoCancel.dcrQuoteStatus record
+  , "canceller" .= DomoCancel.dcrCanceller record
+  , "actorType" .= DomoCancel.dcrActorType record
+  , "policyVersion" .= DomoCancel.dcrPolicyVersion record
+  , "cancelledAt" .= DomoCancel.dcrCancelledAt record
+  , "leadDays" .= DomoCancel.dcrLeadDays record
+  , "inProgress" .= DomoCancel.dcrInProgress record
+  , "retainedBasisPoints" .= DomoCancel.dcrRetainedBasisPoints record
+  , "depositCollectedMinor" .= DomoCancel.dcrDepositCollectedMinor record
+  , "balanceCollectedMinor" .= DomoCancel.dcrBalanceCollectedMinor record
+  , "retainedMinor" .= DomoCancel.dcrRetainedMinor record
+  , "refundDueMinor" .= DomoCancel.dcrRefundDueMinor record
+  , "currency" .= DomoCancel.dcrCurrency record
+  , "refundStatus" .= DomoCancel.dcrRefundStatus record
+  , "refundId" .= DomoCancel.dcrRefundId record
+  , "alreadyCancelled" .= DomoCancel.dcrReplayed record
+  ]
