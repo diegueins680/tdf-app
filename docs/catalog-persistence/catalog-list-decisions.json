@@ -47112,6 +47112,30 @@
               }
             }
           ]
+        },
+        {
+          "id": "9f4bd75d43cac2910708",
+          "classification": "dynamic-business-catalog",
+          "disposition": "consumer-update",
+          "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+          "priority": "P3-consumer",
+          "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+          "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+          "reviewed": true,
+          "reviewMethod": "deterministic-policy-v3",
+          "reviewBatch": "deterministic-policy-v3",
+          "evidence": {
+            "file": "scripts/__tests__/event-preview.test.mjs",
+            "line": 10,
+            "kind": "object-registry",
+            "name": "publicEvent",
+            "valueCount": 11,
+            "consumerCount": 143,
+            "exactDuplicateIds": [],
+            "similarCandidateIds": [
+              "46515447e1de3fdd20c9"
+            ]
+          }
         }
       ]
     },
