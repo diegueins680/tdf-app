@@ -91,6 +91,8 @@ export function compiledApiSurface(document) {
         next.authCombinators.push(symbol(tag));
       } else if (modifier === 'Servant.API.RemoteHost.RemoteHost') {
         arity(component, 0); next.internalInputs.push('remote-host');
+      } else if (modifier === 'TDF.Commerce.DatafastClientIP.DatafastClientRequest') {
+        arity(component, 0); next.internalInputs.push('datafast-client-request');
       } else {
         throw new Error(`Unrecognized compiled API combinator: ${modifier}`);
       }

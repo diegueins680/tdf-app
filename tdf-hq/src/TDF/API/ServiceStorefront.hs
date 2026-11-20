@@ -3,6 +3,8 @@
 
 module TDF.API.ServiceStorefront where
 
+import TDF.Commerce.DatafastClientIP (DatafastClientRequest)
+
 import           Data.Text (Text)
 import qualified Data.ByteString.Lazy as BL
 import           Servant
@@ -23,7 +25,7 @@ type ServiceStorefrontPublicAPI =
   :<|> "services" :> "storefront" :> "order" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] ServiceStorefrontOrderCreate :> Post '[JSON] ServiceStorefrontOrderDTO
   :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> Header "X-Order-Lookup-Token" Text :> Get '[JSON] ServiceStorefrontOrderDTO
   :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> "stripe" :> "payment-intent" :> Header "X-Order-Lookup-Token" Text :> Post '[JSON] StripePaymentIntentDTO
-  :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> "datafast" :> "checkout" :> Header "X-Order-Lookup-Token" Text :> Post '[JSON] DatafastCheckoutDTO
+  :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> "datafast" :> "checkout" :> Header "X-Order-Lookup-Token" Text :> DatafastClientRequest :> Post '[JSON] DatafastCheckoutDTO
   :<|> "services" :> "storefront" :> "datafast" :> "status" :> QueryParam "orderId" Text :> QueryParam "resourcePath" Text :> Header "X-Order-Lookup-Token" Text :> Get '[JSON] ServiceStorefrontOrderDTO
   :<|> "services" :> "storefront" :> "order" :> Capture "orderId" Text :> "paypal" :> "create" :> Header "X-Order-Lookup-Token" Text :> Post '[JSON] PaypalCreateDTO
   :<|> "services" :> "storefront" :> "paypal" :> "capture" :> Header "X-Order-Lookup-Token" Text :> ReqBody '[JSON] ServiceStorefrontPaypalCaptureReq :> Post '[JSON] ServiceStorefrontOrderDTO
