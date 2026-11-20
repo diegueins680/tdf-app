@@ -28639,7 +28639,7 @@
     "e2e/web/helpers/thumbnail-failure-diagnostics.mjs": "d40191d4771616880144a3c0ebd629b16f25dac26cc82552187c277fdb53d755",
     "e2e/web/legacy-provider-playback.spec.mjs": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
     "e2e/web/marketplace-cart.spec.mjs": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
-    "e2e/web/marketplace-negotiation.spec.mjs": "cb1b1a4bd84ac9771db4bce96c37b14150892f64722d6b78ee2215b2cf8424ac",
+    "e2e/web/marketplace-negotiation.spec.mjs": "61fec6473c485cfa9f07a95d1551c5c8e859516d913a6f7e8213f48b5e278861",
     "e2e/web/mobile-layout-regressions.spec.mjs": "0be1916b95d3bff15572a7237bcb427295142aa1d31322df1257b0406e50ec9c",
     "e2e/web/mobile-program.spec.mjs": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
     "e2e/web/music-catalog-discovery.spec.mjs": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
@@ -50809,7 +50809,7 @@
     {
       "id": "SURFACE-4361fde9fb21989c",
       "path": "e2e/web/marketplace-negotiation.spec.mjs",
-      "sha256": "cb1b1a4bd84ac9771db4bce96c37b14150892f64722d6b78ee2215b2cf8424ac",
+      "sha256": "61fec6473c485cfa9f07a95d1551c5c8e859516d913a6f7e8213f48b5e278861",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
