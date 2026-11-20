@@ -1,3 +1,7 @@
+-- Columns the confirmation reads to rebuild the order link (production: NOT NULL).
+ALTER TABLE event_ticket_checkout_runtime
+  ADD COLUMN create_idempotency_key TEXT NOT NULL DEFAULT 'synthetic-idempotency-key-0001',
+  ADD COLUMN lookup_token_hash TEXT NOT NULL DEFAULT '';
 INSERT INTO social_event(id,title,timezone,start_time,created_at,updated_at)
 VALUES(1,'Synthetic workshop','America/Guayaquil','2026-10-24T19:00:00Z',NOW(),NOW());
 INSERT INTO event_ticket_tier(id,event_id,code,name,price_cents,currency,quantity_total,quantity_sold,is_active,created_at,updated_at)
