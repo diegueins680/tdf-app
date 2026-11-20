@@ -5,6 +5,7 @@ module TDF.Services.Stripe
   , defaultStripeApiVersion
   , createAccountLink
   , createConnectExpressAccount
+  , buildConnectExpressAccountBody
   , createCustomer
   , createEphemeralKey
   , createPaymentIntent
@@ -410,7 +411,11 @@ buildPaymentIntentForCustomerRequest cfg mIdempotencyKey customerId amountCents 
     , requestBody = RequestBodyBS body
     }
 
--- | Create a Stripe Express payout account for an artist receiving tips.
+-- | Create a Stripe payout account (Express Dashboard) for an artist receiving
+-- tips, through the Accounts v2 API. Stripe rejects @POST /v1/accounts@ for
+-- new Connect platforms, so creation uses @POST /v2/core/accounts@ with a JSON
+-- body; the resulting @acct_*@ id works with the v1 Account Links,
+-- PaymentIntents (@transfer_data[destination]@) and Refunds endpoints.
 --
 -- Resource invariant:
 -- * validates local preconditions before allocating an HTTP manager;
@@ -419,11 +424,12 @@ buildPaymentIntentForCustomerRequest cfg mIdempotencyKey customerId amountCents 
 -- * the manager cannot escape the callback.
 --
 -- Preconditions:
--- * country is an ISO 3166-1 alpha-2 country code; it is normalized to
---   uppercase before the request is sent.
+-- * country is an ISO 3166-1 alpha-2 country code; it is normalized before
+--   the request is sent.
 -- * email, when present, is already accepted by the calling signup/profile
 --   flow.
--- * metadata, when present, is already serialized into Stripe form fields.
+-- * metadata, when present, is an opaque context string stored under the
+--   @tdf_context@ metadata key.
 --
 -- Returns the full account JSON; caller persists @id@ (@acct_*@) and immediately
 -- requests an 'createAccountLink' for onboarding.
@@ -438,25 +444,19 @@ createConnectExpressAccount cfg country mEmail mMetadata =
     Left err -> pure (Left err)
     Right countryCode ->
       withStripeManager $ \manager -> do
-        let url = "https://api.stripe.com/v1/accounts"
-            body = BS8.intercalate "&" $ filter (not . BS.null)
-              [ "type=express"
-              , "country=" <> urlEncode (TE.encodeUtf8 countryCode)
-              , "capabilities[card_payments][requested]=true"
-              , "capabilities[transfers][requested]=true"
-              , maybe "" (\e -> "email=" <> urlEncode (TE.encodeUtf8 e)) mEmail
-              , maybe "" (\m -> "metadata=" <> urlEncode (TE.encodeUtf8 m)) mMetadata
-              ]
+        let url = "https://api.stripe.com/v2/core/accounts"
 
         initialRequest <- parseRequest url
         let request = initialRequest
               { method = "POST"
               , requestHeaders =
                   [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
-                  , ("Content-Type", "application/x-www-form-urlencoded")
+                  , ("Content-Type", "application/json")
                   , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
                   ]
-              , requestBody = RequestBodyBS body
+              , requestBody =
+                  RequestBodyLBS
+                    (Aeson.encode (buildConnectExpressAccountBody countryCode mEmail mMetadata))
               }
 
         response <- httpLbs request manager
@@ -469,6 +469,48 @@ createConnectExpressAccount cfg country mEmail mMetadata =
             bodyLBS
             "Failed to parse Stripe Account response"
             "Stripe account error"
+
+-- | Accounts v2 creation body for a tip recipient.
+--
+-- The account carries only the @recipient@ configuration with the
+-- @stripe_balance.stripe_transfers@ capability, which is what destination
+-- charges need. Stripe requires that combination to use the Express (or no)
+-- Dashboard with the platform as both fees and losses collector.
+--
+-- Precondition: country is already normalized by 'normalizeStripeCountryCode'.
+-- Accounts v2 expects the country code in lowercase.
+buildConnectExpressAccountBody
+  :: StripeCountryCode
+  -> Maybe Text
+  -> Maybe StripeMetadataForm
+  -> Value
+buildConnectExpressAccountBody countryCode mEmail mMetadata =
+  Aeson.object $
+    [ "dashboard" Aeson..= ("express" :: Text)
+    , "identity" Aeson..= Aeson.object
+        [ "country" Aeson..= T.toLower countryCode ]
+    , "defaults" Aeson..= Aeson.object
+        [ "responsibilities" Aeson..= Aeson.object
+            [ "fees_collector" Aeson..= ("application" :: Text)
+            , "losses_collector" Aeson..= ("application" :: Text)
+            ]
+        ]
+    , "configuration" Aeson..= Aeson.object
+        [ "recipient" Aeson..= Aeson.object
+            [ "capabilities" Aeson..= Aeson.object
+                [ "stripe_balance" Aeson..= Aeson.object
+                    [ "stripe_transfers" Aeson..= Aeson.object
+                        [ "requested" Aeson..= True ]
+                    ]
+                ]
+            ]
+        ]
+    ]
+    <> maybe [] (\email -> [ "contact_email" Aeson..= email ]) mEmail
+    <> maybe
+         []
+         (\meta -> [ "metadata" Aeson..= Aeson.object [ "tdf_context" Aeson..= meta ] ])
+         mMetadata
 
 -- | Create a Stripe Account Link for hosted payout onboarding. The returned
 -- URL is single-use and short-lived (~minutes); always generate one fresh when

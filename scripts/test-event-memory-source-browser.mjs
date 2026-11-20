@@ -131,7 +131,11 @@ try {
   await owner.getByRole('textbox', { name: 'Describe tu publicación' }).fill(caption);
   await owner.getByRole('button', { name: 'Publicar', exact: true }).click();
   await expect(card(owner)).toBeVisible({ timeout: 30000 });
-  await participant.reload(); await expect(card(participant)).toBeVisible();
+  await participant.reload();
+  // The compose=1 return URL focuses the editor after session and draft hydration.
+  // Let that navigation finish before scrolling the reader to the lazy moderation panel.
+  await expect(participant.getByRole('textbox', { name: 'Describe tu publicación' })).toBeFocused();
+  await expect(card(participant)).toBeVisible();
   // Moderation controls are lazy: InteractionPanel loads its summary only near
   // the viewport. Scroll the existing card atomically before locating a control
   // that does not exist yet. The locator re-resolves after any feed replacement.
