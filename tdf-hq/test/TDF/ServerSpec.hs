@@ -147,6 +147,7 @@ import TDF.DTO
 import qualified TDF.DTO as DTO
 import qualified TDF.Server as NotificationServer
 import TDF.Services.LlmChat (extractApiErrorMessage, extractModelReplyText, openAIChatRequestErrorMessage, shouldRetryWithFallbackModel)
+import TDF.Studio.Gallery (validateStudioGalleryPayload, studioGalleryImageUrlAllowed)
 import TDF.Server
     ( createPurchase
     , MarketplaceCartTotalsState(..)
@@ -336,8 +337,6 @@ import TDF.Server
     , validateRequiredCmsSlug
     , validateOptionalCmsTitle
     , validateOptionalCmsPayload
-    , validateStudioGalleryPayload
-    , studioGalleryImageUrlAllowed
     , validateCmsContentPathId
     , validateOptionalCmsSlugFilter
     , validateOptionalCmsSlugPrefix
