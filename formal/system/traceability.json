@@ -30107,7 +30107,7 @@
     "tdf-hq-ui/src/pages/PartiesPage.tsx": "7d384990d5d954c9f9fe1d4f6909359a763442597df0c6853e1d9165eb947d60",
     "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts": "4941936bcbb954b17033773cc792520831a6219dd23009d834fcab18318de87d",
     "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx": "c3171aef58671769ae696fd2e76eeae0c6e1cfc4d5b8499398f52986e9b25715",
-    "tdf-hq-ui/src/pages/PaymentsPage.tsx": "bc8dd2ee7b40fe3f144b12626d0abd1cf72da2c246922adcf0ac1f45733cb415",
+    "tdf-hq-ui/src/pages/PaymentsPage.tsx": "ecaf832164af88f5fe9c6a8f9891f2bc27f98c9110ed04d6450a9e915fedc30e",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "d2ae255b310067842c9e3b61b74e2f318c77718eee71ee8ea928e3425ec98038",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "1bc9b588aca1bde9bcd402fb812c73d5049b1754b738694ef2e394de93b2df93",
     "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": "9e3a1a9e16505da719971a9eb12fbe79a6436f3bb01317b5994b78e87f134b5a",
@@ -30654,7 +30654,7 @@
     "tdf-hq/src/TDF/Services/EventLogisticsRoutes.hs": "2bb64ea8ae2173a5b9d6893291d58969816d91013b1a6fca28dc513178518da3",
     "tdf-hq/src/TDF/Services/LlmChat.hs": "9c2a181eb58e95a0e66ab55afc0c66f50ff5e2b04a5b7917c52ca844e6c1785b",
     "tdf-hq/src/TDF/Services/RecordsIngestion.hs": "5452db2713bc4b6333418abe68f96918d59828568fbfce1cbfc22b56155cd403",
-    "tdf-hq/src/TDF/Services/Stripe.hs": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
+    "tdf-hq/src/TDF/Services/Stripe.hs": "20e4b842f37ecab5459005da4641c4eb643e361def2201a39e7778c37af01fc6",
     "tdf-hq/src/TDF/Social/AccountOwnership.hs": "f1e76d1e92b76da281dab0e0a0fecd2589ae3f10deb097bb64efc2391556f0de",
     "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs": "9cb6b2f5d808ce531655c3aa7fdff67fc64026c2a419067313e7805c6317df2f",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
@@ -30684,7 +30684,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "510bf67f67d817fd9462bae93cd7d3d141c5c993ca936b8617d44906ea84b9bc",
+    "tdf-hq/test/Spec.hs": "4e581bc4d8f897cba41fad99eabc29f94a94e6e4ba3732e5632cca0665c7081a",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -69562,7 +69562,7 @@
     {
       "id": "SURFACE-4a78e6b0e0157ec4",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.tsx",
-      "sha256": "bc8dd2ee7b40fe3f144b12626d0abd1cf72da2c246922adcf0ac1f45733cb415",
+      "sha256": "ecaf832164af88f5fe9c6a8f9891f2bc27f98c9110ed04d6450a9e915fedc30e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -82282,7 +82282,7 @@
     {
       "id": "SURFACE-1ac6ca33fd4e0411",
       "path": "tdf-hq/src/TDF/Services/Stripe.hs",
-      "sha256": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
+      "sha256": "20e4b842f37ecab5459005da4641c4eb643e361def2201a39e7778c37af01fc6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -82897,7 +82897,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "510bf67f67d817fd9462bae93cd7d3d141c5c993ca936b8617d44906ea84b9bc",
+      "sha256": "4e581bc4d8f897cba41fad99eabc29f94a94e6e4ba3732e5632cca0665c7081a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
