@@ -1,4 +1,3 @@
-import type { operations } from './generated/types';
 import { assertSafeEventFinanceMoney } from '../utils/eventFinanceMoney';
 import { del, get, post, postForm, put } from './client';
 
@@ -683,9 +682,6 @@ const buildQuery = (params: QueryParams) => {
   const qs = entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join('&');
   return `?${qs}`;
 };
-
-export const listAttendees = async (eventId: string, status: 'accepted' | 'maybe', after?: string) =>
-    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/attendees${buildQuery({ status, after })}`) as operations['listEventAttendees']['responses'][200]['content']['application/json'];
 
 export const SocialEventsAPI = {
   listPublicUpcomingEvents: async (opts?: { city?: string; startAfter?: string; limit?: number; signal?: AbortSignal }) => {

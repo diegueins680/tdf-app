@@ -4802,7 +4802,9 @@
         ],
         "bodies": [],
         "authCombinators": [],
-        "internalInputs": [],
+        "internalInputs": [
+          "datafast-client-request"
+        ],
         "method": "POST",
         "successStatus": 200,
         "contentTypes": [
@@ -5319,7 +5321,9 @@
         ],
         "bodies": [],
         "authCombinators": [],
-        "internalInputs": [],
+        "internalInputs": [
+          "datafast-client-request"
+        ],
         "method": "POST",
         "successStatus": 200,
         "contentTypes": [
@@ -5847,7 +5851,9 @@
         ],
         "bodies": [],
         "authCombinators": [],
-        "internalInputs": [],
+        "internalInputs": [
+          "datafast-client-request"
+        ],
         "method": "POST",
         "successStatus": 200,
         "contentTypes": [
@@ -53617,7 +53623,9 @@
         "authCombinators": [
           "bearer-token"
         ],
-        "internalInputs": [],
+        "internalInputs": [
+          "datafast-client-request"
+        ],
         "method": "POST",
         "successStatus": 200,
         "contentTypes": [
@@ -56290,7 +56298,9 @@
           }
         ],
         "authCombinators": [],
-        "internalInputs": [],
+        "internalInputs": [
+          "datafast-client-request"
+        ],
         "method": "POST",
         "successStatus": 200,
         "contentTypes": [
@@ -57272,7 +57282,9 @@
         ],
         "bodies": [],
         "authCombinators": [],
-        "internalInputs": [],
+        "internalInputs": [
+          "datafast-client-request"
+        ],
         "method": "POST",
         "successStatus": 200,
         "contentTypes": [
@@ -58149,7 +58161,9 @@
         ],
         "bodies": [],
         "authCombinators": [],
-        "internalInputs": [],
+        "internalInputs": [
+          "datafast-client-request"
+        ],
         "method": "POST",
         "successStatus": 200,
         "contentTypes": [

@@ -24,8 +24,9 @@ jest.unstable_mockModule('../../analytics/useAnalytics', () => ({
   useAnalytics: () => ({ capture: captureMock }),
 }));
 
+jest.unstable_mockModule('../../api/eventAttendees', () => ({ listAttendees }));
+
 jest.unstable_mockModule('../../api/socialEvents', () => ({
-  listAttendees,
   SocialEventsAPI: {
     getMyRsvp: getMyRsvpMock,
     getRsvpSummary: getRsvpSummaryMock,

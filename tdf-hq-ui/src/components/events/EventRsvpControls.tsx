@@ -26,8 +26,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState, type FocusEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { listAttendees } from '../../api/eventAttendees';
 import {
-  listAttendees,
   SocialEventsAPI,
   type SocialRsvpDTO,
   type SocialRsvpStatus,
