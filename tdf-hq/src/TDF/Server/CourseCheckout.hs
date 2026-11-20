@@ -13,6 +13,8 @@ module TDF.Server.CourseCheckout
   , loadPublicCourseCheckoutTerms
   ) where
 
+import qualified TDF.Commerce.DatafastClientIP as ClientIP
+
 import           Control.Exception
   ( SomeAsyncException, SomeException, fromException, throwIO, try )
 import           Control.Monad (forM_, unless, void, when)
@@ -1038,8 +1040,9 @@ createPublicCourseDatafastCheckout
   :: Text
   -> Int64
   -> Maybe Text
+  -> ClientIP.DatafastClientRequest
   -> AppM APITypes.DatafastCheckoutDTO
-createPublicCourseDatafastCheckout rawSlug rawRegistrationId mLookupToken = do
+createPublicCourseDatafastCheckout rawSlug rawRegistrationId mLookupToken clientRequest = do
   context <- requireCoursePaymentContext rawSlug rawRegistrationId mLookupToken
   when (cpcCheckoutStatus context == "paid") $
     throwError (conflictError "This course registration is already paid")
@@ -1047,18 +1050,24 @@ createPublicCourseDatafastCheckout rawSlug rawRegistrationId mLookupToken = do
   (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireCourseProvider context
     (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
-  attempt <- beginCoursePaymentAttempt context Checkout.ProviderDatafast
-    Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"
   existing <- loadCourseProviderBinding context Checkout.ProviderDatafast
     (ServiceStorefront.sdfEntityId datafast) "checkout"
-  (checkoutId, widgetUrl) <- case existing of
-    Just (storedCheckoutId, _) -> pure
+  preflight <- maybe
+    (Right <$> ServiceStorefront.loadDatafastClientIP clientRequest) (pure . Left) existing
+  attempt <- beginCoursePaymentAttempt context Checkout.ProviderDatafast
+    Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"
+  checkoutRequest <- ServiceStorefront.recheckDatafastCheckout
+    (loadCourseProviderBinding context Checkout.ProviderDatafast
+      (ServiceStorefront.sdfEntityId datafast) "checkout") preflight
+  (checkoutId, widgetUrl) <- case checkoutRequest of
+    Left (storedCheckoutId, _) -> pure
       ( storedCheckoutId
       , dropWhileEndSlash (ServiceStorefront.sdfBaseUrl datafast)
           <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
       )
-    Nothing -> ServiceStorefront.requestDatafastCheckoutForService
-      (registrationReference context)
+    Right clientIP -> ServiceStorefront.requestDatafastCheckoutForService
+      (cpcCheckout context)
+      attempt clientIP
       (fromIntegral (cpcDueNowMinor context))
       (cpcCurrency context)
       (cpcBuyerName context)
@@ -1132,9 +1141,11 @@ confirmPublicCourseDatafastStatus rawSlug rawRegistrationId mLookupToken rawReso
           orderReference = registrationReference context
       if success
         then do
-          case ServiceStorefront.validateDatafastSuccessfulPayment
-              orderReference (fromIntegral (cpcDueNowMinor context))
-              (cpcCurrency context) providerStatus of
+          validation <- ServiceStorefront.validateBoundDatafastSuccessfulPayment
+            (cpcCheckout context) (ServiceStorefront.sdfEnvironment datafast)
+            (ServiceStorefront.sdfEntityId datafast) checkoutId
+            (fromIntegral (cpcDueNowMinor context)) (cpcCurrency context) providerStatus
+          case validation of
             Left validationMessage -> do
               let actualAmount = ServiceStorefront.sdfpsAmount providerStatus
                     >>= either (const Nothing) Just . ServiceStorefront.parseDatafastCents

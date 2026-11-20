@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "c47c2a8d8851a58a828dec830704f8c352496c20",
+  "previousDecisionId": "be0b1503a04f9fa295ee",
+  "currentDecisionId": "4de6c20a3ad9e64dbbc5",
+  "previousDecisionCanonicalSha256": "b723beeb4258060c7a86c12bc37069f34e2284a102b5195fc8e5011225a81bb5",
+  "previousManifestCanonicalSha256": "f886eb72b8d1c3944213a6230ff442f2bd533200e19f138eaaa91d33495caafc",
+  "currentManifestCanonicalSha256": "7a1c7d274c1d558f2469f45252e6d2b9885712abcf106948197710e9a96f1718",
+  "addedMigration": {
+    "id": "2026-11-06_content_storage_security",
+    "path": "tdf-hq/sql/2026-11-06_content_storage_security.sql",
+    "introducedBy": "a0f18086cb8ded76cc1d3b1d19dc31e813070a20"
+  },
+  "executionAllowed": false
+}

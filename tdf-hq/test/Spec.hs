@@ -47,6 +47,7 @@ import System.FilePath ((</>))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
+import qualified TDF.StorageSecuritySpec as StorageSecuritySpec
 import qualified TDF.VideoCampaignsSpec as VideoCampaignsSpec
 import qualified TDF.Auth.AccountNameSpec as AccountNameSpec
 import qualified TDF.Auth.GoogleProfileNameSpec as GoogleProfileNameSpec
@@ -54,9 +55,11 @@ import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
 import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
 import qualified TDF.Commerce.DatafastConfigSpec as DatafastConfigSpec
+import qualified TDF.Commerce.DatafastClientIPSpec as DatafastClientIPSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
 import qualified TDF.EventAdminDelegationSpec as EventAdminDelegationSpec
+import qualified TDF.EventTicketSaleSpec as EventTicketSaleSpec
 import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
 import qualified TDF.TicketManualReviewSpec as TicketManualReviewSpec
@@ -480,6 +483,7 @@ import TDF.Server.SocialSync
       validateSocialSyncCaption,
       validateSocialSyncPermalink,
       validateSocialSyncMediaUrls )
+import TDF.Server.TicketSalesWindow (ticketSalesOpenBeforeEventEnd)
 import TDF.Server.SocialEventsHandlers (
     collectMatchingRows,
     replaceLogisticsActivityDependencies,
@@ -922,11 +926,13 @@ main = hspec $ do
     WorkerLoggingSpec.spec
     PaymentArithmeticSpec.spec
     DatafastConfigSpec.spec
+    DatafastClientIPSpec.spec
     CheckoutMoneySpec.spec
     EmailHeadersSpec.spec
     TicketConfirmationSpec.spec
     EventOrganizerSpec.spec
     EventAdminDelegationSpec.spec
+    EventTicketSaleSpec.spec
     InvoiceDatilSpec.spec
     TicketManualReviewSpec.spec
     TicketPaymentReceiptSpec.spec
@@ -2396,6 +2402,13 @@ main = hspec $ do
                 PaymentAvailability.bankTransferInstructionsReady flow True False `shouldBe` True
                 PaymentAvailability.bankTransferInstructionsReady flow False False `shouldBe` False
 
+    describe "PayPhone Button split readiness" $ do
+        it "requires the coding password only for marketplace splits" $
+            forM_ [minBound .. maxBound] $ \flow -> do
+                PaymentAvailability.payPhoneButtonSplitReady flow True `shouldBe` True
+                PaymentAvailability.payPhoneButtonSplitReady flow False
+                    `shouldBe` (flow /= ProviderCapabilities.FlowMarketplace)
+
     describe "marketplace contact checkout boundary" $ do
         it "retains checkout preparation without selecting a payment rail or changing payment state" $ do
             source <- readFile "src/TDF/Server.hs"
@@ -2472,6 +2485,8 @@ main = hspec $ do
             label CheckoutStore.ProviderPayPhone ProviderCapabilities.MethodPayPhoneWallet
               `shouldBe` Just "payphone_wallet"
             label CheckoutStore.ProviderPayPhone ProviderCapabilities.MethodCard
+              `shouldBe` Just "payphone_card"
+            label CheckoutStore.ProviderPayPhone ProviderCapabilities.MethodBankRedirect
               `shouldBe` Nothing
 
         it "does not route a documented capability until every runtime gate is true" $ do
@@ -3288,6 +3303,49 @@ main = hspec $ do
             -- API Sale references keep the API Sale status query.
             fmap ProviderAdapter.arUrl (ProviderAdapter.adapterBuildQuery payPhoneSplit adapterContext locator)
               `shouldSatisfy` either (const False) ("/api/Sale/client/" `Data.Text.isInfixOf`)
+
+        it "reads the JSON array PayPhone returns for a Button status query" $ do
+            -- Shape observed in the PayPhone sandbox on 2026-11-17: the status read
+            -- of a Button payment is a list, not an object.
+            let reference = "TDFC-0123456789abcdef0123456789a" :: Text
+                buttonLocator = locator
+                  { ProviderAdapter.plExternalId = "GSizecyUkIAkxTj3SQ"
+                  , ProviderAdapter.plExpected = expected { ProviderAdapter.epReference = reference }
+                  }
+                transaction ref transactionId statusCode = A.object
+                  [ "transactionId" .= (transactionId :: Int)
+                  , "clientTransactionId" .= (ref :: Text)
+                  , "amount" .= (12515 :: Int)
+                  , "currency" .= ("USD" :: Text)
+                  , "statusCode" .= (statusCode :: Int)
+                  ]
+                followUp = ProviderAdapter.adapterQueryFollowUp payPhone adapterContext buttonLocator
+                query = ProviderAdapter.adapterParseResponse payPhone ProviderAdapter.AdapterQuery buttonLocator
+                followUpUrl = fmap (fmap (ProviderAdapter.arUrl . ProviderAdapter.followUpRequest))
+            -- An approved single-item list is confirmed with its transaction ID.
+            followUpUrl (followUp (A.toJSON [transaction reference 93776650 3]))
+              `shouldBe` Right (Just "https://pay.payphonetodoesposible.com/api/button/V2/Confirm")
+            -- Pending and canceled lists are read as they are, never as success.
+            fmap ProviderAdapter.adapterResultState (query (A.toJSON [transaction reference 93776650 1]))
+              `shouldBe` Right ProviderAdapter.AdapterPending
+            fmap ProviderAdapter.adapterResultState (query (A.toJSON [transaction reference 93776650 2]))
+              `shouldBe` Right ProviderAdapter.AdapterCancelled
+            query (A.toJSON [transaction reference 93776650 3]) `shouldSatisfy` isLeft
+            -- Entries for other references are ignored; an empty or ambiguous list is rejected.
+            fmap ProviderAdapter.adapterResultState
+              (query (A.toJSON [transaction "TDFC-other" 1 3, transaction reference 93776650 1]))
+              `shouldBe` Right ProviderAdapter.AdapterPending
+            query (A.toJSON ([] :: [A.Value])) `shouldSatisfy` isLeft
+            query (A.toJSON [transaction reference 93776650 2, transaction reference 93776651 1])
+              `shouldSatisfy` isLeft
+            followUpUrl (followUp (A.toJSON [transaction reference 93776650 3, transaction reference 93776651 3]))
+              `shouldSatisfy` isLeft
+            -- The Button no longer needs the coding password when there is no split.
+            fmap ProviderAdapter.arUrl (ProviderAdapter.adapterBuildCreate payPhone adapterContext
+              createPayment
+                { ProviderAdapter.cpReference = reference
+                , ProviderAdapter.cpPaymentMethod = ProviderCapabilities.MethodCard })
+              `shouldBe` Right "https://pay.payphonetodoesposible.com/api/button/Prepare"
 
         it "confirms a PayPhone Button charge every minute instead of backing off (ADR 0136)" $ do
             let delay = ProviderExecutionStore.providerQueryRetryDelaySeconds
@@ -4337,6 +4395,36 @@ main = hspec $ do
                 Nothing
                 Nothing
                 `shouldReturn` Left "country must be a 2-letter ISO code"
+
+        it "builds an Accounts v2 recipient body for payout account creation" $ do
+            let baseFields countryValue =
+                    [ "dashboard" .= ("express" :: Text)
+                    , "identity" .= A.object [ "country" .= (countryValue :: Text) ]
+                    , "defaults" .= A.object
+                        [ "responsibilities" .= A.object
+                            [ "fees_collector" .= ("application" :: Text)
+                            , "losses_collector" .= ("application" :: Text)
+                            ]
+                        ]
+                    , "configuration" .= A.object
+                        [ "recipient" .= A.object
+                            [ "capabilities" .= A.object
+                                [ "stripe_balance" .= A.object
+                                    [ "stripe_transfers" .= A.object
+                                        [ "requested" .= True ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+            Stripe.buildConnectExpressAccountBody "EC" (Just "artist@example.com") Nothing
+                `shouldBe` A.object
+                    (baseFields "ec" <> [ "contact_email" .= ("artist@example.com" :: Text) ])
+            Stripe.buildConnectExpressAccountBody "US" Nothing (Just "artist:42")
+                `shouldBe` A.object
+                    ( baseFields "us"
+                        <> [ "metadata" .= A.object [ "tdf_context" .= ("artist:42" :: Text) ] ]
+                    )
 
         it "rejects invalid account link preconditions before HTTP allocation" $ do
             Stripe.createAccountLink
@@ -13255,6 +13343,15 @@ main = hspec $ do
                 , "{\"isPublic\":true,\"_discoveryOwned\":{},\"_discoveryOwned\":{}}"
                 ] $ \raw -> (EventMetadataServer.emIsPublic <$> EventMetadataServer.decodeStoredEventMetadata (Just raw)) `shouldSatisfy` isLeft
 
+    describe "ticket sales close when the event ends" $ do
+        let eventEnd = UTCTime (fromGregorian 2026 10 24) 0
+        it "sells until the end time and not from it on" $ do
+            ticketSalesOpenBeforeEventEnd (addUTCTime (-1) eventEnd) (Just eventEnd) `shouldBe` True
+            ticketSalesOpenBeforeEventEnd eventEnd (Just eventEnd) `shouldBe` False
+            ticketSalesOpenBeforeEventEnd (addUTCTime 86400 eventEnd) (Just eventEnd) `shouldBe` False
+        it "leaves an event without an end time to its workflow state" $
+            ticketSalesOpenBeforeEventEnd eventEnd Nothing `shouldBe` True
+
     describe "ticket purchase event eligibility" $ do
         it "allows only public events in buyer-facing sale states" $ do
             case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":true}") True of
@@ -18368,6 +18465,7 @@ main = hspec $ do
       describe "music-unit-ddex" MusicErn432Spec.spec
       describe "music-unit-storage" MusicS3Spec.spec
       describe "music-unit-credential-cache" MusicCredentialCacheSpec.spec
+    StorageSecuritySpec.spec
     DriveReplaySpec.spec
     WhatsAppRedeliverySpec.spec
     LiveIntakeIdentitySpec.spec
