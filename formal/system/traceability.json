@@ -12825,7 +12825,8 @@
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq-ui/src/components/StudioGallery.tsx",
-        "tdf-hq-ui/src/pages/NotFoundPage.tsx"
+        "tdf-hq-ui/src/pages/NotFoundPage.tsx",
+        "tdf-hq/sql/2026-11-07_studio_gallery.sql"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
@@ -12837,7 +12838,9 @@
         "e2e/web/directory-language.spec.mjs",
         "e2e/web/public-welcome.spec.mjs",
         "tdf-hq-ui/src/components/StudioGallery.test.tsx",
-        "tdf-hq-ui/src/pages/NotFoundPage.test.tsx"
+        "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
+        "scripts/test-studio-gallery-migration.sh",
+        "scripts/test-studio-gallery-runner-safety.py"
       ],
       "formalModels": [],
       "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",
@@ -28506,7 +28509,7 @@
     ".github/workflows/check-messaging-token.yml": "68ee6bacc89bb3d49176cd023a289b68c5fcaabf616fe599c645be7b34a20ddf",
     ".github/workflows/check-mobile-distribution.yml": "a02130cf5379c4a451ec8588b989a057a683dcf275fd3d6638b275aaec0ba599",
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
-    ".github/workflows/ci.yml": "813581940f8c9435bd0813e8cbd0ac517e65a414c874aac4533b1ad0261b36ef",
+    ".github/workflows/ci.yml": "7881225540928b2134b6aaf82a3f7d77570dd99b6ca1e36c69678065ee38f086",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/event-operations-formal.yml": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
@@ -28517,7 +28520,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "675efabea0f33c0c0006980ba5cbd4d1693a27d4db68d963de715ba196ec7b6a",
+    "docs/catalog-persistence/catalog-list-decisions.json": "6b7bda686e973092236b87407720157352676dc20338269e39841c31ce1a5fec",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
@@ -28953,7 +28956,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "3549e483381de0afe200a2b56a6297639472f0a2ab41f3038928de869f323308",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "9130c15b4ddd67d9716ef59d31f37c2eb97c24c320691e5c06ae07ef9300b83c",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -29142,7 +29145,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "66eb7f410d6801095d49d3b9f1676e92d0f881dbcd662babaed67aaa0a43710b",
+    "scripts/production-migrations.json": "937e18f52bdce6ea9e2dd92d7e5727a6a755e5a1bda32e78aded5a83a07eae7b",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
@@ -29286,6 +29289,8 @@
     "scripts/test-specification-inventory.py": "803f1a3ba0e54e29c3f7ea8fcc2c7e263a0b1c450c0e358912091bd745332369",
     "scripts/test-state-machines.py": "8b04bc8695f89b092627c7a9e58c83ba4a718e12d83dfad3cd07634d0c8d8f72",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
+    "scripts/test-studio-gallery-migration.sh": "42cf15ffb993ed44439390aec75f82944a94a8dcb92b9ec86fd44fb3a6604087",
+    "scripts/test-studio-gallery-runner-safety.py": "2b2905f47cd1f07113cc8af3e9be163338ef27cc164bba03b3779738f7541dfd",
     "scripts/test-studio-internship-audit-api-e2e.mjs": "2c4671ee52541c181cfe9e00d8bc7d0f98e8e54921adc513c0bf9aa657662c40",
     "scripts/test-studio-internship-audit-api-e2e.sh": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
     "scripts/test-studio-internship-audit-migration.sh": "0898a7f6b32336840a85bf97c29a9aca4bbe7addc9e6360c97ac21169fc7f99e",
@@ -30162,6 +30167,7 @@
     "tdf-hq/sql/2026-11-07_artist_featured_identity_guard.sql": "bfbb511663f6606bfa37cea7156bbddfe81227b22cd0884efdf4e6f830a92cfc",
     "tdf-hq/sql/2026-11-07_artist_featured_identity_guard_rollback.sql": "d0fd69ee72fed44695d682a753bc5fc4cd0ce1636cabb19fcaf44c9e2e481a37",
     "tdf-hq/sql/2026-11-07_music_featured_source_health.sql": "e28257cbb4288c0185272133c1474dc744f67a8d6f0226a0920dc0be512e0cc6",
+    "tdf-hq/sql/2026-11-07_studio_gallery.sql": "7da04908fd0947a2fa420932eeaf9fa8a224d88b0a238913d652173654571cab",
     "tdf-hq/sql/2026-11-08_marketplace_offers.sql": "fb65c76c3474d465f5463b63d441d9dcd0965e311af8bde7eb6527d1ac8a3ea5",
     "tdf-hq/sql/2026-11-08_marketplace_offers_rollback.sql": "4086427dccbc526e2c9694253155d6e80065ccea0b281b4baab2917640ea4480",
     "tdf-hq/sql/2026-11-10_auth_rate_limit.sql": "278f16a38d411fbf41cbb0068f2588f93f9ba710c3026830c9307f2a2108d7c5",
@@ -44876,6 +44882,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-11-07_studio_gallery.sql": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx": [
       {
         "requirement": "UX-WELCOME-001",
@@ -44905,6 +44917,18 @@
       }
     ],
     "tdf-hq-ui/src/pages/NotFoundPage.test.tsx": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-studio-gallery-migration.sh": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-studio-gallery-runner-safety.py": [
       {
         "requirement": "UX-WELCOME-001",
         "relationship": "tests"
@@ -49937,7 +49961,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "813581940f8c9435bd0813e8cbd0ac517e65a414c874aac4533b1ad0261b36ef",
+      "sha256": "7881225540928b2134b6aaf82a3f7d77570dd99b6ca1e36c69678065ee38f086",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51540,7 +51564,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "3549e483381de0afe200a2b56a6297639472f0a2ab41f3038928de869f323308",
+      "sha256": "9130c15b4ddd67d9716ef59d31f37c2eb97c24c320691e5c06ae07ef9300b83c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54787,7 +54811,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "66eb7f410d6801095d49d3b9f1676e92d0f881dbcd662babaed67aaa0a43710b",
+      "sha256": "937e18f52bdce6ea9e2dd92d7e5727a6a755e5a1bda32e78aded5a83a07eae7b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57856,6 +57880,30 @@
         {
           "requirement": "OPS-CLIENT-001",
           "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-078dea30964c514e",
+      "path": "scripts/test-studio-gallery-migration.sh",
+      "sha256": "42cf15ffb993ed44439390aec75f82944a94a8dcb92b9ec86fd44fb3a6604087",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-210fe9c567c3a287",
+      "path": "scripts/test-studio-gallery-runner-safety.py",
+      "sha256": "2b2905f47cd1f07113cc8af3e9be163338ef27cc164bba03b3779738f7541dfd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -75703,6 +75751,18 @@
       ]
     },
     {
+      "id": "SURFACE-d4ecbdf088675af2",
+      "path": "tdf-hq/sql/2026-11-07_studio_gallery.sql",
+      "sha256": "7da04908fd0947a2fa420932eeaf9fa8a224d88b0a238913d652173654571cab",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-a5284041219da02a",
       "path": "tdf-hq/sql/2026-11-08_marketplace_offers.sql",
       "sha256": "fb65c76c3474d465f5463b63d441d9dcd0965e311af8bde7eb6527d1ac8a3ea5",
@@ -89762,7 +89822,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ff8bc9f09d7dd33a0fbb58f34c832dc8683c64db26f7d1dc8b9f753c8b6eb448",
+      "sourceSha256": "d635c561ab147f92778e8a6fa52843268054be22906de30fadcd1230c09339da",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -89790,7 +89850,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ff8bc9f09d7dd33a0fbb58f34c832dc8683c64db26f7d1dc8b9f753c8b6eb448",
+      "sourceSha256": "d635c561ab147f92778e8a6fa52843268054be22906de30fadcd1230c09339da",
       "definition": {
         "states": [
           "absent",
@@ -89820,7 +89880,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ff8bc9f09d7dd33a0fbb58f34c832dc8683c64db26f7d1dc8b9f753c8b6eb448",
+      "sourceSha256": "d635c561ab147f92778e8a6fa52843268054be22906de30fadcd1230c09339da",
       "definition": {
         "export": [
           "queued",

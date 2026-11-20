@@ -76,8 +76,16 @@ const playerMigrations = new Set([
   '2026-11-07_artist_featured_identity_guard',
 ]);
 
+const gallerySeedId = '2026-11-07_studio_gallery';
+const galleryBase = '4b167ab9587315e288ab376585ca1bc2702abf0c';
+async function manifestBeforeGallery() {
+  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  assert.equal(current.migrations.at(-1).id, gallerySeedId);
+  return { ...current, migrations: current.migrations.slice(0, -1) };
+}
+
 async function manifestBeforePlayer() {
-  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  const manifest = await manifestBeforeGallery();
   return { ...manifest, migrations: manifest.migrations.filter(row => !playerMigrations.has(row.id)) };
 }
 
@@ -131,7 +139,7 @@ async function readHistoricalReconciliation() {
   return { ...current, active };
 }
 
-async function readReconciliation(beforePlayer = false) {
+async function readReconciliation(beforePlayer = false, beforeGallery = beforePlayer) {
   const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-catalog-retirements.json'), 'utf8'));
   const register = JSON.parse(await fs.readFile(path.join(workspaceRoot,
@@ -144,6 +152,14 @@ async function readReconciliation(beforePlayer = false) {
     'docs/catalog-persistence/event-catalog-current-successors.json'), 'utf8')).successors;
   const integration = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-integration-retirements.json'), 'utf8'));
+  if (!beforeGallery) return { ledger, active, retired, successors, integration };
+  // Earlier review contracts compare against the complete pre-gallery decision graph.
+  const pointerIndex = successors.findIndex(row => row.name === 'migrations');
+  const reviewIndex = active.findIndex(row => row.id === successors[pointerIndex].currentId);
+  const retirementIndex = integration.retirements.findIndex(row => row.source.name === 'migrations');
+  active[reviewIndex] = active[reviewIndex].previousDecision;
+  successors[pointerIndex] = successors[pointerIndex].previousResolution;
+  integration.retirements[retirementIndex] = integration.retirements[retirementIndex].previousResolution;
   if (!beforePlayer) return { ledger, active, retired, successors, integration };
 
   // Earlier reviews retain their own manifest fingerprint and catalog size.
@@ -1263,7 +1279,7 @@ test('marketplace agreement payments append one migration to the protected 252-e
 test('player server preserves both reviewed migration histories and appends only reviewed SQL', async () => {
   const main = await reviewedJson(PLAYER_SERVER_MAIN_BASE, manifestPath);
   const player = await reviewedJson(PLAYER_SERVER_REVIEW_HEAD, manifestPath);
-  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  const current = await manifestBeforeGallery();
   const extension = player.migrations.filter(row => playerMigrations.has(row.id));
   assert.deepEqual(extension.map(row => row.id), [...playerMigrations]);
   assert.deepEqual(current, { ...main, migrations: [...main.migrations, ...extension] });
@@ -1275,7 +1291,7 @@ test('player server preserves both reviewed migration histories and appends only
     assert.equal(await fs.readFile(path.join(workspaceRoot, row.path), 'utf8'), stdout);
   }
 
-  const { active, successors, integration } = await readReconciliation();
+  const { active, successors, integration } = await readReconciliation(false, true);
   const pointer = successors.find(row => row.name === 'migrations');
   const actual = active.find(row => row.id === pointer.currentId);
   const findTip = doc => doc.decisions.find(row => row.evidence?.file === manifestPath);
@@ -1326,4 +1342,25 @@ test('delivery evidence protocol adds exactly one reviewed list', async () => {
   assert.equal(additions[0].evidence.name, 'DELIVERY_CHECKS');
   assert.match(additions[0].justification, /SYS-VERIFY-002/);
   assert.equal(current.decisions.filter(row => row.evidence?.file === 'scripts/lib/delivery-matrix.mjs').length, 1);
+});
+
+test('gallery seed appends exactly one migration and retains complete protected reviews', async () => {
+  const before = await reviewedJson(galleryBase, manifestPath);
+  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  const file = 'tdf-hq/sql/2026-11-07_studio_gallery.sql';
+  const introducedBy = 'd77cd1319a67e89675e12e9e9082641bdf9fcc66';
+  assert.deepEqual(current.migrations, [...before.migrations, {id: gallerySeedId, path: file, introducedBy}]);
+  await execFileAsync('git', ['merge-base','--is-ancestor',introducedBy,'HEAD'], {cwd: workspaceRoot});
+  const { stdout } = await execFileAsync('git',['show', introducedBy + ':' + file], {cwd: workspaceRoot});
+  assert.equal(await fs.readFile(path.join(workspaceRoot,file),'utf8'), stdout);
+  const { active, successors, integration } = await readReconciliation();
+  const pointer = successors.find(row => row.name === 'migrations');
+  const decision = active.find(row => row.id === pointer.currentId);
+  const retirement = integration.retirements.find(row => row.source.name === 'migrations');
+  assert.equal(decision.evidence.valueCount,current.migrations.length);
+  assert.equal(retirement.replacementId,decision.id);
+  assert.equal(pointer.valueCount,current.migrations.length);
+  assert.deepEqual(decision.previousDecision,(await reviewedJson(galleryBase,catalogPath)).decisions.find(row=>row.evidence?.file===manifestPath));
+  assert.deepEqual(pointer.previousResolution,(await reviewedJson(galleryBase,'docs/catalog-persistence/event-catalog-current-successors.json')).successors.find(row=>row.name==='migrations'));
+  assert.deepEqual(retirement.previousResolution,(await reviewedJson(galleryBase,'docs/catalog-persistence/event-integration-retirements.json')).retirements.find(row=>row.source.name==='migrations'));
 });
