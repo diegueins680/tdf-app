@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-20T02:10:31.699Z",
+  "generatedAt": "2026-11-20T04:24:39.286Z",
   "repositoryRoot": ".",
   "filesScanned": 2786,
   "candidateCount": 1469,
@@ -173451,7 +173451,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 643,
+      "consumerCount": 644,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -173542,6 +173542,7 @@
         "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
         "tdf-hq-ui/src/components/TopBar.tsx",
         "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
+        "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx",
         "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx",
         "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
         "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx",
@@ -173553,8 +173554,7 @@
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
         "tdf-hq-ui/src/contexts/LocalePreferencesContext.storage.test.tsx",
-        "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx",
-        "tdf-hq-ui/src/desktop/shell.test.ts"
+        "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
