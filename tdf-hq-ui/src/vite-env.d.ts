@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
+  readonly VITE_EVENT_AGREEMENTS_ENABLED?: string;
   readonly VITE_ACCOUNT_DELETION_FORM_ENABLED?: string;
   readonly VITE_ACCOUNT_DELETION_QUEUE_ENABLED?: string;
   readonly VITE_SOCIAL_V2_ENABLED?: string;

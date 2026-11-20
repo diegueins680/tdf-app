@@ -286,7 +286,7 @@ handlersFor actor =
   case socialEventsServer actor of
     _events :<|> _cities :<|> _sources :<|> _research :<|> _venues :<|> _artists :<|> _rsvps
       :<|> _invitations :<|> _moments :<|> _live :<|> _tickets :<|> _budget :<|> _finance
-      :<|> _logistics :<|> _admins :<|> _memory
+      :<|> _logistics :<|> _admins :<|> _memory :<|> _workspace
       :<|> (saleH :<|> requestH :<|> queueH :<|> approveH :<|> declineH) ->
         SaleHandlers saleH requestH queueH approveH declineH
 

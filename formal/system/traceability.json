@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "4d866387ac6938d7aeaad5d1fa2985f8e02932e7",
+  "mobileRevision": "070f4a592e08fd6bda8e327b5ec864d412c9f753",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -28496,6 +28496,138 @@
         "reason": "The request and decision lifecycle and its races are exercised on PostgreSQL and the web card and queue by Jest; checkout from an approved request is covered by reading only, no model exists and notice delivery is unverified."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "EVT-AGREEMENT-001",
+      "statement": "Only the designated active account can accept the current sent organizer-approved event agreement; accepted content, its plan annex and evidence remain immutable.",
+      "authority": "approved",
+      "source": "User-approved event agreement workflow; formal/system/event-agreements.md",
+      "property": "authenticated authorized current version and hash with consent and matching name; one immutable acceptance and frozen annex",
+      "contract": "formal/system/event-agreements.md",
+      "implementation": [
+        "tdf-hq/sql/2026-11-03_event_agreements.sql",
+        "tdf-hq/src/TDF/Contracts/EventWorkspace.hs",
+        "tdf-hq/src/TDF/Contracts/EventWorkspaceAPI.hs",
+        "tdf-hq/src/TDF/Contracts/Server.hs",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/api/eventWorkspace.ts",
+        "tdf-hq-ui/src/pages/EventAgreementsPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq-ui/src/components/notificationTarget.ts",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        ".github/workflows/event-agreements.yml",
+        ".github/workflows/event-operations-formal.yml",
+        "scripts/production-migrations.json",
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "formal/system/state-machine-bindings.json",
+        "docs/catalog-persistence/event-agreements-smtp-reconciliation-20261106.json",
+        "tdf-hq/sql/2026-11-07_event_agreement_identity_guards.sql",
+        "tdf-hq/sql/2026-11-07_event_agreement_identity_guards_rollback.sql",
+        "tdf-hq-ui/src/config/eventAgreementsRollout.ts",
+        "tdf-hq-ui/src/vite-env.d.ts"
+      ],
+      "verification": "Actual isolated PostgreSQL migration tests, web response/session regressions, Haskell document and delivery tests in Stack CI, bounded TLC baseline and five negative configurations. Current-main integration additionally exercises archived-reference forward/replay/rollback with actualSQL and exact-true/default-off web rollout controls. The UI switch is not authorization and old bounded model evidence does not prove these additions.",
+      "evidence": "Event agreement persistence CI; web focused tests; account acceptance TLC output; Stack CI. Deployment is independent.",
+      "status": "specified and implemented",
+      "historicalStatus": "new workflow",
+      "critical": true,
+      "title": "Private event proposal and account acceptance",
+      "domain": "EVENT",
+      "actors": [
+        "event organizer",
+        "designated recipient",
+        "unrelated account"
+      ],
+      "preconditions": [
+        "Current authenticated session; event has assigned organizer; production migration installed"
+      ],
+      "inputs": [
+        "Strict action payload; expected version and SHA-256; explicit consent and recipient legal name"
+      ],
+      "state": {
+        "boundary": "formal/system/event-agreements.md",
+        "property": "draft -> approved draft -> sent -> accepted or rejected or changes requested or withdrawn",
+        "states": [
+          "draft",
+          "sent",
+          "changes_requested",
+          "accepted",
+          "rejected",
+          "withdrawn"
+        ],
+        "initial": "draft",
+        "transitions": {
+          "draft": [
+            "sent",
+            "withdrawn"
+          ],
+          "sent": [
+            "changes_requested",
+            "accepted",
+            "rejected",
+            "withdrawn"
+          ],
+          "changes_requested": [
+            "draft",
+            "withdrawn"
+          ],
+          "rejected": [
+            "draft"
+          ],
+          "withdrawn": [
+            "draft"
+          ],
+          "accepted": []
+        }
+      },
+      "allowedTransitions": [
+        "Organizer saves versioned plan and proposals; approves exact complete document and cap; sends it. Recipient accepts, rejects or requests changes. Accepted agreements require a separate amendment."
+      ],
+      "forbiddenTransitions": [
+        "Unsent, stale, unapproved, incomplete or foreign acceptance; direct artist edits; rewriting accepted evidence"
+      ],
+      "effects": [
+        "Atomic persisted commands and in-app notifications; private downloadable plan, proposal and acceptance PDF"
+      ],
+      "authorization": "Current-session check wraps each read or write. Event owner and explicitly assigned recipient only; assignment does not grant event editor rights.",
+      "privacy": "No public legal documents or comments; authenticated no-store downloads; no real artist information in fixtures.",
+      "concurrency": "Event lock before agreement lock serializes revisions, snapshots, acceptance and withdrawal. One acceptance primary key.",
+      "idempotency": "Actor/event/request-bound digest; identical retries reuse original response; clients reread current state; authorization precedes replay.",
+      "failure": "Preserve input on network/stale errors; reject malformed content and incomplete scope/cap; PDF or missing migration returns unavailable, never fake success.",
+      "recovery": "Retry same command key for same intent, refresh current truth; separate version/amendment for changed terms; reviewed SQL deployment.",
+      "observability": "Immutable action history, actor account, exact version and hash, server UTC timestamps and downloadable evidence.",
+      "tests": [
+        "scripts/test-event-agreements.py",
+        "scripts/verify-event-agreements-formal.mjs",
+        "tdf-hq-ui/src/api/eventWorkspace.test.ts",
+        "tdf-hq-ui/src/api/eventWorkspace.fixture.ts",
+        "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq/test/TDF/Contracts/EventWorkspaceSpec.hs",
+        "tdf-hq/test/TDF/Contracts/DeliverySpec.hs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/test-event-agreement-identity-guards.py",
+        "scripts/test-event-agreement-runner-safety.py",
+        "tdf-hq-ui/src/config/eventAgreementsRollout.test.ts"
+      ],
+      "formalModels": [
+        "formal/event-operations/EventAgreement.tla",
+        "formal/event-operations/EventAgreement.cfg"
+      ],
+      "confidence": "Bounded lifecycle and actual PostgreSQL guards tested locally; Haskell compile, deployed schema, legal sufficiency and production correspondence require independent evidence.",
+      "ambiguity": [
+        "No certified signature provider or cryptographic identity proof. Event proposals use internal notifications; separate generic contracts retain SMTP delivery. No native acceptance UI. Document recipients and all commercial/legal scope must be verified before real send."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local SQL/UI/model checks do not establish production deployment or full-width refinement; Mobile write authorization and exact Stack CI remain prerequisites."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -28509,7 +28641,8 @@
     ".github/workflows/ci.yml": "813581940f8c9435bd0813e8cbd0ac517e65a414c874aac4533b1ad0261b36ef",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
-    ".github/workflows/event-operations-formal.yml": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
+    ".github/workflows/event-agreements.yml": "f14dfe30e14a4990f567f6bb7af6417c81b69b749f9d9ceb25a2ca7a2942779b",
+    ".github/workflows/event-operations-formal.yml": "d022edf728f5da0d7fdde955c228bd3a6271552b4a5ebdb60339ec6f4dd9512c",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -28517,7 +28650,8 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "675efabea0f33c0c0006980ba5cbd4d1693a27d4db68d963de715ba196ec7b6a",
+    "docs/catalog-persistence/catalog-list-decisions.json": "24c30c121f524e7cc1ec7b2463f387d38c88861b3e01541fcd659068bba857e4",
+    "docs/catalog-persistence/event-agreements-smtp-reconciliation-20261106.json": "964230d1f327256b324a37cb8ffdf6f899ac581b9130d935bfbddf485e9f08d4",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
@@ -28629,6 +28763,8 @@
     "formal/event-operations/DriveReplayLegacyAdopted.cfg": "a3fe9971114d1f19c88d5aa45c6758d40b4a1c113873f9db1cee9cea52997462",
     "formal/event-operations/DriveReplayRace.cfg": "20f5ac3591b3342afa3e432ce2e80c68c72259577688b2bc98d7f269b0c1050a",
     "formal/event-operations/DriveReplayUnchecked.cfg": "2bf51aafda6d0337f8422f35052aaecfd47c55de5e63c307906cb1623a9ce491",
+    "formal/event-operations/EventAgreement.cfg": "6e0f36b4cc56dd064cdf0b72729915501623e12c91e77de73d8ad4ced0ae2601",
+    "formal/event-operations/EventAgreement.tla": "dd6ed537b1ad03844d9c42a79f696180db5b30aa05e8742578495ceaa022a1fa",
     "formal/event-operations/EventOrganizer.cfg": "ed84da709c486f2fb88625b426cec2aeddf8439f9317ade750c15a948756242d",
     "formal/event-operations/EventOrganizer.tla": "b1cd25333de4d8722147e39b72a8ff63e5b6fd7870bccf4ad033524ee9ba2b81",
     "formal/event-operations/EventOrganizerAnyoneClaims.cfg": "87c88ff91027aa555ac04eeda4c6d98bbc92f34458a5c070bc7f70844c6d0ea5",
@@ -28896,15 +29032,15 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
-    "formal/system/compiled-api-surface.json": "fec57ee9ea748079caf5e09ae77d225203b69ae341eb2beae7017a16c07df5eb",
+    "formal/system/compiled-api-surface.json": "f4ffc6bb8a44cf6b2008b04602bf165f071574216d6f3aad2738899385de545a",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
     "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "18ed72964b1f72dfcfabf52238b8571017315cebd90f8aa0e538e5c209c68aba",
+    "formal/system/recovery-expiry-arithmetic.json": "dbe8029ccc5d2086a1780f0b72416ec3896c04ca2cd1335815e20f441a86f206",
     "formal/system/route-requirements.json": "9309a047b34b93a1b6150a77ffa6ea31f699869f80a80f9cc6515092bd796480",
-    "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
+    "formal/system/state-machine-bindings.json": "84b68a611f7652aad06305dc213d6656343fbf291b5442c3c50d1cd4d8882906",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
     "functions/_shared/event-preview.mjs": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
@@ -28953,7 +29089,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "3549e483381de0afe200a2b56a6297639472f0a2ab41f3038928de869f323308",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "1ae1a3fd1d6717e8597eb0e0c299a0526d3d1a7a165561ae5e7864aa8553a25e",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -29142,7 +29278,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "66eb7f410d6801095d49d3b9f1676e92d0f881dbcd662babaed67aaa0a43710b",
+    "scripts/production-migrations.json": "7072ceff3d90a4d221cba1362ff34c5721609791a20528a89697bfb5bfd865bb",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
@@ -29199,6 +29335,9 @@
     "scripts/test-domo-deposit-policy-validator.sh": "b664c8bb09120a506c27f406967a7408e326281d311fcc562f52a97a1720d509",
     "scripts/test-domo-quote-checkout-runtime-migration.sh": "8b51f9e41bcd8fa224dffc3878d24d2587fc3ccce797a67927ad8cd3f96b6680",
     "scripts/test-event-admin-delegation.sh": "1eb28989e4944b78c67624dbf8fb4040deffe3c9fd1e95b73f2eb1bbdea902f8",
+    "scripts/test-event-agreement-identity-guards.py": "e390f93e7d76930887b02d378a11a9d28ddfcf36fb680f735cc1f5a98aac45b4",
+    "scripts/test-event-agreement-runner-safety.py": "c84e0fd35711f2f826f295215784e0fe548598c5023966af08beaaf865380e05",
+    "scripts/test-event-agreements.py": "d5f7795c150b150e01adf1141072ef27cc8c45722e014ab43fd7a4b200abe779",
     "scripts/test-event-discovery-postgres.mjs": "45bab4bd40d7f7676b202ca619e9b46036abb54713ebcbb3ce4724b4c3b6a745",
     "scripts/test-event-memories-http.py": "7c329b1465ab2778f9b51ba94d31008e7c97eee20e78324271c06c7d23b01831",
     "scripts/test-event-memories.sh": "a942ebd013b52efde43d6644f4cd27020361e041266d52ff49710e00d09c1e4f",
@@ -29311,6 +29450,7 @@
     "scripts/verify-auth-predicates.py": "cf60cc69c61b49c4940dc1a23ff0583f4f8431e99f1f33891d3288425db5c828",
     "scripts/verify-checkout-money.py": "bf698645e4ca026a168234a99a13371e1d359e26010b3771867158cb0bd47d6d",
     "scripts/verify-cors-boundary.py": "3eaa65583fd4a282cf0cab35afecde249ed7667c9b55e13ead8a11f7db823506",
+    "scripts/verify-event-agreements-formal.mjs": "564e9cdb504dcf5377f1954061dc4697ff2852f422e01220e00620616191327c",
     "scripts/verify-event-operations-formal.sh": "a17b08e8c4d12ee0537ed8707d8675e8fa60fe7a1b2aa985391c204cf6d0351b",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
     "scripts/verify-google-account-name.py": "db797f61655c32d3df0c6737a18514ea8d49312bfa245253e7c45e521d9ce4e9",
@@ -29472,11 +29612,14 @@
     "tdf-hq-ui/src/api/eventMemoryModeration.ts": "0b771dcdeb9318776a5955c1ae543d97ae2b9f06af31dc13e2f397f010bb4ed5",
     "tdf-hq-ui/src/api/eventTickets.test.ts": "a411fe9ca5267672db4db1ec3481aecd3fda6d8a19bc913c0885db2eb65ea541",
     "tdf-hq-ui/src/api/eventTickets.ts": "9ed3528a555397f16261758e2fe98aa6b57348ffbda8ed45b6ac629daeaeb736",
+    "tdf-hq-ui/src/api/eventWorkspace.fixture.ts": "714bba6fe6e96dac4422ff124896e6868189a1d6f76c2a85c8fac2b55dd992e1",
+    "tdf-hq-ui/src/api/eventWorkspace.test.ts": "e2c11dd85601111b7ab0c4ccac210ef86c594514258cbac2611c667dd83aac5b",
+    "tdf-hq-ui/src/api/eventWorkspace.ts": "294ac70a83ea545b98afc390b069d2f480894f870ec7868153167ea9fa494b79",
     "tdf-hq-ui/src/api/fans.test.ts": "950ce9aa232eb1bc40b85f24b4ee05dc53599dff908edea22fd96d04f1c00c08",
     "tdf-hq-ui/src/api/fans.ts": "75f0d175c04cd78845fb2fb305577eb00db074d30f2cc693a70d4d3a023a7046",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "fda193b1304afecae7fb41102ae3ad1eeb498ca83941500cac37634cab7e5b87",
+    "tdf-hq-ui/src/api/generated/types.ts": "8b6b20bd767e747d6c80851e4eda49c7f8b86ac2e5631a394279b7da2b4212f9",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "579339fc25f2a17e8d34cfd23b25562a6242cca6df291887f904bac5483acc02",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "da727168f7e65d08d52a371cbe8ccfe0d0b1c91d4de940b827f7c37fdac72f85",
@@ -29614,8 +29757,8 @@
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
     "tdf-hq-ui/src/components/navigationLabels.test.ts": "01028083246407c2dffe74f833aa4b263db10f2ad3ed99621e8fc9c478af90fb",
-    "tdf-hq-ui/src/components/notificationTarget.test.ts": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
-    "tdf-hq-ui/src/components/notificationTarget.ts": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
+    "tdf-hq-ui/src/components/notificationTarget.test.ts": "b787e86052e0687cdc6ab933a80467c5909c15e0719e1d52d1508581063f006c",
+    "tdf-hq-ui/src/components/notificationTarget.ts": "33947e831f76dfba3dc1d0297afb98c27c0dffcc6975a08440a083100755ba15",
     "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "281ad82e80344a783693be507711cd5dbef740d50c5c283eeb1793159f37443f",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "3fdc444ab0e36acb6cd12c09531303347d55b9edef443a51311d0d585529ede3",
@@ -29631,6 +29774,8 @@
     "tdf-hq-ui/src/config/accountDeletionRollout.test.ts": "a32b108366282c451878b0a95dd4c9efb1cdfba44ea779d0069cd03f3b5c913f",
     "tdf-hq-ui/src/config/accountDeletionRollout.ts": "c55e82bd8e87288e48b3ac05b86a9fe1335e4400be3e105d2f4fee71534af911",
     "tdf-hq-ui/src/config/appConfig.ts": "29f5c5e8d461756baa2d66118623a4b7841affeb08ce5f38d0a07a62b664213e",
+    "tdf-hq-ui/src/config/eventAgreementsRollout.test.ts": "793bc6e43272319c15ea732b777a628381985d5e3ecfec938c45e16fa93a9a8f",
+    "tdf-hq-ui/src/config/eventAgreementsRollout.ts": "2bf8a5133fd12a0eb1f3e95843fb14e20a8e3ba2aee2910a034fe188bd7caf1f",
     "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts": "40724d6817e05d242a914760487fd7494cef3847d35229a0b78ab1d16f02615d",
     "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx": "1dc11b1cece10e40c193f15225f92e5b02a5b880c6e7b24239cdb574a64ca06b",
     "tdf-hq-ui/src/desktop/shell.test.ts": "4a3ff436d1a4fc40424786499a45255e8e1b6b5c795408bcacbf17f874d55769",
@@ -29759,6 +29904,8 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "69d2e5c5578e6a197df30ed9a19b82e36fd3a207c26bf6d2358b922a94c673a1",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "8291bfa98091297a5b96ca67cf1f2b822bd8a4470d83a19fae59ff99a7682074",
     "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "805e39c40e648eaf187345dc3b56537dbad10d671da330c86ddb5cedddf694d2",
+    "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx": "a206d2b2f4a96ffdf47c4de814661d9f5becbc9d6b25fec8d24fd02fdb692df6",
+    "tdf-hq-ui/src/pages/EventAgreementsPage.tsx": "c8de8ad351e3c8c4fb508f10d2f11e25ab0374e6865cb558b25b6e8aded99f6d",
     "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx": "c0d2368f5146b8e0ed3552c6e8b98ce50be7ed215a88cc10092f7034843dc913",
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": "c7df527c7a1f9e1859cbe81a549012dba31cf22e892a99de4621acf013a9202f",
     "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx": "3b706df13cadd3dfa75ca932202c6dbc44f87c2146df911918c44e2d4c4adcfd",
@@ -29841,8 +29988,8 @@
     "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx": "f28e0af04c8548c34193d0be952af2b2105ffc27e1cc464376a6c141f309ebf9",
     "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.test.tsx": "e12697e1e24c433a4d4b24d959028c8fe0c84e9096cd4fc4babb011a7da80410",
     "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx": "3caada9d04b5cf50b7b71bb52aa6281e834e68694e9641803bf96e1540915d05",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "68f7a68e44a96a32446a50aad3e730170f8890e6423b8c8a9a73d6e30b09f6d6",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "39d8d5afb9e62580964f7d301e37fdd14c608ba7987a76075b14ca5707492401",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "c3156e9c681da6175ec372ea1c5b395f28a767c15c05d2053c0724ec4bf420ba",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "1847e43f1264f86bb4c0496c715fad101bbfdd0a322d499296bba14977c7351a",
     "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx": "15dd2db47fab984029cfbabfd5e60830f3f29e4b8d93753f7da33f7f123c6a66",
     "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": "94ef4c36895a388db4d47e7f8bddb6057ed4594a5aa997694ae57f110cd6d7b3",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "309b788cb21ae6505fff38577913e2bf5e7b23a7a2acf9d6fc704ed3119cd3c9",
@@ -29886,7 +30033,7 @@
     "tdf-hq-ui/src/routes/NavigationScrollRestoration.tsx": "b6d064b5d995cbefe03f29c130e2acf93c562508615ddea4d180e93ca3b3025a",
     "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx": "8175b54ef1214499422d141a254f74eefaeda8ec121c3a5bec380400f9e0f87a",
     "tdf-hq-ui/src/routes/RouteLoadingFallback.tsx": "d6d3fe537c86d2159ded28cdc4f56543137a55fe1002acc8eb8381bf73b5b4ef",
-    "tdf-hq-ui/src/routes/protectedRoutes.tsx": "bd49b500f0243ae6413203205466d5a1a2220c9cd5a10de3e41a3420275cffb3",
+    "tdf-hq-ui/src/routes/protectedRoutes.tsx": "0561aea213c676c335794f45c76c0aa4213582ee146db8b09c3ecbb4afac0057",
     "tdf-hq-ui/src/routes/publicRoutes.test.tsx": "b1d51f44ec9320845ae9fe0027eec9f45e088ae3b3d15b991f986e31448bbb5c",
     "tdf-hq-ui/src/routes/publicRoutes.tsx": "d257098c3338360560f5382908e43fc0ab08c5eefb631ed3393a66a02db109ae",
     "tdf-hq-ui/src/services/googleDrive.recovery.test.ts": "2c982d140fc8bc88ce3bd786eba6f36f3844d595f49a946982996ec439b72e98",
@@ -29978,16 +30125,16 @@
     "tdf-hq-ui/src/utils/videoWatch.test.ts": "2a39fa6986883d674162a323039841cd3632b715c789423bd996e1d75c3f6db3",
     "tdf-hq-ui/src/utils/videoWatch.ts": "cdd77bc2ebca7c28f41954b8b43233d60f9bfe563355ed2d2365b328d607632c",
     "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
-    "tdf-hq-ui/src/vite-env.d.ts": "28fae652abf43eaed9c5a3615cb2f362f8d81efdd7815347fa995b222908a22e",
+    "tdf-hq-ui/src/vite-env.d.ts": "f88da613f66cafa033e860872370bf0cc0ad6cc5c737921677815296478eeaca",
     "tdf-hq/.env.example": "52c6e873ba21c44a10f7fd7fb1bdb44c0234a806dde3b019cf383a850b06b77a",
     "tdf-hq/Dockerfile": "505fa666dbdcc1247d871369bc84557d79dc0fca947897d6ab7f3d4aa807af5e",
     "tdf-hq/Dockerfile.music-worker": "c6921beae4fddef66fcf4d6135f2fb94b39ccb548e19dc2101dff69735d624a6",
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
-    "tdf-hq/assets/feature-registry.json": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
+    "tdf-hq/assets/feature-registry.json": "e2bc0f47a2431bf62150da4b012d90fc9a2b704c457eeb1a97dcba97bd6bd3ec",
     "tdf-hq/config/default.env.example": "43e79e82892aa470110818f593c2784857a1e6324e8ae5a111ff1de063d55364",
-    "tdf-hq/docs/openapi/api.yaml": "169df5e00c28e75faeea29e47509f07478a7586da520fae3a30765c5d1215ab5",
+    "tdf-hq/docs/openapi/api.yaml": "646cdf711bab92758e63477d51545ec5e258a05fd4fce67e09587df9d279544e",
     "tdf-hq/docs/openapi/artist-playback.yaml": "16c71adea21002fb54ecff645bba84be251a8537828d38342b1fb67a78acabcf",
     "tdf-hq/docs/openapi/directory.yaml": "796a92d53f69e5be446ac9de7f18da1916c151de4b0ead2f95d1d2751813e7e3",
     "tdf-hq/docs/openapi/interactions.yaml": "8d3ca2368a0ef1ea36a6c8f996b00d9a404c102fca1b44bf47eef8532a1fe598",
@@ -30134,6 +30281,7 @@
     "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql": "a8309bd68daaa4790cd2ddc2c1f739dd359f703b139140ac5bd54a973651c9f9",
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql": "7fab9f9568dbb2b2b113044869c2b6b7543e6385e9d77207c11114cbf5c1f3ef",
     "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql": "7097233b7f841e289cb3923483df869ca1f18a4c8e22998b48172b9772118163",
+    "tdf-hq/sql/2026-11-03_event_agreements.sql": "e6447771c6bd5db946d4133f32d6743b55f090cd537600a46f208d8c11814145",
     "tdf-hq/sql/2026-11-04_content_storage.sql": "dc48d8a2849069de750861f0c23265665fb3af0d6fb21550e82229c3ef29e7e1",
     "tdf-hq/sql/2026-11-04_content_storage_accounting.sql": "63541c66b0cbfcad3be42bb3bb18e9d7748e07d876bb093eed0536f8f663c5ee",
     "tdf-hq/sql/2026-11-04_content_storage_accounting_rollback.sql": "c8216053c5216b00cfd8a18028161446b8419e1569a7e867fae1ff5c397b1a95",
@@ -30161,6 +30309,8 @@
     "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql": "b88961fb0f27ecaaded3e59643aa005633e48843d53fc71bb334fcffde80e448",
     "tdf-hq/sql/2026-11-07_artist_featured_identity_guard.sql": "bfbb511663f6606bfa37cea7156bbddfe81227b22cd0884efdf4e6f830a92cfc",
     "tdf-hq/sql/2026-11-07_artist_featured_identity_guard_rollback.sql": "d0fd69ee72fed44695d682a753bc5fc4cd0ce1636cabb19fcaf44c9e2e481a37",
+    "tdf-hq/sql/2026-11-07_event_agreement_identity_guards.sql": "cb5f70b2b285866551bdf9d99e84b55c920e9d7d36938015c73af6996bba5bba",
+    "tdf-hq/sql/2026-11-07_event_agreement_identity_guards_rollback.sql": "bad57cb9b50fe91e55a11c716d65f1515e55839d10c057bf01683825a1521e12",
     "tdf-hq/sql/2026-11-07_music_featured_source_health.sql": "e28257cbb4288c0185272133c1474dc744f67a8d6f0226a0920dc0be512e0cc6",
     "tdf-hq/sql/2026-11-08_marketplace_offers.sql": "fb65c76c3474d465f5463b63d441d9dcd0965e311af8bde7eb6527d1ac8a3ea5",
     "tdf-hq/sql/2026-11-08_marketplace_offers_rollback.sql": "4086427dccbc526e2c9694253155d6e80065ccea0b281b4baab2917640ea4480",
@@ -30189,7 +30339,7 @@
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/MusicRelease.hs": "20df32dfcf33e6748c09ef59ecc35213479c3f78afe851e6aaf281a2f7789871",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
-    "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "81bb719a7780e7e6236ff85cb6b87f5479d913afac0af35941ae62bce3bd12cc",
+    "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "a5753f21a8b265e80ea093aefd9241bd24e654b8156ce28013309f4c8b5f4d9d",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
     "tdf-hq/src/TDF/App/Boot.hs": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "158b961935c20e95aa6a43637e1ede2f078bb8ecb594de1d5f8abbf91764004f",
@@ -30243,6 +30393,8 @@
     "tdf-hq/src/TDF/Config.hs": "5c41c41baf78a5dc1d5b79fe2039dcb6004f41abf1fe58cb146d047d4e4115ee",
     "tdf-hq/src/TDF/ContentStorage.hs": "4c39f039f1a81aa2b5d42db562063edfc569e651ad4bdb0afec5796aaa906634",
     "tdf-hq/src/TDF/Contracts/API.hs": "5030fec3414c8afbc5fb71895609ad035be9bdbd0fa95d448f788fc50ac82540",
+    "tdf-hq/src/TDF/Contracts/EventWorkspace.hs": "e0cb06813074ca6ebe5996749d1f5ed4769d3f7f014552b3fda26c831ce7632d",
+    "tdf-hq/src/TDF/Contracts/EventWorkspaceAPI.hs": "028fd057c9706d9786ee649b0adf9d9b2630244a1ebf2392757487c995f91ba1",
     "tdf-hq/src/TDF/Contracts/Server.hs": "874d4fd54c05dc35103a2182a8793d3b8277f845803cc963e41582b5a403538d",
     "tdf-hq/src/TDF/Contracts/Types.hs": "cd59c25f047739b58e8e6b0373b858e212665705dbd9f0ca2c2ced7c56b36a20",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
@@ -30323,7 +30475,7 @@
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "ad338e7fb54bcf415d0b2a87f653a2855ab0f0f92219a09c1c22125ab02b7d19",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "928c126539e456187c15420669c6259fbda05e7bad7f1abc627b306c2a22bee4",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "48bed8045b516297cefc700665ac69c9afb6f95d195852a604185d475a6804f0",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/StripeTicketCapture.hs": "b2a93b8ef71726410abeb79ec0ec07ef8e96d845ada7d7c0a401fda9b5b7c842",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
@@ -30366,7 +30518,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+    "tdf-hq/tdf-hq.cabal": "6af2d038804ccf7364441b2f7bcee266fb2b053a0b4b1decfba197e8a3d108c9",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -30374,7 +30526,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "4e581bc4d8f897cba41fad99eabc29f94a94e6e4ba3732e5632cca0665c7081a",
+    "tdf-hq/test/Spec.hs": "1c9ee51be95b1e7d227b6f6d85418dc5bf88859b5526bd6602d7cf3eecf085ba",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -30396,6 +30548,8 @@
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
+    "tdf-hq/test/TDF/Contracts/DeliverySpec.hs": "d4281e8cdc64efd6b03a73faaf4cffe62d468bec96dd70c4b13b2e50a4d4f481",
+    "tdf-hq/test/TDF/Contracts/EventWorkspaceSpec.hs": "ae3e57382a41e99a61ebd63f8892cdbac469e9bca6c5a2802639acf09a4ea733",
     "tdf-hq/test/TDF/Contracts/StoreSpec.hs": "302ab1c3c85ff1bfa9b3b514ed4373d13197df7bc1f12b78283b3a24cbf23579",
     "tdf-hq/test/TDF/CorsPropertiesSpec.hs": "11c733a22ba58b1c482169e4e30e6726795abb29fdd2946466c3adbcd1179990",
     "tdf-hq/test/TDF/CorsSpec.hs": "8663de653f6eb0ba12b8889b2645a537fc6ec0f6dad951cb340f674aa3838357",
@@ -30412,7 +30566,7 @@
     "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "bc4f5e6053643ddcbae742e1690e44f5698c6f527f86874723c3bf014ceda57a",
     "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs": "65bdfb6d20e33eb7a062cebdeef4c1e3dbb48e83b10eda578a9dcdeddd9249dc",
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
-    "tdf-hq/test/TDF/EventTicketSaleSpec.hs": "c0645218656951aee61012df54df63ec2f9128b8d787d6899fcd323bc90294dd",
+    "tdf-hq/test/TDF/EventTicketSaleSpec.hs": "095512b37114807f4b369298125815e78feb32c23ab0236fc41e3bbc909040bd",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
@@ -30528,7 +30682,7 @@
     "tdf-mobile/__tests__/eventMomentWirePayload.test.ts": "5aa80192f305412e8c79ca0e427605680333b391491108e922e20e9019f85d0c",
     "tdf-mobile/__tests__/eventMoments.test.ts": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
     "tdf-mobile/__tests__/eventMomentsRepository.test.ts": "c43a3a723719ec489e1ba91e456cfa44a981ce41a6348fd0ca7c2a6e02361542",
-    "tdf-mobile/__tests__/featureRegistry.test.ts": "1ab135bf265b974320e20f3f5710fc64b0e23877b99beb8273267e7d021c7cad",
+    "tdf-mobile/__tests__/featureRegistry.test.ts": "337bd6aeeeca7bcd31c061a0e63df2a4b45507bb4a9c0171cb29b9c87bb95ac2",
     "tdf-mobile/__tests__/liveBroadcastsRepository.test.ts": "ff98004607a259e2b0e9a9e677d121a564a78e61e6a66074e948e04d15ff9d6d",
     "tdf-mobile/__tests__/nativeAppleAuthentication.test.ts": "1dc10f0182ae85dd59d046e553d4b0e9714dc6e3edcd481143bcedc5d71b969b",
     "tdf-mobile/__tests__/onboardingApi.test.ts": "4770fd9508a3a13c6ab0fb701d900b32633bac7b377d3f4fed4498f0b0c08300",
@@ -30572,7 +30726,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
-    "tdf-mobile/src/api/generated/types.ts": "fda193b1304afecae7fb41102ae3ad1eeb498ca83941500cac37634cab7e5b87",
+    "tdf-mobile/src/api/generated/types.ts": "8b6b20bd767e747d6c80851e4eda49c7f8b86ac2e5631a394279b7da2b4212f9",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
@@ -30583,7 +30737,7 @@
     "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
     "tdf-mobile/src/features/directory/previewImage.ts": "c29605bbb2d8a794106068ab2dc1d3e0d568797403168a3e7fee0d7059c37674",
     "tdf-mobile/src/features/featureRegistry.ts": "1e4c7047aaaaf481b1dbeb0c5f07652eb0672bd382926a6863c82042f51f2864",
-    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "7befb5f315c7e165fbbeb77014b7fa1b8306efeeb22439b35f03e5acfbacd796",
+    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "310c4f9c916fa90c099b7d8eaa76b1ccd57da8fe13b0bf2ee3a672eae92e8bcd",
     "tdf-mobile/src/feedback/FeedbackEntry.tsx": "7964eaf7976c58daf264bacf94ea4854af265f0146cfbd16a1429e385bc46e7b",
     "tdf-mobile/src/feedback/metadata.ts": "62336d3a2cf7f055624bdb4f4bd20aedbfd47afc3fbddb2cefaa2d4ce1e26861",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
@@ -30604,9 +30758,9 @@
     "tdf-mobile/src/localization/eventExperienceCopy.ts": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
     "tdf-mobile/src/localization/onboardingCopy.ts": "58e4e181760d5850403bb9e01980e09ee21caddb46e4c82f6207d01abfc0c949",
     "tdf-mobile/src/navigation/deepLinks.ts": "6d1185dd9e204bd685da9fe358de42c7254f27eacd80b8f59fdd43d6fb1baebf",
-    "tdf-mobile/src/navigation/notificationResponses.test.ts": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
-    "tdf-mobile/src/navigation/notificationTarget.ts": "635b13a8a72aeed82cf22482e8213ddc7df33c54a95f6b9b655b5ddd53e2b33c",
-    "tdf-mobile/src/notifications/NotificationScreen.test.tsx": "8309c2ee6791950ecfc31aa48f43156876156099c87ebe701f291e079aad2c05",
+    "tdf-mobile/src/navigation/notificationResponses.test.ts": "4a0751458c9bb8cbb48e5f7e4257c1c3064c00d4b6e073eb3dedc8b42e2d0460",
+    "tdf-mobile/src/navigation/notificationTarget.ts": "fc5c33c9774bd9a3ca3ef4fbb6e9fe64888c77ee3f07e5e1681d8db8b850e9ac",
+    "tdf-mobile/src/notifications/NotificationScreen.test.tsx": "9c3e22f7517a34aceb560cb0435aa9bef54f5e523e53790cc65858bf531d5d44",
     "tdf-mobile/src/providers/AppProviders.tsx": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
     "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
     "tdf-mobile/src/providers/AuthQueryProviders.tsx": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2",
@@ -30829,6 +30983,10 @@
       },
       {
         "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -32298,6 +32456,10 @@
       {
         "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/api/generated/types.ts": [
@@ -32424,6 +32586,10 @@
       {
         "requirement": "SYS-TRACE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/build-catalog-decisions.mjs": [
@@ -32476,6 +32642,10 @@
       {
         "requirement": "MEDIA-SOURCE-HEALTH-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
       }
     ],
     "scripts/check-state-machines.py": [
@@ -32495,6 +32665,10 @@
       },
       {
         "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -32840,6 +33014,10 @@
       {
         "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": [
@@ -33129,6 +33307,10 @@
       },
       {
         "requirement": "MEDIA-ARTIST-FEATURED-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -33548,6 +33730,10 @@
       {
         "requirement": "MEDIA-ARTIST-FEATURED-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/verify-recovery-expiry.py": [
@@ -33784,6 +33970,10 @@
       {
         "requirement": "EVT-TICKET-SALE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": [
@@ -33913,6 +34103,10 @@
       },
       {
         "requirement": "EVT-TICKET-SALE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -36730,6 +36924,10 @@
       {
         "requirement": "EVT-TICKET-SALE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/lib/liveBroadcastsRepository.ts": [
@@ -39310,6 +39508,10 @@
       {
         "requirement": "PRIV-WHATSAPP-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "playwright.config.mjs": [
@@ -39749,6 +39951,10 @@
       },
       {
         "requirement": "EVT-TICKET-SALE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -41450,6 +41656,10 @@
       {
         "requirement": "CAMP-SERVER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/SidebarNav.tsx": [
@@ -41477,6 +41687,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -41733,6 +41947,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
         "relationship": "tests"
       }
     ],
@@ -45116,6 +45334,10 @@
       {
         "requirement": "EVT-TICKET-SALE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/routes/EventCommunityEntry.tsx": [
@@ -47614,6 +47836,10 @@
       {
         "requirement": "CONTRACT-SEND-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Contracts/API.hs": [
@@ -49843,6 +50069,138 @@
         "requirement": "EVT-TICKET-SALE-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/sql/2026-11-03_event_agreements.sql": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Contracts/EventWorkspace.hs": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Contracts/EventWorkspaceAPI.hs": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/eventWorkspace.ts": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/EventAgreementsPage.tsx": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/event-agreements.yml": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "docs/catalog-persistence/event-agreements-smtp-reconciliation-20261106.json": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-07_event_agreement_identity_guards.sql": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-07_event_agreement_identity_guards_rollback.sql": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/config/eventAgreementsRollout.ts": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-event-agreements.py": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/verify-event-agreements-formal.mjs": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/eventWorkspace.test.ts": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/eventWorkspace.fixture.ts": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/Contracts/EventWorkspaceSpec.hs": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/Contracts/DeliverySpec.hs": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-event-agreement-identity-guards.py": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-event-agreement-runner-safety.py": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/config/eventAgreementsRollout.test.ts": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/EventAgreement.tla": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/EventAgreement.cfg": [
+      {
+        "requirement": "EVT-AGREEMENT-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -50071,9 +50429,21 @@
       ]
     },
     {
+      "id": "SURFACE-b5d2210a9e7e1bdd",
+      "path": ".github/workflows/event-agreements.yml",
+      "sha256": "f14dfe30e14a4990f567f6bb7af6417c81b69b749f9d9ceb25a2ca7a2942779b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
+      "sha256": "d022edf728f5da0d7fdde955c228bd3a6271552b4a5ebdb60339ec6f4dd9512c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50102,6 +50472,10 @@
         },
         {
           "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -51540,7 +51914,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "3549e483381de0afe200a2b56a6297639472f0a2ab41f3038928de869f323308",
+      "sha256": "1ae1a3fd1d6717e8597eb0e0c299a0526d3d1a7a165561ae5e7864aa8553a25e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51569,6 +51943,10 @@
         },
         {
           "requirement": "MEDIA-SOURCE-HEALTH-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "tests"
         }
       ]
@@ -54787,7 +55165,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "66eb7f410d6801095d49d3b9f1676e92d0f881dbcd662babaed67aaa0a43710b",
+      "sha256": "7072ceff3d90a4d221cba1362ff34c5721609791a20528a89697bfb5bfd865bb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54864,6 +55242,10 @@
         },
         {
           "requirement": "MEDIA-ARTIST-FEATURED-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -56388,6 +56770,42 @@
         },
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-eae1b23653dbe0a8",
+      "path": "scripts/test-event-agreement-identity-guards.py",
+      "sha256": "e390f93e7d76930887b02d378a11a9d28ddfcf36fb680f735cc1f5a98aac45b4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-3b0d26f92c24fc4e",
+      "path": "scripts/test-event-agreement-runner-safety.py",
+      "sha256": "c84e0fd35711f2f826f295215784e0fe548598c5023966af08beaaf865380e05",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b0e9ec5e2aad95e6",
+      "path": "scripts/test-event-agreements.py",
+      "sha256": "d5f7795c150b150e01adf1141072ef27cc8c45722e014ab43fd7a4b200abe779",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "tests"
         }
       ]
@@ -58245,6 +58663,18 @@
         },
         {
           "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-836dc136fcac46df",
+      "path": "scripts/verify-event-agreements-formal.mjs",
+      "sha256": "564e9cdb504dcf5377f1954061dc4697ff2852f422e01220e00620616191327c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "tests"
         }
       ]
@@ -60776,6 +61206,42 @@
       ]
     },
     {
+      "id": "SURFACE-d636158602030625",
+      "path": "tdf-hq-ui/src/api/eventWorkspace.fixture.ts",
+      "sha256": "714bba6fe6e96dac4422ff124896e6868189a1d6f76c2a85c8fac2b55dd992e1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1993206467f2d6d7",
+      "path": "tdf-hq-ui/src/api/eventWorkspace.test.ts",
+      "sha256": "e2c11dd85601111b7ab0c4ccac210ef86c594514258cbac2611c667dd83aac5b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c2680654755934cd",
+      "path": "tdf-hq-ui/src/api/eventWorkspace.ts",
+      "sha256": "294ac70a83ea545b98afc390b069d2f480894f870ec7868153167ea9fa494b79",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-743e4202864493ee",
       "path": "tdf-hq-ui/src/api/fans.test.ts",
       "sha256": "950ce9aa232eb1bc40b85f24b4ee05dc53599dff908edea22fd96d04f1c00c08",
@@ -60851,7 +61317,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "fda193b1304afecae7fb41102ae3ad1eeb498ca83941500cac37634cab7e5b87",
+      "sha256": "8b6b20bd767e747d6c80851e4eda49c7f8b86ac2e5631a394279b7da2b4212f9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60908,6 +61374,10 @@
         },
         {
           "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -63529,7 +63999,7 @@
     {
       "id": "SURFACE-5a528805907175e9",
       "path": "tdf-hq-ui/src/components/notificationTarget.test.ts",
-      "sha256": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
+      "sha256": "b787e86052e0687cdc6ab933a80467c5909c15e0719e1d52d1508581063f006c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63542,6 +64012,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-INVITATION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "tests"
         }
       ]
@@ -63549,7 +64023,7 @@
     {
       "id": "SURFACE-45942cefd314d415",
       "path": "tdf-hq-ui/src/components/notificationTarget.ts",
-      "sha256": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
+      "sha256": "33947e831f76dfba3dc1d0297afb98c27c0dffcc6975a08440a083100755ba15",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63562,6 +64036,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-INVITATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -63856,6 +64334,30 @@
         },
         {
           "requirement": "WEB-CANONICAL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e27e66764d7dcb5e",
+      "path": "tdf-hq-ui/src/config/eventAgreementsRollout.test.ts",
+      "sha256": "793bc6e43272319c15ea732b777a628381985d5e3ecfec938c45e16fa93a9a8f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-bc6bc265304cf3d3",
+      "path": "tdf-hq-ui/src/config/eventAgreementsRollout.ts",
+      "sha256": "2bf8a5133fd12a0eb1f3e95843fb14e20a8e3ba2aee2910a034fe188bd7caf1f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -66432,6 +66934,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-fac74da10964b761",
+      "path": "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
+      "sha256": "a206d2b2f4a96ffdf47c4de814661d9f5becbc9d6b25fec8d24fd02fdb692df6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-0e855839df1ec21d",
+      "path": "tdf-hq-ui/src/pages/EventAgreementsPage.tsx",
+      "sha256": "c8de8ad351e3c8c4fb508f10d2f11e25ab0374e6865cb558b25b6e8aded99f6d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-378a6bc30de606b4",
       "path": "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx",
       "sha256": "4dac7124635899687df092f6164248eab3673764ae71ed80d44bac9be0234bdf",
@@ -68165,7 +68691,7 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "68f7a68e44a96a32446a50aad3e730170f8890e6423b8c8a9a73d6e30b09f6d6",
+      "sha256": "c3156e9c681da6175ec372ea1c5b395f28a767c15c05d2053c0724ec4bf420ba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68205,7 +68731,7 @@
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "39d8d5afb9e62580964f7d301e37fdd14c608ba7987a76075b14ca5707492401",
+      "sha256": "1847e43f1264f86bb4c0496c715fad101bbfdd0a322d499296bba14977c7351a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68246,6 +68772,10 @@
         },
         {
           "requirement": "EVT-TICKET-SALE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -69150,7 +69680,7 @@
     {
       "id": "SURFACE-f0dfc7a18e8b49c7",
       "path": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
-      "sha256": "bd49b500f0243ae6413203205466d5a1a2220c9cd5a10de3e41a3420275cffb3",
+      "sha256": "0561aea213c676c335794f45c76c0aa4213582ee146db8b09c3ecbb4afac0057",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -69163,6 +69693,10 @@
         },
         {
           "requirement": "CAMP-SERVER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -70838,7 +71372,7 @@
     {
       "id": "SURFACE-2f83dbcb131f448c",
       "path": "tdf-hq-ui/src/vite-env.d.ts",
-      "sha256": "28fae652abf43eaed9c5a3615cb2f362f8d81efdd7815347fa995b222908a22e",
+      "sha256": "f88da613f66cafa033e860872370bf0cc0ad6cc5c737921677815296478eeaca",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -70847,6 +71381,10 @@
         },
         {
           "requirement": "PRIV-WHATSAPP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -71021,7 +71559,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
+      "sha256": "e2bc0f47a2431bf62150da4b012d90fc9a2b704c457eeb1a97dcba97bd6bd3ec",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71062,6 +71600,10 @@
         },
         {
           "requirement": "EVT-LOGISTICS-ACCESS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -71132,7 +71674,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "169df5e00c28e75faeea29e47509f07478a7586da520fae3a30765c5d1215ab5",
+      "sha256": "646cdf711bab92758e63477d51545ec5e258a05fd4fce67e09587df9d279544e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71213,6 +71755,10 @@
         },
         {
           "requirement": "MEDIA-ARTIST-FEATURED-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -75351,6 +75897,18 @@
       ]
     },
     {
+      "id": "SURFACE-59f86d2323262f88",
+      "path": "tdf-hq/sql/2026-11-03_event_agreements.sql",
+      "sha256": "e6447771c6bd5db946d4133f32d6743b55f090cd537600a46f208d8c11814145",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-5e915c9291c4c355",
       "path": "tdf-hq/sql/2026-11-04_content_storage.sql",
       "sha256": "dc48d8a2849069de750861f0c23265665fb3af0d6fb21550e82229c3ef29e7e1",
@@ -75686,6 +76244,30 @@
       "requirements": [
         {
           "requirement": "MEDIA-ARTIST-FEATURED-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-68f8cb91acdb41db",
+      "path": "tdf-hq/sql/2026-11-07_event_agreement_identity_guards.sql",
+      "sha256": "cb5f70b2b285866551bdf9d99e84b55c920e9d7d36938015c73af6996bba5bba",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-635b804c2dbb895b",
+      "path": "tdf-hq/sql/2026-11-07_event_agreement_identity_guards_rollback.sql",
+      "sha256": "bad57cb9b50fe91e55a11c716d65f1515e55839d10c057bf01683825a1521e12",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -76344,7 +76926,7 @@
     {
       "id": "SURFACE-200737fdda273f28",
       "path": "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
-      "sha256": "81bb719a7780e7e6236ff85cb6b87f5479d913afac0af35941ae62bce3bd12cc",
+      "sha256": "a5753f21a8b265e80ea093aefd9241bd24e654b8156ce28013309f4c8b5f4d9d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76373,6 +76955,10 @@
         },
         {
           "requirement": "EVT-TICKET-SALE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -77393,6 +77979,30 @@
       ]
     },
     {
+      "id": "SURFACE-d96f97b9cdae89c5",
+      "path": "tdf-hq/src/TDF/Contracts/EventWorkspace.hs",
+      "sha256": "e0cb06813074ca6ebe5996749d1f5ed4769d3f7f014552b3fda26c831ce7632d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6222007b8d3a8c32",
+      "path": "tdf-hq/src/TDF/Contracts/EventWorkspaceAPI.hs",
+      "sha256": "028fd057c9706d9786ee649b0adf9d9b2630244a1ebf2392757487c995f91ba1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-de7641689e63ad01",
       "path": "tdf-hq/src/TDF/Contracts/Server.hs",
       "sha256": "874d4fd54c05dc35103a2182a8793d3b8277f845803cc963e41582b5a403538d",
@@ -77404,6 +78014,10 @@
         },
         {
           "requirement": "CONTRACT-SEND-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -79492,7 +80106,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "928c126539e456187c15420669c6259fbda05e7bad7f1abc627b306c2a22bee4",
+      "sha256": "48bed8045b516297cefc700665ac69c9afb6f95d195852a604185d475a6804f0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79641,6 +80255,10 @@
         },
         {
           "requirement": "EVT-TICKET-SALE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -80574,7 +81192,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "sha256": "6af2d038804ccf7364441b2f7bcee266fb2b053a0b4b1decfba197e8a3d108c9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -80631,6 +81249,10 @@
         },
         {
           "requirement": "EVT-TICKET-SALE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -80761,7 +81383,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "4e581bc4d8f897cba41fad99eabc29f94a94e6e4ba3732e5632cca0665c7081a",
+      "sha256": "1c9ee51be95b1e7d227b6f6d85418dc5bf88859b5526bd6602d7cf3eecf085ba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -80907,6 +81529,10 @@
         {
           "requirement": "EVT-TICKET-SALE-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -81317,6 +81943,30 @@
       ]
     },
     {
+      "id": "SURFACE-8a3bcf7db1bd362a",
+      "path": "tdf-hq/test/TDF/Contracts/DeliverySpec.hs",
+      "sha256": "d4281e8cdc64efd6b03a73faaf4cffe62d468bec96dd70c4b13b2e50a4d4f481",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c6ed0e5e79e54ac9",
+      "path": "tdf-hq/test/TDF/Contracts/EventWorkspaceSpec.hs",
+      "sha256": "ae3e57382a41e99a61ebd63f8892cdbac469e9bca6c5a2802639acf09a4ea733",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AGREEMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-83dc1bd4fe1e5da0",
       "path": "tdf-hq/test/TDF/Contracts/StoreSpec.hs",
       "sha256": "302ab1c3c85ff1bfa9b3b514ed4373d13197df7bc1f12b78283b3a24cbf23579",
@@ -81597,7 +82247,7 @@
     {
       "id": "SURFACE-78bfd9d40d6ce29d",
       "path": "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
-      "sha256": "c0645218656951aee61012df54df63ec2f9128b8d787d6899fcd323bc90294dd",
+      "sha256": "095512b37114807f4b369298125815e78feb32c23ab0236fc41e3bbc909040bd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84269,7 +84919,7 @@
     {
       "id": "SURFACE-7aafc197c0caae2e",
       "path": "tdf-mobile/__tests__/featureRegistry.test.ts",
-      "sha256": "1ab135bf265b974320e20f3f5710fc64b0e23877b99beb8273267e7d021c7cad",
+      "sha256": "337bd6aeeeca7bcd31c061a0e63df2a4b45507bb4a9c0171cb29b9c87bb95ac2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85609,7 +86259,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "fda193b1304afecae7fb41102ae3ad1eeb498ca83941500cac37634cab7e5b87",
+      "sha256": "8b6b20bd767e747d6c80851e4eda49c7f8b86ac2e5631a394279b7da2b4212f9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86106,7 +86756,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "7befb5f315c7e165fbbeb77014b7fa1b8306efeeb22439b35f03e5acfbacd796",
+      "sha256": "310c4f9c916fa90c099b7d8eaa76b1ccd57da8fe13b0bf2ee3a672eae92e8bcd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86706,7 +87356,7 @@
     {
       "id": "SURFACE-335f0e863443a35b",
       "path": "tdf-mobile/src/navigation/notificationResponses.test.ts",
-      "sha256": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
+      "sha256": "4a0751458c9bb8cbb48e5f7e4257c1c3064c00d4b6e073eb3dedc8b42e2d0460",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86733,7 +87383,7 @@
     {
       "id": "SURFACE-1b440686d0fdbde2",
       "path": "tdf-mobile/src/navigation/notificationTarget.ts",
-      "sha256": "635b13a8a72aeed82cf22482e8213ddc7df33c54a95f6b9b655b5ddd53e2b33c",
+      "sha256": "fc5c33c9774bd9a3ca3ef4fbb6e9fe64888c77ee3f07e5e1681d8db8b850e9ac",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86774,7 +87424,7 @@
     {
       "id": "SURFACE-c524a39784b123fa",
       "path": "tdf-mobile/src/notifications/NotificationScreen.test.tsx",
-      "sha256": "8309c2ee6791950ecfc31aa48f43156876156099c87ebe701f291e079aad2c05",
+      "sha256": "9c3e22f7517a34aceb560cb0435aa9bef54f5e523e53790cc65858bf531d5d44",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -89762,7 +90412,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ff8bc9f09d7dd33a0fbb58f34c832dc8683c64db26f7d1dc8b9f753c8b6eb448",
+      "sourceSha256": "0b9ddbb0bf2f625d408449208241fde32b72e6f04b674ce0a68680877f75e0a3",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -89790,7 +90440,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ff8bc9f09d7dd33a0fbb58f34c832dc8683c64db26f7d1dc8b9f753c8b6eb448",
+      "sourceSha256": "0b9ddbb0bf2f625d408449208241fde32b72e6f04b674ce0a68680877f75e0a3",
       "definition": {
         "states": [
           "absent",
@@ -89820,7 +90470,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ff8bc9f09d7dd33a0fbb58f34c832dc8683c64db26f7d1dc8b9f753c8b6eb448",
+      "sourceSha256": "0b9ddbb0bf2f625d408449208241fde32b72e6f04b674ce0a68680877f75e0a3",
       "definition": {
         "export": [
           "queued",
@@ -89871,6 +90521,48 @@
           "failed": []
         },
         "authority": "music_ddex_export.status and music_processing_job.status; transitions are enforced by the worker's conditional UPDATEs under the lease guard, not by a trigger"
+      },
+      "correspondence": "Mapped requirement evidence required; enumeration alone is not conformance"
+    },
+    {
+      "id": "EVT-AGREEMENT-001",
+      "source": "formal/system/requirements.json",
+      "sourceSha256": "0b9ddbb0bf2f625d408449208241fde32b72e6f04b674ce0a68680877f75e0a3",
+      "definition": {
+        "boundary": "formal/system/event-agreements.md",
+        "property": "draft -> approved draft -> sent -> accepted or rejected or changes requested or withdrawn",
+        "states": [
+          "draft",
+          "sent",
+          "changes_requested",
+          "accepted",
+          "rejected",
+          "withdrawn"
+        ],
+        "initial": "draft",
+        "transitions": {
+          "draft": [
+            "sent",
+            "withdrawn"
+          ],
+          "sent": [
+            "changes_requested",
+            "accepted",
+            "rejected",
+            "withdrawn"
+          ],
+          "changes_requested": [
+            "draft",
+            "withdrawn"
+          ],
+          "rejected": [
+            "draft"
+          ],
+          "withdrawn": [
+            "draft"
+          ],
+          "accepted": []
+        }
       },
       "correspondence": "Mapped requirement evidence required; enumeration alone is not conformance"
     }
@@ -98578,6 +99270,106 @@
         "400",
         "401",
         "404",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /social-events/events/{eventId}/workspace",
+      "operationId": "getEventWorkspace",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /social-events/events/{eventId}/workspace",
+      "operationId": "mutateEventWorkspace",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /social-events/events/{eventId}/workspace/plan.pdf",
+      "operationId": "downloadEventPlan",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /social-events/events/{eventId}/workspace/agreements/{agreementId}/{version}/document.pdf",
+      "operationId": "downloadEventAgreement",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /social-events/events/{eventId}/workspace/agreements/{agreementId}/acceptance.pdf",
+      "operationId": "downloadEventAgreementAcceptance",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
         "503"
       ],
       "conformance": "not-established-by-client-generation"
@@ -113028,6 +113820,94 @@
         "documentedException": "Campaign creation and review are available through the responsive web interface."
       },
       "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "social.event.agreements",
+      "resource": "/social/eventos/:eventId/acuerdos",
+      "action": "discover",
+      "authentication": "authenticated",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "none",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Account acceptance and plan review currently use the authenticated web workspace; no new native signing screen is claimed."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "social.event.agreements",
+      "resource": "/social/eventos/:eventId/acuerdos",
+      "action": "view",
+      "authentication": "authenticated",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "event-owner-or-designated-recipient",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Account acceptance and plan review currently use the authenticated web workspace; no new native signing screen is claimed."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "social.event.agreements",
+      "resource": "/social/eventos/:eventId/acuerdos",
+      "action": "submit",
+      "authentication": "authenticated",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "event-owner-or-designated-recipient",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Account acceptance and plan review currently use the authenticated web workspace; no new native signing screen is claimed."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "social.event.agreements",
+      "resource": "/social/eventos/:eventId/acuerdos",
+      "action": "export",
+      "authentication": "authenticated",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "event-owner-or-designated-recipient",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Account acceptance and plan review currently use the authenticated web workspace; no new native signing screen is claimed."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
     }
   ],
   "conformanceCounts": {
@@ -113035,7 +113915,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 226,
+    "PARTIAL": 227,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

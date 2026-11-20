@@ -17,6 +17,7 @@ import { SocialEventsAPI, type SocialEventMomentCreateDTO, type SocialTicketTier
 import { EventTickets } from '../api/eventTickets';
 import { Catalogs } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
+import { isEventAgreementsEnabled } from '../config/eventAgreementsRollout';
 import { canAccessPath, hasStrictAdminAccess } from '../utils/accessControl';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { formatCurrency } from '../utils/formatters';
@@ -414,6 +415,7 @@ export default function SocialEventDetailPage() {
       loading={eventQuery.isLoading}
       actions={<Stack direction="row" spacing={1}>
         <Button component={RouterLink} to="/social/eventos" startIcon={<ArrowBackIcon />}>Eventos</Button>
+        {session && isEventAgreementsEnabled() && <Button component={RouterLink} to={`/social/eventos/${eventId}/acuerdos`} variant="outlined">Acuerdos y plan</Button>}
         {canShareTickets && (
           <Button
             onClick={() => { void shareTicketPurchaseLink(); }}

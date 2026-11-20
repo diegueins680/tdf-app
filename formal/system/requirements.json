@@ -28495,6 +28495,138 @@
         "reason": "The request and decision lifecycle and its races are exercised on PostgreSQL and the web card and queue by Jest; checkout from an approved request is covered by reading only, no model exists and notice delivery is unverified."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "EVT-AGREEMENT-001",
+      "statement": "Only the designated active account can accept the current sent organizer-approved event agreement; accepted content, its plan annex and evidence remain immutable.",
+      "authority": "approved",
+      "source": "User-approved event agreement workflow; formal/system/event-agreements.md",
+      "property": "authenticated authorized current version and hash with consent and matching name; one immutable acceptance and frozen annex",
+      "contract": "formal/system/event-agreements.md",
+      "implementation": [
+        "tdf-hq/sql/2026-11-03_event_agreements.sql",
+        "tdf-hq/src/TDF/Contracts/EventWorkspace.hs",
+        "tdf-hq/src/TDF/Contracts/EventWorkspaceAPI.hs",
+        "tdf-hq/src/TDF/Contracts/Server.hs",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/api/eventWorkspace.ts",
+        "tdf-hq-ui/src/pages/EventAgreementsPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq-ui/src/components/notificationTarget.ts",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        ".github/workflows/event-agreements.yml",
+        ".github/workflows/event-operations-formal.yml",
+        "scripts/production-migrations.json",
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "formal/system/state-machine-bindings.json",
+        "docs/catalog-persistence/event-agreements-smtp-reconciliation-20261106.json",
+        "tdf-hq/sql/2026-11-07_event_agreement_identity_guards.sql",
+        "tdf-hq/sql/2026-11-07_event_agreement_identity_guards_rollback.sql",
+        "tdf-hq-ui/src/config/eventAgreementsRollout.ts",
+        "tdf-hq-ui/src/vite-env.d.ts"
+      ],
+      "verification": "Actual isolated PostgreSQL migration tests, web response/session regressions, Haskell document and delivery tests in Stack CI, bounded TLC baseline and five negative configurations. Current-main integration additionally exercises archived-reference forward/replay/rollback with actualSQL and exact-true/default-off web rollout controls. The UI switch is not authorization and old bounded model evidence does not prove these additions.",
+      "evidence": "Event agreement persistence CI; web focused tests; account acceptance TLC output; Stack CI. Deployment is independent.",
+      "status": "specified and implemented",
+      "historicalStatus": "new workflow",
+      "critical": true,
+      "title": "Private event proposal and account acceptance",
+      "domain": "EVENT",
+      "actors": [
+        "event organizer",
+        "designated recipient",
+        "unrelated account"
+      ],
+      "preconditions": [
+        "Current authenticated session; event has assigned organizer; production migration installed"
+      ],
+      "inputs": [
+        "Strict action payload; expected version and SHA-256; explicit consent and recipient legal name"
+      ],
+      "state": {
+        "boundary": "formal/system/event-agreements.md",
+        "property": "draft -> approved draft -> sent -> accepted or rejected or changes requested or withdrawn",
+        "states": [
+          "draft",
+          "sent",
+          "changes_requested",
+          "accepted",
+          "rejected",
+          "withdrawn"
+        ],
+        "initial": "draft",
+        "transitions": {
+          "draft": [
+            "sent",
+            "withdrawn"
+          ],
+          "sent": [
+            "changes_requested",
+            "accepted",
+            "rejected",
+            "withdrawn"
+          ],
+          "changes_requested": [
+            "draft",
+            "withdrawn"
+          ],
+          "rejected": [
+            "draft"
+          ],
+          "withdrawn": [
+            "draft"
+          ],
+          "accepted": []
+        }
+      },
+      "allowedTransitions": [
+        "Organizer saves versioned plan and proposals; approves exact complete document and cap; sends it. Recipient accepts, rejects or requests changes. Accepted agreements require a separate amendment."
+      ],
+      "forbiddenTransitions": [
+        "Unsent, stale, unapproved, incomplete or foreign acceptance; direct artist edits; rewriting accepted evidence"
+      ],
+      "effects": [
+        "Atomic persisted commands and in-app notifications; private downloadable plan, proposal and acceptance PDF"
+      ],
+      "authorization": "Current-session check wraps each read or write. Event owner and explicitly assigned recipient only; assignment does not grant event editor rights.",
+      "privacy": "No public legal documents or comments; authenticated no-store downloads; no real artist information in fixtures.",
+      "concurrency": "Event lock before agreement lock serializes revisions, snapshots, acceptance and withdrawal. One acceptance primary key.",
+      "idempotency": "Actor/event/request-bound digest; identical retries reuse original response; clients reread current state; authorization precedes replay.",
+      "failure": "Preserve input on network/stale errors; reject malformed content and incomplete scope/cap; PDF or missing migration returns unavailable, never fake success.",
+      "recovery": "Retry same command key for same intent, refresh current truth; separate version/amendment for changed terms; reviewed SQL deployment.",
+      "observability": "Immutable action history, actor account, exact version and hash, server UTC timestamps and downloadable evidence.",
+      "tests": [
+        "scripts/test-event-agreements.py",
+        "scripts/verify-event-agreements-formal.mjs",
+        "tdf-hq-ui/src/api/eventWorkspace.test.ts",
+        "tdf-hq-ui/src/api/eventWorkspace.fixture.ts",
+        "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq/test/TDF/Contracts/EventWorkspaceSpec.hs",
+        "tdf-hq/test/TDF/Contracts/DeliverySpec.hs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/test-event-agreement-identity-guards.py",
+        "scripts/test-event-agreement-runner-safety.py",
+        "tdf-hq-ui/src/config/eventAgreementsRollout.test.ts"
+      ],
+      "formalModels": [
+        "formal/event-operations/EventAgreement.tla",
+        "formal/event-operations/EventAgreement.cfg"
+      ],
+      "confidence": "Bounded lifecycle and actual PostgreSQL guards tested locally; Haskell compile, deployed schema, legal sufficiency and production correspondence require independent evidence.",
+      "ambiguity": [
+        "No certified signature provider or cryptographic identity proof. Event proposals use internal notifications; separate generic contracts retain SMTP delivery. No native acceptance UI. Document recipients and all commercial/legal scope must be verified before real send."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local SQL/UI/model checks do not establish production deployment or full-width refinement; Mobile write authorization and exact Stack CI remain prerequisites."
+      }
     }
   ]
 }
