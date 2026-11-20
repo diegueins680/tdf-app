@@ -1784,11 +1784,6 @@
     "tdf-hq": [
       "tdf-hq/.github/workflows/haskell.yml",
       "tdf-hq/.github/workflows/openapi-validate.yml",
-      "tdf-hq/.stack-work-before-main-20261119/config.yaml",
-      "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/examples/Scotty.hs",
-      "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/examples/ServantWai.hs",
-      "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/examples/Wai.hs",
-      "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/test/phantomjs.js",
       "tdf-hq/Dockerfile",
       "tdf-hq/Dockerfile.music-worker",
       "tdf-hq/Dockerfile.runtime",
@@ -3486,7 +3481,7 @@
     {
       "id": "SURFACE-a759d468f3ebc8d5",
       "path": "e2e/web/event-discovery-filters.spec.mjs",
-      "sha256": "295c2354d6390f937686451ac1eb03f257b34c7da509c719c16928489e9d529a",
+      "sha256": "f6e267555a45d88ce4cc4c0d7cf13752f164e1ab3cbfaa7f4d064ada7319af78",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9744,13 +9739,13 @@
     {
       "id": "SURFACE-67b757b19f11e973",
       "path": "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx",
-      "sha256": "460e07ee1070d586d1d8f14b4d9fe03c76c2170632a06cae8d1c1273c02497a3",
+      "sha256": "7497a1d38c2e6e9a5327bd53405eb76d993fe3c7ea63ca70ed8f0965a29677cd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8817f81a71124ed7",
       "path": "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
-      "sha256": "a27268569f428e752d4fb941ddafd8e299dfa705b91593581b9ecdfeefd27d9b",
+      "sha256": "4923d21e7f78ebb08e20cd4091fdb19adb6492a3f74d6b1fa810f79be7a29bdd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13735,36 +13730,6 @@
       "id": "SURFACE-c6183dfcf6eaddfa",
       "path": "tdf-hq/.github/workflows/openapi-validate.yml",
       "sha256": "836f34cd0df5d5130cbc3fc05b9f42e3c38db1515be0ff7637bd2cf8813ac91a",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-ddef40520a4670c5",
-      "path": "tdf-hq/.stack-work-before-main-20261119/config.yaml",
-      "sha256": "b659428c302e5f25458218514855c46821962af0f4a39c1ec79bd0fa3a44fc13",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-2c31341c1874bf93",
-      "path": "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/examples/Scotty.hs",
-      "sha256": "d118323031c669b92e38d62c39b12360676f6e775de9aa2b909c658e3451af53",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-052571ab002ba206",
-      "path": "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/examples/ServantWai.hs",
-      "sha256": "0d84c584b9aaa874f00c258230c4fa9d78e29309beef010266b260002cd75a4f",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-a900a64e3ed63f8e",
-      "path": "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/examples/Wai.hs",
-      "sha256": "1faf86c03a778679fd2ce75cf827c3f13a98c348f6612edb44af1b265220048a",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-670812a7107b6d42",
-      "path": "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/test/phantomjs.js",
-      "sha256": "de4fe3f6cd983a3f836799314a108e70c28f258ea14c672b98c6a0afd5fbe1f0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32175,13 +32140,6 @@
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
-    },
-    {
-      "path": "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/README.md",
-      "sha256": "a3b963af9b903671321eda600821b8be72f1bcd737c912a9c54a4feeb1491e3f",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
     },
     {
       "path": "tdf-hq/README.md",

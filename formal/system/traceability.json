@@ -28567,7 +28567,7 @@
     "e2e/web/directory-entry.spec.mjs": "08cbc831a6260271171aa65121ec655f0b3f916d0c468e670278157032d387a3",
     "e2e/web/directory-favorite-recovery.spec.mjs": "08dd8f020ec9c1f0ab75f00a2af230764e57acf65a224826c54b2201b5670fe3",
     "e2e/web/directory-language.spec.mjs": "bd2ea2a63805ab1b466e7056eeefdaed3fab6d430efa67e6c46f161904717800",
-    "e2e/web/event-discovery-filters.spec.mjs": "295c2354d6390f937686451ac1eb03f257b34c7da509c719c16928489e9d529a",
+    "e2e/web/event-discovery-filters.spec.mjs": "f6e267555a45d88ce4cc4c0d7cf13752f164e1ab3cbfaa7f4d064ada7319af78",
     "e2e/web/event-memories.spec.mjs": "197d325765bbd6268167b65c1da217c9b960568b39d99bc92fd356871812e9d0",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
@@ -29597,8 +29597,8 @@
     "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.tsx": "b49157c373d0e5e823b9df4c86804ce5d09afeabd5f009bbeb4cf89b5a851043",
     "tdf-hq-ui/src/components/events/EventAdminsCard.test.tsx": "b40b6519188bc04dee62ca39b1439ed08c8db7741043dfbcc4e0a036638daaf5",
     "tdf-hq-ui/src/components/events/EventAdminsCard.tsx": "2573f605a859d3ee94e25ec5d82f223c3e4ea9d5e1befdf8a1b565a5c42d6d46",
-    "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx": "460e07ee1070d586d1d8f14b4d9fe03c76c2170632a06cae8d1c1273c02497a3",
-    "tdf-hq-ui/src/components/events/EventArtistSelector.tsx": "a27268569f428e752d4fb941ddafd8e299dfa705b91593581b9ecdfeefd27d9b",
+    "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx": "7497a1d38c2e6e9a5327bd53405eb76d993fe3c7ea63ca70ed8f0965a29677cd",
+    "tdf-hq-ui/src/components/events/EventArtistSelector.tsx": "4923d21e7f78ebb08e20cd4091fdb19adb6492a3f74d6b1fa810f79be7a29bdd",
     "tdf-hq-ui/src/components/events/EventCourtesyTicketsCard.test.tsx": "fbb47f70d85f4b0ea595d86622653c03f0ea9b21e76441d4a4142c2c027c4cb6",
     "tdf-hq-ui/src/components/events/EventCourtesyTicketsCard.tsx": "80913110e94b3121796b1d1bde17b1922406bbd43eb74768e1c700c8d94c3b91",
     "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx": "5af42bc7ea52c2f6f329699a3231ee2117a8cef7f87ce819cb0ce9980d7f722f",
@@ -50614,7 +50614,7 @@
     {
       "id": "SURFACE-a759d468f3ebc8d5",
       "path": "e2e/web/event-discovery-filters.spec.mjs",
-      "sha256": "295c2354d6390f937686451ac1eb03f257b34c7da509c719c16928489e9d529a",
+      "sha256": "f6e267555a45d88ce4cc4c0d7cf13752f164e1ab3cbfaa7f4d064ada7319af78",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63071,7 +63071,7 @@
     {
       "id": "SURFACE-67b757b19f11e973",
       "path": "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx",
-      "sha256": "460e07ee1070d586d1d8f14b4d9fe03c76c2170632a06cae8d1c1273c02497a3",
+      "sha256": "7497a1d38c2e6e9a5327bd53405eb76d993fe3c7ea63ca70ed8f0965a29677cd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63083,7 +63083,7 @@
     {
       "id": "SURFACE-8817f81a71124ed7",
       "path": "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
-      "sha256": "a27268569f428e752d4fb941ddafd8e299dfa705b91593581b9ecdfeefd27d9b",
+      "sha256": "4923d21e7f78ebb08e20cd4091fdb19adb6492a3f74d6b1fa810f79be7a29bdd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -70980,41 +70980,6 @@
       "id": "SURFACE-c6183dfcf6eaddfa",
       "path": "tdf-hq/.github/workflows/openapi-validate.yml",
       "sha256": "836f34cd0df5d5130cbc3fc05b9f42e3c38db1515be0ff7637bd2cf8813ac91a",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-ddef40520a4670c5",
-      "path": "tdf-hq/.stack-work-before-main-20261119/config.yaml",
-      "sha256": "b659428c302e5f25458218514855c46821962af0f4a39c1ec79bd0fa3a44fc13",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-2c31341c1874bf93",
-      "path": "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/examples/Scotty.hs",
-      "sha256": "d118323031c669b92e38d62c39b12360676f6e775de9aa2b909c658e3451af53",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-052571ab002ba206",
-      "path": "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/examples/ServantWai.hs",
-      "sha256": "0d84c584b9aaa874f00c258230c4fa9d78e29309beef010266b260002cd75a4f",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-a900a64e3ed63f8e",
-      "path": "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/examples/Wai.hs",
-      "sha256": "1faf86c03a778679fd2ce75cf827c3f13a98c348f6612edb44af1b265220048a",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-670812a7107b6d42",
-      "path": "tdf-hq/.stack-work-before-main-20261119/snapshots/x86_64-osx/7ddf4edbb0d90c268ab96cde0341f7283ece295196232573b40b0a77ef2f9bb6/9.6.6/share/x86_64-osx-ghc-9.6.6/wai-cors-0.2.7/test/phantomjs.js",
-      "sha256": "de4fe3f6cd983a3f836799314a108e70c28f258ea14c672b98c6a0afd5fbe1f0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -87869,11 +87834,6 @@
     "SURFACE-084ed605284f4be6",
     "SURFACE-c7d9ad67bbab6f41",
     "SURFACE-c6183dfcf6eaddfa",
-    "SURFACE-ddef40520a4670c5",
-    "SURFACE-2c31341c1874bf93",
-    "SURFACE-052571ab002ba206",
-    "SURFACE-a900a64e3ed63f8e",
-    "SURFACE-670812a7107b6d42",
     "SURFACE-e9aa9f40d6e4aec3",
     "SURFACE-20a931f02cd6a32b",
     "SURFACE-a53cc38173461f9a",
