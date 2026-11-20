@@ -2560,6 +2560,7 @@
       "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
       "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs",
       "tdf-hq/src/TDF/Server/TicketRefunds.hs",
+      "tdf-hq/src/TDF/Server/TicketSalesWindow.hs",
       "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs",
       "tdf-hq/src/TDF/ServerAdmin.hs",
       "tdf-hq/src/TDF/ServerAuth.hs",
@@ -18381,7 +18382,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "928c126539e456187c15420669c6259fbda05e7bad7f1abc627b306c2a22bee4",
+      "sha256": "4b32d0ae30d63d082ebcb6e9558f3f7a3680905bc6014557618349d12770254d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18412,6 +18413,12 @@
       "id": "SURFACE-2531a758cf6e10bc",
       "path": "tdf-hq/src/TDF/Server/TicketRefunds.hs",
       "sha256": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-55053ce2c5c673dc",
+      "path": "tdf-hq/src/TDF/Server/TicketSalesWindow.hs",
+      "sha256": "fd215386f1396fb5dc12414bae565889b31f196de8efcc431037df4f9517fa9a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18639,7 +18646,7 @@
     {
       "id": "SURFACE-b48f5e82f84a1379",
       "path": "tdf-hq/src/TDF/Ticketing/Inventory.hs",
-      "sha256": "12bffe2306dd3639c0afe23e05e08a1baa55c9615540a3e8a747d9e83eb90e8c",
+      "sha256": "7debfcbb6f15e152edc32c62292093625ec358b107344a6c450dcdfdb4ffb6d2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18753,7 +18760,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "c3a4aa245523959f01e9b411f11d7f9f3c78703b45faf194bf6b926c8cdc0eb0",
+      "sha256": "be0ab821e68ffb0cc665d0fdeb19e47263eec429a403a5c0244542b352917e02",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18831,7 +18838,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "071f65adbc11d89513122f9a1bdb1b2b67ad72147825f669ef02121471e2976e",
+      "sha256": "88b8d615ff7d935fd0c9b077369218dec89b66f55b5d8e299b9cdc8f6e23e79e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18957,7 +18964,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "ba4ed70550620880605c57887957b9cd84e618c6b172fe748722d14d52fad4da",
+      "sha256": "110a2aadfc9f1659c7f0d641e66d1d737383f18b5eb0855ff6652d60653eabe9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19383,7 +19390,7 @@
     {
       "id": "SURFACE-b88bd7d333ae2b44",
       "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
-      "sha256": "fcca9f3e8d3252d503d51b5de03c2d280792cb1dadfa96878c3ff266fbdbecf3",
+      "sha256": "e39aced356e643801238fd0b935d1e3dd97f713c28fd1fa7722f639f516c8015",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31947,7 +31954,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d0675ce8a808011119a82e5a286914f44f2a1742624107e02e04da33434977f4",
+      "sha256": "aa4ca886a957bb5dfdad48f63e2c10491a7b38100403fc2c4c1013e9eb2515e6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32045,7 +32052,7 @@
     },
     {
       "path": "formal/system/ticket-reservation-clock.md",
-      "sha256": "8e25fe8724f48710dfa8e31237bc10023123717bb9601859dfcc4e537266be80",
+      "sha256": "7aaa4d844cc13e1f6e11f50faf536fe5ef95b7110478bdab32e973f3dce8f544",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
