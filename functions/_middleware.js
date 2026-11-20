@@ -22,7 +22,7 @@ export function canonicalRedirectLocation(requestUrl) {
 
 export async function onRequest(context) {
   const location = canonicalRedirectLocation(context.request.url);
-  const reportPath = /^\/reportes\/eventos(?:\/|$)/.test(new URL(context.request.url).pathname);
+  const reportPath = /^\/reportes\/(?:eventos|estudio)(?:\/|$)/.test(new URL(context.request.url).pathname);
   if (location) {
     return reportPath
       ? new Response(null, { status: 302, headers: { ...reportHeaders, Location: location } })
@@ -32,7 +32,7 @@ export async function onRequest(context) {
   // Unknown or extra path segments must not fall through to the public SPA,
   // whose analytics and navigation were not designed to receive capabilities.
   const path = new URL(context.request.url).pathname;
-  if (!/^\/reportes\/eventos\/[A-Za-z0-9_-]{43}\/?$/.test(path)) {
+  if (!/^\/reportes\/(?:eventos|estudio)\/[A-Za-z0-9_-]{43}\/?$/.test(path)) {
     return new Response(context.request.method === 'HEAD' ? null : 'Not found', {
       status: 404, headers: reportHeaders,
     });
