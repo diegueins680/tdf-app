@@ -2538,6 +2538,7 @@
       "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
       "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs",
       "tdf-hq/src/TDF/Server/TicketRefunds.hs",
+      "tdf-hq/src/TDF/Server/TicketSalesWindow.hs",
       "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs",
       "tdf-hq/src/TDF/ServerAdmin.hs",
       "tdf-hq/src/TDF/ServerAuth.hs",
@@ -18217,7 +18218,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "928c126539e456187c15420669c6259fbda05e7bad7f1abc627b306c2a22bee4",
+      "sha256": "4b32d0ae30d63d082ebcb6e9558f3f7a3680905bc6014557618349d12770254d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18248,6 +18249,12 @@
       "id": "SURFACE-2531a758cf6e10bc",
       "path": "tdf-hq/src/TDF/Server/TicketRefunds.hs",
       "sha256": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-55053ce2c5c673dc",
+      "path": "tdf-hq/src/TDF/Server/TicketSalesWindow.hs",
+      "sha256": "fd215386f1396fb5dc12414bae565889b31f196de8efcc431037df4f9517fa9a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18583,7 +18590,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "sha256": "c4c3308b0b745aa41bb1f1be0f4db41cad817e99b42f7a46f116682199ba399b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18661,7 +18668,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "510bf67f67d817fd9462bae93cd7d3d141c5c993ca936b8617d44906ea84b9bc",
+      "sha256": "c7baf4805f226e0672d7a0d8697370bf1b09c4c7a6de8a64015b98979909d962",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31716,7 +31723,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ff8bc9f09d7dd33a0fbb58f34c832dc8683c64db26f7d1dc8b9f753c8b6eb448",
+      "sha256": "d6279684704d3025d331cd930a02d435466c810f628ce86f94612c9396ed6a07",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
