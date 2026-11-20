@@ -1362,7 +1362,9 @@ const INTEGRATION_SOURCE = 'c702734dd932b8445e2429462d6638e03261435a';
 const INTEGRATION_EXTRA_IDS = new Set(["2026-11-02_domo_refund_lifecycle"]);
 const INTEGRATION_MAIN_REVIEW = '912cda11c7b6eb622f76';
 async function actualManifest() {
-  return JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8'));
+  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  assert.equal(manifest.migrations.at(-1).id, gallerySeedId);
+  return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
 }
 async function mainManifestView() {
   const actual = await actualManifest();
@@ -1525,9 +1527,9 @@ test('combined registry retains the exact main prefix, original SQL and whole pa
   const retireFile = 'docs/catalog-persistence/event-integration-retirements.json';
   const pointers = JSON.parse(await fs.readFile(path.join(workspaceRoot, pointerFile), 'utf8'));
   const retirements = JSON.parse(await fs.readFile(path.join(workspaceRoot, retireFile), 'utf8'));
-  const pointer = pointers.successors.find(row => row.name === 'migrations');
-  const tip = register.decisions.find(row => row.id === pointer.currentId);
-  const retirement = retirements.retirements.find(row => row.source.name === 'migrations');
+  const pointer = pointers.successors.find(row => row.name === 'migrations').previousResolution;
+  const tip = register.decisions.find(row => row.evidence?.file === manifestPath).previousDecision;
+  const retirement = retirements.retirements.find(row => row.source.name === 'migrations').previousResolution;
   assert.equal(tip.evidence.valueCount, current.migrations.length);
   assert.equal(pointer.valueCount, current.migrations.length);
   assert.equal(retirement.replacementId, tip.id);
@@ -1619,4 +1621,29 @@ test('actual Mobile mirror matches its generator and stale predecessor cannot au
   } finally {
     await fs.rm(temporary, { recursive: true, force: true });
   }
+});
+
+const gallerySeedId = '2026-11-07_studio_gallery';
+const galleryBase = 'd65017d10f16e8089c43b82bdbcacf3177d206f5';
+test('gallery seed appends exactly one migration and retains complete protected reviews', async () => {
+  const before = await reviewedJson(galleryBase, manifestPath);
+  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  const file = 'tdf-hq/sql/2026-11-07_studio_gallery.sql';
+  const introducedBy = 'd77cd1319a67e89675e12e9e9082641bdf9fcc66';
+  assert.deepEqual(current.migrations, [...before.migrations, {id: gallerySeedId, path: file, introducedBy}]);
+  await execFileAsync('git', ['merge-base','--is-ancestor',introducedBy,'HEAD'], {cwd: workspaceRoot});
+  const { stdout } = await execFileAsync('git',['show', introducedBy + ':' + file], {cwd: workspaceRoot});
+  assert.equal(await fs.readFile(path.join(workspaceRoot,file),'utf8'), stdout);
+  const { decisions: active } = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
+  const { successors } = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/event-catalog-current-successors.json'), 'utf8'));
+  const integration = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/event-integration-retirements.json'), 'utf8'));
+  const pointer = successors.find(row => row.name === 'migrations');
+  const decision = active.find(row => row.id === pointer.currentId);
+  const retirement = integration.retirements.find(row => row.source.name === 'migrations');
+  assert.equal(decision.evidence.valueCount,current.migrations.length);
+  assert.equal(retirement.replacementId,decision.id);
+  assert.equal(pointer.valueCount,current.migrations.length);
+  assert.deepEqual(decision.previousDecision,(await reviewedJson(galleryBase,catalogPath)).decisions.find(row=>row.evidence?.file===manifestPath));
+  assert.deepEqual(pointer.previousResolution,(await reviewedJson(galleryBase,'docs/catalog-persistence/event-catalog-current-successors.json')).successors.find(row=>row.name==='migrations'));
+  assert.deepEqual(retirement.previousResolution,(await reviewedJson(galleryBase,'docs/catalog-persistence/event-integration-retirements.json')).retirements.find(row=>row.source.name==='migrations'));
 });
