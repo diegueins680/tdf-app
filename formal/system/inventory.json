@@ -3999,7 +3999,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "bfac1ff91e3afef21c3d2d831ad0cc70bdb608428419df22697d2e3a33f1f7b7",
+      "sha256": "a690ce40a719a0c3c5e7250091e11c4b687294c8aa58f9ca1b97fb83c087120c",
       "semanticConformance": "not-established-by-discovery"
     },
     {

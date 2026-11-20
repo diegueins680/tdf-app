@@ -3206,9 +3206,16 @@ async function readPreservedParentFile(ref, file, encoding) {
 
 const COMPOSED_PARENTS = ["d65017d10f16e8089c43b82bdbcacf3177d206f5", "cdf57961e4058f403ee4dd903bacfced2a5ee258"];
 
+// Appended after the storage/refund composition (COURSE-FOLLOWUP-REMINDER-001).
+const COURSE_REMINDER_ENTRY = '2026-11-20_course_follow_up_reminder_delivery';
 test('actual storage/refund composition retains all 261 migrations, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const actual = JSON.parse(await fs.readFile(path.join(composedRoot, file), 'utf8'));
+  const composed = JSON.parse(await fs.readFile(path.join(composedRoot, file), 'utf8'));
+  const appended = composed.migrations.at(-1);
+  if (appended?.id === COURSE_REMINDER_ENTRY) {
+    await composedExec('git', ['merge-base', '--is-ancestor', appended.introducedBy, 'HEAD'], { cwd: composedRoot });
+  }
+  const actual = { ...composed, migrations: composed.migrations.filter(row => row.id !== COURSE_REMINDER_ENTRY) };
   const [main, storage] = await Promise.all(COMPOSED_PARENTS.map(ref => composedParent(ref, file)));
   const ids = new Set(main.migrations.map(row => row.id));
   const extra = storage.migrations.filter(row => !ids.has(row.id));
