@@ -4341,6 +4341,36 @@ main = hspec $ do
                 Nothing
                 `shouldReturn` Left "country must be a 2-letter ISO code"
 
+        it "builds an Accounts v2 recipient body for payout account creation" $ do
+            let baseFields countryValue =
+                    [ "dashboard" .= ("express" :: Text)
+                    , "identity" .= A.object [ "country" .= (countryValue :: Text) ]
+                    , "defaults" .= A.object
+                        [ "responsibilities" .= A.object
+                            [ "fees_collector" .= ("application" :: Text)
+                            , "losses_collector" .= ("application" :: Text)
+                            ]
+                        ]
+                    , "configuration" .= A.object
+                        [ "recipient" .= A.object
+                            [ "capabilities" .= A.object
+                                [ "stripe_balance" .= A.object
+                                    [ "stripe_transfers" .= A.object
+                                        [ "requested" .= True ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+            Stripe.buildConnectExpressAccountBody "EC" (Just "artist@example.com") Nothing
+                `shouldBe` A.object
+                    (baseFields "ec" <> [ "contact_email" .= ("artist@example.com" :: Text) ])
+            Stripe.buildConnectExpressAccountBody "US" Nothing (Just "artist:42")
+                `shouldBe` A.object
+                    ( baseFields "us"
+                        <> [ "metadata" .= A.object [ "tdf_context" .= ("artist:42" :: Text) ] ]
+                    )
+
         it "rejects invalid account link preconditions before HTTP allocation" $ do
             Stripe.createAccountLink
                 (stripeTestConfig "whsec_test")
