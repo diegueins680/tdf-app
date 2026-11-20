@@ -25,8 +25,8 @@ jest.unstable_mockModule('../../analytics/useAnalytics', () => ({
 }));
 
 jest.unstable_mockModule('../../api/socialEvents', () => ({
+  listAttendees,
   SocialEventsAPI: {
-    listAttendees,
     getMyRsvp: getMyRsvpMock,
     getRsvpSummary: getRsvpSummaryMock,
     upsertMyRsvp: upsertMyRsvpMock,

@@ -27,6 +27,7 @@ import { useCallback, useEffect, useRef, useState, type FocusEvent } from 'react
 import { useNavigate } from 'react-router-dom';
 
 import {
+  listAttendees,
   SocialEventsAPI,
   type SocialRsvpDTO,
   type SocialRsvpStatus,
@@ -96,7 +97,7 @@ function AttendeeDialog({ eventId, status, labels, viewer, close }: {
   const after = cursors[cursors.length - 1];
   const page = useQuery({
     queryKey: ['event-attendees', eventId, viewer, status, after],
-    queryFn: () => SocialEventsAPI.listAttendees(eventId, status, after),
+    queryFn: () => listAttendees(eventId, status, after),
     enabled: Boolean(viewer),
     gcTime: 0,
   });

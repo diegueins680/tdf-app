@@ -223,6 +223,7 @@ library
     TDF.ServerInternAudit
     TDF.Server.EventAdminDelegation
     TDF.Server.EventTicketSale
+    TDF.Server.EventAttendees
     TDF.Server.SocialEventsHandlers
     TDF.Server.StripeTicketCapture
     TDF.Server.EventResearch
