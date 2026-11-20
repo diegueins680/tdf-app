@@ -174,6 +174,25 @@ describe('DomoQuoteCheckoutPage verified deposit boundary', () => {
     expect(container.textContent).toContain('Saldo restante');
     expect(container.textContent).toContain('Cumplimiento del espacio: date_reserved');
   });
+  it.each(['requested', 'approved', 'processing', 'succeeded'])('restores cancelled quotes with refund status %s after reload', async (refundStatus) => {
+    getQuoteMock.mockResolvedValue(quoteFixture({
+      quoteStatus: 'cancelled', paymentStatus: refundStatus === 'succeeded' ? 'refunded' : 'paid',
+      fulfillmentStatus: 'cancelled', depositPaidAt: '2030-01-01T10:05:00Z', paymentMethods: [],
+      cancellation: { quoteId, quoteStatus: 'cancelled', canceller: 'customer', policyVersion: 1,
+        cancelledAt: '2030-01-01T12:00:00Z', leadDays: 40, inProgress: false,
+        retainedBasisPoints: 0, depositCollectedMinor: 200704, balanceCollectedMinor: 0,
+        retainedMinor: 0, refundDueMinor: 200704, currency: 'USD', refundStatus, alreadyCancelled: true },
+    }));
+    await renderTracking(`/domo-del-pululahua/cotizaciones/${quoteId}`);
+    await waitForExpectation(() => expect(container.textContent).toContain('Esta cotización fue cancelada y la fecha quedó liberada'));
+    expect(container.textContent).toContain('Reembolso debido:');
+    expect(container.textContent).not.toContain('No está reservada y el depósito no está pagado');
+    expect(container.textContent).not.toContain('El servidor verificó el depósito y reservó la fecha');
+    expect(container.textContent).toContain(refundStatus === 'succeeded'
+      ? 'Devolución confirmada.' : 'Devolución pendiente de confirmación.');
+    expect(cancelQuoteMock).not.toHaveBeenCalled();
+  });
+
   it('cancels a paid quote only after explicit confirmation and shows the policy outcome', async () => {
     getQuoteMock.mockResolvedValue(quoteFixture({
       quoteStatus: 'deposit_paid',
@@ -205,7 +224,7 @@ describe('DomoQuoteCheckoutPage verified deposit boundary', () => {
     await waitForExpectation(() => expect(cancelQuoteMock).toHaveBeenCalledWith(quoteId, 'secure-lookup-token', ''));
     await waitForExpectation(() => expect(container.textContent).toContain('Cotización cancelada'));
     expect(container.textContent).toContain('Retenido según política');
-    expect(container.textContent).toContain('Un operador emitirá la solicitud de reembolso');
+    expect(container.textContent).toContain('Devolución pendiente de confirmación.');
     expect(container.textContent).toContain('Cotización: cancelled');
   });
   it('shows the recorded cancellation outcome when a cancelled quote is reopened', async () => {

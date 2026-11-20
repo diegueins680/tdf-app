@@ -76,16 +76,8 @@ const playerMigrations = new Set([
   '2026-11-07_artist_featured_identity_guard',
 ]);
 
-const gallerySeedId = '2026-11-07_studio_gallery';
-const galleryBase = '4b167ab9587315e288ab376585ca1bc2702abf0c';
-async function manifestBeforeGallery() {
-  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
-  assert.equal(current.migrations.at(-1).id, gallerySeedId);
-  return { ...current, migrations: current.migrations.slice(0, -1) };
-}
-
 async function manifestBeforePlayer() {
-  const manifest = await manifestBeforeGallery();
+  const manifest = (await mainManifestView());
   return { ...manifest, migrations: manifest.migrations.filter(row => !playerMigrations.has(row.id)) };
 }
 
@@ -139,27 +131,36 @@ async function readHistoricalReconciliation() {
   return { ...current, active };
 }
 
-async function readReconciliation(beforePlayer = false, beforeGallery = beforePlayer) {
+async function readReconciliation(beforePlayer = false) {
   const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-catalog-retirements.json'), 'utf8'));
   const register = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
-  const active = register.decisions;
+  const mainRegister = await reviewedJson(INTEGRATION_MAIN, catalogPath);
+  const active = mainRegister.decisions.map(row => {
+    const found = wholeReview(register, row);
+    assert.ok(found, `Dated main review missing: ${row.id}`);
+    return found;
+  });
   // Reviews whose source list was deleted outright (no successor list). They
   // leave the active register and are kept, unchanged, as history.
   const retired = (register.reconciliation.sourceRemovalRetirements ?? []).flatMap(entry => entry.decisions);
-  const successors = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+  let successors = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-catalog-current-successors.json'), 'utf8')).successors;
-  const integration = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+  let integration = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-integration-retirements.json'), 'utf8'));
-  if (!beforeGallery) return { ledger, active, retired, successors, integration };
-  // Earlier review contracts compare against the complete pre-gallery decision graph.
-  const pointerIndex = successors.findIndex(row => row.name === 'migrations');
-  const reviewIndex = active.findIndex(row => row.id === successors[pointerIndex].currentId);
-  const retirementIndex = integration.retirements.findIndex(row => row.source.name === 'migrations');
-  active[reviewIndex] = active[reviewIndex].previousDecision;
-  successors[pointerIndex] = successors[pointerIndex].previousResolution;
-  integration.retirements[retirementIndex] = integration.retirements[retirementIndex].previousResolution;
+  const parentPointers = await reviewedJson(INTEGRATION_MAIN, 'docs/catalog-persistence/event-catalog-current-successors.json');
+  successors = parentPointers.successors.map(row => {
+    const found = findWholeResolution(successors, row);
+    assert.ok(found, `Dated main resolution missing: ${row.name}`);
+    return found;
+  });
+  const parentRetirements = await reviewedJson(INTEGRATION_MAIN, 'docs/catalog-persistence/event-integration-retirements.json');
+  integration = { ...integration, retirements: parentRetirements.retirements.map(row => {
+    const found = findWholeResolution(integration, row);
+    assert.ok(found, `Dated main retirement missing: ${row.source.name}`);
+    return found;
+  }) };
   if (!beforePlayer) return { ledger, active, retired, successors, integration };
 
   // Earlier reviews retain their own manifest fingerprint and catalog size.
@@ -237,8 +238,7 @@ test('music/main reconciliation retains both reviews and the protected migration
     }
   }
   assert.equal(preservedReviews, 10);
-  const manifest = asReviewedBeforeRegistryRefresh(JSON.parse(await fs.readFile(path.join(workspaceRoot,
-    'scripts/production-migrations.json'), 'utf8')).migrations);
+  const manifest = asReviewedBeforeRegistryRefresh((await mainManifestView()).migrations);
   assert.ok(manifest.length >= 208);
   assert.equal(canonicalHash(manifest.slice(0, 206)), ledger.protectedMainManifestCanonicalSha256);
   assert.equal(new Set(manifest.map(entry => entry.id)).size, manifest.length);
@@ -662,7 +662,7 @@ test('reconciled fingerprints match current sources; retired decisions still fai
     await fs.mkdir(repoDir);
     await execFileAsync('git', ['init', '-b', 'main'], { cwd: repoDir });
     for (const file of new Set(ledger.retirements.map(entry => entry.file))) {
-      await writeFile(repoDir, file, await fs.readFile(path.join(workspaceRoot, file), 'utf8'));
+      await writeFile(repoDir, file, await mainSourceBytes(file));
       await execFileAsync('git', ['add', '--', file], { cwd: repoDir });
     }
     const current = successors.map(entry => active.find(item => item.id === entry.currentId));
@@ -869,7 +869,17 @@ test('ticket main merge retains stale approvals only as provenance', async () =>
   for (const entry of retired.decisions) {
     assert.equal(createHash('sha256').update(JSON.stringify(entry.originalDecision)).digest('hex'), entry.originalDecisionSha256);
     assert.ok(!document.decisions.some(item => item.id === entry.originalDecision.id));
-    if (entry.replacementId) {
+    if (entry.replacementId === 'fd606f7d00f82c78cb20') {
+      // The dated 164-feature replacement is now nested in the explicitly
+      // reviewed canonical 165-feature mirror. It cannot authorize that new
+      // source: the generator/negative-control test below checks this directly.
+      const successor = document.decisions.find(item => item.id === 'ea29c6e8a6cd165802a8');
+      assert.equal(successor?.reviewed, true);
+      const parent = (await reviewedJson(INTEGRATION_MAIN, catalogPath)).decisions
+        .find(item => item.id === entry.replacementId);
+      assert.deepEqual(successor.previousDecision, parent);
+      assert.ok(!document.decisions.some(item => item.id === entry.replacementId));
+    } else if (entry.replacementId) {
       assert.equal(document.decisions.find(item => item.id === entry.replacementId)?.reviewed, true);
     } else {
       assert.equal(entry.originalDecision.id, 'ec1a316784aa9992384a');
@@ -1279,7 +1289,7 @@ test('marketplace agreement payments append one migration to the protected 252-e
 test('player server preserves both reviewed migration histories and appends only reviewed SQL', async () => {
   const main = await reviewedJson(PLAYER_SERVER_MAIN_BASE, manifestPath);
   const player = await reviewedJson(PLAYER_SERVER_REVIEW_HEAD, manifestPath);
-  const current = await manifestBeforeGallery();
+  const current = (await mainManifestView());
   const extension = player.migrations.filter(row => playerMigrations.has(row.id));
   assert.deepEqual(extension.map(row => row.id), [...playerMigrations]);
   assert.deepEqual(current, { ...main, migrations: [...main.migrations, ...extension] });
@@ -1291,7 +1301,7 @@ test('player server preserves both reviewed migration histories and appends only
     assert.equal(await fs.readFile(path.join(workspaceRoot, row.path), 'utf8'), stdout);
   }
 
-  const { active, successors, integration } = await readReconciliation(false, true);
+  const { active, successors, integration } = await readReconciliation();
   const pointer = successors.find(row => row.name === 'migrations');
   const actual = active.find(row => row.id === pointer.currentId);
   const findTip = doc => doc.decisions.find(row => row.evidence?.file === manifestPath);
@@ -1344,6 +1354,277 @@ test('delivery evidence protocol adds exactly one reviewed list', async () => {
   assert.equal(current.decisions.filter(row => row.evidence?.file === 'scripts/lib/delivery-matrix.mjs').length, 1);
 });
 
+// These parent tests describe a dated schema. Only the two/one explicitly
+// appended migration rows are projected away; combined-source checks below
+// validate the actual unprojected registry and complete parent histories.
+const INTEGRATION_MAIN = '966fb55dca70a49c0a340b674f8cc133cc413a2d';
+const INTEGRATION_SOURCE = 'c702734dd932b8445e2429462d6638e03261435a';
+const INTEGRATION_EXTRA_IDS = new Set(["2026-11-02_domo_refund_lifecycle"]);
+const INTEGRATION_MAIN_REVIEW = '912cda11c7b6eb622f76';
+async function actualManifest() {
+  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  assert.equal(manifest.migrations.at(-1).id, gallerySeedId);
+  return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
+}
+async function mainManifestView() {
+  const actual = await actualManifest();
+  return { ...actual, migrations: actual.migrations.filter(row => !INTEGRATION_EXTRA_IDS.has(row.id)) };
+}
+async function sourceManifestView() {
+  const original = (await reviewedJson(INTEGRATION_SOURCE, 'scripts/production-migrations.json')).migrations;
+  const current = (await actualManifest()).migrations;
+  return { migrations: original.map(row => {
+    const actual = current.find(item => item.id === row.id);
+    assert.deepEqual(actual, row, `Source manifest entry changed: ${row.id}`);
+    return actual;
+  }) };
+}
+const reviewIndexes = new WeakMap();
+function wholeReview(value, expected) {
+  if (!value || typeof value !== 'object') return undefined;
+  let index = reviewIndexes.get(value);
+  if (!index) {
+    index = new Map();
+    const visit = node => {
+      if (!node || typeof node !== 'object') return;
+      if (node.id) index.set(node.id, [...(index.get(node.id) ?? []), node]);
+      for (const child of Object.values(node)) visit(child);
+    };
+    visit(value); reviewIndexes.set(value, index);
+  }
+  return (index.get(expected.id) ?? []).find(row => canonicalReview(row) === canonicalReview(expected));
+}
+
+async function sourceReconciliation() {
+  const register = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
+  const original = await reviewedJson(INTEGRATION_SOURCE, catalogPath);
+  const active = original.decisions.map(row => {
+    const found = wholeReview(register, row);
+    assert.ok(found, `Complete original source review missing: ${row.id}`);
+    return found;
+  });
+  return { active, successors: (await reviewedJson(INTEGRATION_SOURCE,
+    'docs/catalog-persistence/event-catalog-current-successors.json')).successors };
+}
+
+const DOMO_REFUND_ENTRY = '2026-11-02_domo_refund_lifecycle';
+
+test('Domo refund247 preserves exact Main246, original SQL/rollback and both review graphs', async () => {
+  const main = 'f615c862b1a7d50406cc0506d21d7650e607fa5f';
+  const source = 'c36edd9f2fd99112ec56622d89ea37e8b72b2879';
+  const readAt = async (ref, file) => (await execFileAsync('git', ['show', `${ref}:${file}`],
+    { cwd: workspaceRoot, maxBuffer: 32 * 1024 * 1024 })).stdout;
+  const file = 'scripts/production-migrations.json';
+  const prior = JSON.parse(await readAt(main, file)).migrations;
+  const original = JSON.parse(await readAt(source, file)).migrations;
+  const current = (await sourceManifestView()).migrations;
+  assert.equal(prior.length, 246); assert.equal(original.length, 236); assert.equal(current.length, 247);
+  assert.deepEqual(current.slice(0, 246), prior);
+  assert.deepEqual(current[246], original[235]);
+  assert.equal(current[246].id, DOMO_REFUND_ENTRY);
+  assert.deepEqual(prior.slice(0, 235), original.slice(0, 235));
+  await execFileAsync('git', ['merge-base', '--is-ancestor', current[246].introducedBy, 'HEAD'], { cwd: workspaceRoot });
+  for (const migration of current) {
+    const ref = migration.id === DOMO_REFUND_ENTRY ? source : main;
+    assert.equal(await fs.readFile(path.join(workspaceRoot, migration.path), 'utf8'),
+      await readAt(ref, migration.path), `Immutable reviewed SQL changed: ${migration.id}`);
+  }
+  const rollback = 'tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql';
+  assert.equal(await fs.readFile(path.join(workspaceRoot, rollback), 'utf8'), await readAt(source, rollback));
+  const decisions = 'docs/catalog-persistence/catalog-list-decisions.json';
+  const sourceReviews = JSON.parse(await readAt(source, decisions));
+  const mainReviews = JSON.parse(await readAt(main, decisions));
+  const { active, successors } = await sourceReconciliation();
+  const tip = active.find(row => row.id === successors.find(row => row.name === 'migrations').currentId);
+  assert.equal(tip.evidence.valueCount, 247);
+  assert.deepEqual(tip.previousDecision, mainReviews.decisions.find(row => row.evidence?.file === file));
+  assert.deepEqual(tip.concurrentReviewHistory, [sourceReviews.decisions.find(row => row.evidence?.file === file)]);
+  for (const priorReview of mainReviews.decisions) {
+    if (priorReview.evidence?.file === file) continue;
+    let retained = active.find(row => row.id === priorReview.id);
+    if (priorReview.id === '34210b76e81fd04cffae') {
+      // This assertion refers to dated Main f615's 75-method transport, not
+      // current Main's reviewed 78-method successor. Preserve the WHOLE old
+      // review in that actual successor chain; it must not be active again.
+      retained = active.find(row => row.id === '2511cbba2fc7279bc28a');
+      while (retained && retained.id !== priorReview.id) retained = retained.previousDecision;
+    }
+    assert.deepEqual(retained, priorReview);
+  }
+  assert.deepEqual(JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/domo-source-review-history-20261107.json'), 'utf8')), sourceReviews);
+});
+
+test('dated source transport review retains its 75-method predecessor and historical negative control', async () => {
+  const main = '321f4fe6c8e803ab1c32724a8ce5b7814418b79c';
+  const file = 'tdf-hq-ui/src/api/socialEvents.ts';
+  const decisionsFile = 'docs/catalog-persistence/catalog-list-decisions.json';
+  const readAt = async name => (await execFileAsync('git', ['show', `${main}:${name}`],
+    { cwd: workspaceRoot, maxBuffer: 32 * 1024 * 1024 })).stdout;
+  const mainReviews = JSON.parse(await readAt(decisionsFile));
+  const currentReviews = { decisions: (await sourceReconciliation()).active };
+  const current = currentReviews.decisions.find(row => row.id === '2511cbba2fc7279bc28a');
+  assert.deepEqual(current, mainReviews.decisions.find(row => row.id === current.id));
+  assert.equal(current.evidence.valueCount, 78);
+  const implementation = await readAt(file); // dated fixture for the retained negative control
+  assert.equal(implementation, await readAt(file), 'Current transport must preserve complete canonical Main source');
+  let predecessor = current;
+  while (predecessor && predecessor.id !== '34210b76e81fd04cffae') predecessor = predecessor.previousDecision;
+  assert.ok(predecessor, 'Keep the exact dated review in the actual successor chain');
+  assert.equal(predecessor.evidence.valueCount, 75);
+  assert.ok(!currentReviews.decisions.some(row => row.id === predecessor.id), 'Historical approval must stay inactive');
+
+  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'catalog-current-transport-'));
+  const repo = path.join(temporary, 'repo');
+  const decisions = path.join(temporary, 'decisions.json');
+  const reportPath = path.join(temporary, 'report.json');
+  try {
+    await fs.mkdir(repo);
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: repo });
+    await writeFile(repo, file, implementation);
+    await execFileAsync('git', ['add', '--', file], { cwd: repo });
+    const mainInventory = JSON.parse(await readAt('docs/catalog-persistence/reports/static-list-inventory.json'));
+    const ids = new Set(mainInventory.candidates.filter(row => row.file === file).map(row => row.id));
+    const selected = mainReviews.decisions.filter(row => ids.has(row.id));
+    assert.equal(selected.length, ids.size, 'Keep every canonical review for this complete source file');
+    await fs.writeFile(decisions, JSON.stringify(selected));
+    const args = [auditScriptPath, '--root', repo, '--decisions', decisions, '--output', reportPath];
+    await execFileAsync(process.execPath, [...args, '--fail-on-unreviewed'], { cwd: repo });
+    const report = JSON.parse(await fs.readFile(reportPath, 'utf8'));
+    const candidate = report.candidates.find(row => row.id === current.id);
+    assert.ok(candidate, 'Actual source fingerprint must identify the active review');
+    assert.equal(candidate.file, file);
+    assert.equal(candidate.values.length, 78);
+    assert.equal(candidate.decision, current.classification);
+
+    // An intact historical review is still insufficient for the changed source.
+    await fs.writeFile(decisions, JSON.stringify(selected.map(row => row.id === current.id ? predecessor : row)));
+    await assert.rejects(execFileAsync(process.execPath, [...args, '--fail-on-unreviewed'], { cwd: repo }),
+      error => error.code === 1 && error.stderr.includes('1 unreviewed candidate(s), 1 stale decision(s)'));
+    const rejected = JSON.parse(await fs.readFile(reportPath, 'utf8'));
+    assert.equal(rejected.candidates.find(row => row.id === current.id)?.decision, 'unreviewed');
+    assert.ok(!rejected.candidates.some(row => row.id === predecessor.id));
+  } finally {
+    await fs.rm(temporary, { recursive: true, force: true });
+  }
+});
+
+
+test('combined registry retains the exact main prefix, original SQL and whole parent reviews', async () => {
+  const current = await actualManifest();
+  const main = await reviewedJson(INTEGRATION_MAIN, manifestPath);
+  const original = await reviewedJson(INTEGRATION_SOURCE, manifestPath);
+  const suffix = original.migrations.filter(row => INTEGRATION_EXTRA_IDS.has(row.id));
+  assert.deepEqual(current, { ...main, migrations: [...main.migrations, ...suffix] });
+  assert.equal(new Set(current.migrations.map(row => row.id)).size, current.migrations.length);
+  for (const row of suffix) {
+    const { stdout } = await execFileAsync('git', ['show', `${INTEGRATION_SOURCE}:${row.path}`], { cwd: workspaceRoot });
+    assert.equal(await fs.readFile(path.join(workspaceRoot, row.path), 'utf8'), stdout);
+    await execFileAsync('git', ['merge-base', '--is-ancestor', row.introducedBy, 'HEAD'], { cwd: workspaceRoot });
+  }
+  const register = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
+  const pointerFile = 'docs/catalog-persistence/event-catalog-current-successors.json';
+  const retireFile = 'docs/catalog-persistence/event-integration-retirements.json';
+  const pointers = JSON.parse(await fs.readFile(path.join(workspaceRoot, pointerFile), 'utf8'));
+  const retirements = JSON.parse(await fs.readFile(path.join(workspaceRoot, retireFile), 'utf8'));
+  const pointer = pointers.successors.find(row => row.name === 'migrations').previousResolution;
+  const tip = register.decisions.find(row => row.evidence?.file === manifestPath).previousDecision;
+  const retirement = retirements.retirements.find(row => row.source.name === 'migrations').previousResolution;
+  assert.equal(tip.evidence.valueCount, current.migrations.length);
+  assert.equal(pointer.valueCount, current.migrations.length);
+  assert.equal(retirement.replacementId, tip.id);
+  assert.deepEqual(tip.previousDecision, (await reviewedJson(INTEGRATION_MAIN, catalogPath))
+    .decisions.find(row => row.evidence?.file === manifestPath));
+  const canonical = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
+    ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
+  for (const parent of [INTEGRATION_MAIN, INTEGRATION_SOURCE]) {
+    const old = await reviewedJson(parent, catalogPath);
+    for (const row of old.decisions) {
+      const found = wholeReview(register, row);
+      assert.ok(found, `Lost complete parent review ${parent}:${row.id}`);
+      assert.equal(canonical(found), canonical(row));
+    }
+    for (const [file, actual, key] of [[pointerFile, pointers, 'successors'], [retireFile, retirements, 'retirements']]) {
+      const rows = (await reviewedJson(parent, file))[key];
+      for (const row of rows) assert.ok(wholeResolution(actual, row), `Lost complete parent resolution ${parent}:${file}`);
+    }
+  }
+});
+function wholeResolution(value, expected) {
+  return Boolean(findWholeResolution(value, expected));
+}
+
+const canonicalReview = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
+  ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
+function findWholeResolution(value, expected) {
+  if (!value || typeof value !== 'object') return undefined;
+  if ((Object.hasOwn(expected, 'currentId') && value.currentId === expected.currentId || Object.hasOwn(expected, 'replacementId') && value.replacementId === expected.replacementId) && canonicalReview(value) === canonicalReview(expected)) return value;
+  for (const child of Object.values(value)) {
+    const found = findWholeResolution(child, expected);
+    if (found) return found;
+  }
+}
+async function mainSourceBytes(file) {
+  if (file === 'tdf-mobile/src/features/generatedFeatureRegistry.ts') {
+    const { stdout } = await execFileAsync('git', ['show', '4d866387ac6938d7aeaad5d1fa2985f8e02932e7:src/features/generatedFeatureRegistry.ts'], { cwd: path.join(workspaceRoot, 'tdf-mobile'), maxBuffer: 16 * 1024 * 1024 });
+    return stdout; // exact dated fixture; the actual mirror has its own successor check below
+  }
+  return file === manifestPath ? JSON.stringify(await mainManifestView())
+    : fs.readFile(path.join(workspaceRoot, file), 'utf8');
+}
+
+function findHistoricalReview(value, id) {
+  if (!value) return undefined;
+  if (value.id === id) return value;
+  const previous = findHistoricalReview(value.previousDecision, id);
+  if (previous) return previous;
+  for (const branch of value.concurrentReviewHistory ?? []) {
+    const found = findHistoricalReview(branch, id);
+    if (found) return found;
+  }
+}
+
+
+test('actual Mobile mirror matches its generator and stale predecessor cannot authorize the new list', async () => {
+  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'catalog-mobile-mirror-'));
+  const mobileFile = 'tdf-mobile/src/features/generatedFeatureRegistry.ts';
+  const generatedFile = 'src/features/generatedFeatureRegistry.ts';
+  const register = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
+  const current = register.decisions.find(row => row.id === 'ea29c6e8a6cd165802a8');
+  assert.equal(current?.evidence.valueCount, 165);
+  assert.equal(current.previousDecision.id, 'fd606f7d00f82c78cb20');
+  try {
+    const output = path.join(temporary, 'generated');
+    await fs.mkdir(path.join(output, 'src/features'), { recursive: true });
+    await execFileAsync(process.execPath, [path.join(workspaceRoot, 'scripts/generate-mobile-feature-registry.mjs')],
+      { cwd: workspaceRoot, env: { ...process.env, TDF_MOBILE_ROOT: output } });
+    const source = await fs.readFile(path.join(workspaceRoot, mobileFile), 'utf8');
+    assert.equal(source, await fs.readFile(path.join(output, generatedFile), 'utf8'));
+    const repo = path.join(temporary, 'repo');
+    await fs.mkdir(repo);
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: repo });
+    await writeFile(repo, mobileFile, source);
+    await execFileAsync('git', ['add', '--', mobileFile], { cwd: repo });
+    const report = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+      'docs/catalog-persistence/reports/static-list-inventory.json'), 'utf8'));
+    const ids = new Set(report.candidates.filter(row => row.file === mobileFile).map(row => row.id));
+    const selected = register.decisions.filter(row => ids.has(row.id));
+    assert.equal(selected.length, ids.size);
+    assert.ok(ids.has(current.id));
+    const decisions = path.join(temporary, 'decisions.json');
+    await fs.writeFile(decisions, JSON.stringify(selected));
+    const args = [auditScriptPath, '--root', repo, '--decisions', decisions, '--fail-on-unreviewed'];
+    await execFileAsync(process.execPath, args, { cwd: repo });
+    await fs.writeFile(decisions, JSON.stringify(selected.map(row => row.id === current.id ? current.previousDecision : row)));
+    await assert.rejects(execFileAsync(process.execPath, args, { cwd: repo }),
+      error => error.code === 1 && error.stderr.includes('1 unreviewed candidate(s), 1 stale decision(s)'));
+  } finally {
+    await fs.rm(temporary, { recursive: true, force: true });
+  }
+});
+
+const gallerySeedId = '2026-11-07_studio_gallery';
+const galleryBase = 'd65017d10f16e8089c43b82bdbcacf3177d206f5';
 test('gallery seed appends exactly one migration and retains complete protected reviews', async () => {
   const before = await reviewedJson(galleryBase, manifestPath);
   const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
@@ -1353,7 +1634,9 @@ test('gallery seed appends exactly one migration and retains complete protected 
   await execFileAsync('git', ['merge-base','--is-ancestor',introducedBy,'HEAD'], {cwd: workspaceRoot});
   const { stdout } = await execFileAsync('git',['show', introducedBy + ':' + file], {cwd: workspaceRoot});
   assert.equal(await fs.readFile(path.join(workspaceRoot,file),'utf8'), stdout);
-  const { active, successors, integration } = await readReconciliation();
+  const { decisions: active } = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
+  const { successors } = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/event-catalog-current-successors.json'), 'utf8'));
+  const integration = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/event-integration-retirements.json'), 'utf8'));
   const pointer = successors.find(row => row.name === 'migrations');
   const decision = active.find(row => row.id === pointer.currentId);
   const retirement = integration.retirements.find(row => row.source.name === 'migrations');
