@@ -322,11 +322,13 @@ CourseRegistrationFollowUp
     deriving Show Generic
 
 -- One row per reminder sent, so a rescheduled follow-up reminds again
--- and replicas never send the same reminder twice.
+-- and replicas never send the same reminder twice. The recipient is the
+-- party id as text, like EventLogisticsAlertDelivery, so this claim table
+-- stays outside the identity Party reference registry.
 CourseFollowUpReminderDelivery
-    followUpId       CourseRegistrationFollowUpId
+    followUpId       CourseRegistrationFollowUpId OnDeleteCascade
     dueAt            UTCTime
-    recipientPartyId PartyId
+    recipientPartyId Text
     deliveredAt      UTCTime
     UniqueCourseFollowUpReminderDelivery followUpId dueAt recipientPartyId
     deriving Show Generic

@@ -273,7 +273,7 @@ sendDueCourseFollowUpReminders Env{envPool} = do
             claim <- runSqlPool (insertUnique ME.CourseFollowUpReminderDelivery
               { ME.courseFollowUpReminderDeliveryFollowUpId = followUpKey
               , ME.courseFollowUpReminderDeliveryDueAt = dueAt
-              , ME.courseFollowUpReminderDeliveryRecipientPartyId = recipient
+              , ME.courseFollowUpReminderDeliveryRecipientPartyId = T.pack (show (fromSqlKey recipient))
               , ME.courseFollowUpReminderDeliveryDeliveredAt = now
               }) envPool
             for_ claim $ \_ -> runSqlPool (insert_ Notification

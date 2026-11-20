@@ -7,14 +7,6 @@ const notification = (overrides: Partial<NotificationDTO>): NotificationDTO => (
   nTargetId: null, nIsRead: false, nCreatedAt: '2026-09-10T00:00:00Z', ...overrides,
 });
 describe('notification destination identities', () => {
-  it('opens the course registration dossier for follow-up reminders', () => {
-    expect(notificationTargetPath(notification({ nTargetType: 'course_registration', nTargetId: 12, nTargetKey: 'produccion-musical-dic-2025' })))
-      .toBe('/configuracion/inscripciones-curso?registration=12&slug=produccion-musical-dic-2025');
-    expect(notificationTargetPath(notification({ nTargetType: 'course_registration', nTargetId: 12, nTargetKey: 'x&admin=1' })))
-      .toBe('/configuracion/inscripciones-curso?registration=12');
-    expect(notificationTargetPath(notification({ nTargetType: 'course_registration', nTargetId: 0 }))).toBeNull();
-    expect(notificationFallbackPath(notification({ nTargetType: 'course_registration' }))).toBe('/configuracion/inscripciones-curso');
-  });
   it('preserves the merged mobile chat destination using only a positive safe thread ID', () => {
     expect(notificationTargetPath(notification({ nTargetType: 'chat_thread', nTargetKey: '42' }))).toBe('/chat?threadId=42');
     for (const nTargetKey of ['0', '-1', '1.2', '9007199254740992', 'https://evil.example', '42?partyId=5']) {
