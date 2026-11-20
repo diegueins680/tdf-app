@@ -24425,13 +24425,13 @@
     },
     {
       "id": "MEDIA-STORAGE-WRITES-001",
-      "title": "Drive token exchange, uploads, file deletion and storage destination",
-      "statement": "A signed-in party exchanges or refreshes its own Google Drive tokens, uploads to TDF storage or Drive, deletes its TDF files and chooses its storage destination. Routes: POST /drive/token; POST /drive/token/refresh; POST /drive/upload; DELETE /storage/files/{fileId}; PUT /storage/me/destination.",
+      "title": "Account-scoped Drive connection, uploads, file deletion and storage destination",
+      "statement": "A signed-in party exchanges or refreshes its own Google Drive connection and disconnects its stored delegated credential, uploads to TDF storage or Drive, deletes its TDF files and chooses its storage destination. Routes: POST /drive/token; DELETE /drive/token; POST /drive/token/refresh; POST /drive/upload; DELETE /storage/files/{fileId}; PUT /storage/me/destination.",
       "domain": "MEDIA",
-      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md. Storage reconciliation 2026-11-19 updates the descriptive token behavior from the reviewed #705 handlers; this remains author code reading rather than owner acceptance.",
       "source": "formal/system/commerce-integration-routes.md",
       "contract": "formal/system/commerce-integration-routes.md",
-      "property": "Token routes need a coherent scope (403), validate the PKCE request (400), call Google and return the tokens without storing them (Google errors map to 409 reconnect, 403, 429 or 503). TDF uploads need server auth mode, a 64-hex idempotency key, up to 50 MiB, a visibility and recognized media for public files (400/413), reserve through content_storage_reserve, stage the file and complete under a lease (409 while in progress, 503 on integrity failure). Drive uploads need ops, admin or Artist access or a personal token (403), bind a drive attempt per owner and request key, and reuse an entry only on a matching fingerprint (MEDIA-DRIVE-001). Delete is owner-scoped (404), fences the row cancelled under FOR UPDATE, removes the file and marks it deleted. Destination needs tdf or google_drive and a revision (400) and is a conditional update (409).",
+      "property": "Token routes need a current authenticated session and coherent scope, validate PKCE, store delegated credentials encrypted in the owner-bound server vault and return only an opaque TDFConnection handle. Refresh resolves that owner-bound handle server-side; raw provider credentials are rejected. DELETE /drive/token erases the current account connection and fences stale refresh resurrection, returning 204; it does not delete provider files or claim provider-wide OAuth revocation. Google errors map to reconnect or bounded refusal. TDF uploads need server auth mode, a 64-hex idempotency key, up to 50 MiB, a visibility and recognized media for public files (400/413), reserve through content_storage_reserve, stage the file and complete under a lease (409 while in progress, 503 on integrity failure). Drive uploads need ops, admin or Artist access or a personal token (403), bind a drive attempt per owner and request key, and reuse an entry only on a matching fingerprint (MEDIA-DRIVE-001). Delete is owner-scoped (404), fences the row cancelled under FOR UPDATE, removes the file and marks it deleted. Destination needs tdf or google_drive and a revision (400) and is a conditional update (409).",
       "actors": [
         "Account holder",
         "Operations staff",
@@ -24442,6 +24442,7 @@
       ],
       "inputs": [
         "POST /drive/token",
+        "DELETE /drive/token",
         "POST /drive/token/refresh",
         "POST /drive/upload",
         "DELETE /storage/files/{fileId}",
@@ -24468,7 +24469,7 @@
         "Google Drive calls"
       ],
       "authorization": "Own tokens and files; Drive server credential needs ops access.",
-      "privacy": "Unchanged; see the route table.",
+      "privacy": "Delegated provider credentials remain encrypted server-side; responses expose only an owner-bound handle. Private object access and deployment reader qualification remain separate obligations.",
       "concurrency": "Leases and FOR UPDATE on storage rows; optimistic revision on the destination.",
       "idempotency": "TDF uploads replay by key with on-disk hash verification; Drive uploads reuse by fingerprint; delete and destination are idempotent or 409.",
       "failure": "400/413 invalid; 403 scope; 404 file; 409 lease, reconnect or revision; 503 provider or integrity.",
@@ -24476,10 +24477,16 @@
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/ContentStorage.hs"
+        "tdf-hq/src/TDF/ContentStorage.hs",
+        "tdf-hq/src/TDF/StorageVault.hs",
+        "tdf-hq/src/TDF/DriveOAuthClient.hs"
       ],
       "tests": [
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/StorageSecuritySpec.hs",
+        "scripts/test-content-storage-security-runtime.sh",
+        "tdf-hq/test/integration/content_storage_security_fixture.sql",
+        "tdf-hq/test/integration/content_storage_full_security_fixture.sql"
       ],
       "formalModels": [],
       "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
@@ -25601,10 +25608,10 @@
     {
       "id": "MEDIA-STORAGE-001",
       "title": "Explicit account storage and safe upload recovery",
-      "statement": "Account uploads preserve chosen authority, enforce the approved decimal five-GB allowance with concurrent reservations and retain retry identity without exposing provider internals.",
-      "property": "No personal-to-service fallback; admitted managed occupancy does not exceed entitlement; replay cannot change owner or fingerprint; unconfirmed deletion retains occupied capacity.",
+      "statement": "Account uploads preserve chosen authority, enforce the approved decimal five-GB allowance with concurrent reservations and retain retry identity without exposing provider internals. Delegated credentials remain server-side with authenticated owner-bound encryption; private readers require current ownership or a live authorized domain reference.",
+      "property": "No personal-to-service fallback or implicit public permission; admitted managed occupancy does not exceed entitlement; replay cannot change owner or fingerprint; private bytes require current session and resource authority; public static reads require a completed public registry entry; unconfirmed or uncertain deletion retains occupied capacity.",
       "domain": "MEDIA",
-      "authority": "User-approved November 4 storage and shared upload recovery prompt.",
+      "authority": "User-approved November 4 storage prompt and November 6 security completion request.",
       "source": "User-approved November 4 storage prompt; formal/system/content-storage.md",
       "contract": "formal/system/content-storage.md",
       "actors": [
@@ -25698,7 +25705,18 @@
         "tdf-hq-ui/src/session/useSessionOwner.ts",
         "tdf-hq-ui/src/api/uploadQueue.ts",
         "tdf-hq-ui/src/session/recoverableDraft.ts",
-        "tdf-hq-ui/src/session/useOwnedTabDraft.ts"
+        "tdf-hq-ui/src/session/useOwnedTabDraft.ts",
+        "tdf-hq/src/TDF/StorageVault.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/sql/2026-11-06_content_storage_security.sql",
+        "tdf-hq-ui/src/components/PrivateAttachmentLink.tsx",
+        "tdf-hq-ui/src/services/storageCredentials.ts",
+        "docs/catalog-persistence/storage-security-successor-20261106.json",
+        "tdf-hq/sql/2026-11-07_content_storage_identity_guards.sql",
+        "tdf-hq/sql/2026-11-07_content_storage_identity_guards_rollback.sql",
+        "tdf-mobile/src/api/accountStorage.ts",
+        "tdf-hq-ui/src/utils/env.ts",
+        "tdf-hq/src/TDF/DriveOAuthClient.hs"
       ],
       "tests": [
         "scripts/__tests__/content-storage-model.test.mjs",
@@ -25720,28 +25738,38 @@
         "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
-        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx"
+        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx",
+        "tdf-hq/test/TDF/StorageSecuritySpec.hs",
+        "tdf-hq/test/integration/content_storage_security_fixture.sql",
+        "scripts/test-content-storage-security-runtime.sh",
+        "tdf-hq-ui/src/api/contentStorage.security.test.ts",
+        "tdf-hq-ui/src/services/storageCredentials.test.ts",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "tdf-hq-ui/src/services/googleDrive.compatibility.test.ts",
+        "tdf-hq/test/sql/content_storage_archived_identity.sql",
+        "tdf-mobile/src/api/accountStorage.test.ts",
+        "tdf-mobile/src/api/upload.compatibility.test.ts"
       ],
       "formalModels": [
         "scripts/content-storage-model.mjs"
       ],
-      "verification": "Finite policy model with negative controls; PostgreSQL concurrency and migration tests; owner/reload/transport client tests; canonical hosted backend and synthetic browser receipts, each with its stated limits.",
+      "verification": "Finite policy model with negative controls; PostgreSQL concurrency and migration tests; owner/reload/transport client tests; canonical hosted backend and synthetic browser receipts, each with its stated limits. Refresh-request controls inspect the actual production request builder against the canonical exchange resolver, including whitespace normalization, complete-pair selection, all-four-value validation and generic vault configuration 503. They construct requests without invoking Google or a database.",
       "evidence": "docs/content-storage/rollout.md; scripts/test-content-storage-postgres.mjs; exact-candidate hosted CI logs",
       "status": "specified but missing",
       "critical": true,
-      "confidence": "Partial implementation with bounded executable evidence; no production, real-provider, native-device or system-wide conformance claim.",
+      "confidence": "PARTIAL staged rollout: new backend always encrypts and returns opaque handles. Legacy owner-scoped provider descriptors remain supported only while VITE_DRIVE_VAULT_REQUIRED is not literal true, for old-backend compatibility; this historical mode is not vault-retirement clearance. Strict mode retires raw credentials. Actual local directed SQL/client controls are not production/provider/restore or full implementation refinement evidence.",
       "ambiguity": [
         "See the scoped contract for unimplemented acceptance criteria and evidence limits."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Private attachment readers, encrypted delegated credentials, canonical body/manifest accounting, native destination UI and exact-image release/restore/provider execution remain open. Tab-scoped metadata and original-file reselect now cover the shared web consumers, subject to hosted browser evidence."
+        "reason": "Production activation remains blocked: exact-image HTTP/compiled storage follow-up, actual provider ACL/consent, historical inventory and coordinated key/database/files restore, native destination/consent UI. New server vault remains encrypted in every mode. Default-off frontend strict-vault enforcement preserves existing old-backend proxy behavior; completed strict rollout must separately prove retirement of all owner-scoped provider descriptors. No fallback from denied opaque identity or personal storage to corporate storage."
       },
       "authorization": "Existing server origin, session, role, ownership and provider checks remain authoritative. Cookie inclusion grants no role.",
       "privacy": "Do not extract or log HttpOnly cookies or provider tokens.",
-      "concurrency": "Managed reservation uses account locking and lease identity. A browser-wide queue bounds active transfers to three; queued cancellation removes its waiter.",
+      "concurrency": "Managed reservation uses account locking and lease identity. A browser-wide queue bounds active transfers to three; queued cancellation removes its waiter. Exchange and vault refresh share one canonical OAuth client resolver. Every configured value is validated before selecting a complete Drive pair or complete Google fallback; partial pairs never mix and unused fallback values are not ignored.",
       "idempotency": "Managed and explicit personal Drive attempts retain one owner-bound identity and byte fingerprint. Corporate inventory uploads retain their existing server semantics and are not covered by the new deduplication protocol.",
-      "failure": "Errors preserve drafts and retry metadata; unknown transfer or deletion outcome retains accounting until reconciliation. Provider errors do not invalidate unrelated TDF login.",
+      "failure": "Errors preserve drafts and retry metadata; unknown transfer or deletion outcome retains accounting until reconciliation. Provider errors do not invalidate unrelated TDF login. Vault refresh configuration failures retain 503 storage_vault_unavailable; actual provider invalid_client retains503 storage_service_unavailable, and revoked personal grants retain 409 storage_reconnect_required.",
       "recovery": "Same-tab metadata expires after eight hours and is purged by account/session cleanup. Browser reload requires reselecting the original binary; successful matching uploads reconcile the original key. Storage denial warns the user to keep the tab open.",
       "observability": "No tokens or private bodies in diagnostics; compiler observations, synthetic test receipts and production version reads identify their evidence boundary."
     },
