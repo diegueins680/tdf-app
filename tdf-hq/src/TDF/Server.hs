@@ -75,7 +75,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Scientific as Sci
 import           Data.Time
   ( Day, NominalDiffTime, UTCTime (..), ZonedTime, addUTCTime, diffTimeToPicoseconds, diffUTCTime, fromGregorian
-  , getCurrentTime, secondsToDiffTime, toGregorian, utctDay, zonedTimeToUTC
+  , getCurrentTime, hoursToTimeZone, secondsToDiffTime, toGregorian, utcToLocalTime, utctDay, zonedTimeToUTC
   )
 import           Data.Time.Format (defaultTimeLocale, formatTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
@@ -11586,7 +11586,9 @@ createPublicBooking mIdempotency PublicBookingReq{..} = do
     dtos <- buildBookingDTOs [created]
     pure (requirePersistedBookingDTO dtos)
   dto <- either throwError pure dtoResult
-  when createdNow (notifyEngineerIfNeeded dto)
+  when createdNow $ do
+    notifyEngineerIfNeeded dto
+    notifyPublicBookingRequest dto fullNameClean emailClean phoneClean
   pure dto
 
 -- | SQL failures a public booking transaction turns into 409 instead of a
@@ -11627,6 +11629,69 @@ validatePublicManualPaymentSelection checkoutStatus rawMethod
       Left err409
         { errBody = "Another payment rail is currently processing; verify it before switching methods" }
   | otherwise = Right ()
+
+-- | A public booking request must reach both sides: the customer gets a
+-- receipt and studio staff (admin/manager/studio manager) get an in-app
+-- notification plus an email. Each delivery is best-effort so a mail outage
+-- never turns an accepted request into an error for the customer.
+notifyPublicBookingRequest :: BookingDTO -> Text -> Text -> Maybe Text -> AppM ()
+notifyPublicBookingRequest booking customerName customerEmail mPhone = do
+  Env pool cfg <- ask
+  now <- liftIO getCurrentTime
+  let emailSvc = EmailSvc.mkEmailService cfg
+      serviceLabel = fromMaybe (DTO.title booking) (DTO.serviceType booking)
+      ecuadorTime = utcToLocalTime (hoursToTimeZone (-5)) (DTO.startsAt booking)
+      startLabel = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M" ecuadorTime) <> " (hora Ecuador)"
+      contact = customerEmail <> maybe "" (" · " <>) mPhone
+      details = case booking of DTO.BookingDTO{DTO.notes = ns} -> ns
+      bookingKey = DTO.bookingId booking
+      logFailure :: Text -> Either SomeException () -> IO ()
+      logFailure label result = case result of
+        Left err -> do
+          let msg = "[Bookings] Failed to " <> label <> " for booking " <> T.pack (show bookingKey)
+                <> ": " <> T.pack (displayException err)
+          hPutStrLn stderr (T.unpack msg)
+          LogBuf.addLog LogBuf.LogWarning msg
+        Right () -> pure ()
+  staffResult <- liftIO $ (try $ flip runSqlPool pool $ do
+    groups <- mapM selectCanonicalPartyIdsByRole [M.Admin, M.Manager, M.StudioManager]
+    let recipients = nub (concat groups)
+    forM_ recipients $ \recipient -> insert_ M.Notification
+      { M.notificationRecipientPartyId = recipient
+      , M.notificationNotifType = "public_booking_request"
+      , M.notificationTitle = "Nueva solicitud: " <> serviceLabel
+      , M.notificationBody = customerName <> " · " <> startLabel <> " · " <> contact
+      , M.notificationTargetType = Just "booking"
+      , M.notificationTargetId = Just (fromIntegral bookingKey)
+      , M.notificationTargetKey = Nothing
+      , M.notificationIsRead = False
+      , M.notificationCreatedAt = now
+      }
+    parties <- mapM get recipients
+    pure [ (M.partyDisplayName party, addr)
+         | Just party <- parties
+         , Just addr <- [partyPrimaryEmail party]
+         ]) :: AppM (Either SomeException [(Text, Text)])
+  staffEmails <- case staffResult of
+    Left err -> do
+      liftIO $ logFailure "notify staff in-app" (Left err)
+      pure []
+    Right emails -> pure emails
+  liftIO $ do
+    forM_ (nubOrdOn (T.toLower . snd) staffEmails) $ \(staffName, staffEmail) ->
+      try (EmailSvc.sendPublicBookingRequestStaff emailSvc staffName staffEmail
+             serviceLabel startLabel customerName contact details)
+        >>= logFailure ("email staff " <> staffEmail)
+    try (EmailSvc.sendPublicBookingRequestReceived emailSvc customerName customerEmail
+           serviceLabel startLabel details)
+      >>= logFailure "email customer"
+  where
+    nubOrdOn key = go []
+      where
+        go _ [] = []
+        go seen (x:xs)
+          | key x `elem` seen = go seen xs
+          | otherwise = x : go (key x : seen) xs
 
 createPublicTentativeBookingTransaction
   :: Text
