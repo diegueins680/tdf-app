@@ -18169,7 +18169,7 @@
     {
       "id": "SURFACE-576775b1139a1557",
       "path": "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
-      "sha256": "7863060f32a0f2d11c78f9c93ef27808c198a5bce0eecf5c31497ed608c0584c",
+      "sha256": "b5c07724c67c4f02591abd0bec054547c47f45795f269b804318b7e85f062fae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18661,7 +18661,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "c7868f5fa1a255f742c4e477b9cc286664e19c3ada869234f75eab328c0ebb7b",
+      "sha256": "cc4f3bceceaf1c98f639c97046205e28a1d7aa52ef46e64767ec4ce4c30a53a1",
       "semanticConformance": "not-established-by-discovery"
     },
     {

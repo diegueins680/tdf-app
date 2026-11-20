@@ -30403,7 +30403,7 @@
     "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "feb330191f5b1146684ed7953ed957212d6b2aac155f829307c7305ea3444486",
     "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs": "803f46e01864c6b3afd56c46b106c9150251bfa7f2a54d980b3899c7dc5e5b70",
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
-    "tdf-hq/src/TDF/Server/PaymentAvailability.hs": "7863060f32a0f2d11c78f9c93ef27808c198a5bce0eecf5c31497ed608c0584c",
+    "tdf-hq/src/TDF/Server/PaymentAvailability.hs": "b5c07724c67c4f02591abd0bec054547c47f45795f269b804318b7e85f062fae",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "d5129a96d1450d4c428ff8d6886abb1311116c24c43f40b8ae3e01327dfd3116",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "f42c6b0bf7913cf6f0a0deeae6aa6c14785644edf2d50d97dd840d1202080cae",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
@@ -30461,7 +30461,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "c7868f5fa1a255f742c4e477b9cc286664e19c3ada869234f75eab328c0ebb7b",
+    "tdf-hq/test/Spec.hs": "cc4f3bceceaf1c98f639c97046205e28a1d7aa52ef46e64767ec4ce4c30a53a1",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -79520,7 +79520,7 @@
     {
       "id": "SURFACE-576775b1139a1557",
       "path": "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
-      "sha256": "7863060f32a0f2d11c78f9c93ef27808c198a5bce0eecf5c31497ed608c0584c",
+      "sha256": "b5c07724c67c4f02591abd0bec054547c47f45795f269b804318b7e85f062fae",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -80960,7 +80960,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "c7868f5fa1a255f742c4e477b9cc286664e19c3ada869234f75eab328c0ebb7b",
+      "sha256": "cc4f3bceceaf1c98f639c97046205e28a1d7aa52ef46e64767ec4ce4c30a53a1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

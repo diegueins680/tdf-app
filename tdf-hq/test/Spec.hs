@@ -2398,6 +2398,13 @@ main = hspec $ do
                 PaymentAvailability.bankTransferInstructionsReady flow True False `shouldBe` True
                 PaymentAvailability.bankTransferInstructionsReady flow False False `shouldBe` False
 
+    describe "PayPhone Button split readiness" $ do
+        it "requires the coding password only for marketplace splits" $
+            forM_ [minBound .. maxBound] $ \flow -> do
+                PaymentAvailability.payPhoneButtonSplitReady flow True `shouldBe` True
+                PaymentAvailability.payPhoneButtonSplitReady flow False
+                    `shouldBe` (flow /= ProviderCapabilities.FlowMarketplace)
+
     describe "marketplace contact checkout boundary" $ do
         it "retains checkout preparation without selecting a payment rail or changing payment state" $ do
             source <- readFile "src/TDF/Server.hs"

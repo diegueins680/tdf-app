@@ -10,6 +10,7 @@ module TDF.Server.PaymentAvailability
   , loadRuntimeReadyRoutes
   , publicPaymentRouteLabel
   , bankTransferInstructionsReady
+  , payPhoneButtonSplitReady
   , manualTransferInstructionsConfigured
   ) where
 
@@ -120,7 +121,11 @@ runtimeReady environment flow method activation = case paProvider activation of
     configured <- liftIO (runtimeProviderMethodConfigured environment
       Checkout.ProviderPayPhone method)
     if configured && method == MethodCard
-      then buttonConfirmationReady
+      then do
+        codingPassword <- liftIO (nonEmptyEnv "PAYPHONE_CODING_PASSWORD")
+        if payPhoneButtonSplitReady flow codingPassword
+          then buttonConfirmationReady
+          else pure False
       else pure configured
   Checkout.ProviderStripe -> pure False
   Checkout.ProviderCash -> pure False
@@ -143,6 +148,13 @@ runtimeReady environment flow method activation = case paProvider activation of
             then Execution.queryRecoveryReady Checkout.ProviderPayPhone environment merchantRef
             else pure False
         pure (worker && ready)
+
+-- A marketplace Button charge always carries a split (ADR 0136), and the
+-- adapter refuses a split without the store's coding password before any
+-- provider call. Other flows charge the Button without a split.
+payPhoneButtonSplitReady :: ProductFlow -> Bool -> Bool
+payPhoneButtonSplitReady flow codingPasswordConfigured =
+  flow /= FlowMarketplace || codingPasswordConfigured
 
 -- Merchandise-specific instructions must never enable another product's rail.
 bankTransferInstructionsReady :: ProductFlow -> Bool -> Bool -> Bool
