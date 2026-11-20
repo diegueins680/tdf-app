@@ -27,7 +27,7 @@ Derived on 2026-11-07 by reading `tdf-hq/src/TDF/Server/DDEX.hs`, `DDEX/DB.hs`, 
 ## Open behaviours for the owner to decide
 
 **Outbound fetches**
-- Radio host validation is lexical only: redirects and DNS rebinding are not re-checked, so a public source can send the server to a private address; source and metadata bodies are read with no size cap. Whether an egress proxy mitigates this in production is not known here.
+- **Decided 2026-11-10.** Radio fetches follow no redirect and keep no cookie, and refresh re-validates stored URLs. Still open: host validation is lexical, so DNS rebinding to a private address is not caught; source and metadata bodies are read with no size cap. Whether an egress proxy mitigates this in production is not known here.
 
 **DDEX**
 - Partner creation is gated by the import capability alone, accepts an empty name and answers 500 on a duplicate name.

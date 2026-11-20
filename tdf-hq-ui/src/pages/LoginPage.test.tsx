@@ -73,7 +73,7 @@ const { default: LoginPage, isGoogleSignupConsentRequiredError, focusSignupEmail
   './LoginPage'
 );
 
-const { beginLogoutIntent, finishLogoutIntent } = await import('../session/logoutIntent');
+const { beginLogoutIntent, finishLogoutIntent } = await import('../auth/logoutIntent');
 
 function RouteStateProbe() { const location = useLocation(); return <output data-testid="route-state">{JSON.stringify(location.state)}</output>; }
 

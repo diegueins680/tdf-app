@@ -35,6 +35,11 @@ export function checkGeneratedApi(root) {
       stdio: ['pipe', 'pipe', 'pipe'],
     }).trim();
     if (expected !== staged || expected !== actualBlob) {
+      // Show the drift so a reviewer can reconcile without rerunning the generator.
+      const drift = execFileSync('git', ['--no-pager', 'diff', '--no-color', '--', file], {
+        cwd: repo, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      process.stderr.write(drift);
       throw new Error(`Generated API drift: ${path.relative(root, path.join(repo, file))}`);
     }
   }

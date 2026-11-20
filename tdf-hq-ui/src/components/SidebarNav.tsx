@@ -33,7 +33,7 @@ import {
   canAccessPath,
 } from '../utils/accessControl';
 import { COURSE_REGISTRATIONS_NAV_LABEL } from '../utils/navigationLabels';
-import { featureGroups, standaloneMenuFeatures } from '../features/featureRegistry';
+import { featureGroups, standaloneMenuFeatures } from '../utils/featureRegistry';
 
 export interface NavItem {
   label: string;

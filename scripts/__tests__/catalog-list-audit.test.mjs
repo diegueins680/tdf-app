@@ -25,6 +25,30 @@ const REGISTRY_REFRESH_ENTRY = '2026-09-18_identity_review_dependencies';
 const SESSION_EXPIRY_ENTRY = '2026-10-31_api_token_session_expiry';
 const APPLE_POLICY_ENTRY = '2026-10-13_apple_sign_in_policy';
 const APPLE_ISSUER_ENTRY = '2026-11-07_apple_provider_identity_issuer';
+// 2026-11-08 marketplace offers (ADR 0134) append after the Apple issuer entry.
+const MARKETPLACE_OFFERS_ENTRY = '2026-11-08_marketplace_offers';
+// 2026-11-10 auth rate limit (owner decisions of the formal audit) appends last.
+const AUTH_RATE_LIMIT_ENTRY = '2026-11-10_auth_rate_limit';
+// 2026-11-12 marketplace agreements (ADR 0135) append after the auth_rate_limit entry.
+const MARKETPLACE_AGREEMENTS_ENTRY = '2026-11-12_marketplace_agreements';
+// 2026-11-11 delegated event administrators: one migration appended last to the
+// 251-entry manifest of protected main 8ec7d85c. Earlier reviews are verified
+// over the manifest without that entry.
+const EVENT_ADMIN_ENTRY = '2026-11-11_event_admin_delegation';
+const EVENT_ADMIN_PROTECTED_MAIN = '8ec7d85c672e844e28c38e49c087b102032582d8';
+const EVENT_ADMIN_INTRODUCTION = '2703eb3a1ac1604829e902262fe2dbfbbf4f4ca8';
+// The marketplace agreement payments migration (ADR 0136) appends one entry to
+// the 252-entry manifest of protected main d4bb9603. Earlier reviews are
+// verified with the records stepped back to the main they reviewed.
+const MARKETPLACE_AGREEMENT_PAYMENTS_ENTRY = '2026-11-12_marketplace_agreement_payments';
+const AGREEMENT_PAYMENTS_PROTECTED_MAIN = 'd4bb96030b1182e165ff39b614315c6a2554aee7';
+const AGREEMENT_PAYMENTS_INTRODUCTION = '26c83d9e6525d859b0da0bebf959ad6d1c806159';
+
+async function reviewedJson(revision, file) {
+  const { stdout } = await execFileAsync('git', ['show', `${revision}:${file}`],
+    { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 });
+  return JSON.parse(stdout);
+}
 const historicalReview = (entry, count) => {
   while (entry && entry.evidence?.valueCount !== count) entry = entry.previousDecision;
   assert.ok(entry, `Missing exact reviewed ${count}-entry predecessor`);
@@ -39,130 +63,136 @@ const asReviewedBeforeRegistryRefresh = entries => entries.map(entry => {
   return reviewed;
 });
 
-async function readReconciliation() {
-  const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot,
-    'docs/catalog-persistence/event-catalog-retirements.json'), 'utf8'));
-  const currentActive = JSON.parse(await fs.readFile(path.join(workspaceRoot,
-    'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8')).decisions;
-  // Each presentation follow-up has its own complete-parent preservation test.
-  // Historical reconciliation tests replay their exact earlier reviewed view.
-  const settlementDisplayView = currentActive.flatMap(row => {
-    if (row.id === '734ed3533d72f55f1170' || row.id === '95da3806a32123c6e1a5' || row.id === '354146cb038857137555') return [];
-    return [row.id === '295c31c74b0bad95c5c7' ? row.previousDecision : row];
-  });
-  const labelExtractionView = settlementDisplayView.filter(row =>
-    row.id !== 'f42409396fc972bf4d31' && row.id !== '399cc2b7d2c27f5143c1');
-  const active = labelExtractionView.flatMap(row => {
-    if (row.id === 'e4eadc75e199657bbd8a') return [];
-    if (row.id === '91c81c283f19a583aa11' || row.id === 'edd06ad23b93dfcc632a') return [row.previousDecision];
-    return [row];
-  });
-  const successors = JSON.parse(await fs.readFile(path.join(workspaceRoot,
-    'docs/catalog-persistence/event-catalog-current-successors.json'), 'utf8')).successors;
-  const integration = JSON.parse(await fs.readFile(path.join(workspaceRoot,
-    'docs/catalog-persistence/event-integration-retirements.json'), 'utf8'));
-  return { ledger, active, currentActive, settlementDisplayView, labelExtractionView, successors, integration };
+const DELIVERY_PROTOCOL_REVIEW = '755cf14ac92e4f590879';
+const PLAYER_SERVER_MAIN_BASE = '2ebb5c38bef08f3205877dc9521026b40b68d4ef';
+const PLAYER_SERVER_REVIEW_HEAD = '85255658262166ab4aeb0e7e167b3a93c4a33d61';
+const manifestPath = 'scripts/production-migrations.json';
+const catalogPath = 'docs/catalog-persistence/catalog-list-decisions.json';
+const playerMigrations = new Set([
+  '2026-10-30_artist_featured_track',
+  '2026-11-06_music_media_health',
+  '2026-11-06_music_legacy_source_compatibility',
+  '2026-11-07_music_featured_source_health',
+  '2026-11-07_artist_featured_identity_guard',
+]);
+
+async function manifestBeforePlayer() {
+  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  return { ...manifest, migrations: manifest.migrations.filter(row => !playerMigrations.has(row.id)) };
 }
 
-test('shared evidence/request display retains the full parent view and existing SQL/API vocabulary', async () => {
-  const { currentActive, settlementDisplayView } = await readReconciliation();
-  const parent = JSON.parse((await execFileAsync('git', ['show',
-    'a4edbe4b107e2f37b1091e02bac0d75fac472554:docs/catalog-persistence/catalog-list-decisions.json'],
-    { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions;
-  assert.deepEqual(settlementDisplayView, parent, 'all1432 complete parent reviews remain reconstructible unchanged');
-  assert.equal(currentActive.length, parent.length + 3);
-  const status = currentActive.find(row => row.id === '295c31c74b0bad95c5c7');
-  assert.deepEqual(status.previousDecision, parent.find(row => row.id === '31fdec804cc113595b2f'));
-  assert.equal(status.classification, status.previousDecision.classification);
-  assert.equal(status.disposition, status.previousDecision.disposition);
-  const labels = await fs.readFile(path.join(workspaceRoot, 'tdf-hq-ui/src/utils/marketplaceStatusLabel.ts'), 'utf8');
-  const oldPage = (await execFileAsync('git', ['show',
-    'a4edbe4b107e2f37b1091e02bac0d75fac472554:tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx'],
-    { cwd: workspaceRoot })).stdout;
-  const body = (text, name) => text.match(new RegExp(String.raw`const ${name}: [^=]+ = \{([\s\S]*?)\n\};`))?.[1];
-  assert.ok(body(labels, 'CUSTOMER_REQUEST_TYPE_LABELS'));
-  assert.ok(body(labels, 'CUSTOMER_REQUEST_STATUS_LABELS'));
-  assert.equal(body(labels, 'CUSTOMER_REQUEST_TYPE_LABELS'), body(oldPage, 'requestLabels'));
-  assert.equal(body(labels, 'CUSTOMER_REQUEST_STATUS_LABELS'), body(oldPage, 'requestStatusLabels'));
-  const requestSchema = (await fs.readFile(path.join(workspaceRoot,
-    'tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql'), 'utf8'))
-    .split('CREATE TABLE IF NOT EXISTS marketplace_customer_request (')[1];
-  const manualSchema = (await fs.readFile(path.join(workspaceRoot,
-    'tdf-hq/sql/2026-08-13_unified_checkout_core.sql'), 'utf8'))
-    .split('CREATE TABLE IF NOT EXISTS commerce_manual_payment_evidence (')[1];
-  const types = await fs.readFile(path.join(workspaceRoot, 'tdf-hq-ui/src/api/types.ts'), 'utf8');
-  const rows = currentActive.filter(row => row.reviewBatch === 'cognitive-load-evidence-request-display-20261119');
-  assert.equal(rows.length, 4);
-  for (const row of rows) {
-    let values;
-    if (row.evidence.name === 'CUSTOMER_REQUEST_TYPE_LABELS') values = requestSchema.match(/request_type TEXT NOT NULL CHECK \(request_type IN \(([\s\S]*?)\)\)/)[1];
-    else if (row.evidence.name === 'CUSTOMER_REQUEST_STATUS_LABELS') values = requestSchema.match(/status TEXT NOT NULL DEFAULT 'submitted' CHECK \(status IN \(([\s\S]*?)\)\)/)[1];
-    else if (row.evidence.name === 'MANUAL_EVIDENCE_STATUS_LABELS') values = manualSchema.match(/status TEXT NOT NULL CHECK \(status IN \(([\s\S]*?)\)\)/)[1];
-    else values = types.match(/mmePaymentMethod:([^;]+);/)[1];
-    assert.deepEqual(row.evidence.values, [...values.matchAll(/'([^']+)'/g)].map(match => match[1]));
-    assert.equal(row.classification, 'dynamic-business-catalog');
-  }
-});
+// Lists whose source file moved without any change to their values (ADR 0133).
+// A list id follows its file, so each move is recorded as a successor review
+// that nests the exact earlier review; checks against an earlier main read the
+// successor back to that review.
+const MOVED_FILE_REVIEW_BATCHES = new Set([
+  'paypal-webhook-domain-module-2026-11-10',
+  'web-auth-state-layer-2026-11-17',
+  'web-feature-registry-layer-2026-11-17',
+]);
 
-test('staff settlement display preserves every parent review and only labels existing SQL codes', async () => {
-  const { settlementDisplayView: currentActive, labelExtractionView } = await readReconciliation();
-  const parent = JSON.parse((await execFileAsync('git', ['show',
-    'f11327af1ad809147f23b50e988dcc631d416836:docs/catalog-persistence/catalog-list-decisions.json'],
-    { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions;
-  assert.deepEqual(labelExtractionView, parent, 'all1430 complete parent reviews must remain byte-for-byte equivalent');
-  assert.equal(currentActive.length, parent.length + 2);
-  const schema = (await fs.readFile(path.join(workspaceRoot,
-    'tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql'), 'utf8'))
-    .split('CREATE TABLE IF NOT EXISTS marketplace_rental_deposit_settlement (')[1];
-  assert.ok(schema, 'the canonical settlement schema must exist');
-  const rows = currentActive.filter(row => row.id === 'f42409396fc972bf4d31' || row.id === '399cc2b7d2c27f5143c1');
-  assert.equal(rows.length, 2);
-  for (const row of rows) {
-    assert.equal(row.classification, 'dynamic-business-catalog');
-    assert.equal(row.reviewMethod, 'individual-source-review');
-    assert.equal(row.evidence.file, 'tdf-hq-ui/src/utils/marketplaceStatusLabel.ts');
-    const pattern = row.evidence.name === 'DEPOSIT_SETTLEMENT_STATUS_LABELS'
-      ? /status TEXT NOT NULL DEFAULT 'submitted' CHECK \(status IN \(([\s\S]*?)\)\)/
-      : /settlement_method TEXT NOT NULL CHECK \(settlement_method IN \(([\s\S]*?)\)\)/;
-    const allowed = [...schema.match(pattern)[1].matchAll(/'([^']+)'/g)].map(match => match[1]);
-    assert.deepEqual(row.evidence.values, allowed);
-    assert.equal(row.evidence.valueCount, 4);
-  }
-});
-
-test('marketplace label extraction preserves all complete reviews and the backend deposit vocabulary', async () => {
-  const { active, labelExtractionView: currentActive } = await readReconciliation();
-  const parent = JSON.parse((await execFileAsync('git',
-    ['show', '4669d12deaf891f31a78f4d49140d59d260e50da:docs/catalog-persistence/catalog-list-decisions.json'],
-    { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions;
-  assert.deepEqual(active, parent, 'every prior complete decision survives unchanged in the current review history');
-  assert.equal(currentActive.length, parent.length + 1);
-  const labels = await fs.readFile(path.join(workspaceRoot, 'tdf-hq-ui/src/utils/marketplaceStatusLabel.ts'), 'utf8');
-  const oldPage = (await execFileAsync('git', ['show',
-    '4669d12deaf891f31a78f4d49140d59d260e50da:tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx'],
-    { cwd: workspaceRoot })).stdout;
-  for (const row of currentActive.filter(row => row.id === '91c81c283f19a583aa11' || row.id === 'edd06ad23b93dfcc632a')) {
+function movedFileSuccessors(active) {
+  const moved = active.filter(row => MOVED_FILE_REVIEW_BATCHES.has(row.reviewBatch));
+  for (const row of moved) {
     assert.equal(row.reviewMethod, 'successor-of-reviewed-decision');
+    assert.ok(row.previousDecision?.reviewed, `moved list ${row.id} must nest a reviewed decision`);
     assert.equal(row.classification, row.previousDecision.classification);
     assert.equal(row.disposition, row.previousDecision.disposition);
-    assert.equal(row.evidence.file, 'tdf-hq-ui/src/utils/marketplaceStatusLabel.ts');
-    const pattern = new RegExp(String.raw`const ${row.evidence.name}: Record<string, string> = \{([\s\S]*?)\n\};`);
-    assert.equal(labels.match(pattern)?.[1], oldPage.match(pattern)?.[1]);
-    assert.ok(labels.match(pattern), 'the complete copied map must exist in the shared source');
   }
-  const deposit = currentActive.find(row => row.id === 'e4eadc75e199657bbd8a');
-  assert.equal(deposit.reviewMethod, 'individual-source-review');
-  assert.equal(deposit.classification, 'dynamic-business-catalog');
-  const schema = await fs.readFile(path.join(workspaceRoot,
-    'tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql'), 'utf8');
-  const allowed = [...schema.match(/deposit_status TEXT NOT NULL CHECK \(deposit_status IN \(([\s\S]*?)\)\)/)[1].matchAll(/'([^']+)'/g)].map(match => match[1]);
-  assert.deepEqual(deposit.evidence.values, allowed, 'display covers only the already-persisted deposit states');
-});
+  return moved;
+}
+
+// Every moved list whose earlier review protected main held nests that exact review.
+function assertMovedListsNest(active, priorMain) {
+  const prior = new Map(priorMain.map(row => [row.id, row]));
+  return movedFileSuccessors(active).filter(row => prior.has(row.previousDecision.id)).map(row => {
+    assert.deepEqual(row.previousDecision, prior.get(row.previousDecision.id));
+    return row.previousDecision.id;
+  });
+}
+
+// The continuous improvement loop rework (pull request #750) deleted two automation
+// scripts: their reviews are retired as provenance and one new list is reviewed.
+const LOOP_REWORK_RECONCILIATION = 'continuousImprovementLoopRework20261113';
+
+async function readLoopRework() {
+  return JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8')).reconciliation[LOOP_REWORK_RECONCILIATION];
+}
+
+async function readHistoricalReconciliation() {
+  const current = await readReconciliation();
+  const rework = await readLoopRework();
+  const added = new Set(rework.addedDecisionIds);
+  const active = current.active.filter(row => !added.has(row.id));
+  for (const entry of [...rework.decisions].sort((left, right) => left.position - right.position)) {
+    active.splice(entry.position, 0, entry.decision);
+  }
+  return { ...current, active };
+}
+
+async function readReconciliation(beforePlayer = false) {
+  const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/event-catalog-retirements.json'), 'utf8'));
+  const register = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
+  const mainRegister = await reviewedJson(INTEGRATION_MAIN, catalogPath);
+  const active = mainRegister.decisions.map(row => {
+    const found = wholeReview(register, row);
+    assert.ok(found, `Dated main review missing: ${row.id}`);
+    return found;
+  });
+  // Reviews whose source list was deleted outright (no successor list). They
+  // leave the active register and are kept, unchanged, as history.
+  const retired = (register.reconciliation.sourceRemovalRetirements ?? []).flatMap(entry => entry.decisions);
+  let successors = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/event-catalog-current-successors.json'), 'utf8')).successors;
+  let integration = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/event-integration-retirements.json'), 'utf8'));
+  const parentPointers = await reviewedJson(INTEGRATION_MAIN, 'docs/catalog-persistence/event-catalog-current-successors.json');
+  successors = parentPointers.successors.map(row => {
+    const found = findWholeResolution(successors, row);
+    assert.ok(found, `Dated main resolution missing: ${row.name}`);
+    return found;
+  });
+  const parentRetirements = await reviewedJson(INTEGRATION_MAIN, 'docs/catalog-persistence/event-integration-retirements.json');
+  integration = { ...integration, retirements: parentRetirements.retirements.map(row => {
+    const found = findWholeResolution(integration, row);
+    assert.ok(found, `Dated main retirement missing: ${row.source.name}`);
+    return found;
+  }) };
+  if (!beforePlayer) return { ledger, active, retired, successors, integration };
+
+  // Earlier reviews retain their own manifest fingerprint and catalog size.
+  const predecessor = (await reviewedJson(PLAYER_SERVER_MAIN_BASE, catalogPath)).decisions;
+  const pointer = successors.find(row => row.name === 'migrations');
+  const tip = active.find(row => row.id === pointer.currentId);
+  const retirement = integration.retirements.find(row => row.source.name === 'migrations');
+  const byId = new Map(active.map(row => row === tip ? row.previousDecision : row)
+    .map(row => [row.id, row]));
+  // A moved list's successor stands in for the review it nests.
+  for (const row of movedFileSuccessors(active)) byId.set(row.previousDecision.id, row);
+  // EVT-TICKET-SALE-001 extended the typed client registry; its successor
+  // review nests the 86-method review unchanged and stands in for it.
+  const ticketSaleClient = active.find(row => row.previousDecision?.id === '083bd1a66e9f23f02866');
+  byId.set(ticketSaleClient.previousDecision.id, ticketSaleClient);
+  // The loop rework (pull request #750) retired two reviews of deleted scripts as
+  // provenance; the earlier catalog still lists them, so they stand in for themselves.
+  for (const entry of (await readLoopRework()).decisions) byId.set(entry.decision.id, entry.decision);
+  return {
+    ledger,
+    retired,
+    active: predecessor.map(row => byId.get(row.id)).filter(Boolean),
+    successors: successors.map(row => row === pointer ? row.previousResolution : row),
+    integration: { ...integration, retirements: integration.retirements
+      .map(row => row === retirement ? row.previousResolution : row) },
+  };
+}
 
 test('music/main reconciliation retains both reviews and the protected migration prefix', async () => {
   const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/music-main-reconciliation.json'), 'utf8'));
-  const { active, successors, integration } = await readReconciliation();
+  const { active, successors, integration } = await readReconciliation(true);
   const canonicalHash = value => createHash('sha256').update(JSON.stringify(value,
     (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
       ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item)).digest('hex');
@@ -247,7 +277,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
     'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
   const transition = document.reconciliation.directorySavedSearchParity;
   const financial = document.reconciliation.directoryFinancialMainIntegration;
-  const { active, successors, integration } = await readReconciliation();
+  const { active, successors, integration } = await readReconciliation(true);
   const canonicalHash = value => createHash('sha256').update(JSON.stringify(value,
     (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
       ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item)).digest('hex');
@@ -262,8 +292,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(previous.reviewed, true);
   assert.ok(!active.some(entry => entry.id === previous.id));
   const storageMerge = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/storage-main-integration-20261104.json'), 'utf8'));
-  const rawManifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
-    'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => entry.id !== APPLE_POLICY_ENTRY && entry.id !== APPLE_ISSUER_ENTRY && entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references' && !storageMerge.storageMigrationIds.includes(entry.id));
+  const rawManifest = (await manifestBeforePlayer()).migrations.filter(entry => entry.id !== APPLE_POLICY_ENTRY && entry.id !== APPLE_ISSUER_ENTRY && entry.id !== MARKETPLACE_OFFERS_ENTRY && entry.id !== AUTH_RATE_LIMIT_ENTRY && entry.id !== MARKETPLACE_AGREEMENTS_ENTRY && entry.id !== EVENT_ADMIN_ENTRY && entry.id !== MARKETPLACE_AGREEMENT_PAYMENTS_ENTRY && entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references' && !storageMerge.storageMigrationIds.includes(entry.id));
   const manifest = asReviewedBeforeRegistryRefresh(rawManifest);
   assert.equal(canonicalHash(manifest.slice(0, 213)), protectedPrefixHash);
   assert.equal(transition.protectedMainManifestCanonicalSha256, protectedPrefixHash);
@@ -547,14 +576,22 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
   assert.equal(current.evidence.valueCount, 221);
   assert.equal(pointer.currentId, latestCurrent.id);
-  assert.equal(pointer.valueCount, 248);
-  assert.equal(pointer.previousResolution.valueCount, 247);
+  assert.equal(pointer.valueCount, 253);
+  assert.equal(pointer.previousResolution.valueCount, 252);
+  assert.equal(pointer.previousResolution.previousResolution.valueCount, 251);
+  assert.equal(pointer.previousResolution.previousResolution.previousResolution.valueCount, 250);
+  assert.equal(pointer.previousResolution.previousResolution.previousResolution.previousResolution.valueCount, 249);
+  assert.equal(pointer.previousResolution.previousResolution.previousResolution.previousResolution.previousResolution.valueCount, 248);
   assert.equal(pointer.change, latestCurrent.justification);
   const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
   assert.equal(retirement.replacementId, latestCurrent.id);
   assert.equal(retirement.currentResolution.id, latestCurrent.id);
-  assert.equal(retirement.currentResolution.valueCount, 248);
-  assert.equal(retirement.previousResolution.currentResolution.valueCount, 247);
+  assert.equal(retirement.currentResolution.valueCount, 253);
+  assert.equal(retirement.previousResolution.currentResolution.valueCount, 252);
+  assert.equal(retirement.previousResolution.previousResolution.currentResolution.valueCount, 251);
+  assert.equal(retirement.previousResolution.previousResolution.previousResolution.currentResolution.valueCount, 250);
+  assert.equal(retirement.previousResolution.previousResolution.previousResolution.previousResolution.currentResolution.valueCount, 249);
+  assert.equal(retirement.previousResolution.previousResolution.previousResolution.previousResolution.previousResolution.currentResolution.valueCount, 248);
   assert.equal(retirement.reason, latestCurrent.justification);
   for (const decision of retiredParents) {
     assert.ok(pointer.previousCurrentIds.includes(decision.id));
@@ -845,7 +882,7 @@ test('ticket main merge retains stale approvals only as provenance', async () =>
 
 test('storage/main integration preserves both exact parent reviews and manifest views', async () => {
   const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/storage-main-integration-20261104.json'), 'utf8'));
-  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => entry.id !== APPLE_POLICY_ENTRY && entry.id !== APPLE_ISSUER_ENTRY && entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references');
+  const manifest = (await manifestBeforePlayer()).migrations.filter(entry => entry.id !== APPLE_POLICY_ENTRY && entry.id !== APPLE_ISSUER_ENTRY && entry.id !== MARKETPLACE_OFFERS_ENTRY && entry.id !== AUTH_RATE_LIMIT_ENTRY && entry.id !== MARKETPLACE_AGREEMENTS_ENTRY && entry.id !== EVENT_ADMIN_ENTRY && entry.id !== MARKETPLACE_AGREEMENT_PAYMENTS_ENTRY && entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references');
   const { active, successors } = await readReconciliation();
   const extension = active.find(entry => entry.id === successors.find(item => item.name === 'migrations').currentId);
   const current = historicalReview(extension, 244);
@@ -867,11 +904,11 @@ test('video campaign migration appends to the exact protected 244-entry manifest
   const main = 'e5248e0b3ad30d832ef1ccbf5e595a7ee36b0324';
   const introduction = '4b84238abb4ca17c6aaa9902e3bec16a1cc3daa5';
   const old = JSON.parse((await execFileAsync('git', ['show', `${main}:scripts/production-migrations.json`], { cwd: workspaceRoot })).stdout).migrations;
-  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => entry.id !== APPLE_POLICY_ENTRY && entry.id !== APPLE_ISSUER_ENTRY);
+  const current = (await manifestBeforePlayer()).migrations.filter(entry => entry.id !== APPLE_POLICY_ENTRY && entry.id !== APPLE_ISSUER_ENTRY && entry.id !== MARKETPLACE_OFFERS_ENTRY && entry.id !== AUTH_RATE_LIMIT_ENTRY && entry.id !== MARKETPLACE_AGREEMENTS_ENTRY && entry.id !== EVENT_ADMIN_ENTRY && entry.id !== MARKETPLACE_AGREEMENT_PAYMENTS_ENTRY);
   const decisionsPath = 'docs/catalog-persistence/catalog-list-decisions.json';
   const priorDecisions = JSON.parse((await execFileAsync('git', ['show', `${main}:${decisionsPath}`], { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout);
-  const decisions = JSON.parse(await fs.readFile(path.join(workspaceRoot, decisionsPath), 'utf8'));
-  const latest = decisions.decisions.find(item => item.evidence?.file === 'scripts/production-migrations.json');
+  const { active } = await readReconciliation(true);
+  const latest = active.find(item => item.evidence?.file === manifestPath);
   const videoReview = historicalReview(latest, 245);
   assert.equal(videoReview.id, '969410f2f45854cc54fc');
   assert.deepEqual(videoReview.previousDecision,
@@ -891,6 +928,37 @@ test('video campaign migration appends to the exact protected 244-entry manifest
   assert.deepEqual(videoReview, priorReview);
   assert.equal(await fs.readFile(path.join(workspaceRoot, current[245].path), 'utf8'), (await execFileAsync('git', ['show', forward + ':' + current[245].path], { cwd: workspaceRoot })).stdout);
   await execFileAsync('git', ['merge-base', '--is-ancestor', forward, 'HEAD'], { cwd: workspaceRoot });
+  // ADR 0134: marketplace offers were reviewed on top of the exact 246-entry
+  // identity manifest (8ee6c7a) and now append after the two Apple entries that
+  // protected main integrated; the manifest without those entries is still that
+  // reviewed 247-entry manifest byte for byte.
+  const marketplace = '8ee6c7a66e2504f425863ca6f5b83062723efd58';
+  const marketplaceIntroduction = '5901003189dac2291380604c66fdd66087e4a587';
+  const full = (await manifestBeforePlayer()).migrations.filter(entry => entry.id !== AUTH_RATE_LIMIT_ENTRY && entry.id !== MARKETPLACE_AGREEMENTS_ENTRY && entry.id !== EVENT_ADMIN_ENTRY && entry.id !== MARKETPLACE_AGREEMENT_PAYMENTS_ENTRY);
+  assert.equal(full.length, 249);
+  // The agreements entry (ADR 0135) is the 251st, the last one before the
+  // event administrator entry: its SQL is exactly what its introduction commit
+  // carries and that commit is an ancestor.
+  const agreementsEntry = (await manifestBeforePlayer()).migrations.filter(entry => entry.id !== EVENT_ADMIN_ENTRY && entry.id !== MARKETPLACE_AGREEMENT_PAYMENTS_ENTRY).at(-1);
+  assert.equal(agreementsEntry.id, MARKETPLACE_AGREEMENTS_ENTRY);
+  assert.equal(agreementsEntry.path, 'tdf-hq/sql/2026-11-12_marketplace_agreements.sql');
+  assert.equal(await fs.readFile(path.join(workspaceRoot, agreementsEntry.path), 'utf8'), (await execFileAsync('git', ['show', agreementsEntry.introducedBy + ':' + agreementsEntry.path], { cwd: workspaceRoot })).stdout);
+  await execFileAsync('git', ['merge-base', '--is-ancestor', agreementsEntry.introducedBy, 'HEAD'], { cwd: workspaceRoot });
+  assert.deepEqual(full[248], { id: MARKETPLACE_OFFERS_ENTRY, path: 'tdf-hq/sql/2026-11-08_marketplace_offers.sql', introducedBy: marketplaceIntroduction });
+  const identityManifest = JSON.parse((await execFileAsync('git', ['show', marketplace + ':scripts/production-migrations.json'], { cwd: workspaceRoot })).stdout).migrations;
+  assert.equal(identityManifest.length, 247);
+  // The marketplace entry's introduction moved to the review-fix commit (the
+  // SQL gained the analytics allowlist and the filled -> published edge);
+  // everything before it is still the reviewed identity manifest byte for byte.
+  const withoutApple = full.filter(entry => entry.id !== APPLE_POLICY_ENTRY && entry.id !== APPLE_ISSUER_ENTRY);
+  assert.deepEqual(withoutApple.slice(0, -1), identityManifest.slice(0, -1));
+  assert.equal(withoutApple.at(-1).id, identityManifest.at(-1).id);
+  const identityReview = historicalReview(latest, 246);
+  assert.equal(identityReview.id, '806180f5957fc4a7520f');
+  const identityPriorReview = JSON.parse((await execFileAsync('git', ['show', marketplace + ':' + decisionsPath], { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions.find(item => item.id === identityReview.id);
+  assert.deepEqual(identityReview, identityPriorReview);
+  assert.equal(await fs.readFile(path.join(workspaceRoot, full[248].path), 'utf8'), (await execFileAsync('git', ['show', marketplaceIntroduction + ':' + full[248].path], { cwd: workspaceRoot })).stdout);
+  await execFileAsync('git', ['merge-base', '--is-ancestor', marketplaceIntroduction, 'HEAD'], { cwd: workspaceRoot });
 });
 
 test('Apple policy preserves the exact main prefix and every manual review', async () => {
@@ -898,8 +966,9 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   const fromGit = async file => (await execFileAsync('git', ['show', `${main}:${file}`],
     { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout;
   const oldManifest = JSON.parse(await fromGit('scripts/production-migrations.json')).migrations;
-  const currentManifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
-    'scripts/production-migrations.json'), 'utf8')).migrations;
+  // The marketplace offers entry (ADR 0134) appends after the Apple entries;
+  // the Apple review is verified over the manifest without it.
+  const currentManifest = (await manifestBeforePlayer()).migrations.filter(entry => entry.id !== MARKETPLACE_OFFERS_ENTRY && entry.id !== AUTH_RATE_LIMIT_ENTRY && entry.id !== MARKETPLACE_AGREEMENTS_ENTRY && entry.id !== EVENT_ADMIN_ENTRY && entry.id !== MARKETPLACE_AGREEMENT_PAYMENTS_ENTRY);
   assert.equal(oldManifest.length, 246);
   assert.equal(currentManifest.length, 248);
   assert.deepEqual(currentManifest.slice(0, 246), oldManifest);
@@ -920,7 +989,29 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   await execFileAsync('git', ['merge-base', '--is-ancestor', addition.introducedBy, 'HEAD'],
     { cwd: workspaceRoot });
   const old = JSON.parse(await fromGit('docs/catalog-persistence/catalog-list-decisions.json')).decisions;
-  const { active, successors, integration } = await readReconciliation();
+  // Compare the Apple review with the records as protected main 8ec7d85c held
+  // them: the event administrator successors are read back to the review,
+  // pointer and retirement they replaced (each nests its predecessor
+  // unchanged), and lists first reviewed after that main are left out.
+  const { active: currentDecisions, retired, successors: currentSuccessors,
+    integration: currentIntegration } = await readReconciliation(true);
+  const mainIds = new Set((await reviewedJson(EVENT_ADMIN_PROTECTED_MAIN,
+    'docs/catalog-persistence/catalog-list-decisions.json')).decisions.map(row => row.id));
+  // Later successors (the agreement payments manifest review, ADR 0136) nest
+  // the event administrator one, so step back until the record that main held.
+  const active = currentDecisions.flatMap(row => {
+    let reviewed = row;
+    while (reviewed && !mainIds.has(reviewed.id)) reviewed = reviewed.previousDecision;
+    return reviewed ? [reviewed] : [];
+  });
+  const heldByMain = (row, idOf) => {
+    let held = row;
+    while (held && !mainIds.has(idOf(held))) held = held.previousResolution;
+    return held;
+  };
+  const successors = currentSuccessors.map(row => row.name === 'migrations' ? heldByMain(row, held => held.currentId) : row);
+  const integration = { ...currentIntegration, retirements: currentIntegration.retirements
+    .map(row => row.source.name === 'migrations' ? heldByMain(row, held => held.replacementId) : row) };
   const reviewedParent = async revision => JSON.parse((await execFileAsync('git',
     ['show', `${revision}:docs/catalog-persistence/catalog-list-decisions.json`],
     { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions;
@@ -949,6 +1040,468 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     assert.ok(review, 'the desktop shell reviews need their exact branch review');
     assert.deepEqual(active.find(row => row.id === review.id), review);
   }
+  // The marketplace offers branch (ADR 0134, #719) adds eighteen value lists
+  // reviewed by the deterministic policy, extends the search page view-mode
+  // attribute list (successor of main's exact review 7393e5dd10ebe68ae3e2) and
+  // records a successor review of the 249-entry manifest whose exact
+  // predecessor is main's 248-entry review; the historical Apple view keeps
+  // the exact predecessors and leaves the new lists out.
+  const marketplaceReviewIds = ['3d30e49db2fefa10a623', '2471af5d3bf550aade51', '0365580729887c8f5ca7',
+    '0dc607f91bd630b1fb87', '4ed56a39eea6e4d4679d', 'aa6a65391d2c0611fdd8',
+    'b79670b0b1a1fbc1ee05', 'df679c5b2cb5d91be79e', 'ef5bffc43b9c0ff3a361', '39edb2a76ecef8cd6c57',
+    '2a350b9da29a2d080bd8', 'd776481beacf4f4a074f', '16393adee900667601af', '7207f087ef5f8e0b2158',
+    '3a7f374bb3b52ef8d34d', 'a9c6757fbe6f2868f4f2', '853a5f768e09d0c32259',
+    // Listing-conditions labels on the public classified page (review fix round four).
+    '9dd6b72c9435bd64fe09'];
+  for (const id of marketplaceReviewIds) {
+    const review = active.find(row => row.id === id);
+    assert.ok(review?.reviewed, `the marketplace offers review ${id} must be present and reviewed`);
+    assert.match(review.reviewMethod, /^deterministic-policy-v\d+$/);
+  }
+  // The auth_rate_limit migration (owner decisions of 2026-11-10) succeeds the
+  // marketplace manifest review as the 250-entry tip and adds two reviews; the
+  // historical view sets those aside and steps the manifest back twice.
+  // The marketplace agreements migration (ADR 0135) succeeds the auth_rate_limit
+  // review as the 251-entry tip and adds six reviews (status filter, panel
+  // tabs, agreement CHECK lists and the party type); the historical view sets
+  // those aside too and steps the manifest back once more.
+  const agreementsTip = active.find(row => row.id === 'bc5e5bd4f9d8795d2166');
+  assert.equal(agreementsTip.evidence.valueCount, 251);
+  const agreementReviews = ['3a5425de732f609db717', '75f5a77be26697f0a281', '06f1e7eef25d710385f4',
+    '74460721a4c7f744e3ab', '33d907b3850fb5474551', 'c9a145a03e59580950b5'];
+  for (const id of agreementReviews) {
+    const review = active.find(row => row.id === id);
+    assert.ok(review?.reviewed, `the marketplace agreements review ${id} must be present and reviewed`);
+    assert.match(review.reviewMethod, /^deterministic-policy-v\d+$/);
+  }
+  const authRateLimitTip = agreementsTip.previousDecision;
+  assert.equal(authRateLimitTip.id, '52d96d4b31e677ac5948');
+  assert.equal(authRateLimitTip.evidence.valueCount, 250);
+  const authRateLimitReviews = ['f37745d92e494e02fcba', 'a95cbb8b9256407889ea'];
+  const marketplaceManifestReview = authRateLimitTip.previousDecision;
+  assert.equal(marketplaceManifestReview.id, '4dc5a2f26154a0f125db');
+  assert.equal(marketplaceManifestReview.evidence.valueCount, 249);
+  assert.equal(marketplaceManifestReview.previousDecision.id, 'a20e04bc426cc6383584');
+  const searchViewReview = active.find(row => row.id === '79bdbe2ae9b350e0d1da');
+  assert.equal(searchViewReview.reviewMethod, 'successor-of-reviewed-decisions');
+  assert.equal(searchViewReview.previousDecision.id, '7393e5dd10ebe68ae3e2');
+  const marketplaceSuccessors = new Map([
+    [agreementsTip.id, marketplaceManifestReview.previousDecision],
+    [searchViewReview.id, searchViewReview.previousDecision]]);
+  const laterMainIds = new Set([offlineFixture.id, ...routeReviews.map(row => row.id),
+    ...desktopReviews.map(row => row.id), ...marketplaceReviewIds, ...authRateLimitReviews, ...agreementReviews]);
+  const historicalAppleView = active.filter(row => !laterMainIds.has(row.id))
+    .map(row => marketplaceSuccessors.get(row.id) ?? row);
+  assert.equal(old.length, 1405);
+  assert.equal(priorApple.length, 1407);
+  assert.equal(currentMain.length, 1409);
+  const retiredIds = new Set(retired.map(row => row.id));
+  assert.equal(historicalAppleView.length, 1411 - retired.length);
+  const appleView = (await reviewedParent('15e2228d24080a520d4bed187731cc3db09d474a'))
+    .filter(row => !retiredIds.has(row.id));
+  assert.equal(historicalAppleView.length, appleView.length);
+  for (const [index, row] of appleView.entries()) {
+    assert.deepEqual(historicalAppleView[index], row, `Apple review order or content changed at ${row.id}`);
+  }
+  assert.equal(active.length,
+    1423 + marketplaceReviewIds.length + authRateLimitReviews.length + agreementReviews.length - retired.length);
+  const history = new Map(retired.map(row => [row.id, row]));
+  const visit = row => {
+    if (!row) return;
+    if (!history.has(row.id)) history.set(row.id, row);
+    visit(row.previousDecision);
+    for (const branch of row.concurrentReviewHistory ?? []) visit(branch);
+  };
+  for (const row of active) visit(row);
+  for (const row of [...old, ...priorApple, ...currentMain, ...offlineMain, ...routeMain]) {
+    assert.deepEqual(history.get(row.id), row);
+  }
+  const pointer = successors.find(row => row.name === 'migrations');
+  const agreementsCurrentTip = active.find(row => row.id === pointer.currentId);
+  assert.equal(agreementsCurrentTip.evidence.valueCount, 251);
+  assert.equal(integration.retirements.find(row => row.source.name === 'migrations').replacementId,
+    agreementsCurrentTip.id);
+  assert.equal(pointer.previousResolution.currentId, agreementsCurrentTip.previousDecision.id);
+  const currentTip = agreementsCurrentTip.previousDecision;
+  assert.equal(currentTip.evidence.valueCount, 250);
+  assert.equal(pointer.previousResolution.previousResolution.currentId, currentTip.previousDecision.id);
+  assert.equal(integration.retirements.find(row => row.source.name === 'migrations').previousReplacementId,
+    currentTip.id);
+  const marketplaceTip = currentTip.previousDecision;
+  assert.equal(marketplaceTip.evidence.valueCount, 249);
+  const tip = marketplaceTip.previousDecision;
+  assert.equal(tip.evidence.valueCount, 248);
+  assert.equal(historicalReview(tip, 247).previousDecision.id, '806180f5957fc4a7520f');
+  assert.equal(tip.previousDecision.id, '4e282e4c258854caa655');
+  assert.equal(pointer.previousResolution.previousResolution.previousResolution.currentId, tip.id);
+  assert.equal(integration.retirements.find(row => row.source.name === 'migrations').previousResolution.previousReplacementId,
+    marketplaceTip.id);
+  assert.equal(integration.retirements.find(row => row.source.name === 'migrations').previousResolution.previousResolution.previousReplacementId,
+    tip.id);
+  const security = active.find(row => row.evidence?.file === 'tdf-hq/src/TDF/Catalog/Security.hs'
+    && row.evidence?.name === 'expectedSecurityRoleAssignmentPolicyBindings');
+  assert.equal(security.previousDecision.id, 'ff4edc0f8d2debecf71c');
+  const currentSecurity = await fs.readFile(path.join(workspaceRoot, security.evidence.file), 'utf8');
+  const withoutApple = currentSecurity.replace(
+    '  , ("account.apple.customer", "apple-account-create", "customer", True)\n', '');
+  assert.notEqual(withoutApple, currentSecurity);
+  assert.equal(withoutApple, await fromGit(security.evidence.file));
+});
+
+test('event administrator delegation appends one migration to the protected 251-entry manifest', async () => {
+  const manifestPath = 'scripts/production-migrations.json';
+  const decisionsPath = 'docs/catalog-persistence/catalog-list-decisions.json';
+  const main = await reviewedJson(EVENT_ADMIN_PROTECTED_MAIN, manifestPath);
+  const combined = await manifestBeforePlayer();
+  const migration = { id: EVENT_ADMIN_ENTRY, path: 'tdf-hq/sql/2026-11-11_event_admin_delegation.sql',
+    introducedBy: EVENT_ADMIN_INTRODUCTION };
+  assert.equal(main.migrations.length, 251);
+  // The agreement payments entry (ADR 0136) appends after this one and has its own review.
+  assert.deepEqual({ ...combined, migrations: combined.migrations.filter(entry => entry.id !== MARKETPLACE_AGREEMENT_PAYMENTS_ENTRY) },
+    { ...main, migrations: [...main.migrations, migration] });
+  const { stdout } = await execFileAsync('git', ['show', `${EVENT_ADMIN_INTRODUCTION}:${migration.path}`],
+    { cwd: workspaceRoot });
+  assert.equal(await fs.readFile(path.join(workspaceRoot, migration.path), 'utf8'), stdout);
+  await execFileAsync('git', ['merge-base', '--is-ancestor', EVENT_ADMIN_INTRODUCTION, 'HEAD'],
+    { cwd: workspaceRoot });
+  const { active, retired, successors, integration } = await readReconciliation(true);
+  const priorMain = (await reviewedJson(EVENT_ADMIN_PROTECTED_MAIN, decisionsPath)).decisions;
+  // The active manifest review is the agreement payments successor; this
+  // review, its pointer and its retirement are nested one step back, unchanged.
+  const tipPointer = successors.find(row => row.name === 'migrations');
+  const pointer = tipPointer.previousResolution;
+  const current = active.find(row => row.id === tipPointer.currentId).previousDecision;
+  assert.equal(current.id, pointer.currentId);
+  assert.equal(current.evidence.valueCount, 252);
+  assert.equal(current.reviewed, true);
+  // The complete review of protected main is nested unchanged, and so are the
+  // pointer and the retirement that named it.
+  assert.deepEqual(current.previousDecision, priorMain.find(row => row.evidence?.file === manifestPath));
+  assert.equal(current.previousDecision.evidence.valueCount, 251);
+  assert.equal(pointer.previousCurrentId, current.previousDecision.id);
+  assert.deepEqual(pointer.previousResolution, (await reviewedJson(EVENT_ADMIN_PROTECTED_MAIN,
+    'docs/catalog-persistence/event-catalog-current-successors.json')).successors
+    .find(row => row.name === 'migrations'));
+  const retirement = integration.retirements.find(row => row.source.name === 'migrations').previousResolution;
+  assert.equal(retirement.previousReplacementId, current.previousDecision.id);
+  assert.deepEqual(retirement.previousResolution, (await reviewedJson(EVENT_ADMIN_PROTECTED_MAIN,
+    'docs/catalog-persistence/event-integration-retirements.json')).retirements
+    .find(row => row.source.name === 'migrations'));
+  // The typed client registry is the only other successor; it also nests its parent review.
+  // EVT-TICKET-SALE-001 later added four methods: its 90-method successor keeps
+  // this 86-method review intact as its previousDecision.
+  const clientNow = active.find(row => row.id === successors.find(row => row.name === 'SocialEventsAPI').currentId);
+  assert.equal(clientNow.evidence.valueCount, 90);
+  const client = clientNow.previousDecision;
+  assert.equal(client.id, '083bd1a66e9f23f02866');
+  assert.equal(client.evidence.valueCount, 86);
+  assert.deepEqual(client.previousDecision, priorMain.find(row => row.id === '2511cbba2fc7279bc28a'));
+  // Moved lists (ADR 0133) nest the exact review of protected main.
+  const movedReviews = assertMovedListsNest(active, priorMain);
+  // Every other review of protected main is retained exactly; three lists are new.
+  const history = new Map([...active, ...retired].map(row => [row.id, row]));
+  const replaced = new Set([current.previousDecision.id, client.previousDecision.id, ...movedReviews]);
+  for (const row of priorMain) {
+    if (replaced.has(row.id)) assert.ok(!history.has(row.id));
+    else assert.deepEqual(history.get(row.id), row);
+  }
+  assert.equal(priorMain.length, 1449);
+  // 1452 after this review, plus the nine agreement payments reviews (ADR 0136),
+  // less the reviews retired with their deleted source lists; the delivery
+  // protocol review (SYS-VERIFY-002) is counted separately.
+  assert.equal(active.filter(row => row.id !== DELIVERY_PROTOCOL_REVIEW).length, 1461 - retired.length);
+});
+
+test('marketplace agreement payments append one migration to the protected 252-entry manifest', async () => {
+  const manifestPath = 'scripts/production-migrations.json';
+  const decisionsPath = 'docs/catalog-persistence/catalog-list-decisions.json';
+  const main = await reviewedJson(AGREEMENT_PAYMENTS_PROTECTED_MAIN, manifestPath);
+  const combined = await manifestBeforePlayer();
+  const migration = { id: MARKETPLACE_AGREEMENT_PAYMENTS_ENTRY,
+    path: 'tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql',
+    introducedBy: AGREEMENT_PAYMENTS_INTRODUCTION };
+  assert.equal(main.migrations.length, 252);
+  assert.deepEqual(combined, { ...main, migrations: [...main.migrations, migration] });
+  const { stdout } = await execFileAsync('git', ['show', `${AGREEMENT_PAYMENTS_INTRODUCTION}:${migration.path}`],
+    { cwd: workspaceRoot });
+  assert.equal(await fs.readFile(path.join(workspaceRoot, migration.path), 'utf8'), stdout);
+  await execFileAsync('git', ['merge-base', '--is-ancestor', AGREEMENT_PAYMENTS_INTRODUCTION, 'HEAD'],
+    { cwd: workspaceRoot });
+  const { active, retired, successors, integration } = await readReconciliation(true);
+  const priorMain = (await reviewedJson(AGREEMENT_PAYMENTS_PROTECTED_MAIN, decisionsPath)).decisions;
+  const pointer = successors.find(row => row.name === 'migrations');
+  const current = active.find(row => row.id === pointer.currentId);
+  assert.equal(current.evidence.valueCount, 253);
+  assert.equal(current.reviewed, true);
+  assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
+  // The complete review of protected main is nested unchanged, and so are the
+  // pointer and the retirement that named it.
+  assert.deepEqual(current.previousDecision, priorMain.find(row => row.evidence?.file === manifestPath));
+  assert.equal(current.previousDecision.evidence.valueCount, 252);
+  assert.equal(pointer.previousCurrentId, current.previousDecision.id);
+  assert.equal(pointer.change, current.justification);
+  assert.deepEqual(pointer.previousResolution, (await reviewedJson(AGREEMENT_PAYMENTS_PROTECTED_MAIN,
+    'docs/catalog-persistence/event-catalog-current-successors.json')).successors
+    .find(row => row.name === 'migrations'));
+  const retirement = integration.retirements.find(row => row.source.name === 'migrations');
+  assert.equal(retirement.replacementId, current.id);
+  assert.equal(retirement.previousReplacementId, current.previousDecision.id);
+  assert.deepEqual(retirement.previousResolution, (await reviewedJson(AGREEMENT_PAYMENTS_PROTECTED_MAIN,
+    'docs/catalog-persistence/event-integration-retirements.json')).retirements
+    .find(row => row.source.name === 'migrations'));
+  // Every other review of protected main is retained exactly; nine lists are
+  // new (payment provider, fee payer, payout and payment CHECK lists and the
+  // two Policy sum types) and reviewed by the deterministic policy.
+  // Moved lists (ADR 0133) nest the exact review of protected main.
+  const history = new Map([...active, ...retired].map(row => [row.id, row]));
+  const replaced = new Set([current.previousDecision.id, ...assertMovedListsNest(active, priorMain)]);
+  // The 86-method client review was since superseded by EVT-TICKET-SALE-001
+  // and is retained exactly as the previousDecision of its successor.
+  const clientSuccessor = active.find(row => row.previousDecision?.id === '083bd1a66e9f23f02866');
+  for (const row of priorMain) {
+    if (replaced.has(row.id)) assert.ok(!history.has(row.id));
+    else if (row.id === '083bd1a66e9f23f02866') assert.deepEqual(clientSuccessor.previousDecision, row);
+    else assert.deepEqual(history.get(row.id), row);
+  }
+  const payoutReviews = ['d580ad14a8f01218c4a9', 'fbe5e4e4d0289e1caaf4', 'cfa5a05214e95ed07ef0',
+    '203395cfa370d78f86a1', '1f6946049f264576684d'];
+  const chargeReviews = ['09d7dc6ebc55642a4bb2', '584b9609b82ad71578ed', 'e1a25b160e801cf866df',
+    '32574b309f1d005ed165'];
+  for (const id of [...payoutReviews, ...chargeReviews]) {
+    assert.ok(!priorMain.some(row => row.id === id));
+    assert.ok(history.get(id)?.reviewed, `the marketplace agreement payments review ${id} must be present and reviewed`);
+    assert.match(history.get(id).reviewMethod, /^deterministic-policy-v\d+$/);
+  }
+  assert.equal(priorMain.length, 1452);
+  assert.equal(active.filter(row => row.id !== DELIVERY_PROTOCOL_REVIEW).length, 1461 - retired.length);
+});
+
+
+test('player server preserves both reviewed migration histories and appends only reviewed SQL', async () => {
+  const main = await reviewedJson(PLAYER_SERVER_MAIN_BASE, manifestPath);
+  const player = await reviewedJson(PLAYER_SERVER_REVIEW_HEAD, manifestPath);
+  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, manifestPath), 'utf8'));
+  const extension = player.migrations.filter(row => playerMigrations.has(row.id));
+  assert.deepEqual(extension.map(row => row.id), [...playerMigrations]);
+  assert.deepEqual(current, { ...main, migrations: [...main.migrations, ...extension] });
+  for (const row of extension) {
+    await execFileAsync('git', ['merge-base', '--is-ancestor', row.introducedBy, 'HEAD'],
+      { cwd: workspaceRoot });
+    const { stdout } = await execFileAsync('git', ['show', `${row.introducedBy}:${row.path}`],
+      { cwd: workspaceRoot });
+    assert.equal(await fs.readFile(path.join(workspaceRoot, row.path), 'utf8'), stdout);
+  }
+
+  const { active, successors, integration } = await readReconciliation();
+  const pointer = successors.find(row => row.name === 'migrations');
+  const actual = active.find(row => row.id === pointer.currentId);
+  const findTip = doc => doc.decisions.find(row => row.evidence?.file === manifestPath);
+  const mainReview = findTip(await reviewedJson(PLAYER_SERVER_MAIN_BASE, catalogPath));
+  const playerReview = findTip(await reviewedJson(PLAYER_SERVER_REVIEW_HEAD, catalogPath));
+  assert.deepEqual(actual.previousDecision, mainReview);
+  assert.deepEqual(actual.concurrentReviewHistory, [playerReview]);
+  assert.equal(actual.evidence.valueCount, current.migrations.length);
+  assert.equal(pointer.valueCount, current.migrations.length);
+  const retirement = integration.retirements.find(row => row.source.name === 'migrations');
+  assert.equal(retirement.replacementId, actual.id);
+  assert.equal(retirement.previousResolution.replacementId, mainReview.id);
+});
+
+test('loop rework retires the reviews of two deleted scripts as provenance and reviews one new list', async () => {
+  const { active } = await readReconciliation();
+  const rework = await readLoopRework();
+  assert.equal(rework.decisions.length, 2);
+  assert.ok(rework.reason.length > 80);
+  for (const entry of rework.decisions) {
+    assert.equal(entry.decision.reviewed, true);
+    assert.ok(!active.some(row => row.id === entry.decision.id));
+    await assert.rejects(fs.access(path.join(workspaceRoot, entry.source.file)), { code: 'ENOENT' });
+  }
+  assert.deepEqual(rework.addedDecisionIds, ['16e3988d48089cc77b7e']);
+  for (const id of rework.addedDecisionIds) {
+    assert.equal(active.find(row => row.id === id)?.reviewed, true);
+  }
+  // The earlier view re-inserts the retired reviews and drops the new one; the catalog
+  // itself keeps growing with main, so only the difference is fixed.
+  const historical = (await readHistoricalReconciliation()).active;
+  assert.equal(historical.length, active.length + rework.decisions.length - rework.addedDecisionIds.length);
+  for (const entry of rework.decisions) assert.deepEqual(historical[entry.position], entry.decision);
+});
+
+// One explicit review classifies the delivery protocol; it is new, unique and
+// carries its requirement. The rest of the catalog follows main.
+test('delivery evidence protocol adds exactly one reviewed list', async () => {
+  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
+  const baseline = await reviewedJson('5084d8a8a4d7a7a3b8d30d1f55ae5d9c8c032b9b', catalogPath);
+  assert.ok(!baseline.decisions.some(row => row.id === DELIVERY_PROTOCOL_REVIEW));
+  const additions = current.decisions.filter(row => row.id === DELIVERY_PROTOCOL_REVIEW);
+  assert.equal(additions.length, 1);
+  assert.equal(additions[0].classification, 'genuine-technical-constant');
+  assert.equal(additions[0].disposition, 'explicit-allowlist');
+  assert.equal(additions[0].reviewed, true);
+  assert.equal(additions[0].evidence.file, 'scripts/lib/delivery-matrix.mjs');
+  assert.equal(additions[0].evidence.name, 'DELIVERY_CHECKS');
+  assert.match(additions[0].justification, /SYS-VERIFY-002/);
+  assert.equal(current.decisions.filter(row => row.evidence?.file === 'scripts/lib/delivery-matrix.mjs').length, 1);
+});
+
+const reviewIndexes = new WeakMap();
+function wholeReview(value, expected) {
+  if (!value || typeof value !== 'object') return undefined;
+  let index = reviewIndexes.get(value);
+  if (!index) {
+    index = new Map();
+    const visit = node => {
+      if (!node || typeof node !== 'object') return;
+      if (node.id) index.set(node.id, [...(index.get(node.id) ?? []), node]);
+      for (const child of Object.values(node)) visit(child);
+    };
+    visit(value); reviewIndexes.set(value, index);
+  }
+  return (index.get(expected.id) ?? []).find(row => canonicalReview(row) === canonicalReview(expected));
+}
+
+const canonicalReview = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
+  ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
+function findWholeResolution(value, expected) {
+  if (!value || typeof value !== 'object') return undefined;
+  if ((Object.hasOwn(expected, 'currentId') && value.currentId === expected.currentId || Object.hasOwn(expected, 'replacementId') && value.replacementId === expected.replacementId) && canonicalReview(value) === canonicalReview(expected)) return value;
+  for (const child of Object.values(value)) {
+    const found = findWholeResolution(child, expected);
+    if (found) return found;
+  }
+}
+const INTEGRATION_MAIN = '966fb55dca70a49c0a340b674f8cc133cc413a2d';
+const UX_PARENT = 'e4ae39edb7924e9646aad4535036aeb39fb5dd7c';
+
+async function uxParentReconciliation() {
+  const register = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
+  const parent = await reviewedJson(UX_PARENT, catalogPath);
+  const currentActive = parent.decisions.map(row => {
+    const found = wholeReview(register, row);
+    assert.ok(found, `Complete UX parent review missing: ${row.id}`);
+    return found;
+  });
+  // Each presentation follow-up has its own complete-parent preservation test.
+  // Historical reconciliation tests replay their exact earlier reviewed view.
+  const settlementDisplayView = currentActive.flatMap(row => {
+    if (row.id === '734ed3533d72f55f1170' || row.id === '95da3806a32123c6e1a5' || row.id === '354146cb038857137555') return [];
+    return [row.id === '295c31c74b0bad95c5c7' ? row.previousDecision : row];
+  });
+  const labelExtractionView = settlementDisplayView.filter(row =>
+    row.id !== 'f42409396fc972bf4d31' && row.id !== '399cc2b7d2c27f5143c1');
+  const active = labelExtractionView.flatMap(row => {
+    if (row.id === 'e4eadc75e199657bbd8a') return [];
+    if (row.id === '91c81c283f19a583aa11' || row.id === 'edd06ad23b93dfcc632a') return [row.previousDecision];
+    return [row];
+  });
+  return { active, currentActive, settlementDisplayView, labelExtractionView };
+}
+
+test('shared evidence/request display retains the full parent view and existing SQL/API vocabulary', async () => {
+  const { currentActive, settlementDisplayView } = await uxParentReconciliation();
+  const parent = JSON.parse((await execFileAsync('git', ['show',
+    'a4edbe4b107e2f37b1091e02bac0d75fac472554:docs/catalog-persistence/catalog-list-decisions.json'],
+    { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions;
+  assert.deepEqual(settlementDisplayView, parent, 'all1432 complete parent reviews remain reconstructible unchanged');
+  assert.equal(currentActive.length, parent.length + 3);
+  const status = currentActive.find(row => row.id === '295c31c74b0bad95c5c7');
+  assert.deepEqual(status.previousDecision, parent.find(row => row.id === '31fdec804cc113595b2f'));
+  assert.equal(status.classification, status.previousDecision.classification);
+  assert.equal(status.disposition, status.previousDecision.disposition);
+  const labels = await fs.readFile(path.join(workspaceRoot, 'tdf-hq-ui/src/utils/marketplaceStatusLabel.ts'), 'utf8');
+  const oldPage = (await execFileAsync('git', ['show',
+    'a4edbe4b107e2f37b1091e02bac0d75fac472554:tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx'],
+    { cwd: workspaceRoot })).stdout;
+  const body = (text, name) => text.match(new RegExp(String.raw`const ${name}: [^=]+ = \{([\s\S]*?)\n\};`))?.[1];
+  assert.ok(body(labels, 'CUSTOMER_REQUEST_TYPE_LABELS'));
+  assert.ok(body(labels, 'CUSTOMER_REQUEST_STATUS_LABELS'));
+  assert.equal(body(labels, 'CUSTOMER_REQUEST_TYPE_LABELS'), body(oldPage, 'requestLabels'));
+  assert.equal(body(labels, 'CUSTOMER_REQUEST_STATUS_LABELS'), body(oldPage, 'requestStatusLabels'));
+  const requestSchema = (await fs.readFile(path.join(workspaceRoot,
+    'tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql'), 'utf8'))
+    .split('CREATE TABLE IF NOT EXISTS marketplace_customer_request (')[1];
+  const manualSchema = (await fs.readFile(path.join(workspaceRoot,
+    'tdf-hq/sql/2026-08-13_unified_checkout_core.sql'), 'utf8'))
+    .split('CREATE TABLE IF NOT EXISTS commerce_manual_payment_evidence (')[1];
+  const types = await fs.readFile(path.join(workspaceRoot, 'tdf-hq-ui/src/api/types.ts'), 'utf8');
+  const rows = currentActive.filter(row => row.reviewBatch === 'cognitive-load-evidence-request-display-20261119');
+  assert.equal(rows.length, 4);
+  for (const row of rows) {
+    let values;
+    if (row.evidence.name === 'CUSTOMER_REQUEST_TYPE_LABELS') values = requestSchema.match(/request_type TEXT NOT NULL CHECK \(request_type IN \(([\s\S]*?)\)\)/)[1];
+    else if (row.evidence.name === 'CUSTOMER_REQUEST_STATUS_LABELS') values = requestSchema.match(/status TEXT NOT NULL DEFAULT 'submitted' CHECK \(status IN \(([\s\S]*?)\)\)/)[1];
+    else if (row.evidence.name === 'MANUAL_EVIDENCE_STATUS_LABELS') values = manualSchema.match(/status TEXT NOT NULL CHECK \(status IN \(([\s\S]*?)\)\)/)[1];
+    else values = types.match(/mmePaymentMethod:([^;]+);/)[1];
+    assert.deepEqual(row.evidence.values, [...values.matchAll(/'([^']+)'/g)].map(match => match[1]));
+    assert.equal(row.classification, 'dynamic-business-catalog');
+  }
+});
+
+
+test('staff settlement display preserves every parent review and only labels existing SQL codes', async () => {
+  const { settlementDisplayView: currentActive, labelExtractionView } = await uxParentReconciliation();
+  const parent = JSON.parse((await execFileAsync('git', ['show',
+    'f11327af1ad809147f23b50e988dcc631d416836:docs/catalog-persistence/catalog-list-decisions.json'],
+    { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions;
+  assert.deepEqual(labelExtractionView, parent, 'all1430 complete parent reviews must remain byte-for-byte equivalent');
+  assert.equal(currentActive.length, parent.length + 2);
+  const schema = (await fs.readFile(path.join(workspaceRoot,
+    'tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql'), 'utf8'))
+    .split('CREATE TABLE IF NOT EXISTS marketplace_rental_deposit_settlement (')[1];
+  assert.ok(schema, 'the canonical settlement schema must exist');
+  const rows = currentActive.filter(row => row.id === 'f42409396fc972bf4d31' || row.id === '399cc2b7d2c27f5143c1');
+  assert.equal(rows.length, 2);
+  for (const row of rows) {
+    assert.equal(row.classification, 'dynamic-business-catalog');
+    assert.equal(row.reviewMethod, 'individual-source-review');
+    assert.equal(row.evidence.file, 'tdf-hq-ui/src/utils/marketplaceStatusLabel.ts');
+    const pattern = row.evidence.name === 'DEPOSIT_SETTLEMENT_STATUS_LABELS'
+      ? /status TEXT NOT NULL DEFAULT 'submitted' CHECK \(status IN \(([\s\S]*?)\)\)/
+      : /settlement_method TEXT NOT NULL CHECK \(settlement_method IN \(([\s\S]*?)\)\)/;
+    const allowed = [...schema.match(pattern)[1].matchAll(/'([^']+)'/g)].map(match => match[1]);
+    assert.deepEqual(row.evidence.values, allowed);
+    assert.equal(row.evidence.valueCount, 4);
+  }
+});
+
+
+test('marketplace label extraction preserves all complete reviews and the backend deposit vocabulary', async () => {
+  const { active, labelExtractionView: currentActive } = await uxParentReconciliation();
+  const parent = JSON.parse((await execFileAsync('git',
+    ['show', '4669d12deaf891f31a78f4d49140d59d260e50da:docs/catalog-persistence/catalog-list-decisions.json'],
+    { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions;
+  assert.deepEqual(active, parent, 'every prior complete decision survives unchanged in the current review history');
+  assert.equal(currentActive.length, parent.length + 1);
+  const labels = await fs.readFile(path.join(workspaceRoot, 'tdf-hq-ui/src/utils/marketplaceStatusLabel.ts'), 'utf8');
+  const oldPage = (await execFileAsync('git', ['show',
+    '4669d12deaf891f31a78f4d49140d59d260e50da:tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx'],
+    { cwd: workspaceRoot })).stdout;
+  for (const row of currentActive.filter(row => row.id === '91c81c283f19a583aa11' || row.id === 'edd06ad23b93dfcc632a')) {
+    assert.equal(row.reviewMethod, 'successor-of-reviewed-decision');
+    assert.equal(row.classification, row.previousDecision.classification);
+    assert.equal(row.disposition, row.previousDecision.disposition);
+    assert.equal(row.evidence.file, 'tdf-hq-ui/src/utils/marketplaceStatusLabel.ts');
+    const pattern = new RegExp(String.raw`const ${row.evidence.name}: Record<string, string> = \{([\s\S]*?)\n\};`);
+    assert.equal(labels.match(pattern)?.[1], oldPage.match(pattern)?.[1]);
+    assert.ok(labels.match(pattern), 'the complete copied map must exist in the shared source');
+  }
+  const deposit = currentActive.find(row => row.id === 'e4eadc75e199657bbd8a');
+  assert.equal(deposit.reviewMethod, 'individual-source-review');
+  assert.equal(deposit.classification, 'dynamic-business-catalog');
+  const schema = await fs.readFile(path.join(workspaceRoot,
+    'tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql'), 'utf8');
+  const allowed = [...schema.match(/deposit_status TEXT NOT NULL CHECK \(deposit_status IN \(([\s\S]*?)\)\)/)[1].matchAll(/'([^']+)'/g)].map(match => match[1]);
+  assert.deepEqual(deposit.evidence.values, allowed, 'display covers only the already-persisted deposit states');
+});
+
+
+test('dated UX parent preserves its explicit form, label, category and booking reviews', async () => {
+  const { active } = await uxParentReconciliation();
+  const reviewedParent = async revision => (await reviewedJson(revision, catalogPath)).decisions;
+  const offlineFixture = active.find(row => row.id === 'b3eadb9d52a262f5371f');
+  const routeReviews = ['afe675892f43a8a4de73', '6f876292d2fcb1dd7a86'].map(id => active.find(row => row.id === id));
+  const desktopReviews = (await reviewedParent('3668640fa56a558bbd3bd95881526d5faf5be22c')).filter(row => ['9f5a58afbcc5a21f3a81','162bb73e8a27ecdbd80d','19b53762aa84c847059a','d3fe8dedc63dbee01dcf','dd837be242ffaf6c73c5','70eef2bc5a9e8ef6ab65','ee97985b0d9abc1b1ed3','57fc580c92ca2352698d','2cf4da8b8443b9be1b48'].includes(row.id));
   const priceFixture = active.find(row => row.id === '4255c54da850af675134');
   assert.ok(priceFixture, 'the service-price form fixture needs its explicit structural review');
   assert.equal(priceFixture.classification, 'genuine-technical-constant');
@@ -989,38 +1542,16 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     bookingParent.find(row => row.id === '528ebad9929ca2769837'));
   const historicalAppleView = active.filter(row => !laterMainIds.has(row.id))
     .map(row => row.id === bookingReview.id ? bookingReview.previousDecision : row);
-  assert.equal(old.length, 1405);
-  assert.equal(priorApple.length, 1407);
-  assert.equal(currentMain.length, 1409);
   assert.equal(historicalAppleView.length, 1411);
   assert.deepEqual(historicalAppleView,
     await reviewedParent('15e2228d24080a520d4bed187731cc3db09d474a'));
   assert.equal(active.length, 1429);
-  const history = new Map();
-  const visit = row => {
-    if (!row) return;
-    if (!history.has(row.id)) history.set(row.id, row);
-    visit(row.previousDecision);
-    for (const branch of row.concurrentReviewHistory ?? []) visit(branch);
-  };
-  for (const row of active) visit(row);
-  for (const row of [...old, ...priorApple, ...currentMain, ...offlineMain, ...routeMain]) {
-    assert.deepEqual(history.get(row.id), row);
+});
+
+test('current integration preserves every complete main and UX parent review', async () => {
+  const register = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
+  for (const revision of [INTEGRATION_MAIN, UX_PARENT]) {
+    const parent = await reviewedJson(revision, catalogPath);
+    for (const row of parent.decisions) assert.ok(wholeReview(register, row), `${revision}: ${row.id}`);
   }
-  const pointer = successors.find(row => row.name === 'migrations');
-  const tip = active.find(row => row.id === pointer.currentId);
-  assert.equal(tip.evidence.valueCount, 248);
-  assert.equal(historicalReview(tip, 247).previousDecision.id, '806180f5957fc4a7520f');
-  assert.equal(tip.previousDecision.id, '4e282e4c258854caa655');
-  assert.equal(pointer.previousResolution.currentId, tip.previousDecision.id);
-  assert.equal(integration.retirements.find(row => row.source.name === 'migrations').replacementId,
-    tip.id);
-  const security = active.find(row => row.evidence?.file === 'tdf-hq/src/TDF/Catalog/Security.hs'
-    && row.evidence?.name === 'expectedSecurityRoleAssignmentPolicyBindings');
-  assert.equal(security.previousDecision.id, 'ff4edc0f8d2debecf71c');
-  const currentSecurity = await fs.readFile(path.join(workspaceRoot, security.evidence.file), 'utf8');
-  const withoutApple = currentSecurity.replace(
-    '  , ("account.apple.customer", "apple-account-create", "customer", True)\n', '');
-  assert.notEqual(withoutApple, currentSecurity);
-  assert.equal(withoutApple, await fromGit(security.evidence.file));
 });

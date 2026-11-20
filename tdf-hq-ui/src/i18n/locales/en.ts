@@ -1,6 +1,7 @@
 import mobileApp from './mobileApp.en';
 import accountDeletion from './accountDeletion.en';
 import directorySearch from './directorySearch.en';
+import marketplace from './marketplace.en';
 import authEntry from './authEntry.en';
 const en = {
   app: mobileApp,
@@ -43,6 +44,7 @@ const en = {
   records: { videoUnavailable: 'Video unavailable at source', thumbnailUnavailable: 'Thumbnail unavailable', loadingThumbnail: 'Loading thumbnail' },
   authEntry,
   directorySearch,
+  marketplace,
   auditAccessibility: {
     loadingFeaturedArtists: 'Loading featured artists',
     loadingMarketplace: 'Loading marketplace products',
@@ -85,6 +87,23 @@ const en = {
     saving: 'Saving your exit from first steps…',
     loadError: 'We could not load your first steps. We will not show information from another account; check your connection and try again.',
     saveError: 'We could not save your exit from first steps. You can retry without losing your progress.',
+  },
+  eventDashboard: {
+    title: 'Your events',
+    subtitle: 'Create an event, publish it and manage tickets, attendees and logistics from one place.',
+    create: 'Create event',
+    manageAll: 'Manage events',
+    upcoming: 'Upcoming events you organize',
+    loading: 'Loading your events',
+    empty: 'You are not organizing any upcoming events. Create your first one in minutes.',
+    error: 'We could not load your events. You can still create or manage events with the buttons above.',
+    retry: 'Retry',
+    manage: 'Manage',
+    manageNamed: 'Manage {{title}}',
+    logistics: 'Logistics',
+    logisticsNamed: 'Logistics for {{title}}',
+    dateTbc: 'Date to be confirmed',
+    more: 'And {{count}} more in Events.',
   },
   Parties: 'Parties',
   Bookings: 'Bookings',

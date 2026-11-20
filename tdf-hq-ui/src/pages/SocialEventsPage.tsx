@@ -1,9 +1,10 @@
+import ArtistProfileLink from '../components/ArtistProfileLink';
 import { formatEventMoney as formatMoney } from '../utils/eventFinanceMoney';
 import { parseOptionalPriceCents } from '../utils/priceInput';
 import { buildEventFinanceCsvRows } from '../utils/eventFinanceCsv';
 import { serializeCsvCell, type CsvCell } from '../utils/csv';
 import MarkdownText from '../components/MarkdownText';
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import {
@@ -69,6 +70,8 @@ import { UserSelector } from '../components/party-selector/PartySelector';
 import type { PartySelectorOption } from '../api/partySelector';
 import { formatDateForUser, resolveRuntimeCurrency } from '../utils/formatters';
 import { hasStrictAdminAccess } from '../utils/accessControl';
+import { useSaveTicketTier } from '../components/events/useSaveTicketTier';
+import EventTicketSaleRequestsQueue from '../components/events/EventTicketSaleRequestsQueue';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventManualPaymentsPanel from '../components/events/EventManualPaymentsPanel';
 import EventTaxDocumentsPanel from '../components/events/EventTaxDocumentsPanel';
@@ -603,8 +606,8 @@ export default function SocialEventsPage() {
     },
   });
 
-  const createTierMutation = useMutation({
-    mutationFn: ({ eventId }: { eventId: string }) => {
+  const createTierMutation = useSaveTicketTier(
+    ({ eventId }) => {
       const draft = ticketTierForms[eventId] ?? {
         code: '',
         name: '',
@@ -617,7 +620,7 @@ export default function SocialEventsPage() {
       if (!draft.name.trim()) throw new Error('Nombre del ticket requerido.');
       if (priceCents === null) throw new Error('Ingresa un precio; usa 0 para una entrada gratis.');
       if (quantity === null || quantity <= 0) throw new Error('Cantidad inválida.');
-      const payload: SocialTicketTierDTO = {
+      return {
         ticketTierCode: draft.code.trim() || draft.name,
         ticketTierName: draft.name.trim(),
         ticketTierDescription: null,
@@ -630,18 +633,18 @@ export default function SocialEventsPage() {
         ticketTierActive: true,
         ticketTierPosition: null,
       };
-      return SocialEventsAPI.createTicketTier(eventId, payload);
     },
-    onSuccess: (_resp, { eventId }) => {
-      setTicketTierForms((prev) => ({
-        ...prev,
-        [eventId]: { code: '', name: '', price: '', quantity: '', currency: preferredCurrency },
-      }));
-      void qc.invalidateQueries({ queryKey: ['social-ticket-tiers', eventId] });
-      setFeedback({ kind: 'success', message: 'Tipo de ticket creado.' });
+    {
+      onSuccess: (_resp, { eventId }) => {
+        setTicketTierForms((prev) => ({
+          ...prev,
+          [eventId]: { code: '', name: '', price: '', quantity: '', currency: preferredCurrency },
+        }));
+        setFeedback({ kind: 'success', message: 'Tipo de ticket creado.' });
+      },
+      onError: (err) => setFeedback({ kind: 'error', message: err.message }),
     },
-    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
-  });
+  );
 
   // Cancelling or refunding a paid order cannot be undone, so each asks first and names the order.
   const [pendingOrderAction, setPendingOrderAction] = useState<{ eventId: string; orderId: string; status: 'cancelled' | 'refunded' } | null>(null);
@@ -1003,6 +1006,7 @@ export default function SocialEventsPage() {
     <Box>
       <Stack spacing={2} sx={{ mb: 3 }}>
         <Typography variant="h4" fontWeight={800}>Eventos</Typography>
+        {hasStrictAdminAccess(session?.roles, session?.modules) && <EventTicketSaleRequestsQueue />}
         <Typography color="text.secondary">
           Descubre eventos, confirma asistencia y gestiona operación completa: tickets, presupuesto y contabilidad por evento.
         </Typography>
@@ -1361,7 +1365,12 @@ export default function SocialEventsPage() {
                     )}
                     {ev.eventArtists?.length ? (
                       <Typography variant="body2" color="text.secondary">
-                        Artistas: {ev.eventArtists.map((a) => a.artistName).join(', ')}
+                        Artistas: {ev.eventArtists.map((artist, index) => (
+                          <Fragment key={artist.artistId ?? index}>
+                            {index > 0 && ', '}
+                            <ArtistProfileLink partyId={artist.artistPartyId}>{artist.artistName}</ArtistProfileLink>
+                          </Fragment>
+                        ))}
                       </Typography>
                     ) : null}
                     {typeof ev.eventPriceCents === 'number' && (

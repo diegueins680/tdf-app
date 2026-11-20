@@ -38,9 +38,8 @@ async function fixture(page, baseURL, manager = false, permitted = true, publicA
 }
 
 for (const manager of [false, true]) test(`${manager ? 'authorized band manager' : 'artist'} can retry a draft save, reload and review manual publication @mobile-flow`, async ({ page, baseURL }, info) => {
-  // This complete import/save/reload/manual-review journey performs many
-  // touch interactions; hosted WebKit can exhaust 30s before the final click.
-  // Keep the existing per-assertion budgets and unforced clicks.
+  // This full edit/retry/reload/import/review journey crosses many mobile
+  // transitions. Keep action/assertion bounds; budget the complete workflow.
   test.setTimeout(60_000);
   const { rows, saves } = await fixture(page, baseURL, manager);
   if (manager) {

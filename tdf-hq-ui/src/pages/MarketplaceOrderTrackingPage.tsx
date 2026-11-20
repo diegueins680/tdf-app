@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import MarkdownText from '../components/MarkdownText';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -290,6 +291,9 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
         )}
         {status === 'success' && order && (
           <Stack spacing={2}>
+            {['failed', 'payment_failed', 'declined', 'rejected'].includes(order.moCheckoutStatus ?? order.moStatus) && (
+              <PaymentAlternativesNotice methods={[]} blocked />
+            )}
             <Card variant="outlined" data-testid="marketplace-order-card">
               <CardContent>
                 <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between"

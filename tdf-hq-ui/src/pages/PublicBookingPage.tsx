@@ -1,4 +1,5 @@
 import PaymentMethodChoices, { PaymentMethodButton } from '../components/payments/PaymentMethodChoices';
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import { logger } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -375,6 +376,7 @@ export default function PublicBookingPage() {
   const [authoritativeQuote, setAuthoritativeQuote] = useState<PublicBookingQuoteDTO | null>(null);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
+  const [attemptedPaymentMethod, setAttemptedPaymentMethod] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
   const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
@@ -1138,6 +1140,7 @@ export default function PublicBookingPage() {
   }, [checkoutSuccess]);
 
   const handleDatafastDeposit = useCallback(async () => {
+    setAttemptedPaymentMethod('datafast');
     if (!checkoutSuccess || !checkoutLookupToken) {
       setPaymentError('No encontramos el acceso seguro de esta orden. Crea una nueva reserva.');
       return;
@@ -1160,6 +1163,7 @@ export default function PublicBookingPage() {
   }, [checkoutLookupToken, checkoutSuccess]);
 
   const handlePaypalDeposit = useCallback(async () => {
+    setAttemptedPaymentMethod('paypal');
     if (!checkoutSuccess || !checkoutLookupToken) {
       setPaymentError('No encontramos el acceso seguro de esta orden. Crea una nueva reserva.');
       return;
@@ -1185,6 +1189,7 @@ export default function PublicBookingPage() {
   }, [checkoutLookupToken, checkoutSuccess, paypalClientId]);
 
   const handleManualDeposit = useCallback(async () => {
+    setAttemptedPaymentMethod('bank_transfer');
     if (!checkoutSuccess || !checkoutLookupToken) {
       setPaymentError('No encontramos el acceso seguro de esta orden. Crea una nueva reserva.');
       return;
@@ -1244,9 +1249,12 @@ export default function PublicBookingPage() {
     const script = document.createElement('script');
     script.src = datafastCheckout.dcWidgetUrl;
     script.async = true;
-    script.onerror = () => setPaymentError(
+    script.onerror = () => {
+      setAttemptedPaymentMethod('datafast');
+      setPaymentError(
       'No se pudo cargar el formulario Datafast. No se confirmó ningún pago.',
     );
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [datafastCheckout, datafastDialogOpen, datafastWidgetKey]);
@@ -1262,9 +1270,12 @@ export default function PublicBookingPage() {
     script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=${encodeURIComponent(checkoutSuccess?.quote.currency ?? 'USD')}`;
     script.async = true;
     script.onload = () => setPaypalReady(true);
-    script.onerror = () => setPaymentError(
+    script.onerror = () => {
+      setAttemptedPaymentMethod('paypal');
+      setPaymentError(
       'No se pudo cargar PayPal. La reserva continúa sin pago confirmado.',
     );
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [checkoutSuccess?.paymentMethods, checkoutSuccess?.quote.currency, paypalClientId]);
@@ -1512,6 +1523,9 @@ export default function PublicBookingPage() {
                                   returnPath: `/reservas/orden/${checkoutSuccess.booking.bookingId}`,
                                 }}
                                 offeredMethods={paymentMethods}
+                                alternativeMethods={paymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                                paymentFailure={paymentError && !depositPaid
+                                  ? { method: attemptedPaymentMethod, needsVerification: true } : null}
                                 disabled={paymentBusy || datafastDialogOpen || paypalDialogOpen || manualDialogOpen}
                                 initialBuyerPhone={form.phone}
                                 onSafetyLockChange={setHostedPaymentLocked}
@@ -1620,6 +1634,11 @@ export default function PublicBookingPage() {
                 El formulario es alojado por el proveedor. Al volver, TDF consultará el estado en el servidor antes de confirmar.
               </Alert>
               {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+              {paymentError && <PaymentAlternativesNotice
+                methods={(checkoutSuccess?.paymentMethods ?? []).filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                failedMethod={attemptedPaymentMethod}
+                blocked
+              />}
               {datafastCheckout && datafastReturnUrl && (
                 <Box ref={datafastFormRef} key={datafastWidgetKey} sx={{ minHeight: 360 }}>
                   <form
@@ -1649,6 +1668,11 @@ export default function PublicBookingPage() {
                 Aprobar en PayPal no es confirmación. TDF capturará y verificará importe, moneda, comercio y referencia en el servidor.
               </Alert>
               {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+              {paymentError && <PaymentAlternativesNotice
+                methods={(checkoutSuccess?.paymentMethods ?? []).filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                failedMethod={attemptedPaymentMethod}
+                blocked
+              />}
               <Box ref={paypalButtonRef} sx={{ minHeight: 48 }} />
             </Stack>
           </DialogContent>
@@ -1696,6 +1720,11 @@ export default function PublicBookingPage() {
                 fullWidth
               />
               {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+              {paymentError && <PaymentAlternativesNotice
+                methods={(checkoutSuccess?.paymentMethods ?? []).filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                failedMethod={attemptedPaymentMethod}
+                blocked
+              />}
             </Stack>
           </DialogContent>
           <DialogActions>

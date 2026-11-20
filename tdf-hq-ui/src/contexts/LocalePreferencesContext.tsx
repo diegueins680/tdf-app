@@ -7,6 +7,29 @@ import { Catalogs } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
 
 const STORAGE_KEY = 'tdf-hq-ui/locale-preferences';
+const CHOSEN_TIMEZONE_KEY = 'tdf-hq-ui/chosen-timezone';
+
+// The server reports UTC both for an account that never chose a zone and for
+// one that chose UTC. Remembering a zone saved from this browser lets pages
+// tell the two apart here; on another device the choice is not known.
+export function rememberChosenTimezone(timezone: string | null | undefined): void {
+  const zone = timezone?.trim();
+  if (!zone || typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(CHOSEN_TIMEZONE_KEY, zone);
+  } catch {
+    // Storage can be unavailable; the choice is then simply not remembered.
+  }
+}
+
+export function wasTimezoneChosenOnThisDevice(timezone: string): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.localStorage.getItem(CHOSEN_TIMEZONE_KEY) === timezone.trim();
+  } catch {
+    return false;
+  }
+}
 
 function browserTimezone(): string {
   try {
@@ -217,6 +240,7 @@ export function LocalePreferencesProvider({ children }: { children: ReactNode })
           countryCode: preferences.countryCode ?? null,
         });
       }
+      rememberChosenTimezone(input.timezone);
     } finally {
       setSaving(false);
     }

@@ -1,4 +1,4 @@
-import { getLogoutRevision, ownsLogoutRevision, waitForLogoutRequest } from '../session/logoutIntent';
+import { getLogoutRevision, ownsLogoutRevision, waitForLogoutRequest } from '../auth/logoutIntent';
 import { AuthRequestError } from '../utils/authErrorMessage';
 import { fetchWithDeadline, RequestTimeoutError } from './requestDeadline';
 import type { components } from './generated/types';

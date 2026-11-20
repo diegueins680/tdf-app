@@ -23,7 +23,7 @@ import EventIcon from '@mui/icons-material/Event';
 import { DateTime } from 'luxon';
 import { useSession, getActiveSession, type SessionUser } from '../session/SessionContext';
 import { CalendarApi } from '../api/calendar';
-import { isSessionAuthFailureMessage } from '../session/authEvents';
+import { isSessionAuthFailureMessage } from '../auth/authEvents';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
