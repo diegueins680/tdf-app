@@ -8484,7 +8484,7 @@
     {
       "id": "SURFACE-508b1f32dfcc85d0",
       "path": "tdf-hq-ui/src/api/eventAttendees.ts",
-      "sha256": "ed53fb36bf770901892c77244fac6c32ac2897a93bcbd97356313d794fe9a541",
+      "sha256": "6f5f885b3df5b37b1b06f31fa7bf02d6b3952c761e623a35875b88712b76340b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9900,7 +9900,7 @@
     {
       "id": "SURFACE-3fb10adaf67ec8d5",
       "path": "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
-      "sha256": "31a360a893ba668733d2f5fcd0f8ace9a84d0afdbf9e1340b4dada29a535d538",
+      "sha256": "d4237c7d4d87bd9f1d652561813aa2fff3ba8712f9fb4ad18e105bed6d06c39a",
       "semanticConformance": "not-established-by-discovery"
     },
     {

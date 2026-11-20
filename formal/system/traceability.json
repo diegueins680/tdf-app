@@ -29532,7 +29532,7 @@
     "tdf-hq-ui/src/api/domoQuotes.ts": "d1353a1cd98093582b6d90df3fd061ea759d003bc1b7d4112809f9789af32373",
     "tdf-hq-ui/src/api/drive.ts": "3265e382c29f6d5888a26ce8d9be47b2c926e2269390d38b6eb4cf532efe7b3b",
     "tdf-hq-ui/src/api/drive.upload.test.ts": "7ae7828b0917f8ee4f03f630a5932bff0098b498b0f5ff7fde96b90f7682f033",
-    "tdf-hq-ui/src/api/eventAttendees.ts": "ed53fb36bf770901892c77244fac6c32ac2897a93bcbd97356313d794fe9a541",
+    "tdf-hq-ui/src/api/eventAttendees.ts": "6f5f885b3df5b37b1b06f31fa7bf02d6b3952c761e623a35875b88712b76340b",
     "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts": "9d38441f08bdac34840484807caaea351a6be48c1d701ae5e346587db99ff86f",
     "tdf-hq-ui/src/api/eventMemoryInvitations.ts": "2ed34e56f52432bff7d53ee495a79c902a9d2fb4c6d79ea630bc92cd61e7e6f9",
     "tdf-hq-ui/src/api/eventMemoryModeration.test.ts": "4bb13866a0291da53b45c7b547ee4716ab6736701b9a938793d32a0f8fa62915",
@@ -29664,7 +29664,7 @@
     "tdf-hq-ui/src/components/events/EventPublishControl.tsx": "9f009c12badf37e22f1261a2e35c7437f5b3e22b2a8df6988236b6a0aa95b718",
     "tdf-hq-ui/src/components/events/EventRaciEditor.tsx": "4f5d9809f1955c583981cf9cc97fb0d48ce5b9cbf3df7cb9a0b22bd4cf2a3bb9",
     "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx": "392b111514f0c58041a239bd52ea5b85146539bb0b41e6b5e458f1c5918f8f83",
-    "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "31a360a893ba668733d2f5fcd0f8ace9a84d0afdbf9e1340b4dada29a535d538",
+    "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "d4237c7d4d87bd9f1d652561813aa2fff3ba8712f9fb4ad18e105bed6d06c39a",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
     "tdf-hq-ui/src/components/events/EventTicketSaleCard.test.tsx": "abeb518ad9ba0fed947777c091ee5387c35ea9c312f3acdf9c28892cb82ffe06",
     "tdf-hq-ui/src/components/events/EventTicketSaleCard.tsx": "0918c0a57274cea5e57dc1e2eb358745d5642bdb1739d8a5591fc85cd327ab6b",
@@ -60993,7 +60993,7 @@
     {
       "id": "SURFACE-508b1f32dfcc85d0",
       "path": "tdf-hq-ui/src/api/eventAttendees.ts",
-      "sha256": "ed53fb36bf770901892c77244fac6c32ac2897a93bcbd97356313d794fe9a541",
+      "sha256": "6f5f885b3df5b37b1b06f31fa7bf02d6b3952c761e623a35875b88712b76340b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63605,7 +63605,7 @@
     {
       "id": "SURFACE-3fb10adaf67ec8d5",
       "path": "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
-      "sha256": "31a360a893ba668733d2f5fcd0f8ace9a84d0afdbf9e1340b4dada29a535d538",
+      "sha256": "d4237c7d4d87bd9f1d652561813aa2fff3ba8712f9fb4ad18e105bed6d06c39a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -26,7 +26,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState, type FocusEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { listAttendees } from '../../api/eventAttendees';
+import { listAttendees, type AttendeeStatus } from '../../api/eventAttendees';
 import {
   SocialEventsAPI,
   type SocialRsvpDTO,
@@ -83,8 +83,6 @@ const copyFor = (locale?: string | null) => {
     sharePrompt: '¿Quieres invitar a alguien?', discard: 'Descartar RSVP pendiente', shareCancelled: 'Cancelaste la acción de compartir.', shareError: 'No pudimos abrir las opciones para compartir.',
   };
 };
-
-type AttendeeStatus = 'accepted' | 'maybe';
 
 function AttendeeDialog({ eventId, status, labels, viewer, close }: {
   eventId: string;
