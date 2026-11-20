@@ -558,6 +558,18 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
   };
 
   const removeTrack = (trackRef: string) => {
+    // Raw prices belong to the rules they were edited on. Removing a track
+    // also removes its rules, so carry every surviving draft to its new index.
+    setPriceInputs((current) => {
+      const next: Record<number, string> = {};
+      let retainedIndex = 0;
+      content.availability.forEach((rule, index) => {
+        if (rule.trackRef === trackRef) return;
+        if (current[index] !== undefined) next[retainedIndex] = current[index];
+        retainedIndex += 1;
+      });
+      return next;
+    });
     setContent((current) => ({
       ...current, tracks: current.tracks.filter((track) => track.clientRef !== trackRef),
       credits: current.credits.filter((credit) => credit.trackRef !== trackRef),

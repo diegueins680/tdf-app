@@ -30092,9 +30092,9 @@
     "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx": "9a38d743806d57f1ed655cfe93a2db264c21dd0672db93afbc06c422e4b8698d",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx": "82bb2a837450ba66c5139d899fe44023c79ed3972657f2343929c82861e31ff7",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "02b7dc725ef0650d7eea8e4de55a144fc9252c0ad841297a8359b7120fc0503f",
-    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx": "f49a1d1fcdb455d2c0fd4d0bbe0e2a493879294d1e3611fcb9fee6b4d40c35c6",
+    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx": "7eeacf7144a54d0cb7f2f08de7ced1b1acfb4fe53a53017e73562d24c2790c48",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts": "26ae645bd78e98a19c1659bfad09c7a953aa8ae16bcc95632258380882285dde",
-    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "cd37a6f4b86d270db696993566120c3eafd67a7cbbcceafd8d0a3495d3549ff4",
+    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "f613299023445960d574250d79f4fcfa408e5939869f8cca06c24a8d2d5f0f99",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx": "d5b2555b6b1e5a0bf27f0a124f3fb57019397d06a9695dbf9e8a417ceb72309c",
     "tdf-hq-ui/src/pages/NotFoundPage.test.tsx": "0bb182ef3da26e32894ee7ca9093cf1691afb78b7e6a3ec9129d4dc3f0fa97bc",
     "tdf-hq-ui/src/pages/NotFoundPage.tsx": "1bfa74b3ea1565ef9e00e494bd10ce3154c88ccbfe9508a2e9f77e016e34b7c7",
@@ -69317,7 +69317,7 @@
     {
       "id": "SURFACE-f537d8c206de6d62",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
-      "sha256": "f49a1d1fcdb455d2c0fd4d0bbe0e2a493879294d1e3611fcb9fee6b4d40c35c6",
+      "sha256": "7eeacf7144a54d0cb7f2f08de7ced1b1acfb4fe53a53017e73562d24c2790c48",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -69353,7 +69353,7 @@
     {
       "id": "SURFACE-eb5c18c24c04950e",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
-      "sha256": "cd37a6f4b86d270db696993566120c3eafd67a7cbbcceafd8d0a3495d3549ff4",
+      "sha256": "f613299023445960d574250d79f4fcfa408e5939869f8cca06c24a8d2d5f0f99",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

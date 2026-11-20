@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-20T02:13:50.443Z",
+  "generatedAt": "2026-11-20T03:20:58.346Z",
   "repositoryRoot": ".",
   "filesScanned": 2803,
   "candidateCount": 1481,
@@ -15432,7 +15432,7 @@
       "lines": [
         175
       ],
-      "consumerCount": 69,
+      "consumerCount": 71,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -15484,6 +15484,8 @@
         "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
         "tdf-hq-ui/src/pages/ForbiddenPage.test.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
         "tdf-hq-ui/src/react-router.d.ts",
         "tdf-hq-ui/src/test/accessibility.ts",
         "tdf-hq-ui/src/utils/accessControl.test.ts",
@@ -75886,7 +75888,7 @@
       "lines": [
         100
       ],
-      "consumerCount": 569,
+      "consumerCount": 570,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -92895,7 +92897,7 @@
       "lines": [
         1
       ],
-      "consumerCount": 12,
+      "consumerCount": 13,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
         "tdf-hq/test/EventPilotCountMain.hs",
@@ -92905,6 +92907,7 @@
       "webConsumers": [
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
         "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
         "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx"
       ],
