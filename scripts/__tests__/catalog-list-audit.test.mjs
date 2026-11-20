@@ -1364,9 +1364,11 @@ const INTEGRATION_MAIN_REVIEW = '912cda11c7b6eb622f76';
 async function actualManifest() {
   return JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8'));
 }
+// Appended after the integration snapshot (COURSE-FOLLOWUP-REMINDER-001).
+const COURSE_REMINDER_ENTRY = '2026-11-20_course_follow_up_reminder_delivery';
 async function mainManifestView() {
   const actual = await actualManifest();
-  return { ...actual, migrations: actual.migrations.filter(row => !INTEGRATION_EXTRA_IDS.has(row.id)) };
+  return { ...actual, migrations: actual.migrations.filter(row => !INTEGRATION_EXTRA_IDS.has(row.id) && row.id !== COURSE_REMINDER_ENTRY) };
 }
 async function sourceManifestView() {
   const original = (await reviewedJson(INTEGRATION_SOURCE, 'scripts/production-migrations.json')).migrations;
@@ -1509,7 +1511,11 @@ test('dated source transport review retains its 75-method predecessor and histor
 
 
 test('combined registry retains the exact main prefix, original SQL and whole parent reviews', async () => {
-  const current = await actualManifest();
+  const actual = await actualManifest();
+  const appended = actual.migrations.at(-1);
+  assert.equal(appended.id, COURSE_REMINDER_ENTRY);
+  await execFileAsync('git', ['merge-base', '--is-ancestor', appended.introducedBy, 'HEAD'], { cwd: workspaceRoot });
+  const current = { ...actual, migrations: actual.migrations.slice(0, -1) };
   const main = await reviewedJson(INTEGRATION_MAIN, manifestPath);
   const original = await reviewedJson(INTEGRATION_SOURCE, manifestPath);
   const suffix = original.migrations.filter(row => INTEGRATION_EXTRA_IDS.has(row.id));
@@ -1528,10 +1534,13 @@ test('combined registry retains the exact main prefix, original SQL and whole pa
   const pointer = pointers.successors.find(row => row.name === 'migrations');
   const tip = register.decisions.find(row => row.id === pointer.currentId);
   const retirement = retirements.retirements.find(row => row.source.name === 'migrations');
-  assert.equal(tip.evidence.valueCount, current.migrations.length);
-  assert.equal(pointer.valueCount, current.migrations.length);
+  assert.equal(tip.evidence.valueCount, actual.migrations.length);
+  assert.equal(pointer.valueCount, actual.migrations.length);
   assert.equal(retirement.replacementId, tip.id);
-  assert.deepEqual(tip.previousDecision, (await reviewedJson(INTEGRATION_MAIN, catalogPath))
+  // The course reminder review nests the integration review whole.
+  const integrationTip = tip.previousDecision;
+  assert.equal(integrationTip.evidence.valueCount, current.migrations.length);
+  assert.deepEqual(integrationTip.previousDecision, (await reviewedJson(INTEGRATION_MAIN, catalogPath))
     .decisions.find(row => row.evidence?.file === manifestPath));
   const canonical = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
     ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);

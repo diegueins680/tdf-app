@@ -21,9 +21,11 @@ An admin schedules a reminder on a course registration follow-up by setting
   reminds again.
 - The notification has type `course_follow_up_reminder`, target type
   `course_registration`, target id the registration id and target key the
-  course slug. The web bell opens
-  `/configuracion/inscripciones-curso?registration=<id>&slug=<slug>`; the slug
-  is only appended when it matches `^[a-z0-9][a-z0-9-]{0,79}$`.
+  course slug. The shared web/Mobile notification destination registry does
+  not list `course_registration` yet, so the bell opens the generic
+  notification page. The dossier itself accepts
+  `/configuracion/inscripciones-curso?registration=<id>&slug=<slug>`, which
+  the calendar entries use.
 
 ## Calendar entries
 
@@ -33,3 +35,10 @@ Each follow-up with a reminder shows "Google Calendar" (a
 `VALARM` ten minutes before). Both carry the registration name, subject,
 contact data, the note and the dossier link. Nothing is written to a shared
 calendar by the server.
+
+## Schema
+
+Production creates `course_follow_up_reminder_delivery` through the reviewed
+migration `tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql`
+(rollback alongside); schema verification requires the table and its unique
+claim constraint. Deleting a follow-up deletes its delivery claims.

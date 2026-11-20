@@ -414,6 +414,10 @@ BEGIN
   ) NOT IN (9,10) OR to_regclass('public.idx_notification_recipient') IS NULL THEN
     RAISE EXCEPTION 'The repaired notification schema is missing or incomplete';
   END IF;
+  IF to_regclass('public.course_follow_up_reminder_delivery') IS NULL
+     OR to_regclass('public.unique_course_follow_up_reminder_delivery') IS NULL THEN
+    RAISE EXCEPTION 'Course follow-up reminder delivery claims are missing';
+  END IF;
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public'

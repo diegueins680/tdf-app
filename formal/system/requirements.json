@@ -28557,7 +28557,7 @@
     {
       "id": "COURSE-FOLLOWUP-REMINDER-001",
       "title": "Course registration follow-ups can schedule bell reminders and calendar entries",
-      "statement": "An admin can schedule a reminder on a course registration follow-up. When it is due the author receives one in-app notification that opens the registration dossier, and the follow-up offers Google Calendar and .ics calendar entries with an alarm.",
+      "statement": "An admin can schedule a reminder on a course registration follow-up. When it is due the author receives one in-app notification, and the follow-up offers Google Calendar and .ics calendar entries with an alarm that link back to the registration dossier.",
       "domain": "Courses",
       "authority": "Product owner request on 2026-11-20 from the registration dossier screen.",
       "source": "User request: add reminder alarms and calendar entries to follow up course registrations.",
@@ -28611,12 +28611,14 @@
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
         "tdf-hq-ui/src/utils/followUpCalendar.ts",
-        "tdf-hq-ui/src/components/notificationTarget.ts"
+        "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql",
+        "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs"
       ],
       "tests": [
         "tdf-hq/test/Spec.hs",
         "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
-        "tdf-hq-ui/src/components/notificationTarget.test.ts",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx"
       ],
       "formalModels": [],
@@ -28625,7 +28627,8 @@
       "evidence": "Branch feat/course-registration-reminders.",
       "confidence": "Builders and routing have unit tests; the delivery job has no database test yet.",
       "ambiguity": [
-        "Email or push delivery of reminders is not included."
+        "Email or push delivery of reminders is not included.",
+        "The bell notification opens the generic notification page; a direct dossier destination needs the shared Mobile notification registry to be synchronized first."
       ],
       "conformance": {
         "classification": "PARTIAL",

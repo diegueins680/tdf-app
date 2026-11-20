@@ -28558,7 +28558,7 @@
     {
       "id": "COURSE-FOLLOWUP-REMINDER-001",
       "title": "Course registration follow-ups can schedule bell reminders and calendar entries",
-      "statement": "An admin can schedule a reminder on a course registration follow-up. When it is due the author receives one in-app notification that opens the registration dossier, and the follow-up offers Google Calendar and .ics calendar entries with an alarm.",
+      "statement": "An admin can schedule a reminder on a course registration follow-up. When it is due the author receives one in-app notification, and the follow-up offers Google Calendar and .ics calendar entries with an alarm that link back to the registration dossier.",
       "domain": "Courses",
       "authority": "Product owner request on 2026-11-20 from the registration dossier screen.",
       "source": "User request: add reminder alarms and calendar entries to follow up course registrations.",
@@ -28612,12 +28612,14 @@
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
         "tdf-hq-ui/src/utils/followUpCalendar.ts",
-        "tdf-hq-ui/src/components/notificationTarget.ts"
+        "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql",
+        "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs"
       ],
       "tests": [
         "tdf-hq/test/Spec.hs",
         "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
-        "tdf-hq-ui/src/components/notificationTarget.test.ts",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx"
       ],
       "formalModels": [],
@@ -28626,7 +28628,8 @@
       "evidence": "Branch feat/course-registration-reminders.",
       "confidence": "Builders and routing have unit tests; the delivery job has no database test yet.",
       "ambiguity": [
-        "Email or push delivery of reminders is not included."
+        "Email or push delivery of reminders is not included.",
+        "The bell notification opens the generic notification page; a direct dossier destination needs the shared Mobile notification registry to be synchronized first."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -28655,7 +28658,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "f69ee35a1a2d9a283d00a65fb59dfafa0c8a50bc17271f7f770ba1d967372f35",
+    "docs/catalog-persistence/catalog-list-decisions.json": "8795b7842537c7dafb2b473ecc2613dc52fd2ce65f0a5e67c515925339e8767f",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
@@ -29093,7 +29096,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "427a8f57069b70bbafa92bcf5768f426fd89991ebba8a5e33f500230aae12c54",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "6dc72b7a0fb2ef7471dd31b3646a8439adceedd764dd6f733a4c090dec7226f8",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -29259,7 +29262,7 @@
     "scripts/lib/music_payment_conformance.py": "2d06c9081c0386dcde94a0f39c381baf2c4e33cc8ae59b34d5a4192163588b49",
     "scripts/lib/operations_conformance.py": "1978873ba86472cc29198bf14fcc428102d69db29e6816a197a1140118ef2654",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "32bea4fc79e9c4df0b01926dc4b29101c60514e7d69e39efc398be64599d8372",
+    "scripts/lib/production-release.mjs": "49b2887dfd698db89037b74e866ace74a3b7e97bf79788380c743b88410eb808",
     "scripts/lib/public_routes_conformance.py": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
     "scripts/lib/readiness_conformance.py": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
@@ -29282,7 +29285,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "ab3ea174ea370ac6753e474f77ce2b8abbe0502d299010364585e83d3b18b5d5",
+    "scripts/production-migrations.json": "57c70ccbfe40cba8dca42d05a3154b7882fec3f6e8d2ed57b6ce379fadf1106c",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "9a71164db53157724c1a3555a802920f3c1f57ae8d2f731116868975e709408f",
@@ -29758,8 +29761,8 @@
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
     "tdf-hq-ui/src/components/navigationLabels.test.ts": "01028083246407c2dffe74f833aa4b263db10f2ad3ed99621e8fc9c478af90fb",
-    "tdf-hq-ui/src/components/notificationTarget.test.ts": "f0c8f38714e4403ea1e435a65f080af798ee41c0037330069fb9558dccf9dad1",
-    "tdf-hq-ui/src/components/notificationTarget.ts": "0929c2849faacf9f3d361f8ea771ddb03c5e31ed92a0880460b60849bf0f7b1d",
+    "tdf-hq-ui/src/components/notificationTarget.test.ts": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
+    "tdf-hq-ui/src/components/notificationTarget.ts": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
     "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "281ad82e80344a783693be507711cd5dbef740d50c5c283eeb1793159f37443f",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "3fdc444ab0e36acb6cd12c09531303347d55b9edef443a51311d0d585529ede3",
@@ -30320,6 +30323,8 @@
     "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql": "86483222ece86b79a88a693a2cd403cdf3d9b3fd183ef1182df4bf447c873f95",
     "tdf-hq/sql/2026-11-12_marketplace_agreements.sql": "cba023d9107d987ce7f336181505334538bd0a0a00782e596fab1faf4a14fdbf",
     "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql": "47a811221f03817022572f6bee479567c08f714897b56706cea4f75c8b39ac8f",
+    "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql": "09dec141f5de428cb9bda712bf2aa9b4ec4f75ee13a16bc511c6e16a34031edd",
+    "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql": "510f4ab65e13fd0faf203afd83a68e8c2df817723452b98603580b27f9586219",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
     "tdf-hq/src/TDF/API.hs": "ef1ed6b71b5bc4a490c9074808094513c7c6396dbefd58606ae30f954d59ea4e",
@@ -30402,7 +30407,7 @@
     "tdf-hq/src/TDF/Courses/Metadata.hs": "ba3efe18dff11d3f36413640d7d3c2b58222a445dd2240509ef2b1378b5fe661",
     "tdf-hq/src/TDF/Courses/Production.hs": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
     "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "f1b7d5faa26ac03e6217695f5b1dbf11ba31108bd1d3967969f62efe33b04376",
-    "tdf-hq/src/TDF/Cron.hs": "a4791123f7d3861e36ed3ad557c56c68718ce774fa9cea2a9409e37b327a5368",
+    "tdf-hq/src/TDF/Cron.hs": "20183b2f2bfe61bbb767aa7df2daf52b70dbb9f26aaa87c3d42fa89c34700678",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
@@ -30426,7 +30431,7 @@
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Models.hs": "0ba4227346e64f32a08e46bc3ad1b03eb5d739e4d7df65bf4ec0279af58b8a4a",
     "tdf-hq/src/TDF/Models/SocialEventsModels.hs": "c6f0a707566cf96e63d59890c04b499a67362d99d6f9c625380dc36f770473c9",
-    "tdf-hq/src/TDF/ModelsExtra.hs": "03cb7edb8baafa726c9952f3d9947559271cb43d9e843770317c535a5bb0cf28",
+    "tdf-hq/src/TDF/ModelsExtra.hs": "08d7358681bb8d4df7fb1c6aad4ad6c93d2f4add460c92a90cdcf5ef2dcf91f0",
     "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs": "1c3b5fae0cc4e5f4605aea8a1a0118badcafb8d83dbef671fce27f6cbf3d65d2",
     "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs": "91a8b3c360e9175f819599f55f2421f76502e908d76719ff2306c23d2614c329",
     "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs": "4dec7b8d3065fb925231203efe76181a645eb3701b3560b635eb364ece867677",
@@ -31428,6 +31433,10 @@
       },
       {
         "requirement": "MEDIA-ARTIST-FEATURED-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
         "relationship": "implementation"
       }
     ],
@@ -33710,6 +33719,10 @@
       },
       {
         "requirement": "MEDIA-ARTIST-FEATURED-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
         "relationship": "implementation"
       }
     ],
@@ -41713,10 +41726,6 @@
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": [
@@ -41972,10 +41981,6 @@
       },
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
         "relationship": "tests"
       }
     ],
@@ -50217,6 +50222,18 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql": [
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql": [
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/utils/followUpCalendar.test.ts": [
       {
         "requirement": "COURSE-FOLLOWUP-REMINDER-001",
@@ -51931,7 +51948,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "427a8f57069b70bbafa92bcf5768f426fd89991ebba8a5e33f500230aae12c54",
+      "sha256": "6dc72b7a0fb2ef7471dd31b3646a8439adceedd764dd6f733a4c090dec7226f8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54757,7 +54774,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "32bea4fc79e9c4df0b01926dc4b29101c60514e7d69e39efc398be64599d8372",
+      "sha256": "49b2887dfd698db89037b74e866ace74a3b7e97bf79788380c743b88410eb808",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54826,6 +54843,10 @@
         },
         {
           "requirement": "MEDIA-ARTIST-FEATURED-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -55186,7 +55207,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "ab3ea174ea370ac6753e474f77ce2b8abbe0502d299010364585e83d3b18b5d5",
+      "sha256": "57c70ccbfe40cba8dca42d05a3154b7882fec3f6e8d2ed57b6ce379fadf1106c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55263,6 +55284,10 @@
         },
         {
           "requirement": "MEDIA-ARTIST-FEATURED-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -63984,7 +64009,7 @@
     {
       "id": "SURFACE-5a528805907175e9",
       "path": "tdf-hq-ui/src/components/notificationTarget.test.ts",
-      "sha256": "f0c8f38714e4403ea1e435a65f080af798ee41c0037330069fb9558dccf9dad1",
+      "sha256": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63997,10 +64022,6 @@
         },
         {
           "requirement": "SOCIAL-EVENT-INVITATION-001",
-          "relationship": "tests"
-        },
-        {
-          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "tests"
         }
       ]
@@ -64008,7 +64029,7 @@
     {
       "id": "SURFACE-45942cefd314d415",
       "path": "tdf-hq-ui/src/components/notificationTarget.ts",
-      "sha256": "0929c2849faacf9f3d361f8ea771ddb03c5e31ed92a0880460b60849bf0f7b1d",
+      "sha256": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64021,10 +64042,6 @@
         },
         {
           "requirement": "SOCIAL-EVENT-INVITATION-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -76350,6 +76367,30 @@
       ]
     },
     {
+      "id": "SURFACE-6a369025a50bc49c",
+      "path": "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql",
+      "sha256": "09dec141f5de428cb9bda712bf2aa9b4ec4f75ee13a16bc511c6e16a34031edd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-94aab7e703fbb551",
+      "path": "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql",
+      "sha256": "510f4ab65e13fd0faf203afd83a68e8c2df817723452b98603580b27f9586219",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -78072,7 +78113,7 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "a4791123f7d3861e36ed3ad557c56c68718ce774fa9cea2a9409e37b327a5368",
+      "sha256": "20183b2f2bfe61bbb767aa7df2daf52b70dbb9f26aaa87c3d42fa89c34700678",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78699,7 +78740,7 @@
     {
       "id": "SURFACE-de59a337fc1e94a1",
       "path": "tdf-hq/src/TDF/ModelsExtra.hs",
-      "sha256": "03cb7edb8baafa726c9952f3d9947559271cb43d9e843770317c535a5bb0cf28",
+      "sha256": "08d7358681bb8d4df7fb1c6aad4ad6c93d2f4add460c92a90cdcf5ef2dcf91f0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -90449,7 +90490,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fc1452aa9bd958b05745ca5531b645bf520734472fbcdf486c5c8651eb1f8560",
+      "sourceSha256": "e90e654c2e9d01dec16be2e40d69d7d73c70516071bdba75ea51f8a101e8aa8d",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -90477,7 +90518,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fc1452aa9bd958b05745ca5531b645bf520734472fbcdf486c5c8651eb1f8560",
+      "sourceSha256": "e90e654c2e9d01dec16be2e40d69d7d73c70516071bdba75ea51f8a101e8aa8d",
       "definition": {
         "states": [
           "absent",
@@ -90507,7 +90548,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fc1452aa9bd958b05745ca5531b645bf520734472fbcdf486c5c8651eb1f8560",
+      "sourceSha256": "e90e654c2e9d01dec16be2e40d69d7d73c70516071bdba75ea51f8a101e8aa8d",
       "definition": {
         "export": [
           "queued",
