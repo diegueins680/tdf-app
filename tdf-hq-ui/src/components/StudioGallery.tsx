@@ -1,7 +1,8 @@
+import { studioImageSrc } from '../api/studioSubmissions';
 import { useState } from 'react';
 import { Alert, Box, Button, ButtonBase, Dialog, DialogActions, DialogContent, DialogTitle, Pagination, Typography } from '@mui/material';
 import { useCmsContent } from '../hooks/useCmsContent';
-import { parseStudioGallery, STUDIO_GALLERY_SLUG, studioImageSrc, studioPhotoCaption, type StudioPhoto } from '../utils/studioGallery';
+import { parseStudioGallery, STUDIO_GALLERY_SLUG, studioPhotoCaption, type StudioPhoto } from '../utils/studioGallery';
 
 const PAGE_SIZE = 6;
 

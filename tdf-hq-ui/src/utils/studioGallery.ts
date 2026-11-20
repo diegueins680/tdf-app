@@ -1,7 +1,4 @@
-import { resolveApiBase } from '../config/apiBase';
-
-const submittedImage = /^\/studio-submissions\/images\/[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}\/(?:large|small)$/;
-export const studioImageSrc = (url: string) => submittedImage.test(url) ? resolveApiBase() + url : url;
+export const submittedImage = /^\/studio-submissions\/images\/[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}\/(?:large|small)$/;
 
 export const STUDIO_GALLERY_SLUG = 'studio-gallery';
 export const STUDIO_GALLERY_LIMIT = 200;

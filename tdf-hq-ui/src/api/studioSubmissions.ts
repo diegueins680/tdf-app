@@ -1,4 +1,7 @@
 import { API_BASE_URL, post } from './client';
+import { submittedImage } from '../utils/studioGallery';
+
+export const studioImageSrc = (url: string) => submittedImage.test(url) ? API_BASE_URL + url : url;
 
 export interface Submission {
   id: string;

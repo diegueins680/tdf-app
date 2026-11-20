@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
 import axe from 'axe-core';
+import { readFileSync } from 'node:fs';
+
+const gallerySeedSql = readFileSync(new URL('../../tdf-hq/sql/2026-11-07_studio_gallery.sql', import.meta.url), 'utf8');
+const galleryPayload = JSON.parse(gallerySeedSql.split('$studio_gallery_seed$')[1]);
 import { inspectReviewPaint } from './helpers/review-paint.mjs';
 
 // Synthetic API/browser integration. Only local documents and static assets
@@ -40,6 +44,9 @@ async function fixture(page, baseURL, { searchFails = false } = {}) {
       return route.abort('blockedbyclient');
     }
     const path = url.pathname.replace(/^\/api(?=\/)/, '');
+    if (path === '/cms/content' && url.searchParams.get('slug') === 'studio-gallery') {
+      return route.fulfill({ json: { id: 1, slug: 'studio-gallery', locale: 'es', version: 1, status: 'published', payload: galleryPayload } });
+    }
     if (path === '/session') {
       state.sessions.push({ method: request.method(), status: 200, body: null });
       // The actual optional-session contract is HTTP 200 with JSON null.
@@ -183,10 +190,10 @@ test('studio photos open with keyboard, fit small screens and restore focus @cri
   }
   expect(enlarged).toHaveLength(0);
   await gallery.screenshot({ path: testInfo.outputPath('studio-gallery.png') });
-  const trigger = gallery.getByRole('button', { name: 'Ampliar foto: Sala de control', exact: true });
+  const trigger = gallery.getByRole('button', { name: 'Ampliar foto: Procesadores y preamplificadores', exact: true });
   await trigger.focus();
   await trigger.press('Enter');
-  const dialog = page.getByRole('dialog', { name: 'Sala de control', exact: true });
+  const dialog = page.getByRole('dialog', { name: 'Procesadores y preamplificadores', exact: true });
   await expect(dialog).toBeVisible();
   await expect.poll(() => dialog.getByRole('img').evaluate(image => image.complete && image.naturalWidth === 1280)).toBe(true);
   await expect(dialog.getByRole('status')).toHaveCount(0);
@@ -223,18 +230,18 @@ test('studio photos open with keyboard, fit small screens and restore focus @cri
 test('failed studio images retain public navigation and recover on retry @critical @mobile-flow', async ({ page, baseURL }) => {
   const state = await fixture(page, baseURL);
   let attempts = 0;
-  await page.route('**/assets/tdf-studio/control-room-640.webp', route => route.abort('failed'));
-  await page.route('**/assets/tdf-studio/control-room-1280.webp*', route => {
+  await page.route('**/assets/tdf-studio/maps-preamps-640.webp', route => route.abort('failed'));
+  await page.route('**/assets/tdf-studio/maps-preamps-1280.webp*', route => {
     attempts++;
     return attempts === 1 ? route.abort('failed') : route.continue();
   });
   await page.goto('/tdf#estudio', { waitUntil: 'domcontentloaded' });
   const gallery = page.getByRole('group', { name: 'Fotos del estudio TDF' });
-  const trigger = gallery.getByRole('button', { name: 'Ampliar foto: Sala de control', exact: true });
+  const trigger = gallery.getByRole('button', { name: 'Ampliar foto: Procesadores y preamplificadores', exact: true });
   await trigger.scrollIntoViewIfNeeded();
   await expect(trigger).toContainText('Foto no disponible. Abre para reintentar.');
   await trigger.click();
-  const dialog = page.getByRole('dialog', { name: 'Sala de control', exact: true });
+  const dialog = page.getByRole('dialog', { name: 'Procesadores y preamplificadores', exact: true });
   await expect(dialog.getByRole('alert')).toContainText('No se pudo cargar esta foto');
   await dialog.getByRole('button', { name: 'Reintentar foto', exact: true }).click();
   await expect.poll(() => dialog.getByRole('img').evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);

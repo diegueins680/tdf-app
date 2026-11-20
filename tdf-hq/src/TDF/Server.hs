@@ -62,6 +62,8 @@ import           Data.Aeson (ToJSON(..), Value(..), Object, object, (.=), decode
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKeyMap
 import           Data.Aeson.Types (Parser, parseEither, parseMaybe, withObject, (.:), (.:?), (.!=))
+import TDF.Studio.Submissions (studioOperation)
+import TDF.Studio.Gallery (validateStudioGalleryPayload)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -72,7 +74,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Scientific as Sci
 import           Data.Time
-  ( Day, NominalDiffTime, UTCTime (..), ZonedTime, addUTCTime, diffTimeToPicoseconds, diffUTCTime, fromGregorian, fromGregorianValid
+  ( Day, NominalDiffTime, UTCTime (..), ZonedTime, addUTCTime, diffTimeToPicoseconds, diffUTCTime, fromGregorian
   , getCurrentTime, secondsToDiffTime, toGregorian, utctDay, zonedTimeToUTC
   )
 import           Data.Time.Format (defaultTimeLocale, formatTime)
@@ -15119,27 +15121,6 @@ resolveAuthoredContentIdBySlug slug = do
             Just state | Catalog.workflowStateCode state == "published" -> Just contentId
             _ -> Nothing
 
-studioOperation :: String -> Value -> AppM Value
-studioOperation op payload = do
-  result <- liftIO $ readProcessWithExitCode "python3" ["studio/submissions.py",op]
-    (T.unpack (TE.decodeUtf8 (BL.toStrict (encode payload))))
-  case result of
-    (ExitSuccess,out,_) | Just (Object response) <- decodeStrict' (TE.encodeUtf8 (T.pack out)) ->
-      case AKeyMap.lookup "ok" response of
-        Just value -> pure value
-        Nothing -> do
-          let code = AKeyMap.lookup "status" response
-              base = case code of
-                Just (Number 403) -> err403
-                Just (Number 404) -> err404
-                Just (Number 409) -> err409
-                Just (Number 413) -> err413
-                Just (Number 422) -> err422
-                Just (Number 429) -> err429
-                _ -> err400
-          throwError base { errBody = encode (Object response) }
-    _ -> throwError err503
-
 cmsPublicServer :: ServerT CmsPublicAPI AppM
 cmsPublicServer = cmsGet :<|> cmsList :<|> studioOperation "batch" :<|> uploadStudio
   :<|> studioOperation "status" :<|> publishedImage
@@ -20621,114 +20602,6 @@ cmsPayloadShapeProblem allowIncomplete contentType payload
       case maybe (Left "a payload is required") (validateStudioGalleryPayload allowIncomplete) payload of
         Right () -> Nothing
         Left problem -> Just ("studio gallery payload is invalid: " <> problem)
-
--- | Mirrors @parseStudioGallery@ in the web client.
-validateStudioGalleryPayload :: Bool -> Value -> Either Text ()
-validateStudioGalleryPayload allowIncomplete value =
-  case value of
-    Object root
-      | AKeyMap.lookup "schemaVersion" root == Just (Number 1)
-      , Just (Array photoValues) <- AKeyMap.lookup "photos" root ->
-          let photos = toList photoValues
-          in if length photos > 200
-               then Left "at most 200 photos are allowed"
-               else checkPhotos Set.empty (zip [1 :: Int ..] photos)
-    _ -> Left "schemaVersion 1 and a photos list are required"
-  where
-    checkPhotos :: Set.Set Text -> [(Int, Value)] -> Either Text ()
-    checkPhotos _ [] = Right ()
-    checkPhotos seen ((index, photoValue) : rest) =
-      case checkPhoto seen photoValue of
-        Left problem -> Left ("photo " <> T.pack (show index) <> ": " <> problem)
-        Right photoId -> checkPhotos (Set.insert photoId seen) rest
-
-    checkPhoto :: Set.Set Text -> Value -> Either Text Text
-    checkPhoto seen (Object photo) = do
-      photoId <- requiredText photo "id"
-      title <- requiredText photo "title"
-      alt <- requiredText photo "alt"
-      imageUrl <- requiredText photo "imageUrl"
-      unless (validPhotoId photoId && not (Set.member photoId seen)) $
-        Left "id is invalid or repeated"
-      unless (T.length title <= 200 && T.length alt <= 1000) $
-        Left "title or alt is too long"
-      case AKeyMap.lookup "visible" photo of
-        Just (Bool _) -> Right ()
-        _ -> Left "visible must be true or false"
-      thumbnailUrl <- optionalText photo "thumbnailUrl"
-      _ <- optionalText photo "credit"
-      capturedAt <- optionalText photo "capturedAt"
-      sourceUrl <- optionalText photo "sourceUrl"
-      unless allowIncomplete $ do
-        unless (studioGalleryImageUrlAllowed imageUrl && blankOr studioGalleryImageUrlAllowed thumbnailUrl) $
-          Left "imageUrl and thumbnailUrl must be public HTTPS image URLs"
-        unless (blankOr (\url -> "https://" `T.isPrefixOf` url && studioGalleryImageUrlAllowed url) sourceUrl) $
-          Left "sourceUrl must use HTTPS"
-        unless (blankOr validCapturedAt capturedAt) $
-          Left "capturedAt must be an existing YYYY-MM or YYYY-MM-DD date"
-      Right photoId
-    checkPhoto _ _ = Left "must be an object"
-
-    requiredText :: AKeyMap.KeyMap Value -> Text -> Either Text Text
-    requiredText photo field =
-      case AKeyMap.lookup (AKey.fromText field) photo of
-        Just (String text)
-          | allowIncomplete || not (T.null (T.strip text)) -> Right text
-        _ -> Left (field <> " is required")
-
-    optionalText :: AKeyMap.KeyMap Value -> Text -> Either Text (Maybe Text)
-    optionalText photo field =
-      case AKeyMap.lookup (AKey.fromText field) photo of
-        Nothing -> Right Nothing
-        Just (String text)
-          | T.length text <= 2000 -> Right (Just text)
-        _ -> Left (field <> " must be text of at most 2000 characters")
-
-    blankOr :: (Text -> Bool) -> Maybe Text -> Bool
-    blankOr accepts = maybe True (\text -> T.null text || accepts text)
-
-    validPhotoId :: Text -> Bool
-    validPhotoId photoId =
-      not (T.null photoId)
-        && T.length photoId <= 100
-        && T.all (\c -> isAscii c && (isAlphaNum c || c == '-')) photoId
-
-    validCapturedAt :: Text -> Bool
-    validCapturedAt raw =
-      case T.splitOn "-" raw of
-        [year, month] -> existingDate year month "01"
-        [year, month, day] -> existingDate year month day
-        _ -> False
-
-    existingDate :: Text -> Text -> Text -> Bool
-    existingDate year month day =
-      T.length year == 4 && T.length month == 2 && T.length day == 2
-        && T.all isDigit (year <> month <> day)
-        && case (readMaybe (T.unpack year), readMaybe (T.unpack month), readMaybe (T.unpack day)) of
-             (Just y, Just m, Just d) -> isJust (fromGregorianValid y m d)
-             _ -> False
-
--- | A bundled studio asset or a credential-free HTTPS URL.
-studioGalleryImageUrlAllowed :: Text -> Bool
-studioGalleryImageUrlAllowed url = bundledAsset || submissionImage || secureRemote
-  where
-    submissionImage = case T.splitOn "/" url of
-      ["","studio-submissions","images",identifier,size] ->
-        isJust (UUID.fromText identifier) && size `elem` ["small","large"]
-      _ -> False
-    bundledAsset =
-      case T.stripPrefix "/assets/tdf-studio/" url of
-        Just name ->
-          any (\suffix -> maybe False validStem (T.stripSuffix suffix name)) ["-640.webp", "-1280.webp"]
-        Nothing -> False
-    validStem stem =
-      not (T.null stem) && T.all (\c -> isAsciiLower c || isDigit c || c == '-') stem
-    secureRemote =
-      T.toLower (T.take 8 url) == "https://"
-        && not (T.null authority)
-        && not (T.any (== '@') authority)
-        && not (T.any (\c -> isSpace c || isControl c) url)
-    authority = T.takeWhile (`notElem` ['/', '?', '#']) (T.drop 8 url)
 
 entityKeyInt :: ToBackendKey SqlBackend record => Key record -> Int
 entityKeyInt = fromIntegral . fromSqlKey

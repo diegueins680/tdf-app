@@ -233,6 +233,8 @@ library
     TDF.Server.Reviews
     TDF.Server.MerchReputation
     TDF.Server.Catalog
+    TDF.Studio.Gallery
+    TDF.Studio.Submissions
     TDF.Server.ServiceStorefront
     TDF.Server.ProviderTransport
     TDF.Server.TicketManualPayments
