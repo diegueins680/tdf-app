@@ -1016,7 +1016,8 @@
       "path": "/commerce/checkouts/{checkoutId}/payment-sessions",
       "basis": "named",
       "requirements": [
-        "PAY-HOSTED-SESSION-001"
+        "PAY-HOSTED-SESSION-001",
+        "PAY-PAYPHONE-CARD-001"
       ]
     },
     {

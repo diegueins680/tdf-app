@@ -211,6 +211,7 @@ export default function MixingMasteringPage() {
     ...(availablePaymentMethods?.placeToPayCard ? ['placetopay_card'] : []),
     ...(availablePaymentMethods?.placeToPayBankRedirect ? ['placetopay_bank_redirect'] : []),
     ...(availablePaymentMethods?.placeToPayDeunaQr ? ['placetopay_deuna_qr'] : []),
+    ...(availablePaymentMethods?.payPhoneCard ? ['payphone_card'] : []),
     ...(availablePaymentMethods?.payPhoneWallet ? ['payphone_wallet'] : []),
   ], [availablePaymentMethods]);
 

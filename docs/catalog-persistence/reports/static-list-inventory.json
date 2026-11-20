@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-20T19:32:46.264Z",
+  "generatedAt": "2026-11-20T21:50:59.544Z",
   "repositoryRoot": ".",
   "filesScanned": 2812,
   "candidateCount": 1474,
@@ -11945,7 +11945,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 135,
+      "consumerCount": 136,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -11972,6 +11972,7 @@
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
         "tdf-hq/src/TDF/FeatureRegistry.hs",
         "tdf-hq/src/TDF/RagStore.hs",
@@ -11995,8 +11996,7 @@
         "tdf-hq/src/TDF/SocialEventLifecycle.hs",
         "tdf-hq/src/TDF/StorageVault.hs",
         "tdf-hq/src/TDF/Ticketing/Transfer.hs",
-        "tdf-hq/src/TDF/UserActivity.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/src/TDF/UserActivity.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/analytics/errorReporting.test.ts",
@@ -12156,7 +12156,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 377,
+      "consumerCount": 378,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -18406,7 +18406,7 @@
       "lines": [
         71
       ],
-      "consumerCount": 117,
+      "consumerCount": 118,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -18473,6 +18473,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
         "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
@@ -18529,6 +18530,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
         "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx",
         "tdf-hq/docs/openapi/api.yaml",
@@ -18819,7 +18821,7 @@
       "lines": [
         131
       ],
-      "consumerCount": 117,
+      "consumerCount": 118,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -18886,6 +18888,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
         "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
@@ -18942,6 +18945,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
         "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx",
         "tdf-hq/docs/openapi/api.yaml",
@@ -20212,7 +20216,7 @@
       "domain": "studio-services-booking",
       "kind": "object-registry",
       "name": "Bookings",
-      "line": 214,
+      "line": 215,
       "values": [
         "publicAvailability",
         "list",
@@ -20233,7 +20237,7 @@
       "valueCount": 15,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        214
+        215
       ],
       "consumerCount": 126,
       "backendConsumers": [
@@ -20629,7 +20633,7 @@
       "lines": [
         21
       ],
-      "consumerCount": 110,
+      "consumerCount": 111,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -20697,6 +20701,7 @@
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.ts",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
@@ -20783,7 +20788,7 @@
       "lines": [
         42
       ],
-      "consumerCount": 121,
+      "consumerCount": 123,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -20850,8 +20855,10 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.ts",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
@@ -20908,6 +20915,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.ts",
         "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
         "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx",
@@ -23912,7 +23920,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 32,
+      "consumerCount": 33,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql",
@@ -23937,6 +23945,7 @@
         "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.ts",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
@@ -24226,7 +24235,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "cbfb2e7629209b469aeb",
+      "id": "8ce113fec3c2b206646b",
       "file": "tdf-hq-ui/src/api/providerPaymentSessions.ts",
       "sourceKind": "production",
       "surface": "web",
@@ -24238,14 +24247,15 @@
         "placetopay_card",
         "placetopay_bank_redirect",
         "placetopay_deuna_qr",
-        "payphone_wallet"
+        "payphone_wallet",
+        "payphone_card"
       ],
-      "valueCount": 4,
+      "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
         9
       ],
-      "consumerCount": 25,
+      "consumerCount": 26,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
         "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
@@ -24266,6 +24276,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
@@ -24294,29 +24305,30 @@
       "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
       "priority": "P1-cross-platform",
       "risk": "A stale public label could disconnect the server-offered method from its client executor or permit an unsafe implicit provider substitution.",
-      "justification": "The labels are exact client consumers of server routing output; availability remains owned by the provider account, method, flow, operation, and environment capability rows.",
+      "justification": "Adds payphone_card, the PayPhone hosted-button card label, to the exact client consumers of server routing output; availability remains owned by the provider account, method, flow, operation, and environment capability rows.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
     {
-      "id": "97f5e84df29e38480f3f",
+      "id": "461b09bfd03dfc53a612",
       "file": "tdf-hq-ui/src/api/providerPaymentSessions.ts",
       "sourceKind": "production",
       "surface": "web",
       "domain": "studio-services-booking",
       "kind": "array",
       "name": "HOSTED_PAYMENT_METHODS",
-      "line": 21,
+      "line": 22,
       "values": [
         "{label=placetopay_card, provider=placetopay, paymentMethod=card}",
         "{label=placetopay_bank_redirect, provider=placetopay, paymentMethod=bank_redirect}",
         "{label=placetopay_deuna_qr, provider=placetopay, paymentMethod=deuna_qr}",
+        "{label=payphone_card, provider=payphone, paymentMethod=card}",
         "{label=payphone_wallet, provider=payphone, paymentMethod=payphone_wallet}"
       ],
-      "valueCount": 4,
+      "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        21
+        22
       ],
       "consumerCount": 2,
       "backendConsumers": [],
@@ -24332,9 +24344,9 @@
       "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
       "priority": "P0-security",
       "risk": "An incorrect label-to-provider-method binding could execute a different rail than the server offered and undermine duplicate-charge and consent controls.",
-      "justification": "This closed dispatch maps server-authorized composite labels to the two implemented hosted adapters; unknown labels fail closed and the database registry remains authoritative for visibility.",
+      "justification": "Adds the payphone_card -> (payphone, card) binding to the closed dispatch of server-authorized composite labels; no label maps to a different provider or method than the server offered.",
       "exactDuplicateIds": [
-        "dae3b89dd11670870aa4"
+        "bb442758aac4e8bc0d5c"
       ],
       "similarCandidateIds": []
     },
@@ -32807,7 +32819,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "dae3b89dd11670870aa4",
+      "id": "bb442758aac4e8bc0d5c",
       "file": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
       "sourceKind": "test",
       "surface": "web",
@@ -32819,9 +32831,10 @@
         "{label=placetopay_card, provider=placetopay, paymentMethod=card}",
         "{label=placetopay_bank_redirect, provider=placetopay, paymentMethod=bank_redirect}",
         "{label=placetopay_deuna_qr, provider=placetopay, paymentMethod=deuna_qr}",
+        "{label=payphone_card, provider=payphone, paymentMethod=card}",
         "{label=payphone_wallet, provider=payphone, paymentMethod=payphone_wallet}"
       ],
-      "valueCount": 4,
+      "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
         11
@@ -32842,9 +32855,9 @@
       "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
       "priority": "P3-consumer",
       "risk": "A stale test fixture could stop verifying exact provider-method dispatch and allow client/server contract drift.",
-      "justification": "The mocked list is test-only evidence for the canonical hosted-method mapping and must change with, but never become authority over, the production server and adapter contract.",
+      "justification": "The mocked list adds payphone_card with the canonical mapping; it remains test-only evidence and never authority over server routing.",
       "exactDuplicateIds": [
-        "97f5e84df29e38480f3f"
+        "461b09bfd03dfc53a612"
       ],
       "similarCandidateIds": []
     },
@@ -33014,7 +33027,7 @@
       "domain": "studio-services-booking",
       "kind": "switch-cases",
       "name": "session.state",
-      "line": 108,
+      "line": 109,
       "values": [
         "succeeded",
         "confirmed_no_charge",
@@ -33025,7 +33038,7 @@
       "valueCount": 5,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        108
+        109
       ],
       "consumerCount": 125,
       "backendConsumers": [
@@ -56231,12 +56244,13 @@
       "lines": [
         3948
       ],
-      "consumerCount": 11,
+      "consumerCount": 12,
       "backendConsumers": [
         "tdf-hq/src/TDF/Cors.hs",
         "tdf-hq/src/TDF/Services/EventLogisticsRoutes.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/utils/eventRsvpIntent.ts"
       ],
       "mobileConsumers": [
@@ -56698,7 +56712,7 @@
       "lines": [
         114
       ],
-      "consumerCount": 336,
+      "consumerCount": 337,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -56946,7 +56960,7 @@
       "lines": [
         114
       ],
-      "consumerCount": 336,
+      "consumerCount": 337,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -57193,7 +57207,7 @@
       "lines": [
         114
       ],
-      "consumerCount": 407,
+      "consumerCount": 408,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -57450,7 +57464,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 319,
+      "consumerCount": 320,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -57702,7 +57716,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 305,
+      "consumerCount": 306,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -57948,7 +57962,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 324,
+      "consumerCount": 325,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -58194,7 +58208,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 316,
+      "consumerCount": 317,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -58440,7 +58454,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 307,
+      "consumerCount": 308,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -66868,7 +66882,7 @@
       "lines": [
         1238
       ],
-      "consumerCount": 153,
+      "consumerCount": 154,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -66936,6 +66950,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/types.ts",
@@ -67001,6 +67016,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/types.ts",
@@ -69649,7 +69665,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 472,
+      "line": 473,
       "values": [
         "all",
         "Mixing",
@@ -69659,7 +69675,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        472
+        473
       ],
       "consumerCount": 30,
       "backendConsumers": [
@@ -73469,7 +73485,7 @@
       "lines": [
         14
       ],
-      "consumerCount": 109,
+      "consumerCount": 110,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -73535,6 +73551,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
         "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
@@ -73586,6 +73603,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
         "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx",
         "tdf-hq/src/TDF/API/Marketplace.hs",
@@ -75780,7 +75798,7 @@
       "lines": [
         100
       ],
-      "consumerCount": 568,
+      "consumerCount": 569,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -75813,6 +75831,7 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
@@ -75830,8 +75849,7 @@
         "tdf-hq/src/TDF/DDEX/ERN/V432/BusinessRules.hs",
         "tdf-hq/src/TDF/DDEX/ERN/V432/Convert.hs",
         "tdf-hq/src/TDF/DDEX/ERN/V432/Parse.hs",
-        "tdf-hq/src/TDF/DDEX/Validation.hs",
-        "tdf-hq/src/TDF/DTO.hs"
+        "tdf-hq/src/TDF/DDEX/Validation.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
@@ -89657,6 +89675,7 @@
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
         "tdf-hq-ui/src/analytics/ticketFunnel.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.ts",
@@ -89670,7 +89689,6 @@
         "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
-        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
         "tdf-hq-ui/src/utils/inventoryCheckout.ts",
         "tdf-hq-ui/src/utils/providerPaymentResume.test.ts"
       ],
@@ -89685,6 +89703,7 @@
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.ts",
@@ -114144,7 +114163,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 139,
+      "consumerCount": 140,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -114212,6 +114231,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/types.ts",
@@ -114272,6 +114292,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/types.ts",
@@ -117318,7 +117339,7 @@
       "lines": [
         89
       ],
-      "consumerCount": 139,
+      "consumerCount": 140,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -117386,6 +117407,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/types.ts",
@@ -117446,6 +117468,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/types.ts",
@@ -124145,7 +124168,7 @@
       "lines": [
         135
       ],
-      "consumerCount": 128,
+      "consumerCount": 129,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -124207,6 +124230,7 @@
         "tdf-hq-ui/src/components/PartyRelatedPopover.test.tsx",
         "tdf-hq-ui/src/components/PartyRelatedPopover.tsx",
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
@@ -124507,7 +124531,7 @@
       "lines": [
         54
       ],
-      "consumerCount": 128,
+      "consumerCount": 129,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -124569,6 +124593,7 @@
         "tdf-hq-ui/src/components/PartyRelatedPopover.test.tsx",
         "tdf-hq-ui/src/components/PartyRelatedPopover.tsx",
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
@@ -126414,7 +126439,7 @@
       "lines": [
         133
       ],
-      "consumerCount": 128,
+      "consumerCount": 129,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -126476,6 +126501,7 @@
         "tdf-hq-ui/src/components/PartyRelatedPopover.test.tsx",
         "tdf-hq-ui/src/components/PartyRelatedPopover.tsx",
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
@@ -127358,7 +127384,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 128,
+      "consumerCount": 129,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -127420,6 +127446,7 @@
         "tdf-hq-ui/src/components/PartyRelatedPopover.test.tsx",
         "tdf-hq-ui/src/components/PartyRelatedPopover.tsx",
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
@@ -128907,7 +128934,7 @@
       "lines": [
         109
       ],
-      "consumerCount": 128,
+      "consumerCount": 129,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -128969,6 +128996,7 @@
         "tdf-hq-ui/src/components/PartyRelatedPopover.test.tsx",
         "tdf-hq-ui/src/components/PartyRelatedPopover.tsx",
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
@@ -129604,7 +129632,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 128,
+      "consumerCount": 129,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -129666,6 +129694,7 @@
         "tdf-hq-ui/src/components/PartyRelatedPopover.test.tsx",
         "tdf-hq-ui/src/components/PartyRelatedPopover.tsx",
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
@@ -139378,7 +139407,7 @@
       "lines": [
         664
       ],
-      "consumerCount": 99,
+      "consumerCount": 100,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -139438,6 +139467,7 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.ts",
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
@@ -143847,7 +143877,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 139,
+      "consumerCount": 140,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -143915,6 +143945,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/types.ts",
@@ -143975,6 +144006,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/types.ts",
@@ -144027,7 +144059,7 @@
       "lines": [
         79
       ],
-      "consumerCount": 139,
+      "consumerCount": 140,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -144095,6 +144127,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/types.ts",
@@ -144155,6 +144188,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/types.ts",
@@ -145554,7 +145588,7 @@
         60,
         91
       ],
-      "consumerCount": 33,
+      "consumerCount": 34,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql",
         "tdf-hq/sql/2026-09-11_manual_bank_provider_activation_rollback.sql",
@@ -145579,6 +145613,7 @@
         "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.ts",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
@@ -146717,7 +146752,7 @@
       "lines": [
         176
       ],
-      "consumerCount": 128,
+      "consumerCount": 129,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -146779,6 +146814,7 @@
         "tdf-hq-ui/src/components/PartyRelatedPopover.test.tsx",
         "tdf-hq-ui/src/components/PartyRelatedPopover.tsx",
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
@@ -161556,7 +161592,7 @@
         22,
         89
       ],
-      "consumerCount": 105,
+      "consumerCount": 106,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -161622,6 +161658,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
@@ -161679,6 +161716,7 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
@@ -161724,7 +161762,7 @@
         24,
         91
       ],
-      "consumerCount": 79,
+      "consumerCount": 80,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -161781,6 +161819,7 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.ts",
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
@@ -161850,7 +161889,7 @@
       "lines": [
         49
       ],
-      "consumerCount": 65,
+      "consumerCount": 67,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -161894,7 +161933,9 @@
       "webConsumers": [
         "tdf-hq-ui/src/analytics/ticketFunnel.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
@@ -161926,7 +161967,9 @@
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
         "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
         "tdf-hq-ui/src/api/providerPaymentSessions.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -169089,7 +169132,7 @@
       "lines": [
         226
       ],
-      "consumerCount": 397,
+      "consumerCount": 398,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
