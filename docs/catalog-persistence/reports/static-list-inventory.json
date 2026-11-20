@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-19T22:43:32.206Z",
+  "generatedAt": "2026-11-19T23:34:08.560Z",
   "repositoryRoot": ".",
   "filesScanned": 2778,
   "candidateCount": 1469,
@@ -26966,7 +26966,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 1012,
+      "consumerCount": 1013,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -70071,7 +70071,7 @@
       "lines": [
         331
       ],
-      "consumerCount": 75,
+      "consumerCount": 76,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -70095,6 +70095,7 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/CorsPropertiesSpec.hs",
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
@@ -70161,6 +70162,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicStorageResponse.test.ts",
         "tdf-hq/src/TDF/API/Future.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -79126,7 +79128,7 @@
       "lines": [
         31
       ],
-      "consumerCount": 35,
+      "consumerCount": 36,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
@@ -79141,6 +79143,7 @@
         "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
       ],
@@ -79171,7 +79174,8 @@
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/musicReleases.ts",
-        "tdf-hq/src/TDF/API/Future.hs"
+        "tdf-hq/src/TDF/API/Future.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -93482,7 +93486,7 @@
       "lines": [
         12047
       ],
-      "consumerCount": 285,
+      "consumerCount": 286,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -93667,6 +93671,7 @@
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
         "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
         "tdf-hq/test/sql/music_ddex_operations.sql",
@@ -114588,7 +114593,7 @@
       "lines": [
         165
       ],
-      "consumerCount": 285,
+      "consumerCount": 286,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -114773,6 +114778,7 @@
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
         "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
         "tdf-hq/test/sql/music_ddex_operations.sql",
@@ -119218,7 +119224,7 @@
       "lines": [
         507
       ],
-      "consumerCount": 49,
+      "consumerCount": 50,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -119230,6 +119236,7 @@
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/integration/catalog_backfill_postgres.sql",
         "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql"
@@ -119280,6 +119287,7 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/features/ddex/PartnerManagementPage.tsx",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/venues.ts"
@@ -120869,7 +120877,7 @@
       "lines": [
         749
       ],
-      "consumerCount": 98,
+      "consumerCount": 100,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_backfill_rollback.sql",
         "tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql",
@@ -120908,7 +120916,9 @@
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/src/TDF/WhatsApp/Types.hs",
+        "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
@@ -120983,6 +120993,7 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq/src/TDF/API/Internships.hs",
         "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/src/TDF/WhatsApp/Types.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -121798,7 +121809,7 @@
       "lines": [
         853
       ],
-      "consumerCount": 72,
+      "consumerCount": 74,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -121824,6 +121835,8 @@
         "tdf-hq/src/TDF/Server/EventResearch.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
+        "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/integration/directory_artist_derived_listings_postgres.sql",
@@ -121884,6 +121897,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/partySelector.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/partySelector.ts",
@@ -122648,7 +122662,7 @@
       "lines": [
         905
       ],
-      "consumerCount": 168,
+      "consumerCount": 170,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -122809,6 +122823,7 @@
         "tdf-hq/src/TDF/API/Internships.hs",
         "tdf-hq/src/TDF/API/Types.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/src/TDF/WhatsApp/Types.hs",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts",
@@ -123267,7 +123282,7 @@
       "lines": [
         947
       ],
-      "consumerCount": 57,
+      "consumerCount": 59,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql",
@@ -123283,6 +123298,8 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
+        "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
         "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
@@ -123339,6 +123356,7 @@
         "tdf-hq/src/TDF/API/Directory.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/operations.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -124937,7 +124955,7 @@
       "lines": [
         22
       ],
-      "consumerCount": 168,
+      "consumerCount": 170,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -125098,6 +125116,7 @@
         "tdf-hq/src/TDF/API/Internships.hs",
         "tdf-hq/src/TDF/API/Types.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/src/TDF/WhatsApp/Types.hs",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts",
@@ -125141,7 +125160,7 @@
       "lines": [
         28
       ],
-      "consumerCount": 57,
+      "consumerCount": 59,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql",
@@ -125157,6 +125176,8 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
+        "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
         "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
@@ -125213,6 +125234,7 @@
         "tdf-hq/src/TDF/API/Directory.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/operations.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -129445,7 +129467,7 @@
       "lines": [
         16
       ],
-      "consumerCount": 57,
+      "consumerCount": 59,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql",
@@ -129461,6 +129483,8 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
+        "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
         "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
@@ -129517,6 +129541,7 @@
         "tdf-hq/src/TDF/API/Directory.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/operations.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -133933,7 +133958,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 271,
+      "consumerCount": 272,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -134117,6 +134142,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
@@ -136303,7 +136329,7 @@
       "lines": [
         378
       ],
-      "consumerCount": 316,
+      "consumerCount": 317,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -136491,6 +136517,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
         "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
@@ -148444,7 +148471,7 @@
       "lines": [
         61
       ],
-      "consumerCount": 57,
+      "consumerCount": 59,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql",
@@ -148460,6 +148487,8 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
+        "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
         "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
@@ -148516,6 +148545,7 @@
         "tdf-hq/src/TDF/API/Directory.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/operations.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -148563,7 +148593,7 @@
       "lines": [
         66
       ],
-      "consumerCount": 57,
+      "consumerCount": 59,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql",
@@ -148579,6 +148609,8 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
+        "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
         "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
@@ -148635,6 +148667,7 @@
         "tdf-hq/src/TDF/API/Directory.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/operations.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -151679,7 +151712,7 @@
       "lines": [
         486
       ],
-      "consumerCount": 76,
+      "consumerCount": 77,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -151702,6 +151735,7 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/CorsPropertiesSpec.hs",
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
@@ -151770,6 +151804,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicStorageResponse.test.ts",
         "tdf-hq/src/TDF/API/Future.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -152687,7 +152722,7 @@
       "lines": [
         795
       ],
-      "consumerCount": 24,
+      "consumerCount": 26,
       "backendConsumers": [
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
@@ -152696,6 +152731,8 @@
         "tdf-hq/src/TDF/ServerExtra.hs",
         "tdf-hq/src/TDF/Services/FacebookMessaging.hs",
         "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
+        "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
         "tdf-hq/test/TDF/ServerExtraSpec.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql"
@@ -152727,6 +152764,7 @@
         "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
         "tdf-hq/src/TDF/Services/FacebookMessaging.hs",
         "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -159002,7 +159040,7 @@
       "lines": [
         30
       ],
-      "consumerCount": 39,
+      "consumerCount": 41,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
         "tdf-hq/sql/2026-08-14_checkout_event_refund_runtime.sql",
@@ -159014,8 +159052,10 @@
         "tdf-hq/src/TDF/Server/EventTicketSale.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
         "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
@@ -159053,6 +159093,7 @@
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/merch.test.ts",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
@@ -168532,7 +168573,7 @@
       "lines": [
         1225
       ],
-      "consumerCount": 284,
+      "consumerCount": 285,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -168717,6 +168758,7 @@
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
         "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
+        "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
         "tdf-hq/test/sql/music_ddex_operations.sql",
