@@ -276,6 +276,7 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                       width: { xs: '100%', sm: 220 },
                       height: { xs: 300, sm: 220 },
                       aspectRatio: 'auto',
+                      ...(kind === 'event' && { objectFit: 'contain' }),
                       borderRadius: 3,
                     }}
                   />
