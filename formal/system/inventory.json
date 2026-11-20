@@ -3691,7 +3691,7 @@
     {
       "id": "SURFACE-48f151ff03188032",
       "path": "functions/_shared/event-preview.mjs",
-      "sha256": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
+      "sha256": "8c45a8fef1e5740623c33173b5ea0924f5b8f8b6d832f3fef666d1cda595e381",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4093,7 +4093,7 @@
     {
       "id": "SURFACE-c1036edc5aa530c7",
       "path": "scripts/__tests__/event-preview.test.mjs",
-      "sha256": "4b464df800da5e7b0dcfc1b2a045c3d918c7578ea49e608a3d1093ceac58948a",
+      "sha256": "d94db8fb24010a611de0da7db94e99de5cbb704324acd82534e81a6aaef4b2a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9691,7 +9691,7 @@
     {
       "id": "SURFACE-d7474e771e08a175",
       "path": "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx",
-      "sha256": "4757fc29b4daeb50f3ed170e90ef56a62b46a5813e764d5b158bc256dbbd2f5d",
+      "sha256": "db2529edba3200186b347848aa0eee09fde91be1bfc5ff1002ee8ade2150677b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11227,7 +11227,7 @@
     {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "07aa5b0a0e31ac7cae1a0190060cd9cea6e1b25d37923fe99ce53853b806c66c",
+      "sha256": "876345d0a60f98b4a5ce7a2888fdbb194c69925c4c4e72dde245b22b181dfaa4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11353,13 +11353,13 @@
     {
       "id": "SURFACE-814a4782598cab3d",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-      "sha256": "e320f4d8a89ddeb92c3d573429ba9c110a725979d97b9974cd356aaf058ee02b",
+      "sha256": "8fd87e54a6450ffbb6217145421034c2f6b5216829d8ff8da729a1b2427d1b61",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "efd16855987a225aaecb430437477786dc0455ba474aeea8e6452e59edf43cdb",
+      "sha256": "edbcf765bea2a8a50257af8fabfedc5570c6550235ddc2095a83bcda05527009",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12505,7 +12505,7 @@
     {
       "id": "SURFACE-7ec18247afed2819",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-      "sha256": "1b7577906f1f3739f2ae756237f62cca45ae34174039e3dcb94f9d0384644324",
+      "sha256": "c7d5c4f0b3f4d557d090935fdefb8b757af401dbe440ede7e4334640a61d7413",
       "semanticConformance": "not-established-by-discovery"
     },
     {

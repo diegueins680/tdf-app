@@ -211,7 +211,7 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
 
   const locationValue = record(value['location']) ?? rows(value['locations'])[0];
   const addressLine = kind === 'event' ? /^Dirección del evento:[ \t]*(\S[^\r\n]*)/iu.exec(description) : null;
-  const publicLocation = addressLine?.[1]?.trim() || [text(locationValue?.['city']), text(locationValue?.['countryCode'])].filter(Boolean).join(', ');
+  const publicLocation = addressLine?.[1]?.trim() ?? [text(locationValue?.['city']), text(locationValue?.['countryCode'])].filter(Boolean).join(', ');
   const detailDescription = addressLine ? description.slice(addressLine[0].length).trim() : description;
   const professions = rows(value['professions']);
   const instruments = rows(value['instruments']);
