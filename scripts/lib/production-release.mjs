@@ -414,10 +414,6 @@ BEGIN
   ) NOT IN (9,10) OR to_regclass('public.idx_notification_recipient') IS NULL THEN
     RAISE EXCEPTION 'The repaired notification schema is missing or incomplete';
   END IF;
-  IF to_regclass('public.course_follow_up_reminder_delivery') IS NULL
-     OR to_regclass('public.unique_course_follow_up_reminder_delivery') IS NULL THEN
-    RAISE EXCEPTION 'Course follow-up reminder delivery claims are missing';
-  END IF;
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public'
@@ -629,6 +625,19 @@ BEGIN
             AND pg_get_constraintdef(oid)=
               'CHECK ((issuer = ANY (ARRAY[''https://accounts.google.com''::text, ''https://appleid.apple.com''::text])))') THEN
         RAISE EXCEPTION 'Recorded Apple issuer schema is missing or incompatible';
+      END IF;
+    END IF;
+  END IF;
+  -- A recorded course reminder migration requires its claim table and the
+  -- unique claim constraint (COURSE-FOLLOWUP-REMINDER-001).
+  IF to_regclass('public.tdf_schema_migration') IS NOT NULL THEN
+    IF EXISTS (SELECT 1 FROM public.tdf_schema_migration
+      WHERE migration_id='2026-11-20_course_follow_up_reminder_delivery') THEN
+      IF to_regclass('public.course_follow_up_reminder_delivery') IS NULL
+        OR NOT EXISTS (SELECT 1 FROM pg_constraint
+          WHERE conrelid=to_regclass('public.course_follow_up_reminder_delivery')
+            AND conname='unique_course_follow_up_reminder_delivery' AND contype='u') THEN
+        RAISE EXCEPTION 'Course follow-up reminder delivery claims are missing';
       END IF;
     END IF;
   END IF;

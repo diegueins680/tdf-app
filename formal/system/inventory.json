@@ -5391,7 +5391,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "3bcaf89ad805e67d988463ba69a7f1bfc7eaeb1d5557c12e20218b769a88587b",
+      "sha256": "b2581954bf71df4691d0a1829a5350e5271c7cc575896a3381266e9496580ab9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
