@@ -276,7 +276,7 @@ function ScopedDriveUploadWidget({
       .catch(() => { if (current) setAccountError(true); });
     return () => { current = false; };
   }, [authMode, ownerPartyId]);
-  const { status: driveStatus, error: driveError, startAuth, ensureToken } = useGoogleDriveAuth({
+  const { status: driveStatus, error: driveError, startAuth, ensureToken, resetAuth } = useGoogleDriveAuth({
     enabled: needsUserAuth,
   });
 
@@ -480,6 +480,7 @@ function ScopedDriveUploadWidget({
           {label}
         </Button>
         {needsUserAuth && (
+          <>
           <Button
             variant="text"
             tabIndex={0}
@@ -492,6 +493,10 @@ function ScopedDriveUploadWidget({
           >
             {english ? (driveStatus === 'ready' ? 'Reconnect Drive' : 'Connect Drive') : (driveStatus === 'ready' ? 'Reautorizar Drive' : 'Conectar Drive')}
           </Button>
+          {driveStatus === 'ready' && <Button onClick={() => { void resetAuth().catch(() => setError(english ? 'Could not disconnect Drive. Retry shortly.' : 'No pudimos desconectar Drive. Reintenta.')); }}>
+            {english ? 'Disconnect Drive' : 'Desconectar Drive'}
+          </Button>}
+          </>
         )}
         {!dense && (
           <Typography variant="body2" color="text.secondary">
