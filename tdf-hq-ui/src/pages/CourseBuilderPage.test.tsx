@@ -372,4 +372,136 @@ describe('CourseBuilderPage', () => {
       await cleanup();
     }
   });
+
+  it('loads fractional server prices and writes decimal-comma edits as exact cents without draft-only fields', async () => {
+    getMetadataMock.mockResolvedValue(buildMetadata({ price: 25.5 }));
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      const input = getInputByLabelText(container, 'Precio (USD)');
+      expect(input.value).toBe('25.50');
+      await changeInputValue(input, '40,99');
+      expect(JSON.parse(window.localStorage.getItem('tdf-course-builder-draft') ?? '{}')).toMatchObject({ priceInput: '40,99', priceCents: 4099 });
+      await clickButton(getButtonByText(container, 'Publicar curso'));
+      await waitForExpectation(() => expect(upsertMock).toHaveBeenCalledTimes(1));
+      expect(upsertMock.mock.calls[0]?.[0].priceCents).toBe(4099);
+      expect(upsertMock.mock.calls[0]?.[0]).not.toHaveProperty('priceInput');
+      expect(upsertMock.mock.calls[0]?.[0]).not.toHaveProperty('priceInputError');
+      await waitForExpectation(() => expect(window.localStorage.getItem('tdf-course-builder-draft')).toBeNull());
+      await act(async () => { await new Promise(resolve => setTimeout(resolve, 2100)); });
+      expect(window.localStorage.getItem('tdf-course-builder-draft')).toBeNull();
+      expect(text(container)).toContain('Estado: Publicado');
+      await changeInputValue(input, '50,50');
+      expect(text(container)).not.toContain('Estado: Publicado');
+      expect(JSON.parse(window.localStorage.getItem('tdf-course-builder-draft') ?? '{}').priceCents).toBe(5050);
+      expect(upsertMock).toHaveBeenCalledTimes(1);
+    } finally { await cleanup(); }
+  });
+
+  it.each(['', '-1', '25.505', '1e2', '90071992547409.92', 'not-a-price'])('retains invalid draft text %s without turning it into a free course', async raw => {
+    const container = document.createElement('div'); document.body.appendChild(container);
+    let view = await renderPage(container);
+    try {
+      let input = getInputByLabelText(container, 'Precio (USD)');
+      await changeInputValue(input, raw);
+      expect(input.getAttribute('aria-invalid')).toBe('true');
+      expect(document.getElementById(input.getAttribute('aria-describedby')!)?.textContent).toBeTruthy();
+      expect(getButtonByText(container, 'Publicar curso').getAttribute('disabled')).not.toBeNull();
+      const draft = JSON.parse(window.localStorage.getItem('tdf-course-builder-draft') ?? '{}') as Record<string, unknown>;
+      expect(draft.priceInput).toBe(raw); expect(draft).not.toHaveProperty('priceCents');
+      expect(upsertMock).not.toHaveBeenCalled();
+      await view.cleanup(); document.body.appendChild(container); view = await renderPage(container);
+      input = getInputByLabelText(container, 'Precio (USD)');
+      expect(input.value).toBe(raw); expect(input.getAttribute('aria-invalid')).toBe('true');
+      await changeInputValue(input, '0');
+      await clickButton(getButtonByText(container, 'Publicar curso'));
+      await waitForExpectation(() => expect(upsertMock).toHaveBeenCalledTimes(1));
+      expect(upsertMock.mock.calls[0]?.[0].priceCents).toBe(0);
+    } finally { await view.cleanup(); }
+  });
+
+  it.each([2550, Number.MAX_SAFE_INTEGER])('preserves exact legacy draft cents %s through hydration and publication', async cents => {
+    window.localStorage.setItem('tdf-course-builder-draft', JSON.stringify({ title: 'Curso sintético', slug: 'curso-sintetico', priceCents: cents, currency: 'USD' }));
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      const input = getInputByLabelText(container, 'Precio (USD)');
+      expect(input.value).toBe(cents === 2550 ? '25.50' : '90071992547409.91');
+      expect(JSON.parse(window.localStorage.getItem('tdf-course-builder-draft') ?? '{}').priceCents).toBe(cents);
+      expect(getMetadataMock).not.toHaveBeenCalled();
+      await clickButton(getButtonByText(container, 'Publicar curso'));
+      await waitForExpectation(() => expect(upsertMock).toHaveBeenCalledTimes(1));
+      expect(upsertMock.mock.calls[0]?.[0].priceCents).toBe(cents);
+    } finally { await cleanup(); }
+  });
+
+  it.each(['metadata', 'draft'] as const)('blocks an unsafe %s read until the operator explicitly corrects the price', async source => {
+    if (source === 'metadata') getMetadataMock.mockResolvedValue(buildMetadata({ price: Number.MAX_SAFE_INTEGER / 100 }));
+    else window.localStorage.setItem('tdf-course-builder-draft', JSON.stringify({ title: 'Curso sintético', slug: 'curso-sintetico', priceCents: Number.MAX_SAFE_INTEGER + 1, currency: 'USD' }));
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      const input = getInputByLabelText(container, 'Precio (USD)');
+      expect(input.value).toBe(''); expect(input.getAttribute('aria-invalid')).toBe('true');
+      expect(getButtonByText(container, 'Publicar curso').getAttribute('disabled')).not.toBeNull();
+      expect(upsertMock).not.toHaveBeenCalled();
+      await changeInputValue(input, '25,50');
+      await clickButton(getButtonByText(container, 'Publicar curso'));
+      await waitForExpectation(() => expect(upsertMock).toHaveBeenCalledTimes(1));
+      expect(upsertMock.mock.calls[0]?.[0].priceCents).toBe(2550);
+    } finally { await cleanup(); }
+  });
+
+
+  it('retains deliberately cleared optional fields and empty lists when restoring a draft', async () => {
+    window.localStorage.setItem('tdf-course-builder-draft', JSON.stringify({ title: 'Curso sintético', slug: 'curso-sintetico', priceCents: 2550, currency: 'USD',
+      subtitle: null, format: null, duration: null, sessionStartHour: null, sessionDurationHours: null,
+      locationLabel: null, locationMapUrl: null, whatsappCtaUrl: null, landingUrl: null,
+      instructorName: null, instructorBio: null, instructorAvatarUrl: null, daws: [], includes: [] }));
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await clickButton(getButtonByText(container, 'Publicar curso'));
+      await waitForExpectation(() => expect(upsertMock).toHaveBeenCalledTimes(1));
+      expect(upsertMock.mock.calls[0]?.[0]).toMatchObject({ priceCents: 2550, subtitle: null, format: null, duration: null,
+        sessionStartHour: null, sessionDurationHours: null, locationLabel: null, locationMapUrl: null, whatsappCtaUrl: null,
+        instructorName: null, instructorBio: null, instructorAvatarUrl: null, daws: [], includes: [] });
+    } finally { await cleanup(); }
+  });
+
+  it('keeps newer edits and their draft when a publication response arrives late', async () => {
+    let finish!: (metadata: CourseMetadata) => void;
+    upsertMock.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      const input = getInputByLabelText(container, 'Precio (USD)');
+      await changeInputValue(input, '40,99');
+      await clickButton(getButtonByText(container, 'Publicar curso'));
+      await changeInputValue(input, '50,50');
+      await act(async () => { finish(buildMetadata({ price: 40.99 })); await flushPromises(); });
+      expect(input.value).toBe('50,50');
+      expect(JSON.parse(window.localStorage.getItem('tdf-course-builder-draft') ?? '{}').priceCents).toBe(5050);
+      expect(text(container)).not.toContain('Estado: Publicado');
+      expect(upsertMock.mock.calls[0]?.[0].priceCents).toBe(4099);
+    } finally { await cleanup(); }
+  });
+
+
+  it('does not clear a draft replaced by another editor while publishing', async () => {
+    let finish!: (metadata: CourseMetadata) => void;
+    upsertMock.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await changeInputValue(getInputByLabelText(container, 'Precio (USD)'), '40,99');
+      await clickButton(getButtonByText(container, 'Publicar curso'));
+      const replacement = JSON.stringify({ title: 'Otro borrador', slug: 'otro-borrador', priceCents: 5050, priceInput: '50,50' });
+      window.localStorage.setItem('tdf-course-builder-draft', replacement);
+      await act(async () => { finish(buildMetadata({ price: 40.99 })); await flushPromises(); });
+      expect(window.localStorage.getItem('tdf-course-builder-draft')).toBe(replacement);
+      expect(upsertMock.mock.calls[0]?.[0].priceCents).toBe(4099);
+    } finally { await cleanup(); }
+  });
+
 });

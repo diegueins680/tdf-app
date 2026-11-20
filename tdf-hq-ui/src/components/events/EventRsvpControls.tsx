@@ -59,14 +59,14 @@ const copyFor = (locale?: string | null) => {
     summaryError: 'We could not refresh RSVP counts.', saving: 'Saving RSVP',
     sharePrompt: 'Want to invite someone?', discard: 'Discard pending RSVP', shareCancelled: 'Sharing was cancelled.', shareError: 'We could not open sharing.',
   } : {
-    title: 'Tu RSVP', going: 'Voy', maybe: 'Me interesa', declined: 'No iré', remove: 'Eliminar mi RSVP',
-    profile: 'Mostrar este RSVP en mi perfil', privacyHint: '“No iré” nunca se publica.', manualLink: 'Enlace público del evento',
+    title: '¿Vas?', going: 'Voy', maybe: 'Tal vez', declined: 'No voy', remove: 'Quitar mi respuesta',
+    profile: 'Mostrar mi respuesta en mi perfil', privacyHint: '“No voy” nunca se publica.', manualLink: 'Enlace público del evento',
     share: 'Compartir', copy: 'Copiar enlace', copied: 'Enlace copiado.',
-    saved: 'Guardamos tu RSVP.', removed: 'Eliminamos tu RSVP.', unavailable: 'Este evento no está aceptando RSVPs.',
-    cancelled: 'Los eventos cancelados no aceptan nuevos RSVPs.', error: 'No pudimos actualizar tu RSVP. Inténtalo otra vez.',
-    loadError: 'No pudimos cargar tu RSVP. Comprueba tu conexión.', retry: 'Reintentar',
-    summaryError: 'No pudimos actualizar los conteos de RSVP.', saving: 'Guardando RSVP',
-    sharePrompt: '¿Quieres invitar a alguien?', discard: 'Descartar RSVP pendiente', shareCancelled: 'Cancelaste la acción de compartir.', shareError: 'No pudimos abrir las opciones para compartir.',
+    saved: 'Guardamos tu respuesta.', removed: 'Quitamos tu respuesta.', unavailable: 'Este evento no está aceptando respuestas de asistencia.',
+    cancelled: 'Los eventos cancelados no aceptan nuevas respuestas.', error: 'No pudimos guardar tu respuesta. Inténtalo otra vez.',
+    loadError: 'No pudimos cargar tu respuesta. Comprueba tu conexión.', retry: 'Reintentar',
+    summaryError: 'No pudimos actualizar los conteos de asistencia.', saving: 'Guardando tu respuesta',
+    sharePrompt: '¿Quieres invitar a alguien?', discard: 'Descartar respuesta pendiente', shareCancelled: 'Cancelaste la acción de compartir.', shareError: 'No pudimos abrir las opciones para compartir.',
   };
 };
 

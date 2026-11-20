@@ -1,4 +1,4 @@
-import { canonicalMusicMinor, formatMusicMinor, musicMinorForWire } from './musicMoney';
+import { canonicalMusicMinor, formatMusicMinor, musicMinorForWire, formatMusicPriceInput, parseMusicPriceInput } from './musicMoney';
 
 describe('PAY-MUSIC-MONEY-WIRE-001', () => {
   it.each([
@@ -18,6 +18,7 @@ describe('PAY-MUSIC-MONEY-WIRE-001', () => {
       const text = value.toString();
       const response: unknown = JSON.parse(JSON.stringify(musicMinorForWire(text)));
       expect(canonicalMusicMinor(response)).toBe(text);
+      expect(parseMusicPriceInput(formatMusicPriceInput(text))).toBe(text);
     }
   });
 
@@ -37,5 +38,27 @@ describe('PAY-MUSIC-MONEY-WIRE-001', () => {
 
   it('does not invent support for another sale currency', () => {
     expect(() => formatMusicMinor('250', 'JPY')).toThrow();
+  });
+});
+
+
+describe('music price entry in USD units', () => {
+  it.each([
+    ['0', '0.00'], ['1', '0.01'], ['499', '4.99'],
+    ['9007199254740993', '90071992547409.93'],
+    ['9223372036854775807', '92233720368547758.07'],
+  ])('round trips exact minor text %s through decimal input', (minor, decimal) => {
+    expect(formatMusicPriceInput(minor)).toBe(decimal);
+    expect(parseMusicPriceInput(decimal)).toBe(minor);
+    expect(parseMusicPriceInput(decimal.replace('.', ','))).toBe(minor);
+  });
+  it.each(['-1', '1e2', '4.999', '92233720368547758.08'])('rejects %s without narrowing the wire range or rounding', value => {
+    expect(() => parseMusicPriceInput(value)).toThrow();
+  });
+  it('distinguishes missing price and zero, and rejects imprecise loaded numbers', () => {
+    expect(formatMusicPriceInput(null)).toBe('');
+    expect(parseMusicPriceInput('')).toBeNull();
+    expect(parseMusicPriceInput('0')).toBe('0');
+    expect(() => formatMusicPriceInput(9007199254740992)).toThrow();
   });
 });

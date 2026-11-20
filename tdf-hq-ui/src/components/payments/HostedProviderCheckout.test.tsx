@@ -1,5 +1,7 @@
 /** @jest-environment jsdom */
 import { jest } from '@jest/globals';
+import { useState } from 'react';
+import { PaymentMethodButton } from './PaymentMethodChoices';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 const checkoutId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -37,6 +39,37 @@ describe('HostedProviderCheckout', () => {
     createMock.mockReset();
     getMock.mockReset();
     window.sessionStorage.clear();
+  });
+
+  it('keeps local and hosted choices in one group and locks local alternatives after an ambiguous hosted request', async () => {
+    const localStart = jest.fn();
+    createMock.mockRejectedValue(new Error('Synthetic lost response'));
+    function CombinedMethods() {
+      const [locked, setLocked] = useState(false);
+      return <HostedProviderCheckout checkout={context} offeredMethods={['placetopay_card', 'payphone_wallet']}
+        onSafetyLockChange={setLocked} additionalMethods={<>
+          <PaymentMethodButton disabled={locked} onClick={localStart}>Tarjeta · Datafast</PaymentMethodButton>
+          <PaymentMethodButton disabled={locked} onClick={localStart}>PayPal</PaymentMethodButton>
+          <PaymentMethodButton disabled={locked} onClick={localStart}>Transferencia bancaria</PaymentMethodButton>
+        </>} />;
+    }
+    render(<CombinedMethods />);
+    const group = screen.getByRole('group', { name: 'Métodos de pago disponibles' });
+    expect(group.querySelectorAll('button')).toHaveLength(5);
+    expect(screen.getAllByRole('region', { name: 'Métodos de pago' })).toHaveLength(1);
+    expect(createMock).not.toHaveBeenCalled(); expect(localStart).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Billetera PayPhone', exact: true }));
+    expect(screen.getByRole('textbox', { name: 'Número PayPhone' })).toBeTruthy();
+    expect(createMock).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Tarjeta · PlaceToPay', exact: true }));
+    await screen.findByText(/no sabemos si el pago se completó/);
+    for (const label of ['Tarjeta · Datafast', 'PayPal', 'Transferencia bancaria']) {
+      const button = screen.getByRole('button', { name: label, exact: true });
+      expect(button.hasAttribute('disabled')).toBe(true);
+      fireEvent.click(button);
+    }
+    expect(localStart).not.toHaveBeenCalled(); expect(createMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Recuperar pago original' })).toBeTruthy();
   });
 
   it('shows only server-offered methods and redirects only to the allowlisted host', async () => {
@@ -85,7 +118,7 @@ describe('HostedProviderCheckout', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Tarjeta · PlaceToPay/ }));
 
-    expect(await screen.findByText(/resultado del proveedor/)).toBeTruthy();
+    expect(await screen.findByText(/no sabemos si el pago se completó/)).toBeTruthy();
     expect(screen.getByRole('button', { name: /PayPhone/ }).hasAttribute('disabled')).toBe(true);
     expect(locks).toContain(true);
   });
@@ -101,7 +134,7 @@ describe('HostedProviderCheckout', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Tarjeta · PlaceToPay/ }));
-    expect(await screen.findByText(/resultado del proveedor/)).toBeTruthy();
+    expect(await screen.findByText(/no sabemos si el pago se completó/)).toBeTruthy();
     const firstIdempotencyKey = createMock.mock.calls[0]?.[2];
     first.unmount();
 
@@ -113,7 +146,7 @@ describe('HostedProviderCheckout', () => {
       />,
     );
 
-    expect(await screen.findByText(/resultado del proveedor/)).toBeTruthy();
+    expect(await screen.findByText(/no sabemos si el pago se completó/)).toBeTruthy();
     expect(screen.getByRole('button', { name: /PayPhone/ }).hasAttribute('disabled')).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: /Tarjeta · PlaceToPay/ }));
     await waitFor(() => expect(createMock).toHaveBeenCalledTimes(2));
@@ -145,7 +178,7 @@ describe('HostedProviderCheckout', () => {
       onPaymentConfirmed={confirmed} />);
     expect(screen.queryByRole('button', { name: /Tarjeta · PlaceToPay/ })).toBeNull();
     fireEvent.click(await screen.findByRole('button', { name: 'Recuperar pago original' }));
-    expect(await screen.findByText('El servidor verificó el pago del proveedor.')).toBeTruthy();
+    expect(await screen.findByText('Pago confirmado.')).toBeTruthy();
     expect(createMock).toHaveBeenCalledWith(checkoutId, context.lookupToken, key,
       { provider: 'placetopay', paymentMethod: 'card' });
     expect(confirmed).toHaveBeenCalledTimes(1);
@@ -169,15 +202,70 @@ describe('HostedProviderCheckout', () => {
       onSafetyLockChange={(locked) => locks.push(locked)} />);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Recuperar pago original' }));
-    expect(await screen.findByText(/No reintentes ni uses otro proveedor/)).toBeTruthy();
+    expect(await screen.findByText(/No vuelvas a intentar ni uses otro método/)).toBeTruthy();
     expect(confirmed).not.toHaveBeenCalled();
     expect(navigate).not.toHaveBeenCalled();
-    expect(screen.queryByText('El servidor verificó el pago del proveedor.')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Continuar en la página segura del proveedor' })).toBeNull();
+    expect(screen.queryByText('Pago confirmado.')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Continuar con el pago' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Elegir otro método de pago' })).toBeNull();
     expect(screen.getByRole('button', { name: /PayPhone/ }).hasAttribute('disabled')).toBe(true);
     expect(locks).toContain(true);
     expect(createMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks for the PayPhone number only after that wallet is chosen', async () => {
+    render(<HostedProviderCheckout checkout={context} offeredMethods={['placetopay_card', 'payphone_wallet']}
+      initialBuyerPhone="991234567" />);
+    const wallet = await screen.findByRole('button', { name: /PayPhone/ });
+    expect(screen.queryByRole('textbox', { name: 'Número PayPhone' })).toBeNull();
+    fireEvent.click(wallet);
+    expect(await screen.findByRole('textbox', { name: 'Número PayPhone' })).toBeTruthy();
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
+  it('shows PayPhone errors on the invalid fields without creating or locking a payment', async () => {
+    const locks: boolean[] = [];
+    createMock.mockResolvedValue({ ...succeeded, provider: 'payphone' });
+    render(<HostedProviderCheckout checkout={context} offeredMethods={['payphone_wallet']}
+      onSafetyLockChange={(locked) => locks.push(locked)} />);
+    const wallet = await screen.findByRole('button', { name: /PayPhone/ });
+    fireEvent.click(wallet);
+    const phone = screen.getByRole<HTMLInputElement>('textbox', { name: 'Número PayPhone' });
+    const country = screen.getByRole<HTMLInputElement>('textbox', { name: 'Código país' });
+    expect(document.activeElement).toBe(phone);
+    fireEvent.change(country, { target: { value: '' } });
+    fireEvent.change(phone, { target: { value: '123' } });
+    fireEvent.click(wallet);
+    expect(country.getAttribute('aria-invalid')).toBe('true');
+    expect(phone.getAttribute('aria-invalid')).toBe('true');
+    expect(document.activeElement).toBe(country);
+    expect(createMock).not.toHaveBeenCalled();
+    expect(locks).not.toContain(true);
+    fireEvent.change(country, { target: { value: '593' } });
+    expect(document.activeElement).toBe(country);
+    fireEvent.click(wallet);
+    expect(document.activeElement).toBe(phone);
+    expect(phone.value).toBe('123');
+    fireEvent.change(phone, { target: { value: '999000111' } });
+    fireEvent.click(wallet);
+    await waitFor(() => expect(createMock).toHaveBeenCalledTimes(1));
+    expect(createMock.mock.calls[0]?.[3]).toMatchObject({
+      buyerCountryCode: '593', buyerPhone: '999000111',
+    });
+  });
+
+  it('clears an unused wallet validation error when another offered method is chosen', async () => {
+    createMock.mockResolvedValue(succeeded);
+    render(<HostedProviderCheckout checkout={context} offeredMethods={['placetopay_card', 'payphone_wallet']} />);
+    const wallet = await screen.findByRole('button', { name: /PayPhone/ });
+    fireEvent.click(wallet);
+    fireEvent.click(wallet);
+    const phone = screen.getByRole('textbox', { name: 'Número PayPhone' });
+    expect(phone.getAttribute('aria-invalid')).toBe('true');
+    expect(createMock).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /Tarjeta · PlaceToPay/ }));
+    await waitFor(() => expect(createMock).toHaveBeenCalledTimes(1));
+    expect(phone.getAttribute('aria-invalid')).toBe('false');
   });
 
   it('keeps the original PayPhone contact frozen during exact recovery', async () => {
@@ -201,7 +289,7 @@ describe('HostedProviderCheckout', () => {
     render(<HostedProviderCheckout checkout={context} offeredMethods={['placetopay_card', 'payphone_wallet']}
       onSafetyLockChange={(locked) => locks.push(locked)} />);
     fireEvent.click(await screen.findByRole('button', { name: 'Recuperar pago original' }));
-    expect(await screen.findByText(/contacta a soporte para conciliar esta orden/)).toBeTruthy();
+    expect(await screen.findByText(/contacta a soporte para revisar esta orden/)).toBeTruthy();
     expect(createMock).not.toHaveBeenCalled();
     expect(loadProviderPaymentPending(checkoutId)).not.toBeNull();
     expect(locks.at(-1)).toBe(true);
@@ -213,7 +301,7 @@ describe('HostedProviderCheckout', () => {
     render(<HostedProviderCheckout checkout={context} offeredMethods={['placetopay_card', 'payphone_wallet']} />);
     fireEvent.click(await screen.findByRole('button', { name: 'Recuperar pago original' }));
     await waitFor(() => expect(createMock).toHaveBeenCalledTimes(1));
-    expect(await screen.findByText(/resultado del proveedor/)).toBeTruthy();
+    expect(await screen.findByText(/no sabemos si el pago se completó/)).toBeTruthy();
     expect(loadProviderPaymentPending(checkoutId)).not.toBeNull();
     expect(screen.getByRole('button', { name: /PayPhone/ }).hasAttribute('disabled')).toBe(true);
   });
@@ -223,7 +311,7 @@ describe('HostedProviderCheckout', () => {
       paymentMethod: 'card', createdAt: Date.now() });
     getMock.mockResolvedValue(succeeded);
     render(<HostedProviderCheckout checkout={context} offeredMethods={[]} disabled />);
-    expect(await screen.findByText('El servidor verificó el pago del proveedor.')).toBeTruthy();
+    expect(await screen.findByText('Pago confirmado.')).toBeTruthy();
     expect(getMock).toHaveBeenCalledWith(checkoutId, attemptId, context.lookupToken);
     expect(createMock).not.toHaveBeenCalled();
   });
@@ -251,7 +339,7 @@ describe('HostedProviderCheckout', () => {
       prepareCheckout={prepareCheckout} pendingReturnPathPrefix="/mezcla-mastering/pedido/" />);
     expect(screen.getByRole('button', { name: /PayPhone/ }).hasAttribute('disabled')).toBe(true);
     fireEvent.click(await screen.findByRole('button', { name: 'Recuperar pago original' }));
-    expect(await screen.findByText('El servidor verificó el pago del proveedor.')).toBeTruthy();
+    expect(await screen.findByText('Pago confirmado.')).toBeTruthy();
     expect(createMock).toHaveBeenCalledTimes(1);
     expect(createMock).toHaveBeenCalledWith(mixingId, 'mixing-lookup-token-secure', key,
       { provider: 'placetopay', paymentMethod: 'card' });
@@ -283,7 +371,7 @@ describe('HostedProviderCheckout', () => {
     getMock.mockResolvedValue({ ...succeeded, state: 'ambiguous', outcomeCertainty: 'ambiguous' });
     render(<HostedProviderCheckout offeredMethods={['placetopay_card', 'payphone_wallet']}
       prepareCheckout={prepareCheckout} pendingReturnPathPrefix="/mezcla-mastering/pedido/" />);
-    expect(await screen.findByText(/No reintentes ni uses otro proveedor/)).toBeTruthy();
+    expect(await screen.findByText(/No vuelvas a intentar ni uses otro método/)).toBeTruthy();
     expect(screen.getByRole('button', { name: /PayPhone/ }).hasAttribute('disabled')).toBe(true);
     expect(prepareCheckout).not.toHaveBeenCalled();
   });
@@ -299,7 +387,7 @@ describe('HostedProviderCheckout', () => {
       checkoutId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd' }} offeredMethods={[]} />);
     finish(succeeded);
     await waitFor(() => expect(screen.queryByRole('progressbar')).toBeNull());
-    expect(screen.queryByText('El servidor verificó el pago del proveedor.')).toBeNull();
+    expect(screen.queryByText('Pago confirmado.')).toBeNull();
     expect(createMock).not.toHaveBeenCalled();
   });
 });

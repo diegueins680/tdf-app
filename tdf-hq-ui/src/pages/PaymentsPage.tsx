@@ -1,3 +1,4 @@
+import { formatPriceCentsInput, parseOptionalPriceCents } from '../utils/priceInput';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -134,7 +135,19 @@ export function PaymentForm({
   const [invoiceId, setInvoiceId] = recovery.field('invoiceId');
   const [orderId, setOrderId] = recovery.field('orderId');
   const [error, setError] = useState<string | null>(null);
-  const [fieldHints, setFieldHints] = useState<{ amount?: string; party?: string; date?: string }>({});
+  const [fieldHints, setFieldHints] = useState<{ party?: string; date?: string }>({});
+  const [amountTouched, setAmountTouched] = useState(false);
+  const amountInput = useRef<HTMLInputElement>(null);
+  const amountValue = useMemo(() => {
+    try {
+      const cents = parseOptionalPriceCents(amount);
+      if (cents === null || cents === 0) throw new Error('Ingresa un monto mayor que cero.');
+      return { cents, error: null };
+    } catch (failure) {
+      return { cents: null, error: failure instanceof Error ? failure.message : 'Revisa el monto.' };
+    }
+  }, [amount]);
+  const amountError = amountTouched || amount !== '' ? amountValue.error : null;
   const invoiceOptions = useMemo(
     () => Array.from(new Set(payments.map((p) => p.payInvoiceId).filter(Boolean))).map((v) => String(v)),
     [payments],
@@ -204,7 +217,7 @@ export function PaymentForm({
   });
 
   const resetPaymentMutation = mutation.reset;
-  useEffect(() => { resetPaymentMutation(); setToast(null); }, [ownerId, defaultParty?.partyId, resetPaymentMutation]);
+  useEffect(() => { resetPaymentMutation(); setToast(null); setAmountTouched(false); }, [ownerId, defaultParty?.partyId, resetPaymentMutation]);
 
   const handleSubmit = () => {
     const parsedPartyId = selectedParty?.partyId;
@@ -213,10 +226,9 @@ export function PaymentForm({
       setFieldHints((prev) => ({ ...prev, party: 'Selecciona un contacto de la lista desplegable.' }));
       return;
     }
-    const normalizedAmount = Number.parseFloat(amount.replace(',', '.'));
-    if (Number.isNaN(normalizedAmount) || normalizedAmount <= 0) {
-      setError('Ingresa un monto valido');
-      setFieldHints((prev) => ({ ...prev, amount: 'Usa solo números. Ej: 120.50' }));
+    if (amountValue.cents === null) {
+      setAmountTouched(true);
+      amountInput.current?.focus();
       return;
     }
     if (!paidAt) {
@@ -242,7 +254,7 @@ export function PaymentForm({
       pcPartyId: parsedPartyId,
       pcOrderId: parsedOrderId,
       pcInvoiceId: parsedInvoiceId,
-      pcAmountCents: Math.round(normalizedAmount * 100),
+      pcAmountCents: amountValue.cents,
       pcCurrency: currency.trim() || preferredCurrency,
       pcMethod: method,
       pcReference: reference.trim() || null,
@@ -290,11 +302,14 @@ export function PaymentForm({
               fullWidth
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              inputRef={amountInput}
+              inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+              onBlur={() => setAmountTouched(true)}
               placeholder="Ej. 399.00"
               required
               InputProps={{ startAdornment: <Box sx={{ mr: 1, fontWeight: 700 }}>{currency}</Box> }}
-              helperText={fieldHints.amount}
-              error={Boolean(fieldHints.amount)}
+              helperText={amountError ?? 'Usa punto o coma y hasta dos decimales. El monto debe ser mayor que cero.'}
+              error={Boolean(amountError)}
             />
           </Grid>
           <Grid item xs={12} md={4}>
@@ -421,7 +436,7 @@ export function PaymentForm({
           startIcon={<AddCircleIcon />}
           variant="contained"
           onClick={handleSubmit}
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || amountValue.cents === null}
           sx={{ mt: 2 }}
         >
           Registrar pago
@@ -442,7 +457,12 @@ export function PaymentForm({
             <Button
               size="small"
               onClick={() => {
-                setAmount(String(lastPaymentForParty.payAmountCents / 100));
+                try {
+                  setAmount(formatPriceCentsInput(lastPaymentForParty.payAmountCents));
+                } catch {
+                  setError('El último monto no conserva centavos exactos. Ingrésalo de nuevo.');
+                  return;
+                }
                 setCurrency(lastPaymentForParty.payCurrency);
                 setMethod(lastPaymentForParty.payMethod);
                 setConcept(lastPaymentForParty.payConcept ?? concept);

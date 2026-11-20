@@ -144,6 +144,25 @@ describe('PublicBranding', () => {
     }
   });
 
+  it('tells a visitor on a public page when the connection drops', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderBranding(container, '/eventos/141/entradas');
+    const notice = () => container.querySelector('[role="alert"]')?.closest('.MuiCollapse-root');
+
+    try {
+      expect(notice()?.textContent).toContain('Sin conexión');
+      expect(notice()?.classList.contains('MuiCollapse-hidden')).toBe(true);
+      await act(async () => {
+        window.dispatchEvent(new Event('offline'));
+        await flushPromises();
+      });
+      expect(notice()?.classList.contains('MuiCollapse-hidden')).toBe(false);
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('offers exactly one events entry in the main navigation', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -311,5 +330,49 @@ it.each([
         expect(destination.searchParams.get('redirect')).toBe(expectedTarget);
       }
     } finally { await view.cleanup(); }
+  },
+);
+
+it('keeps the footer to help and WhatsApp preferences without repeating the navigation', async () => {
+  activeSession = null;
+  const container = document.createElement('div'); document.body.appendChild(container);
+  const view = await renderBranding(container, '/tdf');
+  try {
+    const footer = container.querySelector('footer')!;
+    expect(footer.querySelector('nav')).toBeNull();
+    expect(footer.querySelector('a[href="/buscar"]')).toBeNull();
+    expect(footer.querySelector('a[href="/whatsapp/consentimiento"]')?.textContent).toBe('Preferencias de WhatsApp');
+    expect(footer.textContent).toContain('¿Necesitas ayuda?');
+    expect(footer.querySelector('a[href*="/login"]')).not.toBeNull();
+  } finally { await view.cleanup(); container.remove(); }
+});
+
+it('offers no login or signup actions in the footer to a signed-in visitor', async () => {
+  activeSession = { username: 'fan', displayName: 'Fan', roles: ['fan'], partyId: 7 };
+  const container = document.createElement('div'); document.body.appendChild(container);
+  const view = await renderBranding(container, '/tdf');
+  try {
+    const footer = container.querySelector('footer')!;
+    expect(footer.querySelector('a[href*="/login"]')).toBeNull();
+    expect(footer.textContent).not.toContain('Crear cuenta');
+    expect(footer.querySelector('a[href="/whatsapp/consentimiento"]')).not.toBeNull();
+  } finally { await view.cleanup(); container.remove(); activeSession = null; }
+});
+
+it.each(['/eventos/141/entradas', '/eventos/141/orden/9', '/pagos/retorno'])(
+  'keeps promotion and site navigation out of the purchase task: %s', async (route) => {
+    activeSession = null;
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const view = await renderBranding(container, route);
+    try {
+      expect(container.querySelector('nav[aria-label="Navegación principal"]')).toBeNull();
+      expect(container.querySelector('aside[aria-label="TDF Mobile"]')).toBeNull();
+      expect(container.querySelector('header a[href="/buscar"]')).toBeNull();
+      const footer = container.querySelector('footer')!;
+      expect(footer.querySelector('a[href*="signup=1"]')).toBeNull();
+      expect(footer.querySelector('a[href="/whatsapp/consentimiento"]')).not.toBeNull();
+      expect(footer.textContent).toContain('WhatsApp');
+      expect(container.querySelector('header a[href*="/login"]')).not.toBeNull();
+    } finally { await view.cleanup(); container.remove(); }
   },
 );

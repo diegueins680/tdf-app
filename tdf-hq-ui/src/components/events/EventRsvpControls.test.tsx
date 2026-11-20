@@ -87,7 +87,7 @@ describe('EventRsvpControls', () => {
     sessionValue = { partyId: '7', preferences: { showEventRsvpsOnProfile: true } };
     renderControls();
 
-    const interestedButton = await screen.findByRole('button', { name: 'Me interesa' });
+    const interestedButton = await screen.findByRole('button', { name: 'Tal vez' });
     await waitFor(() => expect((interestedButton as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(interestedButton);
 
@@ -96,7 +96,7 @@ describe('EventRsvpControls', () => {
       rsvpShowOnProfile: true,
     }));
     expect(upsertMyRsvpMock.mock.calls[0]?.[1]).not.toHaveProperty('rsvpPartyId');
-    await waitFor(() => expect(screen.getByRole('region', { name: 'Tu RSVP' }).getAttribute('aria-busy')).toBe('false'));
+    await waitFor(() => expect(screen.getByRole('region', { name: '¿Vas?' }).getAttribute('aria-busy')).toBe('false'));
   });
 
   it('copies only the canonical public event URL', async () => {
