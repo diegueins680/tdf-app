@@ -11,6 +11,8 @@
 
 module TDF.Server where
 
+import qualified TDF.Commerce.DatafastClientIP as ClientIP
+
 import qualified TDF.VideoCampaigns as VideoCampaigns
 import qualified TDF.ContentStorage as ContentStorage
 import qualified TDF.StorageVault as StorageVault
@@ -10736,8 +10738,9 @@ bindServiceBookingProviderResource
 createPublicBookingDatafastCheckout
   :: Int64
   -> Maybe Text
+  -> ClientIP.DatafastClientRequest
   -> AppM DatafastCheckoutDTO
-createPublicBookingDatafastCheckout rawBookingId mLookupToken = do
+createPublicBookingDatafastCheckout rawBookingId mLookupToken clientRequest = do
   context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
   when (sbpcCheckoutStatus context == "paid") $
     throwError err409 { errBody = "This booking deposit is already paid" }
@@ -10745,19 +10748,25 @@ createPublicBookingDatafastCheckout rawBookingId mLookupToken = do
   (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireServiceBookingProvider
     context (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
+  existing <- loadServiceBookingProviderBinding
+    context Checkout.ProviderDatafast (ServiceStorefront.sdfEntityId datafast) "checkout"
+  preflight <- maybe
+    (Right <$> ServiceStorefront.loadDatafastClientIP clientRequest) (pure . Left) existing
   attempt <- beginServiceBookingPaymentAttempt
     context Checkout.ProviderDatafast Checkout.OperationCreate
     (ServiceStorefront.sdfEntityId datafast) "create"
-  existing <- loadServiceBookingProviderBinding
-    context Checkout.ProviderDatafast (ServiceStorefront.sdfEntityId datafast) "checkout"
-  (checkoutId, widgetUrl) <- case existing of
-    Just (storedCheckoutId, _) -> pure
+  checkoutRequest <- ServiceStorefront.recheckDatafastCheckout
+    (loadServiceBookingProviderBinding
+      context Checkout.ProviderDatafast (ServiceStorefront.sdfEntityId datafast) "checkout") preflight
+  (checkoutId, widgetUrl) <- case checkoutRequest of
+    Left (storedCheckoutId, _) -> pure
       ( storedCheckoutId
       , normalizeBaseUrl (ServiceStorefront.sdfBaseUrl datafast)
           <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
       )
-    Nothing -> ServiceStorefront.requestDatafastCheckoutForService
-      (toPathPiece (sbpcBookingKey context))
+    Right clientIP -> ServiceStorefront.requestDatafastCheckoutForService
+      (sbpcCheckout context)
+      attempt clientIP
       (fromIntegral (sbpcDepositMinor context))
       (sbpcCurrency context)
       (sbpcBuyerName context)
@@ -10829,11 +10838,11 @@ confirmPublicBookingDatafastStatus rawBookingId mLookupToken rawResourcePath = d
           pending = resultCode == "000.200.000"
       if success
         then do
-          case ServiceStorefront.validateDatafastSuccessfulPayment
-              (toPathPiece (sbpcBookingKey context))
-              (fromIntegral (sbpcDepositMinor context))
-              (sbpcCurrency context)
-              providerStatus of
+          validation <- ServiceStorefront.validateBoundDatafastSuccessfulPayment
+            (sbpcCheckout context) (ServiceStorefront.sdfEnvironment datafast)
+            (ServiceStorefront.sdfEntityId datafast) checkoutId
+            (fromIntegral (sbpcDepositMinor context)) (sbpcCurrency context) providerStatus
+          case validation of
             Left validationMessage -> do
               let actualAmount = ServiceStorefront.sdfpsAmount providerStatus
                     >>= either (const Nothing) Just . ServiceStorefront.parseDatafastCents
@@ -16519,8 +16528,8 @@ isMarketplaceActiveStripeOrderConflict exception =
           `BS8.isInfixOf` (sqlErrorMsg sqlErr <> " " <> sqlErrorDetail sqlErr)
     Nothing -> False
 
-createDatafastCheckout :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
-createDatafastCheckout rawId mIdempotency payload = do
+createDatafastCheckout :: Text -> Maybe Text -> MarketplaceCheckoutReq -> ClientIP.DatafastClientRequest -> AppM DatafastCheckoutDTO
+createDatafastCheckout rawId mIdempotency payload clientRequest = do
   context <- prepareMarketplaceSaleCheckout "datafast" rawId mIdempotency payload
   dfEnv <- loadDatafastCheckoutEnv
   unless (dfEnvironment dfEnv == msccEnvironment context) $
@@ -16533,6 +16542,12 @@ createDatafastCheckout rawId mIdempotency payload = do
     Checkout.providerEnabledForEnvironment (msccEnvironment context) Checkout.ProviderDatafast
   unless providerEnabled $
     throwError err503 { errBody = "Datafast checkout is disabled in this environment" }
+  mPreflightOrder <- liftIO $ flip runSqlPool envPool $ get (msccOrderKey context)
+  preflightOrder <- maybe (throwError marketplaceOrderNotFound) pure mPreflightOrder
+  preflight <- case ME.marketplaceOrderDatafastCheckoutId preflightOrder of
+    Just storedCheckoutId -> Left <$> either throwError pure
+      (validateStoredDatafastCheckoutId storedCheckoutId)
+    Nothing -> Right <$> ServiceStorefront.loadDatafastClientIP clientRequest
   attemptResult <- liftIO $ flip runSqlPool envPool $
     PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
       { Checkout.pacCheckout = msccCheckout context
@@ -16549,18 +16564,20 @@ createDatafastCheckout rawId mIdempotency payload = do
   attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
   mOrder <- liftIO $ flip runSqlPool envPool $ get (msccOrderKey context)
   order <- maybe (throwError marketplaceOrderNotFound) pure mOrder
-  (checkoutId, widgetUrl) <- case ME.marketplaceOrderDatafastCheckoutId order of
-    Just storedCheckoutId -> do
-      validatedCheckoutId <- either throwError pure
-        (validateStoredDatafastCheckoutId storedCheckoutId)
+  checkoutRequest <- ServiceStorefront.recheckDatafastCheckout
+    (traverse (either throwError pure . validateStoredDatafastCheckoutId)
+      (ME.marketplaceOrderDatafastCheckoutId order)) preflight
+  (checkoutId, widgetUrl) <- case checkoutRequest of
+    Left validatedCheckoutId ->
       pure
         ( validatedCheckoutId
         , normalizeBaseUrl (dfBaseUrl dfEnv)
             <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack validatedCheckoutId
         )
-    Nothing ->
+    Right clientIP ->
       requestDatafastCheckout
-        (msccOrderKey context)
+        (msccCheckout context)
+        attempt clientIP
         (msccTotalCents context)
         (msccCurrency context)
         (ME.marketplaceOrderBuyerName order)
@@ -16632,10 +16649,6 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
         (ME.marketplaceOrderCurrency order)
         (dfpAmount statusResp)
         (dfpCurrency statusResp)
-    unless (dfpMerchantTransactionId statusResp == Just (toPathPiece orderKey)) $
-      throwError err502
-        { errBody = "Datafast merchant transaction reference does not match this order"
-        }
   paymentId <- either throwError pure (validateOptionalDatafastPaymentIdField (dfpId statusResp))
   resultDescription <- either throwError pure $
     validateOptionalDatafastMetadataField
@@ -16686,6 +16699,19 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
       attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
       if success
         then do
+          validation <- ServiceStorefront.validateBoundDatafastSuccessfulPayment checkout
+            checkoutEnvironment (dfEntityId dfEnv)
+            (fromMaybe "" (ME.marketplaceOrderDatafastCheckoutId order))
+            (ME.marketplaceOrderTotalUsdCents order) (ME.marketplaceOrderCurrency order)
+            ServiceStorefront.ServiceDatafastPaymentStatus
+              { ServiceStorefront.sdfpsPaymentId = dfpId statusResp
+              , ServiceStorefront.sdfpsAmount = dfpAmount statusResp
+              , ServiceStorefront.sdfpsCurrency = dfpCurrency statusResp
+              , ServiceStorefront.sdfpsMerchantTransactionId = dfpMerchantTransactionId statusResp
+              , ServiceStorefront.sdfpsResultCode = code
+              }
+          either (\message -> throwError err502
+            { errBody = BL.fromStrict (TE.encodeUtf8 message) }) pure validation
           verified <- liftIO $ flip runSqlPool envPool $
             Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
               { Checkout.vpAttempt = attempt
@@ -16711,7 +16737,10 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
               ("marketplace-datafast:" <> toPathPiece orderKey) now
             else Checkout.recordPaymentFailure checkout attempt Checkout.ProviderDatafast code
               ("marketplace-datafast:" <> toPathPiece orderKey) now
-    [] -> pure ()
+    [] -> when success $
+      unless (dfpMerchantTransactionId statusResp == Just (toPathPiece orderKey)) $
+        throwError err502
+          { errBody = "Datafast merchant transaction reference does not match this order" }
     _ -> throwError (marketplaceCheckoutInternal
       "Marketplace Datafast runtime lookup was ambiguous")
   let nextStatus
@@ -17044,9 +17073,10 @@ captureLegacyPaypalOrder orderKey order paypalOrderId = do
   either throwError pure $
     requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
 
-requestDatafastCheckout :: Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
-requestDatafastCheckout orderKey totalCents currency name email mPhone = do
+requestDatafastCheckout :: Checkout.CheckoutReference -> Checkout.PaymentAttemptReference -> ClientIP.DatafastClientIP -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
+requestDatafastCheckout checkout attempt clientIP totalCents currency name email mPhone = do
   dfEnv <- loadDatafastCheckoutEnv
+  cartParameters <- ServiceStorefront.loadDatafastCartParameters checkout totalCents currency
   let manager = sharedProviderManager
   let amountTxt = Internationalization.formatMinorUnitsDecimal
         currency (fromIntegral totalCents)
@@ -17057,14 +17087,15 @@ requestDatafastCheckout orderKey totalCents currency name email mPhone = do
         , ("amount", TE.encodeUtf8 amountTxt)
         , ("currency", TE.encodeUtf8 currencyTxt)
         , ("paymentType", "DB")
-        , ("merchantTransactionId", TE.encodeUtf8 (toPathPiece orderKey))
+        , ("merchantTransactionId", TE.encodeUtf8 (Checkout.paymentAttemptReferenceId attempt))
         , ("customer.givenName", TE.encodeUtf8 givenName)
         , ("customer.surname", TE.encodeUtf8 surname)
         , ("customer.email", TE.encodeUtf8 email)
         ]
       phoneParam = maybe [] (\p -> [("customer.phone", TE.encodeUtf8 p)]) mPhone
       testModeParam = maybe [] (\tm -> [("testMode", TE.encodeUtf8 tm)]) (dfTestMode dfEnv)
-      allParams = baseParams <> phoneParam <> testModeParam <> dfExtraParams dfEnv
+      allParams = baseParams <> ClientIP.datafastClientIPParameters clientIP
+        <> phoneParam <> testModeParam <> dfExtraParams dfEnv <> cartParameters
       body = RequestBodyBS (renderSimpleQuery False allParams)
       baseUrlClean = normalizeBaseUrl (dfBaseUrl dfEnv)
   req0 <- ServiceStorefront.providerRequest Checkout.ProviderDatafast (baseUrlClean ++ "/v1/checkouts")
