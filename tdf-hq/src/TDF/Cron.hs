@@ -3,6 +3,8 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module TDF.Cron
   ( startCoursePaymentReminderJob
+  , startCourseFollowUpReminderJob
+  , courseFollowUpReminderBody
   , startEventDiscoveryJob
   , startInstagramSyncJob
   , startSocialAutoReplyJob
@@ -54,6 +56,7 @@ import           Data.Time               ( LocalTime(..)
                                          , zonedTimeToUTC
                                          )
 import           Database.Persist        ( (!=.)
+                                         , (<=.)
                                          , (==.)
                                          , (>=.)
                                          , Entity(..)
@@ -225,6 +228,80 @@ cronLoop env = forever $ do
       LogBuf.addLog LogBuf.LogError msg
     Right () ->
       LogBuf.addLog LogBuf.LogInfo "[Cron][CoursePayment] Reminder job finished."
+
+-- | Every five minutes, put each due course follow-up reminder in the bell of
+-- the admin who scheduled it. Reminders older than two days are skipped so a
+-- restart never floods the bell with stale alarms.
+startCourseFollowUpReminderJob :: Env -> IO ()
+startCourseFollowUpReminderJob env = do
+  void . forkIO $ do
+    threadDelay (30 * 1000000)
+    forever $ do
+      result <- tryNonAsync (runCourseFollowUpRemindersWithLeaderLock env)
+      case result of
+        Left err -> LogBuf.addLog LogBuf.LogError ("[Cron][CourseFollowUp] Reminder run failed: " <> T.pack (displayException err))
+        Right () -> pure ()
+      threadDelay (5 * 60 * 1000000)
+  LogBuf.addLog LogBuf.LogInfo "[Cron][CourseFollowUp] Scheduled follow-up reminders every 5 minutes."
+
+runCourseFollowUpRemindersWithLeaderLock :: Env -> IO ()
+runCourseFollowUpRemindersWithLeaderLock env@Env{envPool} =
+  withResource envPool $ \backend -> do
+    lockRows <- runSqlConn (rawSql "SELECT pg_try_advisory_lock(8401320250714)" [] :: SqlPersistT IO [Single Bool]) backend
+    case lockRows of
+      [Single True] -> sendDueCourseFollowUpReminders env
+        `finally` void (runSqlConn (rawSql "SELECT pg_advisory_unlock(8401320250714)" [] :: SqlPersistT IO [Single Bool]) backend)
+      _ -> pure ()
+
+sendDueCourseFollowUpReminders :: Env -> IO ()
+sendDueCourseFollowUpReminders Env{envPool} = do
+  now <- getCurrentTime
+  let oldestDue = addUTCTime (-(2 * 24 * 60 * 60)) now
+  rows <- runSqlPool
+    (selectList
+      [ ME.CourseRegistrationFollowUpNextFollowUpAt <=. Just now
+      , ME.CourseRegistrationFollowUpNextFollowUpAt >=. Just oldestDue
+      ]
+      [Asc ME.CourseRegistrationFollowUpNextFollowUpAt, LimitTo 500])
+    envPool
+  for_ rows $ \(Entity followUpKey followUp) ->
+    case (ME.courseRegistrationFollowUpNextFollowUpAt followUp, ME.courseRegistrationFollowUpCreatedBy followUp) of
+      (Just dueAt, Just recipient) -> do
+        mReg <- runSqlPool (get (ME.courseRegistrationFollowUpRegistrationId followUp)) envPool
+        for_ mReg $ \reg ->
+          when (T.toLower (ME.courseRegistrationStatus reg) /= "cancelled") $ do
+            claim <- runSqlPool (insertUnique ME.CourseFollowUpReminderDelivery
+              { ME.courseFollowUpReminderDeliveryFollowUpId = followUpKey
+              , ME.courseFollowUpReminderDeliveryDueAt = dueAt
+              , ME.courseFollowUpReminderDeliveryRecipientPartyId = recipient
+              , ME.courseFollowUpReminderDeliveryDeliveredAt = now
+              }) envPool
+            for_ claim $ \_ -> runSqlPool (insert_ Notification
+              { notificationRecipientPartyId = recipient
+              , notificationNotifType = "course_follow_up_reminder"
+              , notificationTitle = "Recordatorio de seguimiento · " <> courseFollowUpReminderName reg
+              , notificationBody = courseFollowUpReminderBody followUp
+              , notificationTargetType = Just "course_registration"
+              , notificationTargetId = Just (fromIntegral (fromSqlKey (ME.courseRegistrationFollowUpRegistrationId followUp)))
+              , notificationTargetKey = Just (ME.courseRegistrationCourseSlug reg)
+              , notificationIsRead = False
+              , notificationCreatedAt = now
+              }) envPool
+      _ -> pure ()
+
+courseFollowUpReminderName :: ME.CourseRegistration -> Text
+courseFollowUpReminderName reg =
+  fromMaybe "Inscripción" $
+    listToMaybe (filter (not . T.null) (map T.strip (catMaybes [ME.courseRegistrationFullName reg, ME.courseRegistrationEmail reg])))
+
+-- | Subject first, then the note, trimmed to a bell-sized line.
+courseFollowUpReminderBody :: ME.CourseRegistrationFollowUp -> Text
+courseFollowUpReminderBody followUp =
+  let subject = T.strip (fromMaybe "" (ME.courseRegistrationFollowUpSubject followUp))
+      notes = T.strip (ME.courseRegistrationFollowUpNotes followUp)
+      combined = T.intercalate " · " (filter (not . T.null) [subject, notes])
+      body = if T.null combined then "Es momento de retomar esta inscripción." else combined
+  in if T.length body > 280 then T.take 279 body <> "…" else body
 
 -- | Compute the next 09:00 in UTC, based on the server's local timezone.
 nextNineAMUtc :: IO UTCTime

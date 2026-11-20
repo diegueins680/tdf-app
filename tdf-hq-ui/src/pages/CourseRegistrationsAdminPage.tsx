@@ -33,6 +33,8 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SaveIcon from '@mui/icons-material/Save';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import AlarmAddIcon from '@mui/icons-material/AlarmAdd';
+import EventIcon from '@mui/icons-material/Event';
 import ClearIcon from '@mui/icons-material/Clear';
 import UndoIcon from '@mui/icons-material/Undo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -55,6 +57,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { formatTimestampForDisplay, parseTimestamp } from '../utils/dateTime';
+import { buildGoogleCalendarUrl, downloadFollowUpIcs, type FollowUpCalendarEntry } from '../utils/followUpCalendar';
 
 type StatusFilter = 'all' | 'pending_payment' | 'paid' | 'cancelled';
 type RegistrationSortKey = 'default' | 'name' | 'createdAt' | 'updatedAt' | 'course' | 'status' | 'source';
@@ -4950,6 +4953,7 @@ export default function CourseRegistrationsAdminPage() {
   const [showReceiptUrlField, setShowReceiptUrlField] = useState(false);
   const [showFollowUpUrlField, setShowFollowUpUrlField] = useState(false);
   const [showFollowUpDetails, setShowFollowUpDetails] = useState(false);
+  const followUpReminderInputRef = useRef<HTMLInputElement | null>(null);
   const [showFollowUpComposer, setShowFollowUpComposer] = useState(false);
   const [markedPaidRegistrationId, setMarkedPaidRegistrationId] = useState<number | null>(null);
   const [deleteReceiptConfirmOpen, setDeleteReceiptConfirmOpen] = useState(false);
@@ -6796,6 +6800,20 @@ export default function CourseRegistrationsAdminPage() {
     setSelectedDossier({ reg, intent });
   };
 
+  // Reminder notifications and calendar entries link here with ?registration=<id>.
+  const linkedRegistrationParam = searchParams.get('registration');
+  useEffect(() => {
+    if (!linkedRegistrationParam || !regsQuery.isSuccess) return;
+    const linkedId = Number(linkedRegistrationParam);
+    const linkedReg = registrations.find((reg) => reg.crId === linkedId);
+    if (linkedReg) setSelectedDossier({ reg: linkedReg, intent: 'review' });
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('registration');
+      return next;
+    }, { replace: true });
+  }, [linkedRegistrationParam, regsQuery.isSuccess, registrations, setSearchParams]);
+
   const getPersistedNotesValue = () =>
     dossierQuery.data?.crdRegistration.crAdminNotes ?? selectedDossier?.reg.crAdminNotes ?? '';
 
@@ -6836,6 +6854,36 @@ export default function CourseRegistrationsAdminPage() {
   const handleOpenFollowUpComposer = () => {
     setShowFollowUpComposer(true);
     setDossierFlash(null);
+  };
+
+  const handleOpenReminderComposer = () => {
+    setShowFollowUpComposer(true);
+    setShowFollowUpDetails(true);
+    setDossierFlash(null);
+    setFollowUpForm((prev) => ({
+      ...prev,
+      subject: prev.subject.trim() ? prev.subject : 'Recordatorio',
+    }));
+    globalThis.setTimeout(() => followUpReminderInputRef.current?.focus(), 150);
+  };
+
+  const followUpCalendarEntry = (entry: CourseRegistrationFollowUpDTO): FollowUpCalendarEntry | null => {
+    const startAt = entry.crfNextFollowUpAt ? new Date(entry.crfNextFollowUpAt) : null;
+    if (!startAt || Number.isNaN(startAt.getTime()) || !selectedDossier) return null;
+    const reg = selectedDossier.reg;
+    const name = [reg.crFullName?.trim(), reg.crEmail?.trim()].find(Boolean) ?? `Inscripción #${reg.crId}`;
+    const subject = followUpSubjectLabel(entry);
+    const contact = [reg.crEmail?.trim(), reg.crPhoneE164?.trim()].filter(Boolean).join(' · ');
+    const url = typeof window === 'undefined'
+      ? undefined
+      : `${window.location.origin}/configuracion/inscripciones-curso?registration=${reg.crId}&slug=${encodeURIComponent(reg.crCourseSlug)}`;
+    return {
+      title: `Seguimiento: ${name}${subject ? ` · ${subject}` : ''}`,
+      details: [contact, entry.crfNotes.trim()].filter(Boolean).join('\n\n'),
+      startAt,
+      url,
+      uid: `course-follow-up-${entry.crfId}-${startAt.getTime()}@tdfrecords.net`,
+    };
   };
 
   const handleReceiptUpload = (files: DriveFileInfo[]) => {
@@ -9312,15 +9360,27 @@ export default function CourseRegistrationsAdminPage() {
                           <Chip size="small" label={`${followUps.length} entrad${followUps.length === 1 ? 'a' : 'as'}`} />
                         )}
                       </Stack>
-                      {showAddFollowUpAction && (
-                        <Button
-                          size="small"
-                          variant="contained"
-                          onClick={handleOpenFollowUpComposer}
-                        >
-                          Agregar seguimiento
-                        </Button>
-                      )}
+                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                        {!hasOpenDossierComposer && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<AlarmAddIcon />}
+                            onClick={handleOpenReminderComposer}
+                          >
+                            Programar recordatorio
+                          </Button>
+                        )}
+                        {showAddFollowUpAction && (
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={handleOpenFollowUpComposer}
+                          >
+                            Agregar seguimiento
+                          </Button>
+                        )}
+                      </Stack>
                     </Stack>
                     {sharedFollowUpSummary ? (
                       <Typography variant="body2" color="text.secondary">
@@ -9408,10 +9468,12 @@ export default function CourseRegistrationsAdminPage() {
                                     fullWidth
                                   />
                                   <TextField
-                                    label="Próximo seguimiento"
+                                    label="Recordatorio (próximo seguimiento)"
                                     type="datetime-local"
                                     value={followUpForm.nextFollowUpAt}
                                     onChange={(e) => setFollowUpForm((prev) => ({ ...prev, nextFollowUpAt: e.target.value }))}
+                                    inputRef={followUpReminderInputRef}
+                                    helperText="A esa hora te avisaremos en la campana de notificaciones. Al guardar podrás añadirlo a tu calendario con alarma."
                                     fullWidth
                                     InputLabelProps={{ shrink: true }}
                                   />
@@ -9536,19 +9598,15 @@ export default function CourseRegistrationsAdminPage() {
                                 ? ''
                                 : formatOptionalDate(entry.crfCreatedAt);
                               const showFollowUpTypeChip = !sharedFollowUpTypeIsInSummary && !sharedFollowUpTypeLabel;
-                              const showFollowUpNextChip = Boolean(
-                                entry.crfNextFollowUpAt
-                                && !sharedFollowUpNextIsInSummary
-                                && !sharedFollowUpNextLabel,
-                              );
                               const showFollowUpMetadata = showFollowUpTypeChip
-                                || Boolean(followUpCreatedLabel)
-                                || showFollowUpNextChip;
+                                || Boolean(followUpCreatedLabel);
                               const trimmedFollowUpAttachmentName = entry.crfAttachmentName?.trim() ?? '';
                               const followUpAttachmentLabel = trimmedFollowUpAttachmentName
                                 ? trimmedFollowUpAttachmentName
                                 : `Adjunto de ${followUpActionLabel}`;
                               const isFollowUpBeingEdited = followUpForm.editingId === entry.crfId;
+                              const followUpCalendar = followUpCalendarEntry(entry);
+                              const showFollowUpReminderDate = !sharedFollowUpNextIsInSummary && !sharedFollowUpNextLabel;
 
                               return (
                                 <Paper key={entry.crfId} variant="outlined" sx={{ p: 1.5 }}>
@@ -9569,13 +9627,6 @@ export default function CourseRegistrationsAdminPage() {
                                             <Typography variant="caption" color="text.secondary">
                                               {followUpCreatedLabel}
                                             </Typography>
-                                          )}
-                                          {showFollowUpNextChip && (
-                                            <Chip
-                                              size="small"
-                                              color="warning"
-                                              label={`Próximo: ${formatDate(entry.crfNextFollowUpAt)}`}
-                                            />
                                           )}
                                         </Stack>
                                       )}
@@ -9615,6 +9666,38 @@ export default function CourseRegistrationsAdminPage() {
                                           <span>{followUpAttachmentLabel}</span>
                                         </Stack>
                                       </Link>
+                                    )}
+                                    {followUpCalendar && (
+                                      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                                        {showFollowUpReminderDate && (
+                                          <Chip
+                                            size="small"
+                                            icon={<AlarmAddIcon />}
+                                            color={followUpCalendar.startAt.getTime() < Date.now() ? 'default' : 'warning'}
+                                            variant="outlined"
+                                            label={`Próximo: ${formatDate(entry.crfNextFollowUpAt)}`}
+                                          />
+                                        )}
+                                        <Button
+                                          size="small"
+                                          variant="text"
+                                          startIcon={<EventIcon />}
+                                          href={buildGoogleCalendarUrl(followUpCalendar)}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          aria-label={`Añadir recordatorio de ${followUpActionLabel} a Google Calendar`}
+                                        >
+                                          Google Calendar
+                                        </Button>
+                                        <Button
+                                          size="small"
+                                          variant="text"
+                                          onClick={() => downloadFollowUpIcs(followUpCalendar, `seguimiento-${entry.crfId}`)}
+                                          aria-label={`Descargar recordatorio de ${followUpActionLabel} para Apple Calendar u Outlook`}
+                                        >
+                                          Apple / Outlook (.ics)
+                                        </Button>
+                                      </Stack>
                                     )}
                                   </Stack>
                                 </Paper>

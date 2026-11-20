@@ -28548,6 +28548,85 @@
         "reason": "The request and decision lifecycle and its races are exercised on PostgreSQL and the web card and queue by Jest; checkout from an approved request is covered by reading only, no model exists and notice delivery is unverified."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "COURSE-FOLLOWUP-REMINDER-001",
+      "title": "Course registration follow-ups can schedule bell reminders and calendar entries",
+      "statement": "An admin can schedule a reminder on a course registration follow-up. When it is due the author receives one in-app notification that opens the registration dossier, and the follow-up offers Google Calendar and .ics calendar entries with an alarm.",
+      "domain": "Courses",
+      "authority": "Product owner request on 2026-11-20 from the registration dossier screen.",
+      "source": "User request: add reminder alarms and calendar entries to follow up course registrations.",
+      "property": "Each (follow-up, scheduled time, author) produces at most one bell reminder, never for times older than two days or for cancelled registrations.",
+      "contract": "formal/system/course-follow-up-reminders.md",
+      "actors": [
+        "Course registration admin"
+      ],
+      "preconditions": [
+        "The admin can open the course registration dossier under existing permissions."
+      ],
+      "inputs": [
+        "Follow-up note, subject and nextFollowUpAt",
+        "Programar recordatorio action",
+        "Calendar export actions"
+      ],
+      "state": {
+        "boundary": "Follow-up reminder delivery",
+        "states": [
+          "unscheduled",
+          "scheduled",
+          "due",
+          "delivered",
+          "stale"
+        ]
+      },
+      "allowedTransitions": [
+        "unscheduled -> scheduled when nextFollowUpAt is saved",
+        "scheduled -> due when nextFollowUpAt passes",
+        "due -> delivered when the delivery claim succeeds",
+        "delivered -> scheduled when nextFollowUpAt changes"
+      ],
+      "forbiddenTransitions": [
+        "A delivered reminder is sent again for the same scheduled time and author.",
+        "A reminder older than two days or on a cancelled registration is delivered."
+      ],
+      "effects": [
+        "One Notification row per delivered reminder.",
+        "Browser-built calendar link or .ics file."
+      ],
+      "authorization": "Existing course registration admin permissions govern scheduling; the reminder goes only to the follow-up author.",
+      "privacy": "The bell shows the registration name and follow-up text only to its author; calendar exports stay on the admin's device until the admin saves them.",
+      "concurrency": "An advisory lock and a unique delivery claim prevent duplicate reminders across replicas.",
+      "idempotency": "The unique (followUpId, dueAt, recipientPartyId) delivery row makes repeated ticks harmless.",
+      "failure": "A failed tick is logged and retried on the next five-minute tick.",
+      "recovery": "Due reminders within two days are delivered after a restart.",
+      "observability": "[Cron][CourseFollowUp] log lines and the notification row.",
+      "implementation": [
+        "tdf-hq/src/TDF/Cron.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
+        "tdf-hq-ui/src/utils/followUpCalendar.ts",
+        "tdf-hq-ui/src/components/notificationTarget.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "Unit tests for the calendar builders, the notification route and the reminder text; backend build; page test suite.",
+      "evidence": "Branch feat/course-registration-reminders.",
+      "confidence": "Builders and routing have unit tests; the delivery job has no database test yet.",
+      "ambiguity": [
+        "Email or push delivery of reminders is not included."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The scheduled job has no PostgreSQL integration test."
+      },
+      "critical": false
     }
   ]
 }

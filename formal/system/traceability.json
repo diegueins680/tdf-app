@@ -28549,6 +28549,85 @@
         "reason": "The request and decision lifecycle and its races are exercised on PostgreSQL and the web card and queue by Jest; checkout from an approved request is covered by reading only, no model exists and notice delivery is unverified."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "COURSE-FOLLOWUP-REMINDER-001",
+      "title": "Course registration follow-ups can schedule bell reminders and calendar entries",
+      "statement": "An admin can schedule a reminder on a course registration follow-up. When it is due the author receives one in-app notification that opens the registration dossier, and the follow-up offers Google Calendar and .ics calendar entries with an alarm.",
+      "domain": "Courses",
+      "authority": "Product owner request on 2026-11-20 from the registration dossier screen.",
+      "source": "User request: add reminder alarms and calendar entries to follow up course registrations.",
+      "property": "Each (follow-up, scheduled time, author) produces at most one bell reminder, never for times older than two days or for cancelled registrations.",
+      "contract": "formal/system/course-follow-up-reminders.md",
+      "actors": [
+        "Course registration admin"
+      ],
+      "preconditions": [
+        "The admin can open the course registration dossier under existing permissions."
+      ],
+      "inputs": [
+        "Follow-up note, subject and nextFollowUpAt",
+        "Programar recordatorio action",
+        "Calendar export actions"
+      ],
+      "state": {
+        "boundary": "Follow-up reminder delivery",
+        "states": [
+          "unscheduled",
+          "scheduled",
+          "due",
+          "delivered",
+          "stale"
+        ]
+      },
+      "allowedTransitions": [
+        "unscheduled -> scheduled when nextFollowUpAt is saved",
+        "scheduled -> due when nextFollowUpAt passes",
+        "due -> delivered when the delivery claim succeeds",
+        "delivered -> scheduled when nextFollowUpAt changes"
+      ],
+      "forbiddenTransitions": [
+        "A delivered reminder is sent again for the same scheduled time and author.",
+        "A reminder older than two days or on a cancelled registration is delivered."
+      ],
+      "effects": [
+        "One Notification row per delivered reminder.",
+        "Browser-built calendar link or .ics file."
+      ],
+      "authorization": "Existing course registration admin permissions govern scheduling; the reminder goes only to the follow-up author.",
+      "privacy": "The bell shows the registration name and follow-up text only to its author; calendar exports stay on the admin's device until the admin saves them.",
+      "concurrency": "An advisory lock and a unique delivery claim prevent duplicate reminders across replicas.",
+      "idempotency": "The unique (followUpId, dueAt, recipientPartyId) delivery row makes repeated ticks harmless.",
+      "failure": "A failed tick is logged and retried on the next five-minute tick.",
+      "recovery": "Due reminders within two days are delivered after a restart.",
+      "observability": "[Cron][CourseFollowUp] log lines and the notification row.",
+      "implementation": [
+        "tdf-hq/src/TDF/Cron.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
+        "tdf-hq-ui/src/utils/followUpCalendar.ts",
+        "tdf-hq-ui/src/components/notificationTarget.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "Unit tests for the calendar builders, the notification route and the reminder text; backend build; page test suite.",
+      "evidence": "Branch feat/course-registration-reminders.",
+      "confidence": "Builders and routing have unit tests; the delivery job has no database test yet.",
+      "ambiguity": [
+        "Email or push delivery of reminders is not included."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The scheduled job has no PostgreSQL integration test."
+      },
+      "critical": false
     }
   ],
   "sourceFingerprints": {
@@ -29674,8 +29753,8 @@
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
     "tdf-hq-ui/src/components/navigationLabels.test.ts": "01028083246407c2dffe74f833aa4b263db10f2ad3ed99621e8fc9c478af90fb",
-    "tdf-hq-ui/src/components/notificationTarget.test.ts": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
-    "tdf-hq-ui/src/components/notificationTarget.ts": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
+    "tdf-hq-ui/src/components/notificationTarget.test.ts": "f0c8f38714e4403ea1e435a65f080af798ee41c0037330069fb9558dccf9dad1",
+    "tdf-hq-ui/src/components/notificationTarget.ts": "0929c2849faacf9f3d361f8ea771ddb03c5e31ed92a0880460b60849bf0f7b1d",
     "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "281ad82e80344a783693be507711cd5dbef740d50c5c283eeb1793159f37443f",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "3fdc444ab0e36acb6cd12c09531303347d55b9edef443a51311d0d585529ede3",
@@ -29806,8 +29885,8 @@
     "tdf-hq-ui/src/pages/CompaniesPage.tsx": "08964b25803284e26ecb3bafb8968a38b174a0cbd88772529a48cb0cfc951a9c",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "2271af59a0ff14c2a7884224611f96d3e96a326ae2361ee73441ec9b0c4eaa18",
-    "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx": "769a23d6403d4c2cd9d9e31c676e4d9a4174c3057b381f4ca374ceb0d78f0e59",
-    "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx": "cbd2e7e62f3c5f709b74795f43d75df15b7a902ad802fa529750c7145253d081",
+    "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx": "a450286cb01e4a9d5f8bce4a6f852bdf279bf5498cc1cb10dc0486d3450954b7",
+    "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx": "8448c8624f53eab895027630ccea7b24e2048fb4b9c93ea7473c7f205f5a4474",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "6ae004a992507d66d6498640f83788252cb58900d099658be0bbc3ab846a64d8",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "6346f5a36530f69a754f6f3d3988b95a5fd5ad3a7422d1797d1a2801a933c095",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "351c03a7f95ddf473ef8d86e01c0e5be7b4e2a0fbd2d842209b09feec1731fcd",
@@ -30004,6 +30083,8 @@
     "tdf-hq-ui/src/utils/externalTicketing.ts": "1224ccc2f203440828c55c99dc50b60f02b3a36747c2fa63826c73fde51ed8d5",
     "tdf-hq-ui/src/utils/featureRegistry.test.ts": "3e8ea3f9a0fdd8e13cfb846d7259dd7b4ad723b0154eddd187d99ae1cdb4d368",
     "tdf-hq-ui/src/utils/featureRegistry.ts": "59783b97f00c4d2e07261116d9ee813aea4049c33ed8606660b4ff8f4eeb1c70",
+    "tdf-hq-ui/src/utils/followUpCalendar.test.ts": "4aea61a1111566ac478242a6896c2a26dd4d92caa797ba4f59fcd2823056b555",
+    "tdf-hq-ui/src/utils/followUpCalendar.ts": "d700f15f8024aaed1707c16b0ee4dedba3c6aceb9adc00478fdc21fee7ab2f21",
     "tdf-hq-ui/src/utils/inAppBrowser.test.ts": "1bc37ad8648797a57854e8c8e7d1ddb65e071c483b28aead5b2571545b24dcd2",
     "tdf-hq-ui/src/utils/inAppBrowser.ts": "e8cf3a4277519ec11f07f2533ff28a113595a2156406bd95d08162edbc793924",
     "tdf-hq-ui/src/utils/incrementalSha256.test.ts": "dfc75d64b7e8ea09c1606d830cb3f9a00c06c7e857e13640eb0e842d15d5184d",
@@ -30255,7 +30336,7 @@
     "tdf-hq/src/TDF/API/ServiceStorefront.hs": "9695a49d51f2b9c62f4c9703f09266daa50698dfab767dc473e6e2e7186d8d25",
     "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "81bb719a7780e7e6236ff85cb6b87f5479d913afac0af35941ae62bce3bd12cc",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
-    "tdf-hq/src/TDF/App/Boot.hs": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
+    "tdf-hq/src/TDF/App/Boot.hs": "24dd49cd023be713846d7f8629fd253a519e7847e9664a893b350a03cb987bb0",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "158b961935c20e95aa6a43637e1ede2f078bb8ecb594de1d5f8abbf91764004f",
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
@@ -30316,7 +30397,7 @@
     "tdf-hq/src/TDF/Courses/Metadata.hs": "ba3efe18dff11d3f36413640d7d3c2b58222a445dd2240509ef2b1378b5fe661",
     "tdf-hq/src/TDF/Courses/Production.hs": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
     "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "f1b7d5faa26ac03e6217695f5b1dbf11ba31108bd1d3967969f62efe33b04376",
-    "tdf-hq/src/TDF/Cron.hs": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
+    "tdf-hq/src/TDF/Cron.hs": "a4791123f7d3861e36ed3ad557c56c68718ce774fa9cea2a9409e37b327a5368",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
@@ -30340,7 +30421,7 @@
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Models.hs": "0ba4227346e64f32a08e46bc3ad1b03eb5d739e4d7df65bf4ec0279af58b8a4a",
     "tdf-hq/src/TDF/Models/SocialEventsModels.hs": "c6f0a707566cf96e63d59890c04b499a67362d99d6f9c625380dc36f770473c9",
-    "tdf-hq/src/TDF/ModelsExtra.hs": "d3e32f2ed9802c6b967729235fb4a5ebb9a21541afa73325e0950231539a12dc",
+    "tdf-hq/src/TDF/ModelsExtra.hs": "03cb7edb8baafa726c9952f3d9947559271cb43d9e843770317c535a5bb0cf28",
     "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs": "1c3b5fae0cc4e5f4605aea8a1a0118badcafb8d83dbef671fce27f6cbf3d65d2",
     "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs": "91a8b3c360e9175f819599f55f2421f76502e908d76719ff2306c23d2614c329",
     "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs": "4dec7b8d3065fb925231203efe76181a645eb3701b3560b635eb364ece867677",
@@ -30443,7 +30524,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "140bd4954e3e29772f3db30c8df12bf0d2de094252e693ac3d7133e29967bd45",
+    "tdf-hq/test/Spec.hs": "6f1b78c76c251561d8c43dd8e0b85155631a244786dc0c2c879acc51b3cb5992",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -33858,6 +33939,10 @@
       },
       {
         "requirement": "EVT-TICKET-SALE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
         "relationship": "tests"
       }
     ],
@@ -37881,6 +37966,10 @@
       {
         "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Email.hs": [
@@ -40185,6 +40274,10 @@
       {
         "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/CampaignAutomation.hs": [
@@ -41589,6 +41682,10 @@
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": [
@@ -41844,6 +41941,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
         "relationship": "tests"
       }
     ],
@@ -46103,6 +46204,10 @@
       {
         "requirement": "AUTH-SOCIAL-OAUTH-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/ServerInstagramOAuth.hs": [
@@ -46546,6 +46651,10 @@
       },
       {
         "requirement": "UX-FORM-ACTIONS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
         "relationship": "implementation"
       }
     ],
@@ -49579,6 +49688,10 @@
       {
         "requirement": "UX-FORM-ACTIONS-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": [
@@ -50064,6 +50177,18 @@
     "tdf-hq-ui/src/components/events/EventTicketSaleRequestsQueue.test.tsx": [
       {
         "requirement": "EVT-TICKET-SALE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/followUpCalendar.ts": [
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/followUpCalendar.test.ts": [
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
         "relationship": "tests"
       }
     ]
@@ -63824,7 +63949,7 @@
     {
       "id": "SURFACE-5a528805907175e9",
       "path": "tdf-hq-ui/src/components/notificationTarget.test.ts",
-      "sha256": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
+      "sha256": "f0c8f38714e4403ea1e435a65f080af798ee41c0037330069fb9558dccf9dad1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63837,6 +63962,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-INVITATION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "tests"
         }
       ]
@@ -63844,7 +63973,7 @@
     {
       "id": "SURFACE-45942cefd314d415",
       "path": "tdf-hq-ui/src/components/notificationTarget.ts",
-      "sha256": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
+      "sha256": "0929c2849faacf9f3d361f8ea771ddb03c5e31ed92a0880460b60849bf0f7b1d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63857,6 +63986,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-INVITATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -66393,11 +66526,15 @@
     {
       "id": "SURFACE-b584e0770511a16a",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
-      "sha256": "769a23d6403d4c2cd9d9e31c676e4d9a4174c3057b381f4ca374ceb0d78f0e59",
+      "sha256": "a450286cb01e4a9d5f8bce4a6f852bdf279bf5498cc1cb10dc0486d3450954b7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "UX-FORM-ACTIONS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "tests"
         }
       ]
@@ -66405,7 +66542,7 @@
     {
       "id": "SURFACE-bf79c7904e71c2d9",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-      "sha256": "cbd2e7e62f3c5f709b74795f43d75df15b7a902ad802fa529750c7145253d081",
+      "sha256": "8448c8624f53eab895027630ccea7b24e2048fb4b9c93ea7473c7f205f5a4474",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66418,6 +66555,10 @@
         },
         {
           "requirement": "UX-FORM-ACTIONS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -70444,6 +70585,30 @@
         },
         {
           "requirement": "EVT-LOGISTICS-ACCESS-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-0d41a7fe9efbf447",
+      "path": "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
+      "sha256": "4aea61a1111566ac478242a6896c2a26dd4d92caa797ba4f59fcd2823056b555",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6b381b93f828b6d1",
+      "path": "tdf-hq-ui/src/utils/followUpCalendar.ts",
+      "sha256": "d700f15f8024aaed1707c16b0ee4dedba3c6aceb9adc00478fdc21fee7ab2f21",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -76757,7 +76922,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
+      "sha256": "24dd49cd023be713846d7f8629fd253a519e7847e9664a893b350a03cb987bb0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76782,6 +76947,10 @@
         },
         {
           "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -77864,11 +78033,15 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
+      "sha256": "a4791123f7d3861e36ed3ad557c56c68718ce774fa9cea2a9409e37b327a5368",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -78487,7 +78660,7 @@
     {
       "id": "SURFACE-de59a337fc1e94a1",
       "path": "tdf-hq/src/TDF/ModelsExtra.hs",
-      "sha256": "d3e32f2ed9802c6b967729235fb4a5ebb9a21541afa73325e0950231539a12dc",
+      "sha256": "03cb7edb8baafa726c9952f3d9947559271cb43d9e843770317c535a5bb0cf28",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78516,6 +78689,10 @@
         },
         {
           "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -81174,7 +81351,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "140bd4954e3e29772f3db30c8df12bf0d2de094252e693ac3d7133e29967bd45",
+      "sha256": "6f1b78c76c251561d8c43dd8e0b85155631a244786dc0c2c879acc51b3cb5992",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81319,6 +81496,10 @@
         },
         {
           "requirement": "EVT-TICKET-SALE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "tests"
         }
       ]
@@ -90201,7 +90382,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "aaa1ede612d4548fdf1afb7dba26c2d565875906d865825b365260be829bcfce",
+      "sourceSha256": "86be56de496568498e864ca45cbf014769e9cd28b0758485294ed2aed54a002a",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -90229,7 +90410,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "aaa1ede612d4548fdf1afb7dba26c2d565875906d865825b365260be829bcfce",
+      "sourceSha256": "86be56de496568498e864ca45cbf014769e9cd28b0758485294ed2aed54a002a",
       "definition": {
         "states": [
           "absent",
@@ -90259,7 +90440,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "aaa1ede612d4548fdf1afb7dba26c2d565875906d865825b365260be829bcfce",
+      "sourceSha256": "86be56de496568498e864ca45cbf014769e9cd28b0758485294ed2aed54a002a",
       "definition": {
         "export": [
           "queued",
@@ -113618,7 +113799,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 226,
+    "PARTIAL": 227,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

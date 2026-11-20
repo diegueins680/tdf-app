@@ -321,6 +321,16 @@ CourseRegistrationFollowUp
     updatedAt      UTCTime default=now()
     deriving Show Generic
 
+-- One row per reminder sent, so a rescheduled follow-up reminds again
+-- and replicas never send the same reminder twice.
+CourseFollowUpReminderDelivery
+    followUpId       CourseRegistrationFollowUpId
+    dueAt            UTCTime
+    recipientPartyId PartyId
+    deliveredAt      UTCTime
+    UniqueCourseFollowUpReminderDelivery followUpId dueAt recipientPartyId
+    deriving Show Generic
+
 CourseEmailEvent
     courseSlug      Text
     registrationId  CourseRegistrationId Maybe

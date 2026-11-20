@@ -1710,6 +1710,8 @@
       "tdf-hq-ui/src/utils/externalTicketing.ts",
       "tdf-hq-ui/src/utils/featureRegistry.test.ts",
       "tdf-hq-ui/src/utils/featureRegistry.ts",
+      "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
+      "tdf-hq-ui/src/utils/followUpCalendar.ts",
       "tdf-hq-ui/src/utils/formatPhone.ts",
       "tdf-hq-ui/src/utils/formatters.test.ts",
       "tdf-hq-ui/src/utils/formatters.ts",
@@ -10035,13 +10037,13 @@
     {
       "id": "SURFACE-5a528805907175e9",
       "path": "tdf-hq-ui/src/components/notificationTarget.test.ts",
-      "sha256": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
+      "sha256": "f0c8f38714e4403ea1e435a65f080af798ee41c0037330069fb9558dccf9dad1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-45942cefd314d415",
       "path": "tdf-hq-ui/src/components/notificationTarget.ts",
-      "sha256": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
+      "sha256": "0929c2849faacf9f3d361f8ea771ddb03c5e31ed92a0880460b60849bf0f7b1d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11349,13 +11351,13 @@
     {
       "id": "SURFACE-b584e0770511a16a",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
-      "sha256": "769a23d6403d4c2cd9d9e31c676e4d9a4174c3057b381f4ca374ceb0d78f0e59",
+      "sha256": "a450286cb01e4a9d5f8bce4a6f852bdf279bf5498cc1cb10dc0486d3450954b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-bf79c7904e71c2d9",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-      "sha256": "cbd2e7e62f3c5f709b74795f43d75df15b7a902ad802fa529750c7145253d081",
+      "sha256": "8448c8624f53eab895027630ccea7b24e2048fb4b9c93ea7473c7f205f5a4474",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13306,6 +13308,18 @@
       "id": "SURFACE-3b8899145aa5725f",
       "path": "tdf-hq-ui/src/utils/featureRegistry.ts",
       "sha256": "59783b97f00c4d2e07261116d9ee813aea4049c33ed8606660b4ff8f4eeb1c70",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0d41a7fe9efbf447",
+      "path": "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
+      "sha256": "4aea61a1111566ac478242a6896c2a26dd4d92caa797ba4f59fcd2823056b555",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6b381b93f828b6d1",
+      "path": "tdf-hq-ui/src/utils/followUpCalendar.ts",
+      "sha256": "d700f15f8024aaed1707c16b0ee4dedba3c6aceb9adc00478fdc21fee7ab2f21",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17241,7 +17255,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
+      "sha256": "24dd49cd023be713846d7f8629fd253a519e7847e9664a893b350a03cb987bb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17661,7 +17675,7 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
+      "sha256": "a4791123f7d3861e36ed3ad557c56c68718ce774fa9cea2a9409e37b327a5368",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17979,7 +17993,7 @@
     {
       "id": "SURFACE-de59a337fc1e94a1",
       "path": "tdf-hq/src/TDF/ModelsExtra.hs",
-      "sha256": "d3e32f2ed9802c6b967729235fb4a5ebb9a21541afa73325e0950231539a12dc",
+      "sha256": "03cb7edb8baafa726c9952f3d9947559271cb43d9e843770317c535a5bb0cf28",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18747,7 +18761,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "140bd4954e3e29772f3db30c8df12bf0d2de094252e693ac3d7133e29967bd45",
+      "sha256": "6f1b78c76c251561d8c43dd8e0b85155631a244786dc0c2c879acc51b3cb5992",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30959,6 +30973,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/course-follow-up-reminders.md",
+      "sha256": "f16d0b457260f6cd787512d1e1663c6ee5d1baeb38428e5023e54b49b4fab550",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/csv-export-text.md",
       "sha256": "4ab0b237a5b34b00d5a8b1e928f61bee534527f26f29839834b64fa1057df9f5",
       "authority": "inferred",
@@ -31821,7 +31842,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "aaa1ede612d4548fdf1afb7dba26c2d565875906d865825b365260be829bcfce",
+      "sha256": "86be56de496568498e864ca45cbf014769e9cd28b0758485294ed2aed54a002a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

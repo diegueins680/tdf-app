@@ -19,6 +19,12 @@ export function notificationTargetPath(notification: NotificationDTO): string | 
     case 'feature_access_request': return id ? `/solicitudes-acceso?request=${id}` : null;
     case 'event_memories': return id && key ? `/social/eventos/${id}?compose=1&invitation=${key}#momentos` : null;
     case 'event_logistics': return id ? `/social/eventos/${id}/logistica${activity ? `?activity=${activity}` : ''}` : null;
+    case 'course_registration': {
+      if (!id) return null;
+      const slug = typeof notification.nTargetKey === 'string' && /^[a-z0-9][a-z0-9-]{0,79}$/.test(notification.nTargetKey)
+        ? `&slug=${notification.nTargetKey}` : '';
+      return `/configuracion/inscripciones-curso?registration=${id}${slug}`;
+    }
     case 'intern_audit_plan': return key ? `/practicas/auditorias/${key}` : null;
     case 'internal_feedback_report': return key ? `/feedback/interno/${key}` : null;
     case 'directory_application': return key ? `/mis-clasificados?application=${key}` : null;
@@ -41,6 +47,7 @@ export function notificationFallbackPath(notification: NotificationDTO): string 
   if (kind === 'intern_audit_plan' || kind === 'internship_task') return '/practicas';
   if (kind === 'event_memories') return '/social/eventos';
   if (kind === 'event_logistics') return '/social/eventos';
+  if (kind === 'course_registration') return '/configuracion/inscripciones-curso';
   return '/inicio';
 }
 
