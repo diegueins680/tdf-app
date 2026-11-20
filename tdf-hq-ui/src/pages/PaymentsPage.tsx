@@ -436,7 +436,7 @@ export function PaymentForm({
           startIcon={<AddCircleIcon />}
           variant="contained"
           onClick={handleSubmit}
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || amountValue.cents === null}
           sx={{ mt: 2 }}
         >
           Registrar pago
