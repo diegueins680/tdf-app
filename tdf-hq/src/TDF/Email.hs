@@ -17,6 +17,8 @@ module TDF.Email
   , sendContractEmail
   , contractEmailContent
   , sendEngineerBookingEmail
+  , sendPublicBookingRequestReceivedEmail
+  , sendPublicBookingRequestStaffEmail
   -- Ticketing system emails
   , sendTicketConfirmationEmail
   , sendTicketTransferNotificationEmail
@@ -314,6 +316,68 @@ sendEngineerBookingEmail (Just cfg) mBase name email serviceLabel startsAtLabel 
         , "Inicio: " <> startsAtLabel
         , "Cliente: " <> fromMaybe "—" mCustomer
         , "Notas: " <> fromMaybe "—" mNotes
+        , "Ver calendario: " <> calendarUrl
+        ]
+      toAddr = Address (Just name) email
+      mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just calendarUrl)
+  sendMailWithLogging cfg toAddr subject mail
+
+-- Confirm to the customer that a manual (non-holding) booking request arrived.
+sendPublicBookingRequestReceivedEmail
+  :: Maybe EmailConfig
+  -> Text       -- ^ customer name
+  -> Text       -- ^ customer email
+  -> Text       -- ^ service label
+  -> Text       -- ^ starts at label
+  -> Maybe Text -- ^ request details
+  -> IO ()
+sendPublicBookingRequestReceivedEmail Nothing _name _email _svc _start _details =
+  putStrLn "[Email] SMTP not configured; skipped public booking request confirmation."
+sendPublicBookingRequestReceivedEmail (Just cfg) name email serviceLabel startsAtLabel mDetails = do
+  let subject   = "Recibimos tu solicitud - " <> serviceLabel
+      preheader = "Tu solicitud llegó a TDF. Revisaremos disponibilidad y te contactaremos."
+      greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
+      bodyLines =
+        [ "Recibimos tu solicitud. El equipo de TDF revisará disponibilidad y te contactará con una cotización."
+        , "Importante: esta solicitud no retiene la fecha ni confirma un pago."
+        , "Servicio: " <> serviceLabel
+        , "Fecha solicitada: " <> startsAtLabel
+        ]
+        <> maybe [] (\details -> ["Detalle:", details]) mDetails
+      toAddr = Address (Just name) email
+      mail = buildMail cfg toAddr subject preheader greeting bodyLines Nothing
+  sendMailWithLogging cfg toAddr subject mail
+
+-- Alert studio staff that a public booking request needs review.
+sendPublicBookingRequestStaffEmail
+  :: Maybe EmailConfig
+  -> Maybe Text -- ^ optional app base URL
+  -> Text       -- ^ staff name
+  -> Text       -- ^ staff email
+  -> Text       -- ^ service label
+  -> Text       -- ^ starts at label
+  -> Text       -- ^ customer name
+  -> Text       -- ^ customer contact summary
+  -> Maybe Text -- ^ request details
+  -> IO ()
+sendPublicBookingRequestStaffEmail Nothing _base _name _email _svc _start _customer _contact _details =
+  putStrLn "[Email] SMTP not configured; skipped staff booking request alert."
+sendPublicBookingRequestStaffEmail (Just cfg) mBase name email serviceLabel startsAtLabel customer contact mDetails = do
+  let subject   = "Nueva solicitud: " <> serviceLabel <> " · " <> customer
+      preheader = "Una persona envió una solicitud desde la web. Revisa disponibilidad y responde."
+      greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
+      baseUrl   = resolveAppBase mBase
+      sanitized =
+        let trimmed = T.dropWhileEnd (== '/') baseUrl
+        in if T.null trimmed then baseUrl else trimmed
+      calendarUrl = sanitized <> "/estudio/calendario"
+      bodyLines =
+        [ "Llegó una nueva solicitud tentativa desde la web. No retiene la fecha hasta que el equipo la confirme."
+        , "Servicio: " <> serviceLabel
+        , "Fecha solicitada: " <> startsAtLabel
+        , "Cliente: " <> customer
+        , "Contacto: " <> contact
+        , "Detalle: " <> fromMaybe "—" mDetails
         , "Ver calendario: " <> calendarUrl
         ]
       toAddr = Address (Just name) email
