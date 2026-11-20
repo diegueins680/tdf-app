@@ -77,7 +77,7 @@ test('manual evidence uses readable status and exact currency units without conf
   const status = dialog.getByText('Referencia recibida', { exact: true });
   await expect(status).toBeVisible();
   await expect(dialog.getByText('Método: Transferencia bancaria', { exact: true })).toBeVisible();
-  const amount = dialog.getByText(/^Monto declarado:/);
+  const amount = dialog.getByText('Monto declarado:', { exact: true }).locator('..');
   await expect(amount).toContainText(/100[.,]00/); await expect(amount).not.toContainText('10000');
   await expect(dialog.getByText('La evidencia del cliente no confirma pago por sí sola.')).toBeVisible();
   const approve = dialog.getByRole('button', { name: 'Aprobar pago verificado', exact: true });
@@ -113,7 +113,7 @@ test('staff request labels preserve quote-only extension review and unfamiliar c
   await expect(quote).toBeDisabled(); await expect(dialog.getByRole('button', { name: 'Aprobar transición', exact: true })).toHaveCount(0);
   await dialog.getByRole('textbox', { name: 'Notas para el cliente', exact: true }).fill('Cotización sintética pendiente, sin envío.');
   await expect(quote).toBeEnabled();
-  await expect(dialog.getByText(/^Fechas:/)).toContainText('2030-01-12');
+  await expect(dialog.getByText('Fechas:', { exact: true }).locator('..')).toContainText('2030-01-12');
   await inspect(page); await type.scrollIntoViewIfNeeded();
   await page.screenshot({ path: info.outputPath('staff-request-labels.png') });
   state.unknown = true;
