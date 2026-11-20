@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 533,
-    "named": 451,
+    "total": 539,
+    "named": 457,
     "path-named": 0,
     "reviewed": 82,
     "unspecified": 0,
-    "covered": 533
+    "covered": 539
   },
   "routes": [
     {
@@ -318,6 +318,54 @@
     {
       "method": "POST",
       "path": "/admin/domo/quotes/{quoteId}/cancel",
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/domo/quotes/{quoteId}/refund/approve",
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/domo/quotes/{quoteId}/refund/confirm-manual",
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/domo/quotes/{quoteId}/refund/execute",
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/domo/quotes/{quoteId}/refund/manual-evidence",
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/domo/quotes/{quoteId}/refund/provider-reference",
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/domo/quotes/{quoteId}/refund/reconcile",
       "basis": "named",
       "requirements": [
         "PAY-DOMO-CANCEL-001"
