@@ -1,0 +1,199 @@
+{
+  "date": "2026-11-07",
+  "baseCommit": "47e270802a782631dd858ad8f45e8474c05e5a74",
+  "selection": [
+    {
+      "id": "rojo-live-room",
+      "source": "Roj(o) en vivo desde TDF, original local master",
+      "sourceTimeSeconds": 35,
+      "captureDate": "2025-02-24",
+      "publicReference": "https://www.instagram.com/p/DfLV5lMCnfX/",
+      "referencePublishedDate": "2026-10-31",
+      "originalFrameSha256": "c609ccba4230f21c4d2fa0471519c46513ec3c18f7ede0c4eb302a57532a308e",
+      "assets": [
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/rojo-live-room-640.webp",
+          "bytes": 32242,
+          "width": 640,
+          "height": 360,
+          "sha256": "262a518dca0eb561690bad57350137cfddca303e14e5516e87ed88a35eb8404c"
+        },
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/rojo-live-room-1280.webp",
+          "bytes": 87406,
+          "width": 1280,
+          "height": 720,
+          "sha256": "56b876ca35df790ca63741b9399c043c7f887c100de6e37bbad424e7ca35821f"
+        }
+      ]
+    },
+    {
+      "id": "rojo-vocal-session",
+      "source": "Roj(o) en vivo desde TDF, original local master",
+      "sourceTimeSeconds": 174,
+      "captureDate": "2025-02-24",
+      "publicReference": "https://www.instagram.com/p/DfLV5lMCnfX/",
+      "referencePublishedDate": "2026-10-31",
+      "originalFrameSha256": "c2f59b964b59a9800d290e44b94bba67d393c358503da750aea0833428de7b6b",
+      "assets": [
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/rojo-vocal-session-640.webp",
+          "bytes": 14370,
+          "width": 640,
+          "height": 360,
+          "sha256": "219e3e91cce260d1b15dbf6e21c808c792be5ef940b3e10e2c16d22959d2eb75"
+        },
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/rojo-vocal-session-1280.webp",
+          "bytes": 36804,
+          "width": 1280,
+          "height": 720,
+          "sha256": "834b3ab67deee774b9fcdb6319a897b409b1e14d9b6cccad0eaca0383d8f6cb1"
+        }
+      ]
+    },
+    {
+      "id": "rojo-drum-recording",
+      "source": "Roj(o) en vivo desde TDF, original local master",
+      "sourceTimeSeconds": 750,
+      "captureDate": "2025-02-24",
+      "publicReference": "https://www.instagram.com/p/DfLV5lMCnfX/",
+      "referencePublishedDate": "2026-10-31",
+      "originalFrameSha256": "a8ee857ca7c143650a771fed45f19f3963c68761f66a8eee4baf6b72110b781f",
+      "assets": [
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/rojo-drum-recording-640.webp",
+          "bytes": 18936,
+          "width": 640,
+          "height": 360,
+          "sha256": "603f2f2be733772352bbd9453df43242ac9e76c8961625a8c581814c6b750fa5"
+        },
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/rojo-drum-recording-1280.webp",
+          "bytes": 48578,
+          "width": 1280,
+          "height": 720,
+          "sha256": "609062bc2e6c699850b282d60812ce4fac390e5572199601f6fc599bf2671610"
+        }
+      ]
+    }
+  ],
+  "selectionNotes": "Three clean session stills from the original master matching the recent public TDF Instagram carousel. Capture date is distinct from publication date. Six existing archive photographs retained. No fabricated current room or equipment claim.",
+  "sourcesReviewed": {
+    "googleMaps": "Supplied listing inspected in browser. Photos 1-3 attributed to Daniel Escudero, June 2024; not selected as newer photographs.",
+    "instagram": "TDF profile and October 31 carousel inspected; session explicitly dated February 24, 2025. Selected original master stills without promotional overlays.",
+    "drive": "Searched TDF, studio, estudio, sesiones, fotos and image metadata. Reviewed construction photos, control-room render and September 2025 landscape photographs; excluded as unsuitable for studio gallery.",
+    "diskAndSynology": "Inspected local Pictures/Downloads and mounted Synology photo folders, including GoPro and TDF ESTUDIO/Imagenes. Reviewed session master already on disk; older/irrelevant photos excluded. Search was targeted, not exhaustive."
+  },
+  "encoding": "cwebp -q 78 -metadata none, widths 640 and 1280; preserve original aspect ratio; thumbnail crop only in CSS. No provider URLs required for image delivery.",
+  "pagination": {
+    "pageSize": 6,
+    "photos": 9,
+    "pages": 2
+  },
+  "validation": [
+    {
+      "check": "StudioGallery Jest",
+      "result": "PASS",
+      "tests": 6
+    },
+    {
+      "check": "Full UI TypeScript",
+      "result": "PASS"
+    },
+    {
+      "check": "Vite production build and initial bundle budget",
+      "result": "PASS",
+      "initialGzipJavaScriptBytes": 389750
+    },
+    {
+      "check": "Chromium with anonymous public API fixtures",
+      "result": "PASS",
+      "desktopWidth": 1440,
+      "mobileWidth": 320,
+      "firstPagePhotos": 6,
+      "lastPagePhotos": 3,
+      "allNineImagesDecode": true,
+      "fullSizeWidth": 1280,
+      "keyboardFocusRestored": true,
+      "horizontalOverflow": false,
+      "seriousCriticalScopedAxeViolations": 0,
+      "limitation": "Synthetic API responses; no production backend or physical-device claim."
+    },
+    {
+      "check": "WebP metadata inspection",
+      "result": "PASS",
+      "files": 6,
+      "chunks": [
+        "VP8 "
+      ],
+      "EXIF": false,
+      "XMP": false
+    },
+    {
+      "check": "Strict catalog audit",
+      "result": "BASELINE_FAILURE_UNCHANGED",
+      "unreviewed": 0,
+      "staleDecisions": 101,
+      "baselineStaleDecisions": 101,
+      "exactStaleSetUnchanged": true,
+      "galleryDecision": "reviewed nine-entry immutable asset manifest"
+    }
+  ],
+  "delivery": {
+    "deployed": false
+  },
+  "limitations": [
+    "The newest selected session has a verified February 24, 2025 capture date, promoted October 31, 2026. No selected photograph is claimed to have been captured in 2026.",
+    "Targeted search across supplied sources was not an exhaustive indexing of disk, NAS or Drive.",
+    "Not deployed; normal repository review and deployment controls still apply."
+  ],
+  "publicationQualification": {
+    "baseCommit": "d0b10b60d93cb379ac57b204e1d4137cd22dc5ba",
+    "preservedMainChange": "4ae1660cd: synchronize gallery assertions with actual MUI exit clock; new last-page test uses the same clock",
+    "galleryTests": {
+      "result": "PASS",
+      "tests": 6
+    },
+    "fullUiTypecheckAndBuild": {
+      "result": "PASS",
+      "initialGzipJavaScriptBytes": 389748
+    },
+    "specificationInventory": "PASS",
+    "specificationTraceability": "PASS",
+    "pinnedMobile": "1c63eb038ba230005ee77afbe081a0d98bf18b92",
+    "initialAuditLimitation": "Earlier 101 stale decisions were measured with Mobile absent in both candidate and baseline; that historical result is not a complete-repository audit. Final publication check uses the exact initialized Mobile pin.",
+    "catalog": {
+      "result": "PASS",
+      "candidates": 1406,
+      "unreviewed": 0,
+      "staleDecisions": 0,
+      "mobileCandidates": 101,
+      "csv": "Rendered from the audited JSON using unchanged repository csvCell/asCsv functions; exact baseline CSV replay verified."
+    },
+    "mainIntegration": {
+      "baseCommit": "321f4fe6c8e803ab1c32724a8ce5b7814418b79c",
+      "method": "Normal merge of current main preserving published feature history",
+      "gallerySourceAndAssetsUnchanged": true,
+      "tests": {
+        "result": "PASS",
+        "count": 6
+      },
+      "fullTypecheckAndProductionBuild": {
+        "result": "PASS",
+        "initialGzipJavaScriptBytes": 389750
+      },
+      "specificationInventory": "PASS",
+      "specificationTraceability": "PASS",
+      "catalog": {
+        "result": "PASS",
+        "candidates": 1409,
+        "unreviewed": 0,
+        "staleDecisions": 0,
+        "csvBaselineReplay": "PASS"
+      },
+      "mainRequirementsAndUnrelatedCatalogDecisions": "Preserved exactly except authorized gallery requirement and photo-manifest extension",
+      "deployed": false
+    }
+  }
+}

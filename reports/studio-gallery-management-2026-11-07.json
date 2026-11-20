@@ -1,0 +1,92 @@
+{
+  "requestedDate": "2026-11-07",
+  "sourceCommit": "70c847f33b602ba279cab96c96d970d6bb4e36ef",
+  "integratedMain": "9df3922fc8261f80975f436bb14c417ce1194636",
+  "publicGallery": {
+    "source": "GET /cms/content?slug=studio-gallery&locale=es",
+    "initialPhotoCount": 13,
+    "pageSize": 6,
+    "pageCounts": [
+      6,
+      6,
+      1
+    ],
+    "seed": "tdf-hq/sql/2026-11-07_studio_gallery.sql",
+    "fallback": "No bundled-photo fallback; published empty/hidden entries remain authoritative."
+  },
+  "administration": {
+    "path": "/configuracion/cms?slug=studio-gallery&locale=es",
+    "roles": [
+      "Admin",
+      "Webmaster"
+    ],
+    "operations": [
+      "public file upload",
+      "add public HTTPS URL",
+      "edit title/alt/credit/capture date/source",
+      "reorder",
+      "hide/show",
+      "confirm removal",
+      "save draft",
+      "review/publish through existing CMS",
+      "recover via version history"
+    ],
+    "persistence": "Existing authored content + immutable CMS revisions in PostgreSQL",
+    "publication": "Existing server prohibits draft authors publishing their own revisions.",
+    "storage": "Existing TDF public storage with quotas, recovery messages and idempotent upload attempts; gallery removal retains original files."
+  },
+  "photos": "Four real owner-selected Maps images, Daniel Escudero, June 2024. Provenance: reports/studio-gallery-maps-2026-11-07.json. Three Roj(o) session stills, February 2025; six prior photographs retained.",
+  "verification": {
+    "publicAndEditorRegressionSuites": "71 tests passed across StudioGallery, StudioGalleryManagement, studioGallery parser, CmsAdminPage and TdfPlatformPage.",
+    "migration": "PASS against actual production schema fixture plus canonical schema, consumer expansion, integrity and seed. Initial data, CMS lookup, draft isolation, intentional empty publication, rerun preservation and unrelated content tested.",
+    "migrationRegistry": "64 tests passed; registered batch renders.",
+    "browser": {
+      "scope": "Actual gallery/editor components with migrated seed in an isolated local UI harness. Not a production CMS publication or a real-authority authentication test.",
+      "desktop": [
+        1440,
+        1000
+      ],
+      "mobile": [
+        320,
+        900
+      ],
+      "all13ImagesDecode": true,
+      "threePages": [
+        6,
+        6,
+        1
+      ],
+      "fullImageDecodes": true,
+      "keyboardFocusRestored": true,
+      "reorderAndVisibilityUpdate": true,
+      "horizontalOverflow": false,
+      "portraitThumbnailRatio": 1.33333,
+      "fullPortraitHeight": 700,
+      "viewportHeight": 1000,
+      "screenshots": [
+        {
+          "file": "tdf-gallery-desktop-20261107.png",
+          "sha256": "7fc4d5a96b21a463c5c417cd5df7170adf376c68f99999e19c76c27c365f270a"
+        },
+        {
+          "file": "tdf-gallery-mobile-20261107.png",
+          "sha256": "d12d389c8d6daaeabe9260a4eebd2646554a42dd20601310e90776240c759a3c"
+        },
+        {
+          "file": "tdf-gallery-editor-mobile-20261107.png",
+          "sha256": "87c2b239d871c6cb3c993769697072b57110bb7520138df287f8ccac63566fcd"
+        },
+        {
+          "file": "tdf-gallery-maps-portrait-20261107.png",
+          "sha256": "48f758b068c592b061ac0dec5e888313fc370da7b9e567b866af50b751364295"
+        }
+      ]
+    },
+    "build": {
+      "status": "PASS",
+      "initialJavaScriptGzipBytes": 389750,
+      "preloads": 5
+    }
+  },
+  "rollout": "Apply the registered backend migration before deploying the UI. Protected PR approval, checks and production release remain required. Existing preview-origin API CORS limitations are unchanged."
+}

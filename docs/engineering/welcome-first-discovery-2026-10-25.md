@@ -222,3 +222,18 @@ estados de entrega: `reports/studio-gallery-2026-10-26.json`. La galería
 responde al comentario 16:42:25; videos didácticos e identificación del
 anfitrión continúan pendientes. No constituye un resultado humano de
 usabilidad ni una mejora de activación medida.
+
+### Actualización solicitada el 7 de noviembre de 2026
+
+El propietario solicitó nuevas imágenes y paginación, indicando Maps, Drive, disco local, Instagram y Synology como fuentes posibles. La selección añade tres fotogramas del máster original de Roj(o), con fecha de grabación visible del 24 de febrero de 2025 y enlace a la publicación y créditos del 31 de octubre de 2026. No se presentan como fotografías tomadas en 2026. Se conservan las seis fotografías anteriores.
+
+La galería muestra seis imágenes por página, con controles numerados, anterior/siguiente, límites deshabilitados y rango anunciado; la revisión inicial de trece imágenes ocupa tres páginas. El diálogo conserva imagen completa, reintento y retorno del foco a la miniatura de la página activa. Fuentes, derivados y verificación: `reports/studio-gallery-refresh-2026-11-07.json`. Publicación para revisión autorizada; no implica despliegue ni disponibilidad actual de equipos.
+
+
+El propietario también seleccionó expresamente cuatro fotografías de Google Maps y pidió mantenimiento por administradores. Se incorporan los cuatro archivos reales, con crédito a Daniel Escudero y fecha de junio de 2024, sin atribuirles una fecha más reciente. Procedencia y hashes: `reports/studio-gallery-maps-2026-11-07.json`.
+
+La fuente pública pasa a ser el contenido editorial `studio-gallery` (español), con revisiones persistidas en el CMS existente. En `/configuracion/cms?slug=studio-gallery&locale=es`, Admin/Webmaster puede cargar la versión publicada, añadir archivos públicos o URLs HTTPS, editar título, descripción accesible, crédito, fecha y fuente, mover fotos, ocultarlas y quitarlas con confirmación. La carga usa el almacenamiento existente y sus cuotas; quitar una entrada conserva el archivo original. Se guarda un borrador y un revisor diferente lo publica según el contrato existente del CMS. El historial permite cargar una revisión anterior y guardar una nueva versión, sin modificar revisiones publicadas en sitio.
+
+La migración `2026-11-07_studio_gallery` registra el tipo y contenido editorial y siembra una única revisión con trece fotos. Es idempotente y no sobrescribe posteriores borradores, orden ni publicaciones. El despliegue debe aplicar la migración registrada antes de servir la nueva UI. Una galería publicada vacía o con fotos ocultas es autoritativa; no hay una lista local de respaldo que resucite fotos retiradas. Los fallos de API muestran reintento. La lectura pública valida URLs, claves únicas, campos requeridos, fechas y visibilidad antes de mostrar imágenes.
+
+Verificación de esta ampliación: regresiones de paginación y foco, contrato de lectura y guardado CMS, controles visuales y errores de carga, compilación y ensayo PostgreSQL sobre el esquema real de producción y sus migraciones canónicas. Estos ensayos no prueban una publicación en producción ni sustituyen la aprobación editorial o de código. Los previews ajenos al origen permitido pueden sufrir CORS de API; esa restricción no se debilita para el preview.
