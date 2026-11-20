@@ -11476,6 +11476,38 @@
       "accessRequestEligible": false
     },
     {
+      "id": "music.production",
+      "parentId": null,
+      "webRoute": "/producciones",
+      "routeType": "primary",
+      "classification": "primary-destination",
+      "label": {
+        "es": "Producciones musicales",
+        "en": "Music production projects"
+      },
+      "synonyms": {
+        "es": [
+          "proyectos",
+          "mezcla",
+          "grabación"
+        ],
+        "en": [
+          "projects",
+          "mix review",
+          "recording"
+        ]
+      },
+      "keywords": [
+        "production",
+        "studio",
+        "EP"
+      ],
+      "navigationGroup": "people",
+      "icon": "album",
+      "breadcrumb": [],
+      "accessRequestEligible": false
+    },
+    {
       "id": "music.library",
       "parentId": null,
       "webRoute": "/musica/biblioteca",

@@ -1,0 +1,91 @@
+openapi: 3.0.0
+info: {title: Private music production workspace, version: '1.0'}
+paths:
+  /productions:
+    get:
+      operationId: listProductions
+      security: [{bearerAuth: []}]
+      summary: Return projects with member-filtered tasks, immutable audio review history and current schedule
+      responses:
+        '200':
+          description: Client projections contain only expressly shared versions and their tasks
+          content: {application/json: {schema: {type: array, items: {type: object}}}}
+        '401': {description: Active TDF session required}
+    post:
+      operationId: createProduction
+      security: [{bearerAuth: []}]
+      summary: Create a private production and reverse-schedule its songs from a template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, format, delivery, songs, template]
+              properties:
+                title: {type: string, maxLength: 240}
+                format: {type: string, enum: [Sencillo, EP, Álbum]}
+                delivery: {type: string, format: date}
+                songs:
+                  type: array
+                  items: {type: object, properties: {title: {type: string}, track: {type: string, format: uuid}}}
+                template:
+                  type: array
+                  items: {type: object, required: [name, days], properties: {name: {type: string}, days: {type: integer, minimum: 0, maximum: 365}}}
+      responses:
+        '200': {$ref: '#/components/responses/Receipt'}
+        '400': {description: Invalid template or song}
+        '401': {description: Active TDF session required}
+  /productions/{project}/actions:
+    post:
+      operationId: updateProduction
+      security: [{bearerAuth: []}]
+      summary: Apply one project-scoped transition under the project transaction lock
+      parameters:
+        - {$ref: '#/components/parameters/Project'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [op]
+              properties:
+                op: {type: string, enum: [invite, task, edit, dependency, block, progress, publish, feedback, propose, backplan, confirm]}
+                task: {type: string, format: uuid}
+                revision: {type: integer, description: Required except for version feedback and proposal confirmation}
+                version: {type: string, format: uuid}
+                kind: {type: string, enum: [comment, changes, approve]}
+                request: {type: string, format: uuid, description: Idempotency key for the exact version and feedback payload}
+                file: {type: string, format: uuid, description: Completed private TDF audio owned by the authenticated uploader}
+                proposal: {type: string, format: uuid}
+      responses:
+        '200': {$ref: '#/components/responses/Receipt'}
+        '400': {description: Invalid transition input}
+        '401': {description: Active TDF session required}
+        '403': {description: Project role or assignment does not allow the transition}
+        '404': {description: Project or version unavailable to this account}
+        '409': {description: Stale plan, stale version, dependency, decision or booking conflict}
+  /productions/{project}/versions/{version}/audio:
+    get:
+      operationId: readProductionAudio
+      security: [{bearerAuth: []}]
+      summary: Read private audio for this exact version
+      parameters:
+        - {$ref: '#/components/parameters/Project'}
+        - {name: version, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Immutable file bytes, private cache disabled
+          content: {application/octet-stream: {schema: {type: string, format: binary}}}
+        '401': {description: Active TDF session required}
+        '404': {description: No visible version at this project path}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer}
+  parameters:
+    Project: {name: project, in: path, required: true, schema: {type: string, format: uuid}}
+  responses:
+    Receipt:
+      description: The persisted result identifier
+      content: {application/json: {schema: {type: object, required: [id], properties: {id: {type: string, format: uuid}, kind: {type: string}}}}}

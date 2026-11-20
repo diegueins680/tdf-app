@@ -188,6 +188,11 @@ jobs:
             https://github.com/apalache-mc/apalache/releases/download/v0.62.4/apalache.tgz \
             --output "${RUNNER_TEMP}/tdf-formal-tools/apalache-0.62.4.tgz"
 
+      - name: Check production workspace models and negative controls
+        env:
+          TLA2TOOLS_JAR: ${{ runner.temp }}/tdf-formal-tools/tla2tools-1.7.2.jar
+        run: bash scripts/verify-production-workspace.sh
+
       - name: Check event operations models
         env:
           TLA2TOOLS_JAR: ${{ runner.temp }}/tdf-formal-tools/tla2tools-1.7.2.jar
@@ -216,6 +221,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+
+      - name: Check production workspace EP and concurrent PostgreSQL writers
+        run: python3 scripts/test-production-workspace.py
 
       - name: Check event operations foundation migration
         run: npm run test:event-operations-foundation-migration

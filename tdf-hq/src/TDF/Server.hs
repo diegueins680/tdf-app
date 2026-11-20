@@ -109,6 +109,7 @@ import qualified TDF.API.Types as APITypes
 import           TDF.API.WhatsApp (validateHookVerifyRequest)
 import qualified TDF.API      as Api
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
+import           TDF.Server.Production (productionServer)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Drive (DriveAPI, DriveUploadForm(..))
 import           TDF.Contracts.API (ContractsAPI)
@@ -4043,6 +4044,7 @@ protectedServer user =
   :<|> adsAdminServer user
   :<|> academyAccountServer user
   :<|> coursesAdminServer user
+  :<|> productionServer hasStudioBookingAccess user
   :<|> labelServer user
   :<|> calendarServer user
   :<|> cmsAdminServer user

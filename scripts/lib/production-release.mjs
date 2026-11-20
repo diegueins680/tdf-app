@@ -612,6 +612,15 @@ BEGIN
   -- forward migration does: rollback keeps its ledger row, so verify the live
   -- column and validated exact allowlist before starting the newer application.
   IF to_regclass('public.tdf_schema_migration') IS NOT NULL THEN
+    IF EXISTS (SELECT FROM public.tdf_schema_migration WHERE migration_id='2026-11-18_production_workspace')
+      AND (to_regprocedure('public.production_command(bigint,boolean,uuid,jsonb)') IS NULL
+        OR to_regprocedure('public.production_workspace(bigint)') IS NULL
+        OR to_regprocedure('public.production_visible_version(bigint,uuid)') IS NULL
+        OR to_regclass('public.production_one_decision') IS NULL
+        OR NOT EXISTS(SELECT FROM pg_trigger WHERE tgrelid=to_regclass('public.content_storage_upload')
+          AND tgname='production_version_retention' AND tgenabled IN ('O','A'))) THEN
+      RAISE EXCEPTION 'Production workspace migration is incomplete';
+    END IF;
     IF EXISTS (SELECT 1 FROM public.tdf_schema_migration
       WHERE migration_id='2026-11-07_apple_provider_identity_issuer') THEN
       IF NOT EXISTS (SELECT 1 FROM pg_attribute

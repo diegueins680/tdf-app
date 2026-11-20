@@ -66,6 +66,9 @@ const asReviewedBeforeRegistryRefresh = entries => entries.map(entry => {
 const DELIVERY_PROTOCOL_REVIEW = '755cf14ac92e4f590879';
 const PLAYER_SERVER_MAIN_BASE = '2ebb5c38bef08f3205877dc9521026b40b68d4ef';
 const PLAYER_SERVER_REVIEW_HEAD = '85255658262166ab4aeb0e7e167b3a93c4a33d61';
+const workspaceMigration = '2026-11-18_production_workspace';
+const productionParent = '4389ab59ff19e3bf1b5722454d238d63e1d42aae';
+const refundParent = 'd65017d10f16e8089c43b82bdbcacf3177d206f5';
 const manifestPath = 'scripts/production-migrations.json';
 const catalogPath = 'docs/catalog-persistence/catalog-list-decisions.json';
 const playerMigrations = new Set([
@@ -873,7 +876,7 @@ test('ticket main merge retains stale approvals only as provenance', async () =>
       // The dated 164-feature replacement is now nested in the explicitly
       // reviewed canonical 165-feature mirror. It cannot authorize that new
       // source: the generator/negative-control test below checks this directly.
-      const successor = document.decisions.find(item => item.id === 'ea29c6e8a6cd165802a8');
+      const successor = wholeReview(document, (await reviewedJson(refundParent, catalogPath)).decisions.find(item => item.id === 'ea29c6e8a6cd165802a8'));
       assert.equal(successor?.reviewed, true);
       const parent = (await reviewedJson(INTEGRATION_MAIN, catalogPath)).decisions
         .find(item => item.id === entry.replacementId);
@@ -1366,7 +1369,7 @@ async function actualManifest() {
 }
 async function mainManifestView() {
   const actual = await actualManifest();
-  return { ...actual, migrations: actual.migrations.filter(row => !INTEGRATION_EXTRA_IDS.has(row.id)) };
+  return { ...actual, migrations: actual.migrations.filter(row => row.id !== workspaceMigration && !INTEGRATION_EXTRA_IDS.has(row.id)) };
 }
 async function sourceManifestView() {
   const original = (await reviewedJson(INTEGRATION_SOURCE, 'scripts/production-migrations.json')).migrations;
@@ -1513,7 +1516,7 @@ test('combined registry retains the exact main prefix, original SQL and whole pa
   const main = await reviewedJson(INTEGRATION_MAIN, manifestPath);
   const original = await reviewedJson(INTEGRATION_SOURCE, manifestPath);
   const suffix = original.migrations.filter(row => INTEGRATION_EXTRA_IDS.has(row.id));
-  assert.deepEqual(current, { ...main, migrations: [...main.migrations, ...suffix] });
+  assert.deepEqual(current, { ...main, migrations: [...main.migrations, ...suffix, (await reviewedJson(productionParent, manifestPath)).migrations.at(-1)] });
   assert.equal(new Set(current.migrations.map(row => row.id)).size, current.migrations.length);
   for (const row of suffix) {
     const { stdout } = await execFileAsync('git', ['show', `${INTEGRATION_SOURCE}:${row.path}`], { cwd: workspaceRoot });
@@ -1531,7 +1534,7 @@ test('combined registry retains the exact main prefix, original SQL and whole pa
   assert.equal(tip.evidence.valueCount, current.migrations.length);
   assert.equal(pointer.valueCount, current.migrations.length);
   assert.equal(retirement.replacementId, tip.id);
-  assert.deepEqual(tip.previousDecision, (await reviewedJson(INTEGRATION_MAIN, catalogPath))
+  assert.deepEqual(tip.previousDecision.previousDecision, (await reviewedJson(INTEGRATION_MAIN, catalogPath))
     .decisions.find(row => row.evidence?.file === manifestPath));
   const canonical = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
     ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
@@ -1588,9 +1591,9 @@ test('actual Mobile mirror matches its generator and stale predecessor cannot au
   const mobileFile = 'tdf-mobile/src/features/generatedFeatureRegistry.ts';
   const generatedFile = 'src/features/generatedFeatureRegistry.ts';
   const register = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
-  const current = register.decisions.find(row => row.id === 'ea29c6e8a6cd165802a8');
-  assert.equal(current?.evidence.valueCount, 165);
-  assert.equal(current.previousDecision.id, 'fd606f7d00f82c78cb20');
+  const current = register.decisions.find(row => row.previousDecision?.id === 'ea29c6e8a6cd165802a8');
+  assert.equal(current?.evidence.valueCount, 166);
+  assert.equal(current.previousDecision.previousDecision.id, 'fd606f7d00f82c78cb20');
   try {
     const output = path.join(temporary, 'generated');
     await fs.mkdir(path.join(output, 'src/features'), { recursive: true });
@@ -1619,4 +1622,29 @@ test('actual Mobile mirror matches its generator and stale predecessor cannot au
   } finally {
     await fs.rm(temporary, { recursive: true, force: true });
   }
+});
+
+
+test('production workspace preserves both reviewed parents and the protected migration prefix', async () => {
+  const current = await actualManifest();
+  const main = await reviewedJson(refundParent, manifestPath);
+  const source = await reviewedJson(productionParent, manifestPath);
+  const addition = source.migrations.at(-1);
+  assert.equal(addition.id, workspaceMigration);
+  assert.deepEqual(current.migrations, [...main.migrations, addition]);
+  const { stdout } = await execFileAsync('git', ['show', addition.introducedBy + ':' + addition.path], { cwd: workspaceRoot });
+  assert.equal(await fs.readFile(path.join(workspaceRoot, addition.path), 'utf8'), stdout);
+  const register = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
+  for (const parent of [refundParent, productionParent]) {
+    const prior = await reviewedJson(parent, catalogPath);
+    for (const decision of prior.decisions) assert.ok(wholeReview(register, decision), parent + ':' + decision.id);
+    for (const [name, key] of [['event-catalog-current-successors', 'successors'], ['event-integration-retirements', 'retirements']]) {
+      const file = 'docs/catalog-persistence/' + name + '.json';
+      const live = JSON.parse(await fs.readFile(path.join(workspaceRoot, file), 'utf8'));
+      for (const row of (await reviewedJson(parent, file))[key]) assert.ok(wholeResolution(live, row), parent + ':' + name);
+    }
+  }
+  const active = register.decisions.map(row => row.id);
+  const candidates = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/reports/static-list-inventory.json'), 'utf8')).candidates;
+  assert.deepEqual(active.sort(), candidates.map(row => row.id).sort());
 });

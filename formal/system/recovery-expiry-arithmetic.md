@@ -286,3 +286,7 @@ appended. The two Cabal registrations and the explicit middleware/wiring/API/tes
 manifest are unchanged from `ce763107100e39a94c7caae7876d2632ae9c47de`. Other main handler/test
 changes prevent a whole-backend identity claim. Fresh predicate verification
 binds the final composition; older execution receipts retain their identities.
+
+### Private production workspace registration
+
+The library registers `TDF.API.Production` and `TDF.Server.Production`. Removing the two lines reproduces the Cabal file at protected main `d05a3964819a8eba675a3dcc399342ad6aba16ef` byte for byte. The source paths, compiler options, dependency versions and bindings for the predicates in this contract retain their reviewed definitions. The production workflow has its own bounded model and PostgreSQL tests in `formal/production/README.md`.

@@ -2,7 +2,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module TDF.ContentStorage
   ( contentStorageServer, storeManagedUpload, storageError, managedImageExtension
-  , bindExternalDriveAttempt ) where
+  , readManagedFile, bindExternalDriveAttempt ) where
 
 import Control.Monad (unless, when)
 import Control.Monad.IO.Class (liftIO)
@@ -104,11 +104,7 @@ contentStorageServer user = account :<|> setDestination :<|> listFiles :<|> read
       (sharing,mime) <- case found of
         [(Single sharing,Single mime)] -> pure (sharing,mime)
         _ -> throwError err404
-      cfg <- asks envConfig
-      let path = storedFilePath (assetsRootDir cfg) (UUID.toText fileId) sharing mime
-      exists <- liftIO (doesFileExist path)
-      unless exists (throwError (storageError err503 "storage_file_unavailable"))
-      bytes <- liftIO (BL.readFile path)
+      bytes <- readManagedFile fileId sharing mime
       pure (addHeader ("private, no-store" :: Text) (addHeader ("attachment; filename=\"tdf-file\"" :: Text) (addHeader ("nosniff" :: Text) bytes)))
     deleteFile fileId = do
       let identifier = UUID.toText fileId
@@ -119,11 +115,15 @@ contentStorageServer user = account :<|> setDestination :<|> listFiles :<|> read
           :: SqlPersistT IO [(Single Text,Single Text,Single Bool)]
         case found of
           [(Single sharing,Single mime,Single False)] -> do
-            -- Persist deletion intent before touching bytes. Old writers cannot
-            -- publish after this fence; preserve the original completion time.
-            rawExecute "UPDATE content_storage_upload SET status='cancelled',original_completed_at=COALESCE(original_completed_at,completed_at),completed_at=NULL WHERE id=?::uuid AND owner_party_id=?"
-              [PersistText identifier,PersistInt64 owner]
-            pure (Right (sharing,mime))
+            references <- rawSql "SELECT EXISTS(SELECT FROM production_version WHERE file_id=?::uuid)"
+              [PersistText identifier] :: SqlPersistT IO [Single Bool]
+            if references == [Single True] then pure (Left (storageError err409 "storage_file_in_production"))
+            else do
+              -- Persist deletion intent before touching bytes. Old writers cannot
+              -- publish after this fence; preserve the original completion time.
+              rawExecute "UPDATE content_storage_upload SET status='cancelled',original_completed_at=COALESCE(original_completed_at,completed_at),completed_at=NULL WHERE id=?::uuid AND owner_party_id=?"
+                [PersistText identifier,PersistInt64 owner]
+              pure (Right (sharing,mime))
           [(Single _,Single _,Single True)] -> pure (Left (storageError err409 "storage_upload_in_progress"))
           _ -> pure (Left err404)
       (sharing,mime) <- either throwError pure rows
@@ -138,6 +138,14 @@ contentStorageServer user = account :<|> setDestination :<|> listFiles :<|> read
           runDB (rawExecute "UPDATE content_storage_upload SET deleted_at=COALESCE(deleted_at,clock_timestamp()) WHERE id=?::uuid AND owner_party_id=? AND status='cancelled'"
             [PersistText identifier,PersistInt64 owner])
           pure NoContent
+
+readManagedFile :: UUID -> Text -> Text -> AppM BL.ByteString
+readManagedFile fileId sharing mime = do
+  cfg <- asks envConfig
+  let path = storedFilePath (assetsRootDir cfg) (UUID.toText fileId) sharing mime
+  exists <- liftIO (doesFileExist path)
+  unless exists (throwError (storageError err503 "storage_file_unavailable"))
+  liftIO (BL.readFile path)
 
 privateRoot :: FilePath
 privateRoot = "uploads/content-storage"

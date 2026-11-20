@@ -76,6 +76,12 @@ jobs:
       - name: Build canonical backend and generated package metadata
         working-directory: tdf-hq
         run: stack build tdf-hq:exe:tdf-hq-exe
+      - name: Production EP with private audio and four real browser sessions
+        run: |
+          python3 -m venv "$RUNNER_TEMP/production-browser"
+          "$RUNNER_TEMP/production-browser/bin/pip" install playwright==1.59.0
+          backend_dir=$(cd tdf-hq && stack path --local-install-root)
+          "$RUNNER_TEMP/production-browser/bin/python" scripts/test-production-workspace-browser.py --backend "$backend_dir/bin/tdf-hq-exe"
       - name: Real session, event API, PostgreSQL and browser journeys
         run: sh scripts/test-event-raci-browser.sh --event-memories
       - name: Retain test-only evidence

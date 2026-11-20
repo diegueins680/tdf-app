@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 539,
-    "named": 457,
+    "total": 541,
+    "named": 459,
     "path-named": 0,
     "reviewed": 82,
     "unspecified": 0,
-    "covered": 539
+    "covered": 541
   },
   "routes": [
     {
@@ -2922,6 +2922,22 @@
       "basis": "named",
       "requirements": [
         "PIPELINE-CARDS-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/productions",
+      "basis": "named",
+      "requirements": [
+        "MUSIC-PRODUCTION-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/productions/{project}/actions",
+      "basis": "named",
+      "requirements": [
+        "MUSIC-PRODUCTION-001"
       ]
     },
     {

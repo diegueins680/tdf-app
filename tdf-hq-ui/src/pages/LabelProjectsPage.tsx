@@ -286,6 +286,7 @@ export default function LabelProjectsPage() {
       actions={<LiveReloadAction loading={listQuery.isFetching} onReload={() => void listQuery.refetch()} />}
     >
       <Stack spacing={3}>
+        <Button href="/producciones" variant="outlined">Abrir producciones musicales</Button>
         {(listQuery.isLoading || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending) && <LinearProgress />}
         {listQuery.isError && <Alert severity="error">No se pudieron cargar las notas.</Alert>}
 

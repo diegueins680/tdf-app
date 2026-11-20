@@ -69,6 +69,7 @@ import           TDF.API.Calendar    (CalendarAPI)
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Merch (MerchPublicAPI, MerchProtectedAPI)
 import           TDF.API.MusicRelease (MusicReleasePublicAPI, MusicReleaseProtectedAPI)
+import           TDF.API.Production (ProductionAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Services (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.SocialEventsAPI (SocialEventsAPI)
@@ -647,6 +648,7 @@ type ProtectedAPI =
   :<|> AdsAdminAPI
   :<|> AcademyAccountAPI
   :<|> "admin" :> CoursesAdminAPI
+  :<|> ProductionAPI
   :<|> "label" :> LabelAPI
   :<|> "calendar" :> CalendarAPI
   :<|> CmsAdminAPI
