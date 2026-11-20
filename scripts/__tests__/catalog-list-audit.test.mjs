@@ -144,7 +144,12 @@ async function readReconciliation(beforePlayer = false) {
   });
   // Reviews whose source list was deleted outright (no successor list). They
   // leave the active register and are kept, unchanged, as history.
-  const retired = (register.reconciliation.sourceRemovalRetirements ?? []).flatMap(entry => entry.decisions);
+  const retired = (mainRegister.reconciliation.sourceRemovalRetirements ?? [])
+    .flatMap(entry => entry.decisions).map(row => {
+      const found = wholeReview(register.reconciliation.sourceRemovalRetirements, row);
+      assert.ok(found, `Dated retirement missing: ${row.id}`);
+      return found;
+    });
   let successors = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-catalog-current-successors.json'), 'utf8')).successors;
   let integration = JSON.parse(await fs.readFile(path.join(workspaceRoot,
