@@ -14,6 +14,8 @@ export default {
   auditActor: "Operador {{actor}} · {{date}}",
 
   queueTitle: 'Solicitudes de eliminación de cuenta',
+  queueLoading: 'Cargando solicitudes…',
+  queueRefreshing: 'Actualizando solicitudes…',
   queueEmpty: 'No hay solicitudes en esta página.',
   queueError: 'No se pudieron cargar las solicitudes de eliminación.',
   previous: 'Anterior',
