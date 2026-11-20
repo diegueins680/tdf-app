@@ -147,7 +147,7 @@ module TDF.Server.SocialEventsHandlers (
 import Control.Applicative ((<|>))
 import Control.Exception (IOException, SomeAsyncException, SomeException, fromException, throwIO, try)
 import Control.Monad (filterM, forM, forM_, join, unless, void, when)
-import Control.Monad.Except (ExceptT, catchError, runExceptT)
+import Control.Monad.Except (catchError, runExceptT)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask)
@@ -338,6 +338,7 @@ import TDF.Models
     )
 import TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
+import TDF.Server.SocialArtistOwnership (duplicateArtistOwner, ensureAvailableArtistOwner)
 import qualified TDF.Profiles.Artist as ArtistProfiles
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.SocialEventLifecycle as EventLifecycle
@@ -7710,20 +7711,6 @@ artistOwnerKey :: T.Text -> Either ServerError (Key Party)
 artistOwnerKey value =
     maybe (Left err400{errBody = "artistPartyId must be a positive integer"})
         (Right . toSqlKey) (normalizePositiveIdentifier value)
-
-duplicateArtistOwner :: ServerError
-duplicateArtistOwner = err409{errBody = "An artist profile already exists for this party"}
-
-ensureAvailableArtistOwner :: Key Party -> Maybe ArtistProfileId -> ExceptT ServerError (SqlPersistT IO) ()
-ensureAvailableArtistOwner owner currentProfile = do
-    backend <- lift getRDBMS
-    let lock = if backend == "postgresql" then " FOR UPDATE" else ""
-    owners <- lift (rawSql ("SELECT id FROM party WHERE id = ?" <> lock)
-        [toPersistValue owner] :: SqlPersistT IO [Single Int64])
-    when (null owners) $ throwError err422{errBody = "artistPartyId references an unknown party"}
-    duplicate <- lift $ selectFirst
-        ([ArtistProfilePartyId ==. Just (renderKeyText owner)] ++ maybe [] (\key -> [ArtistProfileId !=. key]) currentProfile) []
-    when (isJust duplicate) $ throwError duplicateArtistOwner
 
 normalizePositivePartyIdText :: T.Text -> Maybe T.Text
 normalizePositivePartyIdText rawPartyId =

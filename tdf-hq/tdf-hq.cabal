@@ -224,6 +224,7 @@ library
     TDF.Server.EventAdminDelegation
     TDF.Server.EventTicketSale
     TDF.Server.SocialEventsHandlers
+    TDF.Server.SocialArtistOwnership
     TDF.Server.StripeTicketCapture
     TDF.Server.EventResearch
     TDF.Server.DDEX
