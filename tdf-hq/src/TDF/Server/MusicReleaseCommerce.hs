@@ -14,6 +14,8 @@ module TDF.Server.MusicReleaseCommerce
   , recordMusicVerifiedPayment
   ) where
 
+import qualified TDF.Commerce.DatafastClientIP as ClientIP
+
 import Control.Monad (unless)
 import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (liftIO)
@@ -253,8 +255,8 @@ listMusicEntitlements user = do
     "SELECT jsonb_build_object('id',entitlement.id,'releaseVersionId',entitlement.release_version_id,'assetId',entitlement.asset_id,'sourceKind',entitlement.source_kind,'status',entitlement.status,'maxDownloads',entitlement.max_downloads,'downloadCount',(SELECT count(*) FROM music_download_event event WHERE event.entitlement_id=entitlement.id),'expiresAt',entitlement.expires_at,'grantedAt',entitlement.granted_at,'revokedAt',entitlement.revoked_at) FROM music_entitlement entitlement WHERE entitlement.buyer_party_id=? ORDER BY entitlement.granted_at DESC"
     [PersistInt64 (currentPartyId user)]
 
-createMusicDatafastCheckout :: AuthedUser -> UUID -> Maybe Text -> AppM Value
-createMusicDatafastCheckout user orderId idempotencyHeader = do
+createMusicDatafastCheckout :: AuthedUser -> UUID -> Maybe Text -> ClientIP.DatafastClientRequest -> AppM Value
+createMusicDatafastCheckout user orderId idempotencyHeader clientRequest = do
   requireCommerceFeature
   idempotencyKey <- requireIdempotencyKey idempotencyHeader
   context <- loadPurchaseContext user orderId
@@ -265,36 +267,42 @@ createMusicDatafastCheckout user orderId idempotencyHeader = do
   case existing of
     Just (providerId, _) -> datafastCheckoutJson context datafast providerId
     Nothing -> do
+      clientIP <- Provider.loadDatafastClientIP clientRequest
       now <- liftIO getCurrentTime
       attempt <- beginAttempt context checkout Checkout.ProviderDatafast (Provider.sdfEnvironment datafast)
         (Provider.sdfEntityId datafast) Checkout.OperationCreate idempotencyKey now
-      amount <- safeIntAmount (purchaseAmountMinor context)
-      (providerId, widgetUrl) <- Provider.requestDatafastCheckoutForService
-        (UUID.toText orderId) amount (purchaseCurrency context)
-        (purchaseBuyerName context) (purchaseBuyerEmail context) Nothing
-        `catchError` failAttempt checkout attempt Checkout.ProviderDatafast "datafast_create" now
-      bindResult <- runDB $ Checkout.bindProviderResource Checkout.ProviderBindingCreation
-        { Checkout.pbcAttempt = attempt
-        , Checkout.pbcCheckout = checkout
-        , Checkout.pbcProvider = Checkout.ProviderDatafast
-        , Checkout.pbcEnvironment = Provider.sdfEnvironment datafast
-        , Checkout.pbcMerchantRef = Provider.sdfEntityId datafast
-        , Checkout.pbcResourceType = "checkout"
-        , Checkout.pbcProviderResource = providerId
-        , Checkout.pbcResourcePath = Just ("/v1/checkouts/" <> providerId)
-        , Checkout.pbcOrderReference = UUID.toText orderId
-        , Checkout.pbcAmountMinor = purchaseAmountMinor context
-        , Checkout.pbcCurrency = purchaseCurrency context
-        , Checkout.pbcStage = Checkout.AttemptRequiresCustomerAction
-        , Checkout.pbcOccurredAt = now
-        , Checkout.pbcCorrelationId = "music-datafast-create:" <> UUID.toText orderId
-        }
-      either (throwError . providerError) pure bindResult
-      pure (object
-        [ "purchaseId" .= orderId, "checkoutId" .= purchaseCheckoutId context
-        , "providerCheckoutId" .= providerId, "widgetUrl" .= T.pack widgetUrl
-        , "amountMinor" .= musicMinorUnitsJSON (purchaseAmountMinor context), "currency" .= purchaseCurrency context
-        ])
+      checkoutRequest <- Provider.recheckDatafastCheckout
+        (providerBinding (purchaseCheckoutId context) "datafast" "checkout") (Right clientIP)
+      case checkoutRequest of
+        Left (providerId, _) -> datafastCheckoutJson context datafast providerId
+        Right verifiedIP -> do
+          amount <- safeIntAmount (purchaseAmountMinor context)
+          (providerId, widgetUrl) <- Provider.requestDatafastCheckoutForService
+            checkout attempt verifiedIP amount (purchaseCurrency context)
+            (purchaseBuyerName context) (purchaseBuyerEmail context) Nothing
+            `catchError` failAttempt checkout attempt Checkout.ProviderDatafast "datafast_create" now
+          bindResult <- runDB $ Checkout.bindProviderResource Checkout.ProviderBindingCreation
+            { Checkout.pbcAttempt = attempt
+            , Checkout.pbcCheckout = checkout
+            , Checkout.pbcProvider = Checkout.ProviderDatafast
+            , Checkout.pbcEnvironment = Provider.sdfEnvironment datafast
+            , Checkout.pbcMerchantRef = Provider.sdfEntityId datafast
+            , Checkout.pbcResourceType = "checkout"
+            , Checkout.pbcProviderResource = providerId
+            , Checkout.pbcResourcePath = Just ("/v1/checkouts/" <> providerId)
+            , Checkout.pbcOrderReference = UUID.toText orderId
+            , Checkout.pbcAmountMinor = purchaseAmountMinor context
+            , Checkout.pbcCurrency = purchaseCurrency context
+            , Checkout.pbcStage = Checkout.AttemptRequiresCustomerAction
+            , Checkout.pbcOccurredAt = now
+            , Checkout.pbcCorrelationId = "music-datafast-create:" <> UUID.toText orderId
+            }
+          either (throwError . providerError) pure bindResult
+          pure (object
+            [ "purchaseId" .= orderId, "checkoutId" .= purchaseCheckoutId context
+            , "providerCheckoutId" .= providerId, "widgetUrl" .= T.pack widgetUrl
+            , "amountMinor" .= musicMinorUnitsJSON (purchaseAmountMinor context), "currency" .= purchaseCurrency context
+            ])
 
 confirmMusicDatafastPayment :: AuthedUser -> UUID -> Maybe Text -> MusicDatafastStatusRequest -> AppM Value
 confirmMusicDatafastPayment user orderId idempotencyHeader MusicDatafastStatusRequest{..} = do
@@ -316,8 +324,10 @@ confirmMusicDatafastPayment user orderId idempotencyHeader MusicDatafastStatusRe
     if Provider.isDatafastPaymentSuccess (Provider.sdfEnvironment datafast) (Provider.sdfpsResultCode status)
       then do
         amount <- safeIntAmount (purchaseAmountMinor context)
-        either (throwError . providerError) pure
-          (Provider.validateDatafastSuccessfulPayment (UUID.toText orderId) amount (purchaseCurrency context) status)
+        validation <- Provider.validateBoundDatafastSuccessfulPayment checkout
+          (Provider.sdfEnvironment datafast) (Provider.sdfEntityId datafast)
+          providerCheckoutId amount (purchaseCurrency context) status
+        either (throwError . providerError) pure validation
         paymentId <- maybe (throwError (providerError "Datafast response omitted the payment ID")) pure
           (Provider.sdfpsPaymentId status)
         bindAndVerify context checkout attempt Checkout.ProviderDatafast (Provider.sdfEnvironment datafast)

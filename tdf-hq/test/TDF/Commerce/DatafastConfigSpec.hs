@@ -6,14 +6,18 @@ import Control.Monad (forM_)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map.Strict as Map
 import Data.Either (isLeft)
+import Data.Int (Int64)
+import Data.Scientific (Scientific)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Network.HTTP.Types.URI (parseQuery)
 import Test.Hspec
-import Test.QuickCheck (property)
+import Test.QuickCheck (choose, forAll, property)
+import Text.Read (readMaybe)
 
 import TDF.Commerce.DatafastConfig
-  (validateDatafastMerchantParameters, encodeDatafastForm, splitDatafastBuyerName)
+  (validateDatafastMerchantParameters, encodeDatafastForm, splitDatafastBuyerName,
+   DatafastCartLine(..), datafastCartParameters)
 import TDF.Commerce.TicketBuyerContact (ticketPaymentBuyerPhone, normalizeTicketBuyerPhone)
 
 spec :: Spec
@@ -111,6 +115,92 @@ spec = describe "Dataweb merchant metadata" $ do
             validateDatafastMerchantParameters (Map.insert field value fixture) of
       Left message -> message `shouldSatisfy` (not . T.isInfixOf "private")
       Right _ -> expectationFailure ("Accepted invalid " <> field)
+  describe "immutable cart projection" $ do
+    it "sends every stored item with its own exact price and quantity" $
+      datafastCartParameters 3000 "USD"
+        [DatafastCartLine "Entrada" 2 1250, DatafastCartLine "Reserva" 1 500]
+        `shouldBe` Right
+          [ ("cart.items[0].name", "Entrada")
+          , ("cart.items[0].description", "Entrada")
+          , ("cart.items[0].price", "12.50")
+          , ("cart.items[0].quantity", "2")
+          , ("cart.items[1].name", "Reserva")
+          , ("cart.items[1].description", "Reserva")
+          , ("cart.items[1].price", "5.00")
+          , ("cart.items[1].quantity", "1")
+          ]
+
+    it "never rounds a mismatched total into an artificial per-item price" $ do
+      datafastCartParameters 1000 "USD" [DatafastCartLine "Entrada" 3 333]
+        `shouldSatisfy` isLeft
+      fmap (lookup "cart.items[0].price")
+        (datafastCartParameters 999 "USD" [DatafastCartLine "Entrada" 3 333])
+        `shouldBe` Right (Just "3.33")
+
+    it "rejects missing, zero and negative canonical amounts or quantities" $ do
+      datafastCartParameters 100 "USD" [] `shouldSatisfy` isLeft
+      forM_ [0, -1] $ \amount ->
+        datafastCartParameters amount "USD" [DatafastCartLine "Entrada" 1 100]
+          `shouldSatisfy` isLeft
+      forM_ [DatafastCartLine "Entrada" 0 100, DatafastCartLine "Entrada" (-1) 100,
+             DatafastCartLine "Entrada" 1 0, DatafastCartLine "Entrada" 1 (-100)] $ \line ->
+        datafastCartParameters 100 "USD" [line] `shouldSatisfy` isLeft
+
+    it "refuses unsupported currencies instead of treating their minor units as USD" $ do
+      forM_ ["EUR", "JPY", "", "US1"] $ \currency ->
+        datafastCartParameters 100 currency [DatafastCartLine "Entrada" 1 100]
+          `shouldSatisfy` isLeft
+      fmap (lookup "cart.items[0].price")
+        (datafastCartParameters 1 " usd " [DatafastCartLine "Entrada" 1 1])
+        `shouldBe` Right (Just "0.01")
+
+    it "retains UTF-8 product descriptions and literal encoded separators" $ do
+      let description = "Sesión José + mezcla=1"
+      case datafastCartParameters 100 "USD" [DatafastCartLine description 1 100] of
+        Left message -> expectationFailure (T.unpack message)
+        Right fields -> do
+          parseQuery (encodeDatafastForm fields)
+            `shouldBe` map (\(key, value) -> (key, Just value)) fields
+          lookup "cart.items[0].name" fields `shouldBe` Just (TE.encodeUtf8 description)
+
+    it "rejects provider-invalid product names without exposing private text" $
+      forM_ ["", "  ", "private&product", "private\nproduct", "private\NULproduct",
+             T.replicate 256 "x"] $ \description ->
+        case datafastCartParameters 100 "USD" [DatafastCartLine description 1 100] of
+          Left message -> message `shouldSatisfy` (not . T.isInfixOf "private")
+          Right _ -> expectationFailure "Provider-invalid cart name was accepted"
+
+    it "respects exact decimal and quantity boundaries before provider I/O" $ do
+      datafastCartParameters 999999999999 "USD"
+        [DatafastCartLine "Entrada" 1 999999999999] `shouldSatisfy` either (const False) (const True)
+      datafastCartParameters 1000000000000 "USD"
+        [DatafastCartLine "Entrada" 1 1000000000000] `shouldSatisfy` isLeft
+      datafastCartParameters 100000 "USD"
+        [DatafastCartLine "Entrada" 100000 1] `shouldSatisfy` isLeft
+      datafastCartParameters 99999 "USD"
+        [DatafastCartLine "Entrada" 99999 1] `shouldSatisfy` either (const False) (const True)
+
+    it "cannot wrap an overflowing product into a matching positive total" $
+      datafastCartParameters 1 "USD" [DatafastCartLine "Entrada" 3 (maxBound :: Int64)]
+        `shouldSatisfy` isLeft
+
+    it "conserves generated cent totals and unique indexed fields" $
+      forAll (choose (1, 999 :: Int)) $ \quantity ->
+      forAll (choose (1, 100000 :: Int64)) $ \unit ->
+        let amount = fromIntegral quantity * unit
+        in case datafastCartParameters amount "USD"
+            [DatafastCartLine "Entrada" quantity unit] of
+          Left _ -> False
+          Right fields -> length fields == 4 && Map.size (Map.fromList fields) == 4
+            && lookup "cart.items[0].quantity" fields == Just (BS.pack (show quantity))
+            && (do
+                 price <- lookup "cart.items[0].price" fields
+                 decimal <- readMaybe (BS.unpack price) :: Maybe Scientific
+                 pure (toRational decimal * 100 * fromIntegral quantity)
+               ) == Just (fromIntegral amount)
+            && parseQuery (encodeDatafastForm fields)
+              == map (\(key, value) -> (key, Just value)) fields
+
 fixture :: Map.Map String String
 fixture = Map.fromList
   [ ("DATAFAST_MID", "1234567890")
