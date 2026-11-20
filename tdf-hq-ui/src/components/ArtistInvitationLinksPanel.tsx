@@ -124,7 +124,14 @@ export default function ArtistInvitationLinksPanel() {
           </Typography>
         </Alert>
       ) : null}
-      {listQuery.isPending ? <CircularProgress aria-label="Invitaciones de artista" /> : null}
+      {listQuery.isFetching ? (
+        <Stack direction="row" spacing={1} alignItems="center" role="status">
+          <CircularProgress size={20} aria-hidden="true" />
+          <Typography variant="body2" color="text.secondary">
+            {listQuery.isPending ? 'Cargando invitaciones…' : 'Actualizando invitaciones…'}
+          </Typography>
+        </Stack>
+      ) : null}
       {listQuery.isError ? <Alert severity="error">{listQuery.error.message}</Alert> : null}
       {revokeMutation.isError ? <Alert severity="error">{revokeMutation.error.message}</Alert> : null}
       <Stack spacing={1} aria-live="polite">
