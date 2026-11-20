@@ -74,6 +74,12 @@ const saveLookupToken = (eventId: number, orderId: number, token: string) => {
   }
 };
 
+// The confirmation email links to the order with its key after "#acceso=". A
+// fragment is not sent with the page request, and analytics drops it; the page
+// keeps the key like one from a purchase on this device and clears the address.
+const emailedLookupToken = (hash: string): string | null =>
+  /^#acceso=([0-9a-f]{64})$/.exec(hash)?.[1] ?? null;
+
 const loadLookupToken = (eventId: number, orderId: number): string | null => {
   try {
     return window.localStorage.getItem(lookupStorageKey(eventId, orderId));
@@ -207,14 +213,20 @@ export default function PublicEventTicketsPage() {
       setLookupFailed(false);
       setPaymentUnconfirmed(false);
     }
+    const emailed = emailedLookupToken(location.hash);
+    if (emailed) {
+      liveLookup.current = { eventId, orderId: routeOrderId, token: emailed };
+      saveLookupToken(eventId, routeOrderId, emailed);
+      navigate(`${location.pathname}${location.search}`, { replace: true });
+    }
     const live = liveLookup.current;
     const token = live?.eventId === eventId && live.orderId === routeOrderId
       ? live.token : loadLookupToken(eventId, routeOrderId);
     if (!token) {
       setPaymentBusy(false);
       setMessage(english
-        ? 'Open this order in the browser where you bought your tickets, or use the ticket codes in your confirmation email.'
-        : 'Abre esta orden en el navegador donde compraste tus entradas o usa los códigos del correo de confirmación.');
+        ? 'Open this order from the link in your confirmation email, or in the browser where you bought your tickets.'
+        : 'Abre esta orden desde el enlace de tu correo de confirmación o en el navegador donde compraste tus entradas.');
       return;
     }
     const query = new URLSearchParams(location.search);
@@ -242,7 +254,7 @@ export default function PublicEventTicketsPage() {
       })
       .finally(() => { if (active) setPaymentBusy(false); });
     return () => { active = false; };
-  }, [english, eventId, location.pathname, location.search, lookupRevision, navigate, routeOrderId, validEventId, validOrderId]);
+  }, [english, eventId, location.hash, location.pathname, location.search, lookupRevision, navigate, routeOrderId, validEventId, validOrderId]);
 
   const title = storefront.data?.title ?? (english ? 'Event tickets' : 'Entradas para eventos');
   const description = storefront.data?.description
