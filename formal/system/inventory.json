@@ -18476,7 +18476,7 @@
     {
       "id": "SURFACE-b48f5e82f84a1379",
       "path": "tdf-hq/src/TDF/Ticketing/Inventory.hs",
-      "sha256": "12bffe2306dd3639c0afe23e05e08a1baa55c9615540a3e8a747d9e83eb90e8c",
+      "sha256": "7debfcbb6f15e152edc32c62292093625ec358b107344a6c450dcdfdb4ffb6d2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18788,7 +18788,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "1d44b71cfda45994856a9657043c1da774f32399a7dcec5bc0b54e7d9b47afff",
+      "sha256": "449893675ef34a757c850b16513421074f94241cfeeed1514607fb3de133a9af",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19208,7 +19208,7 @@
     {
       "id": "SURFACE-b88bd7d333ae2b44",
       "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
-      "sha256": "79ee5e669a2e4f14adc869ed26d3828bd2ef174ed8fb1472d81a206303a4fbcb",
+      "sha256": "7e32d6c2d3d32f9b656fa665bcde046a00cfe0e9aa7091da28b25146c3f8b286",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31821,7 +31821,7 @@
     },
     {
       "path": "formal/system/ticket-reservation-clock.md",
-      "sha256": "8e25fe8724f48710dfa8e31237bc10023123717bb9601859dfcc4e537266be80",
+      "sha256": "7aaa4d844cc13e1f6e11f50faf536fe5ef95b7110478bdab32e973f3dce8f544",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

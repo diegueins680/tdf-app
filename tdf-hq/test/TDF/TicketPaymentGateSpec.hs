@@ -16,7 +16,7 @@ import Data.Int (Int64)
 import Data.List (isInfixOf)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Time (UTCTime, getCurrentTime)
+import Data.Time (UTCTime, addUTCTime, getCurrentTime)
 import Database.Persist (PersistValue(..))
 import Database.Persist.Postgresql (createPostgresqlPool)
 import Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, toSqlKey, rawExecute, rawSql, runSqlPool)
@@ -58,14 +58,18 @@ spec = describe "ticket-payment-gate-postgresql" $ do
     Just connection | not (isDisposablePostgresUrl ci connection) ->
       it "refuses a non-disposable database" $ expectationFailure "Use the isolated runner"
     Just connection -> beforeAll (runNoLoggingT (createPostgresqlPool (BS.pack connection) 4)) $ do
-      forM_ [False,True] $ \promotion -> forM_ [False,True] $ \elapsed ->
+      forM_ [False,True] $ \eventEndCutoff -> forM_ [False,True] $ \promotion -> forM_ [False,True] $ \elapsed ->
         it ("ticket-reservation-clock enforces canonical deadline: promo=" <>
-            show promotion <> ", elapsed=" <> show elapsed) $ \pool -> do
+            show promotion <> ", elapsed=" <> show elapsed <> ", eventEnd=" <> show eventEndCutoff) $ \pool -> do
           let label = if promotion then "clock-promo" else "clock-tier"
           (eventId,tierId) <- newOrderFixture pool label
           [Single deadline] <- runSqlPool (rawSql
             "SELECT clock_timestamp()+(?::integer*interval '1 second')"
               [PersistInt64 (if elapsed then 5 else 600)]) pool :: IO [Single UTCTime]
+          if eventEndCutoff then runSqlPool (rawExecute
+            "UPDATE social_event SET start_time=?::timestamptz-interval '1 hour',end_time=? WHERE id=?"
+            [PersistUTCTime deadline,PersistUTCTime deadline,PersistInt64 eventId]) pool else pure ()
+          let otherDeadline = if eventEndCutoff then addUTCTime 600 deadline else deadline
           let code = "CLOCK-" <> T.pack (show eventId)
               request = Routes.PublicEventTicketCheckoutRequest tierId 1 "Synthetic Buyer"
                 ("clock-" <> T.pack (show eventId) <> "@example.test") Nothing
@@ -74,9 +78,9 @@ spec = describe "ticket-payment-gate-postgresql" $ do
           runSqlPool (if promotion then rawExecute
             "INSERT INTO promo_code(event_id,code,discount_type,discount_value,currency,valid_until,\
             \ max_redemptions,current_redemptions,is_active) VALUES (?,?,'fixed_amount',100,'USD',?,10,0,true)"
-            [PersistInt64 eventId,PersistText code,PersistUTCTime deadline]
+            [PersistInt64 eventId,PersistText code,PersistUTCTime otherDeadline]
             else rawExecute "UPDATE event_ticket_tier SET sales_end=? WHERE id=?"
-              [PersistUTCTime deadline,PersistInt64 tierId]) pool
+              [PersistUTCTime otherDeadline,PersistInt64 tierId]) pool
           locked <- newEmptyMVar
           release <- newEmptyMVar
           let holdBarrier = runSqlPool (do

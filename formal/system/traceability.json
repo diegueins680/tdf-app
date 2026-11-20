@@ -30357,7 +30357,7 @@
     "tdf-hq/src/TDF/Social/Session.hs": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "a2568ecfb8235b9c91c0ce144ac5cec72ef0eb5cd52e06f42c3130ed7e347142",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "5b3345a4fb48d85bdbbcca06a6965eb66349c1fe5bf73c3461e27edc7fbbba90",
-    "tdf-hq/src/TDF/Ticketing/Inventory.hs": "12bffe2306dd3639c0afe23e05e08a1baa55c9615540a3e8a747d9e83eb90e8c",
+    "tdf-hq/src/TDF/Ticketing/Inventory.hs": "7debfcbb6f15e152edc32c62292093625ec358b107344a6c450dcdfdb4ffb6d2",
     "tdf-hq/src/TDF/Ticketing/Issuance.hs": "398c68514db13ca6c396a3b160cdf10d9b0524c48acb10e7c21032d15e5e25b7",
     "tdf-hq/src/TDF/Ticketing/Refund.hs": "fffa6d4c96c372218fa827af114cacdcc43d6ac9aa2c84bfc5e1552a9e72dc29",
     "tdf-hq/src/TDF/Ticketing/Transfer.hs": "edfefec16e7943820a62c0f655677db2045a311ee6b324b63b7999b5501e8791",
@@ -30395,7 +30395,7 @@
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "5b0a405f5a8e81e439655b8aac0384c828258113c625cfa1f1d4acb0376a3cde",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "1d44b71cfda45994856a9657043c1da774f32399a7dcec5bc0b54e7d9b47afff",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "449893675ef34a757c850b16513421074f94241cfeeed1514607fb3de133a9af",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -30456,7 +30456,7 @@
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "787b4aca5216a0e5ee10906523087f49791ef9b86a2a59eb9d487478e97440e2",
-    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "79ee5e669a2e4f14adc869ed26d3828bd2ef174ed8fb1472d81a206303a4fbcb",
+    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "7e32d6c2d3d32f9b656fa665bcde046a00cfe0e9aa7091da28b25146c3f8b286",
     "tdf-hq/test/TDF/TicketPaymentReceiptSpec.hs": "cec7960d91dcca1fdb69846eef1ed504824a0cda51c252aceb32e162ae5ef432",
     "tdf-hq/test/TDF/TrialIdentitySpec.hs": "b0aedc327dffadf0a90fa678a2a1baa4a5a619175585c0a8ad469c37fa4a2f63",
     "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": "42b2da69c834ae9d60c4d88e4573c06aedd68e14e0dd6b4579cef5da89fdd21b",
@@ -80350,7 +80350,7 @@
     {
       "id": "SURFACE-b48f5e82f84a1379",
       "path": "tdf-hq/src/TDF/Ticketing/Inventory.hs",
-      "sha256": "12bffe2306dd3639c0afe23e05e08a1baa55c9615540a3e8a747d9e83eb90e8c",
+      "sha256": "7debfcbb6f15e152edc32c62292093625ec358b107344a6c450dcdfdb4ffb6d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81240,7 +81240,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "1d44b71cfda45994856a9657043c1da774f32399a7dcec5bc0b54e7d9b47afff",
+      "sha256": "449893675ef34a757c850b16513421074f94241cfeeed1514607fb3de133a9af",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -82687,7 +82687,7 @@
     {
       "id": "SURFACE-b88bd7d333ae2b44",
       "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
-      "sha256": "79ee5e669a2e4f14adc869ed26d3828bd2ef174ed8fb1472d81a206303a4fbcb",
+      "sha256": "7e32d6c2d3d32f9b656fa665bcde046a00cfe0e9aa7091da28b25146c3f8b286",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
