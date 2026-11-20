@@ -235,6 +235,7 @@ library
     TDF.Server.MerchReputation
     TDF.Server.Catalog
     TDF.Studio.Gallery
+    TDF.Studio.Submissions
     TDF.Server.ServiceStorefront
     TDF.Server.DatafastCheckoutContext
     TDF.Server.ProviderTransport

@@ -12,6 +12,7 @@ import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (fromGregorianValid)
+import qualified Data.UUID as UUID
 import Text.Read (readMaybe)
 
 -- | Mirrors @parseStudioGallery@ in the web client.
@@ -102,8 +103,12 @@ validateStudioGalleryPayload allowIncomplete value =
 
 -- | A bundled studio asset or a credential-free HTTPS URL.
 studioGalleryImageUrlAllowed :: Text -> Bool
-studioGalleryImageUrlAllowed url = bundledAsset || secureRemote
+studioGalleryImageUrlAllowed url = bundledAsset || submissionImage || secureRemote
   where
+    submissionImage = case T.splitOn "/" url of
+      ["","studio-submissions","images",identifier,size] ->
+        isJust (UUID.fromText identifier) && size `elem` ["small","large"]
+      _ -> False
     bundledAsset =
       case T.stripPrefix "/assets/tdf-studio/" url of
         Just name ->

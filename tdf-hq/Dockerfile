@@ -112,7 +112,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get -o Acquire::AllowInsecureRepositories=false -o Acquire::Check-Valid-Until=true --error-on=any update && \
     apt-get -o APT::Get::AllowUnauthenticated=false install -y --no-install-recommends \
-    libpq5 postgresql-client ca-certificates tzdata libxml2-utils && \
+    libpq5 postgresql-client ca-certificates tzdata libxml2-utils python3-pil heif-thumbnailer && \
     rm -rf /var/lib/apt/lists/*
 
 ARG SOURCE_COMMIT=dev
@@ -126,6 +126,7 @@ COPY --from=builder /app/COMMIT /app/COMMIT
 COPY --from=builder /app/BUILD_TIME /app/BUILD_TIME
 COPY --from=builder /app/assets /app/assets
 COPY --from=migration-bundle /production-migrations.sql /app/production-migrations.sql
+COPY tdf-hq/studio/submissions.py /app/studio/submissions.py
 COPY tdf-hq/production-entrypoint.sh /app/production-entrypoint.sh
 COPY tdf-hq/persistent-uploads.sh /app/persistent-uploads.sh
 

@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "92f9927c95a0c23fb18134665352a190dce88bbc7dc83f16d5e05d57a940902e"
+    "tdf-hq/tdf-hq.cabal": "3e8c1128cd34d5968dd45312e70bf4b621aff92da0d9a49113ab05af52ea6652"
   },
   "obligations": [
     {
@@ -716,6 +716,15 @@
       "previousSha256": "7b74c8a2489454360ad4b6c8cedd4e6883e5b951fb2290e4f294df6c3bce6f83",
       "currentSha256": "92f9927c95a0c23fb18134665352a190dce88bbc7dc83f16d5e05d57a940902e",
       "change": "Expose TDF.Studio.Gallery for CMS validation and backend tests.",
+      "semanticReview": "The library exposes the studio module. The dependency versions, build options and modules implementing the reviewed authorization and recovery predicates retain their previous definitions.",
+      "qualification": "This review binds the build context for the existing verifier obligations."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "d12f0e27dfd45ef4669c78180ecf79f35074058a",
+      "previousSha256": "92f9927c95a0c23fb18134665352a190dce88bbc7dc83f16d5e05d57a940902e",
+      "currentSha256": "3e8c1128cd34d5968dd45312e70bf4b621aff92da0d9a49113ab05af52ea6652",
+      "change": "Expose TDF.Studio.Submissions for private photo intake and request admission.",
       "semanticReview": "The library exposes the studio module. The dependency versions, build options and modules implementing the reviewed authorization and recovery predicates retain their previous definitions.",
       "qualification": "This review binds the build context for the existing verifier obligations."
     }

@@ -64,6 +64,7 @@ import           Data.Aeson (ToJSON(..), Value(..), Object, object, (.=), decode
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKeyMap
 import           Data.Aeson.Types (Parser, parseEither, parseMaybe, withObject, (.:), (.:?), (.!=))
+import TDF.Studio.Submissions (studioIntakeLimits, studioOperation)
 import TDF.Studio.Gallery (validateStudioGalleryPayload)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -88,8 +89,10 @@ import           Data.Word (Word64)
 import           Numeric (showHex)
 import           System.Directory (getFileSize)
 import           System.FilePath ((</>))
+import qualified Data.ByteString.Base64 as StudioBase64
 import           System.IO (hPutStrLn, stderr)
 import           Network.HTTP.Types.Status (status404)
+import qualified Servant.Multipart as Multipart
 import qualified Network.Wai as Wai
 import           Servant
 import           Servant.Multipart (FileData(..), Tmp)
@@ -738,7 +741,7 @@ mkApp env =
       ctx      = authContext env
       trials   = TrialsServer.trialsServer (envPool env)
       apiSrv   = hoistServerWithContext apiProxy ctxProxy (nt env) (server env)
-  in musicCredentialCache $ serveWithContext combinedProxy ctx (trials :<|> apiSrv)
+  in studioIntakeLimits env $ musicCredentialCache $ serveWithContext combinedProxy ctx (trials :<|> apiSrv)
 
 nt :: Env -> AppM a -> Handler a
 nt env x = runReaderT x env
@@ -15106,8 +15109,33 @@ resolveAuthoredContentIdBySlug slug = do
             _ -> Nothing
 
 cmsPublicServer :: ServerT CmsPublicAPI AppM
-cmsPublicServer = cmsGet :<|> cmsList
+cmsPublicServer = cmsGet :<|> cmsList :<|> studioOperation "batch" :<|> uploadStudio
+  :<|> studioOperation "status" :<|> publishedImage
   where
+    uploadStudio position authorization form = case (Multipart.inputs form, Multipart.files form) of
+      ([Multipart.Input "receipt" receipt], [file]) | fdInputName file == "file" ->
+        studioOperation "upload" $ object
+          [ "position" .= position, "token" .= T.stripPrefix "Bearer " authorization
+          , "receipt" .= receipt, "name" .= fdFileName file, "path" .= fdPayload file ]
+      _ -> throwError err400
+    publishedImage identifier size = do
+      unless (size `elem` ["large","small"]) (throwError err404)
+      gallery <- cmsGet (Just "studio-gallery") (Just "es")
+      let visiblePhoto = withObject "photo" $ \photo -> do
+            imageUrl <- photo .: "imageUrl"
+            thumbnail <- photo .:? "thumbnailUrl"
+            visible <- photo .: "visible"
+            let requested = "/studio-submissions/images/" <> UUID.toText identifier <> "/" <> size
+            pure (visible && (imageUrl == requested || thumbnail == Just requested))
+          containsPhoto = withObject "gallery" $ \galleryObject -> do
+            photos <- galleryObject .: "photos" :: Parser [Value]
+            or <$> traverse visiblePhoto photos
+      unless ((ccdPayload gallery >>= parseMaybe containsPhoto) == Just True) (throwError err404)
+      response <- studioOperation "image" (object ["id" .= identifier, "size" .= size])
+      case parseMaybe (withObject "image" (.: "jpeg")) response >>= either (const Nothing) Just . StudioBase64.decode . TE.encodeUtf8 of
+        Nothing -> throwError err500
+        Just bytes -> pure (addHeader ("no-store" :: Text) (BL.fromStrict bytes))
+
     fallbackContent slug locale = do
       now <- liftIO getCurrentTime
       pure CmsContentDTO
@@ -20382,11 +20410,13 @@ toLabelProjectNoteDTO (Entity key note) =
 
 cmsAdminServer :: AuthedUser -> ServerT CmsAdminAPI AppM
 cmsAdminServer user =
-       cmsListH
-  :<|> cmsCreateH
-  :<|> cmsPublishH
-  :<|> cmsDeleteH
+  (cmsListH :<|> cmsCreateH :<|> cmsPublishH :<|> cmsDeleteH) :<|> studioAdmin
   where
+    studioAdmin action payload = do
+      requireWebmaster
+      unless (action `elem` ["queue","review","preview","link","replace","disable"]) (throwError err404)
+      studioOperation (T.unpack action) payload
+
     requireWebmaster = unless (hasRole Admin user || hasRole Webmaster user) $
       throwError err403
 
