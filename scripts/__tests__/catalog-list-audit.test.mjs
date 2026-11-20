@@ -3153,6 +3153,8 @@ test('storage-parent: actual Mobile mirror matches its generator and stale prede
 const composedRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const composedExec = promisify(execFile);
 const composedCache = new Map();
+const preservedIndexes = new WeakMap();
+const composedCurrentFiles = new Map();
 const preservedFiles = new Map([
   ['docs/catalog-persistence/catalog-list-decisions.json', 'decisions'],
   ['docs/catalog-persistence/event-catalog-current-successors.json', 'successors'],
@@ -3162,10 +3164,16 @@ const canonicalComposed = value => JSON.stringify(value, (_key, item) => item &&
   ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
 function findPreserved(value, expected) {
   if (!value || typeof value !== 'object') return undefined;
-  if (canonicalComposed(value) === canonicalComposed(expected)) return value;
-  for (const child of Object.values(value)) {
-    const found = findPreserved(child, expected); if (found) return found;
+  if (!preservedIndexes.has(value)) {
+    const index = new Map();
+    const visit = node => {
+      if (!node || typeof node !== 'object') return;
+      index.set(canonicalComposed(node), node);
+      for (const child of Object.values(node)) visit(child);
+    };
+    visit(value); preservedIndexes.set(value, index);
   }
+  return preservedIndexes.get(value).get(canonicalComposed(expected));
 }
 async function composedParent(ref, file) {
   const key = `${ref}:${file}`;
@@ -3175,8 +3183,12 @@ async function composedParent(ref, file) {
 }
 async function readPreservedParentFile(ref, file, encoding) {
   const actualBytes = await fs.readFile(path.join(composedRoot, file), encoding);
+  if (file === 'scripts/production-migrations.json' || preservedFiles.has(file)) {
+    if (!composedCurrentFiles.has(file)) composedCurrentFiles.set(file, { bytes: actualBytes, value: JSON.parse(actualBytes) });
+    assert.equal(composedCurrentFiles.get(file).bytes, actualBytes, `Composed source changed during parent assertions: ${file}`);
+  }
   if (file === 'scripts/production-migrations.json') {
-    const actual = JSON.parse(actualBytes); const parent = await composedParent(ref, file);
+    const actual = composedCurrentFiles.get(file).value; const parent = await composedParent(ref, file);
     return JSON.stringify({ ...parent, migrations: parent.migrations.map(row => {
       const found = actual.migrations.find(item => item.id === row.id);
       assert.deepEqual(found, row, `Dated migration changed: ${ref}:${row.id}`); return found;
@@ -3184,7 +3196,7 @@ async function readPreservedParentFile(ref, file, encoding) {
   }
   const key = preservedFiles.get(file);
   if (!key) return actualBytes;
-  const actual = JSON.parse(actualBytes); const parent = await composedParent(ref, file);
+  const actual = composedCurrentFiles.get(file).value; const parent = await composedParent(ref, file);
   return JSON.stringify({ ...parent, [key]: parent[key].map(row => {
     const found = findPreserved(actual, row);
     assert.ok(found, `Lost whole parent review/resolution: ${ref}:${file}:${row.id ?? row.name}`);

@@ -40749,28 +40749,6 @@
       }
     },
     {
-      "id": "dba5e241ba7782bae73f",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Dropping or merging a case would show a generic message for a storage failure that needs a specific recovery step.",
-      "justification": "Exhaustive mapping from the backend's storage error codes (raised in TDF.Server and TDF.ContentStorage) to localized user messages. The codes are an API error contract owned by the backend, not an editable catalog.",
-      "reviewed": true,
-      "reviewMethod": "individual-source-review",
-      "reviewBatch": "storage-upload-recovery-2026-11-04",
-      "evidence": {
-        "file": "tdf-hq-ui/src/api/uploadFailure.ts",
-        "line": 35,
-        "kind": "switch-cases",
-        "name": "error.code",
-        "valueCount": 9,
-        "consumerCount": 29,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
-      }
-    },
-    {
       "id": "eb9c9dac4985a4b51874",
       "classification": "governed-reference-data",
       "disposition": "consumer-update",
@@ -60277,7 +60255,7 @@
       "justification": "Preserve the nine existing backend storage-error messages and add storage_activation_pending for the default-disabled account-upload gate. This is an exhaustive backend error protocol, not an editable catalog.",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "storage-security-20261106",
+      "reviewBatch": "storage-refund-composition-20261120",
       "evidence": {
         "file": "tdf-hq-ui/src/api/uploadFailure.ts",
         "line": 36,
@@ -60286,26 +60264,57 @@
         "valueCount": 10
       },
       "previousDecision": {
-        "id": "dba5e241ba7782bae73f",
+        "id": "137567fa80095813947d",
         "classification": "genuine-technical-constant",
         "disposition": "retain-in-code",
         "specializedModel": "technical_constant_allowlist",
         "priority": "P3-retain",
         "risk": "Dropping or merging a case would show a generic message for a storage failure that needs a specific recovery step.",
-        "justification": "Exhaustive mapping from the backend's storage error codes (raised in TDF.Server and TDF.ContentStorage) to localized user messages. The codes are an API error contract owned by the backend, not an editable catalog.",
+        "justification": "Preserve the nine existing backend storage-error messages and add storage_activation_pending for the default-disabled account-upload gate. This is an exhaustive backend error protocol, not an editable catalog.",
         "reviewed": true,
-        "reviewMethod": "individual-source-review",
-        "reviewBatch": "storage-upload-recovery-2026-11-04",
+        "reviewMethod": "successor-of-reviewed-decisions",
+        "reviewBatch": "storage-security-20261106",
         "evidence": {
           "file": "tdf-hq-ui/src/api/uploadFailure.ts",
-          "line": 35,
+          "line": 36,
           "kind": "switch-cases",
           "name": "error.code",
-          "valueCount": 9,
-          "consumerCount": 29,
-          "exactDuplicateIds": [],
-          "similarCandidateIds": []
-        }
+          "valueCount": 10
+        },
+        "previousDecision": {
+          "id": "dba5e241ba7782bae73f",
+          "classification": "genuine-technical-constant",
+          "disposition": "retain-in-code",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P3-retain",
+          "risk": "Dropping or merging a case would show a generic message for a storage failure that needs a specific recovery step.",
+          "justification": "Exhaustive mapping from the backend's storage error codes (raised in TDF.Server and TDF.ContentStorage) to localized user messages. The codes are an API error contract owned by the backend, not an editable catalog.",
+          "reviewed": true,
+          "reviewMethod": "individual-source-review",
+          "reviewBatch": "storage-upload-recovery-2026-11-04",
+          "evidence": {
+            "file": "tdf-hq-ui/src/api/uploadFailure.ts",
+            "line": 35,
+            "kind": "switch-cases",
+            "name": "error.code",
+            "valueCount": 9,
+            "consumerCount": 29,
+            "exactDuplicateIds": [],
+            "similarCandidateIds": []
+          }
+        },
+        "sourceReviewReferences": [
+          {
+            "sourceRevision": "c47c2a8d8851a58a828dec830704f8c352496c20",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "360004e743c689ff9a547c2d55d304f532325a9bb2ba5cc6ac15ab654b9ebb9e",
+            "sourceEntry": {
+              "id": "dba5e241ba7782bae73f"
+            },
+            "sourceEntryCanonicalSha256": "c09fec9eff9128e8cd1408f10bdca911b0c07ab2d92e82a53924566f6b43ba0f",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+          }
+        ]
       },
       "sourceReviewReferences": [
         {
@@ -60318,7 +60327,32 @@
           "sourceEntryCanonicalSha256": "c09fec9eff9128e8cd1408f10bdca911b0c07ab2d92e82a53924566f6b43ba0f",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
         }
-      ]
+      ],
+      "concurrentReviewHistory": [
+        {
+          "id": "dba5e241ba7782bae73f",
+          "classification": "genuine-technical-constant",
+          "disposition": "retain-in-code",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P3-retain",
+          "risk": "Dropping or merging a case would show a generic message for a storage failure that needs a specific recovery step.",
+          "justification": "Exhaustive mapping from the backend's storage error codes (raised in TDF.Server and TDF.ContentStorage) to localized user messages. The codes are an API error contract owned by the backend, not an editable catalog.",
+          "reviewed": true,
+          "reviewMethod": "individual-source-review",
+          "reviewBatch": "storage-upload-recovery-2026-11-04",
+          "evidence": {
+            "file": "tdf-hq-ui/src/api/uploadFailure.ts",
+            "line": 35,
+            "kind": "switch-cases",
+            "name": "error.code",
+            "valueCount": 9,
+            "consumerCount": 29,
+            "exactDuplicateIds": [],
+            "similarCandidateIds": []
+          }
+        }
+      ],
+      "sourceContextReview": "The active ten-code storage upload recovery mapping is unchanged from reviewed storage parent cdf57961e4058f403ee4dd903bacfced2a5ee258. The nine-code Main snapshot is retained in full as historical evidence and stays inactive; both complete review objects remain intact. This author composition correspondence does not add recovery policy or independent approval."
     },
     {
       "id": "8197695cafc109649860",
