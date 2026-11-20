@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+    "tdf-hq/tdf-hq.cabal": "a6a23d82214ca0e1119787d8b4a7ca969485a3cb57e9aab3e7661aa47ed08da5",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -678,6 +678,43 @@
       "change": "Register the library module TDF.Server.EventTicketSale in exposed-modules and the test module TDF.EventTicketSaleSpec in the tdf-hq-test other-modules list for EVT-TICKET-SALE-001.",
       "semanticReview": "Removing exactly those two module lines reproduces protected main Cabal bytes. Every other reviewed source byte and hash matches protected main. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed; the added library module holds paid ticket sale request and approval handlers only, calls hasStrictAdminAccess without changing it, and is not imported by any reviewed source.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "f615c862b1a7d50406cc0506d21d7650e607fa5f",
+      "previousSha256": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
+      "currentSha256": "028247e5430b87363fcc9bc0c867a480466268dae77797ca922955c134e11671",
+      "change": "Register TDF.Commerce.DomoRefundStore, TDF.Routes.DomoRefunds and TDF.Server.DomoRefunds; exactly three new library module-registration lines.",
+      "semanticReview": "Independent root review removes exactly these three registrations to reproduce protected Main Cabal bytes. Every other controlled authorization/recovery/Stack/model/SQL source, seven obligation objects and all prior review histories remain unchanged. No compiler flag, dependency, language option, existing module or predicate translation changes.",
+      "qualification": "Reviewed source-context correspondence only; the new Domo routes, transaction guards and financial behavior require separate actual tests. Fresh conditional solver/replay/control execution remains required; no whole endpoint, refinement, provider or release claim."
+    },
+    {
+      "reviewedAgainst": "321f4fe6c8e803ab1c32724a8ce5b7814418b79c",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "e4afce0bef5ab7d7c743bb893bab20bfc91841e4de5cf6a53b2273d86df1e0ca",
+      "currentSha256": "307b2da1756aefbe13ecb9c0284da24aa475b958b40941ac4fe2cdc42596c030",
+      "change": "Register only the existing DomoRefundStore, Routes.DomoRefunds and Server.DomoRefunds modules on canonical current Main.",
+      "semanticReview": "Independent removal of exactly3 registrations reproduces whole Main Cabal. All other controlled sources and7 conditional obligations are exact Main; all parent source-context review objects retained.",
+      "independentReviewSha256": "77f112cd73f292b96a820b3272e5c433536736bbf1df32203918fbb37151f3e0",
+      "qualification": "Conditional import/binding/translation context only, not money/refund/capture/cancellation/FAILED handling, provider execution, HTTP/SQL, concurrency, whole-program refinement or release approval. Fresh conditional solver/controls and mandatory hosted whole runtime checks remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "9399daf147d6c53dab153783e2d5721bebba566f",
+      "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "currentSha256": "d103055d35fa3621ca619ba1d5a82485abde749e4883918ab3601e0bfd8ab8c4",
+      "change": "Reconcile current protected main while retaining the reviewed DomoRefund Cabal additions.",
+      "semanticReview": "Removing the three Domo refund store, route and server module registrations reproduces protected main Cabal bytes exactly. No dependency, resolver, compiler flag or existing registration changes. All other authorization and recovery reviewed sources are byte-identical to protected main; obligation objects and both complete histories are preserved. This author source-context review does not establish refund-runtime conformance, whole-system safety or independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "966fb55dca70a49c0a340b674f8cc133cc413a2d",
+      "previousSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "currentSha256": "a6a23d82214ca0e1119787d8b4a7ca969485a3cb57e9aab3e7661aa47ed08da5",
+      "change": "Reconcile current protected main while retaining the reviewed DomoRefund Cabal additions.",
+      "semanticReview": "Removing the three Domo refund store, route and server module registrations reproduces protected main Cabal bytes exactly. No dependency, resolver, compiler flag or existing registration changes. All other authorization and recovery reviewed sources are byte-identical to protected main; obligation objects and both complete histories are preserved. This author source-context review does not establish refund-runtime conformance, whole-system safety or independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
     }
   ]
 }
