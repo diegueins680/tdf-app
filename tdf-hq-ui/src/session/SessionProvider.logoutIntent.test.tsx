@@ -17,7 +17,7 @@ jest.unstable_mockModule('../utils/logger', () => ({ logger: { warn: jest.fn() }
 const { SessionQueryProvider } = await import('./SessionQueryProvider');
 let queryClient!: QueryClient;
 const { SessionProvider, useSession, getActiveSession, SESSION_STORAGE_KEY } = await import('./SessionContext');
-const { getLogoutStatus, LOGOUT_INTENT_KEY } = await import('./logoutIntent');
+const { getLogoutStatus, LOGOUT_INTENT_KEY } = await import('../auth/logoutIntent');
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 function Probe() {

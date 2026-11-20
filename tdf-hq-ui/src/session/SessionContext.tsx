@@ -1,11 +1,11 @@
-import { beginLogoutIntent, clearLogoutIntent, finishLogoutIntent, getLogoutRevision, hasLogoutIntent, subscribeLogoutIntent, trackLogoutRequest } from './logoutIntent';
+import { beginLogoutIntent, clearLogoutIntent, finishLogoutIntent, getLogoutRevision, hasLogoutIntent, subscribeLogoutIntent, trackLogoutRequest } from '../auth/logoutIntent';
 import { logger } from '../utils/logger';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { loadSessionSnapshot, logoutSessionRequest, reconcileOnboardingProgress } from '../api/session';
 import { captureReconciledFirstValue } from '../analytics/onboardingCompletionAnalytics';
-import { advanceAuthSessionEpoch, AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
+import { advanceAuthSessionEpoch, AUTH_SESSION_EXPIRED_EVENT } from '../auth/authEvents';
 import { reportClientError } from '../analytics/errorReporting';
 import type { LocalePreferences } from '../api/preferences';
 import { reconcileSessionPersonalData } from '../utils/sessionPersonalData';

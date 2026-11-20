@@ -722,11 +722,6 @@ export default function CmsAdminPage() {
   const canSaveVersion =
     hasSlugSelection
     && !payloadError
-    && !showFirstVersionLiveLookupGuard
-    && !showFirstVersionEmptyDraftGuard
-    && !showLiveStartEmptyEditorGuard;
-  const showSaveVersionAction =
-    hasSlugSelection
     && !liveEditorActionState.showLiveInSyncChip
     && !showFirstVersionLiveLookupGuard
     && !showFirstVersionEmptyDraftGuard
@@ -1126,15 +1121,13 @@ export default function CmsAdminPage() {
                   </Typography>
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                  {showSaveVersionAction && (
-                    <Button
-                      variant="contained"
-                      onClick={handleCreate}
-                      disabled={createMutation.isPending || galleryUploading || !canSaveVersion}
-                    >
-                      {saveActionLabel}
-                    </Button>
-                  )}
+                  <Button
+                    variant="contained"
+                    onClick={handleCreate}
+                    disabled={createMutation.isPending || galleryUploading || !canSaveVersion}
+                  >
+                    {saveActionLabel}
+                  </Button>
                   {editingSourceChipLabel && <Chip label={editingSourceChipLabel} size="small" color="info" />}
                   {createMutation.isError && (
                     <Alert severity="error" sx={{ flexGrow: 1 }}>

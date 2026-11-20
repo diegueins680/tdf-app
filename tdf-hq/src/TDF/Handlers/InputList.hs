@@ -14,6 +14,8 @@ module TDF.Handlers.InputList
   , renderInputListLatexWithAssets
   , generateInputListPdf
   , generateInputListPdfWithAssets
+  , tectonicArguments
+  , xelatexArguments
   , sanitizeFileName
   ) where
 
@@ -255,10 +257,20 @@ generateInputListPdfWithAssets mAssetsDir latex =
               Right () -> Right <$> BL.readFile pdfFile
               Left xeErr -> pure (Left (tectonicErr <> "\n" <> xeErr))
 
+-- | Compiler arguments. Proposal LaTeX is authored by CRM users and stored
+-- verbatim, so the engines must never run shell commands from the document:
+-- tectonic gets no @-Z shell-escape@ and xelatex gets @-no-shell-escape@.
+-- The shipped templates only need @\\includegraphics@.
+tectonicArguments :: FilePath -> FilePath -> [String]
+tectonicArguments tmpDir texFile = ["-o", tmpDir, texFile]
+
+xelatexArguments :: FilePath -> [String]
+xelatexArguments inputName =
+  ["-no-shell-escape", "-interaction=nonstopmode", "-halt-on-error", inputName]
+
 runTectonic :: FilePath -> FilePath -> IO (Either Text ())
 runTectonic tmpDir texFile = do
-  (exitCode, out, err) <- readProcessWithExitCode "tectonic"
-    ["-Z", "shell-escape", "-o", tmpDir, texFile] ""
+  (exitCode, out, err) <- readProcessWithExitCode "tectonic" (tectonicArguments tmpDir texFile) ""
   case exitCode of
     ExitSuccess -> pure (Right ())
     ExitFailure code -> pure (Left (formatProcessError "tectonic" code out err))
@@ -267,8 +279,7 @@ runXeLaTeX :: FilePath -> FilePath -> IO (Either Text ())
 runXeLaTeX tmpDir texFile =
   withCurrentDirectory tmpDir $ do
     let inputName = takeFileName texFile
-    (exitCode, out, err) <- readProcessWithExitCode "xelatex"
-      ["-interaction=nonstopmode", "-halt-on-error", inputName] ""
+    (exitCode, out, err) <- readProcessWithExitCode "xelatex" (xelatexArguments inputName) ""
     case exitCode of
       ExitSuccess -> pure (Right ())
       ExitFailure code -> pure (Left (formatProcessError "xelatex" code out err))

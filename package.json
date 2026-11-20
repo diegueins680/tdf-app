@@ -41,6 +41,8 @@
     "loop:ci-polling-status": "node scripts/set-loop-github-polling.mjs status",
     "loop:idea": "node scripts/discover-improvement-idea.mjs",
     "audit:ui:static": "node scripts/ui-static-audit.mjs",
+    "check:architecture": "node scripts/check-architecture-boundaries.mjs",
+    "test:architecture": "node --test scripts/__tests__/architecture-boundaries.test.mjs",
     "audit:catalog-lists": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output /tmp/tdf-catalog-list-audit.json",
     "audit:catalog-lists:refresh": "node scripts/catalog-list-audit.mjs --output docs/catalog-persistence/reports/static-list-inventory.json && node scripts/build-catalog-decisions.mjs && node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output docs/catalog-persistence/reports/static-list-inventory.json && node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv",
     "audit:formal": "node scripts/audit-formal-methods.mjs",
@@ -64,6 +66,7 @@
     "test:music-api-s3-local": "node scripts/test-music-s3-local.mjs --with-api",
     "test:music-linux-integration": "node scripts/test-music-s3-local.mjs --with-linux-worker",
     "test:music-player-native": "playwright test --config=playwright.music-native.config.mjs",
+    "test:marketplace-negotiation": "playwright test --config=playwright.marketplace.config.mjs",
     "test:music-browser-integration": "node scripts/test-music-s3-local.mjs --with-linux-worker --with-browser",
     "generate:persona-program": "node scripts/persona-test-program.mjs generate",
     "test:persona-program": "node scripts/persona-test-program.mjs validate && node --test scripts/__tests__/persona-test-program.test.mjs",
@@ -120,7 +123,9 @@
     "clean": "rm -rf node_modules tdf-hq-ui/node_modules tdf-mobile/node_modules",
     "clean:build": "rm -rf tdf-hq-ui/dist tdf-mobile/dist tdf-hq/.stack-work",
     "cron:sync-drive": "node scripts/sync-artist-drive.js",
-    "verify:system:evidence": "node scripts/verify-system-evidence.mjs"
+    "verify:system:evidence": "node scripts/verify-system-evidence.mjs",
+    "audit:delivery": "node scripts/delivery-matrix.mjs",
+    "test:delivery": "node --test scripts/__tests__/delivery-matrix.test.mjs scripts/__tests__/verification-evidence.test.mjs"
   },
   "keywords": [
     "crm",
