@@ -121,6 +121,7 @@ library
     TDF.Commerce.ProviderReconciliation
     TDF.Commerce.ProviderRuntimeConfig
     TDF.Commerce.DatafastConfig
+    TDF.Commerce.DatafastClientIP
     TDF.Commerce.TicketBuyerContact
     TDF.Commerce.ProviderAdapter
     TDF.Commerce.ProviderAdapter.Http
@@ -224,6 +225,7 @@ library
     TDF.ServerInternAudit
     TDF.Server.EventAdminDelegation
     TDF.Server.EventTicketSale
+    TDF.Server.TicketSalesWindow
     TDF.Server.SocialEventsHandlers
     TDF.Server.StripeTicketCapture
     TDF.Server.EventResearch
@@ -235,6 +237,7 @@ library
     TDF.Server.MerchReputation
     TDF.Server.Catalog
     TDF.Server.ServiceStorefront
+    TDF.Server.DatafastCheckoutContext
     TDF.Server.ProviderTransport
     TDF.Server.TicketManualPayments
     TDF.Server.TicketPaymentReceipt
@@ -292,6 +295,9 @@ library
     TDF.Commerce.DepositPolicy
     TDF.Commerce.DomoCancellation
     TDF.Commerce.DomoCancellationStore
+    TDF.Commerce.DomoRefundStore
+    TDF.Routes.DomoRefunds
+    TDF.Server.DomoRefunds
     TDF.Profiles.ArtistVisibility
     TDF.Social.AccountOwnership
     TDF.Social.AccountOwnershipStore
@@ -338,6 +344,7 @@ library
     , mtl
     , network
     , network-uri
+    , iproute
     , mime-mail
     , unordered-containers
     , uuid-types
@@ -415,6 +422,7 @@ test-suite tdf-hq-test
     TDF.Commerce.CheckoutMoneySpec
     TDF.Commerce.PaymentArithmeticSpec
     TDF.Commerce.DatafastConfigSpec
+    TDF.Commerce.DatafastClientIPSpec
     TDF.EmailHeadersSpec
     TDF.CorsSpec
     TDF.Invoice.ReceiptSpec
@@ -526,6 +534,8 @@ test-suite tdf-hq-test
     , mtl
     , network
     , network-uri
+    , iproute
+    , wai-extra
     , mime-mail
     , tagged
     , unordered-containers
