@@ -18386,7 +18386,7 @@
     {
       "id": "SURFACE-1ac6ca33fd4e0411",
       "path": "tdf-hq/src/TDF/Services/Stripe.hs",
-      "sha256": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
+      "sha256": "20e4b842f37ecab5459005da4641c4eb643e361def2201a39e7778c37af01fc6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18668,7 +18668,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "c7baf4805f226e0672d7a0d8697370bf1b09c4c7a6de8a64015b98979909d962",
+      "sha256": "89331fa8a97dc6ab3d6889d5022a72319780bb41f8e6cc9cd8196f097e14fe12",
       "semanticConformance": "not-established-by-discovery"
     },
     {
