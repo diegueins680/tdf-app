@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "73bcd37bc0d58d9d9f66d44ff3241349f93527b66e9756a3c716608f92c25cb9"
+    "tdf-hq/tdf-hq.cabal": "6b854bd59d6db21637a6354b6a8de8a991a84952c687a5e56b55ea506fd29d8a"
   },
   "obligations": [
     {
@@ -621,15 +621,6 @@
       "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
     },
     {
-      "reviewedAgainst": "d05a3964819a8eba675a3dcc399342ad6aba16ef",
-      "source": "tdf-hq/tdf-hq.cabal",
-      "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
-      "currentSha256": "c07b698ec0560d7d2c142508bfd03d58433dda3392414a4f034a3fd7ebc24c2d",
-      "change": "Register TDF.API.Production and TDF.Server.Production in exposed-modules. Removing the two new lines reproduces the protected-main manifest byte for byte.",
-      "semanticReview": "The module names are distinct. Source paths, compiler options, dependency versions and the bindings translated for this contract retain their reviewed definitions.",
-      "qualification": "Fresh source-bound solver execution, serialized replay and mutation controls are required for these scoped predicates."
-    },
-    {
       "reviewedAgainst": "65317ec2e4febf920292ecace7df466153ae5046",
       "source": "tdf-hq/tdf-hq.cabal",
       "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
@@ -639,6 +630,52 @@
       "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
     },
     {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "f615c862b1a7d50406cc0506d21d7650e607fa5f",
+      "previousSha256": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
+      "currentSha256": "028247e5430b87363fcc9bc0c867a480466268dae77797ca922955c134e11671",
+      "change": "Register TDF.Commerce.DomoRefundStore, TDF.Routes.DomoRefunds and TDF.Server.DomoRefunds; exactly three new library module-registration lines.",
+      "semanticReview": "Independent root review removes exactly these three registrations to reproduce protected Main Cabal bytes. Every other controlled authorization/recovery/Stack/model/SQL source, seven obligation objects and all prior review histories remain unchanged. No compiler flag, dependency, language option, existing module or predicate translation changes.",
+      "qualification": "Reviewed source-context correspondence only; the new Domo routes, transaction guards and financial behavior require separate actual tests. Fresh conditional solver/replay/control execution remains required; no whole endpoint, refinement, provider or release claim."
+    },
+    {
+      "reviewedAgainst": "321f4fe6c8e803ab1c32724a8ce5b7814418b79c",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "e4afce0bef5ab7d7c743bb893bab20bfc91841e4de5cf6a53b2273d86df1e0ca",
+      "currentSha256": "307b2da1756aefbe13ecb9c0284da24aa475b958b40941ac4fe2cdc42596c030",
+      "change": "Register only the existing DomoRefundStore, Routes.DomoRefunds and Server.DomoRefunds modules on canonical current Main.",
+      "semanticReview": "Independent removal of exactly3 registrations reproduces whole Main Cabal. All other controlled sources and7 conditional obligations are exact Main; all parent source-context review objects retained.",
+      "independentReviewSha256": "77f112cd73f292b96a820b3272e5c433536736bbf1df32203918fbb37151f3e0",
+      "qualification": "Conditional import/binding/translation context only, not money/refund/capture/cancellation/FAILED handling, provider execution, HTTP/SQL, concurrency, whole-program refinement or release approval. Fresh conditional solver/controls and mandatory hosted whole runtime checks remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "9399daf147d6c53dab153783e2d5721bebba566f",
+      "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "currentSha256": "d103055d35fa3621ca619ba1d5a82485abde749e4883918ab3601e0bfd8ab8c4",
+      "change": "Reconcile current protected main while retaining the reviewed DomoRefund Cabal additions.",
+      "semanticReview": "Removing the three Domo refund store, route and server module registrations reproduces protected main Cabal bytes exactly. No dependency, resolver, compiler flag or existing registration changes. All other authorization and recovery reviewed sources are byte-identical to protected main; obligation objects and both complete histories are preserved. This author source-context review does not establish refund-runtime conformance, whole-system safety or independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "966fb55dca70a49c0a340b674f8cc133cc413a2d",
+      "previousSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "currentSha256": "a6a23d82214ca0e1119787d8b4a7ca969485a3cb57e9aab3e7661aa47ed08da5",
+      "change": "Reconcile current protected main while retaining the reviewed DomoRefund Cabal additions.",
+      "semanticReview": "Removing the three Domo refund store, route and server module registrations reproduces protected main Cabal bytes exactly. No dependency, resolver, compiler flag or existing registration changes. All other authorization and recovery reviewed sources are byte-identical to protected main; obligation objects and both complete histories are preserved. This author source-context review does not establish refund-runtime conformance, whole-system safety or independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "reviewedAgainst": "d05a3964819a8eba675a3dcc399342ad6aba16ef",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "currentSha256": "c07b698ec0560d7d2c142508bfd03d58433dda3392414a4f034a3fd7ebc24c2d",
+      "change": "Register TDF.API.Production and TDF.Server.Production in exposed-modules. Removing the two new lines reproduces the protected-main manifest byte for byte.",
+      "semanticReview": "The module names are distinct. Source paths, compiler options, dependency versions and the bindings translated for this contract retain their reviewed definitions.",
+      "qualification": "Fresh source-bound solver execution, serialized replay and mutation controls are required for these scoped predicates."
+    },
+    {
       "reviewedAgainst": "96706a7216e807d09e76fd5f6fb05934f6bc0611",
       "source": "tdf-hq/tdf-hq.cabal",
       "previousSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
@@ -646,6 +683,20 @@
       "change": "Compose the two production module registrations with the EventTicketSale library/test registrations. Removing only the production lines reproduces protected main exactly; removing only the EventTicketSale lines reproduces f96abae10 exactly.",
       "semanticReview": "All other contract source hashes and obligations are identical across the parents. Compiler options, dependency versions and source paths remain exact. This is a module-registration correspondence check, not complete implementation refinement.",
       "qualification": "Fresh source-bound solver execution, serialized replay, mutation controls and independent protected review remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "d65017d10f16e8089c43b82bdbcacf3177d206f5",
+      "previousSha256": "a6a23d82214ca0e1119787d8b4a7ca969485a3cb57e9aab3e7661aa47ed08da5",
+      "currentSha256": "6b854bd59d6db21637a6354b6a8de8a991a84952c687a5e56b55ea506fd29d8a",
+      "change": "Combined the reviewed private production workspace module additions with the protected Domo refund modules. Existing compiler dependencies and the authorization and recovery predicates are preserved."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "4389ab59ff19e3bf1b5722454d238d63e1d42aae",
+      "previousSha256": "73bcd37bc0d58d9d9f66d44ff3241349f93527b66e9756a3c716608f92c25cb9",
+      "currentSha256": "6b854bd59d6db21637a6354b6a8de8a991a84952c687a5e56b55ea506fd29d8a",
+      "change": "Combined the reviewed private production workspace module additions with the protected Domo refund modules. Existing compiler dependencies and the authorization and recovery predicates are preserved."
     }
   ]
 }

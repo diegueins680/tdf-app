@@ -739,7 +739,8 @@ postRefundLedger record providerRefundId occurredAt correlationId = do
           rawExecute
             "INSERT INTO commerce_ledger_entry (\
             \ transaction_id, account_code, domain_type, domain_id, currency, amount_minor, memo\
-            \) SELECT ?::uuid, 'revenue.service_storefront', domain_type, domain_order_id,\
+            \) SELECT ?::uuid, CASE WHEN domain_type='domo_event_quote' THEN 'revenue.domo_event_quote'\
+            \ ELSE 'revenue.service_storefront' END, domain_type, domain_order_id,\
             \ ?, ?, 'Verified provider refund' FROM commerce_checkout_session\
             \ WHERE id = ?::uuid"
             [ PersistText newLedgerId

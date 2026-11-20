@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "d2d1c4f72bf71cbed19389c1c23e94af496b6b5f",
+  "mobileRevision": "1c374cb54cc0daf9ddc71319c3daa9cf8d1a3dd1",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -14,6 +14,7 @@
       ".github/workflows/ci.yml",
       ".github/workflows/datadog-synthetics.yml",
       ".github/workflows/desktop.yml",
+      ".github/workflows/domo-refund-validation.yml",
       ".github/workflows/event-operations-formal.yml",
       ".github/workflows/event-raci-browser.yml",
       ".github/workflows/interaction-verification.yml",
@@ -631,8 +632,6 @@
       "scripts/test-physical-postgres-recovery.py",
       "scripts/test-player-session-model.mjs",
       "scripts/test-privacy-request-ledger.py",
-      "scripts/test-production-workspace-browser.py",
-      "scripts/test-production-workspace.py",
       "scripts/test-proof-certificates.py",
       "scripts/test-provider-domain-binding.py",
       "scripts/test-provider-domain-harness.py",
@@ -708,7 +707,6 @@
       "scripts/verify-payment-arithmetic.py",
       "scripts/verify-payment-intent-expiry.py",
       "scripts/verify-playwright-image.mjs",
-      "scripts/verify-production-workspace.sh",
       "scripts/verify-proof-certificates.py",
       "scripts/verify-readiness.py",
       "scripts/verify-recovery-expiry.py",
@@ -964,8 +962,6 @@
       "tdf-hq-ui/src/api/pipelines.ts",
       "tdf-hq-ui/src/api/preferences.test.ts",
       "tdf-hq-ui/src/api/preferences.ts",
-      "tdf-hq-ui/src/api/productions.test.ts",
-      "tdf-hq-ui/src/api/productions.ts",
       "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
       "tdf-hq-ui/src/api/providerPaymentSessions.ts",
       "tdf-hq-ui/src/api/queryValidation.test.ts",
@@ -1267,9 +1263,6 @@
       "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
       "tdf-hq-ui/src/features/marketplace/offers.test.ts",
       "tdf-hq-ui/src/features/marketplace/offers.ts",
-      "tdf-hq-ui/src/features/production/ProductionForms.tsx",
-      "tdf-hq-ui/src/features/production/Review.tsx",
-      "tdf-hq-ui/src/features/production/WorkspaceViews.tsx",
       "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
       "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
       "tdf-hq-ui/src/features/records/SelectedRecordPublication.test.tsx",
@@ -1511,8 +1504,6 @@
       "tdf-hq-ui/src/pages/PaymentsPage.partySelector.test.ts",
       "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
       "tdf-hq-ui/src/pages/PaymentsPage.tsx",
-      "tdf-hq-ui/src/pages/ProductionWorkspacePage.test.tsx",
-      "tdf-hq-ui/src/pages/ProductionWorkspacePage.tsx",
       "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
       "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
       "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
@@ -1821,7 +1812,6 @@
       "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
       "tdf-hq/docs/openapi/media-health.yaml",
       "tdf-hq/docs/openapi/music-search.yaml",
-      "tdf-hq/docs/openapi/productions.yaml",
       "tdf-hq/docs/openapi/reviews.yaml",
       "tdf-hq/docs/openapi/social-v2.yaml",
       "tdf-hq/docs/openapi/trials-identity.yaml",
@@ -2279,6 +2269,8 @@
       "tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql",
       "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql",
       "tdf-hq/sql/2026-11-02_domo_quote_cancellation_rollback.sql",
+      "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql",
+      "tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql",
       "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql",
       "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql",
       "tdf-hq/sql/2026-11-04_content_storage.sql",
@@ -2319,7 +2311,6 @@
       "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql",
-      "tdf-hq/sql/2026-11-18_production_workspace.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2355,7 +2346,6 @@
       "tdf-hq/src/TDF/API/PaymentCapabilities.hs",
       "tdf-hq/src/TDF/API/Payments.hs",
       "tdf-hq/src/TDF/API/Pipelines.hs",
-      "tdf-hq/src/TDF/API/Production.hs",
       "tdf-hq/src/TDF/API/Proposals.hs",
       "tdf-hq/src/TDF/API/ProviderExecution.hs",
       "tdf-hq/src/TDF/API/Radio.hs",
@@ -2404,6 +2394,7 @@
       "tdf-hq/src/TDF/Commerce/DomoCancellation.hs",
       "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
       "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
+      "tdf-hq/src/TDF/Commerce/DomoRefundStore.hs",
       "tdf-hq/src/TDF/Commerce/EventTickets.hs",
       "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
       "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
@@ -2515,6 +2506,7 @@
       "tdf-hq/src/TDF/Routes/Academy.hs",
       "tdf-hq/src/TDF/Routes/Courses.hs",
       "tdf-hq/src/TDF/Routes/DomoQuotes.hs",
+      "tdf-hq/src/TDF/Routes/DomoRefunds.hs",
       "tdf-hq/src/TDF/Routes/EventTickets.hs",
       "tdf-hq/src/TDF/Seed.hs",
       "tdf-hq/src/TDF/Server.hs",
@@ -2525,6 +2517,7 @@
       "tdf-hq/src/TDF/Server/Directory.hs",
       "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs",
       "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
+      "tdf-hq/src/TDF/Server/DomoRefunds.hs",
       "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
       "tdf-hq/src/TDF/Server/EventResearch.hs",
       "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
@@ -2539,7 +2532,6 @@
       "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs",
       "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
       "tdf-hq/src/TDF/Server/PaymentCapabilities.hs",
-      "tdf-hq/src/TDF/Server/Production.hs",
       "tdf-hq/src/TDF/Server/ProviderExecution.hs",
       "tdf-hq/src/TDF/Server/ProviderTransport.hs",
       "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
@@ -3265,15 +3257,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6e2aa20fed937be2",
+      "path": ".github/workflows/domo-refund-validation.yml",
+      "sha256": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "785ce83a2d0e653d8301acf941484607b269b94b9dfc9e4989e681f65e8dcec4",
+      "sha256": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-717dbf61c7979518",
       "path": ".github/workflows/event-raci-browser.yml",
-      "sha256": "54ff00e6ab717e8eb7f6cf1936df2f0deef2448c3fc312d290ecc0e19d8c9f03",
+      "sha256": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3483,7 +3481,7 @@
     {
       "id": "SURFACE-a759d468f3ebc8d5",
       "path": "e2e/web/event-discovery-filters.spec.mjs",
-      "sha256": "f6e267555a45d88ce4cc4c0d7cf13752f164e1ab3cbfaa7f4d064ada7319af78",
+      "sha256": "295c2354d6390f937686451ac1eb03f257b34c7da509c719c16928489e9d529a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3969,7 +3967,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "dee793b19fc9b8aba1c86d9522788d83b6e8833d65768eb8472181a2adfeb5da",
+      "sha256": "427a8f57069b70bbafa92bcf5768f426fd89991ebba8a5e33f500230aae12c54",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5361,7 +5359,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "2a0f09f45ac7f86337387f02186cf9626a9f4230b24a95024bffc692e4f66f33",
+      "sha256": "32bea4fc79e9c4df0b01926dc4b29101c60514e7d69e39efc398be64599d8372",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5565,7 +5563,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "82918ed344da384f4607095d9144ad0ae53e48e59d9a4cee5b01b7e90e67d687",
+      "sha256": "ab3ea174ea370ac6753e474f77ce2b8abbe0502d299010364585e83d3b18b5d5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6399,7 +6397,7 @@
     {
       "id": "SURFACE-f6d09097c41b38d4",
       "path": "scripts/test-event-memory-source-browser.mjs",
-      "sha256": "d563b1e79fa5763caeec328d82f152c6ab68a9e37f648de1c2014b039b35d8fb",
+      "sha256": "5b25aaed221efa05e59d42f8281467ba99ac656dd859d58fa7c3ae99d0f5a4b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6883,18 +6881,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-3862d80cc6873442",
-      "path": "scripts/test-production-workspace-browser.py",
-      "sha256": "5f81831aebddb76de1a616688d99e24549520fff2702722283d9649b77a17a7f",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-1d45786677835ad7",
-      "path": "scripts/test-production-workspace.py",
-      "sha256": "b4c628d2f5ecc62ed34124907459ba416f36e651c64be76b85f61ea81bb79886",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-8e3764761ce42dca",
       "path": "scripts/test-proof-certificates.py",
       "sha256": "daa8f208847358dab9daaa38b917c6a06a83415bda9104d5ee23ef627fa7f24d",
@@ -6909,7 +6895,7 @@
     {
       "id": "SURFACE-7d9c91182787e22c",
       "path": "scripts/test-provider-domain-harness.py",
-      "sha256": "b03157a0506bf162b79bc6f6ab4dbb748a5ada9ebe51514f3c2edf1217e99370",
+      "sha256": "1724bf07b1531dc9a52ac5b0df68875c51390bc598988a493cc2a9a050ce6191",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6933,7 +6919,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "6e9f3db759644af6ba162685d6a48aac8a0b8a1b7a25b123e88cfc2f345eabbc",
+      "sha256": "1a0c7d6c1df4bed918bfff6c91a81add3275e2bcf003c82fd2748d93a12c7e38",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7342,12 +7328,6 @@
       "id": "SURFACE-6074376bf1c8f4b9",
       "path": "scripts/verify-playwright-image.mjs",
       "sha256": "88fe2d6257a3c64943b5a29f98a2fde3d296df138c0750bc5d1a71368445584f",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-452f3c742b2dcd43",
-      "path": "scripts/verify-production-workspace.sh",
-      "sha256": "5d1d313e2b852122114c087574eae91c387d91740e8a68afa8dcb9ec2a418fe1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8019,7 +7999,7 @@
     {
       "id": "SURFACE-9f2d7ab39b8a5348",
       "path": "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
-      "sha256": "4f7755520e4175cc0d5ffb57e233fc4268a375a9dd85422716db07841b5610c1",
+      "sha256": "152baf8a3d873c419962724362e246a5474d451a62a639ed3ac4fffd370066d2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8583,7 +8563,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "8f703aee019b0841e3822d359b3d5dceee2f534ac234810b7e3ddf5d171a2202",
+      "sha256": "876ecab7412f5a01a1ccf6451496f10277fc492d2dafb8f9c5239577495f3ea7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8830,18 +8810,6 @@
       "id": "SURFACE-9babc79b1a56bd8b",
       "path": "tdf-hq-ui/src/api/preferences.ts",
       "sha256": "af75820d8783f712a9f55088b8a05208fd538691a81fd29aa90cbca06547c2b1",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-45dafc2b05e2e54f",
-      "path": "tdf-hq-ui/src/api/productions.test.ts",
-      "sha256": "efdd08fcce16c84c1613122424ac920d3b77086b84d06cb9db138a615034bae9",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-a60c63618349d1d2",
-      "path": "tdf-hq-ui/src/api/productions.ts",
-      "sha256": "aacdd57bc6069995c27f1bf732db1984d31c593be4e4b42123b615ea50aaddad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9579,7 +9547,7 @@
     {
       "id": "SURFACE-eacab29ef41a9481",
       "path": "tdf-hq-ui/src/components/SidebarNav.tsx",
-      "sha256": "9bea6c08df79afb79f18b9992db9d04865cc2ca40a0f684b2290da72571f6efc",
+      "sha256": "4fd28900b142d538af4fabeb8bf99924bf1419c6badfec877a4c685182224afd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9771,13 +9739,13 @@
     {
       "id": "SURFACE-67b757b19f11e973",
       "path": "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx",
-      "sha256": "7497a1d38c2e6e9a5327bd53405eb76d993fe3c7ea63ca70ed8f0965a29677cd",
+      "sha256": "460e07ee1070d586d1d8f14b4d9fe03c76c2170632a06cae8d1c1273c02497a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8817f81a71124ed7",
       "path": "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
-      "sha256": "4923d21e7f78ebb08e20cd4091fdb19adb6492a3f74d6b1fa810f79be7a29bdd",
+      "sha256": "a27268569f428e752d4fb941ddafd8e299dfa705b91593581b9ecdfeefd27d9b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10651,24 +10619,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-5ed7d8944694e02d",
-      "path": "tdf-hq-ui/src/features/production/ProductionForms.tsx",
-      "sha256": "f37e78adb76c1de2ea5e6027cbbd4c83a703c14f8036f9911caf4b2a618ab8dc",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-54f1280f7d455c9d",
-      "path": "tdf-hq-ui/src/features/production/Review.tsx",
-      "sha256": "9ce6ccb645640f2fe1681630fefc861c3fcf6b79f40be21be7333e79d1e7fc0f",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-ed3344c5599b510a",
-      "path": "tdf-hq-ui/src/features/production/WorkspaceViews.tsx",
-      "sha256": "86d86ba9c6520593f05a53d12099909c06ebd48501fa1e7e751c0c7a2e64a6cd",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-1feafb0155431191",
       "path": "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
       "sha256": "02a247376b7685688d733469e04a0c9444e7042db2f17e8a0097782a3d674c68",
@@ -11463,7 +11413,7 @@
     {
       "id": "SURFACE-8f336ec91c101452",
       "path": "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
-      "sha256": "805e39c40e648eaf187345dc3b56537dbad10d671da330c86ddb5cedddf694d2",
+      "sha256": "82536fbbbcd2e520907fcac4bf0f1471c443822511e65107a7f834a4000efa27",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11751,7 +11701,7 @@
     {
       "id": "SURFACE-105a1dc051fd691f",
       "path": "tdf-hq-ui/src/pages/LabelProjectsPage.tsx",
-      "sha256": "bb7ee316342d72d976fd956b39dd4e5b8ada868f16c70a41f3ed7b5c391b2041",
+      "sha256": "742e76d1e66f1aa3abb0c42bdc90982b4c8f91b0e70cec2d727edbc93aa6e6f4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12112,18 +12062,6 @@
       "id": "SURFACE-4a78e6b0e0157ec4",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.tsx",
       "sha256": "81858d869a98dd7cf676fc970baeb16464ef6d47e6625569a10e20b44831e74c",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-f2321be8a26667c7",
-      "path": "tdf-hq-ui/src/pages/ProductionWorkspacePage.test.tsx",
-      "sha256": "5fefd3f7c10de0b91d870d2f3f3c70c203a3ea4eac5740f3c0cddbe6fefdf513",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-8f24ea44f9cb1e73",
-      "path": "tdf-hq-ui/src/pages/ProductionWorkspacePage.tsx",
-      "sha256": "bb8f95f6dd19171c60fe63f29766f80c2e35eb5df528a475d42e63071f4e8868",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12819,7 +12757,7 @@
     {
       "id": "SURFACE-f0dfc7a18e8b49c7",
       "path": "tdf-hq-ui/src/routes/protectedRoutes.tsx",
-      "sha256": "9c15497cd2a76cb204eb1b4f82ac81193952f5eab7ec505e1f116147fe5cc04f",
+      "sha256": "bd49b500f0243ae6413203205466d5a1a2220c9cd5a10de3e41a3420275cffb3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13863,7 +13801,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "e4876b033a6fe6240c2aa9b0f417233126f51109df59f8608434a85db77f396e",
+      "sha256": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13923,7 +13861,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "8393c71f435464843cfb230763ad4200d4b05a090ee813378241c4fff49f4db3",
+      "sha256": "aa81a26a74007e75960cbf4c6b67b6c8f37d4aa6e6fe63364fb41541fc8484e9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13960,12 +13898,6 @@
       "id": "SURFACE-f6d50389e4c36039",
       "path": "tdf-hq/docs/openapi/music-search.yaml",
       "sha256": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-711fc44ed1a708dd",
-      "path": "tdf-hq/docs/openapi/productions.yaml",
-      "sha256": "0890d8786c7bc780f67cab5bad518a9daa5001c56258d8360015d6f41c63ee2f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16711,6 +16643,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6af2fb60590d5f42",
+      "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql",
+      "sha256": "889d9636c32bd4fdd78eb8e51590954cf150d71db07ec416a80acdddd7b1ea80",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4e65b4accc811245",
+      "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle_rollback.sql",
+      "sha256": "88d7f2a08044f18581dcb49c1298a0c1197a7e302ac0ca8b8835404f6b7ce33b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2bd4ac88b05a1b49",
       "path": "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql",
       "sha256": "7fab9f9568dbb2b2b113044869c2b6b7543e6385e9d77207c11114cbf5c1f3ef",
@@ -16951,12 +16895,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-43a5288458fec393",
-      "path": "tdf-hq/sql/2026-11-18_production_workspace.sql",
-      "sha256": "ebccee19b5ba577839c53d695ac96a525475259669375a6d1c3829174c7b473c",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -16989,13 +16927,13 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "0c310318169efaced4651d573a573761450bce089a945d513f474cbc75e569bf",
+      "sha256": "5fff27851b528e15bc225b2cbf15a5df9804e87d6419d92c0eb9a87fc2695b20",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-dfe3755c60d368f8",
       "path": "tdf-hq/src/TDF/API/Admin.hs",
-      "sha256": "fadc0f212fce8046e9a116d4d431df510dd3adb0c1df4b0c28d497e089a4862f",
+      "sha256": "6bdbea3f4b2cccc20247f1e4d9a77dcefe0545b4158ff546312ffe7d59db825e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17164,12 +17102,6 @@
       "id": "SURFACE-4ec58002d2eff1e2",
       "path": "tdf-hq/src/TDF/API/Pipelines.hs",
       "sha256": "ae6f94aaf4373407c94b9234afdaf8a3d904614fb9fbd9b870ac327362a96db7",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-14ebe859a5166587",
-      "path": "tdf-hq/src/TDF/API/Production.hs",
-      "sha256": "7a05c274e986d8deeabc638da05858cd187b0ac48c3aa11e1c458d037f51fdec",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17451,13 +17383,19 @@
     {
       "id": "SURFACE-52b27b4edfde0af0",
       "path": "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
-      "sha256": "401427a5cd152d90cf83ae378c70b09e7ff1dad7dd9902212295df32eda1a3e6",
+      "sha256": "62983a66fed8f24be14423b8ce4283acb22039dcf4d5a7ed09730c618d8260c1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-764d135c920e69a2",
       "path": "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
       "sha256": "54da88fdabb8ad1160224d3b930dfa1d44cd656cf491e74cfb0dba35c353eef4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7c2de260230baa84",
+      "path": "tdf-hq/src/TDF/Commerce/DomoRefundStore.hs",
+      "sha256": "67111f57f9e7e86386d63994c9be5678af6dc5f4b3d3fecb70e553b7c8c0f7fa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17595,13 +17533,13 @@
     {
       "id": "SURFACE-dc866f2ee69c9dff",
       "path": "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
-      "sha256": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
+      "sha256": "92c1c8b67ba216a4a5a3f563260f4a83beef6628cfdbbbcb9711b9f6b8bf55ec",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1ed705f31fa3ad8e",
       "path": "tdf-hq/src/TDF/Commerce/RefundStore.hs",
-      "sha256": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
+      "sha256": "7b33d92413ab2ef23d3f4064257448e8ff87109da4098308b752828b679a6edc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17631,7 +17569,7 @@
     {
       "id": "SURFACE-2b23cc9a08067b9e",
       "path": "tdf-hq/src/TDF/ContentStorage.hs",
-      "sha256": "02b8aee27ac687f519da646ced0045ccfc88d7ba116b7e0eb1f2477360f3c157",
+      "sha256": "4c39f039f1a81aa2b5d42db562063edfc569e651ad4bdb0afec5796aaa906634",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18123,7 +18061,13 @@
     {
       "id": "SURFACE-21573408c23f618c",
       "path": "tdf-hq/src/TDF/Routes/DomoQuotes.hs",
-      "sha256": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
+      "sha256": "6ec0f3d0ef1406872f0bc8c2f23c8b683f0f45274e07539a4e14158a7bca3345",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-20cea45d38504230",
+      "path": "tdf-hq/src/TDF/Routes/DomoRefunds.hs",
+      "sha256": "b30e9a615d9ea754e2ffe29a257e272d4fc7342d17ec919e1235a199aeff34fd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18141,7 +18085,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "892bc6cd12d8b079be8bff2c450409bec4c8e7c5472b961bbdb8314e5ebcbb98",
+      "sha256": "e6ff7cfdf1c79b7af0dd8d09ead32ac2b469272ee270f1589aaa97667c963062",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18183,7 +18127,13 @@
     {
       "id": "SURFACE-436c77cb88490332",
       "path": "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-      "sha256": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
+      "sha256": "beb7365c1f6b23072bb7c1afc34ed0eb9e711aee3e60425467c9221e7ab4c7bd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ad9b4538d376377d",
+      "path": "tdf-hq/src/TDF/Server/DomoRefunds.hs",
+      "sha256": "6c520cd643346ad24be6ea7b02c1a6e76f4c407f7ab08176fbe48b47c7f9fd4c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18271,12 +18221,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-d832063c7b8f4e47",
-      "path": "tdf-hq/src/TDF/Server/Production.hs",
-      "sha256": "d5a91a21fef58bfddf2b267448770a62515e7cacbabdb1893fbb10235b618c1d",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
       "sha256": "d5129a96d1450d4c428ff8d6886abb1311116c24c43f40b8ae3e01327dfd3116",
@@ -18303,7 +18247,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "ad338e7fb54bcf415d0b2a87f653a2855ab0f0f92219a09c1c22125ab02b7d19",
+      "sha256": "0ddaa23d575f3c7cea51c6f5bea1690c66b7932728b5ebc2da4f707263e1a9b8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18357,7 +18301,7 @@
     {
       "id": "SURFACE-b79d63603a30c4ce",
       "path": "tdf-hq/src/TDF/ServerAdmin.hs",
-      "sha256": "7ac0b9e10bceeb3d90db939fb6ba851398cf52790e36fe5566624e54934857a7",
+      "sha256": "275d926b7861b10ac4022f8d6f3ddf7d1348fcce214ec9416938cf6e2c43f645",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18681,7 +18625,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "73bcd37bc0d58d9d9f66d44ff3241349f93527b66e9756a3c716608f92c25cb9",
+      "sha256": "a6a23d82214ca0e1119787d8b4a7ca969485a3cb57e9aab3e7661aa47ed08da5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18849,7 +18793,7 @@
     {
       "id": "SURFACE-cf246373db6d4c39",
       "path": "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
-      "sha256": "a4f7f070b8f1d569415a4e82b3a9c2671ada7dcd411e2b9ce9ddd9af9e700e8b",
+      "sha256": "a70b5f9ac0552227fa695f66b5b0876f28be4743303061a822cd9c9a90e98d59",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18879,7 +18823,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "1d44b71cfda45994856a9657043c1da774f32399a7dcec5bc0b54e7d9b47afff",
+      "sha256": "d2359bc8d3bbd90aff2d45d17b640aa458cecd5e110fb97327cf6ecd36559b6f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21219,7 +21163,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "8f703aee019b0841e3822d359b3d5dceee2f534ac234810b7e3ddf5d171a2202",
+      "sha256": "876ecab7412f5a01a1ccf6451496f10277fc492d2dafb8f9c5239577495f3ea7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21567,7 +21511,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "7befb5f315c7e165fbbeb77014b7fa1b8306efeeb22439b35f03e5acfbacd796",
+      "sha256": "0c72bbca5adfe3a8a357123c0111d0a7ff552d02af8c34f2788ff739fac59774",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24899,6 +24843,13 @@
     {
       "path": "docs/payments/consolidation-2026-10-15.md",
       "sha256": "916e3353e262c64f53b869ccb3a3c6ca3dcaa628fe0c7dae3013723ccf859896",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/domo-refunds-2026-11-02.md",
+      "sha256": "295216386b960ffa64e440b6f90dd2fc51cbb544be1da62cf079a7fb6d11f0a1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30308,55 +30259,6 @@
       "kind": "model-configuration"
     },
     {
-      "path": "formal/production/README.md",
-      "sha256": "85680d7bca88d8919933342e17b53514f22208858b0005a3abbd5090c6d539cf",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
-      "path": "formal/production/Workspace.tla",
-      "sha256": "7c96663501054e64ca1d27d8308320e4c5230f08c38c47c8cc8a4200d614b13b",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "formal-model"
-    },
-    {
-      "path": "formal/production/decision.cfg",
-      "sha256": "495210810c4ed5df114cbde720c59376cd27fcfea9302d697be51c716e884673",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/production/graph.cfg",
-      "sha256": "cbe6196f4adb7b5049835707d40bec2082e5ead8c8faaf8aa840a4c1b8feb5d7",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/production/plan.cfg",
-      "sha256": "6a648f2d4d8d2713f7db6a407711653b518e1c132e7c588230f66be4d1409ee9",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/production/read.cfg",
-      "sha256": "2a88d83370dd0e37b475a31f38099b180670c3a1f88232e5f10e2f3cc344c986",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
-      "path": "formal/production/review.cfg",
-      "sha256": "c94bddade5bf12dd65e4425f58ddfccbc5bbb7f088206fae02d3db15f7746e74",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "model-configuration"
-    },
-    {
       "path": "formal/social/ConsentTraces.cfg",
       "sha256": "877abff564403e4e64fdb1823551971b68d34813f49c75c02f00b0b0b996f716",
       "authority": "inferred",
@@ -30834,7 +30736,7 @@
     },
     {
       "path": "formal/system/auth-predicates.md",
-      "sha256": "b3b3392231623e15fbc1ba5597e160f21d6926126a200d3e59a90ab110bc7a25",
+      "sha256": "49ea19c9ada5e64b7ffbab7b8477d8ed65b46aabb6d39fd0aab97cb8cdc4d6f6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31835,7 +31737,7 @@
     },
     {
       "path": "formal/system/recovery-expiry-arithmetic.md",
-      "sha256": "c9fde50c86dee2d1c9e86fc060ec5651147e6c9340add96803120865967a8b08",
+      "sha256": "38450b4c3de997915bb03efe5c79fe025c0072fca129bcf409ee74c8dc43cc08",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31863,7 +31765,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "9519eb7c848d27bc34e073ed8dffc081252975d20549f47cd71c26def9a18d38",
+      "sha256": "a910954fe39fb358454a0155da61c5aa6a4a0e62de9f9f78b9c1623fc9761027",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32297,7 +32199,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "8393c71f435464843cfb230763ad4200d4b05a090ee813378241c4fff49f4db3",
+      "sha256": "aa81a26a74007e75960cbf4c6b67b6c8f37d4aa6e6fe63364fb41541fc8484e9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -32340,13 +32242,6 @@
     {
       "path": "tdf-hq/docs/openapi/music-search.yaml",
       "sha256": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "interface-contract"
-    },
-    {
-      "path": "tdf-hq/docs/openapi/productions.yaml",
-      "sha256": "0890d8786c7bc780f67cab5bad518a9daa5001c56258d8360015d6f41c63ee2f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -48053,61 +47948,6 @@
         "INIT Init",
         "NEXT Next",
         "INVARIANTS TypeOK Safe",
-        "CHECK_DEADLOCK FALSE"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/production/decision.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CONSTANTS Scenario = \"decision\" Unsafe = FALSE",
-        "INVARIANTS Acyclic UniqueDecision CurrentApproval PlanSafe Private",
-        "CHECK_DEADLOCK FALSE"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/production/graph.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CONSTANTS Scenario = \"graph\" Unsafe = FALSE",
-        "INVARIANTS Acyclic CurrentApproval UniqueDecision PlanSafe Private",
-        "CHECK_DEADLOCK FALSE"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/production/plan.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CONSTANTS Scenario = \"plan\" Unsafe = FALSE",
-        "INVARIANTS Acyclic CurrentApproval UniqueDecision PlanSafe Private",
-        "CHECK_DEADLOCK FALSE"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/production/read.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CONSTANTS Scenario = \"read\" Unsafe = FALSE",
-        "INVARIANTS Acyclic CurrentApproval UniqueDecision PlanSafe Private",
-        "CHECK_DEADLOCK FALSE"
-      ],
-      "result": "not-revalidated-by-inventory",
-      "correspondence": "See domain traceability; discovery establishes no refinement"
-    },
-    {
-      "configuration": "formal/production/review.cfg",
-      "declarations": [
-        "SPECIFICATION Spec",
-        "CONSTANTS Scenario = \"review\" Unsafe = FALSE",
-        "INVARIANTS Acyclic CurrentApproval UniqueDecision PlanSafe Private",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
