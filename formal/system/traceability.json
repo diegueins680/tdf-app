@@ -9794,11 +9794,13 @@
         "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "tdf-hq-ui/src/api/artistUpcomingEvents.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
       "tests": [
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
@@ -29597,6 +29599,7 @@
     "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx": "deadea2e72df3939783f6a29c075d3038537e39e1065bea3ea7898f54ceb9fc6",
     "tdf-hq-ui/src/components/events/EventPublishControl.tsx": "9f009c12badf37e22f1261a2e35c7437f5b3e22b2a8df6988236b6a0aa95b718",
     "tdf-hq-ui/src/components/events/EventRaciEditor.tsx": "4f5d9809f1955c583981cf9cc97fb0d48ce5b9cbf3df7cb9a0b22bd4cf2a3bb9",
+    "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx": "f75c80467a6100dabc54b2331e96c7b22b707af6e10891d2547d85aaf0eda401",
     "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "2abee262c973c1c59e1eb26548f04105126307e7ca1ab480bb50f17e377bf7e5",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
     "tdf-hq-ui/src/components/events/EventTicketSaleCard.test.tsx": "abeb518ad9ba0fed947777c091ee5387c35ea9c312f3acdf9c28892cb82ffe06",
@@ -39695,6 +39698,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "EVT-DISCOVERY-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "LEGAL-CONSENT-001",
         "relationship": "implementation"
       },
@@ -42828,6 +42835,12 @@
       },
       {
         "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx": [
+      {
+        "requirement": "EVT-DISCOVERY-001",
         "relationship": "tests"
       }
     ],
@@ -61545,6 +61558,10 @@
           "relationship": "implementation"
         },
         {
+          "requirement": "EVT-DISCOVERY-001",
+          "relationship": "implementation"
+        },
+        {
           "requirement": "LEGAL-CONSENT-001",
           "relationship": "implementation"
         },
@@ -63251,7 +63268,12 @@
       "path": "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
       "sha256": "f75c80467a6100dabc54b2331e96c7b22b707af6e10891d2547d85aaf0eda401",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-DISCOVERY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-3fb10adaf67ec8d5",
@@ -87423,7 +87445,6 @@
     "SURFACE-6628113be1d1b41f",
     "SURFACE-ae65f170b258f02b",
     "SURFACE-615a78e009691805",
-    "SURFACE-9b8b12c0260a498e",
     "SURFACE-151891803a9e4745",
     "SURFACE-f29c4e265dd61680",
     "SURFACE-6c08dcce1c9676c9",
@@ -89763,7 +89784,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "32d430917c071934a2205c190f780a6b92d8910f57750d901f19656b67d4fa9c",
+      "sourceSha256": "2188bd9fe82ae29a2fad1f746d52ee24df1770942e26e01fd318d8aaf7966441",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -89791,7 +89812,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "32d430917c071934a2205c190f780a6b92d8910f57750d901f19656b67d4fa9c",
+      "sourceSha256": "2188bd9fe82ae29a2fad1f746d52ee24df1770942e26e01fd318d8aaf7966441",
       "definition": {
         "states": [
           "absent",
@@ -89821,7 +89842,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "32d430917c071934a2205c190f780a6b92d8910f57750d901f19656b67d4fa9c",
+      "sourceSha256": "2188bd9fe82ae29a2fad1f746d52ee24df1770942e26e01fd318d8aaf7966441",
       "definition": {
         "export": [
           "queued",
