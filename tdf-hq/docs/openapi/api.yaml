@@ -4480,6 +4480,131 @@ paths:
           description: Note deactivated without hard deletion.
         '410':
           description: The note was already deactivated.
+  /studio-submissions/batch:
+    post:
+      operationId: createStudioPhotoBatch
+      summary: Start or resume a batch using the unlisted invitation
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, receipt]
+              properties:
+                token: {type: string}
+                receipt: {type: string, format: uuid}
+                credit: {type: string, maxLength: 250}
+      responses:
+        '200': {description: Batch is ready}
+        '403': {description: Invitation disabled or replaced}
+        '429': {description: Hourly batch quota reached}
+  /studio-submissions/upload/{position}:
+    post:
+      operationId: uploadStudioSubmissionPhoto
+      summary: Submit one photo using the invitation as a bearer token
+      security: [{studioInvitation: []}]
+      parameters:
+        - {in: path, name: position, required: true, schema: {type: integer, minimum: 0, maximum: 29}}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [receipt, file]
+              properties:
+                receipt: {type: string, format: uuid}
+                file: {type: string, format: binary}
+      responses:
+        '200':
+          description: Received or matched to an existing photo in this batch
+          content:
+            application/json:
+              schema: {type: object, properties: {duplicate: {type: boolean}}}
+        '403': {description: Invitation disabled or replaced}
+        '409': {description: Position conflict or storage quota reached}
+        '413': {description: File too large}
+        '422': {description: Invalid image}
+        '429': {description: Retry later}
+  /studio-submissions/status:
+    post:
+      operationId: getStudioPhotoBatchStatus
+      summary: Read status using one private batch receipt
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, required: [receipt], properties: {receipt: {type: string, format: uuid}}}
+      responses:
+        '200':
+          description: Status rows for this receipt in contributor order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    position: {type: integer}
+                    name: {type: string}
+                    state: {type: string, enum: [pending, accepted, rejected, expired]}
+  /studio-submissions/images/{id}/{size}:
+    get:
+      operationId: getPublishedStudioPhoto
+      summary: Read an approved JPEG currently visible in the published gallery
+      security: []
+      parameters:
+        - {in: path, name: id, required: true, schema: {type: string, format: uuid}}
+        - {in: path, name: size, required: true, schema: {type: string, enum: [small, large]}}
+      responses:
+        '200':
+          description: Optimized, correctly oriented image
+          content: {image/jpeg: {schema: {type: string, format: binary}}}
+        '404': {description: Photo is unavailable}
+  /cms/admin/studio-submissions/{action}:
+    post:
+      operationId: manageStudioSubmissions
+      summary: Manage invitations and review private photos as an administrator or webmaster
+      security: [{bearerAuth: []}]
+      parameters:
+        - in: path
+          name: action
+          required: true
+          schema: {type: string, enum: [link, replace, disable, queue, preview, review]}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: {type: string, format: uuid, description: Photo to preview}
+                ids: {type: array, maxItems: 30, items: {type: string, format: uuid}}
+                state: {type: string, enum: [accepted, rejected]}
+      responses:
+        '200':
+          description: Invitation, queue, private JPEG preview, or review confirmation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - {type: object, properties: {token: {type: string, nullable: true}, jpeg: {type: string, format: byte}}}
+                  - type: array
+                    items:
+                      type: object
+                      properties:
+                        id: {type: string, format: uuid}
+                        batch: {type: integer}
+                        position: {type: integer}
+                        name: {type: string}
+                        credit: {type: string}
+                        state: {type: string, enum: [pending, accepted]}
+        '401': {description: Sign in required}
+        '403': {description: Staff role required}
+        '409': {description: Review decision conflicts with an existing decision}
   /cms/content:
     get:
       tags: [CMS]
@@ -10428,6 +10553,10 @@ security:
 
 components:
   securitySchemes:
+    studioInvitation:
+      type: http
+      scheme: bearer
+      description: Private studio upload invitation
     bearerAuth:
       type: http
       scheme: bearer

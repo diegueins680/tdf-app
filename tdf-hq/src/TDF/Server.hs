@@ -73,7 +73,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Scientific as Sci
 import           Data.Time
-  ( Day, NominalDiffTime, UTCTime (..), ZonedTime, addDays, addUTCTime, diffTimeToPicoseconds, diffUTCTime, fromGregorian
+  ( Day, NominalDiffTime, UTCTime (..), ZonedTime, addDays, addUTCTime, diffTimeToPicoseconds, diffUTCTime, fromGregorian, fromGregorianValid
   , getCurrentTime, secondsToDiffTime, toGregorian, utctDay, zonedTimeToUTC
   )
 import           Data.Time.Format (defaultTimeLocale, formatTime)
@@ -86,8 +86,12 @@ import           Data.Word (Word64)
 import           Numeric (showHex)
 import           System.Directory (getFileSize)
 import           System.FilePath ((</>))
+import qualified Data.ByteString.Base64 as StudioBase64
+import System.Process (readProcessWithExitCode)
+import System.Exit (ExitCode(..))
 import           System.IO (hPutStrLn, stderr)
-import           Network.HTTP.Types.Status (status404)
+import           Network.HTTP.Types.Status (status400, status403, status404, status413)
+import qualified Servant.Multipart as Multipart
 import qualified Network.Wai as Wai
 import           Servant
 import           Servant.Multipart (FileData(..), Tmp)
@@ -738,7 +742,27 @@ mkApp env =
       ctx      = authContext env
       trials   = TrialsServer.trialsServer (envPool env)
       apiSrv   = hoistServerWithContext apiProxy ctxProxy (nt env) (server env)
-  in musicCredentialCache $ serveWithContext combinedProxy ctx (trials :<|> apiSrv)
+  in studioIntakeLimits env $ musicCredentialCache $ serveWithContext combinedProxy ctx (trials :<|> apiSrv)
+
+-- Reject oversized or uninvited multipart requests before Servant spools any files.
+studioIntakeLimits :: Env -> Wai.Middleware
+studioIntakeLimits env next req respond
+  | Wai.requestMethod req /= "POST" = next req respond
+  | "studio-submissions" : route <- Wai.pathInfo req = do
+      let upload = take 1 route == ["upload"]
+          limit = if upload then 25 * 1024 * 1024 + 16384 else 4096
+          deny code = respond (Wai.responseLBS code [("Cache-Control","no-store")] "")
+      case Wai.requestBodyLength req of
+        Wai.KnownLength bytes | bytes <= limit ->
+          if upload then case lookup "Authorization" (Wai.requestHeaders req) >>= BS8.stripPrefix "Bearer " of
+            Just token | BS8.length token == 43 -> do
+              auth <- runHandler (nt env (studioOperation "authorize" (object ["token" .= BS8.unpack token])))
+              either (const (deny status403)) (const (next req respond)) auth
+            _ -> deny status403
+          else next req respond
+        Wai.ChunkedBody -> deny status400
+        _ -> deny status413
+  | otherwise = next req respond
 
 nt :: Env -> AppM a -> Handler a
 nt env x = runReaderT x env
@@ -15744,9 +15768,55 @@ resolveAuthoredContentIdBySlug slug = do
             Just state | Catalog.workflowStateCode state == "published" -> Just contentId
             _ -> Nothing
 
+studioOperation :: String -> Value -> AppM Value
+studioOperation op payload = do
+  result <- liftIO $ readProcessWithExitCode "python3" ["studio/submissions.py",op]
+    (T.unpack (TE.decodeUtf8 (BL.toStrict (encode payload))))
+  case result of
+    (ExitSuccess,out,_) | Just (Object response) <- decodeStrict' (TE.encodeUtf8 (T.pack out)) ->
+      case AKeyMap.lookup "ok" response of
+        Just value -> pure value
+        Nothing -> do
+          let code = AKeyMap.lookup "status" response
+              base = case code of
+                Just (Number 403) -> err403
+                Just (Number 404) -> err404
+                Just (Number 409) -> err409
+                Just (Number 413) -> err413
+                Just (Number 422) -> err422
+                Just (Number 429) -> err429
+                _ -> err400
+          throwError base { errBody = encode (Object response) }
+    _ -> throwError err503
+
 cmsPublicServer :: ServerT CmsPublicAPI AppM
-cmsPublicServer = cmsGet :<|> cmsList
+cmsPublicServer = cmsGet :<|> cmsList :<|> studioOperation "batch" :<|> uploadStudio
+  :<|> studioOperation "status" :<|> publishedImage
   where
+    uploadStudio position authorization form = case (Multipart.inputs form, Multipart.files form) of
+      ([Multipart.Input "receipt" receipt], [file]) | fdInputName file == "file" ->
+        studioOperation "upload" $ object
+          [ "position" .= position, "token" .= T.stripPrefix "Bearer " authorization
+          , "receipt" .= receipt, "name" .= fdFileName file, "path" .= fdPayload file ]
+      _ -> throwError err400
+    publishedImage identifier size = do
+      unless (size `elem` ["large","small"]) (throwError err404)
+      gallery <- cmsGet (Just "studio-gallery") (Just "es")
+      let visiblePhoto = withObject "photo" $ \photo -> do
+            imageUrl <- photo .: "imageUrl"
+            thumbnail <- photo .:? "thumbnailUrl"
+            visible <- photo .: "visible"
+            let requested = "/studio-submissions/images/" <> UUID.toText identifier <> "/" <> size
+            pure (visible && (imageUrl == requested || thumbnail == Just requested))
+          containsPhoto = withObject "gallery" $ \galleryObject -> do
+            photos <- galleryObject .: "photos" :: Parser [Value]
+            or <$> traverse visiblePhoto photos
+      unless ((ccdPayload gallery >>= parseMaybe containsPhoto) == Just True) (throwError err404)
+      response <- studioOperation "image" (object ["id" .= identifier, "size" .= size])
+      case parseMaybe (withObject "image" (.: "jpeg")) response >>= either (const Nothing) Just . StudioBase64.decode . TE.encodeUtf8 of
+        Nothing -> throwError err500
+        Just bytes -> pure (addHeader ("no-store" :: Text) (BL.fromStrict bytes))
+
     fallbackContent slug locale = do
       now <- liftIO getCurrentTime
       pure CmsContentDTO
@@ -20988,11 +21058,13 @@ toLabelProjectNoteDTO (Entity key note) =
 
 cmsAdminServer :: AuthedUser -> ServerT CmsAdminAPI AppM
 cmsAdminServer user =
-       cmsListH
-  :<|> cmsCreateH
-  :<|> cmsPublishH
-  :<|> cmsDeleteH
+  (cmsListH :<|> cmsCreateH :<|> cmsPublishH :<|> cmsDeleteH) :<|> studioAdmin
   where
+    studioAdmin action payload = do
+      requireWebmaster
+      unless (action `elem` ["queue","review","preview","link","replace","disable"]) (throwError err404)
+      studioOperation (T.unpack action) payload
+
     requireWebmaster = unless (hasRole Admin user || hasRole Webmaster user) $
       throwError err403
 
@@ -21276,8 +21348,12 @@ validateStudioGalleryPayload allowIncomplete value =
 
 -- | A bundled studio asset or a credential-free HTTPS URL.
 studioGalleryImageUrlAllowed :: Text -> Bool
-studioGalleryImageUrlAllowed url = bundledAsset || secureRemote
+studioGalleryImageUrlAllowed url = bundledAsset || submissionImage || secureRemote
   where
+    submissionImage = case T.splitOn "/" url of
+      ["","studio-submissions","images",identifier,size] ->
+        isJust (UUID.fromText identifier) && size `elem` ["small","large"]
+      _ -> False
     bundledAsset =
       case T.stripPrefix "/assets/tdf-studio/" url of
         Just name ->

@@ -119,4 +119,12 @@ fi
 # development invocations may still opt into that path without this entrypoint.
 export RUN_MIGRATIONS=false
 export APP_PORT="${PORT:-${APP_PORT:-8080}}"
+# Retention also runs on days without submissions. The container owns this loop.
+if [ "$production_runtime" = "true" ] && [ -f /app/studio/submissions.py ]; then
+  (while true; do
+    echo '{}' | python3 /app/studio/submissions.py cleanup >/dev/null || echo 'Studio photo retention failed' >&2
+    sleep 86400
+  done) &
+fi
+
 exec "${server_bin}"

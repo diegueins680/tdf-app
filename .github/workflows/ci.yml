@@ -370,7 +370,10 @@ jobs:
       - name: Install native build dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends libpq-dev postgresql-client python3 python3-psycopg2 pkg-config git curl ca-certificates ffmpeg jq libxml2-utils perl unzip zip lsof procps
+          apt-get install -y --no-install-recommends libpq-dev postgresql-client python3 python3-pil heif-thumbnailer python3-psycopg2 pkg-config git curl ca-certificates ffmpeg jq libxml2-utils perl unzip zip lsof procps
+
+      - name: Test private studio photo intake
+        run: python3 tdf-hq/studio/test_submissions.py
 
       - name: Trust the exact container checkout for evidence Git reads
         # Container paths resolve to /__w while checkout may trust the host alias.

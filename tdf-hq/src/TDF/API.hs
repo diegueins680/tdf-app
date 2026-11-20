@@ -1,11 +1,15 @@
 
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
 module TDF.API where
 
+import Network.HTTP.Media ((//))
+import Servant.Multipart (MultipartForm, MultipartData, Tmp)
 import qualified TDF.API.Chat as Chat
 import TDF.VideoCampaigns (VideoCampaignAPI)
 import TDF.API.FanFollowing (FollowArtistAPI, UnfollowArtistAPI)
@@ -144,9 +148,22 @@ type AdsAdminAPI =
   :<|> "ads" :> "automations" :> Capture "automationId" Int64 :> "status" :> ReqBody '[JSON] CampaignAutomationStatusUpdate :> Post '[JSON] CampaignAutomationDTO
   :<|> "ads" :> "automations" :> Capture "automationId" Int64 :> "enrollments" :> Capture "enrollmentId" Int64 :> "status" :> ReqBody '[JSON] CampaignEnrollmentStatusUpdate :> Post '[JSON] CampaignEnrollmentDTO
 
+data StudioJpeg
+instance Accept StudioJpeg where
+  contentType _ = "image" // "jpeg"
+instance MimeRender StudioJpeg BL.ByteString where
+  mimeRender _ = id
+
+type StudioImageResponse = Headers '[Header "Cache-Control" Text] BL.ByteString
+
 type CmsPublicAPI =
        "cms" :> "content" :> QueryParam "slug" Text :> QueryParam "locale" Text :> Get '[JSON] CmsContentDTO
   :<|> "cms" :> "contents" :> QueryParam "locale" Text :> QueryParam "slugPrefix" Text :> Get '[JSON] [CmsContentDTO]
+
+  :<|> "studio-submissions" :> "batch" :> ReqBody '[JSON] Value :> Post '[JSON] Value
+  :<|> "studio-submissions" :> "upload" :> Capture "position" Int :> Header' '[Required, Strict] "Authorization" Text :> MultipartForm Tmp (MultipartData Tmp) :> Post '[JSON] Value
+  :<|> "studio-submissions" :> "status" :> ReqBody '[JSON] Value :> Post '[JSON] Value
+  :<|> "studio-submissions" :> "images" :> Capture "id" UUID :> Capture "size" Text :> Get '[StudioJpeg] StudioImageResponse
 
 type CmsAdminAPI =
        "cms" :> "admin" :> "content" :>
@@ -155,6 +172,8 @@ type CmsAdminAPI =
       :<|> Capture "id" Int :> "publish" :> Post '[JSON] CmsContentDTO
       :<|> Capture "id" Int :> Delete '[JSON] NoContent
          )
+
+  :<|> "cms" :> "admin" :> "studio-submissions" :> Capture "action" Text :> ReqBody '[JSON] Value :> Post '[JSON] Value
 
 type PartyAPI =
        QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [PartyDTO]

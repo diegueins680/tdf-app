@@ -17,7 +17,8 @@ installGlobalErrorHandlers();
 // Initialize analytics as early as possible so pageviews captured by
 // posthog-js include the landing route. If VITE_POSTHOG_KEY is unset
 // this is a no-op.
-void import('./analytics/posthog')
+const studioIntake = window.location.pathname.replace(/\/$/, '') === '/estudio/enviar';
+if (!studioIntake) void import('./analytics/posthog')
   .then(({ getAnalyticsClient }) => {
     const analytics = getAnalyticsClient();
     if (!analytics.ready) return;
@@ -34,10 +35,12 @@ if (window.location.pathname === '/login') {
   void import('./pages/LoginPage').catch(() => undefined);
 }
 
+const StudioSubmissionPage = React.lazy(() => import('./pages/StudioSubmissionPage'));
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BootErrorBoundary>
-      <BrowserRouter>
+      {studioIntake ? <React.Suspense fallback={<p>Cargando envío de fotos…</p>}><StudioSubmissionPage /></React.Suspense> : <BrowserRouter>
         <SessionProviders>
           <LocalePreferencesProvider>
             <CurrencyProvider>
@@ -45,7 +48,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             </CurrencyProvider>
           </LocalePreferencesProvider>
         </SessionProviders>
-      </BrowserRouter>
+      </BrowserRouter>}
     </BootErrorBoundary>
   </React.StrictMode>
 );
