@@ -88,6 +88,25 @@ class StudioIntakeTest(unittest.TestCase):
         self.call("cleanup")
         self.assertIsNone(self.db.execute("SELECT original FROM photos").fetchone()[0])
 
+    def test_webp_and_png_are_decoded_by_content(self):
+        for position, image_format in enumerate(("WEBP", "PNG")):
+            Image.new("RGB", (96, 64), "plum").save(self.path, format=image_format)
+            self.assertFalse(self.upload(position)["duplicate"])
+        self.assertEqual(len(self.call("queue")), 2)
+
+    def test_rate_and_file_size_limits(self):
+        with open(self.path, "wb") as stream:
+            stream.truncate(25 * 1024**2 + 1)
+        with self.assertRaises(Problem) as problem:
+            self.upload()
+        self.assertEqual(problem.exception.status, 413)
+        Image.new("RGB", (2, 2), "blue").save(self.path)
+        with self.db:
+            self.db.executemany("INSERT INTO attempts VALUES(?)", [(time.time(),)] * 240)
+        with self.assertRaises(Problem) as problem:
+            self.upload()
+        self.assertEqual(problem.exception.status, 429)
+
     def test_limits_and_invalid_files(self):
         with self.assertRaises(Problem):
             self.upload(30)
