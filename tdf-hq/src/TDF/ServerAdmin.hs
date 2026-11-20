@@ -40,6 +40,7 @@ module TDF.ServerAdmin
   , normalizeBrainEntryTags
   ) where
 
+import TDF.Server.DomoRefunds (domoRefundAdminServer, domoCancellationView)
 import TDF.Server.RecordsIngestion (recordsIngestionServer)
 import           Control.Exception      (SomeException, try)
 import           Control.Applicative    ((<|>))
@@ -267,6 +268,7 @@ adminServer user =
   :<|> ragRouter
   :<|> socialRouter
   :<|> domoRouter
+  :<|> domoRefundAdminServer user
   :<|> recordsIngestionServer user
   where
     domoRouter = domoCancelHandler
@@ -309,25 +311,7 @@ adminServer user =
           , "refundStatus" .= DomoCancel.dcrRefundStatus record
           , "policyVersion" .= DomoCancel.dcrPolicyVersion record
           ])
-      pure $ object
-        [ "quoteId" .= DomoCancel.dcrQuoteId record
-        , "quoteStatus" .= DomoCancel.dcrQuoteStatus record
-        , "canceller" .= DomoCancel.dcrCanceller record
-        , "actorType" .= DomoCancel.dcrActorType record
-        , "policyVersion" .= DomoCancel.dcrPolicyVersion record
-        , "cancelledAt" .= DomoCancel.dcrCancelledAt record
-        , "leadDays" .= DomoCancel.dcrLeadDays record
-        , "inProgress" .= DomoCancel.dcrInProgress record
-        , "retainedBasisPoints" .= DomoCancel.dcrRetainedBasisPoints record
-        , "depositCollectedMinor" .= DomoCancel.dcrDepositCollectedMinor record
-        , "balanceCollectedMinor" .= DomoCancel.dcrBalanceCollectedMinor record
-        , "retainedMinor" .= DomoCancel.dcrRetainedMinor record
-        , "refundDueMinor" .= DomoCancel.dcrRefundDueMinor record
-        , "currency" .= DomoCancel.dcrCurrency record
-        , "refundStatus" .= DomoCancel.dcrRefundStatus record
-        , "refundId" .= DomoCancel.dcrRefundId record
-        , "alreadyCancelled" .= DomoCancel.dcrReplayed record
-        ]
+      pure (domoCancellationView record)
 
     seedHandler rawToken = do
       ensureStrictAdmin user
