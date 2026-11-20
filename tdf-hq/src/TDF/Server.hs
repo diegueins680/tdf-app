@@ -64,7 +64,7 @@ import           Data.Aeson (ToJSON(..), Value(..), Object, object, (.=), decode
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKeyMap
 import           Data.Aeson.Types (Parser, parseEither, parseMaybe, withObject, (.:), (.:?), (.!=))
-import TDF.Studio.Submissions (studioOperation)
+import TDF.Studio.Submissions (studioIntakeLimits, studioOperation)
 import TDF.Studio.Gallery (validateStudioGalleryPayload)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -90,10 +90,8 @@ import           Numeric (showHex)
 import           System.Directory (getFileSize)
 import           System.FilePath ((</>))
 import qualified Data.ByteString.Base64 as StudioBase64
-import System.Process (readProcessWithExitCode)
-import System.Exit (ExitCode(..))
 import           System.IO (hPutStrLn, stderr)
-import           Network.HTTP.Types.Status (status400, status403, status404, status413)
+import           Network.HTTP.Types.Status (status404)
 import qualified Servant.Multipart as Multipart
 import qualified Network.Wai as Wai
 import           Servant
@@ -744,26 +742,6 @@ mkApp env =
       trials   = TrialsServer.trialsServer (envPool env)
       apiSrv   = hoistServerWithContext apiProxy ctxProxy (nt env) (server env)
   in studioIntakeLimits env $ musicCredentialCache $ serveWithContext combinedProxy ctx (trials :<|> apiSrv)
-
--- Reject oversized or uninvited multipart requests before Servant spools any files.
-studioIntakeLimits :: Env -> Wai.Middleware
-studioIntakeLimits env next req respond
-  | Wai.requestMethod req /= "POST" = next req respond
-  | "studio-submissions" : route <- Wai.pathInfo req = do
-      let upload = take 1 route == ["upload"]
-          limit = if upload then 25 * 1024 * 1024 + 16384 else 4096
-          deny code = respond (Wai.responseLBS code [("Cache-Control","no-store")] "")
-      case Wai.requestBodyLength req of
-        Wai.KnownLength bytes | bytes <= limit ->
-          if upload then case lookup "Authorization" (Wai.requestHeaders req) >>= BS8.stripPrefix "Bearer " of
-            Just token | BS8.length token == 43 -> do
-              auth <- runHandler (nt env (studioOperation "authorize" (object ["token" .= BS8.unpack token])))
-              either (const (deny status403)) (const (next req respond)) auth
-            _ -> deny status403
-          else next req respond
-        Wai.ChunkedBody -> deny status400
-        _ -> deny status413
-  | otherwise = next req respond
 
 nt :: Env -> AppM a -> Handler a
 nt env x = runReaderT x env

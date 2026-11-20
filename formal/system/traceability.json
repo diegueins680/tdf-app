@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "1c374cb54cc0daf9ddc71319c3daa9cf8d1a3dd1",
+  "mobileRevision": "eebb299c2c3a46b55b48de92b31e80bcc123ee51",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -12812,10 +12812,10 @@
         "Navigate to existing public destinations",
         "Emit optional fixed-destination exploration click events"
       ],
-      "authorization": "Existing backend and session authorization unchanged. Signed-in root destination remains Comunidad. Gallery draft, publication and history use existing Admin/Webmaster CMS authorization and the prohibition on authors publishing their own drafts; uploads use existing public-storage authorization and quotas.",
-      "privacy": "New welcome CTA events contain only fixed route and destination labels; no search query, identity, coordinates or user-entered data. Existing consent controls remain authoritative.",
+      "authorization": "Existing backend and session authorization unchanged. Signed-in root destination remains Comunidad. Gallery draft, publication and history use existing Admin/Webmaster CMS authorization and the prohibition on authors publishing their own drafts; uploads use existing public-storage authorization and quotas. Studio submissions use a rotatable upload-only invitation and per-batch receipts. Only administrators and webmasters review submissions, and public image delivery requires a visible published gallery reference.",
+      "privacy": "New welcome CTA events contain only fixed route and destination labels; no search query, identity, coordinates or user-entered data. Existing consent controls remain authoritative. Originals and unreviewed submissions reside on the private uploads mount. Public derivatives omit image metadata.",
       "concurrency": "Welcome is independent of asynchronous directory data; existing account-scoped search cache and mutation guards are unchanged.",
-      "idempotency": "Exploration is read-only navigation; existing directory write contracts unchanged.",
+      "idempotency": "Exploration is read-only navigation; existing directory write contracts unchanged. Studio photo retries reuse the batch receipt and position. The intake deduplicates identical bytes within a batch.",
       "failure": "Directory failures preserve the welcome and independent exploration links. Analytics failure must not interrupt welcome navigation. Individual photograph failure leaves other photographs and public navigation available. A failed CMS read offers retry; invalid published gallery data is not rendered.",
       "recovery": "Existing directory retry and URL-backed search remain available. Full-photo retry makes a new local asset request; closing restores focus to the originating thumbnail.",
       "observability": "public_discovery_cta_clicked is exploratory intent, never successful activation. No measured conversion uplift is claimed.",
@@ -12827,12 +12827,26 @@
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq/src/TDF/Studio/Gallery.hs",
+        "tdf-hq/src/TDF/Studio/Submissions.hs",
         "tdf-hq-ui/src/components/StudioGallery.tsx",
         "tdf-hq-ui/src/pages/NotFoundPage.tsx",
         "tdf-hq-ui/src/components/StudioGalleryEditor.tsx",
         "tdf-hq-ui/src/utils/studioGallery.ts",
         "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
-        "tdf-hq/sql/2026-11-07_studio_gallery.sql"
+        "tdf-hq/sql/2026-11-07_studio_gallery.sql",
+        "tdf-hq/studio/submissions.py",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq-ui/src/main.tsx",
+        "tdf-hq-ui/src/api/studioSubmissions.ts",
+        "tdf-hq-ui/src/components/StudioSubmissionReview.tsx",
+        "tdf-hq-ui/src/pages/StudioSubmissionPage.tsx",
+        "tdf-hq/Dockerfile",
+        "tdf-hq/Dockerfile.runtime",
+        "tdf-hq/production-entrypoint.sh",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
@@ -12850,7 +12864,10 @@
         "tdf-hq-ui/src/testFixtures/studioGallery.ts",
         "tdf-hq-ui/src/utils/studioGallery.test.ts",
         "scripts/test-studio-gallery-runner-safety.py",
-        "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx"
+        "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
+        "tdf-hq/studio/test_submissions.py",
+        "tdf-hq-ui/src/components/StudioSubmissionReview.test.tsx",
+        ".github/workflows/ci.yml"
       ],
       "formalModels": [],
       "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",
@@ -28572,7 +28589,7 @@
     ".github/workflows/check-messaging-token.yml": "68ee6bacc89bb3d49176cd023a289b68c5fcaabf616fe599c645be7b34a20ddf",
     ".github/workflows/check-mobile-distribution.yml": "a02130cf5379c4a451ec8588b989a057a683dcf275fd3d6638b275aaec0ba599",
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
-    ".github/workflows/ci.yml": "7881225540928b2134b6aaf82a3f7d77570dd99b6ca1e36c69678065ee38f086",
+    ".github/workflows/ci.yml": "7913503b17cb314d2e04ebf33cdf0f57bf450561dbb6625845d7ff7d7626153d",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/domo-refund-validation.yml": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
@@ -28584,7 +28601,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "a21e90205e44917753609cd8ee5217df186988ab2e89509a90b12d7aeeb88a9e",
+    "docs/catalog-persistence/catalog-list-decisions.json": "aeb7a428a82adfe1b362a8adf01fcdead2eb5424c97e9c580c6959f9cb8c4af9",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
@@ -29551,7 +29568,7 @@
     "tdf-hq-ui/src/api/fans.ts": "75f0d175c04cd78845fb2fb305577eb00db074d30f2cc693a70d4d3a023a7046",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "876ecab7412f5a01a1ccf6451496f10277fc492d2dafb8f9c5239577495f3ea7",
+    "tdf-hq-ui/src/api/generated/types.ts": "05c8e5d14b610192a8f95c953a050cef253e5be796faa52aeb25d146870a2a32",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "579339fc25f2a17e8d34cfd23b25562a6242cca6df291887f904bac5483acc02",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "da727168f7e65d08d52a371cbe8ccfe0d0b1c91d4de940b827f7c37fdac72f85",
@@ -29576,6 +29593,7 @@
     "tdf-hq-ui/src/api/socialEvents.test.ts": "94e606bd6901c34bcf460a614294be9f4eb027c39b9ef2110e55df65aef5962b",
     "tdf-hq-ui/src/api/socialEvents.ts": "61c417f97c4915a2a3a09cc59cf731fef5a451cce1e59bc2304a8a0498dbbc8d",
     "tdf-hq-ui/src/api/socialV2.test.ts": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
+    "tdf-hq-ui/src/api/studioSubmissions.ts": "67ca20c7574a2c0b901689d58b4ff45391eebd1202e3ce65a5f96d358441667d",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
     "tdf-hq-ui/src/api/uploadFailure.test.ts": "89b50f48d905bb134f2e2a9e43691c564cc1c18cca298998ced25527d2957d11",
     "tdf-hq-ui/src/api/uploadFailure.ts": "dd706a5810a388dd56d44142e9ab8e7fd1ace3612c18b87cf0cd1fe8113214d9",
@@ -29637,9 +29655,11 @@
     "tdf-hq-ui/src/components/StreamingPlayer.tsx": "3b4577b82858d1cfd74b7e38107084a35ff6b56952c6b1050e38e0ababaca8cb",
     "tdf-hq-ui/src/components/StripeCheckoutModal.tsx": "fc7d7f9f5d483c1a1f49ec6c870804bd01398dbb8a883864f626a67d6006a0b9",
     "tdf-hq-ui/src/components/StudioGallery.test.tsx": "a4a418f0084338e8fe10b1cee3d57fec1a80d95d523e8a0747d5f76a1344f9e6",
-    "tdf-hq-ui/src/components/StudioGallery.tsx": "e32e4567ed798f570bc040ef189aa9dff8d7dd03e064195af7b060de82a8fd26",
-    "tdf-hq-ui/src/components/StudioGalleryEditor.tsx": "cee4736a1bc141d0dc7b3aa8ab20703a0590b3e9904ab7057c8fac4eb4fe75d3",
+    "tdf-hq-ui/src/components/StudioGallery.tsx": "a78c9a163b7d2c65d4c4a64d8b17e5cc57b949b6f7fb0ddbd6a9996e72dfef69",
+    "tdf-hq-ui/src/components/StudioGalleryEditor.tsx": "1b42e335d4d75a7ebedc22b9ae164e83baa2134c4648c22757a723618e25f731",
     "tdf-hq-ui/src/components/StudioGalleryManagement.test.tsx": "ecc2a2d6b44349447a7b2d59a7d5bf6637b7bea4186d57156934b12598188ce0",
+    "tdf-hq-ui/src/components/StudioSubmissionReview.test.tsx": "2c6e97fdaf5b8fdce110450df5a48d3bceac6d867bee7bb4c38cee746044c0c1",
+    "tdf-hq-ui/src/components/StudioSubmissionReview.tsx": "2941bffcb86a89017b68d7b444e952f4a6d00ecb920631d1baa5896bba2ca0b0",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
     "tdf-hq-ui/src/components/TopBar.tsx": "a8004b80c8597e8a74dee21966b17d6438cba756572f3f338d114754f823c479",
     "tdf-hq-ui/src/components/UserProfileLink.test.tsx": "ba04e4f640c835620550e32ae875a32fcf18234f14792ff89551a1a260f633d6",
@@ -29792,7 +29812,7 @@
     "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts": "6500275d794c925824d4fe895a8503f53384e2d48c15f9dacacd4532c9ce085d",
     "tdf-hq-ui/src/i18n/locales/pt.ts": "a85d098abc9c9e1d1a5b035622cb219b0dd3fd56fdcd8d38156800f4567cc0e5",
     "tdf-hq-ui/src/i18n/requestedAuthLocale.test.ts": "4eed0d18de4e5f1299bbda26efe96b5c89a2785c5e587a27da5905ce36637f9b",
-    "tdf-hq-ui/src/main.tsx": "6d158f404416b20333c7b4780127978e21c8eeb3ea66ae45b0169c2db3fc14fa",
+    "tdf-hq-ui/src/main.tsx": "720a2ea2dc0badc4eb575b064a889656385e4b1b2d7d644ced1cd1bf581213d7",
     "tdf-hq-ui/src/mobile/MobileApp.test.tsx": "c81a5cffc51ead4b65c1a35f1303908b71a160d3ff6075327d41aa08b35752f2",
     "tdf-hq-ui/src/mobile/MobilePromoContent.tsx": "b7058064649a89f1ffd122b8efd28e2366ec09262adc3d124126b86699da0fd7",
     "tdf-hq-ui/src/mobile/telemetry.ts": "e30c3c227420f3219e1d6ac58552f2f8e4a7a6b6121bad6094541ac7ecb8af2a",
@@ -29925,6 +29945,7 @@
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "309b788cb21ae6505fff38577913e2bf5e7b23a7a2acf9d6fc704ed3119cd3c9",
     "tdf-hq-ui/src/pages/SocialInboxPage.tsx": "df7168e2986e8eab0e85a8ce46a3bfa29fcbc033c95ae43fefef228d47e1bb18",
     "tdf-hq-ui/src/pages/SocialPage.tsx": "eb1162e3cc9418ef3aef29a2a85842aaaaa96f32079062d48a88522912fc4d9d",
+    "tdf-hq-ui/src/pages/StudioSubmissionPage.tsx": "5ee060aea4cec9a71d59d2875a3862bf024dd9e1ea21b9c20524fa4c5ffebc8a",
     "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx": "6ba4f8f777f72fe88da87c5e4f0730a353132d7812eaec2b957e1ebed5c4d38e",
     "tdf-hq-ui/src/pages/TdfPlatformPage.tsx": "9a8e4993313f12a39537882a555efffc12d698d5d13abb487c8eda1b64dc2210",
     "tdf-hq-ui/src/pages/TeacherPortalPage.tsx": "2168bd3444ad51fbdddc632505656649f337bf8bf46d378f8469f9ba809f3c5c",
@@ -30048,7 +30069,7 @@
     "tdf-hq-ui/src/utils/signupFields.test.ts": "5fa74df8f8faf643a00cdfcc30ac02e5097f07d8e6496c4bc644821ef46b7a24",
     "tdf-hq-ui/src/utils/signupFields.ts": "af56138c4a10328afa7b1290aa5353a04fd8ed1864fb683bea7afaca31560089",
     "tdf-hq-ui/src/utils/studioGallery.test.ts": "2dfa1260a3a0052aaf0d58f850275fd75a1e66cdfc923665cd763f75ab4af02a",
-    "tdf-hq-ui/src/utils/studioGallery.ts": "bb811f20ee26490604c6db8c11e88a220d07e4b5d334e1d2e31e901acdee13b1",
+    "tdf-hq-ui/src/utils/studioGallery.ts": "c179f4996371393c527081560cc3952157a9858853cecf364933cc3b7a1f6d4c",
     "tdf-hq-ui/src/utils/torrentAudio.test.ts": "f087ac0025221d5acdec23f0d1324cbb97663818a4bf59e6bba97602dd213369",
     "tdf-hq-ui/src/utils/torrentAudio.ts": "ba3680f2a1b9d4dd35c2c1f3d7e34aa133c57a579f6055ce04f857437eb1c893",
     "tdf-hq-ui/src/utils/torrentWorker.test.ts": "f69e605ea3ccd42b61c794f23636f0d92dff7fa566840a5ab92e8c2770d06b2b",
@@ -30060,14 +30081,14 @@
     "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
     "tdf-hq-ui/src/vite-env.d.ts": "28fae652abf43eaed9c5a3615cb2f362f8d81efdd7815347fa995b222908a22e",
     "tdf-hq/.env.example": "52c6e873ba21c44a10f7fd7fb1bdb44c0234a806dde3b019cf383a850b06b77a",
-    "tdf-hq/Dockerfile": "505fa666dbdcc1247d871369bc84557d79dc0fca947897d6ab7f3d4aa807af5e",
+    "tdf-hq/Dockerfile": "4d1b744ac30b8a7562e81de681cc704d42db7118a8af37e53d81af5eabceff7f",
     "tdf-hq/Dockerfile.music-worker": "c6921beae4fddef66fcf4d6135f2fb94b39ccb548e19dc2101dff69735d624a6",
-    "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
+    "tdf-hq/Dockerfile.runtime": "46500a099931a295873edb4b77b8016e9dff5be44dcd7265901cc73ea521c4c5",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
     "tdf-hq/assets/feature-registry.json": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
     "tdf-hq/config/default.env.example": "b0754a5fe5aa2ae3635b6bdaf6dfed9211466bf077f73fc430d9ab0207379494",
-    "tdf-hq/docs/openapi/api.yaml": "aa81a26a74007e75960cbf4c6b67b6c8f37d4aa6e6fe63364fb41541fc8484e9",
+    "tdf-hq/docs/openapi/api.yaml": "c147f2367c3c0b1069396b3ca74a10282376f96346ce919aa6b588280f4cee85",
     "tdf-hq/docs/openapi/artist-playback.yaml": "16c71adea21002fb54ecff645bba84be251a8537828d38342b1fb67a78acabcf",
     "tdf-hq/docs/openapi/directory.yaml": "796a92d53f69e5be446ac9de7f18da1916c151de4b0ead2f95d1d2751813e7e3",
     "tdf-hq/docs/openapi/interactions.yaml": "8d3ca2368a0ef1ea36a6c8f996b00d9a404c102fca1b44bf47eef8532a1fe598",
@@ -30077,7 +30098,7 @@
     "tdf-hq/music-worker/stack.yaml": "cd8794225ff4aa9550560653e371d570074d9f6dc261c1dfd138a4aa4fc37df8",
     "tdf-hq/music-worker/tdf-music-worker.cabal": "41abf425586e0213ce6607a8208bc6b99ba46a65bc92d7adacb8b23b116d87d2",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
-    "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
+    "tdf-hq/production-entrypoint.sh": "156d3ce64ed8ac3d912c2ed379acf95f482aba26b5f23f44d5c141f884b74c20",
     "tdf-hq/scripts/create_artists_from_list.sh": "eeabe1146bf9ad4cf9baf35d47ad320d6ded90662b56a72014ef9a899a0c814d",
     "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql": "38bb4dbd9368562c8b78eff933ced68df3bf7c6d65e32d14d7403bf61e6126cb",
     "tdf-hq/sql/2026-08-13_unified_checkout_core.sql": "79a940399d6d93f1d3ec7da0fb009e45aade993c0c2a645e674799a298e0abd0",
@@ -30257,7 +30278,7 @@
     "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql": "47a811221f03817022572f6bee479567c08f714897b56706cea4f75c8b39ac8f",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
-    "tdf-hq/src/TDF/API.hs": "ef1ed6b71b5bc4a490c9074808094513c7c6396dbefd58606ae30f954d59ea4e",
+    "tdf-hq/src/TDF/API.hs": "68887a3d362100108d58611dd9bc84aece874c56c94b14c2859d3483ea20509f",
     "tdf-hq/src/TDF/API/Admin.hs": "6bdbea3f4b2cccc20247f1e4d9a77dcefe0545b4158ff546312ffe7d59db825e",
     "tdf-hq/src/TDF/API/Catalog.hs": "a062b9681db64a9f68114888a0c296935944903efcbfedd672de2a3991e9d781",
     "tdf-hq/src/TDF/API/ContentStorage.hs": "252b724cba9b5a963757472792a4073f8562e7e1819b6e6840ca270dc5bf9f9b",
@@ -30384,7 +30405,7 @@
     "tdf-hq/src/TDF/Routes/DomoRefunds.hs": "b30e9a615d9ea754e2ffe29a257e272d4fc7342d17ec919e1235a199aeff34fd",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "c5b5eac3f58fbb0a24651c2bb2e57664720a6526ac25a69d2bf9f49acfdcc438",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "11b9d98b6e779a7702073d78de3c7815faaca48b2e414e209581089669c4573b",
+    "tdf-hq/src/TDF/Server.hs": "f81e255bebc9d6a1ca9ad5cc38933c89b1013e6b416e17068cd982702b3ac9a8",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
@@ -30442,7 +30463,8 @@
     "tdf-hq/src/TDF/Social/RelationshipWrites.hs": "fbe2ab38e7a2730ed13ad065859dffe186646a35d04ff99268597a0ac0fcec7c",
     "tdf-hq/src/TDF/Social/Server.hs": "3b1b4af11566dd037bf44c8fd89b2c198a085171ee23d5d2b4d1f11ab630a731",
     "tdf-hq/src/TDF/Social/Session.hs": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
-    "tdf-hq/src/TDF/Studio/Gallery.hs": "cff513c8345fdbe6d45c607a7f75fc5c2292ad58e7387706baa7c342a240f209",
+    "tdf-hq/src/TDF/Studio/Gallery.hs": "0c48d868e0a256009d2f9297f8d3e517b792ca740fa6ff6c2247adce5d076526",
+    "tdf-hq/src/TDF/Studio/Submissions.hs": "608f5804c0c63c44aec3951a7a7b190a775c4260110f200f2f63685b1737f4a9",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "a2568ecfb8235b9c91c0ce144ac5cec72ef0eb5cd52e06f42c3130ed7e347142",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "5b3345a4fb48d85bdbbcca06a6965eb66349c1fe5bf73c3461e27edc7fbbba90",
     "tdf-hq/src/TDF/Ticketing/Inventory.hs": "12bffe2306dd3639c0afe23e05e08a1baa55c9615540a3e8a747d9e83eb90e8c",
@@ -30457,7 +30479,9 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "92f9927c95a0c23fb18134665352a190dce88bbc7dc83f16d5e05d57a940902e",
+    "tdf-hq/studio/submissions.py": "485b649326cd0f4857ab080dd10ab5262399b5ae83bcc11fff56680d279751cc",
+    "tdf-hq/studio/test_submissions.py": "3a1cdf78b0b66d3ce2f21248cda78d52062d86f1fca95de26f6b80dc2cfb7df9",
+    "tdf-hq/tdf-hq.cabal": "3e8c1128cd34d5968dd45312e70bf4b621aff92da0d9a49113ab05af52ea6652",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -30536,7 +30560,7 @@
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "4746db879d19f0d2387b5198f6d402b7262b7ed2f50b4ec7772b6585172ae474",
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "09827463e1afa9c80342e2d1d12ab74a172c8f338e1195af6733eb1276585042",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
-    "tdf-hq/test/TDF/ServerSpec.hs": "19fb2c55cf3a119f5720c960bde04c3fb5826915718492dbaecba917135f0f7a",
+    "tdf-hq/test/TDF/ServerSpec.hs": "19e13c08eec2c5a218a05373c3b47a209f63eaecfcecd85719d23935a42aa5c4",
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
@@ -30591,20 +30615,20 @@
     "tdf-mobile/.env.example": "d10a60e0655fe1df9fdf48cde7a6e1e7258b8d49fa7c256e5779ed1bfb26e89d",
     "tdf-mobile/.github/workflows/android-release-build.yml": "4d2938e8c0220ed323b6f8e639c729d97e091afe113509d87fd14140c340df3e",
     "tdf-mobile/.github/workflows/datadog-synthetics.yml": "76b3d379a25c9cffadfbe142a91b3a2e55fe54f6163b6547b8a8017ba341ff94",
-    "tdf-mobile/.github/workflows/interaction-simulator.yml": "62a1ef12799f7f8118d0788db55eaec551034b2f5fdefad364f7b9f0b1df226e",
+    "tdf-mobile/.github/workflows/interaction-simulator.yml": "2ee74e89dfdc2935c335c466cd3eac31d77ed7a2bf6088040fb14035905af36c",
     "tdf-mobile/.github/workflows/ios-release-build.yml": "27823e8b817628542e37d318486b3acec9c183989737717675a9d41a26f9d81c",
     "tdf-mobile/.github/workflows/mobile-validate.yml": "4d4e1186594a96993171f6b1ebf4ce162271ab991385adc13b4e3321123db387",
-    "tdf-mobile/__tests__/AuthProvider.test.tsx": "a76d12479c0899214bfd7fb8c2b5eea1e24d81585633c6bf7e835ca21922f474",
+    "tdf-mobile/__tests__/AuthProvider.test.tsx": "a3509a0926561b7b43eea2e77542a26b793c307b6ddf5cdeac22917e4d084819",
     "tdf-mobile/__tests__/AuthQueryProviders.test.tsx": "0062663cef59cc75ff32d326ef90b9550669a433f8bb8ffd1af4e0a52e6734ed",
-    "tdf-mobile/__tests__/AuthScreen.test.tsx": "c5dcdc4be8f13834f4035c142bca57573a637376ed015e0745062ede209c7715",
+    "tdf-mobile/__tests__/AuthScreen.test.tsx": "1a2c9769fa26bb1adee4d99fd464c53c2244ab03d406d48d8cd9d8c778d4b7c4",
     "tdf-mobile/__tests__/DdexInbox.test.tsx": "5082fd98e04f9c9d861e8f3fbf7fabab92ac65cdb0e5ba7dd128a62839456656",
     "tdf-mobile/__tests__/DdexPartners.test.tsx": "6311dc043ee8a286f62bd0ec4d588f3b4425f1990a73d8b94c91093cd9b99b57",
     "tdf-mobile/__tests__/DeepLinks.test.ts": "e6f0b1b0c7fbe545a609b030b23e816c46159e6e37c0cfa8f3f3862e0372feba",
     "tdf-mobile/__tests__/DirectoryManage.test.tsx": "64c623e02b43a402d4f9cfc961a0660a20468d280550b944b6419f9afd93d82e",
     "tdf-mobile/__tests__/EventCardTickets.test.tsx": "d98649ad19fed8b46dadbe20601e3d299ba334d75c6abea5aeb37e2782b6a519",
     "tdf-mobile/__tests__/EventDetailLiveBroadcastLifecycle.test.tsx": "5fa36d709f29921ac128350ccd07366dde32e309c923a217d6450c5f9018dd32",
-    "tdf-mobile/__tests__/EventDetailMoments.test.tsx": "35c61d226b642b0b647cd66f79aca45ef3913e6beb1d35bb24d362d35d601569",
-    "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx": "35c75aa6a37a6f9472abc454e5bd46abc51a6818fc0e93370f4c486e2ef96ac1",
+    "tdf-mobile/__tests__/EventDetailMoments.test.tsx": "5e687bd856c5ba6c44cad12b897b1d1d46f325d49cf0cb02b0ebe118a8fbc46f",
+    "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx": "060e01425cdd059d670eaa71e6d8ee07a149198ac433405062207c17c818d463",
     "tdf-mobile/__tests__/FirstRunProvider.test.tsx": "98e59e33e12c6aa88721c9cac49354a11793484b220689ead819b03629e65f72",
     "tdf-mobile/__tests__/LegalDisclosure.test.tsx": "06f672ea2d9396346ad7b16db1028148434f45537fe83ae1873853076822215c",
     "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx": "0269cfcb7eb5810b04164c968c0ffe237f797bdb50b9eaa7576016e02fd15e98",
@@ -30618,10 +30642,10 @@
     "tdf-mobile/__tests__/ddexApi.test.ts": "c9e274d52a3bab8063c84a79c398c68657d2a07774722f64caecec0b25d4518b",
     "tdf-mobile/__tests__/directoryApi.test.ts": "477010a59bdff0576ab9cab6f2d79f5fddb9a8e4ed9b63f0ebc8a329adaf39a4",
     "tdf-mobile/__tests__/directoryPreviewImage.test.tsx": "122e3f361d7262710b8db15b677a6c1a458e71cc57ec84f0376768df90c5b1d7",
-    "tdf-mobile/__tests__/eventMomentWirePayload.test.ts": "5aa80192f305412e8c79ca0e427605680333b391491108e922e20e9019f85d0c",
-    "tdf-mobile/__tests__/eventMoments.test.ts": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
+    "tdf-mobile/__tests__/eventMomentWirePayload.test.ts": "ad22cd61cca220e564ae3846e245c5e765f821d1ae54dc5978d186fb4c3730b4",
+    "tdf-mobile/__tests__/eventMoments.test.ts": "0ad78db9f8368ad4c903e4b9b4d003b8827308fba83374af7606a12b6688558a",
     "tdf-mobile/__tests__/eventMomentsRepository.test.ts": "c43a3a723719ec489e1ba91e456cfa44a981ce41a6348fd0ca7c2a6e02361542",
-    "tdf-mobile/__tests__/featureRegistry.test.ts": "1ab135bf265b974320e20f3f5710fc64b0e23877b99beb8273267e7d021c7cad",
+    "tdf-mobile/__tests__/featureRegistry.test.ts": "337bd6aeeeca7bcd31c061a0e63df2a4b45507bb4a9c0171cb29b9c87bb95ac2",
     "tdf-mobile/__tests__/liveBroadcastsRepository.test.ts": "ff98004607a259e2b0e9a9e677d121a564a78e61e6a66074e948e04d15ff9d6d",
     "tdf-mobile/__tests__/nativeAppleAuthentication.test.ts": "1dc10f0182ae85dd59d046e553d4b0e9714dc6e3edcd481143bcedc5d71b969b",
     "tdf-mobile/__tests__/onboardingApi.test.ts": "4770fd9508a3a13c6ab0fb701d900b32633bac7b377d3f4fed4498f0b0c08300",
@@ -30630,60 +30654,60 @@
     "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts": "fc0cfd4f44e229e61e64320041776ef82ad457e14474206179cfd86351234455",
     "tdf-mobile/__tests__/usePartyOwnership.test.tsx": "ccdd151045745a81c7bd461d8aeddded98cd102a5cfa97e6cd561872cbf438d1",
     "tdf-mobile/app.config.ts": "7e8e36bb728bb9a2f3c4f9ef773e8addebbd8e4fc036c59e849057fb3f2c1a87",
-    "tdf-mobile/app.json": "d2800274db4ea7adacf3aac8acf695ca0f3b64b513fcfec4e8da83294bc37ed0",
+    "tdf-mobile/app.json": "e86ef1a01bf3a3b0e4b8f902d84ab61a4d28a2f9db1191b5e0c9aedc5e849f75",
     "tdf-mobile/app/(tabs)/directory.tsx": "caa7f7e870394a214e7ddc4fd88b10c3ac7982bf956c54a9a47b58d55ee1a933",
     "tdf-mobile/app/(tabs)/events.tsx": "518cc2e2bbde4ffb7d8da49fcccc384d222b2121cb8b7d4799d7023bc4bcd1a1",
     "tdf-mobile/app/(tabs)/more.tsx": "53cc6d33d6d37756759a2251d2d79fcd8750696b3369a3d64783d0853d21ec18",
     "tdf-mobile/app/(tabs)/social.tsx": "7133744ece6db0db256daa2489c9f94bb6deadf69d76c65a09e0d6dde23a7796",
     "tdf-mobile/app/access-requests/review.tsx": "2070fa548014b0cca20890c9e54ba557aeb3b64d1bd441b131d3a53931acc406",
-    "tdf-mobile/app/auth.tsx": "a62e6581543a3ee7dccb4b42e8570c026eae06aebb5360951118f1bdd620db47",
+    "tdf-mobile/app/auth.tsx": "f00125ca7d02fbeba5a3adef37611bf1e1281bb46daa2a415546f46552b1034b",
     "tdf-mobile/app/ddex/document/[id].tsx": "787e7c4f2a28f137e614df6660c727d81890337ef69fc39cd1ea55c953f731a2",
     "tdf-mobile/app/ddex/index.tsx": "8d534fd0a1a28f0bac5767a8535a91fe1ce7762d0decff518cec5931eb6149e1",
     "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
     "tdf-mobile/app/directory/manage.tsx": "86c9219769a3bddefd54fa47c6aca22b60f23c8f1be86ec65414ff84defd0724",
-    "tdf-mobile/app/eventDetail.tsx": "25d455699a1a707c9c0408aaa2c2841e6ec829c05ca73f1eb043d0b160f2f07f",
+    "tdf-mobile/app/eventDetail.tsx": "f626c210a52d9b9ac73fbf74871a86888aa66c995eeedead6d26a198ddc6f404",
     "tdf-mobile/app/reputation/consents.tsx": "c040edf2f60acb2ffb11aa8398f03e050c7615f1897636af710268b9cc38ca4b",
     "tdf-mobile/app/ticketCheckout.tsx": "009598287928ffbeab933b348f727d5de8c2ebbf9979dc886ff6f250efc1ba8d",
     "tdf-mobile/app/userProfile.tsx": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
     "tdf-mobile/datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "tdf-mobile/ios/Podfile.lock": "396f4289d7affe994421e417c36603d828ef51e8b7f3df66e275647b2b74c158",
+    "tdf-mobile/ios/Podfile.lock": "eb4c0b4bbde24ef4526faca92202d0c95d1689110d61a8c4d5a37499d5ecf2eb",
     "tdf-mobile/ios/TDFRecords/Info.plist": "d40bbaac1da4cb28972fcd49e5fa7ad71509bbf97e1b92da09d9164a9193f937",
     "tdf-mobile/ios/TDFRecords/TDFRecords.entitlements": "f58047e3b53aa61d6a2b0ebdf89e42fc9e9a2c1b4878c7515826cb964cfcbe1e",
     "tdf-mobile/jest.config.js": "b8a9bb07eccf8b0264cde1f9f2f4b1db7e11a9586e3db480c66f09d6bf90813d",
-    "tdf-mobile/package-lock.json": "60929f3a2fb2fdc3e17a61aaefeb8b28759ff9f8b772968d0b9bd6e4a87d48ad",
-    "tdf-mobile/package.json": "69e8b53985d239e9479a5e4c5b1e7414a7cf80b1ff600bba0f8c82dd94fe0c8c",
+    "tdf-mobile/package-lock.json": "04f2f6137f17ab36961fc9f028cde00341812bfa161aa3626833e049cb55193c",
+    "tdf-mobile/package.json": "956cdc3d6d528181c764fb0bf142df0c039285f19ca3ef0ce4df744760de8c81",
     "tdf-mobile/scripts/android-release.py": "359097ccd6ccb3585d544fa40b0a84cd874fc2df0f514cce8d71fdeb5ec95d5c",
     "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs": "3b8ba0a765e1089d11bba9a919d0d8789ecd9a6833ea078d8d9114e1db093863",
     "tdf-mobile/scripts/fixtures/decode-uri-component-0.5.0/index.js": "9401353df38f8010ad7035fe8d666bce6a4902bc1cff809afc4ab23fa2e0bdaa",
     "tdf-mobile/scripts/ios-signing.py": "9226834071568a50c61795fcdaf9c05f2b74317ef0c9d976767f525b270f48b7",
-    "tdf-mobile/scripts/release-check.mjs": "134c027743c05c08d93d7696a4b5af88448f375cee8641ea9298907a37a689c4",
+    "tdf-mobile/scripts/release-check.mjs": "b27a4a3dffcbfb1a87acbd3a2bda9069185d45e75e1899946e270b2851499f9f",
     "tdf-mobile/scripts/tests/test_android_release.py": "9fe8727e8da7a4de515e663ce232bec40fae0bcc3bf9cc491bde36d1c8b3fab7",
-    "tdf-mobile/scripts/tests/test_ios_signing.py": "ea2fefd30a92609167d3b003d8557107968db7e1a120b6b3391b28301d5e1888",
+    "tdf-mobile/scripts/tests/test_ios_signing.py": "3eb2c5c0ad814d03280d50ff0c8297107cf73d0a30b74813cdb11d9ec7dc30d6",
     "tdf-mobile/scripts/verify-ios-artifact.py": "c120f94d28040bc3bd4d39e5799b4d826b1426b4cb82a9fb6b58deeb9f5ee999",
     "tdf-mobile/src/api/auth.ts": "aae4ac63fbf5d83207c05ed1caadea095ee86441ef6a74dcbf0d7730e9cc652f",
     "tdf-mobile/src/api/client.ts": "406ab62be2e1a562c231d0a3a296a4bd206bb483e91cd3d8a52aebffd1771312",
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
-    "tdf-mobile/src/api/events.ts": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
-    "tdf-mobile/src/api/generated/types.ts": "876ecab7412f5a01a1ccf6451496f10277fc492d2dafb8f9c5239577495f3ea7",
+    "tdf-mobile/src/api/events.ts": "50ce6e23235e77299f7f6b588c6d96ffe56d431f637a35b5e25c6a7f1441d8a0",
+    "tdf-mobile/src/api/generated/types.ts": "7a30f8fe290c6837768043a2c3cc38f768919460d7050c37a202b88c44fbc3bd",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
     "tdf-mobile/src/components/DirectoryPublicDetailScreen.tsx": "1b5151b36f9e6a2541484ba768b02ca9cbae7ccca221db95afb83bbd5acec338",
     "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
-    "tdf-mobile/src/components/EventMomentCard.tsx": "d157367b980c01a8425a396971519124105860e6394b5c27d90cc5c2fc7dd9c8",
+    "tdf-mobile/src/components/EventMomentCard.tsx": "4d6c16c22b1dc3ce3ced783af44aae982ffa3d8f3a9cb84a2db79638d754fd0e",
     "tdf-mobile/src/components/LegalDisclosure.tsx": "6d9cf58f5bc2df5379ad3ba2b3b7a847291d8e0e779be853a57795f6a1136bea",
     "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
     "tdf-mobile/src/features/directory/previewImage.ts": "c29605bbb2d8a794106068ab2dc1d3e0d568797403168a3e7fee0d7059c37674",
     "tdf-mobile/src/features/featureRegistry.ts": "1e4c7047aaaaf481b1dbeb0c5f07652eb0672bd382926a6863c82042f51f2864",
-    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "0c72bbca5adfe3a8a357123c0111d0a7ff552d02af8c34f2788ff739fac59774",
+    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "49472dfbee590b19cd986c26ecd779d6be19ccdd8040e690b09c03502eeeb657",
     "tdf-mobile/src/feedback/FeedbackEntry.tsx": "7964eaf7976c58daf264bacf94ea4854af265f0146cfbd16a1429e385bc46e7b",
     "tdf-mobile/src/feedback/metadata.ts": "62336d3a2cf7f055624bdb4f4bd20aedbfd47afc3fbddb2cefaa2d4ce1e26861",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
     "tdf-mobile/src/i18n/index.ts": "42437bc42384674d3611d372c648f7d4ff220659c15f364ed58339b725411952",
     "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts": "808e5ef62fe27e73c4a5651cf755fbcd1bb3c829f507a62ffcb2c4acbaeb34ea",
     "tdf-mobile/src/lib/appleSignIn.ts": "b69a21799c8dc11090aef34d074724e7585fb430e14f3872df82de31597e1724",
-    "tdf-mobile/src/lib/eventMoments.ts": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
+    "tdf-mobile/src/lib/eventMoments.ts": "83756539930c4a2ed93b7550ef5f7d6e28c8a0e7e6ad4ecb0800e09d494a0b55",
     "tdf-mobile/src/lib/eventMomentsRepository.ts": "3fc6bd9bff601d1b03a311b57a384b385a87a2e3413a5c3452fb3fdb06b17a7e",
     "tdf-mobile/src/lib/eventSharing.test.ts": "24ee454071d2e4cb8191a20270e3ba52bd1f6ef8a4a9f7b981361d77e20236ac",
     "tdf-mobile/src/lib/eventSharing.ts": "d002b76e84002b3b7c6e61169b7441e82157f7b24afb507aa45993606c4eb577",
@@ -30694,17 +30718,17 @@
     "tdf-mobile/src/lib/onboardingIntent.ts": "cfe60e2d5ce8cc09314d2e8728c5603ceca0dceffbe920c91b9ff7234d1d4f4e",
     "tdf-mobile/src/lib/queryClient.ts": "149f05c3a7463dfe5de259414a14fa30619277ce4f46adc6f166b51e775a4ff2",
     "tdf-mobile/src/lib/savedEvents.ts": "d43e5d39203ce4a1670f3ced2a03e3ebb9ac81b61127cc497ecda8fea69c31a8",
-    "tdf-mobile/src/localization/eventExperienceCopy.ts": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
-    "tdf-mobile/src/localization/onboardingCopy.ts": "58e4e181760d5850403bb9e01980e09ee21caddb46e4c82f6207d01abfc0c949",
+    "tdf-mobile/src/localization/eventExperienceCopy.ts": "a37b5f49ca779bc94668f59abd7ea5a8e9cb8a21cebcdce854859179445cd17d",
+    "tdf-mobile/src/localization/onboardingCopy.ts": "432b3da7176ab411f8a2387fe4499a4a043154e17c1f02c4bc65933d626e28db",
     "tdf-mobile/src/navigation/deepLinks.ts": "6d1185dd9e204bd685da9fe358de42c7254f27eacd80b8f59fdd43d6fb1baebf",
-    "tdf-mobile/src/navigation/notificationResponses.test.ts": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
-    "tdf-mobile/src/navigation/notificationTarget.ts": "635b13a8a72aeed82cf22482e8213ddc7df33c54a95f6b9b655b5ddd53e2b33c",
-    "tdf-mobile/src/notifications/NotificationScreen.test.tsx": "8309c2ee6791950ecfc31aa48f43156876156099c87ebe701f291e079aad2c05",
+    "tdf-mobile/src/navigation/notificationResponses.test.ts": "4a0751458c9bb8cbb48e5f7e4257c1c3064c00d4b6e073eb3dedc8b42e2d0460",
+    "tdf-mobile/src/navigation/notificationTarget.ts": "fc5c33c9774bd9a3ca3ef4fbb6e9fe64888c77ee3f07e5e1681d8db8b850e9ac",
+    "tdf-mobile/src/notifications/NotificationScreen.test.tsx": "9c3e22f7517a34aceb560cb0435aa9bef54f5e523e53790cc65858bf531d5d44",
     "tdf-mobile/src/providers/AppProviders.tsx": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
-    "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
+    "tdf-mobile/src/providers/AuthProvider.tsx": "d729252426b286a84a5a9f7c6a64b3cc43e33e4992ac430e75f0a602c388ef74",
     "tdf-mobile/src/providers/AuthQueryProviders.tsx": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2",
     "tdf-mobile/src/providers/FirstRunProvider.tsx": "b2d91da63d9cb764a8359e5f56100d98d54f93a1443d000952630cb85f0ca56f",
-    "tdf-mobile/src/types/index.ts": "98702db8016ac964ad114836554da03d755ca2b11ffa15a6e4a50219994401a3",
+    "tdf-mobile/src/types/index.ts": "a46a8bb51b5edef441ed0d9e17e3f2565c20b0713a64f46e35d2597223470c2f",
     "tdf-mobile/vendor/decode-uri-component/index.cjs": "d37c0eb2888700a268e79c7f49f1789f40625076bb0325705aaaf3e16bc09fac",
     "tdf-mobile/vendor/decode-uri-component/package.json": "4046c5d32cb9956f3effd5c446bfe4f7d70f69e6f71d2f9b0ddf19191e5e6e6b",
     "test/fixtures/music-worker/curl.mjs": "1b816316017ca5081325de224176d3f48deb3d60d6ae46db230f052df8c3bb46",
@@ -31691,6 +31715,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "PAY-TIP-001",
         "relationship": "implementation"
       },
@@ -31906,6 +31934,10 @@
       },
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-WELCOME-001",
         "relationship": "implementation"
       },
       {
@@ -32283,6 +32315,10 @@
         "relationship": "tests"
       },
       {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "tests"
+      },
+      {
         "requirement": "MEDIA-MUSIC-DISCOVERY-001",
         "relationship": "implementation"
       },
@@ -32385,6 +32421,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
         "relationship": "implementation"
       },
@@ -32428,6 +32468,10 @@
       },
       {
         "requirement": "PAY-MUSIC-OUTCOME-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-WELCOME-001",
         "relationship": "implementation"
       },
       {
@@ -33202,6 +33246,10 @@
       },
       {
         "requirement": "PAY-MUSIC-OUTCOME-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-WELCOME-001",
         "relationship": "implementation"
       },
       {
@@ -34081,6 +34129,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "EVT-DISCOVERY-FILTER-001",
         "relationship": "implementation"
       }
@@ -34092,6 +34144,10 @@
       },
       {
         "requirement": "MEDIA-PERSIST-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-WELCOME-001",
         "relationship": "implementation"
       }
     ],
@@ -34882,6 +34938,10 @@
       },
       {
         "requirement": "MEDIA-PERSIST-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-WELCOME-001",
         "relationship": "implementation"
       }
     ],
@@ -36554,6 +36614,10 @@
       },
       {
         "requirement": "DISCOVERY-NAV-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-WELCOME-001",
         "relationship": "implementation"
       }
     ],
@@ -45003,6 +45067,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Studio/Submissions.hs": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/components/StudioGallery.tsx": [
       {
         "requirement": "UX-WELCOME-001",
@@ -45038,6 +45108,30 @@
       }
     ],
     "tdf-hq/sql/2026-11-07_studio_gallery.sql": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/studio/submissions.py": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/studioSubmissions.ts": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/StudioSubmissionReview.tsx": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/StudioSubmissionPage.tsx": [
       {
         "requirement": "UX-WELCOME-001",
         "relationship": "implementation"
@@ -45114,6 +45208,18 @@
       },
       {
         "requirement": "UX-FORM-ACTIONS-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/studio/test_submissions.py": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/StudioSubmissionReview.test.tsx": [
+      {
+        "requirement": "UX-WELCOME-001",
         "relationship": "tests"
       }
     ],
@@ -50244,7 +50350,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "7881225540928b2134b6aaf82a3f7d77570dd99b6ca1e36c69678065ee38f086",
+      "sha256": "7913503b17cb314d2e04ebf33cdf0f57bf450561dbb6625845d7ff7d7626153d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50293,6 +50399,10 @@
         },
         {
           "requirement": "DIR-SAVED-SEARCH-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "tests"
         },
         {
@@ -61254,7 +61364,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "876ecab7412f5a01a1ccf6451496f10277fc492d2dafb8f9c5239577495f3ea7",
+      "sha256": "05c8e5d14b610192a8f95c953a050cef253e5be796faa52aeb25d146870a2a32",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61299,6 +61409,10 @@
         },
         {
           "requirement": "PAY-MUSIC-OUTCOME-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "implementation"
         },
         {
@@ -62015,6 +62129,18 @@
       "sha256": "b951cdcf1f87ed21340a473f56c6f52d5375a3160d913372fc350c3c1cc09641",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-8079ce8f717c5a7a",
+      "path": "tdf-hq-ui/src/api/studioSubmissions.ts",
+      "sha256": "67ca20c7574a2c0b901689d58b4ff45391eebd1202e3ce65a5f96d358441667d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-356a0fb82dec0531",
@@ -63118,7 +63244,7 @@
     {
       "id": "SURFACE-cf86306debf08604",
       "path": "tdf-hq-ui/src/components/StudioGallery.tsx",
-      "sha256": "e32e4567ed798f570bc040ef189aa9dff8d7dd03e064195af7b060de82a8fd26",
+      "sha256": "a78c9a163b7d2c65d4c4a64d8b17e5cc57b949b6f7fb0ddbd6a9996e72dfef69",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63130,7 +63256,7 @@
     {
       "id": "SURFACE-b9a81b0af6c907f7",
       "path": "tdf-hq-ui/src/components/StudioGalleryEditor.tsx",
-      "sha256": "cee4736a1bc141d0dc7b3aa8ab20703a0590b3e9904ab7057c8fac4eb4fe75d3",
+      "sha256": "1b42e335d4d75a7ebedc22b9ae164e83baa2134c4648c22757a723618e25f731",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63148,6 +63274,30 @@
         {
           "requirement": "UX-WELCOME-001",
           "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5fbafc176ae2a4ce",
+      "path": "tdf-hq-ui/src/components/StudioSubmissionReview.test.tsx",
+      "sha256": "2c6e97fdaf5b8fdce110450df5a48d3bceac6d867bee7bb4c38cee746044c0c1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e386d51a88ad440a",
+      "path": "tdf-hq-ui/src/components/StudioSubmissionReview.tsx",
+      "sha256": "2941bffcb86a89017b68d7b444e952f4a6d00ecb920631d1baa5896bba2ca0b0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -65853,7 +66003,7 @@
     {
       "id": "SURFACE-dfd1359e6fe03cbc",
       "path": "tdf-hq-ui/src/main.tsx",
-      "sha256": "6d158f404416b20333c7b4780127978e21c8eeb3ea66ae45b0169c2db3fc14fa",
+      "sha256": "720a2ea2dc0badc4eb575b064a889656385e4b1b2d7d644ced1cd1bf581213d7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -65866,6 +66016,10 @@
         },
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "implementation"
         }
       ]
@@ -68810,6 +68964,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-55c06d3abb7f9866",
+      "path": "tdf-hq-ui/src/pages/StudioSubmissionPage.tsx",
+      "sha256": "5ee060aea4cec9a71d59d2875a3862bf024dd9e1ea21b9c20524fa4c5ffebc8a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-0b8cce65eccd05df",
       "path": "tdf-hq-ui/src/pages/SystemPage.tsx",
       "sha256": "926df45c3bea19eee4643d50d98286182da8a72547c534bbfdcbc1dbf03cccd9",
@@ -71153,7 +71319,7 @@
     {
       "id": "SURFACE-2bcac04e555d45b3",
       "path": "tdf-hq-ui/src/utils/studioGallery.ts",
-      "sha256": "bb811f20ee26490604c6db8c11e88a220d07e4b5d334e1d2e31e901acdee13b1",
+      "sha256": "c179f4996371393c527081560cc3952157a9858853cecf364933cc3b7a1f6d4c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71374,7 +71540,7 @@
     {
       "id": "SURFACE-349b3c6baf0c525b",
       "path": "tdf-hq/Dockerfile",
-      "sha256": "505fa666dbdcc1247d871369bc84557d79dc0fca947897d6ab7f3d4aa807af5e",
+      "sha256": "4d1b744ac30b8a7562e81de681cc704d42db7118a8af37e53d81af5eabceff7f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71383,6 +71549,10 @@
         },
         {
           "requirement": "MEDIA-PERSIST-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "implementation"
         },
         {
@@ -71410,7 +71580,7 @@
     {
       "id": "SURFACE-355fc91289eee809",
       "path": "tdf-hq/Dockerfile.runtime",
-      "sha256": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
+      "sha256": "46500a099931a295873edb4b77b8016e9dff5be44dcd7265901cc73ea521c4c5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71419,6 +71589,10 @@
         },
         {
           "requirement": "MEDIA-PERSIST-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "implementation"
         }
       ]
@@ -71603,7 +71777,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "aa81a26a74007e75960cbf4c6b67b6c8f37d4aa6e6fe63364fb41541fc8484e9",
+      "sha256": "c147f2367c3c0b1069396b3ca74a10282376f96346ce919aa6b588280f4cee85",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71660,6 +71834,10 @@
         },
         {
           "requirement": "PAY-MUSIC-OUTCOME-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "implementation"
         },
         {
@@ -71854,7 +72032,7 @@
     {
       "id": "SURFACE-5b0f4c12394c077d",
       "path": "tdf-hq/production-entrypoint.sh",
-      "sha256": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
+      "sha256": "156d3ce64ed8ac3d912c2ed379acf95f482aba26b5f23f44d5c141f884b74c20",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71867,6 +72045,10 @@
         },
         {
           "requirement": "MEDIA-PERSIST-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "implementation"
         }
       ]
@@ -76381,7 +76563,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "ef1ed6b71b5bc4a490c9074808094513c7c6396dbefd58606ae30f954d59ea4e",
+      "sha256": "68887a3d362100108d58611dd9bc84aece874c56c94b14c2859d3483ea20509f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76414,6 +76596,10 @@
         },
         {
           "requirement": "AUTH-ARTIST-INVITE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "implementation"
         },
         {
@@ -79126,7 +79312,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "11b9d98b6e779a7702073d78de3c7815faaca48b2e414e209581089669c4573b",
+      "sha256": "f81e255bebc9d6a1ca9ad5cc38933c89b1013e6b416e17068cd982702b3ac9a8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79207,6 +79393,10 @@
         },
         {
           "requirement": "PRIV-RAG-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "implementation"
         },
         {
@@ -80898,7 +81088,19 @@
     {
       "id": "SURFACE-52fbce57aa68de29",
       "path": "tdf-hq/src/TDF/Studio/Gallery.hs",
-      "sha256": "cff513c8345fdbe6d45c607a7f75fc5c2292ad58e7387706baa7c342a240f209",
+      "sha256": "0c48d868e0a256009d2f9297f8d3e517b792ca740fa6ff6c2247adce5d076526",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-0e52f43d05c50a7b",
+      "path": "tdf-hq/src/TDF/Studio/Submissions.hs",
+      "sha256": "608f5804c0c63c44aec3951a7a7b190a775c4260110f200f2f63685b1737f4a9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81185,9 +81387,33 @@
       ]
     },
     {
+      "id": "SURFACE-4a07821d2bfefd09",
+      "path": "tdf-hq/studio/submissions.py",
+      "sha256": "485b649326cd0f4857ab080dd10ab5262399b5ae83bcc11fff56680d279751cc",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-cee901608a22fc03",
+      "path": "tdf-hq/studio/test_submissions.py",
+      "sha256": "3a1cdf78b0b66d3ce2f21248cda78d52062d86f1fca95de26f6b80dc2cfb7df9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "92f9927c95a0c23fb18134665352a190dce88bbc7dc83f16d5e05d57a940902e",
+      "sha256": "3e8c1128cd34d5968dd45312e70bf4b621aff92da0d9a49113ab05af52ea6652",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -82878,7 +83104,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "19fb2c55cf3a119f5720c960bde04c3fb5826915718492dbaecba917135f0f7a",
+      "sha256": "19e13c08eec2c5a218a05373c3b47a209f63eaecfcecd85719d23935a42aa5c4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84331,14 +84557,14 @@
     {
       "id": "SURFACE-d84c1fc5d701e2cc",
       "path": "tdf-mobile/.github/workflows/interaction-android.yml",
-      "sha256": "c38f1297b201627f52df6b1508b4555e2b9bbd438906c978e711391d53073aeb",
+      "sha256": "9c393ef159933b614ee77054cd11773bec37a0c076fdeb0ced0d8701db985672",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-8b8075b14e77947f",
       "path": "tdf-mobile/.github/workflows/interaction-simulator.yml",
-      "sha256": "62a1ef12799f7f8118d0788db55eaec551034b2f5fdefad364f7b9f0b1df226e",
+      "sha256": "2ee74e89dfdc2935c335c466cd3eac31d77ed7a2bf6088040fb14035905af36c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84406,7 +84632,7 @@
     {
       "id": "SURFACE-e8c759c0d912b54a",
       "path": "tdf-mobile/__tests__/AuthProvider.test.tsx",
-      "sha256": "a76d12479c0899214bfd7fb8c2b5eea1e24d81585633c6bf7e835ca21922f474",
+      "sha256": "a3509a0926561b7b43eea2e77542a26b793c307b6ddf5cdeac22917e4d084819",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84430,7 +84656,7 @@
     {
       "id": "SURFACE-889f3ed698a5ec59",
       "path": "tdf-mobile/__tests__/AuthScreen.test.tsx",
-      "sha256": "c5dcdc4be8f13834f4035c142bca57573a637376ed015e0745062ede209c7715",
+      "sha256": "1a2c9769fa26bb1adee4d99fd464c53c2244ab03d406d48d8cd9d8c778d4b7c4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84525,7 +84751,7 @@
     {
       "id": "SURFACE-aa9a5dc6fca02108",
       "path": "tdf-mobile/__tests__/EventDetailMoments.test.tsx",
-      "sha256": "35c61d226b642b0b647cd66f79aca45ef3913e6beb1d35bb24d362d35d601569",
+      "sha256": "5e687bd856c5ba6c44cad12b897b1d1d46f325d49cf0cb02b0ebe118a8fbc46f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84539,9 +84765,16 @@
       ]
     },
     {
+      "id": "SURFACE-b7367d2a7fa44a16",
+      "path": "tdf-mobile/__tests__/EventMomentAuthorCard.test.tsx",
+      "sha256": "d0c7dc29e64522fa5e2c4aa9e4944cc7c4148c05ec2e647aab2f1cea5ee6f4a1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-99ea7561d1a327d8",
       "path": "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx",
-      "sha256": "35c75aa6a37a6f9472abc454e5bd46abc51a6818fc0e93370f4c486e2ef96ac1",
+      "sha256": "060e01425cdd059d670eaa71e6d8ee07a149198ac433405062207c17c818d463",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84865,9 +85098,16 @@
       ]
     },
     {
+      "id": "SURFACE-69633b696a3d6104",
+      "path": "tdf-mobile/__tests__/eventMomentAuthorApi.test.ts",
+      "sha256": "490bfec762d0bb151ed3641a23ad885d4bcff5354b4a207923c5b59b7fbb0728",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-28febc311d021234",
       "path": "tdf-mobile/__tests__/eventMomentWirePayload.test.ts",
-      "sha256": "5aa80192f305412e8c79ca0e427605680333b391491108e922e20e9019f85d0c",
+      "sha256": "ad22cd61cca220e564ae3846e245c5e765f821d1ae54dc5978d186fb4c3730b4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84879,7 +85119,7 @@
     {
       "id": "SURFACE-8c291869bc754896",
       "path": "tdf-mobile/__tests__/eventMoments.test.ts",
-      "sha256": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
+      "sha256": "0ad78db9f8368ad4c903e4b9b4d003b8827308fba83374af7606a12b6688558a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84910,7 +85150,7 @@
     {
       "id": "SURFACE-7aafc197c0caae2e",
       "path": "tdf-mobile/__tests__/featureRegistry.test.ts",
-      "sha256": "1ab135bf265b974320e20f3f5710fc64b0e23877b99beb8273267e7d021c7cad",
+      "sha256": "337bd6aeeeca7bcd31c061a0e63df2a4b45507bb4a9c0171cb29b9c87bb95ac2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84974,6 +85214,13 @@
       "id": "SURFACE-0f816b9eb1e4f3e8",
       "path": "tdf-mobile/__tests__/mobileSurface.test.ts",
       "sha256": "5ee3aada55240c2c8805ba5a4d3db37240826cdb0c235f8db36879d9461deac2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-2fc93ac2f4c40f3c",
+      "path": "tdf-mobile/__tests__/momentAudio.test.ts",
+      "sha256": "a58d50d38a38bd355eeec514f879bc307d5039e3d1564c4bcc80479974ad74b2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -85180,7 +85427,7 @@
     {
       "id": "SURFACE-be1f54efcc2cd549",
       "path": "tdf-mobile/app.json",
-      "sha256": "d2800274db4ea7adacf3aac8acf695ca0f3b64b513fcfec4e8da83294bc37ed0",
+      "sha256": "e86ef1a01bf3a3b0e4b8f902d84ab61a4d28a2f9db1191b5e0c9aedc5e849f75",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85372,7 +85619,7 @@
     {
       "id": "SURFACE-4a53be70534cf501",
       "path": "tdf-mobile/app/auth.tsx",
-      "sha256": "a62e6581543a3ee7dccb4b42e8570c026eae06aebb5360951118f1bdd620db47",
+      "sha256": "f00125ca7d02fbeba5a3adef37611bf1e1281bb46daa2a415546f46552b1034b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85527,7 +85774,7 @@
     {
       "id": "SURFACE-ab43846a5d628103",
       "path": "tdf-mobile/app/eventDetail.tsx",
-      "sha256": "25d455699a1a707c9c0408aaa2c2841e6ec829c05ca73f1eb043d0b160f2f07f",
+      "sha256": "f626c210a52d9b9ac73fbf74871a86888aa66c995eeedead6d26a198ddc6f404",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85729,9 +85976,37 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-ab3293dff633e91f",
+      "path": "tdf-mobile/docs/native-logout-qualification-2026-10-26.json",
+      "sha256": "2c86b3b0a945163a5f4145a406037f8369d760cc7bc47bd437f0a896d0081543",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-901ee3b95fac7cf7",
       "path": "tdf-mobile/e2e/auth-flow.yaml",
       "sha256": "688d0e1e88786de12cb7dd74ddf742f420aea764ffee3d89766d50b7dfe63bd9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-80e8f206a904de60",
+      "path": "tdf-mobile/e2e/ci/detox.config.js",
+      "sha256": "1e0bf18ea74ded395c5cef1ede6bef6a4e9670619bf0e87d5961e834cd4f20db",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-0879c1c9d8b9bd68",
+      "path": "tdf-mobile/e2e/ci/jest.config.js",
+      "sha256": "5cb17876173185891caa0940a614ed59028c58635848c2c24cf26d2bb094d96a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-8e61f33144d95ccd",
+      "path": "tdf-mobile/e2e/ci/smoke.e2e.js",
+      "sha256": "15eb48a6654d6ab282e9fd4e5fabf1c0b67463b66322ce5ac984d4e0de56a272",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -85876,7 +86151,7 @@
     {
       "id": "SURFACE-6bc7940d7e94ca53",
       "path": "tdf-mobile/package-lock.json",
-      "sha256": "60929f3a2fb2fdc3e17a61aaefeb8b28759ff9f8b772968d0b9bd6e4a87d48ad",
+      "sha256": "04f2f6137f17ab36961fc9f028cde00341812bfa161aa3626833e049cb55193c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85896,7 +86171,7 @@
     {
       "id": "SURFACE-74d531fc7e7a3fc1",
       "path": "tdf-mobile/package.json",
-      "sha256": "69e8b53985d239e9479a5e4c5b1e7414a7cf80b1ff600bba0f8c82dd94fe0c8c",
+      "sha256": "956cdc3d6d528181c764fb0bf142df0c039285f19ca3ef0ce4df744760de8c81",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85916,6 +86191,48 @@
           "relationship": "implementation"
         }
       ]
+    },
+    {
+      "id": "SURFACE-71160610bedb83a8",
+      "path": "tdf-mobile/reports/event-moment-audio-2026-10-26.json",
+      "sha256": "b9829c3592d8130ba8e4648eaa4bd2dae704fd1eb8212932295bea10985ebad4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-628d8b13aae0453d",
+      "path": "tdf-mobile/reports/event-moment-author-accessibility-2026-10-26.json",
+      "sha256": "ccef5c1580829a597c587e0bc71abd004c5447d62a1fbbfb5beaf91348328441",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-8e0874119aeb1ae3",
+      "path": "tdf-mobile/reports/event-moment-author-accessibility-20261026/results.json",
+      "sha256": "e5e0693f5ace206221ea7c51bfc232a3fa9325d5cf9a8e5855ca5da793bb21af",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-567d8a6d8b5e9271",
+      "path": "tdf-mobile/reports/event-moment-author-actions-2026-10-26.json",
+      "sha256": "dde72cd7fc6b8bae540404155e8064b36b0a594273b14082ee14c783aa9b66cd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-d7e4b3884f9683a7",
+      "path": "tdf-mobile/reports/event-moment-author-actions-20261026/results.json",
+      "sha256": "744eefd65a10be766d7356b9f6d71ba37d9e2627b6ac7ce8a3be85dd80898bca",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-b555751e5366c533",
+      "path": "tdf-mobile/reports/event-moment-text-2026-10-26.json",
+      "sha256": "bf3b57603bab55aa40daa0844fb20ed862e9740fb8711574841b23b9a20da8fa",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
     },
     {
       "id": "SURFACE-d9259f08043bd4f2",
@@ -86042,7 +86359,7 @@
     {
       "id": "SURFACE-21cdc1519a948266",
       "path": "tdf-mobile/scripts/release-check.mjs",
-      "sha256": "134c027743c05c08d93d7696a4b5af88448f375cee8641ea9298907a37a689c4",
+      "sha256": "b27a4a3dffcbfb1a87acbd3a2bda9069185d45e75e1899946e270b2851499f9f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86050,6 +86367,20 @@
           "relationship": "implementation"
         }
       ]
+    },
+    {
+      "id": "SURFACE-b3cdf81f97ad7b42",
+      "path": "tdf-mobile/scripts/run-native-ui-smoke.py",
+      "sha256": "5415ab09d3e8dd208018b666648faf6ea22afca48faf246907bf44ba6b425875",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-db23175da91bfcbc",
+      "path": "tdf-mobile/scripts/test-event-moment-author-preview.mjs",
+      "sha256": "2c11e67792a4afc0b48e191aaaf8f53259e0cd416acc54adccef48bfd8a73f3c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
     },
     {
       "id": "SURFACE-576d9c2a91a42c51",
@@ -86064,9 +86395,16 @@
       ]
     },
     {
+      "id": "SURFACE-bf3a8537d6509680",
+      "path": "tdf-mobile/scripts/tests/test_audio_runtime.py",
+      "sha256": "55afc947e7eba3d9425c4fa70bf15706930ff26bfa223cbe9398dfdd233d594c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-bfc5bd8fcf9e9e4d",
       "path": "tdf-mobile/scripts/tests/test_ios_signing.py",
-      "sha256": "ea2fefd30a92609167d3b003d8557107968db7e1a120b6b3391b28301d5e1888",
+      "sha256": "3eb2c5c0ad814d03280d50ff0c8297107cf73d0a30b74813cdb11d9ec7dc30d6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86078,6 +86416,13 @@
           "relationship": "tests"
         }
       ]
+    },
+    {
+      "id": "SURFACE-66c50f3efcf88af2",
+      "path": "tdf-mobile/scripts/tests/test_native_ui_smoke.py",
+      "sha256": "ea77d9532589724feb62ce751876bc3a9222cc9d0085873e3534f849609f42a2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
     },
     {
       "id": "SURFACE-85dc8ac2c70e20e0",
@@ -86116,6 +86461,20 @@
       "id": "SURFACE-5755b7368095cc8f",
       "path": "tdf-mobile/src/api/accessRequests.ts",
       "sha256": "89c514977443fb1d8b438fc87c22143be8472df2e7ffb7deb5c68eec58b47a47",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-e5d01bb1f3e3279e",
+      "path": "tdf-mobile/src/api/accountStorage.test.ts",
+      "sha256": "4a3d899b59a81cb207591cdc134396faba696cadf6f1161927006f83b2e4e45e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-63d827763e05c996",
+      "path": "tdf-mobile/src/api/accountStorage.ts",
+      "sha256": "803a284094d3639df64a501a56f73b97d02b78c02fe03ddc65a801897b5eef49",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -86216,7 +86575,7 @@
     {
       "id": "SURFACE-5cc50673dc611e52",
       "path": "tdf-mobile/src/api/events.ts",
-      "sha256": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
+      "sha256": "50ce6e23235e77299f7f6b588c6d96ffe56d431f637a35b5e25c6a7f1441d8a0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86250,7 +86609,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "876ecab7412f5a01a1ccf6451496f10277fc492d2dafb8f9c5239577495f3ea7",
+      "sha256": "7a30f8fe290c6837768043a2c3cc38f768919460d7050c37a202b88c44fbc3bd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86283,6 +86642,10 @@
         },
         {
           "requirement": "PAY-MUSIC-OUTCOME-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-WELCOME-001",
           "relationship": "implementation"
         },
         {
@@ -86446,6 +86809,13 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-5bd8a24e27435925",
+      "path": "tdf-mobile/src/api/upload.compatibility.test.ts",
+      "sha256": "21e4e097cea0449549484f2ba0ba09726585c58a5aa9c4cccbdddba8b00600ba",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-ceac2e6abbe05738",
       "path": "tdf-mobile/src/api/upload.ts",
       "sha256": "b1d5d49d050ec1b59f2ca362844fb42025a05de8096547770110c6d8fcd8ebaf",
@@ -86519,7 +86889,7 @@
     {
       "id": "SURFACE-efc2098b5027a610",
       "path": "tdf-mobile/src/components/EventMomentCard.tsx",
-      "sha256": "d157367b980c01a8425a396971519124105860e6394b5c27d90cc5c2fc7dd9c8",
+      "sha256": "4d6c16c22b1dc3ce3ced783af44aae982ffa3d8f3a9cb84a2db79638d754fd0e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86747,7 +87117,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "0c72bbca5adfe3a8a357123c0111d0a7ff552d02af8c34f2788ff739fac59774",
+      "sha256": "49472dfbee590b19cd986c26ecd779d6be19ccdd8040e690b09c03502eeeb657",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86972,7 +87342,7 @@
     {
       "id": "SURFACE-15e17b090a435ac7",
       "path": "tdf-mobile/src/lib/eventMoments.ts",
-      "sha256": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
+      "sha256": "83756539930c4a2ed93b7550ef5f7d6e28c8a0e7e6ad4ecb0800e09d494a0b55",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87115,6 +87485,13 @@
           "relationship": "implementation"
         }
       ]
+    },
+    {
+      "id": "SURFACE-959694ec75339a56",
+      "path": "tdf-mobile/src/lib/momentAudio.ts",
+      "sha256": "aa2446832a3683d3894fe321ee1096be631c800ae61ede5bb85b7691ba8659c5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
     },
     {
       "id": "SURFACE-98ec2a53efd9fb83",
@@ -87293,7 +87670,7 @@
     {
       "id": "SURFACE-66eee79ab156a1e2",
       "path": "tdf-mobile/src/localization/eventExperienceCopy.ts",
-      "sha256": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
+      "sha256": "a37b5f49ca779bc94668f59abd7ea5a8e9cb8a21cebcdce854859179445cd17d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87305,7 +87682,7 @@
     {
       "id": "SURFACE-8706580fc77ee8a5",
       "path": "tdf-mobile/src/localization/onboardingCopy.ts",
-      "sha256": "58e4e181760d5850403bb9e01980e09ee21caddb46e4c82f6207d01abfc0c949",
+      "sha256": "432b3da7176ab411f8a2387fe4499a4a043154e17c1f02c4bc65933d626e28db",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87347,7 +87724,7 @@
     {
       "id": "SURFACE-335f0e863443a35b",
       "path": "tdf-mobile/src/navigation/notificationResponses.test.ts",
-      "sha256": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
+      "sha256": "4a0751458c9bb8cbb48e5f7e4257c1c3064c00d4b6e073eb3dedc8b42e2d0460",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87374,7 +87751,7 @@
     {
       "id": "SURFACE-1b440686d0fdbde2",
       "path": "tdf-mobile/src/navigation/notificationTarget.ts",
-      "sha256": "635b13a8a72aeed82cf22482e8213ddc7df33c54a95f6b9b655b5ddd53e2b33c",
+      "sha256": "fc5c33c9774bd9a3ca3ef4fbb6e9fe64888c77ee3f07e5e1681d8db8b850e9ac",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87415,7 +87792,7 @@
     {
       "id": "SURFACE-c524a39784b123fa",
       "path": "tdf-mobile/src/notifications/NotificationScreen.test.tsx",
-      "sha256": "8309c2ee6791950ecfc31aa48f43156876156099c87ebe701f291e079aad2c05",
+      "sha256": "9c3e22f7517a34aceb560cb0435aa9bef54f5e523e53790cc65858bf531d5d44",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87446,7 +87823,7 @@
     {
       "id": "SURFACE-9471bdc1113baabd",
       "path": "tdf-mobile/src/providers/AuthProvider.tsx",
-      "sha256": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
+      "sha256": "d729252426b286a84a5a9f7c6a64b3cc43e33e4992ac430e75f0a602c388ef74",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87517,7 +87894,7 @@
     {
       "id": "SURFACE-dd3e1fc92ab14c2d",
       "path": "tdf-mobile/src/types/index.ts",
-      "sha256": "98702db8016ac964ad114836554da03d755ca2b11ffa15a6e4a50219994401a3",
+      "sha256": "a46a8bb51b5edef441ed0d9e17e3f2565c20b0713a64f46e35d2597223470c2f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -88837,6 +89214,7 @@
     "SURFACE-57fb42409e4fe3c1",
     "SURFACE-c2d3a0548b7f007b",
     "SURFACE-efcecbaa0e3acd71",
+    "SURFACE-b7367d2a7fa44a16",
     "SURFACE-7924613b1e052502",
     "SURFACE-adcc415d122d0352",
     "SURFACE-99b5cd25c1db6135",
@@ -88859,6 +89237,7 @@
     "SURFACE-1a9c6b490ed4d09a",
     "SURFACE-a0436207cb7f5fda",
     "SURFACE-2947edfcf470d479",
+    "SURFACE-69633b696a3d6104",
     "SURFACE-38f4ba1a427a2577",
     "SURFACE-a44fa1219b230d2b",
     "SURFACE-27d00a7896b43cdb",
@@ -88866,6 +89245,7 @@
     "SURFACE-28c3118e24cc2238",
     "SURFACE-0fb421e98d3f4d99",
     "SURFACE-0f816b9eb1e4f3e8",
+    "SURFACE-2fc93ac2f4c40f3c",
     "SURFACE-01f7d4bf0f33ebf4",
     "SURFACE-bae7e7b342339ba7",
     "SURFACE-5ba6bb5006d5feaa",
@@ -88931,7 +89311,11 @@
     "SURFACE-3a85ab4b3286a61e",
     "SURFACE-5f61e518d7bd1f48",
     "SURFACE-f7194fab900e8304",
+    "SURFACE-ab3293dff633e91f",
     "SURFACE-901ee3b95fac7cf7",
+    "SURFACE-80e8f206a904de60",
+    "SURFACE-0879c1c9d8b9bd68",
+    "SURFACE-8e61f33144d95ccd",
     "SURFACE-75dbd5ce02cd8a06",
     "SURFACE-989de44a8780a81d",
     "SURFACE-8c3d85e55112c564",
@@ -88950,6 +89334,12 @@
     "SURFACE-9f3baf48c55d783c",
     "SURFACE-8254ab3be0263414",
     "SURFACE-635d2beee7db16c2",
+    "SURFACE-71160610bedb83a8",
+    "SURFACE-628d8b13aae0453d",
+    "SURFACE-8e0874119aeb1ae3",
+    "SURFACE-567d8a6d8b5e9271",
+    "SURFACE-d7e4b3884f9683a7",
+    "SURFACE-b555751e5366c533",
     "SURFACE-49be021610567519",
     "SURFACE-a5513b81233f035b",
     "SURFACE-c571475cdefc021d",
@@ -88960,10 +89350,16 @@
     "SURFACE-2663e424dec4b0da",
     "SURFACE-0365adce5821e515",
     "SURFACE-43b48bb1049e5324",
+    "SURFACE-b3cdf81f97ad7b42",
+    "SURFACE-db23175da91bfcbc",
+    "SURFACE-bf3a8537d6509680",
+    "SURFACE-66c50f3efcf88af2",
     "SURFACE-3aa70a7b24875247",
     "SURFACE-3469b2a00ddfcab0",
     "SURFACE-837d0ebca6fefd3b",
     "SURFACE-5755b7368095cc8f",
+    "SURFACE-e5d01bb1f3e3279e",
+    "SURFACE-63d827763e05c996",
     "SURFACE-c3ef7b9d8509d838",
     "SURFACE-e8c55bfb71a219d9",
     "SURFACE-befc4b8bb8e310b8",
@@ -88990,6 +89386,7 @@
     "SURFACE-7976405ee26783dd",
     "SURFACE-9742dd7e6fc15e5d",
     "SURFACE-4a29841c2910dae2",
+    "SURFACE-5bd8a24e27435925",
     "SURFACE-ceac2e6abbe05738",
     "SURFACE-44f0271f8adb8837",
     "SURFACE-88103f1d6fb89685",
@@ -89047,6 +89444,7 @@
     "SURFACE-4f50cdad8268e254",
     "SURFACE-e225dab1b3e6e242",
     "SURFACE-fefcd38d58b49124",
+    "SURFACE-959694ec75339a56",
     "SURFACE-98ec2a53efd9fb83",
     "SURFACE-9402fc6818e454b1",
     "SURFACE-d0a53a40b5d73f1e",
@@ -90401,7 +90799,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "85bfa246d4f1c0b7ad7ff68caa27bb5684f54b7818946c587541e56fde84e946",
+      "sourceSha256": "8f767fb2d67549b2f362302d49f69e4ca3222f6d1eb855afaeacb443c94d2c08",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -90429,7 +90827,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "85bfa246d4f1c0b7ad7ff68caa27bb5684f54b7818946c587541e56fde84e946",
+      "sourceSha256": "8f767fb2d67549b2f362302d49f69e4ca3222f6d1eb855afaeacb443c94d2c08",
       "definition": {
         "states": [
           "absent",
@@ -90459,7 +90857,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "85bfa246d4f1c0b7ad7ff68caa27bb5684f54b7818946c587541e56fde84e946",
+      "sourceSha256": "8f767fb2d67549b2f362302d49f69e4ca3222f6d1eb855afaeacb443c94d2c08",
       "definition": {
         "export": [
           "queued",
@@ -93763,6 +94161,75 @@
       "responses": [
         "204",
         "410"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /studio-submissions/batch",
+      "operationId": "createStudioPhotoBatch",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [],
+      "responses": [
+        "200",
+        "403",
+        "429"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /studio-submissions/upload/{position}",
+      "operationId": "uploadStudioSubmissionPhoto",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "studioInvitation": []
+        }
+      ],
+      "responses": [
+        "200",
+        "403",
+        "409",
+        "413",
+        "422",
+        "429"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /studio-submissions/status",
+      "operationId": "getStudioPhotoBatchStatus",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [],
+      "responses": [
+        "200"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /studio-submissions/images/{id}/{size}",
+      "operationId": "getPublishedStudioPhoto",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [],
+      "responses": [
+        "200",
+        "404"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /cms/admin/studio-submissions/{action}",
+      "operationId": "manageStudioSubmissions",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "401",
+        "403",
+        "409"
       ],
       "conformance": "not-established-by-client-generation"
     },
