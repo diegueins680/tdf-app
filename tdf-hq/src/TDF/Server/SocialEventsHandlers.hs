@@ -147,7 +147,8 @@ module TDF.Server.SocialEventsHandlers (
 import Control.Applicative ((<|>))
 import Control.Exception (IOException, SomeAsyncException, SomeException, fromException, throwIO, try)
 import Control.Monad (filterM, forM, forM_, join, unless, void, when)
-import Control.Monad.Except (catchError)
+import Control.Monad.Except (catchError, runExceptT)
+import Control.Monad.Trans.Class (lift)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask)
 import qualified TDF.Interactions.Legacy as Interactions
@@ -335,8 +336,10 @@ import TDF.Models
     , Party (..)
     , PartyId
     )
+import TDF.Server.EventAttendees (attendeesQuery)
 import TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
+import TDF.Server.SocialArtistOwnership (duplicateArtistOwner, ensureAvailableArtistOwner)
 import qualified TDF.Profiles.Artist as ArtistProfiles
 import qualified TDF.ModelsExtra as ME
 import TDF.Server.TicketSalesWindow (eventTicketPurchaseEnabledFor)
@@ -3602,55 +3605,52 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         artistNameVal <- either throwError pure (validateArtistName (artistName dto))
         let requestedPartyId = cleanMaybeText (artistPartyId dto)
         targetPartyId <- either throwError pure (validateArtistProfileCreateParty user requestedPartyId)
-        duplicate <- liftIO $ runSqlPool (selectFirst [ArtistProfilePartyId ==. Just targetPartyId] []) envPool
-        when (isJust duplicate) $
-            throwError err409{errBody = "An artist profile already exists for this party"}
+        ownerKey <- either throwError pure (artistOwnerKey targetPartyId)
+        let normalizedOwner = renderKeyText ownerKey
         resolvedGenres <-
             liftIO (runSqlPool (resolvePublishedArtistGenres (artistGenreIds dto)) envPool)
                 >>= either (throwError . invalidArtistGenreIdsError) pure
-        result <- liftIO $ runSqlPool
-            ( do
-                activation <- if targetPartyId == renderPartyId user
-                    then fmap (fmap (const ())) (ArtistProfiles.activateOwnArtistProfile (auPartyId user) now)
-                    else pure (Right ())
-                case activation of
-                    Left message -> pure (Left err403{errBody = BL.fromStrict (TE.encodeUtf8 message)})
-                    Right () -> do
-                        current <- selectFirst [ArtistProfilePartyId ==. Just targetPartyId] []
-                        case current of
-                            Just _ -> pure (Left err409{errBody = "An artist profile already exists for this party"})
-                            Nothing -> do
-                                artistKey <- insert
-                                        ArtistProfile
-                                            { artistProfilePartyId = Just targetPartyId
-                                            , artistProfileName = artistNameVal
-                                            , artistProfileBio = artistBio dto
-                                            , artistProfileAvatarUrl = artistAvatarUrl dto
-                                            , -- Keep this nullable for compatibility with deployments where the
-                                              -- legacy column type is TEXT instead of TEXT[].
-                                              artistProfileGenres = Nothing
-                                            , artistProfileSocialLinks = encodeSocialLinks (artistSocialLinks dto)
-                                            , artistProfileCountryCode = Nothing
-                                            , artistProfileCountryId = Nothing
-                                            , artistProfileCreatedAt = now
-                                            , artistProfileUpdatedAt = now
-                                            }
-                                forM_ (zip [0 :: Int ..] resolvedGenres) $ \(position, (genreId, _)) ->
-                                    insert_ ArtistGenreMembership
-                                        { artistGenreMembershipArtistId = artistKey
-                                        , artistGenreMembershipGenreId = genreId
-                                        , artistGenreMembershipSortOrder = position
-                                        , artistGenreMembershipCreatedAt = now
-                                        }
-                                pure (Right artistKey)
-            ) envPool
+        result <- liftIO $ flip runSqlPool envPool $ runExceptT $ do
+            -- Self-activation takes the onboarding-request locks before the party lock.
+            -- Keep that order to agree with the access-request reviewer.
+            when (ownerKey == auPartyId user) $ do
+                duplicate <- lift $ selectFirst [ArtistProfilePartyId ==. Just normalizedOwner] []
+                when (isJust duplicate) $ throwError duplicateArtistOwner
+                activated <- lift $ ArtistProfiles.activateOwnArtistProfile ownerKey now
+                either (\message -> throwError err403{errBody = BL.fromStrict (TE.encodeUtf8 message)})
+                    (const (pure ())) activated
+            ensureAvailableArtistOwner ownerKey Nothing
+            lift $ do
+                artistKey <- insert
+                        ArtistProfile
+                            { artistProfilePartyId = Just normalizedOwner
+                            , artistProfileName = artistNameVal
+                            , artistProfileBio = artistBio dto
+                            , artistProfileAvatarUrl = artistAvatarUrl dto
+                            , -- Keep this nullable for compatibility with deployments where the
+                              -- legacy column type is TEXT instead of TEXT[].
+                              artistProfileGenres = Nothing
+                            , artistProfileSocialLinks = encodeSocialLinks (artistSocialLinks dto)
+                            , artistProfileCountryCode = Nothing
+                            , artistProfileCountryId = Nothing
+                            , artistProfileCreatedAt = now
+                            , artistProfileUpdatedAt = now
+                            }
+                forM_ (zip [0 :: Int ..] resolvedGenres) $ \(position, (genreId, _)) ->
+                    insert_ ArtistGenreMembership
+                        { artistGenreMembershipArtistId = artistKey
+                        , artistGenreMembershipGenreId = genreId
+                        , artistGenreMembershipSortOrder = position
+                        , artistGenreMembershipCreatedAt = now
+                        }
+                pure artistKey
         key <- either throwError pure result
         let genreIds = map fst resolvedGenres
             genreList = map snd resolvedGenres
         pure
             ArtistDTO
                 { artistId = Just (renderKeyText key)
-                , artistPartyId = Just targetPartyId
+                , artistPartyId = Just normalizedOwner
                 , artistName = artistNameVal
                 , artistGenres = genreList
                 , artistGenreIds = genreIds
@@ -3692,14 +3692,23 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         resolvedGenres <-
             liftIO (runSqlPool (resolvePublishedArtistGenres (artistGenreIds dto)) envPool)
                 >>= either (throwError . invalidArtistGenreIdsError) pure
-        nextPartyId <-
-            either throwError pure
-                (validateArtistProfilePartyChange user (artistProfilePartyId existing) (artistPartyId dto))
-        liftIO $ runSqlPool
-            ( do
+        _ <- either throwError pure $
+            validateArtistProfilePartyChange user (artistProfilePartyId existing) (artistPartyId dto)
+        suppliedOwner <- either throwError pure $ traverse artistOwnerKey (cleanMaybeText (artistPartyId dto))
+        result <- liftIO $ flip runSqlPool envPool $ runExceptT $ do
+            forM_ suppliedOwner $ \owner -> ensureAvailableArtistOwner owner (Just artistKey)
+            backend <- lift getRDBMS
+            let lock = if backend == "postgresql" then " FOR UPDATE" else ""
+            rows <- lift $ rawSql ("SELECT ?? FROM social_artist_profile WHERE id = ?" <> lock)
+                [toPersistValue artistKey]
+            current <- maybe (throwError err404{errBody = "Artist not found"}) (pure . entityVal) (listToMaybe rows)
+            either throwError pure (validateArtistProfileWriteAccess user (artistProfilePartyId current))
+            _ <- either throwError pure $ validateArtistProfilePartyChange user (artistProfilePartyId current) (artistPartyId dto)
+            let nextOwner = fmap renderKeyText suppliedOwner <|> artistProfilePartyId current
+            lift $ do
                 update
                     artistKey
-                    [ ArtistProfilePartyId =. nextPartyId
+                    [ ArtistProfilePartyId =. nextOwner
                     , ArtistProfileName =. artistNameVal
                     , ArtistProfileBio =. artistBio dto
                     , ArtistProfileAvatarUrl =. artistAvatarUrl dto
@@ -3714,7 +3723,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                         , artistGenreMembershipSortOrder = position
                         , artistGenreMembershipCreatedAt = now
                         }
-            ) envPool
+            pure nextOwner
+        nextPartyId <- either throwError pure result
         let genreIds = map fst resolvedGenres
             genreList = map snd resolvedGenres
         pure
@@ -3762,6 +3772,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             :<|> upsertMyRsvp
             :<|> deleteMyRsvp
             :<|> getRsvpSummary
+            :<|> listAttendees
             :<|> listRsvpsForOrganizer
             :<|> listProfileRsvpFeed
             :<|> listDirectoryProfileRsvpFeed
@@ -3830,6 +3841,13 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         eventKey <- parseKeyOr400 "event" eventIdStr
         _ <- requireRsvpEventAccess eventKey False
         liftIO $ runSqlPool (rsvpSummaryForEvent eventKey) envPool
+
+    listAttendees :: T.Text -> T.Text -> Maybe Int64 -> AppM Aeson.Value
+    listAttendees eventIdStr status after = do
+        Env{..} <- ask
+        eventKey <- parseKeyOr400 "event" eventIdStr
+        _ <- requireRsvpEventAccess eventKey False
+        maybe (throwError err400{errBody = "Invalid attendee filter"}) (liftIO . (`runSqlPool` envPool)) (attendeesQuery eventKey currentPartyId status after)
 
     listRsvpsForOrganizer :: T.Text -> Maybe T.Text -> Maybe Int -> AppM RsvpAdminPageDTO
     listRsvpsForOrganizer eventIdStr mCursor mLimit = do
@@ -7698,6 +7716,11 @@ followArtistDb pool artistId followerPartyIdRaw = do
             , afFollowerPartyId = followerPartyId
             , afCreatedAt = Just createdAtVal
             }
+
+artistOwnerKey :: T.Text -> Either ServerError (Key Party)
+artistOwnerKey value =
+    maybe (Left err400{errBody = "artistPartyId must be a positive integer"})
+        (Right . toSqlKey) (normalizePositiveIdentifier value)
 
 normalizePositivePartyIdText :: T.Text -> Maybe T.Text
 normalizePositivePartyIdText rawPartyId =
