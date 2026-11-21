@@ -52,8 +52,8 @@ it('reads ticket and Domo alternatives without preparing another checkout', asyn
 
 it('checks capabilities for the immutable service amount without inventing buyer country', async () => {
   getService.mockResolvedValue({ ssoCheckoutId: 'checkout-1', ssoStatus: 'payment_failed', ssoCurrency: 'USD', ssoPriceUsdCents: 50000 });
-  getMethods.mockResolvedValue({ placeToPayCard: false, payPhoneWallet: true, paypal: true });
-  expect(await loadCheckoutPaymentAlternatives({ ...reference, returnPath: '/mezcla-mastering/pedido/ORDER-1' })).toEqual(['payphone_wallet']);
+  getMethods.mockResolvedValue({ placeToPayCard: false, payPhoneCard: true, payPhoneWallet: true, paypal: true });
+  expect(await loadCheckoutPaymentAlternatives({ ...reference, returnPath: '/mezcla-mastering/pedido/ORDER-1' })).toEqual(['payphone_card', 'payphone_wallet']);
   expect(getMethods).toHaveBeenCalledWith({ currency: 'USD', amountMinor: 50000, productFlow: 'professional_service' });
 });
 

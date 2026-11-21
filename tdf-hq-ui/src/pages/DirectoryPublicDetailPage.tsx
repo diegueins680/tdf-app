@@ -210,6 +210,9 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
   const composePath = `/social/eventos/${encodeURIComponent(identifier)}?${composeSearch.toString()}#momentos`;
 
   const locationValue = record(value['location']) ?? rows(value['locations'])[0];
+  const addressLine = kind === 'event' ? /^Dirección del evento:[ \t]*(\S[^\r\n]*)/iu.exec(description) : null;
+  const publicLocation = addressLine?.[1]?.trim() ?? [text(locationValue?.['city']), text(locationValue?.['countryCode'])].filter(Boolean).join(', ');
+  const detailDescription = addressLine ? description.slice(addressLine[0].length).trim() : description;
   const professions = rows(value['professions']);
   const instruments = rows(value['instruments']);
   const genres = rows(value['genres']);
@@ -273,6 +276,7 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                       width: { xs: '100%', sm: 220 },
                       height: { xs: 300, sm: 220 },
                       aspectRatio: 'auto',
+                      ...(kind === 'event' && { objectFit: 'contain' }),
                       borderRadius: 3,
                     }}
                   />
@@ -307,13 +311,9 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                 </Stack>}
               </Stack>
 
-              {locationValue && (
-                <Alert severity="info">
-                  {text(locationValue['city']) ?? 'Ubicación amplia'}{text(locationValue['countryCode']) ? `, ${text(locationValue['countryCode'])}` : ''}. La ubicación pública es aproximada; no incluye direcciones residenciales.
-                </Alert>
-              )}
+              {publicLocation && <Typography>{publicLocation}</Typography>}
               <Divider />
-              <MarkdownText sx={{ fontSize: '1.08rem', lineHeight: 1.75 }}>{description}</MarkdownText>
+              <MarkdownText sx={{ fontSize: '1.08rem', lineHeight: 1.75 }}>{detailDescription}</MarkdownText>
 
               {kind === 'event' && (
                 <Stack spacing={2}>

@@ -121,7 +121,7 @@ describe('EventPublishControl', () => {
     setup();
     fireEvent.click(await screen.findByRole('button', { name: 'Publicar evento' }));
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
-    expect(screen.getByRole('button', { name: 'Publicar evento' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Publicar evento' })).toBeTruthy();
     expect(readEvent).not.toHaveBeenCalled();
     expect(updateEvent).not.toHaveBeenCalled();
   });

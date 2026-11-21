@@ -69,9 +69,11 @@ export function renderEventMetadata(event, eventId, origin = PUBLIC_ORIGIN) {
   const tags = [
     `<meta data-tdf-event-preview property="og:type" content="event" />`,
     `<meta data-tdf-event-preview property="og:title" content="${escapeHtml(title)}" />`,
+    `<meta property="og:image" content="${escapeHtml(image)}" data-tdf-event-preview />`,
+    `<meta property="og:image:secure_url" content="${escapeHtml(image)}" data-tdf-event-preview />`,
+    `<meta property="og:image:alt" content="${escapeHtml(title)}" data-tdf-event-preview />`,
     `<meta data-tdf-event-preview property="og:description" content="${escapeHtml(description)}" />`,
     `<meta data-tdf-event-preview property="og:url" content="${escapeHtml(canonical)}" />`,
-    `<meta data-tdf-event-preview property="og:image" content="${escapeHtml(image)}" />`,
     `<meta data-tdf-event-preview property="event:start_time" content="${escapeHtml(event.startTime)}" />`,
     `<meta data-tdf-event-preview name="twitter:card" content="summary_large_image" />`,
     `<meta data-tdf-event-preview name="twitter:title" content="${escapeHtml(title)}" />`,
@@ -91,5 +93,5 @@ export function injectEventPreview(html, preview) {
   const withTitle = /<title>[\s\S]*?<\/title>/i.test(withoutManaged)
     ? withoutManaged.replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(preview.title)} · TDF Records</title>`)
     : withoutManaged;
-  return withTitle.replace('</head>', `    ${preview.tags}\n  </head>`);
+  return withTitle.replace(/<head(?:\s[^>]*)?>/i, (head) => `${head}\n    ${preview.tags}`);
 }
