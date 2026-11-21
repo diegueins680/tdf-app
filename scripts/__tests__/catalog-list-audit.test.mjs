@@ -92,6 +92,7 @@ const MOVED_FILE_REVIEW_BATCHES = new Set([
   'paypal-webhook-domain-module-2026-11-10',
   'web-auth-state-layer-2026-11-17',
   'web-feature-registry-layer-2026-11-17',
+  'web-campaign-cart-layer-2026-11-19',
 ]);
 
 function movedFileSuccessors(active) {

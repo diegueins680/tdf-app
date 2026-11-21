@@ -39,6 +39,7 @@ import           Network.Wai                     (Request)
 import           Servant
 import           Servant.Server.Experimental.Auth (AuthHandler)
 
+import           Database.Persist.SqlBackend (getRDBMS)
 import           Database.Persist.Sql hiding (loadConfig)
 
 import           TDF.Auth             (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
@@ -1868,6 +1869,16 @@ privateTrialsServer user@AuthedUser{..} =
       dtos <- buildClassSessionDTOs sessions
       pure $ maybe dtos (\st -> filter (\ClassSessionDTO{status = s} -> s == st) dtos) statusFilter
 
+    scheduledMinutes :: UTCTime -> UTCTime -> Int
+    scheduledMinutes start end = max 0 (floor (diffUTCTime end start / 60))
+
+    lockedClassSession :: Key ClassSession -> AppM (Maybe ClassSession)
+    lockedClassSession key = do
+      backend <- getRDBMS
+      let lock = if backend == "postgresql" then " FOR UPDATE" else ""
+      rows <- rawSql ("SELECT ?? FROM class_session WHERE id = ?" <> lock) [toPersistValue key]
+      pure (entityVal <$> listToMaybe rows)
+
     createClassH :: ClassSessionIn -> AppM ClassSessionOut
     createClassH ClassSessionIn{..} = do
       ensureSchoolAccess
@@ -1878,7 +1889,7 @@ privateTrialsServer user@AuthedUser{..} =
       bookingKey <- traverse ensureBookingExists bookingId
       let teacherKey = intKey teacherId
           roomKey    = intKey roomId :: ResourceId
-          durationMinutes = floor (realToFrac (diffUTCTime endAt startAt) / 60 :: Double)
+          durationMinutes = scheduledMinutes startAt endAt
           isSelfTeacher = teacherKey == auPartyId
       unless (isSchoolStaff || isSelfTeacher) $
         liftIO $ throwIO err403
@@ -1906,17 +1917,17 @@ privateTrialsServer user@AuthedUser{..} =
         , classSessionBookingId       = bookingKey
         , classSessionAttended        = False
         , classSessionPurchaseId      = Nothing
-        , classSessionConsumedMinutes = max 0 durationMinutes
+        , classSessionConsumedMinutes = durationMinutes
         , classSessionNotes           = Nothing
         }
-      pure (ClassSessionOut (entityKeyInt sid) (max 0 durationMinutes))
+      pure (ClassSessionOut (entityKeyInt sid) durationMinutes)
 
     updateClassH :: Int -> ClassSessionUpdate -> AppM ClassSessionDTO
     updateClassH rawClassId ClassSessionUpdate{..} = do
       ensureSchoolAccess
       classId <- either (liftIO . throwIO) pure (validateClassSessionPathId rawClassId)
       let cid = intKey classId :: Key ClassSession
-      mSession <- get cid
+      mSession <- lockedClassSession cid
       case mSession of
         Nothing -> liftIO $ throwIO err404
         Just sess -> do
@@ -1958,7 +1969,8 @@ privateTrialsServer user@AuthedUser{..} =
           unless roomFree $
             liftIO $ throwIO err409 { errBody = "Sala no disponible en ese horario" }
           let updates = concat
-                [ maybe [] (\tid -> [ClassSessionTeacherId =. intKey tid]) teacherId
+                [ [ClassSessionConsumedMinutes =. scheduledMinutes newStart newEnd]
+                , maybe [] (\tid -> [ClassSessionTeacherId =. intKey tid]) teacherId
                 , maybe [] (\sid -> [ClassSessionSubjectId =. intKey sid]) subjectId
                 , maybe [] (\pid -> [ClassSessionStudentId =. intKey pid]) studentId
                 , maybe [] (\v   -> [ClassSessionStartAt   =. v])         startAt
@@ -1967,8 +1979,7 @@ privateTrialsServer user@AuthedUser{..} =
                 , maybe [] (\bid -> [ClassSessionBookingId =. Just bid])  newBooking
                 , maybe [] (\txt -> [ClassSessionNotes     =. txt])       notesUpdate
                 ]
-          unless (null updates) $
-            update cid updates
+          update cid updates
           ent <- getJustEntity cid
           dtos <- buildClassSessionDTOs [ent]
           case listToMaybe dtos of
@@ -1980,16 +1991,16 @@ privateTrialsServer user@AuthedUser{..} =
       ensureSchoolAccess
       classId <- either (liftIO . throwIO) pure (validateClassSessionPathId rawClassId)
       let cid = intKey classId :: Key ClassSession
-      mSession <- get cid
+      mSession <- lockedClassSession cid
       case mSession of
         Nothing -> liftIO $ throwIO err404
         Just sess -> do
           unless (isSchoolStaff || Trials.classSessionTeacherId sess == auPartyId) $
             liftIO $ throwIO err403
           notesUpdate <- either (liftIO . throwIO) pure (resolveAttendNotesUpdate attendReq)
-          let duration = classSessionConsumedMinutes sess
+          let duration = scheduledMinutes (Trials.classSessionStartAt sess) (Trials.classSessionEndAt sess)
           update cid
-            ( [ClassSessionAttended =. attended]
+            ( [ClassSessionAttended =. attended, ClassSessionConsumedMinutes =. duration]
                 ++ maybe [] (\value -> [ClassSessionNotes =. value]) notesUpdate
             )
           pure (ClassSessionOut (entityKeyInt cid) duration)
