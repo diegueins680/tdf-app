@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "86f6b48ef15f964bb180c3bb8f70d26608a26d25",
+  "mobileRevision": "2b3c974c8cd6e8c9aa52e3c0e2ee51d502351deb",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -29807,8 +29807,8 @@
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
     "tdf-hq-ui/src/components/navigationLabels.test.ts": "01028083246407c2dffe74f833aa4b263db10f2ad3ed99621e8fc9c478af90fb",
-    "tdf-hq-ui/src/components/notificationTarget.test.ts": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
-    "tdf-hq-ui/src/components/notificationTarget.ts": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
+    "tdf-hq-ui/src/components/notificationTarget.test.ts": "b4724a34b12b95b40ec3620bd73d132b39bf59b84bee2319d82167ad33fc3e53",
+    "tdf-hq-ui/src/components/notificationTarget.ts": "e21bceb245d6114eebee2644cb683e33549b3b3eb8a48c97cca2e89795053f0d",
     "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "d02b5bd550fc753f9676028fa08aa01637ebcfb8165c8a7050b152e69b6bf2d4",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "b6945ccfa9f7363e9bb130d2ae21b35179f9e81c9385790baa1937d7889b4dd8",
@@ -30466,7 +30466,7 @@
     "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs": "79047936e9a4fff6cbf15767563a68cba32c1d4eaff754a2e6f18046615d3a43",
     "tdf-hq/src/TDF/Directory/Policy.hs": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
     "tdf-hq/src/TDF/DriveOAuthClient.hs": "3d5bb29922ad21c6bf618af565fba70cfe29b5c6fcca2272c8c61e3ee370c3ac",
-    "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
+    "tdf-hq/src/TDF/Email.hs": "0442ae6f781099387961def41f352777b2d9fb56704499f58b7ba8275eb40357",
     "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs": "1b3937abe97b188d3dcd1f330485332651295a5e75e65d14702091c193245d27",
     "tdf-hq/src/TDF/EventOperations/Server.hs": "52efa5b303a134cf22fdbe5df9240b6c53620664b9283982e4e29c4ee7cfeed6",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
@@ -30506,7 +30506,7 @@
     "tdf-hq/src/TDF/Routes/DomoRefunds.hs": "b30e9a615d9ea754e2ffe29a257e272d4fc7342d17ec919e1235a199aeff34fd",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "c5b5eac3f58fbb0a24651c2bb2e57664720a6526ac25a69d2bf9f49acfdcc438",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "10cfaf282a49b1b78b23d820b65339cb2cbe5dd0ed5152688362e0ac034b1aa1",
+    "tdf-hq/src/TDF/Server.hs": "134e8fbabf111ae4ba3e12d7cd24fb1ab86a1b4cc2e7f97badc9996311f0151b",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
@@ -30831,7 +30831,7 @@
     "tdf-mobile/src/localization/onboardingCopy.ts": "58e4e181760d5850403bb9e01980e09ee21caddb46e4c82f6207d01abfc0c949",
     "tdf-mobile/src/navigation/deepLinks.ts": "6d1185dd9e204bd685da9fe358de42c7254f27eacd80b8f59fdd43d6fb1baebf",
     "tdf-mobile/src/navigation/notificationResponses.test.ts": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
-    "tdf-mobile/src/navigation/notificationTarget.ts": "635b13a8a72aeed82cf22482e8213ddc7df33c54a95f6b9b655b5ddd53e2b33c",
+    "tdf-mobile/src/navigation/notificationTarget.ts": "475dbc77248442868e88b9d91a68fc47f7975b7c08f5c6825f406a0832e16f1b",
     "tdf-mobile/src/notifications/NotificationScreen.test.tsx": "8309c2ee6791950ecfc31aa48f43156876156099c87ebe701f291e079aad2c05",
     "tdf-mobile/src/providers/AppProviders.tsx": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
     "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
@@ -64332,7 +64332,7 @@
     {
       "id": "SURFACE-5a528805907175e9",
       "path": "tdf-hq-ui/src/components/notificationTarget.test.ts",
-      "sha256": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
+      "sha256": "b4724a34b12b95b40ec3620bd73d132b39bf59b84bee2319d82167ad33fc3e53",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64352,7 +64352,7 @@
     {
       "id": "SURFACE-45942cefd314d415",
       "path": "tdf-hq-ui/src/components/notificationTarget.ts",
-      "sha256": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
+      "sha256": "e21bceb245d6114eebee2644cb683e33549b3b3eb8a48c97cca2e89795053f0d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78825,7 +78825,7 @@
     {
       "id": "SURFACE-d333d9e42e7c8cfc",
       "path": "tdf-hq/src/TDF/Email.hs",
-      "sha256": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
+      "sha256": "0442ae6f781099387961def41f352777b2d9fb56704499f58b7ba8275eb40357",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78852,7 +78852,7 @@
     {
       "id": "SURFACE-f6ca65c5d4df5331",
       "path": "tdf-hq/src/TDF/Email/Service.hs",
-      "sha256": "00629adbf48158e45d178c28a614a4a66dd241d6cfda3ddbc5a4c742b330a762",
+      "sha256": "866dae2d41232316e5d74ef960b3b9a2ac2559f44e20fee4cfe6793c79b27cba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -79595,7 +79595,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "10cfaf282a49b1b78b23d820b65339cb2cbe5dd0ed5152688362e0ac034b1aa1",
+      "sha256": "134e8fbabf111ae4ba3e12d7cd24fb1ab86a1b4cc2e7f97badc9996311f0151b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -88003,7 +88003,7 @@
     {
       "id": "SURFACE-1b440686d0fdbde2",
       "path": "tdf-mobile/src/navigation/notificationTarget.ts",
-      "sha256": "635b13a8a72aeed82cf22482e8213ddc7df33c54a95f6b9b655b5ddd53e2b33c",
+      "sha256": "475dbc77248442868e88b9d91a68fc47f7975b7c08f5c6825f406a0832e16f1b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

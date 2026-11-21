@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "86f6b48ef15f964bb180c3bb8f70d26608a26d25",
+  "mobileRevision": "2b3c974c8cd6e8c9aa52e3c0e2ee51d502351deb",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -10084,13 +10084,13 @@
     {
       "id": "SURFACE-5a528805907175e9",
       "path": "tdf-hq-ui/src/components/notificationTarget.test.ts",
-      "sha256": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
+      "sha256": "b4724a34b12b95b40ec3620bd73d132b39bf59b84bee2319d82167ad33fc3e53",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-45942cefd314d415",
       "path": "tdf-hq-ui/src/components/notificationTarget.ts",
-      "sha256": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
+      "sha256": "e21bceb245d6114eebee2644cb683e33549b3b3eb8a48c97cca2e89795053f0d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17926,7 +17926,7 @@
     {
       "id": "SURFACE-d333d9e42e7c8cfc",
       "path": "tdf-hq/src/TDF/Email.hs",
-      "sha256": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
+      "sha256": "0442ae6f781099387961def41f352777b2d9fb56704499f58b7ba8275eb40357",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17938,7 +17938,7 @@
     {
       "id": "SURFACE-f6ca65c5d4df5331",
       "path": "tdf-hq/src/TDF/Email/Service.hs",
-      "sha256": "00629adbf48158e45d178c28a614a4a66dd241d6cfda3ddbc5a4c742b330a762",
+      "sha256": "866dae2d41232316e5d74ef960b3b9a2ac2559f44e20fee4cfe6793c79b27cba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18226,7 +18226,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "10cfaf282a49b1b78b23d820b65339cb2cbe5dd0ed5152688362e0ac034b1aa1",
+      "sha256": "134e8fbabf111ae4ba3e12d7cd24fb1ab86a1b4cc2e7f97badc9996311f0151b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22168,7 +22168,7 @@
     {
       "id": "SURFACE-1b440686d0fdbde2",
       "path": "tdf-mobile/src/navigation/notificationTarget.ts",
-      "sha256": "635b13a8a72aeed82cf22482e8213ddc7df33c54a95f6b9b655b5ddd53e2b33c",
+      "sha256": "475dbc77248442868e88b9d91a68fc47f7975b7c08f5c6825f406a0832e16f1b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
