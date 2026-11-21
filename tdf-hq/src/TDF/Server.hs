@@ -20,6 +20,7 @@ import qualified TDF.Calendar.TokenCipher as CalendarTokenCipher
 import qualified TDF.Social.Chat as SocialChat
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
+import qualified TDF.Fans.ArtistRecommendations as ArtistRecommendations
 import qualified TDF.Social.RelationshipReads as SocialReads
 import qualified TDF.Social.RelationshipWrites as SocialWrites
 import qualified TDF.Social.Profiles as SocialProfiles
@@ -3220,6 +3221,7 @@ fanSecureServer :: AuthedUser -> ServerT FanSecureAPI AppM
 fanSecureServer user =
        (fanGetProfile user :<|> fanUpdateProfile user)
   :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
+  :<|> fanListRecommendations user
   :<|> (artistGetOwnProfile user :<|> artistUpdateOwnProfile user)
   :<|> (notifList user :<|> notifCount user :<|> notifGet user :<|> notifMarkRead user :<|> notifMarkAllRead user)
   :<|> CatalogServer.createSelfFanRoleRequest user
@@ -7910,6 +7912,27 @@ fanListFollows user = do
     nameMap <- fetchPartyNameMap artistIds
     profileMap <- fetchArtistProfileMap artistIds
     pure (map (fanFollowEntityToDTO nameMap profileMap) follows)
+
+-- | GET /fans/me/recommendations (COMMUNITY-FAN-RECOMMENDATION-001).
+fanListRecommendations :: AuthedUser -> Maybe Int -> AppM [ArtistRecommendationDTO]
+fanListRecommendations user mLimit = do
+  requireFanAccess user
+  Env pool _ <- ask
+  recommendations <- liftIO $ flip runSqlPool pool $
+    ArtistRecommendations.loadArtistRecommendations
+      (auPartyId user)
+      (ArtistRecommendations.clampRecommendationLimit mLimit)
+  pure
+    [ ArtistRecommendationDTO
+        { arecArtistId = ArtistRecommendations.recArtistId item
+        , arecReason =
+            ArtistRecommendations.recommendationReasonCode
+              (ArtistRecommendations.recReason item)
+        , arecScore = ArtistRecommendations.recScore item
+        , arecSeedArtistIds = ArtistRecommendations.recSeedArtistIds item
+        }
+    | item <- recommendations
+    ]
 
 fanFollowArtist :: AuthedUser -> Int64 -> AppM FanFollowDTO
 fanFollowArtist = FanEffects.followArtist

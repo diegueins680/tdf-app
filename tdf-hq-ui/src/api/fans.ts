@@ -8,6 +8,7 @@ import type {
   FanProfileDTO,
   FanProfileUpdate,
   FanFollowDTO,
+  ArtistRecommendationDTO,
   ArtistFansResponse,
   FanClubDTO,
   FanClubPostDTO,
@@ -81,6 +82,10 @@ export const Fans = {
     (await send('/fans/me/role-request', payload)) as SecurityGrantRevision,
   updateProfile: async (payload: FanProfileUpdate) => (await update('/fans/me/profile', payload)) as FanProfileDTO,
   listFollows: async () => (await read('/fans/me/follows')) as FanFollowDTO[],
+  listRecommendations: async (limit?: number) => {
+    const qs = limit === undefined ? '' : `?limit=${limit}`;
+    return (await read(`/fans/me/recommendations${qs}`)) as ArtistRecommendationDTO[];
+  },
   follow: async (artistId: number) => (await send(`/fans/me/follows/${artistId}`, {})) as FanFollowDTO,
   unfollow: async (artistId: number) => {
     await remove(`/fans/me/follows/${artistId}`);
