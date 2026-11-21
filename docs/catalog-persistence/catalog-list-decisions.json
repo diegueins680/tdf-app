@@ -118058,64 +118058,112 @@
       }
     },
     {
-      "id": "da4f880a8da74120e456",
+      "id": "ec80c5298d7de324e1b2",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Existing generated notification destination registry adds event_memories with positive event ID and invitation UUID only. No arbitrary URL, permission or recipient entitlement is inferred; current server policy remains authoritative.",
+      "justification": "Existing generated notification destination registry adds booking: a positive booking ID opens the fixed staff route /estudio/calendario (public_booking_request staff alerts). No ID, arbitrary URL, permission or recipient entitlement is placed in the path; the calendar keeps its own Scheduling authorization.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/components/notificationTarget.ts",
         "line": 14
       },
-      "reviewBatch": "event-memories-2026-10-25",
+      "reviewBatch": "public-booking-notifications-2026-11-21",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
-        "id": "2a0d6d57a51e35d91376",
+        "id": "da4f880a8da74120e456",
         "classification": "security-system-registry",
         "disposition": "canonical-contract",
         "specializedModel": "notification_destination_registry",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Canonical typed notification destination registry; chat_thread uses a validated positive safe thread identity, selects only an authorized existing conversation and never accepts an arbitrary URL. Generated into Mobile.",
+        "justification": "Existing generated notification destination registry adds event_memories with positive event ID and invitation UUID only. No arbitrary URL, permission or recipient entitlement is inferred; current server policy remains authoritative.",
         "reviewed": true,
         "evidence": {
           "file": "tdf-hq-ui/src/components/notificationTarget.ts",
           "line": 14
         },
-        "reviewBatch": "chat-notification-destination-2026-10-13",
+        "reviewBatch": "event-memories-2026-10-25",
         "reviewMethod": "successor-of-reviewed-decision",
         "previousDecision": {
-          "id": "1a20aae8bb74a6df248f",
+          "id": "2a0d6d57a51e35d91376",
           "classification": "security-system-registry",
           "disposition": "canonical-contract",
           "specializedModel": "notification_destination_registry",
           "priority": "P1-integrity",
           "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
+          "justification": "Canonical typed notification destination registry; chat_thread uses a validated positive safe thread identity, selects only an authorized existing conversation and never accepts an arbitrary URL. Generated into Mobile.",
           "reviewed": true,
           "evidence": {
             "file": "tdf-hq-ui/src/components/notificationTarget.ts",
             "line": 14
           },
-          "reviewBatch": "music-release-platform-sync-2026-10-07",
+          "reviewBatch": "chat-notification-destination-2026-10-13",
           "reviewMethod": "successor-of-reviewed-decision",
           "previousDecision": {
-            "id": "d8058e9fe53556cbf690",
+            "id": "1a20aae8bb74a6df248f",
             "classification": "security-system-registry",
             "disposition": "canonical-contract",
             "specializedModel": "notification_destination_registry",
             "priority": "P1-integrity",
             "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+            "justification": "Generated destination allowlist from the canonical notification navigation registry; adds music_release, which opens the fixed /label/releases workspace and prevents arbitrary URL navigation.",
             "reviewed": true,
             "evidence": {
               "file": "tdf-hq-ui/src/components/notificationTarget.ts",
               "line": 14
             },
-            "reviewBatch": "universal-interactions-2026-09-28"
+            "reviewBatch": "music-release-platform-sync-2026-10-07",
+            "reviewMethod": "successor-of-reviewed-decision",
+            "previousDecision": {
+              "id": "d8058e9fe53556cbf690",
+              "classification": "security-system-registry",
+              "disposition": "canonical-contract",
+              "specializedModel": "notification_destination_registry",
+              "priority": "P1-integrity",
+              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+              "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+              "reviewed": true,
+              "evidence": {
+                "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+                "line": 14
+              },
+              "reviewBatch": "universal-interactions-2026-09-28"
+            }
+          },
+          "mergedSourceDecision": {
+            "id": "2a0d6d57a51e35d91376",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Canonical web notification allowlist now matches merged Mobile main for chat_thread, using only a positive safe numeric thread ID and a fixed same-origin fallback. Existing routes are preserved; generator equality and invalid-ID/URL regression tests enforce the boundary.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+              "line": 14
+            },
+            "reviewBatch": "music-release-platform-sync-2026-10-07",
+            "reviewMethod": "successor-of-reviewed-decision",
+            "previousDecision": {
+              "id": "d8058e9fe53556cbf690",
+              "classification": "security-system-registry",
+              "disposition": "canonical-contract",
+              "specializedModel": "notification_destination_registry",
+              "priority": "P1-integrity",
+              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+              "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+              "reviewed": true,
+              "evidence": {
+                "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+                "line": 14
+              },
+              "reviewBatch": "universal-interactions-2026-09-28"
+            },
+            "previousFingerprint": "1a20aae8bb74a6df248f"
           }
         },
         "mergedSourceDecision": {
@@ -118149,7 +118197,17 @@
             "reviewBatch": "universal-interactions-2026-09-28"
           },
           "previousFingerprint": "1a20aae8bb74a6df248f"
-        }
+        },
+        "supersededReviews": [
+          {
+            "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+            "sourceDecisionId": "2a0d6d57a51e35d91376",
+            "sourceDecisionSha256": "ccac20209c66a4957a170eb062eddf65ad6d5999731c45a94cb8d7ee00e2b07f",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+            "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
+          }
+        ]
       },
       "mergedSourceDecision": {
         "id": "2a0d6d57a51e35d91376",
@@ -135799,49 +135857,152 @@
       "reviewed": true
     },
     {
-      "id": "92f5d2006375f7fb9757",
+      "id": "a84c7c55f0b3ab1c2c11",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Existing generated notification destination registry adds event_memories with positive event ID and invitation UUID only. No arbitrary URL, permission or recipient entitlement is inferred; current server policy remains authoritative.",
+      "justification": "Generated Mobile notification destination registry adds booking with the same positive-ID guard and fixed /estudio/calendario route as the web resolver; arbitrary URL navigation remains rejected.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-mobile/src/navigation/notificationTarget.ts",
         "line": 15
       },
-      "reviewBatch": "event-memories-2026-10-25",
+      "reviewBatch": "public-booking-notifications-2026-11-21",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
-        "id": "4beaac5c476079656a0a",
+        "id": "92f5d2006375f7fb9757",
         "classification": "security-system-registry",
         "disposition": "canonical-contract",
         "specializedModel": "notification_destination_registry",
         "priority": "P1-integrity",
         "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-        "justification": "Generated Mobile notification destination registry adds chat_thread with the same validated numeric identity and canonical web route as the web resolver; arbitrary URL navigation remains rejected.",
+        "justification": "Existing generated notification destination registry adds event_memories with positive event ID and invitation UUID only. No arbitrary URL, permission or recipient entitlement is inferred; current server policy remains authoritative.",
         "reviewed": true,
         "evidence": {
           "file": "tdf-mobile/src/navigation/notificationTarget.ts",
           "line": 15
         },
-        "reviewBatch": "chat-notifications-2026-10-13",
+        "reviewBatch": "event-memories-2026-10-25",
         "reviewMethod": "successor-of-reviewed-decision",
         "previousDecision": {
-          "id": "2c23d0fa2bac40b01a98",
+          "id": "4beaac5c476079656a0a",
           "classification": "security-system-registry",
           "disposition": "canonical-contract",
           "specializedModel": "notification_destination_registry",
           "priority": "P1-integrity",
           "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-          "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+          "justification": "Generated Mobile notification destination registry adds chat_thread with the same validated numeric identity and canonical web route as the web resolver; arbitrary URL navigation remains rejected.",
           "reviewed": true,
           "evidence": {
             "file": "tdf-mobile/src/navigation/notificationTarget.ts",
             "line": 15
           },
-          "reviewBatch": "universal-interactions-2026-09-28"
+          "reviewBatch": "chat-notifications-2026-10-13",
+          "reviewMethod": "successor-of-reviewed-decision",
+          "previousDecision": {
+            "id": "2c23d0fa2bac40b01a98",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+              "line": 15
+            },
+            "reviewBatch": "universal-interactions-2026-09-28"
+          },
+          "supersededReviews": [
+            {
+              "sourceRevision": "cf723a45e24c7f9a8dd8300d4b7f199b261b5363",
+              "sourceDecisionId": "9de842d0529aa06faf6b",
+              "sourceDecisionSha256": "2718813db7c71f8745fcc5fcf0f52ad5161fca943a4dad578f726ae556059e24",
+              "reason": "Prior complete decision retained in Git; existing nested provenance is unchanged."
+            }
+          ],
+          "mergedSourceDecision": {
+            "id": "4beaac5c476079656a0a",
+            "classification": "security-system-registry",
+            "disposition": "canonical-contract",
+            "specializedModel": "notification_destination_registry",
+            "priority": "P1-integrity",
+            "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+            "justification": "Pinned Mobile retains the reviewed notification destination allowlist and adds chat_thread with a positive-safe-integer threadId and /chat fallback. These client routes grant no thread access; recipient and thread membership remain backend authorities. Arbitrary URL navigation remains excluded.",
+            "reviewed": true,
+            "evidence": {
+              "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+              "line": 15
+            },
+            "reviewBatch": "booking-mobile-pin-consolidation-2026-10-15",
+            "reviewMethod": "successor-of-reviewed-decision",
+            "previousDecision": {
+              "id": "9de842d0529aa06faf6b",
+              "classification": "security-system-registry",
+              "disposition": "canonical-contract",
+              "specializedModel": "notification_destination_registry",
+              "priority": "P1-integrity",
+              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+              "justification": "Generated Mobile copy of the notification destination allowlist (adds music_release); prevents arbitrary URL navigation.",
+              "reviewed": true,
+              "evidence": {
+                "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+                "line": 15
+              },
+              "reviewBatch": "music-release-platform-sync-2026-10-07",
+              "reviewMethod": "successor-of-reviewed-decision",
+              "previousDecision": {
+                "id": "2c23d0fa2bac40b01a98",
+                "classification": "security-system-registry",
+                "disposition": "canonical-contract",
+                "specializedModel": "notification_destination_registry",
+                "priority": "P1-integrity",
+                "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+                "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+                "reviewed": true,
+                "evidence": {
+                  "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+                  "line": 15
+                },
+                "reviewBatch": "universal-interactions-2026-09-28"
+              }
+            },
+            "mergedSourceDecision": {
+              "id": "4beaac5c476079656a0a",
+              "classification": "security-system-registry",
+              "disposition": "canonical-contract",
+              "specializedModel": "notification_destination_registry",
+              "priority": "P1-integrity",
+              "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+              "justification": "Mobile main adds chat_thread to the existing notification destination allowlist, resolving to the canonical same-origin thread path. Existing destinations are preserved; the six notification response regressions pass. This is routing authority, not an editable business catalog.",
+              "reviewed": true,
+              "evidence": {
+                "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+                "line": 15
+              },
+              "reviewBatch": "music-release-platform-sync-2026-10-07",
+              "reviewMethod": "successor-of-reviewed-decision",
+              "previousDecision": {
+                "id": "2c23d0fa2bac40b01a98",
+                "classification": "security-system-registry",
+                "disposition": "canonical-contract",
+                "specializedModel": "notification_destination_registry",
+                "priority": "P1-integrity",
+                "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+                "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+                "reviewed": true,
+                "evidence": {
+                  "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+                  "line": 15
+                },
+                "reviewBatch": "universal-interactions-2026-09-28"
+              },
+              "previousFingerprint": "9de842d0529aa06faf6b"
+            }
+          }
         },
         "supersededReviews": [
           {
@@ -135849,6 +136010,14 @@
             "sourceDecisionId": "9de842d0529aa06faf6b",
             "sourceDecisionSha256": "2718813db7c71f8745fcc5fcf0f52ad5161fca943a4dad578f726ae556059e24",
             "reason": "Prior complete decision retained in Git; existing nested provenance is unchanged."
+          },
+          {
+            "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+            "sourceDecisionId": "4beaac5c476079656a0a",
+            "sourceDecisionSha256": "4b0adcbe4bb243448dcd91fb2fed31264b27d1880b10be20a69610ece91a31ea",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+            "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
           }
         ],
         "mergedSourceDecision": {
