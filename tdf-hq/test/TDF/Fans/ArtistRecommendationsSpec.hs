@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module TDF.Fans.ArtistRecommendationsSpec (spec) where
 
 import           Data.Int                       (Int64)

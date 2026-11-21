@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "059ef215725d7779e8312c9f7ca0a97f9296a3f6",
+  "mobileRevision": "63771b3e38933e320234a95ccb5f5916f90870ae",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -30705,7 +30705,7 @@
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
     "tdf-hq/test/TDF/EventTicketSaleSpec.hs": "c0645218656951aee61012df54df63ec2f9128b8d787d6899fcd323bc90294dd",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
-    "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs": "4f51e61803e92ce6269ae3a99b33156a6ad1991a52706bfa3b050e91666ddb36",
+    "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs": "06c1fc52749e819d87022f03274fede8ef8b7ea0be77d879196f25c34fbada56",
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
@@ -82932,7 +82932,7 @@
     {
       "id": "SURFACE-590912916bfb765f",
       "path": "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs",
-      "sha256": "4f51e61803e92ce6269ae3a99b33156a6ad1991a52706bfa3b050e91666ddb36",
+      "sha256": "06c1fc52749e819d87022f03274fede8ef8b7ea0be77d879196f25c34fbada56",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
