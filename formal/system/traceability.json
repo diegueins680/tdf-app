@@ -11520,7 +11520,7 @@
       "id": "MSG-DELIVERY-001",
       "title": "Recipient-controlled email and phone reminders for chat notices",
       "statement": "Every chat notice must create, in the message transaction, one email and one push delivery intent. A worker may send a reminder only when its channel is enabled and, at dispatch, the notice is still unread, the conversation has no newer read receipt, the current chat policy still shows the notice, the recipient account is active, the recipient has not opted out, the notice is under 24 hours old and coalescing allows it.",
-      "property": "Push is due immediately; email waits 10 minutes (offline window). At most one email per conversation per 6 hours and one push per conversation per minute. Reading the conversation records a monotonic receipt and marks its notices read. Retries back off exponentially and dead-letter after 5 attempts; expired leases are re-leased with the same budget. Each intent is leased immediately before its dispatch, at most one delivery is in flight per recipient, conversation and channel, an expired lease may not start a send, and provider calls are bounded (SMTP 60 s, Expo 15 s) inside the 120 s lease. The web chat retries a failed read receipt up to 5 times with backoff.",
+      "property": "Push is due immediately; email waits 10 minutes (offline window). At most one email per conversation per 6 hours and one push per conversation per minute. Reading the conversation records a monotonic receipt and marks its notices read. Retries back off exponentially and dead-letter after 5 attempts; expired leases are re-leased with the same budget. Each intent is leased immediately before its dispatch, at most one delivery is in flight per recipient, conversation and channel, an expired lease may not start a send, and provider calls are bounded (SMTP 60 s, Expo 15 s) inside the 120 s lease. The web chat retries a failed read receipt up to 5 times with backoff. The authenticated routes are POST /chat/threads/{threadId}/read (read receipt, participants only), PUT /notifications/channels (the caller's email and push opt-out), POST /notifications/push-subscriptions (register the caller's device token) and POST /notifications/push-subscriptions/revoke (deactivate it).",
       "preconditions": [
         "Governed production migration 2026-11-20_chat_external_delivery installed after 2026-10-13_chat_message_notifications.",
         "Provider configuration through the approved release process: SMTP, CHAT_*_DELIVERY_ENABLED, NOTIFICATION_PUSH_TOKEN_KEY (>=32 chars), optional EXPO_ACCESS_TOKEN; EAS FCM/APNs credentials for the mobile app."
@@ -29171,7 +29171,7 @@
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
     "formal/system/recovery-expiry-arithmetic.json": "a9d6a4542982110acb147f9f7a17d12639a7497c8c4a378b26e6bbd0d04a29d7",
-    "formal/system/route-requirements.json": "df5ba57041c1061ce8c325253fc66e48dd5558680f6fcf279ef7403be63355fb",
+    "formal/system/route-requirements.json": "d3193014401b00a6362b5e160968306ed2e22b1b9bb949b009115c27c0e1c58e",
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -91326,7 +91326,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4f365f20fa935b5c4087ec872d7303f27a2e0890aa65909e26a21881e4e92a2a",
+      "sourceSha256": "c4e689ea654bc16577551baf35f92ad886aa7caaf6c59dfdb33803ce19df2844",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -91354,7 +91354,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4f365f20fa935b5c4087ec872d7303f27a2e0890aa65909e26a21881e4e92a2a",
+      "sourceSha256": "c4e689ea654bc16577551baf35f92ad886aa7caaf6c59dfdb33803ce19df2844",
       "definition": {
         "states": [
           "absent",
@@ -91384,7 +91384,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4f365f20fa935b5c4087ec872d7303f27a2e0890aa65909e26a21881e4e92a2a",
+      "sourceSha256": "c4e689ea654bc16577551baf35f92ad886aa7caaf6c59dfdb33803ce19df2844",
       "definition": {
         "export": [
           "queued",
