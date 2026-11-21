@@ -85,6 +85,7 @@ const loadDraft = (timezone: string): CollaborativeEventDraft => {
     return {
       ...initial,
       ...stored,
+      publicAddress: typeof stored.publicAddress === 'string' ? stored.publicAddress : '',
       timezone: typeof stored.timezone === 'string' && stored.timezone.trim()
         ? stored.timezone : initial.timezone,
       durationMinutes: stored.durationMinutes === null
@@ -823,6 +824,12 @@ export default function CollaborativeEventCreatorPage() {
               </AccordionSummary>
               <AccordionDetails>
                 <Stack spacing={2}>
+                  <TextField
+                    label="Dirección pública del evento"
+                    value={draft.publicAddress ?? ''}
+                    onChange={(event) => updateDraft('publicAddress', event.target.value)}
+                    helperText="Opcional. Puedes indicar una vivienda si tienes autorización para publicar su dirección exacta."
+                  />
                   <TextField
                     label="Descripción"
                     value={draft.description}
