@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import type { SessionUser } from '../session/SessionContext';
-import type { VideoCampaign, VideoCampaignDocument } from '../features/campaigns/videoCampaign';
+import type { VideoCampaign, VideoCampaignDocument } from '../utils/videoCampaign';
 
 let session: SessionUser | null = { partyId: 51, username: 'artist', displayName: 'Artist', roles: ['Artist'] };
 let persisted: VideoCampaign[] = [];
