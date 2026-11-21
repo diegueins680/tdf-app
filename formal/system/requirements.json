@@ -11556,6 +11556,7 @@
       "implementation": [
         "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
         "tdf-hq/src/TDF/Chat/Delivery.hs",
+        "tdf-hq/src/TDF/Server/NotificationDelivery.hs",
         "tdf-hq/src/TDF/API/NotificationDelivery.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq/docs/openapi/api.yaml",

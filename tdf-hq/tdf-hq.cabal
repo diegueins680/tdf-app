@@ -46,6 +46,7 @@ library
     TDF.API.Chat
     TDF.API.NotificationDelivery
     TDF.Chat.Delivery
+    TDF.Server.NotificationDelivery
     TDF.API.SocialProfiles
     TDF.Social.Profiles
     TDF.API.SocialRelationships
