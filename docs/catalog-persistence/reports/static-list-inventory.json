@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-21T21:39:47.973Z",
+  "generatedAt": "2026-11-21T22:25:03.239Z",
   "repositoryRoot": ".",
   "filesScanned": 2840,
   "candidateCount": 1491,
@@ -5035,7 +5035,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "49a9f35f9cdcafd3580c",
+      "id": "6115ea51cec87dbc2efd",
       "file": "scripts/__tests__/catalog-list-audit.test.mjs",
       "sourceKind": "test",
       "surface": "automation",
@@ -5046,10 +5046,9 @@
       "values": [
         "b99ce783caa8446920c5950f5111865e7f05cfa3",
         "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1",
-        "0f5ac50a3746709827bd58978138307005a0f8c7",
         "5a81672285dc9c03130fc9fd8355e2b4c58e9e12"
       ],
-      "valueCount": 4,
+      "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
         6556
@@ -5064,8 +5063,8 @@
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing the test-reference revisions can omit historical preservation checks. These values select no production catalog, migration or provider authority.",
-      "justification": "The exact four Git revisions retain the two original qualified UX/storage parents and additionally bind the qualified combined checkpoint and latest protected main. This expands the existing whole-review/schema preservation guard without removing any of its original assertions. These are immutable test provenance inputs, not runtime identities or independent approval.",
+      "risk": "Changing this test-only reference can omit a preservation assertion. It selects no production catalog values and grants no runtime, migration or provider authority.",
+      "justification": "These exact three published Git revisions identify the qualified UX parent, merged storage main and latest protected main for immutable SQL, schema-prefix and whole-review preservation assertions. They are bounded test inputs, not production identities or an approval bypass.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
