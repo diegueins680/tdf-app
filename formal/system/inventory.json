@@ -11387,13 +11387,13 @@
     {
       "id": "SURFACE-b584e0770511a16a",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
-      "sha256": "769a23d6403d4c2cd9d9e31c676e4d9a4174c3057b381f4ca374ceb0d78f0e59",
+      "sha256": "f62fd82553679bd61d98babfb732c8a3715b2f3d0ea0fb145147daf3c426139a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-bf79c7904e71c2d9",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-      "sha256": "6c9bc2d583f30483444f06277351d1324cf49e1a22b10780a4f7b025796a74d4",
+      "sha256": "086e47d05d9f0a038fb6cbe875900aca96d67e1a71ee359913943eef463a0a99",
       "semanticConformance": "not-established-by-discovery"
     },
     {

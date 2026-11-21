@@ -644,6 +644,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Expediente de inscripción');
+      const whatsappLink = document.body.querySelector<HTMLAnchorElement>('a[href="https://wa.me/593999000111"]');
+      expect(whatsappLink?.textContent).toBe('+593999000111');
+      expect(whatsappLink?.getAttribute('target')).toBe('_blank');
       expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
       expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
       expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
