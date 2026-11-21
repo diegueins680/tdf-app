@@ -10,7 +10,8 @@ export type HostedPaymentMethodLabel =
   | 'placetopay_card'
   | 'placetopay_bank_redirect'
   | 'placetopay_deuna_qr'
-  | 'payphone_wallet';
+  | 'payphone_wallet'
+  | 'payphone_card';
 
 export interface HostedPaymentMethodDefinition {
   label: HostedPaymentMethodLabel;
@@ -22,6 +23,7 @@ export const HOSTED_PAYMENT_METHODS: readonly HostedPaymentMethodDefinition[] = 
   { label: 'placetopay_card', provider: 'placetopay', paymentMethod: 'card' },
   { label: 'placetopay_bank_redirect', provider: 'placetopay', paymentMethod: 'bank_redirect' },
   { label: 'placetopay_deuna_qr', provider: 'placetopay', paymentMethod: 'deuna_qr' },
+  { label: 'payphone_card', provider: 'payphone', paymentMethod: 'card' },
   { label: 'payphone_wallet', provider: 'payphone', paymentMethod: 'payphone_wallet' },
 ];
 
@@ -93,4 +95,35 @@ export const safePlaceToPayRedirect = (rawUrl: string | null | undefined): strin
   } catch {
     return null;
   }
+};
+
+/**
+ * The PayPhone Button page the buyer is sent to, mirroring the backend's
+ * safePayPhoneRedirect: HTTPS on a PayPhone host, no credentials or port in
+ * the authority. Anything else is refused and nothing is opened.
+ */
+export function safePayPhoneRedirect(rawUrl: string | null | undefined): string | null {
+  if (!rawUrl) return null;
+  try {
+    const parsed = new URL(rawUrl);
+    const host = parsed.hostname.toLowerCase();
+    const payPhoneHost = host === 'payphonetodoesposible.com'
+      || host.endsWith('.payphonetodoesposible.com')
+      || host === 'payphone.app'
+      || host.endsWith('.payphone.app');
+    if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.port || !payPhoneHost) return null;
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
+/** Only each provider's own hosted checkout page may receive the buyer. */
+export const safeProviderRedirect = (
+  provider: string | null | undefined,
+  rawUrl: string | null | undefined,
+): string | null => {
+  if (provider === 'placetopay') return safePlaceToPayRedirect(rawUrl);
+  if (provider === 'payphone') return safePayPhoneRedirect(rawUrl);
+  return null;
 };

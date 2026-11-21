@@ -118,17 +118,12 @@ test('author compares offers, counters one and the final acceptance fills the cl
   // Counter the band at 1 250 USD.
   const bandCard = board.getByTestId('offer-card').filter({ hasText: 'Los Sintéticos' });
   await bandCard.getByRole('button', { name: 'Contraofertar' }).click();
-  const amountField = bandCard.getByLabel('Monto');
-  await expect(amountField).toBeVisible();
-  // The field sits in a Collapse that is still animating in; Firefox has
-  // dropped the first fill there, so fill until the value sticks.
-  await expect(async () => {
-    await amountField.fill('1250');
-    await expect(amountField).toHaveValue('1250', { timeout: 1_000 });
-  }).toPass({ timeout: 15_000 });
-  const sendCounter = bandCard.getByRole('button', { name: 'Enviar contraoferta' });
-  await expect(sendCounter).toBeEnabled();
-  // The form sits in a Collapse; wait for the request itself rather than racing the animation.
+  // Wait for the card's expanding form to finish moving before using its controls.
+  const counterForm = bandCard.locator('.MuiCollapse-entered form');
+  const amountField = counterForm.getByLabel('Monto');
+  await amountField.fill('1250');
+  await expect(amountField).toHaveValue('1250');
+  const sendCounter = counterForm.getByRole('button', { name: 'Enviar contraoferta' });
   await Promise.all([
     page.waitForRequest((request) => request.url().includes('/counter') && request.method() === 'POST'),
     sendCounter.click(),

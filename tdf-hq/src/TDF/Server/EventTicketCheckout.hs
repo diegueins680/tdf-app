@@ -20,6 +20,8 @@ module TDF.Server.EventTicketCheckout
   , ticketUnverifiedCaptureRefusal
   ) where
 
+import qualified TDF.Commerce.DatafastClientIP as ClientIP
+
 import           Control.Exception
   ( SomeAsyncException, SomeException, fromException, throwIO, try )
 import           Control.Monad (forM, forM_, unless, void, when)
@@ -65,6 +67,7 @@ import qualified TDF.Models as Models
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Routes.EventTickets as Routes
 import qualified TDF.Ticketing.Inventory as Inventory
+import           TDF.Ticketing.LookupToken (deriveTicketLookupToken)
 import qualified TDF.Ticketing.Transfer as Transfer
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Server.PaymentAvailability as PaymentAvailability
@@ -181,12 +184,6 @@ loadTicketLookupTokenSecret = do
     Just secret | BS.length secret >= 32 -> pure secret
     _ -> throwError err503
       { errBody = "Secure guest ticket lookup is not configured in this environment" }
-
-deriveTicketLookupToken :: BS.ByteString -> Text -> Int64 -> Either Text Text
-deriveTicketLookupToken secret idempotencyKey eventId
-  | BS.length secret < 32 = Left "Ticket lookup secret must contain at least 32 bytes"
-  | otherwise = Right $ hmacSha256Text secret
-      ("event-ticket-order-lookup:" <> idempotencyKey <> ":" <> T.pack (show eventId))
 
 validatePositiveKey :: Text -> Int64 -> Either ServerError Int64
 validatePositiveKey fieldName value
@@ -1361,8 +1358,9 @@ createPublicEventTicketDatafastCheckout
   :: Int64
   -> Int64
   -> Maybe Text
+  -> ClientIP.DatafastClientRequest
   -> AppM APITypes.DatafastCheckoutDTO
-createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken = do
+createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken clientRequest = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
   requireTicketSalesOpen context
   when (tpcCheckoutStatus context == "paid") $
@@ -1371,18 +1369,24 @@ createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken = do
   (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireTicketProvider context
     (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
-  attempt <- beginSalesGatedTicketPaymentAttempt context Checkout.ProviderDatafast
-    Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"
   existing <- loadTicketProviderBinding context Checkout.ProviderDatafast
     (ServiceStorefront.sdfEntityId datafast) "checkout"
-  (checkoutId, widgetUrl) <- case existing of
-    Just (storedCheckoutId, _) -> pure
+  preflight <- maybe
+    (Right <$> ServiceStorefront.loadDatafastClientIP clientRequest) (pure . Left) existing
+  attempt <- beginSalesGatedTicketPaymentAttempt context Checkout.ProviderDatafast
+    Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"
+  checkoutRequest <- ServiceStorefront.recheckDatafastCheckout
+    (loadTicketProviderBinding context Checkout.ProviderDatafast
+      (ServiceStorefront.sdfEntityId datafast) "checkout") preflight
+  (checkoutId, widgetUrl) <- case checkoutRequest of
+    Left (storedCheckoutId, _) -> pure
       ( storedCheckoutId
       , stripTrailingSlash (ServiceStorefront.sdfBaseUrl datafast)
           <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
       )
-    Nothing -> ServiceStorefront.requestDatafastCheckoutForService
-      (ticketReference context)
+    Right clientIP -> ServiceStorefront.requestDatafastCheckoutForService
+      (tpcCheckout context)
+      attempt clientIP
       (fromIntegral (tpcAmountMinor context))
       (tpcCurrency context)
       (tpcBuyerName context)
@@ -1452,9 +1456,11 @@ confirmPublicEventTicketDatafastStatus rawEventId rawOrderId mLookupToken rawRes
             (ServiceStorefront.sdfEnvironment datafast) resultCode
           pending = resultCode == "000.200.000"
       if success then do
-        case ServiceStorefront.validateDatafastSuccessfulPayment
-            (ticketReference context) (fromIntegral (tpcAmountMinor context))
-            (tpcCurrency context) providerStatus of
+        validation <- ServiceStorefront.validateBoundDatafastSuccessfulPayment
+          (tpcCheckout context) (ServiceStorefront.sdfEnvironment datafast)
+          (ServiceStorefront.sdfEntityId datafast) checkoutId
+          (fromIntegral (tpcAmountMinor context)) (tpcCurrency context) providerStatus
+        case validation of
           Left validationMessage -> do
             let actualAmount = ServiceStorefront.sdfpsAmount providerStatus
                   >>= either (const Nothing) (Just . fromIntegral)
