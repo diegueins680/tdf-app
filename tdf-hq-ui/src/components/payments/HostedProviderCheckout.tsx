@@ -7,13 +7,14 @@ import {
   Typography,
 } from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import PaymentAlternativesNotice from './PaymentAlternativesNotice';
 
 import { ApiError } from '../../api/client';
 import {
   createProviderPaymentSession,
   getProviderPaymentSession,
   HOSTED_PAYMENT_METHODS,
-  safePlaceToPayRedirect,
+  safeProviderRedirect,
   type HostedPaymentMethodDefinition,
   type HostedPaymentMethodLabel,
   type ProviderPaymentSession,
@@ -42,6 +43,9 @@ export interface HostedCheckoutContext {
 interface HostedProviderCheckoutProps {
   checkout?: HostedCheckoutContext | null;
   offeredMethods: readonly string[];
+  alternativeMethods?: readonly string[];
+  availabilityUnknown?: boolean;
+  paymentFailure?: { method?: string | null; needsVerification: boolean } | null;
   disabled?: boolean;
   english?: boolean;
   initialBuyerPhone?: string | null;
@@ -75,6 +79,7 @@ const methodCopy = (
     placetopay_card: ['Card · PlaceToPay', 'Tarjeta · PlaceToPay'],
     placetopay_bank_redirect: ['Online bank payment · PlaceToPay', 'Pago bancario en línea · PlaceToPay'],
     placetopay_deuna_qr: ['DeUna! QR · PlaceToPay', 'QR DeUna! · PlaceToPay'],
+    payphone_card: ['Card · PayPhone', 'Tarjeta · PayPhone'],
     payphone_wallet: ['PayPhone wallet', 'Billetera PayPhone'],
   };
   return copy[label][english ? 0 : 1];
@@ -121,8 +126,8 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
         severity: session.canRetryOrFallback ? 'warning' : 'error',
         message: session.canRetryOrFallback
           ? (english
-            ? 'The payment was declined before a charge was created. You may try again.'
-            : 'El pago fue rechazado antes de crear un cobro. Puedes reintentar.')
+            ? 'The payment was declined before a charge was created. You may choose another available method or try again.'
+            : 'El pago fue rechazado antes de crear un cobro. Puedes elegir otro método disponible o reintentar.')
           : (english
             ? 'The result needs review. Do not use another payment method.'
             : 'El resultado necesita revisión. No uses otro método de pago.'),
@@ -146,8 +151,8 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
         severity: 'info',
         message: session.provider === 'payphone'
           ? (english
-            ? 'Approve the request in PayPhone. TDF is waiting for verified provider confirmation.'
-            : 'Aprueba la solicitud en PayPhone. TDF espera la confirmación verificada del proveedor.')
+            ? 'Complete or approve the payment in PayPhone. TDF is waiting for verified provider confirmation.'
+            : 'Completa o aprueba el pago en PayPhone. TDF espera la confirmación verificada del proveedor.')
           : (english
             ? 'The payment is processing. TDF is waiting for verified provider confirmation.'
             : 'El pago está en proceso. TDF espera la confirmación verificada del proveedor.'),
@@ -158,6 +163,9 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
 export default function HostedProviderCheckout({
   checkout,
   offeredMethods,
+  alternativeMethods = offeredMethods,
+  availabilityUnknown = false,
+  paymentFailure,
   disabled = false,
   english = false,
   initialBuyerPhone,
@@ -327,23 +335,40 @@ export default function HostedProviderCheckout({
     return () => onSafetyLockChangeRef.current?.(false);
   }, [safetyLocked]);
 
-  if (methods.length === 0 && !pendingCreation && !selected && !session) return null;
+  if (methods.length === 0 && !pendingCreation && !selected && !session && !error && !paymentFailure) return null;
 
-  const navigate = navigateToProvider ?? ((url: string) => window.location.assign(url));
+  const navigate = (provider: ProviderPaymentSession['provider'], url: string) => {
+    if (navigateToProvider) {
+      navigateToProvider(url);
+      return;
+    }
+    if (provider !== 'payphone') {
+      window.location.assign(url);
+      return;
+    }
+    // PayPhone checks the referring origin. Keep the ticket document's private
+    // path and query under its existing referrer policy for all other requests.
+    const link = document.createElement('a');
+    link.href = url;
+    link.referrerPolicy = 'origin';
+    document.body.append(link);
+    link.click();
+    link.remove();
+  };
 
   const startPayment = async (method: HostedPaymentMethodDefinition) => {
     if (busy) return;
     const requestScope = recoveryScopeRef.current;
     const original = pendingCreation?.provider === method.provider
       && pendingCreation.paymentMethod === method.paymentMethod ? pendingCreation : null;
-    if (!original && (disabled || !methods.some((candidate) => candidate.label === method.label))) return;
+    if (!original && (disabled || availabilityUnknown || !methods.some((candidate) => candidate.label === method.label))) return;
     if (safetyLocked && selected?.label !== method.label) {
       setError(publicError(english, true));
       return;
     }
     const phone = original?.buyerPhone ?? digitsOnly(buyerPhone);
     const countryCode = original?.buyerCountryCode ?? digitsOnly(buyerCountryCode);
-    if (method.provider === 'payphone'
+    if (method.paymentMethod === 'payphone_wallet'
         && (phone.length < 6 || phone.length > 15
           || countryCode.length < 1 || countryCode.length > 3)) {
       setError(english
@@ -388,7 +413,7 @@ export default function HostedProviderCheckout({
         paymentMethod: method.paymentMethod,
         lookupToken: context.lookupToken,
         returnPath: context.returnPath,
-        ...(method.provider === 'payphone' ? {
+        ...(method.paymentMethod === 'payphone_wallet' ? {
           buyerPhone: phone,
           buyerCountryCode: countryCode,
         } : {}),
@@ -406,7 +431,7 @@ export default function HostedProviderCheckout({
         {
           provider: method.provider,
           paymentMethod: method.paymentMethod,
-          ...(method.provider === 'payphone' ? {
+          ...(method.paymentMethod === 'payphone_wallet' ? {
             buyerPhone: phone,
             buyerCountryCode: countryCode,
           } : {}),
@@ -431,7 +456,7 @@ export default function HostedProviderCheckout({
         clearProviderPaymentPending(context.checkoutId);
         setPendingCreation(null);
       }
-      if (next.provider === 'placetopay' && next.state === 'requires_customer_action') {
+      if (next.state === 'requires_customer_action') {
         if (!resumeSaved) {
           setPotentiallyAmbiguous(true);
           setError(english
@@ -439,14 +464,14 @@ export default function HostedProviderCheckout({
             : 'No se pudo guardar la recuperación segura. Permanece en esta página mientras TDF concilia el intento.');
           return;
         }
-        const redirect = safePlaceToPayRedirect(next.redirectUrl);
+        const redirect = safeProviderRedirect(next.provider, next.redirectUrl);
         if (!redirect) {
           setError(english
             ? 'The provider returned an unsafe redirect. Do not retry with another method; support must reconcile this attempt.'
             : 'El proveedor devolvió una redirección insegura. No reintentes con otro método; soporte debe conciliar este intento.');
           return;
         }
-        navigate(redirect);
+        navigate(next.provider, redirect);
       }
     } catch (startError) {
       if (recoveryScopeRef.current !== requestScope) return;
@@ -490,16 +515,29 @@ export default function HostedProviderCheckout({
   };
 
   const copy = session ? stateCopy(session, english) : null;
-  const existingRedirect = session?.provider === 'placetopay'
-    ? safePlaceToPayRedirect(session.redirectUrl)
-    : null;
+  const existingRedirect = safeProviderRedirect(session?.provider, session?.redirectUrl);
+  const showAlternatives = session?.state !== 'succeeded' && (
+    (Boolean(error) || Boolean(paymentFailure))
+    || session?.state === 'failed' || session?.state === 'confirmed_no_charge'
+  );
 
   return (
     <Stack spacing={1.5} component="section" aria-label={english ? 'Additional secure payment methods' : 'Métodos de pago seguros adicionales'}>
-      <Typography variant="subtitle2" fontWeight={800}>
-        {english ? 'More secure payment methods' : 'Más métodos de pago seguros'}
-      </Typography>
-      {methods.some((method) => method.provider === 'payphone') && (
+      {showAlternatives && (
+        <PaymentAlternativesNotice
+          methods={alternativeMethods}
+          availabilityUnknown={availabilityUnknown}
+          failedMethod={selected?.label ?? paymentFailure?.method}
+          blocked={safetyLocked || Boolean(paymentFailure?.needsVerification)}
+          english={english}
+        />
+      )}
+      {methods.length > 0 && (
+        <Typography variant="subtitle2" fontWeight={800}>
+          {english ? 'More secure payment methods' : 'Más métodos de pago seguros'}
+        </Typography>
+      )}
+      {methods.some((method) => method.paymentMethod === 'payphone_wallet') && (
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
           <TextField
             size="small"
@@ -529,7 +567,7 @@ export default function HostedProviderCheckout({
             <Button
               key={method.label}
               variant={method.provider === 'placetopay' ? 'contained' : 'outlined'}
-              disabled={disabled || busy || ((safetyLocked || blockedByAttempt) && !isSelected) || (Boolean(session) && isSelected)}
+              disabled={disabled || availabilityUnknown || busy || ((safetyLocked || blockedByAttempt) && !isSelected) || (Boolean(session) && isSelected)}
               onClick={() => void startPayment(method)}
             >
               {busy && isSelected ? <CircularProgress size={20} color="inherit" /> : methodCopy(method.label, english)}
@@ -545,7 +583,7 @@ export default function HostedProviderCheckout({
       {copy && <Alert severity={copy.severity}>{copy.message}</Alert>}
       {error && <Alert severity="warning">{error}</Alert>}
       {existingRedirect && session?.state === 'requires_customer_action' && (
-        <Button variant="contained" onClick={() => navigate(existingRedirect)} disabled={disabled || busy}>
+        <Button variant="contained" onClick={() => navigate(session.provider, existingRedirect)} disabled={disabled || busy}>
           {english ? 'Continue on the secure provider page' : 'Continuar en la página segura del proveedor'}
         </Button>
       )}
@@ -559,7 +597,7 @@ export default function HostedProviderCheckout({
         </Button>
       )}
       {session?.canRetryOrFallback && (session.state === 'failed' || session.state === 'confirmed_no_charge') && (
-        <Button variant="outlined" onClick={resetKnownNoCharge} disabled={disabled || busy}>
+        <Button variant="outlined" onClick={resetKnownNoCharge} disabled={disabled || availabilityUnknown || busy}>
           {english ? 'Choose another payment method' : 'Elegir otro método de pago'}
         </Button>
       )}

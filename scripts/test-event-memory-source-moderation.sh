@@ -21,6 +21,19 @@ const { buildMigrationBatchSql, expandMigrationIncludes }=await import(pathToFil
 const manifest=JSON.parse(await fs.readFile(path.join(root,'scripts/production-migrations.json'),'utf8'));
 const repair=manifest.migrations.findIndex(entry=>entry.id==='2026-10-25_event_memory_source_authorization');
 const prefix=repair<0?manifest.migrations:manifest.migrations.slice(0,repair);
+// The current schema guard also requires independent storage identity prerequisites.
+// Keep the later EventMemory authorization/privacy migrations outside this bootstrap.
+const storagePrerequisites=[
+ '2026-11-04_content_storage','2026-11-04_content_storage_drive',
+ '2026-11-04_content_storage_deletion','2026-11-04_content_storage_accounting',
+ '2026-11-04_content_storage_delete_capacity','2026-11-06_content_storage_security',
+ '2026-11-07_content_storage_identity_guards'
+];
+for(const id of storagePrerequisites) {
+ const entry=manifest.migrations.find(entry=>entry.id===id);
+ if(!entry) throw new Error(`Missing canonical storage prerequisite: ${id}`);
+ if(!prefix.some(existing=>existing.id===id)) prefix.push(entry);
+}
 // Keep the historical event-memory functions while satisfying the unchanged
 // current runtime guard with the independent, actual featured-track migration.
 // Its manifest entry supplies the canonical SQL and checksum; no dummy schema.

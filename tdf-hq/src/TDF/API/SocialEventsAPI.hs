@@ -23,6 +23,7 @@ module TDF.API.SocialEventsAPI (
     FinanceRoutes,
     LogisticsRoutes,
     EventAdminRoutes,
+    EventTicketSaleRoutes,
     IdParam,
     EventImageUploadForm (..),
     EventMemoryMediaUploadForm (..),
@@ -70,6 +71,8 @@ import TDF.DTO.SocialEventsDTO (
     EventAdminInvitationTokenDTO,
     EventAdminRosterDTO,
     EventCourtesyTicketDTO,
+    EventTicketSaleDTO,
+    EventTicketSaleRequestDTO,
     ArtistDTO,
     ArtistFollowRequest,
     ArtistFollowerDTO,
@@ -669,6 +672,15 @@ type EventAdminRoutes =
         :<|> "admin-invitations" :> "accept" :> ReqBody '[JSON] EventAdminInvitationTokenDTO :> Post '[JSON] EventAdminAccessDTO
         :<|> "events" :> Capture "eventId" Text :> "courtesy-tickets" :> ReqBody '[JSON] EventCourtesyTicketDTO :> Post '[JSON] TicketOrderDTO
 
+-- EVT-TICKET-SALE-001: an event manager asks to sell paid tickets under the
+-- standard terms; a strict administrator approves or declines the request.
+type EventTicketSaleRoutes =
+    "events" :> Capture "eventId" Text :> "ticket-sale" :> Get '[JSON] EventTicketSaleDTO
+        :<|> "events" :> Capture "eventId" Text :> "ticket-sale" :> "request" :> Post '[JSON] EventTicketSaleDTO
+        :<|> "ticket-sale-requests" :> Get '[JSON] [EventTicketSaleRequestDTO]
+        :<|> "ticket-sale-requests" :> Capture "requestId" Text :> "approve" :> Post '[JSON] EventTicketSaleDTO
+        :<|> "ticket-sale-requests" :> Capture "requestId" Text :> "decline" :> Post '[JSON] EventTicketSaleDTO
+
 type SocialEventsAPI =
     EventsRoutes
         :<|> EventCitiesRoutes
@@ -686,3 +698,4 @@ type SocialEventsAPI =
         :<|> LogisticsRoutes
         :<|> EventAdminRoutes
         :<|> MemoryInvitationRoutes
+        :<|> EventTicketSaleRoutes

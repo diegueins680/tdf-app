@@ -1,3 +1,4 @@
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import {
   Alert,
   Box,
@@ -45,10 +46,12 @@ export default function DomoQuoteCheckoutPage() {
   const { locale } = useLocalePreferences();
   const english = locale.toLowerCase().startsWith('en');
   const [quote, setQuote] = useState<PublicDomoQuote | null>(null);
+  const [quoteAvailabilityUnknown, setQuoteAvailabilityUnknown] = useState(true);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(validQuoteId && Boolean(lookupToken));
   const [busy, setBusy] = useState(false);
   const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
+  const [attemptedPaymentMethod, setAttemptedPaymentMethod] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelNote, setCancelNote] = useState('');
@@ -79,6 +82,7 @@ export default function DomoQuoteCheckoutPage() {
     const query = new URLSearchParams(location.search);
     const resourcePath = query.get('resourcePath') ?? query.get('id');
     setLoading(true);
+    setQuoteAvailabilityUnknown(true);
     setMessage(null);
     const request = resourcePath
       ? DomoQuotes.confirmDatafastStatus(quoteId, resourcePath, lookupToken)
@@ -86,11 +90,13 @@ export default function DomoQuoteCheckoutPage() {
     request
       .then((response) => {
         setQuote(response);
+        setCancellation(response.cancellation ?? null);
+        setQuoteAvailabilityUnknown(false);
         if (resourcePath) navigate(location.pathname, { replace: true });
         // A cancelled quote keeps its recorded outcome on the server. Replaying
         // the holder's cancellation is idempotent and returns that record
         // unchanged, so a reload shows what was collected, retained and owed.
-        if (response.quoteStatus === 'cancelled') {
+        if (response.quoteStatus === 'cancelled' && !response.cancellation) {
           DomoQuotes.cancelQuote(response.quoteId, lookupToken)
             .then((outcome) => setCancellation(outcome))
             .catch(() => setCancellation(null));
@@ -118,6 +124,7 @@ export default function DomoQuoteCheckoutPage() {
     setMessage(null);
     try {
       setQuote(await DomoQuotes.acceptQuote(quote.quoteId, lookupToken));
+      setQuoteAvailabilityUnknown(false);
     } catch {
       setMessage(english
         ? 'The quote could not be accepted. It remains unpaid and the hold may have expired.'
@@ -138,6 +145,7 @@ export default function DomoQuoteCheckoutPage() {
       setCancellation(outcome);
       setCancelOpen(false);
       setQuote(await DomoQuotes.getQuote(quote.quoteId, lookupToken));
+      setQuoteAvailabilityUnknown(false);
     } catch {
       setMessage(english
         ? 'The quote could not be cancelled. Nothing changed; if a payment is being verified, retry once it settles.'
@@ -148,6 +156,7 @@ export default function DomoQuoteCheckoutPage() {
   };
 
   const handleDatafast = async () => {
+    setAttemptedPaymentMethod('datafast');
     if (!quote || !lookupToken) return;
     setBusy(true);
     setMessage(null);
@@ -165,6 +174,7 @@ export default function DomoQuoteCheckoutPage() {
   };
 
   const handlePaypal = async () => {
+    setAttemptedPaymentMethod('paypal');
     if (!quote || !lookupToken || !paypalClientId) return;
     setBusy(true);
     setMessage(null);
@@ -188,9 +198,12 @@ export default function DomoQuoteCheckoutPage() {
     const script = document.createElement('script');
     script.src = datafastCheckout.dcWidgetUrl;
     script.async = true;
-    script.onerror = () => setMessage(english
+    script.onerror = () => {
+      setAttemptedPaymentMethod('datafast');
+      setMessage(english
       ? 'The hosted Datafast form did not load. No payment was confirmed.'
       : 'El formulario alojado de Datafast no cargó. No se confirmó ningún pago.');
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [datafastCheckout, datafastOpen, datafastWidgetKey, english]);
@@ -205,9 +218,12 @@ export default function DomoQuoteCheckoutPage() {
     script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=${encodeURIComponent(quote.currency)}`;
     script.async = true;
     script.onload = () => setPaypalReady(true);
-    script.onerror = () => setMessage(english
+    script.onerror = () => {
+      setAttemptedPaymentMethod('paypal');
+      setMessage(english
       ? 'PayPal did not load. No payment was confirmed.'
       : 'PayPal no cargó. No se confirmó ningún pago.');
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [english, paypalClientId, quote?.currency, quote?.paymentMethods]);
@@ -233,6 +249,7 @@ export default function DomoQuoteCheckoutPage() {
             lookupToken,
           );
           setQuote(response);
+          setQuoteAvailabilityUnknown(false);
           setPaypalOpen(false);
           setPaypalOrderId(null);
           setMessage(response.paymentStatus === 'paid' ? null : (english
@@ -275,7 +292,6 @@ export default function DomoQuoteCheckoutPage() {
   const expired = quote.quoteStatus === 'expired' || quote.paymentStatus === 'expired';
   const canAccept = ['sent', 'viewed'].includes(quote.quoteStatus) && !expired;
   const awaitingPayment = quote.quoteStatus === 'deposit_due' && !paid && !expired;
-  const cancelled = quote.quoteStatus === 'cancelled';
   const canCancel = !expired && !['cancelled', 'completed', 'expired'].includes(quote.quoteStatus) && quote.paymentStatus !== 'processing';
   const returnUrl = typeof window === 'undefined'
     ? ''
@@ -301,7 +317,7 @@ export default function DomoQuoteCheckoutPage() {
                   <Chip label={`${quote.guests} ${english ? 'guests' : 'invitados'}`} variant="outlined" />
                   <Chip label={quote.eventType} variant="outlined" />
                 </Stack>
-                {cancelled ? <Alert severity="info">{english
+                {quote.quoteStatus === 'cancelled' ? <Alert severity="info">{english
                   ? 'This quote was cancelled and the date was released. Any collected payment is handled by the recorded cancellation outcome below.'
                   : 'Esta cotización fue cancelada y la fecha quedó liberada. Cualquier pago cobrado se gestiona según el resultado de cancelación registrado abajo.'}</Alert>
                   : paid ? <Alert severity="success">{english
@@ -333,7 +349,7 @@ export default function DomoQuoteCheckoutPage() {
                 <Stack direction="row" justifyContent="space-between"><Typography fontWeight={800}>{english ? 'Total event quote' : 'Total cotizado'}</Typography><Typography fontWeight={800}>{money(quote.totalMinor, quote.currency)}</Typography></Stack>
                 <Stack direction="row" justifyContent="space-between"><Typography color="primary" fontWeight={900}>{english ? 'Initial deposit due' : 'Depósito inicial'}</Typography><Typography color="primary" fontWeight={900}>{money(quote.depositMinor, quote.currency)}</Typography></Stack>
                 <Stack direction="row" justifyContent="space-between"><Typography>{english ? 'Remaining balance' : 'Saldo restante'}</Typography><Typography>{money(quote.balanceMinor, quote.currency)}</Typography></Stack>
-                {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La retención vence'}: {date(quote.holdExpiresAt, quote.timezone)}.</Typography>}
+                {!paid && quote.quoteStatus !== 'cancelled' && <Typography color="text.secondary">{english ? 'Hold expires' : 'La retención vence'}: {date(quote.holdExpiresAt, quote.timezone)}.</Typography>}
                 {canAccept && <>
                   <FormControlLabel control={<Checkbox checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} />} label={english
                     ? `I accept the exact quote and terms version ${quote.termsVersion}. Acceptance does not mean payment.`
@@ -341,22 +357,23 @@ export default function DomoQuoteCheckoutPage() {
                   <Button variant="contained" disabled={!termsAccepted || busy} onClick={() => void handleAccept()}>{english ? 'Accept quote and choose deposit method' : 'Aceptar cotización y elegir método de depósito'}</Button>
                 </>}
                 {message && <Alert severity="warning">{message}</Alert>}
-                {cancellation && <Alert severity={cancellation.refundStatus === 'awaiting_operator' ? 'info' : 'success'}>
+                {cancellation && <Alert severity={cancellation.refundStatus === 'succeeded' || cancellation.refundDueMinor === 0 ? 'success' : 'info'}>
                   {english
                     ? `Quote cancelled. Collected: ${money(cancellation.depositCollectedMinor + cancellation.balanceCollectedMinor, cancellation.currency)}. Retained by policy: ${money(cancellation.retainedMinor, cancellation.currency)}. Refund due: ${money(cancellation.refundDueMinor, cancellation.currency)}.`
                     : `Cotización cancelada. Cobrado: ${money(cancellation.depositCollectedMinor + cancellation.balanceCollectedMinor, cancellation.currency)}. Retenido según política: ${money(cancellation.retainedMinor, cancellation.currency)}. Reembolso debido: ${money(cancellation.refundDueMinor, cancellation.currency)}.`}
-                  {cancellation.refundStatus === 'awaiting_operator' && (english
-                    ? ' An operator will issue the refund request; you will be contacted by email.'
-                    : ' Un operador emitirá la solicitud de reembolso; te contactaremos por correo.')}
+                  {cancellation.refundDueMinor > 0 && (cancellation.refundStatus === 'succeeded'
+                    ? (english ? ' Refund confirmed.' : ' Devolución confirmada.')
+                    : (english ? ' Refund pending confirmation. A request or approval does not mean the money has been returned.'
+                      : ' Devolución pendiente de confirmación. Una solicitud o aprobación no significa que el dinero haya sido devuelto.'))}
                 </Alert>}
                 {canCancel && !cancellation && <Button variant="text" color="error" disabled={busy} onClick={() => setCancelOpen(true)}>{english ? 'Cancel quote' : 'Cancelar cotización'}</Button>}
-                {awaitingPayment && quote.paymentMethods.length === 0 && <Alert severity="info">{english
+                {awaitingPayment && !quoteAvailabilityUnknown && quote.paymentMethods.length === 0 && <Alert severity="info">{english
                   ? 'No real payment provider is enabled. The date remains only temporarily held.'
                   : 'No hay un proveedor real habilitado. La fecha sigue únicamente retenida de forma temporal.'}</Alert>}
                 <Stack spacing={1.5}>
                   {awaitingPayment && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                    {quote.paymentMethods.includes('datafast') && <Button variant="contained" disabled={busy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
-                    {quote.paymentMethods.includes('paypal') && <Button variant="outlined" disabled={busy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
+                    {quote.paymentMethods.includes('datafast') && <Button variant="contained" disabled={quoteAvailabilityUnknown || busy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
+                    {quote.paymentMethods.includes('paypal') && <Button variant="outlined" disabled={quoteAvailabilityUnknown || busy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
                   </Stack>}
                   <HostedProviderCheckout
                     checkout={{
@@ -365,11 +382,16 @@ export default function DomoQuoteCheckoutPage() {
                       returnPath: `/domo-del-pululahua/cotizaciones/${quote.quoteId}`,
                     }}
                     offeredMethods={awaitingPayment ? quote.paymentMethods : []}
+                    alternativeMethods={awaitingPayment ? quote.paymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady)) : []}
+                    availabilityUnknown={quoteAvailabilityUnknown}
+                    paymentFailure={awaitingPayment && (message || quote.paymentStatus === 'failed')
+                      ? { method: attemptedPaymentMethod, needsVerification: quote.paymentStatus !== 'failed' } : null}
                     disabled={!awaitingPayment || busy || datafastOpen || paypalOpen}
                     english={english}
                     onSafetyLockChange={setHostedPaymentLocked}
                     onPaymentConfirmed={async () => {
                       setQuote(await DomoQuotes.getQuote(quote.quoteId, lookupToken));
+                      setQuoteAvailabilityUnknown(false);
                     }}
                   />
                 </Stack>
@@ -405,6 +427,12 @@ export default function DomoQuoteCheckoutPage() {
       <Dialog open={datafastOpen} onClose={() => setDatafastOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{english ? 'Pay deposit with Datafast' : 'Pagar depósito con Datafast'}</DialogTitle>
         <DialogContent dividers>
+          {message && <Alert severity="warning">{message}</Alert>}
+          {message && <PaymentAlternativesNotice availabilityUnknown={quoteAvailabilityUnknown}
+                methods={awaitingPayment ? quote.paymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady)) : []}
+                failedMethod={attemptedPaymentMethod}
+                blocked english={english}
+              />}
           <Stack spacing={1.5}>
             <Alert severity="info">{english
               ? 'Datafast hosts the card form. Returning here is not payment; the server verifies the exact provider resource, amount, currency, merchant, quote, and checkout.'
@@ -423,6 +451,12 @@ export default function DomoQuoteCheckoutPage() {
       <Dialog open={paypalOpen} onClose={() => setPaypalOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{english ? 'Pay deposit with PayPal' : 'Pagar depósito con PayPal'}</DialogTitle>
         <DialogContent dividers>
+          {message && <Alert severity="warning">{message}</Alert>}
+          {message && <PaymentAlternativesNotice availabilityUnknown={quoteAvailabilityUnknown}
+                methods={awaitingPayment ? quote.paymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady)) : []}
+                failedMethod={attemptedPaymentMethod}
+                blocked english={english}
+              />}
           <Stack spacing={1.5}>
             <Alert severity="info">{english
               ? 'PayPal approval is not payment success. TDF captures and verifies the immutable order on the server.'

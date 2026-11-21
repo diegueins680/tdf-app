@@ -1,3 +1,5 @@
+import PrivateAttachmentLink from '../components/PrivateAttachmentLink';
+import { storageFileIdFromUrl } from '../api/contentStorage';
 import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -7657,7 +7659,7 @@ export default function CourseRegistrationsAdminPage() {
                     return (
                       <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>
                         <Stack spacing={1}>
-                          {looksLikeImageResource(receipt.crrFileUrl, receipt.crrFileName) && (
+                          {!storageFileIdFromUrl(receipt.crrFileUrl) && looksLikeImageResource(receipt.crrFileUrl, receipt.crrFileName) && (
                             <Box
                               component="img"
                               src={receipt.crrFileUrl}
@@ -7673,8 +7675,9 @@ export default function CourseRegistrationsAdminPage() {
                           )}
                           <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" useFlexGap>
                             <Box>
-                              <Link
+                              <PrivateAttachmentLink
                                 href={receipt.crrFileUrl}
+                                fileName={receipt.crrFileName ?? receiptLabel}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 aria-label={`Abrir comprobante ${receiptLabel} en una pestaña nueva`}
@@ -7686,7 +7689,7 @@ export default function CourseRegistrationsAdminPage() {
                               >
                                 {receiptLabel}
                                 <OpenInNewIcon sx={{ fontSize: 16 }} />
-                              </Link>
+                              </PrivateAttachmentLink>
                               {receiptCreatedLabel && (
                                 <Typography variant="caption" color="text.secondary">
                                   Subido: {receiptCreatedLabel}
@@ -9602,8 +9605,9 @@ export default function CourseRegistrationsAdminPage() {
                                       {entry.crfNotes}
                                     </MarkdownText>
                                     {entry.crfAttachmentUrl && (
-                                      <Link
+                                      <PrivateAttachmentLink
                                         href={entry.crfAttachmentUrl}
+                                        fileName={entry.crfAttachmentName ?? followUpAttachmentLabel}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         aria-label={`Abrir adjunto ${followUpAttachmentLabel} en una pestaña nueva`}
@@ -9614,7 +9618,7 @@ export default function CourseRegistrationsAdminPage() {
                                           <OpenInNewIcon sx={{ fontSize: 16 }} />
                                           <span>{followUpAttachmentLabel}</span>
                                         </Stack>
-                                      </Link>
+                                      </PrivateAttachmentLink>
                                     )}
                                   </Stack>
                                 </Paper>

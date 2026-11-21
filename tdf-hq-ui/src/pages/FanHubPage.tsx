@@ -1,4 +1,4 @@
-import { getAuthSessionEpoch } from '../session/authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 import ArtistProfileLink from '../components/ArtistProfileLink';
 import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
 import { buildArtistPublicPath } from '../utils/artistIdentity';

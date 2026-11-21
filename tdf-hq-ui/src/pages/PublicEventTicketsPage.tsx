@@ -1,3 +1,4 @@
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import MarkdownText from '../components/MarkdownText';
 import {
   Alert,
@@ -69,6 +70,12 @@ const saveLookupToken = (eventId: number, orderId: number, token: string) => {
   }
 };
 
+// The confirmation email links to the order with its key after "#acceso=". A
+// fragment is not sent with the page request, and analytics drops it; the page
+// keeps the key like one from a purchase on this device and clears the address.
+const emailedLookupToken = (hash: string): string | null =>
+  /^#acceso=([0-9a-f]{64})$/.exec(hash)?.[1] ?? null;
+
 const loadLookupToken = (eventId: number, orderId: number): string | null => {
   try {
     return window.localStorage.getItem(lookupStorageKey(eventId, orderId));
@@ -110,6 +117,7 @@ export default function PublicEventTicketsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
+  const [attemptedPaymentMethod, setAttemptedPaymentMethod] = useState<string | null>(null);
   // The order on screen could not be refreshed: its payment methods may be stale,
   // so none is offered until the server answers again.
   const [lookupFailed, setLookupFailed] = useState(false);
@@ -188,14 +196,20 @@ export default function PublicEventTicketsPage() {
       setLookupFailed(false);
       setPaymentUnconfirmed(false);
     }
+    const emailed = emailedLookupToken(location.hash);
+    if (emailed) {
+      liveLookup.current = { eventId, orderId: routeOrderId, token: emailed };
+      saveLookupToken(eventId, routeOrderId, emailed);
+      navigate(`${location.pathname}${location.search}`, { replace: true });
+    }
     const live = liveLookup.current;
     const token = live?.eventId === eventId && live.orderId === routeOrderId
       ? live.token : loadLookupToken(eventId, routeOrderId);
     if (!token) {
       setPaymentBusy(false);
       setMessage(english
-        ? 'Open this order in the browser where you bought your tickets, or use the ticket codes in your confirmation email.'
-        : 'Abre esta orden en el navegador donde compraste tus entradas o usa los códigos del correo de confirmación.');
+        ? 'Open this order from the link in your confirmation email, or in the browser where you bought your tickets.'
+        : 'Abre esta orden desde el enlace de tu correo de confirmación o en el navegador donde compraste tus entradas.');
       return;
     }
     const query = new URLSearchParams(location.search);
@@ -223,7 +237,7 @@ export default function PublicEventTicketsPage() {
       })
       .finally(() => { if (active) setPaymentBusy(false); });
     return () => { active = false; };
-  }, [english, eventId, location.pathname, location.search, lookupRevision, navigate, routeOrderId, validEventId, validOrderId]);
+  }, [english, eventId, location.hash, location.pathname, location.search, lookupRevision, navigate, routeOrderId, validEventId, validOrderId]);
 
   const title = storefront.data?.title ?? (english ? 'Event tickets' : 'Entradas para eventos');
   const description = storefront.data?.description
@@ -317,6 +331,7 @@ export default function PublicEventTicketsPage() {
   };
 
   const handleDatafast = async () => {
+    setAttemptedPaymentMethod('datafast');
     if (!checkout || !checkoutLookupToken) return;
     setPaymentBusy(true);
     setMessage(null);
@@ -341,6 +356,7 @@ export default function PublicEventTicketsPage() {
   };
 
   const handlePaypal = async () => {
+    setAttemptedPaymentMethod('paypal');
     if (!checkout || !checkoutLookupToken || !paypalClientId) return;
     setPaymentBusy(true);
     setMessage(null);
@@ -364,6 +380,7 @@ export default function PublicEventTicketsPage() {
   };
 
   const handleBankTransfer = async () => {
+    setAttemptedPaymentMethod('bank_transfer');
     if (!checkout || !checkoutLookupToken) return;
     setPaymentBusy(true);
     setMessage(null);
@@ -413,9 +430,12 @@ export default function PublicEventTicketsPage() {
     const script = document.createElement('script');
     script.src = datafastCheckout.dcWidgetUrl;
     script.async = true;
-    script.onerror = () => setMessage(english
+    script.onerror = () => {
+      setAttemptedPaymentMethod('datafast');
+      setMessage(english
       ? 'The hosted Datafast form did not load. No payment was confirmed.'
       : 'El formulario alojado de Datafast no cargó. No se confirmó ningún pago.');
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [datafastCheckout, datafastOpen, datafastWidgetKey, english]);
@@ -430,9 +450,12 @@ export default function PublicEventTicketsPage() {
     script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=${encodeURIComponent(checkout.quote.currency)}`;
     script.async = true;
     script.onload = () => setPaypalReady(true);
-    script.onerror = () => setMessage(english
+    script.onerror = () => {
+      setAttemptedPaymentMethod('paypal');
+      setMessage(english
       ? 'PayPal did not load. No payment was confirmed.'
       : 'PayPal no cargó. No se confirmó ningún pago.');
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [checkout?.paymentMethods, checkout?.quote.currency, english, orderStale, paypalClientId]);
@@ -754,6 +777,10 @@ export default function PublicEventTicketsPage() {
                             returnPath: `/eventos/${checkout.eventId}/orden/${checkout.orderId}`,
                           }}
                           offeredMethods={paid ? [] : offeredPaymentMethods}
+                          alternativeMethods={paid ? [] : offeredPaymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                          availabilityUnknown={orderStale}
+                          paymentFailure={!paid && (message || checkout.paymentStatus === 'failed')
+                            ? { method: attemptedPaymentMethod, needsVerification: paymentUnconfirmed || orderStale || checkout.paymentStatus !== 'failed' } : null}
                           disabled={paid || paymentBusy || datafastOpen || paypalOpen}
                           english={english}
                           initialBuyerPhone={buyerPhone}
@@ -799,6 +826,12 @@ export default function PublicEventTicketsPage() {
       <Dialog open={datafastOpen} onClose={() => setDatafastOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{english ? 'Pay with Datafast' : 'Pagar con Datafast'}</DialogTitle>
         <DialogContent dividers>
+          {message && <Alert severity="warning">{message}</Alert>}
+          {message && <PaymentAlternativesNotice availabilityUnknown={orderStale}
+                methods={orderStale || paid ? [] : offeredPaymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                failedMethod={attemptedPaymentMethod}
+                blocked english={english}
+              />}
           <Stack spacing={1.5}>
             <Alert severity="info">{english
               ? 'Complete payment in the secure form. Your tickets will appear here once payment is confirmed.'
@@ -817,6 +850,12 @@ export default function PublicEventTicketsPage() {
       <Dialog open={paypalOpen} onClose={() => setPaypalOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{english ? 'Pay with PayPal' : 'Pagar con PayPal'}</DialogTitle>
         <DialogContent dividers>
+          {message && <Alert severity="warning">{message}</Alert>}
+          {message && <PaymentAlternativesNotice availabilityUnknown={orderStale}
+                methods={orderStale || paid ? [] : offeredPaymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                failedMethod={attemptedPaymentMethod}
+                blocked english={english}
+              />}
           <Stack spacing={1.5}>
             <Alert severity="info">{english
               ? 'Complete payment with PayPal. Your tickets will appear here once payment is confirmed.'
