@@ -9,6 +9,8 @@
 
 module TDF.ServerExtra where
 
+import qualified TDF.ContentStorage as ContentStorage
+
 import           Control.Monad              (filterM, forM, unless, when, join, guard)
 import           Control.Applicative        ((<|>))
 import           Control.Exception          (SomeException, try)
@@ -3447,7 +3449,7 @@ paymentsServer user =
           mOrderKey  = toSqlKey <$> orderId
           mInvoiceKey= toSqlKey <$> invoiceId
       either throwError pure =<< withPool (validatePaymentReferences partyKey mOrderKey mInvoiceKey)
-      (ent, party) <- withPool $ do
+      (ent, party) <- ContentStorage.runReferenceMutation user $ do
         payId <- insert Payment
           { paymentInvoiceId   = mInvoiceKey
           , paymentOrderId     = mOrderKey
@@ -3463,6 +3465,9 @@ paymentsServer user =
           , paymentCreatedBy   = Just (auPartyId user)
           , paymentCreatedAt   = Just now
           }
+        ContentStorage.requireReference user
+          (fromMaybe "https://api.tdfrecords.net" (T.stripSuffix "/assets/serve" (resolveConfiguredAssetsBase cfg)))
+          "payment" (fromSqlKey payId) attachmentUrl
         payment <- getJustEntity payId
         party <- getJust partyKey
         pure (payment, party)

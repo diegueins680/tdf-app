@@ -10,6 +10,7 @@ module TDF.Server.PaymentAvailability
   , loadRuntimeReadyRoutes
   , publicPaymentRouteLabel
   , bankTransferInstructionsReady
+  , payPhoneButtonSplitReady
   , manualTransferInstructionsConfigured
   ) where
 
@@ -115,12 +116,16 @@ runtimeReady environment flow method activation = case paProvider activation of
     liftIO (runtimeProviderMethodConfigured environment Checkout.ProviderPlaceToPay
       method)
   Checkout.ProviderPayPhone -> do
-    -- The Button ('MethodCard') is configured only with its coding password
-    -- (ADR 0136); the wallet alone must not open the card route.
+    -- The Button ('MethodCard') is confirmed only by the query worker, so the
+    -- card route also needs that worker (ADR 0136); the wallet does not.
     configured <- liftIO (runtimeProviderMethodConfigured environment
       Checkout.ProviderPayPhone method)
     if configured && method == MethodCard
-      then buttonConfirmationReady
+      then do
+        codingPassword <- liftIO (nonEmptyEnv "PAYPHONE_CODING_PASSWORD")
+        if payPhoneButtonSplitReady flow codingPassword
+          then buttonConfirmationReady
+          else pure False
       else pure configured
   Checkout.ProviderStripe -> pure False
   Checkout.ProviderCash -> pure False
@@ -144,6 +149,13 @@ runtimeReady environment flow method activation = case paProvider activation of
             else pure False
         pure (worker && ready)
 
+-- A marketplace Button charge always carries a split (ADR 0136), and the
+-- adapter refuses a split without the store's coding password before any
+-- provider call. Other flows charge the Button without a split.
+payPhoneButtonSplitReady :: ProductFlow -> Bool -> Bool
+payPhoneButtonSplitReady flow codingPasswordConfigured =
+  flow /= FlowMarketplace || codingPasswordConfigured
+
 -- Merchandise-specific instructions must never enable another product's rail.
 bankTransferInstructionsReady :: ProductFlow -> Bool -> Bool -> Bool
 bankTransferInstructionsReady flow commerceReady merchReady =
@@ -166,6 +178,7 @@ publicPaymentRouteLabel route = case (routeProvider route, routeMethod route) of
     Just "placetopay_bank_redirect"
   (Checkout.ProviderPlaceToPay, MethodDeunaQr) -> Just "placetopay_deuna_qr"
   (Checkout.ProviderPayPhone, MethodPayPhoneWallet) -> Just "payphone_wallet"
+  (Checkout.ProviderPayPhone, MethodCard) -> Just "payphone_card"
   (Checkout.ProviderBankTransfer, MethodManualBankTransfer) ->
     Just "bank_transfer"
   _ -> Nothing

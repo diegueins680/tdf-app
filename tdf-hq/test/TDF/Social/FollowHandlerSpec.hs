@@ -1552,6 +1552,27 @@ spec = describe "social event handler helpers" $ do
                 expectationFailure
                     ("Expected malformed stored event metadata to be rejected, got: " <> show value)
 
+    it "resolves an administrator-selected artist owner on profile creation and edits" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        let user = (socialEventUser 1) {auRoles = [Admin], auModules = modulesForRoles [Admin]}
+            env = Env pool (error "artist creation does not need envConfig")
+            _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> artists :<|> _ = socialEventsServer user
+            _ :<|> create :<|> _ :<|> edit :<|> _ = artists
+            payload owner = ArtistDTO Nothing (Just owner) "Performer" [] [] Nothing Nothing Nothing Nothing Nothing
+            submit owner = runHandler $ runReaderT (create (payload owner)) env
+            reassign owner = runHandler $ runReaderT (edit "1" (payload owner)) env
+        fmap (either errHTTPCode (const 200)) (submit "unknown") `shouldReturn` 400
+        fmap (either errHTTPCode (const 200)) (submit "42") `shouldReturn` 422
+        runSqlPool (rawExecute "INSERT INTO party (id,display_name,is_org,created_at) VALUES (42,'Owner',0,CURRENT_TIMESTAMP)" []) pool
+        fmap (fmap artistPartyId) (submit "0042") `shouldReturn` Right (Just "42")
+        fmap (either errHTTPCode (const 200)) (submit "42") `shouldReturn` 409
+        runSqlPool (rawExecute "CREATE TABLE external_artist_ref(id INTEGER PRIMARY KEY, provider TEXT, external_id TEXT, artist_id INTEGER, last_seen_at TIMESTAMP)" []) pool
+        fmap (either errHTTPCode (const 200)) (reassign "43") `shouldReturn` 422
+        runSqlPool (rawExecute "INSERT INTO party (id,display_name,is_org,created_at) VALUES (43,'Owner 2',0,CURRENT_TIMESTAMP)" []) pool
+        fmap (fmap artistPartyId) (reassign "0043") `shouldReturn` Right (Just "43")
+
+
     it "rejects malformed stored artist social links before publishing artist DTO fallbacks" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool

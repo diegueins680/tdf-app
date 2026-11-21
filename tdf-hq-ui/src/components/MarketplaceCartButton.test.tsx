@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import { CART_META_KEY, CART_OPEN_EVENT, writeCartMeta } from '../features/marketplace/cartSummary';
+import { CART_META_KEY, CART_OPEN_EVENT, writeCartMeta } from '../services/cartSummary';
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => ({ session: null, loading: false, login: jest.fn(), logout: jest.fn(), setApiToken: jest.fn() }),

@@ -14,7 +14,7 @@ import {
   createProviderPaymentSession,
   getProviderPaymentSession,
   HOSTED_PAYMENT_METHODS,
-  safePlaceToPayRedirect,
+  safeProviderRedirect,
   type HostedPaymentMethodDefinition,
   type HostedPaymentMethodLabel,
   type ProviderPaymentSession,
@@ -79,6 +79,7 @@ const methodCopy = (
     placetopay_card: ['Card · PlaceToPay', 'Tarjeta · PlaceToPay'],
     placetopay_bank_redirect: ['Online bank payment · PlaceToPay', 'Pago bancario en línea · PlaceToPay'],
     placetopay_deuna_qr: ['DeUna! QR · PlaceToPay', 'QR DeUna! · PlaceToPay'],
+    payphone_card: ['Card · PayPhone', 'Tarjeta · PayPhone'],
     payphone_wallet: ['PayPhone wallet', 'Billetera PayPhone'],
   };
   return copy[label][english ? 0 : 1];
@@ -150,8 +151,8 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
         severity: 'info',
         message: session.provider === 'payphone'
           ? (english
-            ? 'Approve the request in PayPhone. TDF is waiting for verified provider confirmation.'
-            : 'Aprueba la solicitud en PayPhone. TDF espera la confirmación verificada del proveedor.')
+            ? 'Complete or approve the payment in PayPhone. TDF is waiting for verified provider confirmation.'
+            : 'Completa o aprueba el pago en PayPhone. TDF espera la confirmación verificada del proveedor.')
           : (english
             ? 'The payment is processing. TDF is waiting for verified provider confirmation.'
             : 'El pago está en proceso. TDF espera la confirmación verificada del proveedor.'),
@@ -336,7 +337,24 @@ export default function HostedProviderCheckout({
 
   if (methods.length === 0 && !pendingCreation && !selected && !session && !error && !paymentFailure) return null;
 
-  const navigate = navigateToProvider ?? ((url: string) => window.location.assign(url));
+  const navigate = (provider: ProviderPaymentSession['provider'], url: string) => {
+    if (navigateToProvider) {
+      navigateToProvider(url);
+      return;
+    }
+    if (provider !== 'payphone') {
+      window.location.assign(url);
+      return;
+    }
+    // PayPhone checks the referring origin. Keep the ticket document's private
+    // path and query under its existing referrer policy for all other requests.
+    const link = document.createElement('a');
+    link.href = url;
+    link.referrerPolicy = 'origin';
+    document.body.append(link);
+    link.click();
+    link.remove();
+  };
 
   const startPayment = async (method: HostedPaymentMethodDefinition) => {
     if (busy) return;
@@ -350,7 +368,7 @@ export default function HostedProviderCheckout({
     }
     const phone = original?.buyerPhone ?? digitsOnly(buyerPhone);
     const countryCode = original?.buyerCountryCode ?? digitsOnly(buyerCountryCode);
-    if (method.provider === 'payphone'
+    if (method.paymentMethod === 'payphone_wallet'
         && (phone.length < 6 || phone.length > 15
           || countryCode.length < 1 || countryCode.length > 3)) {
       setError(english
@@ -395,7 +413,7 @@ export default function HostedProviderCheckout({
         paymentMethod: method.paymentMethod,
         lookupToken: context.lookupToken,
         returnPath: context.returnPath,
-        ...(method.provider === 'payphone' ? {
+        ...(method.paymentMethod === 'payphone_wallet' ? {
           buyerPhone: phone,
           buyerCountryCode: countryCode,
         } : {}),
@@ -413,7 +431,7 @@ export default function HostedProviderCheckout({
         {
           provider: method.provider,
           paymentMethod: method.paymentMethod,
-          ...(method.provider === 'payphone' ? {
+          ...(method.paymentMethod === 'payphone_wallet' ? {
             buyerPhone: phone,
             buyerCountryCode: countryCode,
           } : {}),
@@ -438,7 +456,7 @@ export default function HostedProviderCheckout({
         clearProviderPaymentPending(context.checkoutId);
         setPendingCreation(null);
       }
-      if (next.provider === 'placetopay' && next.state === 'requires_customer_action') {
+      if (next.state === 'requires_customer_action') {
         if (!resumeSaved) {
           setPotentiallyAmbiguous(true);
           setError(english
@@ -446,14 +464,14 @@ export default function HostedProviderCheckout({
             : 'No se pudo guardar la recuperación segura. Permanece en esta página mientras TDF concilia el intento.');
           return;
         }
-        const redirect = safePlaceToPayRedirect(next.redirectUrl);
+        const redirect = safeProviderRedirect(next.provider, next.redirectUrl);
         if (!redirect) {
           setError(english
             ? 'The provider returned an unsafe redirect. Do not retry with another method; support must reconcile this attempt.'
             : 'El proveedor devolvió una redirección insegura. No reintentes con otro método; soporte debe conciliar este intento.');
           return;
         }
-        navigate(redirect);
+        navigate(next.provider, redirect);
       }
     } catch (startError) {
       if (recoveryScopeRef.current !== requestScope) return;
@@ -497,9 +515,7 @@ export default function HostedProviderCheckout({
   };
 
   const copy = session ? stateCopy(session, english) : null;
-  const existingRedirect = session?.provider === 'placetopay'
-    ? safePlaceToPayRedirect(session.redirectUrl)
-    : null;
+  const existingRedirect = safeProviderRedirect(session?.provider, session?.redirectUrl);
   const showAlternatives = session?.state !== 'succeeded' && (
     (Boolean(error) || Boolean(paymentFailure))
     || session?.state === 'failed' || session?.state === 'confirmed_no_charge'
@@ -516,10 +532,12 @@ export default function HostedProviderCheckout({
           english={english}
         />
       )}
-      {methods.length > 0 && <Typography variant="subtitle2" fontWeight={800}>
-        {english ? 'More secure payment methods' : 'Más métodos de pago seguros'}
-      </Typography>}
-      {methods.some((method) => method.provider === 'payphone') && (
+      {methods.length > 0 && (
+        <Typography variant="subtitle2" fontWeight={800}>
+          {english ? 'More secure payment methods' : 'Más métodos de pago seguros'}
+        </Typography>
+      )}
+      {methods.some((method) => method.paymentMethod === 'payphone_wallet') && (
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
           <TextField
             size="small"
@@ -565,7 +583,7 @@ export default function HostedProviderCheckout({
       {copy && <Alert severity={copy.severity}>{copy.message}</Alert>}
       {error && <Alert severity="warning">{error}</Alert>}
       {existingRedirect && session?.state === 'requires_customer_action' && (
-        <Button variant="contained" onClick={() => navigate(existingRedirect)} disabled={disabled || busy}>
+        <Button variant="contained" onClick={() => navigate(session.provider, existingRedirect)} disabled={disabled || busy}>
           {english ? 'Continue on the secure provider page' : 'Continuar en la página segura del proveedor'}
         </Button>
       )}

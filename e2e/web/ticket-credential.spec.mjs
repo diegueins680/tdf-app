@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import axe from 'axe-core';
+import { ticketPageResponse } from '../../functions/_shared/ticket-page.mjs';
 
 // Browser rendering/keyboard/accessibility only. Responses are synthetic and
 // MUST NOT be reported as provider payment or purchase-to-check-in evidence.
@@ -57,4 +58,62 @@ test('Guest issued QR downloads on a narrow screen without installing the app @c
   expect(violations).toEqual([]);
   await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('PayPhone receives only the origin after opening and reloading a private ticket order @critical', async ({ page, baseURL }) => {
+  const origin = new URL(baseURL).origin;
+  const orderPath = '/eventos/41/orden/92';
+  const checkoutId = '9ecc9364-e7c2-4d61-8ecd-50762ad1c097';
+  const attemptId = '37122204-1ac3-402d-a948-d22bf7256f16';
+  const providerUrl = 'https://pay.payphone.app/Anonymous/Index?paymentId=synthetic';
+  await page.addInitScript(() => {
+    localStorage.setItem('tdf-hq-ui/locale', 'es');
+    localStorage.setItem('tdf:event-ticket-checkout:41:92', 'synthetic-order-capability');
+  });
+  await page.route('**/*', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.href === providerUrl) return route.fulfill({ body: 'Synthetic PayPhone checkout' });
+    if (request.isNavigationRequest() && url.origin === origin && url.pathname === orderPath) {
+      const asset = await route.fetch();
+      const response = await ticketPageResponse({
+        params: { eventId: '41', orderId: '92' },
+        next: async () => new Response(await asset.body(), { status: asset.status(), headers: asset.headers() }),
+      });
+      return route.fulfill({ status: response.status, headers: Object.fromEntries(response.headers), body: await response.text() });
+    }
+    if (!['fetch', 'xhr'].includes(request.resourceType())) {
+      return url.origin === origin ? route.continue() : route.abort();
+    }
+    const path = url.pathname.replace(/^\/api(?=\/)/, '');
+    if (path === '/session') return route.fulfill({ status: 401, json: {} });
+    if (path === '/public/events/41/tickets') return route.fulfill({ json: {
+      eventId: 41, title: 'Synthetic PayPhone event', startsAt: '2030-10-24T19:00:00Z',
+      timezone: 'America/Guayaquil', checkoutAvailable: true, tiers: [],
+    } });
+    if (path === '/public/events/41/ticket-orders/92') return route.fulfill({ json: {
+      eventId: 41, orderId: 92, checkoutId, paymentStatus: 'pending', fulfillmentStatus: 'reserved',
+      holdExpiresAt: '2030-10-24T18:00:00Z', paymentMethods: ['payphone_card'], tickets: [],
+      quote: { currency: 'USD', quantity: 1, unitPriceMinor: 2000, grossFaceValueMinor: 2000,
+        discountMinor: 0, netFaceValueMinor: 2000, buyerPlatformFeeMinor: 0,
+        organizerPlatformFeeMinor: 0, taxMinor: 0, checkoutTotalMinor: 2000,
+        organizerPayableMinor: 2000, platformFeeMinor: 0, termsVersion: 'test', policyVersion: 'test' },
+    } });
+    if (path === `/commerce/checkouts/${checkoutId}/payment-sessions`) {
+      expect(request.postDataJSON()).toEqual({ provider: 'payphone', paymentMethod: 'card' });
+      return route.fulfill({ json: { attemptId, provider: 'payphone', paymentMethod: 'card',
+        state: 'requires_customer_action', canRetryOrFallback: false, redirectUrl: providerUrl } });
+    }
+    if (path === '/health') return route.fulfill({ json: { status: 'ok', db: 'ok' } });
+    if (path.startsWith('/catalogs/')) return route.fulfill({ json: { catalogs: [], items: [] } });
+    return route.fulfill({ json: [] });
+  });
+
+  const url = `${orderPath}?private=synthetic-order-query`;
+  expect((await page.goto(url)).headers()['referrer-policy']).toBe('no-referrer');
+  expect((await page.reload()).headers()['referrer-policy']).toBe('no-referrer');
+  const providerRequest = page.waitForRequest(providerUrl);
+  await page.getByRole('button', { name: 'Tarjeta · PayPhone' }).click();
+  expect(await (await providerRequest).headerValue('referer')).toBe(`${origin}/`);
+  await expect(page).toHaveURL(providerUrl);
 });

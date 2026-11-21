@@ -6056,10 +6056,20 @@ paths:
         '404':
           description: Not found
   /drive/token:
+    delete:
+      tags: [Drive]
+      summary: Disconnect personal Google Drive
+      description: Erases this account's encrypted delegated credential. In-flight refreshes cannot restore it. Existing external files remain in the user's provider account. Provider-wide OAuth revocation is separately managed in Google permissions.
+      operationId: disconnectDrive
+      security:
+        - bearerAuth: []
+      responses:
+        '204': { description: Personal connection erased }
+        '401': { description: Current authenticated session required }
     post:
       tags: [Drive]
       summary: Exchange Google Drive OAuth code
-      description: Exchanges a Google OAuth code (PKCE) for Drive tokens.
+      description: Stores delegated Google credentials encrypted on the server and returns an owner-bound opaque TDFConnection handle. Provider access and refresh tokens are never returned. Legacy browser tokens require new consent.
       operationId: exchangeDriveToken
       security:
         - bearerAuth: [ ]
@@ -6082,7 +6092,7 @@ paths:
     post:
       tags: [Drive]
       summary: Refresh Google Drive access token
-      description: Refreshes a Google Drive access token using a refresh token.
+      description: Resolves the authenticated owner-bound TDFConnection handle; refreshes provider credentials inside the encrypted server vault when required. Raw Google refresh tokens are rejected.
       operationId: refreshDriveToken
       security:
         - bearerAuth: [ ]
@@ -12504,7 +12514,7 @@ components:
           allOf: [{ $ref: '#/components/schemas/PublicDomoCancellation' }]
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card] }
     PublicDomoPaypalCaptureRequest:
       type: object
       additionalProperties: false
@@ -12651,7 +12661,7 @@ components:
         quote: { $ref: '#/components/schemas/PublicEventTicketQuote' }
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, bank_transfer] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card, bank_transfer] }
         tickets:
           type: array
           description: Empty until fulfillment issues tickets after verified payment.
@@ -12848,7 +12858,7 @@ components:
           type: array
           description: Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown.
           uniqueItems: true
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, bank_transfer] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card, bank_transfer] }
         manualPayment:
           allOf: [{ $ref: '#/components/schemas/PublicBookingManualPayment' }]
           nullable: true
@@ -17733,7 +17743,7 @@ components:
           nullable: true
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card] }
         checkoutAvailable: { type: boolean }
     CoursePaypalCaptureRequest:
       type: object
@@ -17774,6 +17784,7 @@ components:
         refreshToken:
           type: string
     DriveTokenResponse:
+      description: Nonsecret TDFConnection descriptor. accessToken and refreshToken contain the same opaque owner-bound handle; neither contains a provider credential.
       type: object
       required: [accessToken, expiresIn]
       properties:
