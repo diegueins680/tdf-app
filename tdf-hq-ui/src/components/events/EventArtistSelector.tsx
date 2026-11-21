@@ -21,6 +21,9 @@ export default function EventArtistSelector({ artistIds, onChange, label = 'Arti
   const optionsQuery = useQuery({
     queryKey: ['event-artist-options', session?.partyId, search],
     queryFn: ({ signal }) => SocialEventsAPI.listArtists({ name: search || undefined, signal }),
+    // Keep a pointer target mounted while a search refreshes, but never borrow
+    // another signed-in principal's cached options.
+    placeholderData: (previous, previousQuery) => previousQuery?.queryKey[1] === session?.partyId ? previous : undefined,
     enabled: Boolean(session),
     retry: false,
   });

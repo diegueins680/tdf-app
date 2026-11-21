@@ -11,7 +11,7 @@
 -- and its reservation to @cancelled@ and, when an authenticated operator acts,
 -- create the refund request for exactly the obligation. A customer acting with
 -- the lookup token is not a party, so the obligation is recorded and surfaced
--- as an open reconciliation exception until an operator requests the refund;
+-- as an open reconciliation exception until the exact refund is verified;
 -- the refund store then requires a different party to approve it.
 --
 -- Nothing is written before every validation that can fail has passed, so a
@@ -23,7 +23,10 @@ module TDF.Commerce.DomoCancellationStore
   , DomoCancellationRecord (..)
   , approvedCancellationPolicy
   , cancelDomoQuote
+  , loadRecord
+  , domoPaymentAdmission
   , domoAttemptAdmission
+  , domoPaymentAttemptAdmission
   , cancellationRefundIdempotencyKey
   , cancellationReasonCode
   , refundObligationExceptionType
@@ -84,7 +87,7 @@ data DomoCancellationRecord = DomoCancellationRecord
   , dcrRefundDueMinor        :: !Int64
   , dcrCurrency              :: !Text
   , dcrRefundStatus          :: !Text
-    -- ^ none | awaiting_operator | requested
+    -- ^ none | awaiting_operator, or the linked canonical refund status
   , dcrRefundId              :: !(Maybe Text)
   , dcrReplayed              :: !Bool
     -- ^ the quote was already cancelled; the stored record is returned
@@ -100,7 +103,7 @@ cancellationRefundIdempotencyKey :: Text -> Text
 cancellationRefundIdempotencyKey quoteId = "domo-cancel:" <> quoteId
 
 -- | Reconciliation exception type carrying a customer cancellation's refund
--- obligation until an operator requests the refund.
+-- obligation until verified completion settles it.
 refundObligationExceptionType :: Text
 refundObligationExceptionType = "domo_cancellation_refund_due"
 
@@ -143,6 +146,10 @@ data LockedQuote = LockedQuote
 
 lockQuote :: Text -> SqlPersistT IO (Maybe LockedQuote)
 lockQuote quoteId = do
+  -- Cancellation and payment admission always acquire the runtime row before
+  -- its checkout. Do not depend on a join plan's row-mark acquisition order.
+  _ <- rawSql "SELECT id::text FROM domo_event_quote_runtime WHERE id=?::uuid FOR UPDATE"
+    [PersistText quoteId] :: SqlPersistT IO [Single Text]
   rows <- rawSql
     "SELECT runtime.quote_id::text, runtime.checkout_id::text, runtime.quote_status,\
     \ checkout.status, checkout.environment, runtime.starts_at, runtime.deposit_minor,\
@@ -169,9 +176,10 @@ loadRecord quoteId = do
     "SELECT runtime.quote_status, c.canceller, c.actor_type, c.policy_version, c.cancelled_at,\
     \ c.lead_days, c.in_progress, c.retained_basis_points, c.deposit_collected_minor,\
     \ c.balance_collected_minor, c.retained_minor, c.refund_due_minor, c.currency,\
-    \ c.refund_status, c.refund_id::text\
+    \ COALESCE(refund.status, c.refund_status), c.refund_id::text\
     \ FROM domo_quote_cancellation c\
     \ JOIN domo_event_quote_runtime runtime ON runtime.id = c.domo_quote_id\
+    \ LEFT JOIN commerce_refund refund ON refund.id = c.refund_id\
     \ WHERE c.domo_quote_id = ?::uuid"
     [PersistText quoteId]
     :: SqlPersistT IO
@@ -286,6 +294,7 @@ cancelDomoQuote CancellationRequest{..} = do
   case mLocked of
     Nothing -> pure (Left CancellationNotFound)
     Just locked -> do
+      inFlight <- hasUnverifiedCharge locked
       existing <- loadRecord crQuoteId
       case existing of
         Just record
@@ -297,7 +306,7 @@ cancelDomoQuote CancellationRequest{..} = do
               pure (Left (CancellationNotAllowed "Quote was cancelled before cancellation records existed"))
           | lqQuoteStatus locked `elem` ["completed", "expired"] ->
               pure (Left (CancellationNotAllowed ("Quote is " <> lqQuoteStatus locked <> " and cannot be cancelled")))
-          | lqCheckoutStatus locked == "processing" ->
+          | lqCheckoutStatus locked == "processing" || inFlight ->
               pure (Left (CancellationNotAllowed "A deposit payment is being verified; retry once it settles"))
           | otherwise -> cancelFresh locked
   where
@@ -337,18 +346,16 @@ cancelDomoQuote CancellationRequest{..} = do
                     Left message -> pure (Left (CancellationRefundRejected message))
                     Right attempt -> case crActor of
                       OperatorActor party -> do
-                        refundResult <- requestObligation locked attempt party (caRefundDueMinor assessment)
+                        refundResult <- requestObligation locked attempt party (caRefundDueMinor assessment) (cancellationReasonCode crCanceller)
                         case refundResult of
                           Left message -> pure (Left (CancellationRefundRejected message))
                           Right refund -> do
                             writeCancellation locked (Just version) assessment "requested" (Just refund)
+                            recordObligation locked attempt (caRefundDueMinor assessment)
                             finish
                       CustomerActor -> do
                         writeCancellation locked (Just version) assessment "awaiting_operator" Nothing
-                        Checkout.recordReconciliationException
-                          (paProvider attempt) (paEnvironment attempt) (paMerchantRef attempt)
-                          refundObligationExceptionType ("domo-quote:" <> crQuoteId) (paProviderRef attempt)
-                          (caRefundDueMinor assessment) Nothing (lqCurrency locked) crNow
+                        recordObligation locked attempt (caRefundDueMinor assessment)
                         finish
       where
         assessmentNoMoney = CancellationAssessment
@@ -366,7 +373,7 @@ cancelDomoQuote CancellationRequest{..} = do
       pure $ maybe (Left (CancellationNotAllowed "Cancellation record could not be reloaded"))
         (\r -> Right r { dcrReplayed = False }) record
 
-    requestObligation locked attempt party amount =
+    requestObligation locked attempt party amount reasonCode =
       Refund.requestSingleLineRefund Refund.RefundCreation
         { Refund.rcCheckout = Checkout.CheckoutReference (lqCheckoutId locked)
         , Refund.rcPaymentAttempt = Checkout.PaymentAttemptReference (paAttemptId attempt)
@@ -375,20 +382,28 @@ cancelDomoQuote CancellationRequest{..} = do
         , Refund.rcMerchantRef = paMerchantRef attempt
         , Refund.rcAmountMinor = amount
         , Refund.rcCurrency = lqCurrency locked
-        , Refund.rcReasonCode = cancellationReasonCode crCanceller
+        , Refund.rcReasonCode = reasonCode
         , Refund.rcIdempotencyKey = cancellationRefundIdempotencyKey crQuoteId
         , Refund.rcRequestedBy = party
         , Refund.rcCreatedAt = crNow
         }
 
-    -- An operator settles a customer cancellation's open obligation: the refund
-    -- request is created for the recorded amount and the exception resolved.
+    recordObligation locked attempt amount =
+      Checkout.recordReconciliationException
+        (paProvider attempt) (paEnvironment attempt) (paMerchantRef attempt)
+        refundObligationExceptionType ("domo-quote:" <> crQuoteId) (paProviderRef attempt)
+        amount Nothing (lqCurrency locked) crNow
+
+    -- Linking a request does not settle a financial obligation. The exception
+    -- stays open until canonical verified completion in the same transaction
+    -- as the ledger and credit note (domo refund lifecycle migration).
     settleObligation locked record party = do
       attemptResult <- loadPaidAttempt locked
       case attemptResult of
         Left message -> pure (Left (CancellationRefundRejected message))
         Right attempt -> do
           refundResult <- requestObligation locked attempt party (dcrRefundDueMinor record)
+            (if dcrCanceller record == "tdf" then "service_cancelled" else "customer_request")
           case refundResult of
             Left message -> pure (Left (CancellationRefundRejected message))
             Right refund -> do
@@ -397,14 +412,6 @@ cancelDomoQuote CancellationRequest{..} = do
                 \ refund_linked_at = ? WHERE domo_quote_id = ?::uuid AND refund_id IS NULL"
                 [ PersistText (Refund.refundReferenceId (Refund.rrReference refund))
                 , PersistUTCTime crNow, PersistText crQuoteId ]
-              rawExecute
-                "UPDATE commerce_reconciliation_exception SET status = 'resolved', resolved_at = ?,\
-                \ resolution_notes = ? WHERE exception_type = ? AND internal_reference = ?\
-                \ AND status IN ('open','assigned')"
-                [ PersistUTCTime crNow
-                , PersistText ("Refund requested: " <> Refund.refundReferenceId (Refund.rrReference refund))
-                , PersistText refundObligationExceptionType
-                , PersistText ("domo-quote:" <> crQuoteId) ]
               rawExecute
                 "INSERT INTO domo_quote_state_event(domo_quote_id, from_status, to_status, actor_type,\
                 \ reason_code, notes) VALUES (?::uuid, 'cancelled', 'cancelled', 'operator',\
@@ -465,3 +472,51 @@ cancelDomoQuote CancellationRequest{..} = do
             , "lead_days=" <> T.pack (show (caLeadDays assessment))
             , fromMaybe "" crNote ]))
         ]
+
+-- Called under the same quote/checkout locks as cancellation. A created
+-- capture is already in flight: HTTP has not necessarily returned yet.
+hasUnverifiedCharge :: LockedQuote -> SqlPersistT IO Bool
+hasUnverifiedCharge locked = do
+  rows <- rawSql
+    "SELECT EXISTS (SELECT 1 FROM commerce_payment_attempt WHERE checkout_id=?::uuid\
+    \ AND (operation='capture' OR provider='datafast')\
+    \ AND status NOT IN ('succeeded','cancelled'))"
+    [PersistText (lqCheckoutId locked)] :: SqlPersistT IO [Single Bool]
+  pure (rows /= [Single False])
+
+-- PaymentRuntime runs this guard after its save boundary, before inserting
+-- the attempt, and commits the attempt before releasing these locks. Checking
+-- the persisted attempt in cancellation closes the post-commit HTTP window.
+domoPaymentAdmission
+  :: Text -> Checkout.PaymentOperation -> SqlPersistT IO (Maybe Text)
+domoPaymentAdmission quoteId operation = do
+  target <- lockQuote quoteId
+  case target of
+    Just locked | lqQuoteStatus locked == "deposit_due"
+                , lqCheckoutStatus locked `elem` ["awaiting_payment", "processing", "failed"] ->
+      if operation /= Checkout.OperationCapture then pure Nothing else do
+        previous <- rawSql
+          "SELECT EXISTS (SELECT 1 FROM commerce_payment_attempt WHERE checkout_id=?::uuid\
+          \ AND operation='capture')"
+          [PersistText (lqCheckoutId locked)] :: SqlPersistT IO [Single Bool]
+        pure $ if previous == [Single False] then Nothing
+          else Just "Deposit capture already admitted; reconcile its outcome before retrying"
+    _ -> pure (Just "Domo quote is no longer payable")
+
+-- The shared payment bridge runs this after its save boundary and before any
+-- attempt/provider effect. Preserve both domain predicates under the same
+-- runtime -> checkout lock order and bind the context to that exact checkout.
+domoPaymentAttemptAdmission
+  :: Text -> Text -> Checkout.PaymentOperation -> SqlPersistT IO (Maybe Text)
+domoPaymentAttemptAdmission quoteId checkoutId operation = do
+  refusal <- domoPaymentAdmission quoteId operation
+  case refusal of
+    Just problem -> pure (Just problem)
+    Nothing -> do
+      bindings <- rawSql
+        "SELECT checkout_id::text FROM domo_event_quote_runtime WHERE id=?::uuid"
+        [PersistText quoteId] :: SqlPersistT IO [Single Text]
+      case bindings of
+        [Single actualCheckout] | actualCheckout == checkoutId ->
+          domoAttemptAdmission checkoutId
+        _ -> pure (Just "Domo quote payment context no longer matches its checkout")

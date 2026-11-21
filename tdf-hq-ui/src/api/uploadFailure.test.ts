@@ -7,6 +7,10 @@ it('distinguishes provider reconnection from a shared TDF outage', () => {
   expect(service.recovery).toBe('retry');
   expect(uploadFailureMessage(service)).not.toContain('synthetic-secret');
   expect(uploadFailureMessage(service)).not.toContain('Reautoriza');
+  const clientConfiguration = parseUploadFailure(503, '{"code":"storage_service_unavailable"}', 'user');
+  expect(clientConfiguration.code).toBe('storage_service_unavailable');
+  expect(clientConfiguration.recovery).toBe('retry');
+  expect(uploadFailureMessage(clientConfiguration)).toContain('almacenamiento de TDF');
 });
 it('keeps quota, network uncertainty and permissions distinct', () => {
   expect(parseUploadFailure(413, '{"code":"storage_quota_exceeded"}', 'server').code).toBe('storage_quota_exceeded');
