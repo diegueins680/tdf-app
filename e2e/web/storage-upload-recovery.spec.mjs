@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const profile = { username: 'synthetic', displayName: 'Artista de prueba', partyId: 10, roles: ['Artist'], modules: ['Packages'], apiToken: 'synthetic-app-token' };
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a53sAAAAASUVORK5CYII=', 'base64');
+const connectionHandle = 'tdf-vault-v1_00000000-0000-4000-8000-000000000010';
 const uploads = [];
 test.beforeEach(async ({ context }) => {
   uploads.length = 0;
@@ -18,7 +19,7 @@ test.beforeEach(async ({ context }) => {
     if (url.hostname !== '127.0.0.1') return route.abort();
     if (url.pathname === '/session') return route.fulfill({ json: profile });
     if (url.pathname === '/storage/me') return route.fulfill({ json: { allowanceBytes: 5_000_000_000, usedBytes: 0, reservedBytes: 0, revision: 0, defaultDestination: null, legacyUsageVerified: true } });
-    if (url.pathname === '/drive/token') return route.fulfill({ json: { accessToken: 'synthetic-provider-token', refreshToken: 'synthetic-refresh', expiresIn: 3600 } });
+    if (url.pathname === '/drive/token') return route.fulfill({ json: { accessToken: connectionHandle, refreshToken: connectionHandle, expiresIn: 3600, tokenType: 'TDFConnection' } });
     if (url.pathname === '/drive/upload') {
       uploads.push(request.postDataBuffer().toString('utf8'));
       if (uploads.length === 1 && !uploads[0].includes('google_drive')) return route.fulfill({ status: 503, json: { code: 'storage_service_unavailable' } });
