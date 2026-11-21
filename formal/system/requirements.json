@@ -19248,12 +19248,12 @@
     {
       "id": "COMMUNITY-FAN-RECOMMENDATION-001",
       "title": "Artist recommendations for a fan from shared followers",
-      "statement": "A signed-in fan reads the publicly listed artists they do not follow yet, ordered by how strongly the followers of the artists they follow also follow each one (sum of cosine similarities of follower sets), completed with the most followed artists when the evidence gives fewer than the requested number. Route: GET /fans/me/recommendations.",
+      "statement": "A signed-in fan reads the publicly listed artists they do not follow yet and are allowed to follow, ordered by how strongly the followers of the artists they follow also follow each one (sum of cosine similarities of follower sets), completed with the most followed artists when the evidence gives fewer than the requested number. Route: GET /fans/me/recommendations.",
       "domain": "COMMUNITY",
       "authority": "Owner request of 2026-11-21 to build item-to-item recommendations for the Fan Hub; the similarity measure, fallback and limits were chosen by the implementer and await owner review. formal/system/fan-recommendations.md.",
       "source": "formal/system/fan-recommendations.md",
       "contract": "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
-      "property": "For every returned artist a: listed(a) /\\ a \\notin followed(fan) /\\ a # fan; similar_fans entries precede popular ones and are ordered by score descending; score(a) = SUM over listed s \\in followed(fan) of min(shared(s,a), followers(s), followers(a)) / sqrt(followers(s) * followers(a)); at most limit artists, each once.",
+      "property": "For every returned artist a: listed(a) /\\ a \\notin followed(fan) /\\ a # fan /\\ (policyInstalled => followable(fan, a)); similar_fans entries precede popular ones and are ordered by score descending; score(a) = SUM over listed s \\in followed(fan) of min(shared(s,a), followers(s), followers(a)) / sqrt(followers(s) * followers(a)); at most limit artists, each once.",
       "actors": [
         "Fan"
       ],
@@ -19277,6 +19277,7 @@
       ],
       "forbiddenTransitions": [
         "Returning an artist that is not publicly listed, is already followed by the caller, or is the caller",
+        "Returning an artist the caller may not follow under the installed social-v2 follow policy (block, closed profile, organisation or inactive account)",
         "Naming a hidden artist as the reason for a recommendation",
         "Any write"
       ],
@@ -19284,7 +19285,7 @@
         "None; read-only."
       ],
       "authorization": "requireFanAccess; the caller's own party only, taken from the session.",
-      "privacy": "Reads the caller's follows and aggregate counts; no other fan's identity is read or returned. Hidden artists are neither returned nor used as evidence.",
+      "privacy": "Reads the caller's follows and aggregate counts; no other fan's identity is read or returned. Hidden artists are neither returned nor used as evidence. A block in either direction removes the artist from the caller's list where the follow policy is installed.",
       "concurrency": "Three aggregate reads in one transaction at the pool's default isolation; a shared count exceeding a follower count read at another instant is clamped.",
       "idempotency": "Read-only.",
       "failure": "401 without a session; 403 without Fan or Customer access. An out-of-range limit is clamped, not refused.",
@@ -19312,7 +19313,8 @@
       "ambiguity": [
         "Only follows are evidence; plays, favourites and RSVPs are not used.",
         "A single shared fan is enough to recommend; no minimum-support threshold is set.",
-        "No HTTP-level test runs the route against a fully migrated database."
+        "No HTTP-level test runs the route against a fully migrated database.",
+        "The follow-policy filter is exercised against a stand-in function with the migrated signature, not the migrated social_v2_profile_eligible itself."
       ],
       "conformance": {
         "classification": "PARTIAL",

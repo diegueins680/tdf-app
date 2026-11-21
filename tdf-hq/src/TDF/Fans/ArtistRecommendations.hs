@@ -32,6 +32,8 @@ module TDF.Fans.ArtistRecommendations
   , followedArtistsSql
   , coFollowSql
   , followerCountsSql
+  , followPolicyInstalledSql
+  , followableArtistsSql
   , loadArtistRecommendations
   ) where
 
@@ -43,6 +45,7 @@ import           Data.Maybe                    (fromMaybe)
 import           Data.Ord                      (Down (..))
 import qualified Data.Set                      as Set
 import           Data.Text                     (Text)
+import qualified Data.Text                     as T
 import           Database.Persist              (toPersistValue)
 import           Database.Persist.Sql          (Single (..), SqlPersistT, fromSqlKey, rawSql)
 
@@ -206,11 +209,29 @@ followerCountsSql :: Text
 followerCountsSql =
   "SELECT artist_party_id, count(*)::bigint FROM fan_follow GROUP BY artist_party_id"
 
+-- | Whether the caller-specific follow policy is installed (no parameters).
+-- Before the social-v2 migration it is absent and follows are admitted by
+-- public listing alone.
+followPolicyInstalledSql :: Text
+followPolicyInstalledSql =
+  "SELECT to_regprocedure('social_v2_profile_eligible(bigint,bigint[])') IS NOT NULL"
+
+-- | The subset of the given artists the fan may follow, by the same predicate
+-- 'TDF.Social.FanEffects.followArtist' applies (blocks in either direction,
+-- closed profiles, organisations and inactive accounts are refused). Two
+-- parameters: the fan and the artists as a PostgreSQL array literal.
+followableArtistsSql :: Text
+followableArtistsSql =
+  "SELECT profile_id FROM social_v2_profile_eligible(?, ?::bigint[])"
+
 -- | Recommendations for @fan@ from the current follow rows.
 --
--- Three aggregate reads in the caller's transaction: the fan's own follows,
--- the shared-fan counts between those and every other artist, and the follower
+-- Aggregate reads in the caller's transaction: the fan's own follows, the
+-- shared-fan counts between those and every other artist, and the follower
 -- count of each artist. No individual follower other than the fan is read.
+-- Where the follow policy is installed, an artist the fan may not follow is
+-- excluded before ranking, so the list never offers a follow that would be
+-- refused and the limit is filled with followable artists.
 loadArtistRecommendations
   :: MonadIO m
   => PartyId
@@ -222,7 +243,18 @@ loadArtistRecommendations fan limit = do
   coFollowRows <- rawSql coFollowSql [fanValue, fanValue, fanValue]
   followerRows <- rawSql followerCountsSql []
   let followed = [artistId | Single artistId <- followedRows]
-      excluded = Set.fromList (fromSqlKey fan : followed)
+      alreadyExcluded = Set.fromList (fromSqlKey fan : followed)
+      candidates = Set.toList (listed `Set.difference` alreadyExcluded)
+  policyRows <- rawSql followPolicyInstalledSql []
+  notFollowable <-
+    if policyRows /= [Single True] || null candidates
+      then pure Set.empty
+      else do
+        followableRows <-
+          rawSql followableArtistsSql [fanValue, toPersistValue (arrayLiteral candidates)]
+        let followable = Set.fromList [artistId | Single artistId <- followableRows]
+        pure (Set.fromList candidates `Set.difference` followable)
+  let excluded = alreadyExcluded `Set.union` notFollowable
       followers =
         Map.fromList
           [ (artistId, countToInt total)
@@ -238,3 +270,6 @@ loadArtistRecommendations fan limit = do
 
     countToInt :: Int64 -> Int
     countToInt = fromIntegral . max 0
+
+    arrayLiteral :: [Int64] -> Text
+    arrayLiteral ids = "{" <> T.intercalate "," (map (T.pack . show) ids) <> "}"

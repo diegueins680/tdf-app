@@ -43,6 +43,12 @@ CREATE TABLE fan_follow (
 -- 104 follow 1 and 3; fan 101 also follows 7; fan 105 follows only 4.
 INSERT INTO fan_follow (fan_party_id, artist_party_id) VALUES
   (100,1),(100,7),(101,1),(101,2),(101,7),(102,1),(102,2),(103,1),(103,3),(104,1),(104,3),(105,4);
+-- Stand-in for the follow policy of tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql with the
+-- same signature and result columns: here artist 3 has blocked fan 100, nobody else is refused.
+CREATE FUNCTION social_v2_profile_eligible(actor bigint, requested bigint[])
+RETURNS TABLE(profile_id bigint, ordinal bigint) LANGUAGE sql STABLE AS $$
+  SELECT r.id, r.ordinal FROM unnest(requested) WITH ORDINALITY AS r(id, ordinal)
+  WHERE NOT (actor = 100 AND r.id = 3) $$;
 """
 
 FAN, LONE_FAN, STRANGER = 100, 105, 999
@@ -50,6 +56,9 @@ EXPECTED_FOLLOWED = {FAN: [(1,), (7,)], LONE_FAN: [(4,)], STRANGER: []}
 # (followed artist, candidate, fans following both)
 EXPECTED_CO_FOLLOWS = {FAN: [(1, 2, 2), (1, 3, 2), (7, 2, 1)], LONE_FAN: [], STRANGER: []}
 EXPECTED_FOLLOWERS = [(1, 5), (2, 2), (3, 2), (4, 1), (7, 2)]
+# The array literal the Haskell loader builds for candidates 2, 3 and 4.
+CANDIDATES = "'{2,3,4}'"
+EXPECTED_FOLLOWABLE = {FAN: [(2,), (4,)], LONE_FAN: [(2,), (3,), (4,)]}
 
 
 def main():
@@ -58,21 +67,32 @@ def main():
     followed = extract('followedArtistsSql', 1)
     co_follows = extract('coFollowSql', 3)
     followers = extract('followerCountsSql', 0)
+    policy = extract('followPolicyInstalledSql', 0)
+    followable = extract('followableArtistsSql', 2)
     script = "\\set ON_ERROR_STOP 1\nBEGIN;\n" + FIXTURE
     for fan in (FAN, LONE_FAN, STRANGER):
         script += f"\\echo FOLLOWED {fan}\n{followed.replace('?', str(fan))} ORDER BY 1;\n"
         script += f"\\echo CO {fan}\n{co_follows.replace('?', str(fan))} ORDER BY 1, 2;\n"
-    script += f"\\echo FOLLOWERS\n{followers} ORDER BY 1;\nROLLBACK;\n"
+    script += f"\\echo FOLLOWERS\n{followers} ORDER BY 1;\n"
+    for fan in (FAN, LONE_FAN):
+        bound = followable.replace('?', str(fan), 1).replace('?', CANDIDATES, 1)
+        script += f"\\echo FOLLOWABLE {fan}\n{bound} ORDER BY 1;\n"
+    # The probe names the function unqualified, so it resolves through the test schema.
+    script += f"\\echo POLICY\nSELECT ({policy[len('SELECT '):]})::int;\n"
+    script += "DROP FUNCTION social_v2_profile_eligible(bigint, bigint[]);\n"
+    script += f"\\echo NOPOLICY\nSELECT ({policy[len('SELECT '):]})::int;\nROLLBACK;\n"
     out = subprocess.run(['psql', sys.argv[1], '-X', '-q', '-A', '-t', '-F', ','],
                          input=script, text=True, capture_output=True, check=True).stdout
     observed, section = {}, None
     for line in out.splitlines():
-        if re.fullmatch(r'(FOLLOWED|CO) \d+|FOLLOWERS', line):
+        if re.fullmatch(r'(FOLLOWED|CO|FOLLOWABLE) \d+|FOLLOWERS|POLICY|NOPOLICY', line):
             section = line
             observed[section] = []
         elif line.strip():
             observed[section].append(tuple(int(value) for value in line.split(',')))
-    expected = {'FOLLOWERS': EXPECTED_FOLLOWERS}
+    expected = {'FOLLOWERS': EXPECTED_FOLLOWERS, 'POLICY': [(1,)], 'NOPOLICY': [(0,)]}
+    for fan, rows in EXPECTED_FOLLOWABLE.items():
+        expected[f'FOLLOWABLE {fan}'] = rows
     for fan in (FAN, LONE_FAN, STRANGER):
         expected[f'FOLLOWED {fan}'] = EXPECTED_FOLLOWED[fan]
         expected[f'CO {fan}'] = EXPECTED_CO_FOLLOWS[fan]
@@ -82,7 +102,7 @@ def main():
     mine = {artist for (artist,) in EXPECTED_FOLLOWED[FAN]}
     if any(candidate in mine or seed == candidate or seed not in mine for seed, candidate, _ in observed[f'CO {FAN}']):
         raise SystemExit('Co-follow rows leak a followed artist')
-    print('Fan recommendation SQL checked: 3 fans,', len(observed[f'CO {FAN}']), 'shared-fan rows')
+    print('Fan recommendation SQL checked: 3 fans,', len(observed[f'CO {FAN}']), 'shared-fan rows, follow policy applied and absent')
 
 
 if __name__ == '__main__':

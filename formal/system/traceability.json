@@ -19249,12 +19249,12 @@
     {
       "id": "COMMUNITY-FAN-RECOMMENDATION-001",
       "title": "Artist recommendations for a fan from shared followers",
-      "statement": "A signed-in fan reads the publicly listed artists they do not follow yet, ordered by how strongly the followers of the artists they follow also follow each one (sum of cosine similarities of follower sets), completed with the most followed artists when the evidence gives fewer than the requested number. Route: GET /fans/me/recommendations.",
+      "statement": "A signed-in fan reads the publicly listed artists they do not follow yet and are allowed to follow, ordered by how strongly the followers of the artists they follow also follow each one (sum of cosine similarities of follower sets), completed with the most followed artists when the evidence gives fewer than the requested number. Route: GET /fans/me/recommendations.",
       "domain": "COMMUNITY",
       "authority": "Owner request of 2026-11-21 to build item-to-item recommendations for the Fan Hub; the similarity measure, fallback and limits were chosen by the implementer and await owner review. formal/system/fan-recommendations.md.",
       "source": "formal/system/fan-recommendations.md",
       "contract": "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
-      "property": "For every returned artist a: listed(a) /\\ a \\notin followed(fan) /\\ a # fan; similar_fans entries precede popular ones and are ordered by score descending; score(a) = SUM over listed s \\in followed(fan) of min(shared(s,a), followers(s), followers(a)) / sqrt(followers(s) * followers(a)); at most limit artists, each once.",
+      "property": "For every returned artist a: listed(a) /\\ a \\notin followed(fan) /\\ a # fan /\\ (policyInstalled => followable(fan, a)); similar_fans entries precede popular ones and are ordered by score descending; score(a) = SUM over listed s \\in followed(fan) of min(shared(s,a), followers(s), followers(a)) / sqrt(followers(s) * followers(a)); at most limit artists, each once.",
       "actors": [
         "Fan"
       ],
@@ -19278,6 +19278,7 @@
       ],
       "forbiddenTransitions": [
         "Returning an artist that is not publicly listed, is already followed by the caller, or is the caller",
+        "Returning an artist the caller may not follow under the installed social-v2 follow policy (block, closed profile, organisation or inactive account)",
         "Naming a hidden artist as the reason for a recommendation",
         "Any write"
       ],
@@ -19285,7 +19286,7 @@
         "None; read-only."
       ],
       "authorization": "requireFanAccess; the caller's own party only, taken from the session.",
-      "privacy": "Reads the caller's follows and aggregate counts; no other fan's identity is read or returned. Hidden artists are neither returned nor used as evidence.",
+      "privacy": "Reads the caller's follows and aggregate counts; no other fan's identity is read or returned. Hidden artists are neither returned nor used as evidence. A block in either direction removes the artist from the caller's list where the follow policy is installed.",
       "concurrency": "Three aggregate reads in one transaction at the pool's default isolation; a shared count exceeding a follower count read at another instant is clamped.",
       "idempotency": "Read-only.",
       "failure": "401 without a session; 403 without Fan or Customer access. An out-of-range limit is clamped, not refused.",
@@ -19313,7 +19314,8 @@
       "ambiguity": [
         "Only follows are evidence; plays, favourites and RSVPs are not used.",
         "A single shared fan is enough to recommend; no minimum-support threshold is set.",
-        "No HTTP-level test runs the route against a fully migrated database."
+        "No HTTP-level test runs the route against a fully migrated database.",
+        "The follow-policy filter is exercised against a stand-in function with the migrated signature, not the migrated social_v2_profile_eligible itself."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -29469,7 +29471,7 @@
     "scripts/test-event-raci-browser.sh": "1f5732fd0fd9fb56085843be0c3746d92dab1f337973447fec44adca6e8afbd5",
     "scripts/test-event-ticket-sale.sh": "c0c48f9127eaad19269847d29dafb7b056ba433936e81e96a32f252dc60c5c64",
     "scripts/test-fan-recommendations-postgres.sh": "e0499f45114c54a8cf3b46419b1b1c9f963a0799a27a7de46db5c0c94c07a38e",
-    "scripts/test-fan-recommendations-sql.py": "1bf581de9b2dccb17f59c77f2b8c1b3e112db6c42b697c2b79e9dc3555ae9024",
+    "scripts/test-fan-recommendations-sql.py": "e8e7bac3b429385c1225d7aa8d9a9709031606b978380770e43c4403c02a2690",
     "scripts/test-google-account-name-verifier.py": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
     "scripts/test-guarded-release.py": "072a3aea42d088aac1cb00825bf34c7f3d08ff9fff21c630017f2ee5c9977a74",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -30550,7 +30552,7 @@
     "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
     "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs": "1b3937abe97b188d3dcd1f330485332651295a5e75e65d14702091c193245d27",
     "tdf-hq/src/TDF/EventOperations/Server.hs": "52efa5b303a134cf22fdbe5df9240b6c53620664b9283982e4e29c4ee7cfeed6",
-    "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs": "d440cc41ebd345e23ee9d802c231357083f3c8a39c7aa7461119c0091cb92c25",
+    "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs": "5337ce7774dfe5e94936069062c4a9e5d657aebe2ccd829df87f832f49427c36",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
     "tdf-hq/src/TDF/Handlers/InputList.hs": "57565241bce5f077ef7703008e3dba09686952c804b5fee0910326f47cad42e3",
     "tdf-hq/src/TDF/Interactions/API.hs": "1c87397e99ddc44da1178cdb7e696a32966dc02760e58ea32863c162df88d58b",
@@ -30714,7 +30716,7 @@
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
     "tdf-hq/test/TDF/EventTicketSaleSpec.hs": "c0645218656951aee61012df54df63ec2f9128b8d787d6899fcd323bc90294dd",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
-    "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs": "06c1fc52749e819d87022f03274fede8ef8b7ea0be77d879196f25c34fbada56",
+    "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs": "5d5b8fccdd5f61ce7fdd84f8f342cea0463752abb8e330708a9d212b7dae9cfd",
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
@@ -57533,7 +57535,7 @@
     {
       "id": "SURFACE-298bcd9bf352449e",
       "path": "scripts/test-fan-recommendations-sql.py",
-      "sha256": "1bf581de9b2dccb17f59c77f2b8c1b3e112db6c42b697c2b79e9dc3555ae9024",
+      "sha256": "e8e7bac3b429385c1225d7aa8d9a9709031606b978380770e43c4403c02a2690",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79104,7 +79106,7 @@
     {
       "id": "SURFACE-a014c1742322a2bb",
       "path": "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
-      "sha256": "d440cc41ebd345e23ee9d802c231357083f3c8a39c7aa7461119c0091cb92c25",
+      "sha256": "5337ce7774dfe5e94936069062c4a9e5d657aebe2ccd829df87f832f49427c36",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83006,7 +83008,7 @@
     {
       "id": "SURFACE-590912916bfb765f",
       "path": "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs",
-      "sha256": "06c1fc52749e819d87022f03274fede8ef8b7ea0be77d879196f25c34fbada56",
+      "sha256": "5d5b8fccdd5f61ce7fdd84f8f342cea0463752abb8e330708a9d212b7dae9cfd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -91260,7 +91262,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "525c18c3912a119df3d5b36de04437868d50cf557ce0703fb4fdc42ebcef2ba7",
+      "sourceSha256": "51766d253f119b5c46e3b891494d83cf9f7a46c3d11cfae15683dd294d53426e",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -91288,7 +91290,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "525c18c3912a119df3d5b36de04437868d50cf557ce0703fb4fdc42ebcef2ba7",
+      "sourceSha256": "51766d253f119b5c46e3b891494d83cf9f7a46c3d11cfae15683dd294d53426e",
       "definition": {
         "states": [
           "absent",
@@ -91318,7 +91320,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "525c18c3912a119df3d5b36de04437868d50cf557ce0703fb4fdc42ebcef2ba7",
+      "sourceSha256": "51766d253f119b5c46e3b891494d83cf9f7a46c3d11cfae15683dd294d53426e",
       "definition": {
         "export": [
           "queued",

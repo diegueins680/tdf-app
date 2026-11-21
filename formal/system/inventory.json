@@ -6582,7 +6582,7 @@
     {
       "id": "SURFACE-298bcd9bf352449e",
       "path": "scripts/test-fan-recommendations-sql.py",
-      "sha256": "1bf581de9b2dccb17f59c77f2b8c1b3e112db6c42b697c2b79e9dc3555ae9024",
+      "sha256": "e8e7bac3b429385c1225d7aa8d9a9709031606b978380770e43c4403c02a2690",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18012,7 +18012,7 @@
     {
       "id": "SURFACE-a014c1742322a2bb",
       "path": "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
-      "sha256": "d440cc41ebd345e23ee9d802c231357083f3c8a39c7aa7461119c0091cb92c25",
+      "sha256": "5337ce7774dfe5e94936069062c4a9e5d657aebe2ccd829df87f832f49427c36",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19200,7 +19200,7 @@
     {
       "id": "SURFACE-590912916bfb765f",
       "path": "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs",
-      "sha256": "06c1fc52749e819d87022f03274fede8ef8b7ea0be77d879196f25c34fbada56",
+      "sha256": "5d5b8fccdd5f61ce7fdd84f8f342cea0463752abb8e330708a9d212b7dae9cfd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31380,7 +31380,7 @@
     },
     {
       "path": "formal/system/fan-recommendations.md",
-      "sha256": "ae6d848470948bf1aab3d89788ac573c65d35a35ab862a2a3788f1fca88537c6",
+      "sha256": "06c7488bb7fe6d51ca08ae348682750516cba30d613ab9589651fa5e6c41aa14",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32059,7 +32059,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "525c18c3912a119df3d5b36de04437868d50cf557ce0703fb4fdc42ebcef2ba7",
+      "sha256": "51766d253f119b5c46e3b891494d83cf9f7a46c3d11cfae15683dd294d53426e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

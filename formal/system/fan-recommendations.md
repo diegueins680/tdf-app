@@ -27,6 +27,12 @@ Item-to-item collaborative filtering over `fan_follow`:
   and only they count as evidence: a hidden artist the fan follows is never named.
 - **Exclusions.** Artists the fan already follows and the fan's own party are never
   returned.
+- **Follow policy.** Where the social-v2 follow policy is installed, an artist the
+  caller may not follow (a block in either direction, a closed profile, an organisation
+  or an inactive account, by `social_v2_profile_eligible`, the predicate `followArtist`
+  applies) is excluded before ranking and before the limit, so the list never offers a
+  follow that would be refused. Before that migration the predicate is absent and public
+  listing alone decides, as it does for follows.
 - **Privacy.** The handler reads the caller's follows and aggregate counts. No other
   fan's identity is read or returned. Follower lists of public artists are already
   public (`GET /fans/artists/{artistId}/fans`), so the answer discloses nothing those

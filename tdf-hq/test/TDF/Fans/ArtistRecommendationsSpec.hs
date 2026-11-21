@@ -84,6 +84,12 @@ spec = describe "fan artist recommendations (COMMUNITY-FAN-RECOMMENDATION-001)" 
     map recReason hiddenSeed `shouldBe` [Popular, Popular, Popular]
     map recArtistId hiddenSeed `shouldBe` [3, 4, 2]
 
+  it "never offers an artist the caller may not follow, and fills the limit with others" $ do
+    -- The loader adds unfollowable artists (for example a block) to the excluded set.
+    let blocked = Set.fromList [1, 2]
+        out = rankArtistRecommendations 2 everyone blocked followers rows
+    map recArtistId out `shouldBe` [3, 4]
+
   it "clamps a shared count that exceeds a follower count read at another instant" $ do
     let out =
           rankArtistRecommendations 1 (Set.fromList [1, 2]) (Set.fromList [1])
