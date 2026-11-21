@@ -8,6 +8,7 @@ const { uploadToDrive } = await import('./drive');
 class UploadRequest {
   static DONE = 4;
   static current: UploadRequest;
+  static response: Record<string, unknown>;
   withCredentials = false;
   readyState = 0;
   status = 0;
@@ -24,7 +25,7 @@ class UploadRequest {
     this.body = body;
     this.status = this.withCredentials || this.headers.has('Authorization') ? 200 : 401;
     this.responseText = this.status === 200
-      ? JSON.stringify({ duFileId: 'synthetic-cover', duPublicUrl: 'https://assets.test/smoke.png' })
+      ? JSON.stringify(UploadRequest.response)
       : 'Missing or invalid auth token';
     this.readyState = UploadRequest.DONE;
     this.onreadystatechange?.();
@@ -34,6 +35,7 @@ class UploadRequest {
 const original = globalThis.XMLHttpRequest;
 beforeEach(() => {
   authorization.mockReset();
+  UploadRequest.response = { duFileId: 'synthetic-cover', duPublicUrl: 'https://assets.test/smoke.png' };
   globalThis.XMLHttpRequest = UploadRequest as unknown as typeof XMLHttpRequest;
 });
 afterEach(() => { globalThis.XMLHttpRequest = original; });
@@ -60,4 +62,11 @@ it('uses the shared API resolver and preserves selected upload fields', async ()
   expect(UploadRequest.current.body?.get('folderId')).toBe('selected-folder');
   expect(UploadRequest.current.body?.get('name')).toBe('public-cover');
   expect(UploadRequest.current.body?.get('accessToken')).toBe('provider-token');
+});
+
+
+it('never promotes a private provider link into a public URL', async () => {
+  UploadRequest.response = { duFileId: 'private-file', duWebContentLink: 'https://drive.google.com/private-file', duPublicUrl: null };
+  const result = await uploadToDrive(new File(['private'], 'private.bin'));
+  expect(result.publicUrl).toBeUndefined();
 });

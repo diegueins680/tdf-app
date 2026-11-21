@@ -9,6 +9,8 @@ module TDF.Server.DomoQuoteCheckout
   , deriveDomoLookupToken
   ) where
 
+import qualified TDF.Commerce.DatafastClientIP as ClientIP
+
 import           Control.Exception
   ( SomeAsyncException, SomeException, fromException, throwIO, try )
 import           Control.Monad (forM_, unless, void, when)
@@ -1119,26 +1121,32 @@ ensureNoOtherActiveAttempt context provider = do
     throwError (conflict "Another online payment rail is active for this Domo deposit")
 
 createPublicDomoDatafastCheckout
-  :: Text -> Maybe Text -> AppM APITypes.DatafastCheckoutDTO
-createPublicDomoDatafastCheckout rawQuoteId mLookupToken = do
+  :: Text -> Maybe Text -> ClientIP.DatafastClientRequest -> AppM APITypes.DatafastCheckoutDTO
+createPublicDomoDatafastCheckout rawQuoteId mLookupToken clientRequest = do
   context <- requireDomoPaymentContext rawQuoteId mLookupToken
   when (dpcCheckoutStatus context == "paid") $
     throwError (conflict "This Domo deposit is already paid")
   ensureNoOtherActiveAttempt context Checkout.ProviderDatafast
   (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireDomoProvider context (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
-  attempt <- beginDomoPaymentAttempt context Checkout.ProviderDatafast
-    Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"
   existing <- loadDomoProviderBinding context Checkout.ProviderDatafast
     (ServiceStorefront.sdfEntityId datafast) "checkout"
-  (checkoutId, widgetUrl) <- case existing of
-    Just (storedCheckoutId, _) -> pure
+  preflight <- maybe
+    (Right <$> ServiceStorefront.loadDatafastClientIP clientRequest) (pure . Left) existing
+  attempt <- beginDomoPaymentAttempt context Checkout.ProviderDatafast
+    Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"
+  checkoutRequest <- ServiceStorefront.recheckDatafastCheckout
+    (loadDomoProviderBinding context Checkout.ProviderDatafast
+      (ServiceStorefront.sdfEntityId datafast) "checkout") preflight
+  (checkoutId, widgetUrl) <- case checkoutRequest of
+    Left (storedCheckoutId, _) -> pure
       ( storedCheckoutId
       , stripTrailingSlash (ServiceStorefront.sdfBaseUrl datafast)
           <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
       )
-    Nothing -> ServiceStorefront.requestDatafastCheckoutForService
-      (domoReference context) (fromIntegral (dpcAmountMinor context))
+    Right clientIP -> ServiceStorefront.requestDatafastCheckoutForService
+      (dpcCheckout context)
+      attempt clientIP (fromIntegral (dpcAmountMinor context))
       (dpcCurrency context) (dpcCustomerName context) (dpcCustomerEmail context)
       (dpcCustomerPhone context)
       `catchError` failDomoPaymentAttempt context attempt
@@ -1190,9 +1198,11 @@ confirmPublicDomoDatafastStatus rawQuoteId mLookupToken rawResourcePath = do
             (ServiceStorefront.sdfEnvironment datafast) resultCode
           pending = resultCode == "000.200.000"
       if success then do
-        case ServiceStorefront.validateDatafastSuccessfulPayment
-            (domoReference context) (fromIntegral (dpcAmountMinor context))
-            (dpcCurrency context) providerStatus of
+        validation <- ServiceStorefront.validateBoundDatafastSuccessfulPayment
+          (dpcCheckout context) (ServiceStorefront.sdfEnvironment datafast)
+          (ServiceStorefront.sdfEntityId datafast) checkoutId
+          (fromIntegral (dpcAmountMinor context)) (dpcCurrency context) providerStatus
+        case validation of
           Left validationMessage -> do
             let actualAmount = ServiceStorefront.sdfpsAmount providerStatus
                   >>= either (const Nothing) (Just . fromIntegral)
