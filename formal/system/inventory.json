@@ -9485,13 +9485,13 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "5a60ed2d3c0821733cc85d6fb61db40cc709d42282584d1f15e7a6453646338f",
+      "sha256": "be2a3097c38a19c8fab71e221a77f74d32999971f8d578b04dc74271ad8b762f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "9ce84c4ecc6b7f3e427f814310d7e2baf2817c4237e10a980cadb89fa5661970",
+      "sha256": "1c5b55003a6f5e7d666cfddfe7d3724f2f1b0b491085b5f62392d22578e2b409",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17927,7 +17927,7 @@
     {
       "id": "SURFACE-d333d9e42e7c8cfc",
       "path": "tdf-hq/src/TDF/Email.hs",
-      "sha256": "0442ae6f781099387961def41f352777b2d9fb56704499f58b7ba8275eb40357",
+      "sha256": "4787493c97d9073a7ab55d0e34f952ee67d21b986cdffcea441be23790341f45",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18389,7 +18389,7 @@
     {
       "id": "SURFACE-e6a81cd4686d612d",
       "path": "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs",
-      "sha256": "35a423537822ac29bb15ef0f34f2216208236acc30d018bc535eadbeb3784bc5",
+      "sha256": "4380e13a0b4f5c5231bb8659bcbac25b79e36b1efd441ed00695a94d04e653f7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31016,7 +31016,7 @@
     },
     {
       "path": "formal/system/bookings-routes.md",
-      "sha256": "33e82e20527869ed45d48519d89751dcaae5b90b23f7fedc7888dfb1903699e1",
+      "sha256": "44d34a834576dd78b345b32afd613e60e98e7241a09ba6ae0da96a67f453b0ef",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32003,7 +32003,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "471b9062d1c150c6eac7d336f6c3259252a057251793644741419ed9d48269df",
+      "sha256": "dd35f2d7de88790e2c7dc3c8fef1d68826dccf5fb223da46f33c33d76b11e974",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

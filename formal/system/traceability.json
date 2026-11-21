@@ -21814,7 +21814,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/bookings-routes.md.",
       "source": "formal/system/bookings-routes.md",
       "contract": "formal/system/bookings-routes.md",
-      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); only a newly created legacy tentative booking notifies: the assigned engineer by email, every active Admin, Manager and StudioManager by an in-app notification (public_booking_request, target booking) plus email and WhatsApp, and the customer by a receipt email stating the request neither holds the date nor confirms payment. Each delivery is best-effort and logged; a delivery failure never rejects the accepted request.",
+      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); only a newly created legacy tentative booking notifies: the assigned engineer by email, every active Admin, Manager and StudioManager by an in-app notification (public_booking_request, target booking) plus email and WhatsApp, and the customer by a receipt email stating the request is unconfirmed, records no payment and holds its slot tentatively until staff confirm or release it (the staff email says the same). The in-app rows are written before the response; emails and WhatsApp are sent on a background thread after it, so provider latency never delays or fails the accepted request. Each delivery is best-effort and logged.",
       "actors": [
         "Anonymous customer"
       ],
@@ -29739,8 +29739,8 @@
     "tdf-hq-ui/src/components/NotificationBell.tsx": "14f8f702675e5922530c6599ab0677ba2e6d084d809ac2d969410a3c054e6715",
     "tdf-hq-ui/src/components/NotificationNavigation.test.tsx": "9596ad73723f9a44acbed461617a5f03f5e0f40f968cc71b36b2534980d294d1",
     "tdf-hq-ui/src/components/PrivateAttachmentLink.tsx": "98b80a1937cfaf68bb86c04d2127f906c149e1c6d2b74fd0d779dfa552b3fc58",
-    "tdf-hq-ui/src/components/PublicBranding.test.tsx": "5a60ed2d3c0821733cc85d6fb61db40cc709d42282584d1f15e7a6453646338f",
-    "tdf-hq-ui/src/components/PublicBranding.tsx": "9ce84c4ecc6b7f3e427f814310d7e2baf2817c4237e10a980cadb89fa5661970",
+    "tdf-hq-ui/src/components/PublicBranding.test.tsx": "be2a3097c38a19c8fab71e221a77f74d32999971f8d578b04dc74271ad8b762f",
+    "tdf-hq-ui/src/components/PublicBranding.tsx": "1c5b55003a6f5e7d666cfddfe7d3724f2f1b0b491085b5f62392d22578e2b409",
     "tdf-hq-ui/src/components/PublicWelcome.tsx": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "0f61ba07e4d1c71af5f550af67ada13232f96b00104a7a6f353582991353db61",
     "tdf-hq-ui/src/components/RadioWidget.tsx": "ecb3980cf1338692699e0d95e528fa6e5a629d644a1fdb09a81bda9be12c7084",
@@ -30474,7 +30474,7 @@
     "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs": "79047936e9a4fff6cbf15767563a68cba32c1d4eaff754a2e6f18046615d3a43",
     "tdf-hq/src/TDF/Directory/Policy.hs": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
     "tdf-hq/src/TDF/DriveOAuthClient.hs": "3d5bb29922ad21c6bf618af565fba70cfe29b5c6fcca2272c8c61e3ee370c3ac",
-    "tdf-hq/src/TDF/Email.hs": "0442ae6f781099387961def41f352777b2d9fb56704499f58b7ba8275eb40357",
+    "tdf-hq/src/TDF/Email.hs": "4787493c97d9073a7ab55d0e34f952ee67d21b986cdffcea441be23790341f45",
     "tdf-hq/src/TDF/Email/Service.hs": "866dae2d41232316e5d74ef960b3b9a2ac2559f44e20fee4cfe6793c79b27cba",
     "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs": "1b3937abe97b188d3dcd1f330485332651295a5e75e65d14702091c193245d27",
     "tdf-hq/src/TDF/EventOperations/Server.hs": "52efa5b303a134cf22fdbe5df9240b6c53620664b9283982e4e29c4ee7cfeed6",
@@ -30541,7 +30541,7 @@
     "tdf-hq/src/TDF/Server/PaymentAvailability.hs": "b5c07724c67c4f02591abd0bec054547c47f45795f269b804318b7e85f062fae",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "d5129a96d1450d4c428ff8d6886abb1311116c24c43f40b8ae3e01327dfd3116",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "f42c6b0bf7913cf6f0a0deeae6aa6c14785644edf2d50d97dd840d1202080cae",
-    "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs": "35a423537822ac29bb15ef0f34f2216208236acc30d018bc535eadbeb3784bc5",
+    "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs": "4380e13a0b4f5c5231bb8659bcbac25b79e36b1efd441ed00695a94d04e653f7",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "315ba0aaff4bfa27d20e6f22758289a1524a65d3f64d882f541a5192006397ed",
@@ -63134,7 +63134,7 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "5a60ed2d3c0821733cc85d6fb61db40cc709d42282584d1f15e7a6453646338f",
+      "sha256": "be2a3097c38a19c8fab71e221a77f74d32999971f8d578b04dc74271ad8b762f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63162,7 +63162,7 @@
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "9ce84c4ecc6b7f3e427f814310d7e2baf2817c4237e10a980cadb89fa5661970",
+      "sha256": "1c5b55003a6f5e7d666cfddfe7d3724f2f1b0b491085b5f62392d22578e2b409",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78871,7 +78871,7 @@
     {
       "id": "SURFACE-d333d9e42e7c8cfc",
       "path": "tdf-hq/src/TDF/Email.hs",
-      "sha256": "0442ae6f781099387961def41f352777b2d9fb56704499f58b7ba8275eb40357",
+      "sha256": "4787493c97d9073a7ab55d0e34f952ee67d21b986cdffcea441be23790341f45",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -80525,7 +80525,7 @@
     {
       "id": "SURFACE-e6a81cd4686d612d",
       "path": "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs",
-      "sha256": "35a423537822ac29bb15ef0f34f2216208236acc30d018bc535eadbeb3784bc5",
+      "sha256": "4380e13a0b4f5c5231bb8659bcbac25b79e36b1efd441ed00695a94d04e653f7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -91095,7 +91095,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "471b9062d1c150c6eac7d336f6c3259252a057251793644741419ed9d48269df",
+      "sourceSha256": "dd35f2d7de88790e2c7dc3c8fef1d68826dccf5fb223da46f33c33d76b11e974",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -91123,7 +91123,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "471b9062d1c150c6eac7d336f6c3259252a057251793644741419ed9d48269df",
+      "sourceSha256": "dd35f2d7de88790e2c7dc3c8fef1d68826dccf5fb223da46f33c33d76b11e974",
       "definition": {
         "states": [
           "absent",
@@ -91153,7 +91153,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "471b9062d1c150c6eac7d336f6c3259252a057251793644741419ed9d48269df",
+      "sourceSha256": "dd35f2d7de88790e2c7dc3c8fef1d68826dccf5fb223da46f33c33d76b11e974",
       "definition": {
         "export": [
           "queued",
