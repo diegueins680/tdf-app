@@ -30517,7 +30517,7 @@
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "d8c8bd5a028e99f05395e9a2d916d22878ac4121864a3961b71e60a95e3b4af5",
     "tdf-hq/src/TDF/Server/DomoRefunds.hs": "6c520cd643346ad24be6ea7b02c1a6e76f4c407f7ab08176fbe48b47c7f9fd4c",
     "tdf-hq/src/TDF/Server/EventAdminDelegation.hs": "46d53f55d6b570e2dbdc7f077549a34d629cef8f157ee0cda991951c36456a2d",
-    "tdf-hq/src/TDF/Server/EventAttendees.hs": "89d2a5d85872b0edfc3abf7387f711527a6e6c7050558ce7ce1fe1ea69d0c6eb",
+    "tdf-hq/src/TDF/Server/EventAttendees.hs": "4e1b1f195ece4fab6899d969794534d51ec2ca5b7dde9d19e8862ff18151c9b9",
     "tdf-hq/src/TDF/Server/EventResearch.hs": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "9197361e1f562ba04d7a762eefa93e319e20fd49979afbb2612d2eb8ae826ff3",
     "tdf-hq/src/TDF/Server/EventTicketSale.hs": "add3221a1221ad632c6587688312757d525615adbd239e7eb7ed9d1d21cb3323",
@@ -30537,7 +30537,7 @@
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "315ba0aaff4bfa27d20e6f22758289a1524a65d3f64d882f541a5192006397ed",
     "tdf-hq/src/TDF/Server/SocialArtistOwnership.hs": "d6900b5226644c608988dc840a8138ee85973add27284f5763092d39ea50835f",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "c690f2c81eda0a86ba7e0dd9c06948ff20f2ed54bf37efd474f5e0c28dfe0b03",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "cb35d49f3edb69bac4d2adc09ce09bc93d8bcb54f16f2cbdb2e0d8b8795f4a5d",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/StripeTicketCapture.hs": "b2a93b8ef71726410abeb79ec0ec07ef8e96d845ada7d7c0a401fda9b5b7c842",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
@@ -80111,7 +80111,7 @@
     {
       "id": "SURFACE-58b9a744e966b17e",
       "path": "tdf-hq/src/TDF/Server/EventAttendees.hs",
-      "sha256": "89d2a5d85872b0edfc3abf7387f711527a6e6c7050558ce7ce1fe1ea69d0c6eb",
+      "sha256": "4e1b1f195ece4fab6899d969794534d51ec2ca5b7dde9d19e8862ff18151c9b9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -80590,7 +80590,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "c690f2c81eda0a86ba7e0dd9c06948ff20f2ed54bf37efd474f5e0c28dfe0b03",
+      "sha256": "cb35d49f3edb69bac4d2adc09ce09bc93d8bcb54f16f2cbdb2e0d8b8795f4a5d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

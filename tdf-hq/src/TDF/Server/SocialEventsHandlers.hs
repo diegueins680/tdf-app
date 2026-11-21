@@ -336,7 +336,7 @@ import TDF.Models
     , Party (..)
     , PartyId
     )
-import TDF.Server.EventAttendees (loadAttendees)
+import TDF.Server.EventAttendees (attendeesQuery)
 import TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
 import TDF.Server.SocialArtistOwnership (duplicateArtistOwner, ensureAvailableArtistOwner)
@@ -3847,9 +3847,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         Env{..} <- ask
         eventKey <- parseKeyOr400 "event" eventIdStr
         _ <- requireRsvpEventAccess eventKey False
-        unless (status `elem` ["accepted","maybe"] && maybe True (>= 0) after) $
-            throwError err400{errBody = "Invalid attendee filter"}
-        liftIO $ runSqlPool (loadAttendees eventKey currentPartyId status after) envPool
+        maybe (throwError err400{errBody = "Invalid attendee filter"}) (liftIO . (`runSqlPool` envPool)) (attendeesQuery eventKey currentPartyId status after)
 
     listRsvpsForOrganizer :: T.Text -> Maybe T.Text -> Maybe Int -> AppM RsvpAdminPageDTO
     listRsvpsForOrganizer eventIdStr mCursor mLimit = do

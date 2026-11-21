@@ -18292,7 +18292,7 @@
     {
       "id": "SURFACE-58b9a744e966b17e",
       "path": "tdf-hq/src/TDF/Server/EventAttendees.hs",
-      "sha256": "89d2a5d85872b0edfc3abf7387f711527a6e6c7050558ce7ce1fe1ea69d0c6eb",
+      "sha256": "4e1b1f195ece4fab6899d969794534d51ec2ca5b7dde9d19e8862ff18151c9b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18418,7 +18418,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "c690f2c81eda0a86ba7e0dd9c06948ff20f2ed54bf37efd474f5e0c28dfe0b03",
+      "sha256": "cb35d49f3edb69bac4d2adc09ce09bc93d8bcb54f16f2cbdb2e0d8b8795f4a5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {

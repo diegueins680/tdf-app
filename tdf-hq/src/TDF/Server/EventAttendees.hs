@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module TDF.Server.EventAttendees (loadAttendees) where
+module TDF.Server.EventAttendees (attendeesQuery, loadAttendees) where
 
 import qualified Data.Aeson as Aeson
 import Data.Int (Int64)
@@ -8,6 +8,14 @@ import qualified Data.Text as T
 import Database.Persist (PersistValue(..), toPersistValue)
 import Database.Persist.Sql (Single(..), SqlPersistT, rawSql)
 import TDF.Models.SocialEventsModels (SocialEventId)
+
+-- The roster is served only for the two counted statuses and a non-negative
+-- cursor; any other filter has no query.
+attendeesQuery :: SocialEventId -> T.Text -> T.Text -> Maybe Int64 -> Maybe (SqlPersistT IO Aeson.Value)
+attendeesQuery eventKey viewerPartyId status after
+    | status `elem` ["accepted", "maybe"] && maybe True (>= 0) after =
+        Just (loadAttendees eventKey viewerPartyId status after)
+    | otherwise = Nothing
 
 loadAttendees :: SocialEventId -> T.Text -> T.Text -> Maybe Int64 -> SqlPersistT IO Aeson.Value
 loadAttendees eventKey viewerPartyId status after = do
