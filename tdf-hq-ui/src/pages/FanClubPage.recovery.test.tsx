@@ -71,10 +71,20 @@ it.each([true, false])('offers the existing public artist page for a confirmed40
   mount();
   await screen.findByText('Club no disponible', { exact: true });
   expect(screen.getByRole('link', { name: 'Ver perfil del artista' }).getAttribute('href')).toBe('/artista/9');
+  expect(screen.queryByRole('link', { name: 'Editar mi perfil de artista' })).toBeNull();
   expect(screen.getByRole('link', { name: 'Volver a la comunidad' }).getAttribute('href')).toBe('/fans');
   expect(listClubFeed).not.toHaveBeenCalled();
   expect((signedIn ? getMyClub : getClub)).toHaveBeenCalledTimes(1);
   expect((signedIn ? getClub : getMyClub)).not.toHaveBeenCalled();
+});
+
+it('offers the artist their own profile editor when their club is unavailable', async () => {
+  getMyClub.mockRejectedValue(fail(404));
+  mount('/fans/clubs/8');
+  const editor = await screen.findByRole('link', { name: 'Editar mi perfil de artista' });
+  expect(editor.getAttribute('href')).toBe('/mi-artista');
+  expect(screen.getByRole('link', { name: 'Ver perfil del artista' }).getAttribute('href')).toBe('/artista/8');
+  expect(listClubFeed).not.toHaveBeenCalled();
 });
 
 it('waits for the club before requesting its authenticated feed', async () => {

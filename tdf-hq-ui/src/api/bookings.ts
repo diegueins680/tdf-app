@@ -76,6 +76,7 @@ export interface PublicBookingCheckoutDTO {
     | 'placetopay_bank_redirect'
     | 'placetopay_deuna_qr'
     | 'payphone_wallet'
+    | 'payphone_card'
     | 'bank_transfer'
   )[];
   manualPayment?: PublicBookingManualPaymentDTO | null;
