@@ -1880,6 +1880,38 @@ paths:
         '204': { description: RSVP absent after the idempotent operation }
         '401': { description: Authentication required }
         '429': { description: Mutation rate limit exceeded }
+  /social-events/events/{eventId}/attendees:
+    get:
+      tags: [Social events]
+      summary: List visible attendee profiles for one RSVP status
+      operationId: listEventAttendees
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+        - { name: status, in: query, required: true, schema: { type: string, enum: [accepted, maybe] } }
+        - { name: after, in: query, schema: { type: integer, format: int64, minimum: 0 } }
+      responses:
+        '200':
+          description: Up to 20 profiles visible to the viewer, ordered by stable RSVP identifier
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor]
+                properties:
+                  nextCursor: { type: string, nullable: true }
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, name, avatarUrl]
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        avatarUrl: { type: string, nullable: true }
+        '400': { description: Invalid status or cursor }
+        '401': { description: Authentication required }
+        '404': { description: Event is missing or inaccessible }
   /social-events/events/{eventId}/rsvp-summary:
     get:
       tags: [Social events]
@@ -12482,7 +12514,7 @@ components:
           allOf: [{ $ref: '#/components/schemas/PublicDomoCancellation' }]
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card] }
     PublicDomoPaypalCaptureRequest:
       type: object
       additionalProperties: false
@@ -12629,7 +12661,7 @@ components:
         quote: { $ref: '#/components/schemas/PublicEventTicketQuote' }
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, bank_transfer] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card, bank_transfer] }
         tickets:
           type: array
           description: Empty until fulfillment issues tickets after verified payment.
@@ -12826,7 +12858,7 @@ components:
           type: array
           description: Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown.
           uniqueItems: true
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, bank_transfer] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card, bank_transfer] }
         manualPayment:
           allOf: [{ $ref: '#/components/schemas/PublicBookingManualPayment' }]
           nullable: true
@@ -17711,7 +17743,7 @@ components:
           nullable: true
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card] }
         checkoutAvailable: { type: boolean }
     CoursePaypalCaptureRequest:
       type: object

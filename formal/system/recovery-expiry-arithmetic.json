@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "7c0ee9e661a11f56f2b9f109139f78ad19a1cd7235fb9ca286f1b00a423bb5c8",
+    "tdf-hq/tdf-hq.cabal": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -907,6 +907,33 @@
       "change": "Reconcile current protected main while retaining the reviewed StorageVault Cabal additions.",
       "semanticReview": "The StorageVault and DriveOAuthClient library modules and StorageSecuritySpec test module are registered, and the existing snapshot unix package is added to the library for storage filesystem locking. Removing those exact four lines reproduces current main Cabal bytes. No resolver, lock, version, flag, source path, compiler option or other dependency change exists. Every other pinned authorization/recovery source is byte-identical to current protected main. Obligation objects are unchanged. This author source-context review does not prove endpoint, private-reader, credential lifecycle or whole-system security and is not independent approval.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "d65017d10f16e8089c43b82bdbcacf3177d206f5",
+      "previousSha256": "a6a23d82214ca0e1119787d8b4a7ca969485a3cb57e9aab3e7661aa47ed08da5",
+      "currentSha256": "e77b6f8df740811c3cd7d868092c6c065294b0bc9c890f4accadba73be4d26db",
+      "change": "Register TDF.Server.SocialArtistOwnership in the backend library.",
+      "semanticReview": "Removing that registration reproduces the base manifest byte for byte. The authorization and recovery inputs retain the reviewed bindings and compiler configuration.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "de3b79ed29752d0f4c84ea36336003fe529588d0",
+      "previousSha256": "7c0ee9e661a11f56f2b9f109139f78ad19a1cd7235fb9ca286f1b00a423bb5c8",
+      "currentSha256": "92b06c484787facaf795af857a55dbb51c40a2eb1f1ea81096d54ee173ed5112",
+      "change": "Reconcile protected main de3b79ed2 with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "5a81672285dc9c03130fc9fd8355e2b4c58e9e12",
+      "previousSha256": "92b06c484787facaf795af857a55dbb51c40a2eb1f1ea81096d54ee173ed5112",
+      "currentSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "change": "Register the new TDF.Server.EventAttendees module in the library's other-modules on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly one added line, the TDF.Server.EventAttendees module entry. That module holds one read query for the attendee roster and is imported only by the social events server; it adds no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
     }
   ]
 }

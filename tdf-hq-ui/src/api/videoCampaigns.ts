@@ -1,5 +1,5 @@
 import { get, post, put } from './client';
-import type { VideoCampaign, VideoCampaignDocument } from '../features/campaigns/videoCampaign';
+import type { VideoCampaign, VideoCampaignDocument } from '../utils/videoCampaign';
 
 export const VideoCampaigns = {
   list: (artistId: number) => get<VideoCampaign[]>(`/artists/video-campaigns?artistId=${artistId}`),

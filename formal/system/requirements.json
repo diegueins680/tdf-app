@@ -9394,14 +9394,14 @@
       "observability": "Existing marketplace analytics; jest and browser evidence.",
       "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
       "implementation": [
-        "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
+        "tdf-hq-ui/src/services/cartSummary.ts",
         "tdf-hq-ui/src/components/MarketplaceCartButton.tsx",
         "tdf-hq-ui/src/components/PublicBranding.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/DatafastReturnPage.tsx"
       ],
       "tests": [
-        "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts",
+        "tdf-hq-ui/src/services/cartSummary.test.ts",
         "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
         "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "e2e/web/marketplace-cart.spec.mjs"
@@ -9745,8 +9745,8 @@
       "id": "EVT-DISCOVERY-001",
       "title": "One events entry in navigation and an upcoming-events carousel after login",
       "domain": "EVT",
-      "statement": "The public header offers exactly one visible navigation item for events at any width (the main navigation from md up, the overflow menu on phones), pointing to /social/eventos (the public upcoming agenda for visitors, the events workspace for signed-in users), and the staff sidebar labels the same route simply \"Eventos\". Every signed-in user sees, at the top of the public and authenticated shells, a dismissible carousel of up to eight upcoming public events with their own RSVP status for each, and can RSVP \"accepted\" with one tap using their profile-visibility preference. On /artista/:slugOrId and /a/:slugOrId, show every future publicly listable event belonging to the resolved artist first, in chronological order, followed by the general upcoming selection without duplicate events. The artist group is not subject to the eight-event general limit. Resolve the profile Party ID to social Artist relationships; never infer identity from a matching name or equal numeric IDs. If no artist dates exist or that read fails, retain the general agenda.",
-      "authority": "User request 2026-10-08: one menu item for events and a small carousel of events and RSVPs displayed as soon as any user logs in. User request 2026-10-28: prioritize all future events of the corresponding artist on every artist profile.",
+      "statement": "The public header offers exactly one visible navigation item for events at any width (the main navigation from md up, the overflow menu on phones), pointing to /social/eventos (the public upcoming agenda for visitors, the events workspace for signed-in users), and the staff sidebar labels the same route simply \"Eventos\". Every signed-in user sees, at the top of the public and authenticated shells, a dismissible carousel of up to eight upcoming public events with their own RSVP status for each, and can RSVP \"accepted\" with one tap using their profile-visibility preference. On /artista/:slugOrId and /a/:slugOrId, show every future publicly listable event belonging to the resolved artist first, in chronological order, followed by the general upcoming selection without duplicate events. The artist group is not subject to the eight-event general limit. Resolve the profile Party ID to social Artist relationships; never infer identity from a matching name or equal numeric IDs. If no artist dates exist or that read fails, retain the general agenda. On event RSVP controls, each attendance count opens the corresponding paginated list of visible account names and profile pictures.",
+      "authority": "User request 2026-11-20: open paginated attendee profiles from each RSVP count. User request 2026-10-08: one menu item for events and a small carousel of events and RSVPs displayed as soon as any user logs in. User request 2026-10-28: prioritize all future events of the corresponding artist on every artist profile.",
       "source": "tdf-hq-ui navigation and shells",
       "contract": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
       "actors": [
@@ -9758,6 +9758,7 @@
       ],
       "inputs": [
         "GET /social-events/upcoming",
+        "GET /social-events/events/{eventId}/attendees",
         "GET /social-events/events/{id}/rsvp",
         "PUT /social-events/events/{id}/rsvp"
       ],
@@ -9783,7 +9784,7 @@
       "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference. Artist priority admits only events with public-listable capability and public metadata, including for administrative viewers; management-only event fields are excluded from the card projection.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
       "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
-      "failure": "A failed or malformed general agenda read leaves any available artist dates visible. Failed or absent artist dates retain the general agenda. If neither group has available events, hide the carousel. An RSVP read failure leaves the card as a plain link. The surrounding page and navigation are unaffected.",
+      "failure": "A failed or malformed general agenda read leaves any available artist dates visible. Failed or absent artist dates retain the general agenda. On event RSVP controls, each attendance count opens the corresponding paginated list of visible account names and profile pictures. If neither group has available events, hide the carousel. An RSVP read failure leaves the card as a plain link. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",
       "property": "Navigation exposes a single events entry; the carousel renders only for authenticated viewers, never on the events page itself, and stays hidden for the browser session after dismissal.",
@@ -9797,11 +9798,14 @@
         "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "tdf-hq-ui/src/api/artistUpcomingEvents.ts",
+        "tdf-hq-ui/src/api/eventAttendees.ts",
+        "tdf-hq/src/TDF/Server/EventAttendees.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
       "tests": [
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
@@ -15301,13 +15305,15 @@
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/reviews.yaml",
         "tdf-hq/src/TDF/Server/MerchReputation.hs",
-        "tdf-hq/src/TDF/Server/Reviews.hs"
+        "tdf-hq/src/TDF/Server/Reviews.hs",
+        "tdf-hq-ui/src/features/records/RecordDescription.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/api/reviews.test.ts",
         "tdf-hq-ui/src/components/ArtistFansList.test.tsx",
         "tdf-hq-ui/src/components/MarkdownText.test.tsx",
-        "tdf-hq-ui/src/components/UserProfileLink.test.tsx"
+        "tdf-hq-ui/src/components/UserProfileLink.test.tsx",
+        "tdf-hq-ui/src/features/records/RecordDescription.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -16786,7 +16792,8 @@
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/SocialArtistOwnership.hs"
       ],
       "tests": [
         "tdf-hq/test/Spec.hs"
@@ -24140,6 +24147,89 @@
       "historicalStatus": null
     },
     {
+      "id": "PAY-PAYPHONE-CARD-001",
+      "title": "PayPhone card checkout through the hosted Button, confirmed only by the server",
+      "statement": "A buyer can pay a direct checkout by card through PayPhone's hosted payment Button (route label payphone_card) without a PayPhone account and without giving TDF a phone number. The browser is sent only to a PayPhone-hosted page. The charge counts as paid only after the query worker reads the Button status by its TDFC- reference (a JSON list holding exactly one transaction for that reference) and PayPhone's Confirm answer matches transaction, reference, amount and currency. A split is optional and needs the store coding password.",
+      "domain": "PAY",
+      "authority": "Owner request 2026-11-17 (PayPhone card payments without the app); PayPhone sandbox evidence 2026-11-17/18; ADR 0136 for the Button confirmation design.",
+      "source": "docs/adr/0136-marketplace-agreement-payments.md",
+      "contract": "docs/adr/0136-marketplace-agreement-payments.md",
+      "property": "route label (payphone, card) = payphone_card; card offered iff PayPhone runtime configured and the query worker ready (coding password not required); status list with exactly one entry for the reference is read, otherwise rejected; approved -> Confirm follow-up; Succeeded only from a matching Confirm; hosted redirect host is PayPhone over HTTPS without credentials or port; a card request carries no buyer phone.",
+      "actors": [
+        "Anonymous buyer",
+        "PayPhone",
+        "Query worker"
+      ],
+      "preconditions": [
+        "Checkout lookup token; PayPhone runtime configured; COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED and checkout.provider_query_recovery ready; verified one_time and server_verification capabilities for payphone/card."
+      ],
+      "inputs": [
+        "POST /commerce/checkouts/{checkoutId}/payment-sessions with provider payphone and paymentMethod card"
+      ],
+      "state": {
+        "attempt": [
+          "requires_customer_action",
+          "processing",
+          "succeeded",
+          "confirmed_no_charge",
+          "ambiguous"
+        ]
+      },
+      "allowedTransitions": [
+        "requires_customer_action -> succeeded only from a matching Confirm answer",
+        "requires_customer_action -> confirmed_no_charge from a canceled status"
+      ],
+      "forbiddenTransitions": [
+        "succeeded from a status read alone",
+        "succeeded from browser return parameters",
+        "redirect outside PayPhone hosted pages",
+        "buyer phone sent for a card payment"
+      ],
+      "effects": [
+        "provider Prepare and Confirm calls",
+        "reconciled payment attempt"
+      ],
+      "authorization": "Checkout lookup token (capability-header).",
+      "privacy": "No buyer phone is collected for card payments; the PayPhone token is never logged.",
+      "concurrency": "Shared provider query worker lease and reconciliation path.",
+      "idempotency": "Session creation by idempotency key (PAY-RETRY-001); Confirm is idempotent at PayPhone.",
+      "failure": "Unpaid prepared payments query as HTTP 404 and are retried; unconfirmed approvals are reversed by PayPhone.",
+      "recovery": "The query worker confirms every minute for 24 attempts; an unpaid attempt ends in review.",
+      "observability": "Stored provider operation, query job and reconciliation rows.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs",
+        "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
+        "tdf-hq-ui/src/api/providerPaymentSessions.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
+        "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Unit tests for the status list, follow-up confirmation, route label and card readiness without the coding password; UI tests for the card button without phone fields and the PayPhone redirect allowlist; PayPhone sandbox runs of Prepare, list-shaped status, Confirm and Reverse.",
+      "evidence": "docs/adr/0136-marketplace-agreement-payments.md",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for parsing and routing; end-to-end worker confirmation against the sandbox pending a buyer payment run.",
+      "ambiguity": [
+        "A Button status list with several transactions for one reference is rejected and ends in review.",
+        "Abandoned prepared payments query as HTTP 404 until the job dead-letters."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented and unit-tested; worker confirmation against the live sandbox awaits a recorded run."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-HOSTED-NOTIFICATIONS-001",
       "title": "PlaceToPay and PayPhone notifications",
       "statement": "Provider notifications are authenticated or classified as untrusted, stored once in the provider inbox and applied by the worker after a server-to-server query; the handlers move no money. Routes: POST /commerce/provider-notifications/placetopay; POST /commerce/provider-notifications/payphone; POST /NotificacionPago.",
@@ -26040,8 +26130,8 @@
         "tdf-hq/sql/2026-10-20_video_campaigns.sql",
         "tdf-hq-ui/src/api/videoCampaigns.ts",
         "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
-        "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
-        "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
+        "tdf-hq-ui/src/utils/videoCampaign.ts",
+        "tdf-hq-ui/src/services/videoAttribution.ts",
         "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
@@ -26061,8 +26151,8 @@
       "tests": [
         "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
         "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
-        "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
-        "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
+        "tdf-hq-ui/src/utils/videoCampaign.test.ts",
+        "tdf-hq-ui/src/services/videoAttribution.test.ts",
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
         "e2e/web/video-campaigns.spec.mjs",
@@ -27726,7 +27816,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "The ratchet is enforced; 8 backend imports, 10 web imports and 16 oversized files remain listed debt."
+        "reason": "The ratchet is enforced; 8 backend imports, 7 web imports and 16 oversized files remain listed debt."
       },
       "authority": "User request 2026-11-10; layer definitions and limits are an engineering decision recorded in ADR 0133, owner confirmation pending.",
       "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",

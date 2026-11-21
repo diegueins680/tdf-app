@@ -1331,6 +1331,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social-events/events/{eventId}/attendees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List visible attendee profiles for one RSVP status */
+        get: operations["listEventAttendees"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social-events/events/{eventId}/rsvp-summary": {
         parameters: {
             query?: never;
@@ -11417,7 +11434,7 @@ export interface components {
             /** Format: date-time */
             depositPaidAt?: string | null;
             cancellation?: components["schemas"]["PublicDomoCancellation"] | null;
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card")[];
         };
         PublicDomoPaypalCaptureRequest: {
             paypalOrderId: string;
@@ -11549,7 +11566,7 @@ export interface components {
             /** Format: date-time */
             holdExpiresAt: string;
             quote: components["schemas"]["PublicEventTicketQuote"];
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "bank_transfer")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card" | "bank_transfer")[];
             /** @description Empty until fulfillment issues tickets after verified payment. */
             tickets: components["schemas"]["PublicEventTicket"][];
             /** @description Present only after the buyer selected bank transfer. */
@@ -11752,7 +11769,7 @@ export interface components {
             holdExpiresAt: string;
             quote: components["schemas"]["PublicBookingQuote"];
             /** @description Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown. */
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "bank_transfer")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card" | "bank_transfer")[];
             manualPayment: components["schemas"]["PublicBookingManualPayment"] | null;
         };
         PublicBookingManualPaymentCreate: {
@@ -15084,7 +15101,7 @@ export interface components {
             /** Format: date-time */
             holdExpiresAt: string | null;
             quote: components["schemas"]["CourseCheckoutQuote"] | null;
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card")[];
             checkoutAvailable: boolean;
         };
         CoursePaypalCaptureRequest: {
@@ -22985,6 +23002,59 @@ export interface operations {
             };
             /** @description Mutation rate limit exceeded */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventAttendees: {
+        parameters: {
+            query: {
+                status: "accepted" | "maybe";
+                after?: number;
+            };
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Up to 20 profiles visible to the viewer, ordered by stable RSVP identifier */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        nextCursor: string | null;
+                        items: {
+                            id: string;
+                            name: string;
+                            avatarUrl: string | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Invalid status or cursor */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event is missing or inaccessible */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
