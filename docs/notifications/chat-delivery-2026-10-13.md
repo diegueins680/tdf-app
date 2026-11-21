@@ -157,10 +157,16 @@ in-app notice but nothing outside the web app.
   encrypted with `NOTIFICATION_PUSH_TOKEN_KEY`, keyed by its SHA-256 digest; a
   token re-registered by another account moves to it. `.../revoke` deactivates it
   (the mobile app calls it before clearing the session on logout).
-- **Dispatch.** `TDF.Chat.Delivery` leases due intents every 15 s
-  (`FOR UPDATE SKIP LOCKED`, 120 s lease), rechecks eligibility with
-  `chat_delivery_decision` and completes with `chat_delivery_complete`, fenced by
-  the lease token. Skip reasons: `read`, `not_visible` (consent, block, deletion
+- **Dispatch.** Every 15 s `TDF.Chat.Delivery` works through up to 20 due
+  intents, leasing each one (`FOR UPDATE SKIP LOCKED`, 120 s lease) immediately
+  before sending it, so a slow provider cannot expire the leases of intents
+  queued behind it. `chat_delivery_lease` keeps at most one delivery in flight
+  per recipient, conversation and channel (advisory lock plus an in-flight
+  check), so replicas cannot both pass the coalescing check for one burst. It
+  rechecks eligibility with `chat_delivery_decision`, which also rejects an
+  expired lease (`lease_lost`), and completes with `chat_delivery_complete`,
+  fenced by the lease token. SMTP is bounded to 60 s and Expo to 15 s; an SMTP
+  timeout is retried as `provider_timeout`. Skip reasons: `read`, `not_visible` (consent, block, deletion
   or closed account through `interaction_notification_visible`),
   `inactive_recipient`, `opted_out`, `expired` (>24 h), `no_address`,
   `no_subscription`, `coalesced` (one email per conversation per 6 h, one push per

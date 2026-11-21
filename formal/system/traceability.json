@@ -11520,7 +11520,7 @@
       "id": "MSG-DELIVERY-001",
       "title": "Recipient-controlled email and phone reminders for chat notices",
       "statement": "Every chat notice must create, in the message transaction, one email and one push delivery intent. A worker may send a reminder only when its channel is enabled and, at dispatch, the notice is still unread, the conversation has no newer read receipt, the current chat policy still shows the notice, the recipient account is active, the recipient has not opted out, the notice is under 24 hours old and coalescing allows it.",
-      "property": "Push is due immediately; email waits 10 minutes (offline window). At most one email per conversation per 6 hours and one push per conversation per minute. Reading the conversation records a monotonic receipt and marks its notices read. Retries back off exponentially and dead-letter after 5 attempts; expired leases are re-leased with the same budget.",
+      "property": "Push is due immediately; email waits 10 minutes (offline window). At most one email per conversation per 6 hours and one push per conversation per minute. Reading the conversation records a monotonic receipt and marks its notices read. Retries back off exponentially and dead-letter after 5 attempts; expired leases are re-leased with the same budget. Each intent is leased immediately before its dispatch, at most one delivery is in flight per recipient, conversation and channel, an expired lease may not start a send, and provider calls are bounded (SMTP 60 s, Expo 15 s) inside the 120 s lease. The web chat retries a failed read receipt up to 5 times with backoff.",
       "preconditions": [
         "Governed production migration 2026-11-20_chat_external_delivery installed after 2026-10-13_chat_message_notifications.",
         "Provider configuration through the approved release process: SMTP, CHAT_*_DELIVERY_ENABLED, NOTIFICATION_PUSH_TOKEN_KEY (>=32 chars), optional EXPO_ACCESS_TOKEN; EAS FCM/APNs credentials for the mobile app."
@@ -29430,7 +29430,7 @@
     "scripts/seal-event-report.mjs": "2c7087ccb785b9a725a5c1e9e23582236d76a40be28f62e08b0f2124d4fa4764",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
-    "scripts/social/chat-delivery.sql": "cba67e765456aec7ce04f5b21ff1a35ed0d95aef2a354a3d47f347ff68506f6f",
+    "scripts/social/chat-delivery.sql": "41cbcdb64b815cd034bb14c96da007e18d80a4208f7b5ce22d5e151e399c1636",
     "scripts/social/chat-notifications.sql": "1bb1b293aabacbeede286dba05911f20f8a85b59faf18f12d1b399288a32a734",
     "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
     "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
@@ -30017,8 +30017,8 @@
     "tdf-hq-ui/src/pages/BrainAdminPage.tsx": "f24310153284767120713e59c948cac1fc37b7e32c994906523ff3fdad515feb",
     "tdf-hq-ui/src/pages/CalendarSyncPage.tsx": "765803252df26ff78cf4125660a44d20f1f751539b5050327f84d83fa3c70418",
     "tdf-hq-ui/src/pages/CampaignAutomationsPage.tsx": "436a6542811cca0cef5c33ef4979487907e967ef8ac74756fc05c0fa7fb42226",
-    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "a6f6bc1e4f6c7720c1210dbf2f17a1b2cab655765b9a9ff7d15d03624fca5075",
-    "tdf-hq-ui/src/pages/ChatPage.tsx": "6fc83a5c4b31fb489471645ef0139d92c9f027006ae3c9e7a8e942d5a8d76f16",
+    "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "9efce482c8144c8cf63a7849eecf8018123eaf745053c43a9e511f5a494b4381",
+    "tdf-hq-ui/src/pages/ChatPage.tsx": "04cdc23b34e559036e3ae64087e1a43843b37d4a70e10094f35393839c0f1a3f",
     "tdf-hq-ui/src/pages/ClassesPage.tsx": "2c4c084a7e9287144589b96f3ac9a2ff6c3775bc854c0df027f3717bfa85c203",
     "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
     "tdf-hq-ui/src/pages/CmsAdminPage.tsx": "0b2a08ef582f97ec33fb6b9eb8c909f7d8482758655fc6f0958e312838f5744c",
@@ -30469,7 +30469,7 @@
     "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql": "86483222ece86b79a88a693a2cd403cdf3d9b3fd183ef1182df4bf447c873f95",
     "tdf-hq/sql/2026-11-12_marketplace_agreements.sql": "cba023d9107d987ce7f336181505334538bd0a0a00782e596fab1faf4a14fdbf",
     "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql": "47a811221f03817022572f6bee479567c08f714897b56706cea4f75c8b39ac8f",
-    "tdf-hq/sql/2026-11-20_chat_external_delivery.sql": "3f1c4adb14514ad589b689cbf3003c877077766cb67247b332b033906e2acb61",
+    "tdf-hq/sql/2026-11-20_chat_external_delivery.sql": "62f4d0b58ce66ddc0cb345084f1d5b9e5313033ad9dcb6dded08b8957783b1c6",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
     "tdf-hq/src/TDF/API.hs": "e3d28f8c6b19b576c53e3a0a90e2db3c55a2aa7fc6bcb6b1b3454fa7331d6759",
@@ -30510,7 +30510,7 @@
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "e918ed18cf1351d63b16a111af524f6f42541c873974da43299cc5134ce990d0",
     "tdf-hq/src/TDF/Catalog/Security.hs": "bf5ec6b5b0a740ca58709fac5a04118d29cfacf1002ecd4299c35d8a142313e0",
     "tdf-hq/src/TDF/Catalog/Seed.hs": "50badb8bb7b8e413086ec8f656cbfea8818733394f96af51464b8367e4e814d0",
-    "tdf-hq/src/TDF/Chat/Delivery.hs": "1a2817b74ff0ec4961c88ccbff379309a219d3e24d7052d88e44cdd7608bb550",
+    "tdf-hq/src/TDF/Chat/Delivery.hs": "1c2c3c608b0f1dab727f2a082dcb42e4f6bcc52a2efac851cc8be5087e25b60e",
     "tdf-hq/src/TDF/Commerce/ArtistTip.hs": "023febe6a6fc4a1dd49f9d463a6f673572e80b08901df77f72b67f020cc60fdb",
     "tdf-hq/src/TDF/Commerce/ArtistTipStore.hs": "2963db1597da29ad46498dd329df42ed521f314ff091f03113d6cd6acb36e7af",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "4e1031e6416fa416dafdd8da29d80cb383c96966a4b7a9b4981d975feecdbaa9",
@@ -30696,7 +30696,7 @@
     "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
     "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "d2d30b69518718f169d26a18dfa81c8f526fdf8b3c15294f6f6e30ee75cd9d48",
-    "tdf-hq/test/TDF/ChatDeliverySpec.hs": "cddf18e1c12f6c5fbd83cdabed65b517b05a535f1cacde7fd8214fe6cea71c5d",
+    "tdf-hq/test/TDF/ChatDeliverySpec.hs": "36c05280e834adcdfbfd03cf2cc7e9bc1228c6932f7ed0a6b9a204cb42cb1a17",
     "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs": "ad485e08cc1c0433c8cfeb343d07feff37287d4fc63143126e827580776728c6",
     "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs": "821455528e37e95f4baab3ec32621766ce289b8eefd5033186d03571c0cd875f",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -56254,7 +56254,7 @@
     {
       "id": "SURFACE-8cfd686a9c88329c",
       "path": "scripts/social/chat-delivery.sql",
-      "sha256": "cba67e765456aec7ce04f5b21ff1a35ed0d95aef2a354a3d47f347ff68506f6f",
+      "sha256": "41cbcdb64b815cd034bb14c96da007e18d80a4208f7b5ce22d5e151e399c1636",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66862,7 +66862,7 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "a6f6bc1e4f6c7720c1210dbf2f17a1b2cab655765b9a9ff7d15d03624fca5075",
+      "sha256": "9efce482c8144c8cf63a7849eecf8018123eaf745053c43a9e511f5a494b4381",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66878,7 +66878,7 @@
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "6fc83a5c4b31fb489471645ef0139d92c9f027006ae3c9e7a8e942d5a8d76f16",
+      "sha256": "04cdc23b34e559036e3ae64087e1a43843b37d4a70e10094f35393839c0f1a3f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -77018,7 +77018,7 @@
     {
       "id": "SURFACE-1c1db34e299cc07b",
       "path": "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
-      "sha256": "3f1c4adb14514ad589b689cbf3003c877077766cb67247b332b033906e2acb61",
+      "sha256": "62f4d0b58ce66ddc0cb345084f1d5b9e5313033ad9dcb6dded08b8957783b1c6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78003,7 +78003,7 @@
     {
       "id": "SURFACE-fd919e749d5f7980",
       "path": "tdf-hq/src/TDF/Chat/Delivery.hs",
-      "sha256": "1a2817b74ff0ec4961c88ccbff379309a219d3e24d7052d88e44cdd7608bb550",
+      "sha256": "1c2c3c608b0f1dab727f2a082dcb42e4f6bcc52a2efac851cc8be5087e25b60e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -82486,7 +82486,7 @@
     {
       "id": "SURFACE-b47e32d28ca04cf0",
       "path": "tdf-hq/test/TDF/ChatDeliverySpec.hs",
-      "sha256": "cddf18e1c12f6c5fbd83cdabed65b517b05a535f1cacde7fd8214fe6cea71c5d",
+      "sha256": "36c05280e834adcdfbfd03cf2cc7e9bc1228c6932f7ed0a6b9a204cb42cb1a17",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -91326,7 +91326,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a0352b8f93bfa43d32875feb4bbfab9df8eb9a86650e1ae859099938e12c6ed2",
+      "sourceSha256": "4f365f20fa935b5c4087ec872d7303f27a2e0890aa65909e26a21881e4e92a2a",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -91354,7 +91354,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a0352b8f93bfa43d32875feb4bbfab9df8eb9a86650e1ae859099938e12c6ed2",
+      "sourceSha256": "4f365f20fa935b5c4087ec872d7303f27a2e0890aa65909e26a21881e4e92a2a",
       "definition": {
         "states": [
           "absent",
@@ -91384,7 +91384,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a0352b8f93bfa43d32875feb4bbfab9df8eb9a86650e1ae859099938e12c6ed2",
+      "sourceSha256": "4f365f20fa935b5c4087ec872d7303f27a2e0890aa65909e26a21881e4e92a2a",
       "definition": {
         "export": [
           "queued",

@@ -120,6 +120,15 @@ it('isolates cached conversations and drafts when switching accounts', async () 
   await waitFor(() => expect(view.client.getQueryData(['chat-threads', 3])).toEqual([]));
   expect(sendMessage).not.toHaveBeenCalled();
 });
+it('retries a failed server read receipt without waiting for new data (MSG-DELIVERY-001)', async () => {
+  markThreadRead.mockRejectedValueOnce(new Error('temporarily unavailable'));
+  setup();
+  await screen.findByText('Private body');
+  await waitFor(() => expect(markThreadRead).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(markThreadRead).toHaveBeenCalledTimes(2), { timeout: 4000 });
+  expect(markThreadRead).toHaveBeenLastCalledWith(10, 1);
+});
+
 it('records a server read receipt once per newest message (MSG-DELIVERY-001)', async () => {
   const { client } = setup();
   await screen.findByText('Private body');

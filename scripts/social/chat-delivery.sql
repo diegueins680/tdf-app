@@ -4,7 +4,7 @@ SET LOCAL statement_timeout='15s';
 DO $$
 DECLARE sender bigint; recipient bigint; thread bigint; message bigint; notice bigint;
   result jsonb; push_row bigint; email_row bigint; lease uuid; leased record;
-  second_message bigint;
+  second_message bigint; burst_first bigint; burst_second bigint; burst_lease uuid;
 BEGIN
   INSERT INTO party(display_name,is_org,primary_email,created_at)
     VALUES('Synthetic delivery sender',false,'sender@example.invalid',now()) RETURNING id INTO sender;
@@ -99,11 +99,38 @@ BEGIN
     WHERE id=email_row;
   ASSERT chat_delivery_decision(push_row,lease)='coalesced', 'second email inside six hours not coalesced';
 
+  -- 8b. One delivery in flight per recipient, conversation and channel: a burst
+  -- cannot lease two pushes before the first outcome is visible to coalescing,
+  -- and an expired lease is not allowed to start sending.
+  UPDATE chat_delivery_outbox SET state='skipped',lease_token=NULL,lease_expires_at=NULL
+    WHERE channel='push' AND thread_id=thread AND state IN ('pending','leased');
+  UPDATE chat_delivery_outbox SET updated_at=now()-interval '2 minutes'
+    WHERE channel='push' AND thread_id=thread AND state='accepted';
+  result := social_v2_chat_send(sender,thread,'Burst one',false);
+  SELECT id INTO burst_first FROM chat_delivery_outbox
+    WHERE message_id=(result->'result'->>'cmId')::bigint AND channel='push';
+  result := social_v2_chat_send(sender,thread,'Burst two',false);
+  SELECT id INTO burst_second FROM chat_delivery_outbox
+    WHERE message_id=(result->'result'->>'cmId')::bigint AND channel='push';
+  ASSERT (SELECT count(*) FROM chat_delivery_lease(ARRAY['push'],10,60))=1, 'burst leased two pushes for one conversation';
+  SELECT lease_token INTO burst_lease FROM chat_delivery_outbox WHERE id=burst_first AND state='leased';
+  ASSERT burst_lease IS NOT NULL, 'oldest burst push was not the one leased';
+  ASSERT NOT EXISTS (SELECT 1 FROM chat_delivery_lease(ARRAY['push'],10,60)), 'second push leased while the first is in flight';
+  ASSERT chat_delivery_decision(burst_first,burst_lease)='send', 'in-flight burst push not sendable';
+  ASSERT chat_delivery_complete(burst_first,burst_lease,'accepted','provider_accepted',60), 'burst push not completed';
+  SELECT outbox_lease INTO burst_lease FROM chat_delivery_lease(ARRAY['push'],10,60) WHERE outbox_id=burst_second;
+  ASSERT burst_lease IS NOT NULL, 'second push not leased after the first completed';
+  ASSERT chat_delivery_decision(burst_second,burst_lease)='coalesced', 'second push inside a minute not coalesced';
+  UPDATE chat_delivery_outbox SET updated_at=now()-interval '2 minutes' WHERE id=burst_first;
+  ASSERT chat_delivery_decision(burst_second,burst_lease)='send', 'second push after the window not sendable';
+  UPDATE chat_delivery_outbox SET lease_expires_at=now()-interval '1 second' WHERE id=burst_second;
+  ASSERT chat_delivery_decision(burst_second,burst_lease)='lease_lost', 'expired lease could still send';
+
   -- 9. Stale intents are never sent retrospectively.
   UPDATE chat_delivery_outbox SET state='dead',lease_token=NULL,lease_expires_at=NULL WHERE id=email_row;
   UPDATE notification SET created_at=now()-interval '25 hours'
     WHERE id=(SELECT notification_id FROM chat_message_notification WHERE message_id=second_message);
   ASSERT chat_delivery_decision(push_row,lease)='expired', 'day-old notice was still sendable';
-  RAISE NOTICE 'PASS: transactional intents, channel gating, dispatch rechecks, fencing, retry/dead letter, read receipts, coalescing, freshness';
+  RAISE NOTICE 'PASS: transactional intents, channel gating, dispatch rechecks, fencing, retry/dead letter, read receipts, coalescing, one in-flight delivery per conversation, lease expiry, freshness';
 END $$;
 ROLLBACK;

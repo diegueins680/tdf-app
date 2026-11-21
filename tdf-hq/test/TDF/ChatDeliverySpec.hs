@@ -36,6 +36,13 @@ spec = describe "MSG-DELIVERY-001 chat email and push reminders" $ do
       retryDelaySeconds 50 `shouldBe` 3600
       retryDelaySeconds 0 `shouldBe` 60
 
+  describe "lease ownership" $
+    it "bounds every provider call well inside the lease of the intent being sent" $ do
+      emailSendTimeoutSeconds * 2 `shouldSatisfy` (<= deliveryLeaseSeconds)
+      pushResponseTimeoutSeconds * 2 `shouldSatisfy` (<= deliveryLeaseSeconds)
+      -- chat_delivery_lease accepts leases of 10..900 seconds.
+      deliveryLeaseSeconds `shouldSatisfy` (\seconds -> seconds >= 10 && seconds <= 900)
+
   describe "Expo push tokens" $ do
     it "accepts Expo token shapes" $ do
       validExpoPushToken "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]" `shouldBe` True

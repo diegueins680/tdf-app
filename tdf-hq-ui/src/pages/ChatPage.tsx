@@ -42,6 +42,11 @@ import type { ChatMessageDTO, ChatThreadDTO } from '../api/types';
 import { useSession } from '../session/SessionContext';
 import { countUnreadThreads, isThreadUnread, loadChatReadMap, markThreadSeen, subscribeToChatReadState } from '../utils/chatReadState';
 
+// Read receipts stop email/phone reminders, so a transient failure is retried
+// after 1, 2, 4, 8 and 16 seconds before waiting for the next new message.
+const READ_RECEIPT_RETRY_BASE_MS = 1_000;
+const READ_RECEIPT_MAX_RETRIES = 5;
+
 function formatTimestamp(value?: string | null) {
   if (!value) return '';
   const date = new Date(value);
@@ -216,6 +221,13 @@ function ChatWorkspace() {
   const requestParamConsumed = useRef<string | null>(null);
   // Highest message id already reported read to the server, per account and conversation.
   const serverReadRef = useRef(new Map<string, number>());
+  // A failed read receipt is retried on a timer: unchanged polls keep the same
+  // data references, so nothing else would run the receipt effect again.
+  const readRetryRef = useRef({ key: '', attempts: 0, timer: null as ReturnType<typeof setTimeout> | null });
+  const [readRetryVersion, setReadRetryVersion] = useState(0);
+  useEffect(() => () => {
+    if (readRetryRef.current.timer) clearTimeout(readRetryRef.current.timer);
+  }, []);
   const [readVersion, setReadVersion] = useState(0);
 
   useEffect(() => subscribeToChatReadState(() => setReadVersion((v) => v + 1), myPartyId ?? 0), [myPartyId]);
@@ -369,13 +381,31 @@ function ChatWorkspace() {
     const readKey = `${myPartyId ?? 0}:${selectedThreadId}`;
     if (!lastMessageId || (serverReadRef.current.get(readKey) ?? 0) >= lastMessageId) return;
     serverReadRef.current.set(readKey, lastMessageId);
-    ChatAPI.markThreadRead(selectedThreadId, lastMessageId)
-      .then(() => Promise.all([
-        qc.invalidateQueries({ queryKey: ['notification-count'] }),
-        qc.invalidateQueries({ queryKey: ['notifications'] }),
-      ]))
-      .catch(() => { serverReadRef.current.delete(readKey); });
-  }, [qc, myPartyId, messages, messagesQuery.data, messagesQuery.isError, selectedThread, selectedThread?.ctLastMessageAt, selectedThread?.ctUpdatedAt, selectedThreadId]);
+    const attemptKey = `${readKey}:${lastMessageId}`;
+    ChatAPI.markThreadRead(selectedThreadId, lastMessageId).then(
+      () => {
+        if (readRetryRef.current.key === attemptKey) {
+          if (readRetryRef.current.timer) clearTimeout(readRetryRef.current.timer);
+          readRetryRef.current = { key: '', attempts: 0, timer: null };
+        }
+        void qc.invalidateQueries({ queryKey: ['notification-count'] });
+        void qc.invalidateQueries({ queryKey: ['notifications'] });
+      },
+      () => {
+        serverReadRef.current.delete(readKey);
+        const previous = readRetryRef.current;
+        if (previous.timer) clearTimeout(previous.timer);
+        const attempts = previous.key === attemptKey ? previous.attempts + 1 : 1;
+        const timer = attempts <= READ_RECEIPT_MAX_RETRIES
+          ? setTimeout(
+            () => setReadRetryVersion((version) => version + 1),
+            Math.min(30_000, READ_RECEIPT_RETRY_BASE_MS * 2 ** (attempts - 1)),
+          )
+          : null;
+        readRetryRef.current = { key: attemptKey, attempts, timer };
+      },
+    );
+  }, [qc, myPartyId, readRetryVersion, messages, messagesQuery.data, messagesQuery.isError, selectedThread, selectedThread?.ctLastMessageAt, selectedThread?.ctUpdatedAt, selectedThreadId]);
 
   const createThreadMutation = useMutation({
     mutationFn: (otherPartyId: number) => ChatAPI.getOrCreateDmThread(otherPartyId),

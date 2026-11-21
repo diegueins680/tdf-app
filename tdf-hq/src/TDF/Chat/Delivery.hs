@@ -17,6 +17,9 @@ module TDF.Chat.Delivery
   , deliverySettingsFromEnv
   , enabledChannels
   , retryDelaySeconds
+  , deliveryLeaseSeconds
+  , emailSendTimeoutSeconds
+  , pushResponseTimeoutSeconds
   , validExpoPushToken
   , ExpoTicket(..)
   , ExpoOutcome(..)
@@ -48,6 +51,7 @@ import Network.HTTP.Client
   , responseBody, responseStatus, responseTimeout, responseTimeoutMicro )
 import Network.HTTP.Types.Status (statusCode)
 import System.Environment (lookupEnv)
+import System.Timeout (timeout)
 
 import TDF.Config (AppConfig(..))
 import TDF.DB (ConnectionPool, Env(..), sharedTlsManager)
@@ -99,6 +103,20 @@ enabledChannels settings =
 -- | Backoff after the given (1-based) attempt: 1, 2, 4, 8 minutes, capped at one hour.
 retryDelaySeconds :: Int -> Int
 retryDelaySeconds attempt = min 3600 (60 * 2 ^ max 0 (min 6 (attempt - 1)))
+
+-- | How long one leased intent belongs to this worker. An intent is leased
+-- immediately before its dispatch and each provider call is bounded well below
+-- this, so a lease cannot expire while its own send is still in flight.
+deliveryLeaseSeconds :: Int
+deliveryLeaseSeconds = 120
+
+-- | Upper bound for one SMTP exchange. A server that accepts the connection and
+-- then stalls must not stop the only delivery thread.
+emailSendTimeoutSeconds :: Int
+emailSendTimeoutSeconds = 60
+
+pushResponseTimeoutSeconds :: Int
+pushResponseTimeoutSeconds = 15
 
 -- | Expo tokens look like @ExponentPushToken[...]@ (or the newer @ExpoPushToken[...]@).
 validExpoPushToken :: Text -> Bool
@@ -208,14 +226,24 @@ runDeliveryBatch env settings channels = do
   let pool = envPool env
   ready <- deliveryAvailable pool
   if not ready then pure 0 else do
-    leased <- runSqlPool
-      (rawSql
-        "SELECT outbox_id, outbox_channel, outbox_lease::text, outbox_attempts FROM chat_delivery_lease(?::text[], 20, 120)"
-        [PersistText ("{" <> T.intercalate "," channels <> "}")])
-      pool :: IO [(Single Int64, Single Text, Single Text, Single Int)]
-    forM_ leased $ \(Single outboxId, Single channel, Single lease, Single attempts) ->
-      deliverOne env settings outboxId channel lease attempts
-    pure (length leased)
+    -- One intent is leased right before it is dispatched, so a slow provider
+    -- call cannot let the leases of intents queued behind it expire.
+    let leaseNext = runSqlPool
+          (rawSql
+            "SELECT outbox_id, outbox_channel, outbox_lease::text, outbox_attempts FROM chat_delivery_lease(?::text[], 1, ?::integer)"
+            [ PersistText ("{" <> T.intercalate "," channels <> "}")
+            , PersistInt64 (fromIntegral deliveryLeaseSeconds) ])
+          pool :: IO [(Single Int64, Single Text, Single Text, Single Int)]
+        go :: Int -> IO Int
+        go done
+          | done >= 20 = pure done
+          | otherwise = do
+              leased <- leaseNext
+              if null leased then pure done else do
+                forM_ leased $ \(Single outboxId, Single channel, Single lease, Single attempts) ->
+                  deliverOne env settings outboxId channel lease attempts
+                go (done + length leased)
+    go 0
 
 deliverOne :: Env -> DeliverySettings -> Int64 -> Text -> Text -> Int -> IO ()
 deliverOne env settings outboxId channel lease attempts = do
@@ -256,9 +284,13 @@ sendEmail env outboxId = case emailConfig (envConfig env) of
     case rows of
       [(Single name, Single (Just address), Single threadId)] | not (T.null (T.strip address)) -> do
         let (subject, preheader, bodyLines) = chatEmailContent
-        Email.sendTransactionalEmail cfg name (T.strip address) subject preheader bodyLines
-          (chatThreadUrl (appBaseUrl (envConfig env)) threadId)
-        pure ("accepted", "provider_accepted")
+        sent <- timeout (emailSendTimeoutSeconds * 1000000) $
+          Email.sendTransactionalEmail cfg name (T.strip address) subject preheader bodyLines
+            (chatThreadUrl (appBaseUrl (envConfig env)) threadId)
+        -- A timed-out exchange is retried with backoff; acceptance is unknown.
+        pure $ case sent of
+          Just () -> ("accepted", "provider_accepted")
+          Nothing -> ("retry", "provider_timeout")
       _ -> pure ("skipped", "no_address")
 
 sendPush :: Env -> DeliverySettings -> Int64 -> IO (Text, Text)
@@ -286,7 +318,7 @@ sendPush env settings outboxId = case dsPushTokenKey settings of
                   <> maybe [] (\accessToken -> [("Authorization", "Bearer " <> TE.encodeUtf8 accessToken)])
                        (dsExpoAccessToken settings)
               , requestBody = RequestBodyLBS (Aeson.encode (expoPushMessages notificationId tokens))
-              , responseTimeout = responseTimeoutMicro 15000000
+              , responseTimeout = responseTimeoutMicro (pushResponseTimeoutSeconds * 1000000)
               }
         response <- httpLbs request sharedTlsManager
         let status = statusCode (responseStatus response)

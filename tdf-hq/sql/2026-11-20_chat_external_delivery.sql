@@ -100,9 +100,16 @@ END $$;
 -- Lease due work for the enabled channels. An expired lease is retried until the
 -- attempt budget is spent, then dead-lettered. SKIP LOCKED lets several API
 -- replicas share the queue; every completion is fenced by the lease token.
+--
+-- At most one delivery is in flight per recipient, conversation and channel, so
+-- the coalescing check in chat_delivery_decision always sees the outcome of the
+-- previous one. The advisory lock orders concurrent lease calls for one key and
+-- the in-flight check then runs on a fresh snapshot, so two replicas cannot both
+-- lease an item for the same key.
 CREATE OR REPLACE FUNCTION chat_delivery_lease(channels text[], batch integer, lease_seconds integer)
 RETURNS TABLE(outbox_id bigint, outbox_channel text, outbox_lease uuid, outbox_attempts integer)
 LANGUAGE plpgsql AS $$
+DECLARE candidate record; leased_count integer := 0;
 BEGIN
   IF batch < 1 OR batch > 100 OR lease_seconds < 10 OR lease_seconds > 900 THEN
     RAISE EXCEPTION 'chat_delivery_lease_invalid_bounds';
@@ -110,29 +117,46 @@ BEGIN
   UPDATE chat_delivery_outbox SET state='dead', outcome='lease_expired', lease_token=NULL,
       lease_expires_at=NULL, updated_at=now()
     WHERE state='leased' AND lease_expires_at < now() AND attempts >= 5 AND channel = ANY(channels);
-  RETURN QUERY
-  UPDATE chat_delivery_outbox o SET state='leased', lease_token=gen_random_uuid(),
-      lease_expires_at=now() + make_interval(secs => lease_seconds),
-      attempts=o.attempts + 1, updated_at=now()
-    WHERE o.id IN (
-      SELECT c.id FROM chat_delivery_outbox c
+  FOR candidate IN
+    SELECT c.id, c.recipient_party_id, c.thread_id, c.channel FROM chat_delivery_outbox c
       WHERE c.channel = ANY(channels)
         AND ((c.state='pending' AND c.due_at <= now())
           OR (c.state='leased' AND c.lease_expires_at < now()))
       ORDER BY c.due_at, c.id
-      LIMIT batch
-      FOR UPDATE SKIP LOCKED)
-    RETURNING o.id, o.channel, o.lease_token, o.attempts;
+      LIMIT greatest(batch * 10, 100)
+      FOR UPDATE SKIP LOCKED
+  LOOP
+    IF NOT pg_try_advisory_xact_lock(hashtextextended('chat_delivery:' || candidate.recipient_party_id
+        || ':' || candidate.thread_id || ':' || candidate.channel, 0)) THEN
+      CONTINUE;
+    END IF;
+    IF EXISTS (SELECT 1 FROM chat_delivery_outbox f
+        WHERE f.recipient_party_id=candidate.recipient_party_id AND f.thread_id=candidate.thread_id
+          AND f.channel=candidate.channel AND f.id<>candidate.id
+          AND f.state='leased' AND f.lease_expires_at >= now()) THEN
+      CONTINUE;
+    END IF;
+    RETURN QUERY
+    UPDATE chat_delivery_outbox o SET state='leased', lease_token=gen_random_uuid(),
+        lease_expires_at=now() + make_interval(secs => lease_seconds),
+        attempts=o.attempts + 1, updated_at=now()
+      WHERE o.id=candidate.id
+      RETURNING o.id, o.channel, o.lease_token, o.attempts;
+    leased_count := leased_count + 1;
+    EXIT WHEN leased_count >= batch;
+  END LOOP;
 END $$;
 
 -- Rechecks every condition at dispatch time (read state, current chat consent and
 -- block policy through the inbox visibility predicate, account closure, opt-out,
--- freshness and coalescing). Returns 'send' or a minimized skip reason.
+-- freshness and coalescing). Returns 'send' or a minimized skip reason. An expired
+-- lease no longer owns the item (another replica may reclaim it), so it is lost.
 CREATE OR REPLACE FUNCTION chat_delivery_decision(target bigint, lease uuid)
 RETURNS text LANGUAGE plpgsql STABLE AS $$
 DECLARE item chat_delivery_outbox%ROWTYPE; notice notification%ROWTYPE;
 BEGIN
-  SELECT * INTO item FROM chat_delivery_outbox WHERE id=target AND lease_token=lease AND state='leased';
+  SELECT * INTO item FROM chat_delivery_outbox
+    WHERE id=target AND lease_token=lease AND state='leased' AND lease_expires_at > now();
   IF NOT FOUND THEN RETURN 'lease_lost'; END IF;
   SELECT * INTO notice FROM notification WHERE id=item.notification_id;
   IF NOT FOUND THEN RETURN 'not_visible'; END IF;
