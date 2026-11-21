@@ -7,6 +7,7 @@ module TDF.Server.PublicBookingNotifications
   ) where
 
 import           Control.Applicative ((<|>))
+import           Control.Concurrent (forkIO)
 import           Control.Exception (SomeException, displayException, try)
 import           Control.Monad (forM_, mfilter, unless, void)
 import           Data.Char (isDigit)
@@ -33,9 +34,10 @@ import           TDF.WhatsApp.Transport (WhatsAppEnv, loadWhatsAppEnv, sendWhats
 
 -- | A public booking request must reach both sides: the customer gets a
 -- receipt and studio staff (admin/manager/studio manager) get an in-app
--- notification, an email and a WhatsApp alert. Each delivery is best-effort so
--- a mail or WhatsApp outage never turns an accepted request into an error for
--- the customer.
+-- notification, an email and a WhatsApp alert. Each delivery is best-effort,
+-- and the external ones are sent off the request thread, so a mail or WhatsApp
+-- outage or delay never turns an accepted request into an error for the
+-- customer.
 --
 -- WhatsApp only delivers business-initiated free-form text inside an open
 -- 24-hour window, so staff alerts use the approved template named by
@@ -99,57 +101,61 @@ notifyPublicBookingRequest Env{envPool = pool, envConfig = cfg} booking customer
         | (partyKey, party) <- staff
         , Just phone <- [nonBlank (M.partyWhatsapp party) <|> nonBlank (M.partyPrimaryPhone party)]
         ]
-  forM_ (nubOrdOn (T.toLower . snd) staffEmails) $ \(staffName, staffEmail) ->
-    try (EmailSvc.sendPublicBookingRequestStaff emailSvc staffName staffEmail
-           serviceLabel startLabel customerName contact details)
-      >>= logFailure ("email staff " <> staffEmail)
-  try (EmailSvc.sendPublicBookingRequestReceived emailSvc customerName customerEmail
-         serviceLabel startLabel details)
-    >>= logFailure "email customer"
-  unless (null staffPhones) $ do
-    envResult <- try loadWhatsAppEnv :: IO (Either SomeException WhatsAppEnv)
-    case envResult of
-      Left err -> logFailure "load WhatsApp config" (Left err)
-      Right waEnv -> do
-        mTemplate <- lookupEnv "WHATSAPP_STAFF_ALERT_TEMPLATE"
-        mLanguage <- lookupEnv "WHATSAPP_STAFF_ALERT_TEMPLATE_LANGUAGE"
-        let template = mfilter (not . T.null) (T.strip . T.pack <$> mTemplate)
-            language = fromMaybe "es" (mfilter (not . T.null) (T.strip . T.pack <$> mLanguage))
-            singleLine = T.unwords . T.words
-            textBody = T.intercalate "\n" $
-              [ "Nueva solicitud: " <> serviceLabel
-              , "Cliente: " <> customerName
-              , "Fecha: " <> startLabel
-              , "Contacto: " <> contact
-              ]
-              <> maybe [] (\ns -> ["", ns]) details
-              <> ["", "Revisa la agenda en TDF HQ (/estudio/calendario)."]
-        forM_ (nubOrdOn (\(_, _, phone) -> T.filter isDigit phone) staffPhones) $ \(partyKey, staffName, phone) -> do
-          (sentBody, sendResult) <- case template of
-            Just name -> do
-              res <- sendWhatsAppTemplateIO waEnv phone name language
-                (map singleLine [serviceLabel, customerName, startLabel, contact])
-              pure ("[template " <> name <> "/" <> language <> "]", res)
-            Nothing -> do
-              res <- sendWhatsAppTextIO waEnv phone textBody
-              pure (textBody, res)
-          case sendResult of
-            Left err -> logWarning ("WhatsApp staff " <> staffName <> ": " <> err)
-            Right _ -> pure ()
-          try (void (flip runSqlPool pool (recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
-              { owrRecipientPhone = phone
-              , owrRecipientPartyId = Just partyKey
-              , owrRecipientName = Just staffName
-              , owrRecipientEmail = Nothing
-              , owrActorPartyId = Nothing
-              , owrBody = sentBody
-              , owrSource = Just "public_booking_request_staff_alert"
-              , owrReplyToMessageId = Nothing
-              , owrReplyToExternalId = Nothing
-              , owrResendOfMessageId = Nothing
-              , owrMetadata = Nothing
-              } sendResult)))
-            >>= logFailure ("record WhatsApp staff alert " <> staffName)
+  -- Email and WhatsApp providers can be slow or down. They run after the
+  -- response on their own thread, so the customer never waits on them and the
+  -- web client's request deadline cannot turn an accepted booking into an error.
+  void $ forkIO $ (>>= logFailure "deliver external alerts") $ try $ do
+    forM_ (nubOrdOn (T.toLower . snd) staffEmails) $ \(staffName, staffEmail) ->
+      try (EmailSvc.sendPublicBookingRequestStaff emailSvc staffName staffEmail
+             serviceLabel startLabel customerName contact details)
+        >>= logFailure ("email staff " <> staffEmail)
+    try (EmailSvc.sendPublicBookingRequestReceived emailSvc customerName customerEmail
+           serviceLabel startLabel details)
+      >>= logFailure "email customer"
+    unless (null staffPhones) $ do
+      envResult <- try loadWhatsAppEnv :: IO (Either SomeException WhatsAppEnv)
+      case envResult of
+        Left err -> logFailure "load WhatsApp config" (Left err)
+        Right waEnv -> do
+          mTemplate <- lookupEnv "WHATSAPP_STAFF_ALERT_TEMPLATE"
+          mLanguage <- lookupEnv "WHATSAPP_STAFF_ALERT_TEMPLATE_LANGUAGE"
+          let template = mfilter (not . T.null) (T.strip . T.pack <$> mTemplate)
+              language = fromMaybe "es" (mfilter (not . T.null) (T.strip . T.pack <$> mLanguage))
+              singleLine = T.unwords . T.words
+              textBody = T.intercalate "\n" $
+                [ "Nueva solicitud: " <> serviceLabel
+                , "Cliente: " <> customerName
+                , "Fecha: " <> startLabel
+                , "Contacto: " <> contact
+                ]
+                <> maybe [] (\ns -> ["", ns]) details
+                <> ["", "Revisa la agenda en TDF HQ (/estudio/calendario)."]
+          forM_ (nubOrdOn (\(_, _, phone) -> T.filter isDigit phone) staffPhones) $ \(partyKey, staffName, phone) -> do
+            (sentBody, sendResult) <- case template of
+              Just name -> do
+                res <- sendWhatsAppTemplateIO waEnv phone name language
+                  (map singleLine [serviceLabel, customerName, startLabel, contact])
+                pure ("[template " <> name <> "/" <> language <> "]", res)
+              Nothing -> do
+                res <- sendWhatsAppTextIO waEnv phone textBody
+                pure (textBody, res)
+            case sendResult of
+              Left err -> logWarning ("WhatsApp staff " <> staffName <> ": " <> err)
+              Right _ -> pure ()
+            try (void (flip runSqlPool pool (recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+                { owrRecipientPhone = phone
+                , owrRecipientPartyId = Just partyKey
+                , owrRecipientName = Just staffName
+                , owrRecipientEmail = Nothing
+                , owrActorPartyId = Nothing
+                , owrBody = sentBody
+                , owrSource = Just "public_booking_request_staff_alert"
+                , owrReplyToMessageId = Nothing
+                , owrReplyToExternalId = Nothing
+                , owrResendOfMessageId = Nothing
+                , owrMetadata = Nothing
+                } sendResult)))
+              >>= logFailure ("record WhatsApp staff alert " <> staffName)
   where
     nonBlank = mfilter (not . T.null) . fmap T.strip
     nubOrdOn :: Eq k => (a -> k) -> [a] -> [a]

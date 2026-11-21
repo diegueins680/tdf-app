@@ -322,7 +322,9 @@ sendEngineerBookingEmail (Just cfg) mBase name email serviceLabel startsAtLabel 
       mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just calendarUrl)
   sendMailWithLogging cfg toAddr subject mail
 
--- Confirm to the customer that a manual (non-holding) booking request arrived.
+-- Confirm to the customer that a tentative booking request arrived. The request
+-- reserves its assigned rooms until staff confirm or cancel it, so the receipt
+-- must not promise that nothing is held.
 sendPublicBookingRequestReceivedEmail
   :: Maybe EmailConfig
   -> Text       -- ^ customer name
@@ -339,7 +341,7 @@ sendPublicBookingRequestReceivedEmail (Just cfg) name email serviceLabel startsA
       greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
       bodyLines =
         [ "Recibimos tu solicitud. El equipo de TDF revisará disponibilidad y te contactará con una cotización."
-        , "Importante: esta solicitud no retiene la fecha ni confirma un pago."
+        , "Importante: tu solicitud aún no está confirmada ni registra un pago. El horario queda apartado de forma tentativa mientras la revisamos y se libera si no podemos confirmarla."
         , "Servicio: " <> serviceLabel
         , "Fecha solicitada: " <> startsAtLabel
         ]
@@ -372,7 +374,7 @@ sendPublicBookingRequestStaffEmail (Just cfg) mBase name email serviceLabel star
         in if T.null trimmed then baseUrl else trimmed
       calendarUrl = sanitized <> "/estudio/calendario"
       bodyLines =
-        [ "Llegó una nueva solicitud tentativa desde la web. No retiene la fecha hasta que el equipo la confirme."
+        [ "Llegó una nueva solicitud tentativa desde la web. Aún no está confirmada, pero ya ocupa en la agenda el horario de las salas asignadas: confírmala o cancélala para liberarlo."
         , "Servicio: " <> serviceLabel
         , "Fecha solicitada: " <> startsAtLabel
         , "Cliente: " <> customer

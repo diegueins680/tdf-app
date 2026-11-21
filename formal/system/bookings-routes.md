@@ -36,5 +36,5 @@ Derived on 2026-11-07 by reading the booking sections of `tdf-hq/src/TDF/Server.
 
 **Data**
 - Every public booking creates a new party; email never reuses an existing one.
-- A newly created legacy tentative booking (`POST /bookings/public`) notifies the assigned engineer by email, every active Admin/Manager/StudioManager by an in-app `public_booking_request` notification (target `booking`, opened at `/estudio/calendario`) plus email and WhatsApp, and the customer by a receipt email. Deliveries are best-effort and logged; an idempotent replay sends nothing.
+- A newly created legacy tentative booking (`POST /bookings/public`) notifies the assigned engineer by email, every active Admin/Manager/StudioManager by an in-app `public_booking_request` notification (target `booking`, opened at `/estudio/calendario`) plus email and WhatsApp, and the customer by a receipt email. Both emails say the request is unconfirmed and that it occupies its assigned rooms tentatively until staff confirm or cancel it. In-app rows are written before the response; emails and WhatsApp go out on a background thread after it, so a slow provider cannot delay or fail the accepted request. Deliveries are best-effort and logged; an idempotent replay sends nothing.
 - A trigger rejection on the manual-evidence table surfaces as 500.
