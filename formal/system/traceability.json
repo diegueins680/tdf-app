@@ -29081,7 +29081,7 @@
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
-    "functions/_shared/event-preview.mjs": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
+    "functions/_shared/event-preview.mjs": "8c45a8fef1e5740623c33173b5ea0924f5b8f8b6d832f3fef666d1cda595e381",
     "functions/_shared/event-report-crypto.mjs": "8dd9954c2296bb3079c736528458a35bd421bfbf073fe067c4afa4957731638c",
     "functions/_shared/event-report-data.mjs": "ee7e242ebd1b14c26f46041f4e8dd5338c845652b7c5066a4414a890dfd922ca",
     "functions/_shared/event-report.mjs": "c586bdc4d476e4e994b8419b82aa6c8e0ceb2287ab88dabd8006d7fd06db175d",
@@ -29149,7 +29149,7 @@
     "scripts/__tests__/event-memory-http-password.test.mjs": "55dd32c763209f2395cf81602859dac92de349887f9d8f543f6c9dc8544eb87d",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-planning-ux-model.test.mjs": "cabef2dc377be8160232951cdfb2c4eaa1b16f99ed104c409dd2649859ec01af",
-    "scripts/__tests__/event-preview.test.mjs": "4b464df800da5e7b0dcfc1b2a045c3d918c7578ea49e608a3d1093ceac58948a",
+    "scripts/__tests__/event-preview.test.mjs": "d94db8fb24010a611de0da7db94e99de5cbb704324acd82534e81a6aaef4b2a7",
     "scripts/__tests__/event-raci-browser-runner.test.mjs": "0a036a388afece87cf55c150dfac92e411ffcc4c82e76301f502b8c288d9c657",
     "scripts/__tests__/event-raci-editor-context-runner.test.mjs": "3a631e1d3c328f48749b886db2896a0db5ef8640e5dcde7f2d31712e6fcc4ea2",
     "scripts/__tests__/event-report-crypto.test.mjs": "92363873ec7bf9f0567239f2687f790657eaa2801c19e2e5617baefb40642a81",
@@ -29758,7 +29758,7 @@
     "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx": "55bda163a94847cea6c1b62eda88974f2a31f47be0a149e0d569b67a84f2f1dc",
     "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx": "dee2406544003d535d637f676003536c5268358eb2795bf2156a534da54d1996",
     "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx": "c9024a33f3df8a9cd9f52feb310210b7c174fa22c92deef8324c3ce6a5b6d0bb",
-    "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx": "4757fc29b4daeb50f3ed170e90ef56a62b46a5813e764d5b158bc256dbbd2f5d",
+    "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx": "db2529edba3200186b347848aa0eee09fde91be1bfc5ff1002ee8ade2150677b",
     "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.test.tsx": "ee95b3e6a45bc1f4e0e18b08846d140e839f7d7e058d572d4e5573df91124afc",
     "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.tsx": "b49157c373d0e5e823b9df4c86804ce5d09afeabd5f009bbeb4cf89b5a851043",
     "tdf-hq-ui/src/components/events/EventAdminsCard.test.tsx": "b40b6519188bc04dee62ca39b1439ed08c8db7741043dfbcc4e0a036638daaf5",
@@ -29923,7 +29923,7 @@
     "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
     "tdf-hq-ui/src/pages/CmsAdminPage.tsx": "0b2a08ef582f97ec33fb6b9eb8c909f7d8482758655fc6f0958e312838f5744c",
     "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": "c3c495db7182a016a8d4ff2e119853f838157ef7f3892c9124be9131d13f613e",
-    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "a4bd16da93f500e2cf896b10ca8bdbac3e507760c71d888fac292eebcea10278",
+    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "da87c197bcc050c4415abd23fe1f7618052a85fa1cf3f4b65ae2f32acc830d37",
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CompaniesPage.tsx": "08964b25803284e26ecb3bafb8968a38b174a0cbd88772529a48cb0cfc951a9c",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
@@ -29935,8 +29935,8 @@
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "351c03a7f95ddf473ef8d86e01c0e5be7b4e2a0fbd2d842209b09feec1731fcd",
     "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts": "b68dae2863db9239158b04f5a6638623980b1eb23204a96c5cefe4512a50f9f3",
     "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": "da3194d624efc791af6152788a87d684b9ff8cb5737fa0574c236497286b2093",
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "e320f4d8a89ddeb92c3d573429ba9c110a725979d97b9974cd356aaf058ee02b",
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "efd16855987a225aaecb430437477786dc0455ba474aeea8e6452e59edf43cdb",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "8fd87e54a6450ffbb6217145421034c2f6b5216829d8ff8da729a1b2427d1b61",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "edbcf765bea2a8a50257af8fabfedc5570c6550235ddc2095a83bcda05527009",
     "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "10d23697ca3cc48f4b71513a79b9787a3a506022f0feda029dc3a2dc59055d84",
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "69d2e5c5578e6a197df30ed9a19b82e36fd3a207c26bf6d2358b922a94c673a1",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "8291bfa98091297a5b96ca67cf1f2b822bd8a4470d83a19fae59ff99a7682074",
@@ -30040,7 +30040,7 @@
     "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "83ab447bb2495618e93d48cfd3574881733b46cdd78e163be4dbe9a59b8b6a65",
     "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "6d0278536a97bd73dfa4277f123aa44422ac34120d35ac069e2cfa6b2cb64c1f",
     "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts": "aab1e9d9166e505604242c195235695eae9720b08f4e311220368f52bf283940",
-    "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": "1b7577906f1f3739f2ae756237f62cca45ae34174039e3dcb94f9d0384644324",
+    "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": "c7d5c4f0b3f4d557d090935fdefb8b757af401dbe440ede7e4334640a61d7413",
     "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts": "12d0b8e2c66e11b30784646892d3d97f9d6762032243c2f97819b292630b4c7a",
     "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts": "7e4b0da542f427fb13d49fa972d760d093096e1077c19cfbaa6f9a7fa0b9d251",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
@@ -51599,7 +51599,7 @@
     {
       "id": "SURFACE-48f151ff03188032",
       "path": "functions/_shared/event-preview.mjs",
-      "sha256": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
+      "sha256": "8c45a8fef1e5740623c33173b5ea0924f5b8f8b6d832f3fef666d1cda595e381",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52551,7 +52551,7 @@
     {
       "id": "SURFACE-c1036edc5aa530c7",
       "path": "scripts/__tests__/event-preview.test.mjs",
-      "sha256": "4b464df800da5e7b0dcfc1b2a045c3d918c7578ea49e608a3d1093ceac58948a",
+      "sha256": "d94db8fb24010a611de0da7db94e99de5cbb704324acd82534e81a6aaef4b2a7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63674,7 +63674,7 @@
     {
       "id": "SURFACE-d7474e771e08a175",
       "path": "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx",
-      "sha256": "4757fc29b4daeb50f3ed170e90ef56a62b46a5813e764d5b158bc256dbbd2f5d",
+      "sha256": "db2529edba3200186b347848aa0eee09fde91be1bfc5ff1002ee8ade2150677b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66663,7 +66663,7 @@
     {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "a4bd16da93f500e2cf896b10ca8bdbac3e507760c71d888fac292eebcea10278",
+      "sha256": "da87c197bcc050c4415abd23fe1f7618052a85fa1cf3f4b65ae2f32acc830d37",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66930,7 +66930,7 @@
     {
       "id": "SURFACE-814a4782598cab3d",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-      "sha256": "e320f4d8a89ddeb92c3d573429ba9c110a725979d97b9974cd356aaf058ee02b",
+      "sha256": "8fd87e54a6450ffbb6217145421034c2f6b5216829d8ff8da729a1b2427d1b61",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66950,7 +66950,7 @@
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "efd16855987a225aaecb430437477786dc0455ba474aeea8e6452e59edf43cdb",
+      "sha256": "edbcf765bea2a8a50257af8fabfedc5570c6550235ddc2095a83bcda05527009",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -69399,7 +69399,7 @@
     {
       "id": "SURFACE-7ec18247afed2819",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-      "sha256": "1b7577906f1f3739f2ae756237f62cca45ae34174039e3dcb94f9d0384644324",
+      "sha256": "c7d5c4f0b3f4d557d090935fdefb8b757af401dbe440ede7e4334640a61d7413",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

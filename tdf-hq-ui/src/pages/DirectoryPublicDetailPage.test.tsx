@@ -349,6 +349,16 @@ describe('canonical public event authentication fallback', () => {
   });
   afterEach(() => { cleanup(); jest.restoreAllMocks(); });
 
+  it.each([
+    ['Dirección del evento: Calle de Prueba 12, Quito\n\nJam de barrio', 'Calle de Prueba 12, Quito'],
+    ['Jam de barrio', 'Quito, EC'],
+  ])('renders the organizer-provided location or city for %s', async (description, expected) => {
+    profileMock.mockResolvedValueOnce({ ...event, description, location: { city: 'Quito', countryCode: 'EC' } });
+    renderPage('/eventos/141', '/login?redirect=event');
+    expect(await screen.findByText(expected)).toBeTruthy();
+    expect(screen.queryByText(/ubicación pública es aproximada/i)).toBeNull();
+  });
+
   it.each([401, 403, 404])('retains the original protected target when public metadata is unavailable (%s)', async status => {
     profileMock.mockRejectedValueOnce(new ApiError('Unavailable', status));
     const login = '/login?redirect=%2Fsocial%2Feventos%2F141%3Futm_source%3Dinvitation%23momentos';

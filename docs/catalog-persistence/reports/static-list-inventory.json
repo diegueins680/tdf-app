@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-21T15:10:14.293Z",
+  "generatedAt": "2026-11-21T16:36:23.553Z",
   "repositoryRoot": ".",
   "filesScanned": 2814,
   "candidateCount": 1475,
@@ -52846,7 +52846,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 704,
+      "line": 705,
       "values": [
         "editor",
         "viewer"
@@ -52854,7 +52854,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        704
+        705
       ],
       "consumerCount": 16,
       "backendConsumers": [
@@ -59268,7 +59268,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "switch-cases",
       "name": "key",
-      "line": 235,
+      "line": 238,
       "values": [
         "marketplace.offer.termsDuration",
         "marketplace.offer.termsEquipment",
@@ -59277,7 +59277,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        235
+        238
       ],
       "consumerCount": 3,
       "backendConsumers": [],
@@ -156576,7 +156576,7 @@
       "lines": [
         71
       ],
-      "consumerCount": 154,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
@@ -156647,7 +156647,6 @@
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
         "tdf-hq-ui/src/components/StudioGallery.tsx",
-        "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx",
         "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/components/reputation/CategoryPriorityPrototype.tsx",
@@ -156679,7 +156678,8 @@
         "tdf-hq-ui/src/pages/TdfDomoCampaignPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
         "tdf-hq-ui/src/pages/TeacherPortalPage.tsx",
-        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx"
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
+        "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/inventory.tsx",
@@ -156759,7 +156759,7 @@
       "lines": [
         87
       ],
-      "consumerCount": 138,
+      "consumerCount": 137,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
@@ -156829,7 +156829,6 @@
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
         "tdf-hq-ui/src/components/StudioGallery.tsx",
-        "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx",
         "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/components/reputation/CategoryPriorityPrototype.tsx",
@@ -158551,7 +158550,7 @@
       "lines": [
         5
       ],
-      "consumerCount": 145,
+      "consumerCount": 144,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
@@ -158622,7 +158621,6 @@
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
         "tdf-hq-ui/src/components/StudioGallery.tsx",
-        "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx",
         "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/components/reputation/CategoryPriorityPrototype.tsx",
@@ -158654,7 +158652,8 @@
         "tdf-hq-ui/src/pages/TdfDomoCampaignPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
         "tdf-hq-ui/src/pages/TeacherPortalPage.tsx",
-        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx"
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
+        "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/inventory.tsx",
