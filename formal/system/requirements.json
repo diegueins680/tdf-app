@@ -21813,7 +21813,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/bookings-routes.md.",
       "source": "formal/system/bookings-routes.md",
       "contract": "formal/system/bookings-routes.md",
-      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); an engineer email is sent only for a newly created booking.",
+      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); only a newly created legacy tentative booking notifies: the assigned engineer by email, every active Admin, Manager and StudioManager by an in-app notification (public_booking_request, target booking) plus email and WhatsApp, and the customer by a receipt email stating the request neither holds the date nor confirms payment. Each delivery is best-effort and logged; a delivery failure never rejects the accepted request.",
       "actors": [
         "Anonymous customer"
       ],
@@ -21847,7 +21847,9 @@
         "service_booking_checkout_runtime",
         "service_booking_tentative_request",
         "service_booking_event",
-        "engineer email"
+        "engineer, staff and customer email",
+        "staff notification rows",
+        "staff WhatsApp alert"
       ],
       "authorization": "None beyond the key (public-intake).",
       "privacy": "Stores customer contact details from anonymous input.",
@@ -21859,12 +21861,17 @@
       "implementation": [
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
-        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql"
+        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
+        "tdf-hq/src/TDF/Email.hs",
+        "tdf-hq/src/TDF/Email/Service.hs",
+        "tdf-hq-ui/src/components/notificationTarget.ts",
+        "tdf-mobile/src/navigation/notificationTarget.ts"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "scripts/test-public-booking-http-concurrency.sh",
-        "scripts/test-public-booking-tentative-idempotency-migration.sh"
+        "scripts/test-public-booking-tentative-idempotency-migration.sh",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts"
       ],
       "formalModels": [],
       "verification": "publicBookingSqlConflict is tested in tdf-hq/test/TDF/ServerSpec.hs; the HTTP concurrency script drives concurrent public checkouts; the rest is read from the handlers.",

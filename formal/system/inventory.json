@@ -31009,7 +31009,7 @@
     },
     {
       "path": "formal/system/bookings-routes.md",
-      "sha256": "d026999a03edf5a4b907823944c9b8cc4a606ae7f3455e8881fa9041d95df972",
+      "sha256": "33e82e20527869ed45d48519d89751dcaae5b90b23f7fedc7888dfb1903699e1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31996,7 +31996,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "3e6290afbbe3be683a3024ae7f63ef1e0ce5b9eae2a63d4604a4e5f4e4d96850",
+      "sha256": "5ea0a1a8a26b6f06cc282f8829c7c254bd8d554b804f132c132d77f5df056f44",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
