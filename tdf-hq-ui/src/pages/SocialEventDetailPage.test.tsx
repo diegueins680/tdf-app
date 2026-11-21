@@ -172,6 +172,25 @@ describe('SocialEventDetailPage ticket sharing', () => {
     view.unmount();
   });
 
+  it('creates a musician tier whose buyers are listed as event artists', async () => {
+    activeSession = { partyId: 7 };
+    getEventAdminAccessMock.mockResolvedValue({ eaaEventId: '121', eaaAccess: 'owner' });
+    listTicketTiersMock.mockResolvedValue([]);
+    getTicketSaleMock.mockImplementation(async () => saleEligibility(false));
+    createTicketTierMock.mockResolvedValue({ ...tierFixture, ticketTierRegistersParticipant: true });
+    const view = renderPage();
+    await screen.findByRole('button', { name: 'Crear tickets' });
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Precio' }), { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('checkbox', { name: /Entrada de músico/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Crear tickets' }));
+
+    await waitFor(() => expect(createTicketTierMock).toHaveBeenCalledWith('121', expect.objectContaining({
+      ticketTierPriceCents: 500, ticketTierRegistersParticipant: true,
+    })));
+    view.unmount();
+  });
+
   it('disables the sale request after deactivating the last paid tier', async () => {
     activeSession = { partyId: 7 };
     getEventAdminAccessMock.mockResolvedValue({ eaaEventId: '121', eaaAccess: 'owner' });
@@ -193,7 +212,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
 
     await waitFor(() => expect(request.hasAttribute('disabled')).toBe(true));
     expect(updateTicketTierMock).toHaveBeenCalledWith('121', 'tier-general', {
-      ...originalTier, ticketTierActive: false,
+      ...originalTier, ticketTierActive: false, ticketTierRegistersParticipant: false,
     });
     expect(getTicketSaleMock).toHaveBeenCalledTimes(2);
     view.unmount();

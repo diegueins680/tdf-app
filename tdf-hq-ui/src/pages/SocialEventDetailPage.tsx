@@ -51,6 +51,7 @@ interface MomentDraft { caption: string; mediaKind: 'media' | 'audio' | 'text'; 
 const emptyMomentDraft: MomentDraft = { caption: '', mediaKind: 'media', mediaUrl: '', file: null };
 const emptyTicketDraft = {
   name: 'General', price: '', quantity: '100', editing: null as SocialTicketTierDTO | null, active: true,
+  participant: false,
 };
 interface PublicationAttempt { eventId: string; scope: string; draft: MomentDraft; extended: boolean; ready: boolean; isCurrentOwner: () => boolean }
 interface OwnMomentAction { id: string; mode: 'edit' | 'delete'; caption: string; updatedAt: string }
@@ -206,6 +207,7 @@ export default function SocialEventDetailPage() {
       quantity: String(tier.ticketTierQuantityTotal),
       editing: tier,
       active: tier.ticketTierActive,
+      participant: tier.ticketTierRegistersParticipant === true,
     });
   };
   const ticketTierMutation = useSaveTicketTier(
@@ -228,6 +230,8 @@ export default function SocialEventDetailPage() {
         ticketTierQuantityTotal: quantity,
         ticketTierQuantitySold: original?.ticketTierQuantitySold ?? 0,
         ticketTierActive: ticketDraft.active,
+        // Drafts saved before this field existed have no value: treat as off.
+        ticketTierRegistersParticipant: ticketDraft.participant === true,
       };
     },
     {
@@ -531,6 +535,13 @@ export default function SocialEventDetailPage() {
                     resetTicketForm();
                   }} disabled={!ticketFormReady || ticketTierMutation.isPending}>Cancelar edición</Button>}
                 </Stack>
+                <FormControlLabel
+                  label="Entrada de músico: quien la paga aparece como artista del evento"
+                  control={<Switch
+                    checked={ticketDraft.participant === true}
+                    onChange={(_, participant) => setTicketDraft({ ...ticketDraft, participant })}
+                  />}
+                />
                 {editing && <FormControlLabel label="Categoría activa" control={<Switch
                   checked={ticketDraft.active}
                   onChange={(_, active) => setTicketDraft({ ...ticketDraft, active })}

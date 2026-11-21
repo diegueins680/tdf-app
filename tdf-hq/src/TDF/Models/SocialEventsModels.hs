@@ -370,6 +370,7 @@ EventTicketTier
     allowTransfers Bool default=True
     refundPolicy Text default='full'
     refundDeadline UTCTime Maybe
+    registersParticipant Bool default=False
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()
     UniqueEventTicketTierCode eventId code

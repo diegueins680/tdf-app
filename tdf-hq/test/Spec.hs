@@ -842,6 +842,7 @@ initializeTicketCheckInSchema = do
         \allow_transfers BOOLEAN NOT NULL DEFAULT 0,\
         \refund_policy VARCHAR NOT NULL DEFAULT 'none',\
         \refund_deadline TIMESTAMP NULL,\
+        \registers_participant BOOLEAN NOT NULL DEFAULT 0,\
         \created_at TIMESTAMP NOT NULL,\
         \updated_at TIMESTAMP NOT NULL\
         \)"
@@ -13802,6 +13803,7 @@ main = hspec $ do
                                 , eventTicketTierAllowTransfers = False
                               , eventTicketTierRefundPolicy = "none"
                               , eventTicketTierRefundDeadline = Nothing
+                              , eventTicketTierRegistersParticipant = False
                               , eventTicketTierCurrencyId = Nothing
                               , eventTicketTierCreatedAt = now
                                 , eventTicketTierUpdatedAt = now

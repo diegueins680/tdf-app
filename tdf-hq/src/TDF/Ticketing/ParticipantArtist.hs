@@ -1,0 +1,103 @@
+{-# LANGUAGE OverloadedStrings #-}
+
+-- | Musician (participant) ticket tiers. When tickets from such a tier are
+-- issued for a paid order, the buyer is listed among the event's artists,
+-- with a basic artist profile created for them if they have none.
+--
+-- Runs inside the issuance transaction, so the listing commits or rolls back
+-- with the tickets themselves. Guest buyers (no party) are left unlisted.
+module TDF.Ticketing.ParticipantArtist
+    ( registerParticipantArtistForOrder
+    , participantArtistName
+    , maxListedEventArtists
+    ) where
+
+import Control.Monad (void, when)
+import Data.Char (isControl, isDigit)
+import Data.Int (Int64)
+import Data.Maybe (isNothing, listToMaybe, mapMaybe)
+import qualified Data.Text as T
+import Data.Time (UTCTime)
+import Database.Persist
+import Database.Persist.Sql
+import Database.Persist.SqlBackend (getRDBMS)
+import Text.Read (readMaybe)
+
+import TDF.Models.SocialEventsModels
+
+-- | Same ceiling the event editor enforces for an event's artist list.
+maxListedEventArtists :: Int
+maxListedEventArtists = 50
+
+registerParticipantArtistForOrder :: UTCTime -> EventTicketOrder -> SqlPersistT IO ()
+registerParticipantArtistForOrder now order = do
+    mTier <- get (eventTicketOrderTierId order)
+    let participantTier = maybe False eventTicketTierRegistersParticipant mTier
+    case (participantTier, eventTicketOrderBuyerPartyId order >>= parsePartyId) of
+        (True, Just partyIdValue) -> do
+            mArtist <- participantArtistFor now order partyIdValue
+            case mArtist of
+                Nothing -> pure ()
+                Just artistKey -> do
+                    let eventKey = eventTicketOrderEventId order
+                    linked <- get (EventArtistKey eventKey artistKey)
+                    listed <- count [EventArtistEventId ==. eventKey]
+                    when (isNothing linked && listed < maxListedEventArtists) $
+                        void (insertUnique (EventArtist eventKey artistKey (Just "participant")))
+        _ -> pure ()
+
+participantArtistFor :: UTCTime -> EventTicketOrder -> Int64 -> SqlPersistT IO (Maybe ArtistProfileId)
+participantArtistFor now order partyIdValue = do
+    -- Lock the owner the way artist creation does, so two orders issued at
+    -- once for the same buyer cannot each create a profile.
+    backend <- T.toCaseFold <$> getRDBMS
+    let lockClause = if backend == "postgresql" then " FOR UPDATE" else ""
+    owners <-
+        rawSql
+            ("SELECT display_name FROM party WHERE id = ?" <> lockClause)
+            [PersistInt64 partyIdValue]
+    case owners of
+        [] -> pure Nothing
+        (Single displayName : _) -> do
+            let ownerText = T.pack (show partyIdValue)
+            existing <- selectFirst [ArtistProfilePartyId ==. Just ownerText] [Asc ArtistProfileId]
+            case existing of
+                Just (Entity key _) -> pure (Just key)
+                Nothing ->
+                    case participantArtistName [eventTicketOrderBuyerName order, Just displayName] of
+                        Nothing -> pure Nothing
+                        Just nameValue ->
+                            Just
+                                <$> insert
+                                    ArtistProfile
+                                        { artistProfilePartyId = Just ownerText
+                                        , artistProfileName = nameValue
+                                        , artistProfileBio = Nothing
+                                        , artistProfileAvatarUrl = Nothing
+                                        , artistProfileGenres = Nothing
+                                        , artistProfileSocialLinks = Nothing
+                                        , artistProfileCountryCode = Nothing
+                                        , artistProfileCountryId = Nothing
+                                        , artistProfileCreatedAt = now
+                                        , artistProfileUpdatedAt = now
+                                        }
+
+-- | First usable name: the name given at checkout, then the account name.
+-- Follows artist-name validation (non-empty, no control characters).
+participantArtistName :: [Maybe T.Text] -> Maybe T.Text
+participantArtistName = listToMaybe . mapMaybe (>>= usable)
+  where
+    usable raw
+        | T.any isControl raw = Nothing
+        | T.null (T.strip raw) = Nothing
+        | otherwise = Just (T.strip raw)
+
+parsePartyId :: T.Text -> Maybe Int64
+parsePartyId raw =
+    let trimmed = T.strip raw
+     in if not (T.null trimmed) && T.all isDigit trimmed
+            then mfilterPositive (readMaybe (T.unpack trimmed))
+            else Nothing
+  where
+    mfilterPositive (Just n) | n > 0 = Just n
+    mfilterPositive _ = Nothing

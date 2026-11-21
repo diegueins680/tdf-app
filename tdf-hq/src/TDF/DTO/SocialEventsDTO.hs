@@ -1044,6 +1044,9 @@ data TicketTierDTO = TicketTierDTO
     , ticketTierSalesEnd :: Maybe UTCTime
     , ticketTierActive :: Bool
     , ticketTierPosition :: Maybe Int
+    , ticketTierRegistersParticipant :: Maybe Bool
+    -- ^ Paid tickets from this tier list the buyer among the event's artists.
+    -- Omitted on create means False; omitted on update keeps the stored value.
     }
     deriving (Show, Eq, Generic)
 instance ToJSON TicketTierDTO

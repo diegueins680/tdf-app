@@ -191,6 +191,8 @@ export interface SocialTicketTierDTO {
   ticketTierSalesEnd?: string | null;
   ticketTierActive: boolean;
   ticketTierPosition?: number | null;
+  /** Paid tickets from this tier list the buyer among the event's artists. */
+  ticketTierRegistersParticipant?: boolean | null;
 }
 
 export interface SocialTicketPurchaseRequestDTO {
