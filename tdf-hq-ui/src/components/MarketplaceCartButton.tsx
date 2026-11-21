@@ -6,7 +6,7 @@ import {
   MARKETPLACE_CART_PATH,
   requestOpenMarketplaceCart,
   useMarketplaceCartSummary,
-} from '../features/marketplace/cartSummary';
+} from '../services/cartSummary';
 
 const MARKETPLACE_PATH = '/marketplace';
 

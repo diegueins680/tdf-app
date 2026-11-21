@@ -19,6 +19,9 @@ export default function EventPreparationPanel({ event, ownerId, canPlanLogistics
   const uploaded = useRef<{ file: File; url: string } | null>(null);
   const [feedback, setFeedback] = useState('');
   const draft = useOwnedSessionDraft<File | null>({ ownerId, scope: eventId, baseline: null, empty: null });
+  const visibilityLabel = !event.eventIsPublic
+    ? 'Borrador privado'
+    : event.eventPublicListable ? 'Visible al público' : 'Pendiente de publicar';
   const mutation = useMutation({
     mutationFn: async (attempt: PosterAttempt) => {
       const ensureOwner = () => {
@@ -68,7 +71,7 @@ export default function EventPreparationPanel({ event, ownerId, canPlanLogistics
     <CardContent><Stack spacing={1.5}>
       <Typography id="event-preparation-title" component="h2" variant="h6">Preparar evento</Typography>
       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-        <Chip label={event.eventIsPublic ? 'Visible al público' : 'Borrador privado'} color={event.eventIsPublic ? 'success' : 'default'} />
+        <Chip label={visibilityLabel} color={event.eventIsPublic && event.eventPublicListable ? 'success' : 'default'} />
         <Chip label={event.eventImageUrl ? 'Afiche cargado' : 'Falta el afiche'} color={event.eventImageUrl ? 'success' : 'warning'} />
         <Chip label={event.eventTicketPurchaseEnabled ? 'Venta habilitada' : 'Venta pendiente'} />
       </Stack>
