@@ -30029,8 +30029,8 @@
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": "c7df527c7a1f9e1859cbe81a549012dba31cf22e892a99de4621acf013a9202f",
     "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx": "3b706df13cadd3dfa75ca932202c6dbc44f87c2146df911918c44e2d4c4adcfd",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
-    "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx": "67247d4cb24abd1fe878b57d009ab858d7c4dc91bf4e34500d67791b2a6a1431",
-    "tdf-hq-ui/src/pages/FanClubPage.tsx": "a0217caa2b802383711316d3637cbd34ebb74a97db209e6bcd7cc7602437d22b",
+    "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx": "ac93ad9c7177059be02467a213afc1f7a5c08a818b0e2059d619f89d7d4a36bf",
+    "tdf-hq-ui/src/pages/FanClubPage.tsx": "b66b575f4ba3b45494887c73fa9975fdf12d5116a67f6556ed6be49e91828bc9",
     "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "6d1a4156273bc94c6fd44e89ba9c9cff52bb47e7b0f4d4af5fc45085e24feaa3",
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "bc32c42d85f2702f331c7c170764546c3988000c23596cfd3d691e24b4e2c024",
     "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b7c85fe3881529c7b6c6e601085352dfcd5550ae06509c922eefa0eb60575734",
@@ -67414,7 +67414,7 @@
     {
       "id": "SURFACE-adbe6d097447b912",
       "path": "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
-      "sha256": "67247d4cb24abd1fe878b57d009ab858d7c4dc91bf4e34500d67791b2a6a1431",
+      "sha256": "ac93ad9c7177059be02467a213afc1f7a5c08a818b0e2059d619f89d7d4a36bf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67426,7 +67426,7 @@
     {
       "id": "SURFACE-60cd6659a77e2df2",
       "path": "tdf-hq-ui/src/pages/FanClubPage.tsx",
-      "sha256": "a0217caa2b802383711316d3637cbd34ebb74a97db209e6bcd7cc7602437d22b",
+      "sha256": "b66b575f4ba3b45494887c73fa9975fdf12d5116a67f6556ed6be49e91828bc9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
