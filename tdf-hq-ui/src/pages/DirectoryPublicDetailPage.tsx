@@ -242,6 +242,9 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
   const composePath = `/social/eventos/${encodeURIComponent(identifier)}?${composeSearch.toString()}#momentos`;
 
   const locationValue = record(value['location']) ?? rows(value['locations'])[0];
+  const addressLine = kind === 'event' ? /^Dirección del evento:[ \t]*(\S[^\r\n]*)/iu.exec(description) : null;
+  const publicLocation = addressLine?.[1]?.trim() ?? [text(locationValue?.['city']), text(locationValue?.['countryCode'])].filter(Boolean).join(', ');
+  const detailDescription = addressLine ? description.slice(addressLine[0].length).trim() : description;
   const professions = rows(value['professions']);
   const instruments = rows(value['instruments']);
   const genres = rows(value['genres']);
@@ -313,6 +316,7 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                       // A shorter poster on phones keeps an event's buy button in the first screen.
                       height: { xs: kind === 'event' ? 200 : 300, sm: 220 },
                       aspectRatio: 'auto',
+                      ...(kind === 'event' && { objectFit: 'contain' }),
                       borderRadius: 3,
                     }}
                   />
@@ -383,10 +387,8 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                 </Paper>
               ) : null)}
 
-              {locationValue && kind === 'event' && (
-                <Typography color="text.secondary">
-                  {text(locationValue['city']) ?? ''}{text(locationValue['countryCode']) ? `, ${text(locationValue['countryCode'])}` : ''}
-                </Typography>
+              {kind === 'event' && publicLocation && (
+                <Typography color="text.secondary">{publicLocation}</Typography>
               )}
               {locationValue && kind !== 'event' && (
                 <Alert severity="info">
@@ -394,7 +396,7 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                 </Alert>
               )}
               <Divider />
-              <MarkdownText sx={{ fontSize: '1.08rem', lineHeight: 1.75 }}>{description}</MarkdownText>
+              <MarkdownText sx={{ fontSize: '1.08rem', lineHeight: 1.75 }}>{detailDescription}</MarkdownText>
 
               {kind === 'event' && (
                 <Stack spacing={2}>

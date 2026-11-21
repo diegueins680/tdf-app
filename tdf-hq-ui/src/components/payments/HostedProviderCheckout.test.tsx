@@ -14,14 +14,20 @@ jest.unstable_mockModule('../../api/providerPaymentSessions', () => ({
     { label: 'placetopay_card', provider: 'placetopay', paymentMethod: 'card' },
     { label: 'placetopay_bank_redirect', provider: 'placetopay', paymentMethod: 'bank_redirect' },
     { label: 'placetopay_deuna_qr', provider: 'placetopay', paymentMethod: 'deuna_qr' },
+    { label: 'payphone_card', provider: 'payphone', paymentMethod: 'card' },
     { label: 'payphone_wallet', provider: 'payphone', paymentMethod: 'payphone_wallet' },
   ],
   createProviderPaymentSession: createMock,
   getProviderPaymentSession: getMock,
-  safePlaceToPayRedirect: (value?: string | null) => value?.startsWith('https://checkout-test.placetopay.ec/') ? value : null,
+  safeProviderRedirect: (provider?: string | null, value?: string | null) => {
+    if (provider === 'placetopay') return value?.startsWith('https://checkout-test.placetopay.ec/') ? value : null;
+    if (provider === 'payphone') return value?.startsWith('https://pay.payphonetodoesposible.com/') ? value : null;
+    return null;
+  },
 }));
 
 const { default: HostedProviderCheckout } = await import('./HostedProviderCheckout');
+const { HOSTED_PAYMENT_METHODS: testHostedMethods } = await import('../../api/providerPaymentSessions');
 const { ApiError } = await import('../../api/client');
 const {
   saveProviderPaymentPending, saveProviderPaymentResume, loadProviderPaymentPending,
@@ -280,6 +286,50 @@ describe('HostedProviderCheckout', () => {
     await waitFor(() => expect(createMock).toHaveBeenCalledWith(checkoutId, context.lookupToken, key,
       { provider: 'payphone', paymentMethod: 'payphone_wallet',
         buyerPhone: '991234567', buyerCountryCode: '593' }));
+  });
+
+  it('sends a PayPhone card buyer to the hosted page without asking for a phone number', async () => {
+    const navigate = jest.fn();
+    const hosted = 'https://pay.payphonetodoesposible.com/Anonymous/Index?paymentId=Pay-1';
+    createMock.mockResolvedValue({
+      checkoutId,
+      attemptId,
+      operationId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+      provider: 'payphone',
+      state: 'requires_customer_action',
+      externalId: 'Pay-1',
+      redirectUrl: hosted,
+      outcomeCertainty: 'ambiguous',
+      canRetryOrFallback: false,
+    });
+    render(<HostedProviderCheckout checkout={context}
+      offeredMethods={['payphone_card']} navigateToProvider={navigate} />);
+    expect(screen.queryByRole('textbox')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Tarjeta · PayPhone' }));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith(hosted));
+    expect(createMock).toHaveBeenCalledWith(checkoutId, context.lookupToken, expect.any(String),
+      { provider: 'payphone', paymentMethod: 'card' });
+    expect(screen.queryByRole('textbox')).toBeNull();
+  });
+
+  it('keeps wallet fields hidden and fallback locked for a PayPhone card among other offered methods', async () => {
+    const navigate = jest.fn();
+    const hosted = 'https://pay.payphonetodoesposible.com/Anonymous/Index?paymentId=Pay-1';
+    createMock.mockResolvedValue({
+      checkoutId, attemptId, operationId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+      provider: 'payphone', state: 'requires_customer_action', externalId: 'Pay-1',
+      redirectUrl: hosted, outcomeCertainty: 'ambiguous', canRetryOrFallback: false,
+    });
+    render(<HostedProviderCheckout checkout={context}
+      offeredMethods={testHostedMethods.map((method) => method.label)} navigateToProvider={navigate} />);
+    const wallet = screen.getByRole('button', { name: 'Billetera PayPhone' });
+    expect(screen.queryByRole('textbox')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Tarjeta · PayPhone' }));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith(hosted));
+    expect(createMock).toHaveBeenCalledWith(checkoutId, context.lookupToken, expect.any(String),
+      { provider: 'payphone', paymentMethod: 'card' });
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(wallet.hasAttribute('disabled')).toBe(true);
   });
 
   it('never mints a new request key when the original recovery key is missing', async () => {

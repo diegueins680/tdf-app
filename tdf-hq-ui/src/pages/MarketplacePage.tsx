@@ -64,7 +64,7 @@ import {
   readCartMeta,
   writeCartMeta,
   type MarketplaceCartMeta,
-} from '../features/marketplace/cartSummary';
+} from '../services/cartSummary';
 import { BOTTOM_DOCK_OFFSET } from '../utils/bottomDock';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 // The pure entry defers injecting js.stripe.com until checkout actually calls loadStripe.

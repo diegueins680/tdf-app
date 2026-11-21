@@ -162,4 +162,5 @@ type DriveAPI =
   :<|> "drive" :> "token" :> "refresh"
     :> ReqBody '[JSON] DriveTokenRefreshRequest
     :> Post '[JSON] DriveTokenResponse
+  :<|> "drive" :> "token" :> DeleteNoContent
   :<|> ContentStorageAPI
