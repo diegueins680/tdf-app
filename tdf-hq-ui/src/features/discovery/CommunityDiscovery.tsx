@@ -4,11 +4,19 @@ import { Alert, Box, Button, Card, CardActionArea, CardContent, LinearProgress, 
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import { resolveDirectoryPreviewImage } from '../../utils/directoryPreviewImage';
+import { isArtistPlaceholderImage } from '../../utils/artistFallbacks';
 import ArtistProfileImage from '../../components/ArtistProfileImage';
 import { Directory, type DirectorySearchQuery } from '../../api/directory';
 import { directoryResultPath, useDebouncedSearch, useDirectorySearch } from './useDirectorySearch';
 
 const PAGE_SIZE_OPTIONS = [12, 24, 48];
+
+const hasPicture = (imageUrl: unknown) => {
+  const resolved = resolveDirectoryPreviewImage(imageUrl);
+  return Boolean(resolved) && !isArtistPlaceholderImage(resolved);
+};
+const picturedResultsFirst = <T extends { imageUrl?: unknown }>(items: readonly T[]): T[] =>
+  [...items].sort((left, right) => Number(hasPicture(right.imageUrl)) - Number(hasPicture(left.imageUrl)));
 
 export default function CommunityDiscovery() {
   const [params, setParams] = useSearchParams();
@@ -50,7 +58,9 @@ export default function CommunityDiscovery() {
   const total = pages[0]?.facets.total ?? 0;
   // A restored page that is not loaded yet is reached one server page at a time.
   const catchingUp = pages.length > 0 && page >= pages.length && Boolean(results.hasNextPage);
-  const items = catchingUp ? [] : pages[Math.min(page, pages.length - 1)]?.items ?? [];
+  // Until every API ranks pictured profiles first, keep that order within the
+  // page shown; the sort is stable, so the server order holds inside each group.
+  const items = picturedResultsFirst(catchingUp ? [] : pages[Math.min(page, pages.length - 1)]?.items ?? []);
   const { fetchNextPage, isFetching, isFetchNextPageError } = results;
   // After a failed page request the catch-up stops; only the retry button asks again.
   useEffect(() => {

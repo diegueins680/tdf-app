@@ -4,7 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { jest } from '@jest/globals';
 
 import { writeSessionPersonalData } from '../utils/sessionPersonalData';
-import { AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
+import { AUTH_SESSION_EXPIRED_EVENT } from '../auth/authEvents';
 
 const logoutSessionRequestMock = jest.fn(() => Promise.resolve());
 const loadSessionSnapshotMock = jest.fn(() => new Promise<null>(() => undefined));
@@ -107,8 +107,8 @@ describe('SessionProvider personal-data boundary', () => {
   });
 
   it('preserves the current party drafts during a role refresh without publishing a new login revision', async () => {
-    const { getLogoutRevision } = await import('./logoutIntent');
-    const { getAuthSessionEpoch } = await import('./authEvents');
+    const { getLogoutRevision } = await import('../auth/logoutIntent');
+    const { getAuthSessionEpoch } = await import('../auth/authEvents');
     await act(async () => sessionControls?.login({ username: 'first', displayName: 'First', roles: ['Customer'], partyId: 42 }));
     writeSessionPersonalData('tdf-marketplace-buyer', 'same-party buyer');
     writeSessionPersonalData('tdf-public-booking-profile', 'same-party booking');
@@ -122,7 +122,7 @@ describe('SessionProvider personal-data boundary', () => {
   });
 
   it('preserves drafts on same-party interactive reauthentication while advancing the login revision', async () => {
-    const { getLogoutRevision } = await import('./logoutIntent');
+    const { getLogoutRevision } = await import('../auth/logoutIntent');
     await act(async () => sessionControls?.login({ username: 'first', displayName: 'First', roles: [], partyId: 42 }));
     writeSessionPersonalData('tdf-marketplace-buyer', 'same-party buyer');
     const revision = getLogoutRevision();

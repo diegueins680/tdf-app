@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 jest.unstable_mockModule('./authHeader', () => ({ buildAuthorizationHeader: () => 'Bearer stale-test-token' }));
 jest.unstable_mockModule('../utils/env', () => ({ env: { read: () => undefined } }));
-const { beginLogoutIntent, clearLogoutIntent, trackLogoutRequest } = await import('../session/logoutIntent');
+const { beginLogoutIntent, clearLogoutIntent, trackLogoutRequest } = await import('../auth/logoutIntent');
 const { get } = await import('./client');
 const { loadSessionSnapshot, logoutSessionRequest } = await import('./session');
 const { loginRequest } = await import('./auth');

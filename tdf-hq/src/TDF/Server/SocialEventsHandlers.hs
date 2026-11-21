@@ -231,6 +231,7 @@ import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
 import TDF.Ticketing.Issuance (finalizePaidTicketOrder, issueMissingTicketsForOrder)
 import qualified TDF.Server.EventAdminDelegation as EventAdmin
+import qualified TDF.Server.EventTicketSale as EventTicketSale
 import TDF.Server.EventAdminDelegation (eventNotOrganizerError, eventWithoutOrganizerError, isEventManager, isTicketTierSaleOpen, requireEventManager)
 import qualified TDF.Ticketing.Inventory as TicketInventory
 import qualified TDF.Ticketing.Refund as TicketRefund
@@ -338,6 +339,7 @@ import TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueC
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Profiles.Artist as ArtistProfiles
 import qualified TDF.ModelsExtra as ME
+import TDF.Server.TicketSalesWindow (eventTicketPurchaseEnabledFor)
 import qualified TDF.SocialEventLifecycle as EventLifecycle
 import TDF.ServerRadio (nativeBroadcastUnavailable)
 import TDF.Server.StripeTicketCapture (StripeTicketCapture (..), parseStripeTicketCapture, recordStripeTicketCapture, stripeTicketClosedOrderNeedsReview)
@@ -2267,6 +2269,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 lockSocialEventForMutation isImportedEventHidden validateTicketPurchaseBuyerName validateTicketPurchaseBuyerEmail
                 issueMissingTicketsForOrder ticketOrderEntityToDTO sendTicketConfirmationForOrder )
         :<|> memoryInvitationsServer
+        :<|> EventTicketSale.eventTicketSaleServer user currentPartyId
+            (EventTicketSale.EventTicketSaleDeps parseVisibleEventKey lockSocialEventForMutation)
   where
     currentPartyId :: T.Text
     currentPartyId = renderPartyId user
@@ -8346,12 +8350,6 @@ validateTicketPurchaseEventEligibility rawMetadata purchaseEnabled = do
         Left err403{errBody = "Tickets are not available for private events"}
     unless purchaseEnabled $
         Left err409{errBody = "Tickets are not on sale for this event"}
-
-eventTicketPurchaseEnabledFor :: SocialEvent -> SqlPersistT IO Bool
-eventTicketPurchaseEnabledFor eventRow =
-    case socialEventWorkflowStateId eventRow of
-        Nothing -> pure False
-        Just stateId -> EventLifecycle.socialEventStateHasCapability stateId "ticket-purchase"
 
 normalizeTicketStatus :: Maybe T.Text -> T.Text
 normalizeTicketStatus mStatus =

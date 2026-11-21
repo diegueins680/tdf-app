@@ -54,7 +54,7 @@ it('attributes only a syntactically valid invitation while preserving the event 
 it('does not grant invitation consent after credentials change before the next session render', async () => {
   const close = mount(false);
   const checkbox = await screen.findByRole('checkbox', { name: 'Recibir invitaciones a compartir recuerdos dentro de TDF' });
-  const { advanceAuthSessionEpoch } = await import('../../session/authEvents');
+  const { advanceAuthSessionEpoch } = await import('../../auth/authEvents');
   advanceAuthSessionEpoch();
   fireEvent.click(checkbox);
   await waitFor(() => expect(save.mock.calls.length > 0 || Boolean(screen.queryByText(/No se pudo guardar o consultar/))).toBe(true));
@@ -71,7 +71,7 @@ it('does not replace the new account preference with a late response from the pr
   const view = render(tree());
   fireEvent.click(await screen.findByRole('checkbox', { name: /Recibir invitaciones/ }));
   await waitFor(() => expect(save).toHaveBeenCalledWith(true));
-  const { advanceAuthSessionEpoch } = await import('../../session/authEvents');
+  const { advanceAuthSessionEpoch } = await import('../../auth/authEvents');
   advanceAuthSessionEpoch(); activeParty = 10; view.rerender(tree());
   await screen.findByRole('checkbox', { name: /Recibir invitaciones/ });
   await act(async () => { finish({ inApp: true }); await pending; });

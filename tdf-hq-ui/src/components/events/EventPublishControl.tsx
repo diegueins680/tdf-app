@@ -6,7 +6,7 @@ import { Catalogs, type WorkflowState } from '../../api/catalogs';
 import { SocialEventsAPI, type SocialEventDTO } from '../../api/socialEvents';
 import { captureGrowthEvent } from '../../analytics/growthAttribution';
 import { getAnalyticsClient } from '../../analytics/posthog';
-import { getAuthSessionEpoch } from '../../session/authEvents';
+import { getAuthSessionEpoch } from '../../auth/authEvents';
 
 const PUBLIC_LISTABLE = 'public-listable';
 

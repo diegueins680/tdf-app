@@ -1,4 +1,4 @@
-import { getAuthSessionEpoch } from '../session/authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 import ArtistProfileLink from '../components/ArtistProfileLink';
 import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
