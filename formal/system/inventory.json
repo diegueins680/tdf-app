@@ -2554,6 +2554,7 @@
       "tdf-hq/src/TDF/Server/PaymentCapabilities.hs",
       "tdf-hq/src/TDF/Server/ProviderExecution.hs",
       "tdf-hq/src/TDF/Server/ProviderTransport.hs",
+      "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs",
       "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
       "tdf-hq/src/TDF/Server/Reviews.hs",
       "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
@@ -18226,7 +18227,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "134e8fbabf111ae4ba3e12d7cd24fb1ab86a1b4cc2e7f97badc9996311f0151b",
+      "sha256": "74be6a7279ca75cc8e24231e6723c461acc8956d6f4e4f5f497597c0df3cd521",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18383,6 +18384,12 @@
       "id": "SURFACE-8bea15f709688422",
       "path": "tdf-hq/src/TDF/Server/ProviderTransport.hs",
       "sha256": "f42c6b0bf7913cf6f0a0deeae6aa6c14785644edf2d50d97dd840d1202080cae",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e6a81cd4686d612d",
+      "path": "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs",
+      "sha256": "35a423537822ac29bb15ef0f34f2216208236acc30d018bc535eadbeb3784bc5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18802,7 +18809,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "sha256": "3572a1afd73c7ec2b40da2d9b281cb1ea34a718217e7a30c5000af695288022f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31996,7 +32003,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "5ea0a1a8a26b6f06cc282f8829c7c254bd8d554b804f132c132d77f5df056f44",
+      "sha256": "471b9062d1c150c6eac7d336f6c3259252a057251793644741419ed9d48269df",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
