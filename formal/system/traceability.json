@@ -29185,7 +29185,7 @@
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
     "ops/hetzner/guarded-release.py": "4551cec5f09215463ad98ea7a4dc3e3c47417b02fc5ccbd50fad63c20e15239b",
-    "ops/hetzner/inspect-runtime.py": "3a5ac05d5e1333ef9891090641ad1eaa4a47f3714c82b82806355de8d653b20d",
+    "ops/hetzner/inspect-runtime.py": "ac9d2301115c8f86fcf339c1191f5937b9677312c16a4bcd582ef71779628611",
     "ops/hetzner/isolated-application-canary.py": "a21c2ad244d0c2b5a340c6f51b867a3f5b4c1551340e0953836a1c46375ed83f",
     "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
@@ -51973,7 +51973,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "3a5ac05d5e1333ef9891090641ad1eaa4a47f3714c82b82806355de8d653b20d",
+      "sha256": "ac9d2301115c8f86fcf339c1191f5937b9677312c16a4bcd582ef71779628611",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

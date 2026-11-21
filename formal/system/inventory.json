@@ -3847,7 +3847,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "3a5ac05d5e1333ef9891090641ad1eaa4a47f3714c82b82806355de8d653b20d",
+      "sha256": "ac9d2301115c8f86fcf339c1191f5937b9677312c16a4bcd582ef71779628611",
       "semanticConformance": "not-established-by-discovery"
     },
     {
