@@ -23099,7 +23099,7 @@
     },
     {
       "path": "docs/artists/video-campaigns.md",
-      "sha256": "af9afbc38c9e4744f9290f8f262f903f7a9a8112fc9bee20cacd1f02fb4b9113",
+      "sha256": "d862571e78b84bfb4e4234567a743c4dd7d44014d0665dff419ef64b01b3f0cd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
