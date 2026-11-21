@@ -54,6 +54,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
+jest.unstable_mockModule('../api/eventAttendees', () => ({ listAttendees: jest.fn() }));
 jest.unstable_mockModule('../api/eventTickets', () => ({ EventTickets: { getStorefront: storefrontMock } }));
 // Keep the real feed component while isolating its explicit domain API boundary.
 // Do not invent successful low-level transport methods merely to satisfy imports.
@@ -348,6 +349,16 @@ describe('canonical public event authentication fallback', () => {
     await appI18n.changeLanguage('es');
   });
   afterEach(() => { cleanup(); jest.restoreAllMocks(); });
+
+  it.each([
+    ['Dirección del evento: Calle de Prueba 12, Quito\n\nJam de barrio', 'Calle de Prueba 12, Quito'],
+    ['Jam de barrio', 'Quito, EC'],
+  ])('renders the organizer-provided location or city for %s', async (description, expected) => {
+    profileMock.mockResolvedValueOnce({ ...event, description, location: { city: 'Quito', countryCode: 'EC' } });
+    renderPage('/eventos/141', '/login?redirect=event');
+    expect(await screen.findByText(expected)).toBeTruthy();
+    expect(screen.queryByText(/ubicación pública es aproximada/i)).toBeNull();
+  });
 
   it.each([401, 403, 404])('retains the original protected target when public metadata is unavailable (%s)', async status => {
     profileMock.mockRejectedValueOnce(new ApiError('Unavailable', status));

@@ -1,4 +1,4 @@
-import { VideoCampaigns } from '../../api/videoCampaigns';
+import { VideoCampaigns } from '../api/videoCampaigns';
 
 export function videoAttribution(search: string) {
   const params = new URLSearchParams(search);
