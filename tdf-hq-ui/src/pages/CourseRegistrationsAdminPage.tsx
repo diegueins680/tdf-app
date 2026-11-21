@@ -604,6 +604,17 @@ const parseStatusFilter = (value: string | null): StatusFilter => {
   return normalizeStatusFilterAlias(value ?? '') ?? 'all';
 };
 
+interface LinkedRegistrationTarget {
+  id: number;
+  slug: string;
+}
+
+const parseLinkedRegistrationTarget = (params: URLSearchParams): LinkedRegistrationTarget | null => {
+  const raw = (params.get('registration') ?? '').trim();
+  if (!/^[1-9]\d{0,14}$/.test(raw)) return null;
+  return { id: Number(raw), slug: (params.get('slug') ?? '').trim() };
+};
+
 const parsePositiveLimit = (value: string | null, fallback = DEFAULT_LIMIT): number => {
   const trimmed = value?.trim() ?? '';
   if (!/^\d+$/.test(trimmed)) return fallback;
@@ -4899,6 +4910,11 @@ export default function CourseRegistrationsAdminPage() {
     initialRegistrationSortKey,
   );
   const [slug, setSlug] = useState(initialSlug);
+  // Reminder and calendar links arrive as ?registration=<id>&slug=<cohort>. The
+  // target stays here (and in the URL) until its dossier opens or lookup fails.
+  const [linkedRegistration, setLinkedRegistration] = useState<LinkedRegistrationTarget | null>(
+    () => parseLinkedRegistrationTarget(searchParams),
+  );
   const [status, setStatus] = useState<StatusFilter>(initialStatus);
   const [limit, setLimit] = useState(initialLimit);
   const [registrationSortKey, setRegistrationSortKey] = useState<RegistrationSortKey>(initialRegistrationSortKey);
@@ -6600,8 +6616,9 @@ export default function CourseRegistrationsAdminPage() {
       params.set('sort', registrationSortKey);
       params.set('dir', registrationSortDirection);
     }
+    if (linkedRegistration) params.set('registration', String(linkedRegistration.id));
     setSearchParams(params, { replace: true });
-  }, [slug, status, limit, registrationSortKey, registrationSortDirection, setSearchParams]);
+  }, [slug, status, limit, registrationSortKey, registrationSortDirection, linkedRegistration, setSearchParams]);
 
   useEffect(() => {
     setCopyMessage(null);
@@ -6802,19 +6819,46 @@ export default function CourseRegistrationsAdminPage() {
     setSelectedDossier({ reg, intent });
   };
 
-  // Reminder notifications and calendar entries link here with ?registration=<id>.
-  const linkedRegistrationParam = searchParams.get('registration');
+  // A linked registration is fetched by id, so it opens even when it is older
+  // than the rows the list requested. Links without a cohort fall back to the list.
+  const linkedRegistrationQuery = useQuery<CourseRegistrationDTO>({
+    queryKey: ['admin', 'course-registration-link', linkedRegistration?.slug ?? '', linkedRegistration?.id ?? 0],
+    enabled: Boolean(linkedRegistration?.slug),
+    queryFn: () => {
+      if (!linkedRegistration?.slug) {
+        return Promise.reject(new Error('No hay una inscripción enlazada.'));
+      }
+      return Courses.getRegistration(linkedRegistration.slug, linkedRegistration.id);
+    },
+    retry: false,
+    staleTime: 0,
+  });
   useEffect(() => {
-    if (!linkedRegistrationParam || !regsQuery.isSuccess) return;
-    const linkedId = Number(linkedRegistrationParam);
-    const linkedReg = registrations.find((reg) => reg.crId === linkedId);
+    if (!linkedRegistration) return;
+    const missingMessage = 'No pudimos abrir la inscripción del enlace. Búscala en la lista.';
+    if (linkedRegistration.slug) {
+      if (linkedRegistrationQuery.isSuccess && linkedRegistrationQuery.data?.crId === linkedRegistration.id) {
+        setSelectedDossier({ reg: linkedRegistrationQuery.data, intent: 'review' });
+        setLinkedRegistration(null);
+      } else if (linkedRegistrationQuery.isSuccess || linkedRegistrationQuery.isError) {
+        setPageFlash({ severity: 'error', message: missingMessage });
+        setLinkedRegistration(null);
+      }
+      return;
+    }
+    if (regsQuery.isLoading) return;
+    const linkedReg = registrations.find((reg) => reg.crId === linkedRegistration.id);
     if (linkedReg) setSelectedDossier({ reg: linkedReg, intent: 'review' });
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.delete('registration');
-      return next;
-    }, { replace: true });
-  }, [linkedRegistrationParam, regsQuery.isSuccess, registrations, setSearchParams]);
+    else setPageFlash({ severity: 'error', message: missingMessage });
+    setLinkedRegistration(null);
+  }, [
+    linkedRegistration,
+    linkedRegistrationQuery.data,
+    linkedRegistrationQuery.isError,
+    linkedRegistrationQuery.isSuccess,
+    regsQuery.isLoading,
+    registrations,
+  ]);
 
   const getPersistedNotesValue = () =>
     dossierQuery.data?.crdRegistration.crAdminNotes ?? selectedDossier?.reg.crAdminNotes ?? '';

@@ -70,6 +70,7 @@ import           Database.Persist        ( (!=.)
                                          , insert_
                                          , insertEntity
                                          , insertUnique
+                                         , toPersistValue
                                          , delete
                                          , update
                                          , (=.)
@@ -257,26 +258,41 @@ sendDueCourseFollowUpReminders :: Env -> IO ()
 sendDueCourseFollowUpReminders Env{envPool} = do
   now <- getCurrentTime
   let oldestDue = addUTCTime (-(2 * 24 * 60 * 60)) now
+  -- Only reminders that can still be delivered take a batch slot: delivered,
+  -- authorless and cancelled-registration rows are excluded before the limit,
+  -- so a busy two-day window cannot starve later reminders.
   rows <- runSqlPool
-    (selectList
-      [ ME.CourseRegistrationFollowUpNextFollowUpAt <=. Just now
-      , ME.CourseRegistrationFollowUpNextFollowUpAt >=. Just oldestDue
-      ]
-      [Asc ME.CourseRegistrationFollowUpNextFollowUpAt, LimitTo 500])
+    (rawSql
+      "SELECT ?? FROM course_registration_follow_up \
+      \JOIN course_registration ON course_registration.id = course_registration_follow_up.registration_id \
+      \WHERE course_registration_follow_up.next_follow_up_at <= ? \
+      \AND course_registration_follow_up.next_follow_up_at >= ? \
+      \AND course_registration_follow_up.created_by IS NOT NULL \
+      \AND lower(course_registration.status) <> 'cancelled' \
+      \AND NOT EXISTS (SELECT 1 FROM course_follow_up_reminder_delivery d \
+      \WHERE d.follow_up_id = course_registration_follow_up.id \
+      \AND d.due_at = course_registration_follow_up.next_follow_up_at \
+      \AND d.recipient_party_id = CAST(course_registration_follow_up.created_by AS text)) \
+      \ORDER BY course_registration_follow_up.next_follow_up_at ASC, course_registration_follow_up.id ASC \
+      \LIMIT 500"
+      [toPersistValue now, toPersistValue oldestDue]
+      :: SqlPersistT IO [Entity ME.CourseRegistrationFollowUp])
     envPool
   for_ rows $ \(Entity followUpKey followUp) ->
     case (ME.courseRegistrationFollowUpNextFollowUpAt followUp, ME.courseRegistrationFollowUpCreatedBy followUp) of
-      (Just dueAt, Just recipient) -> do
-        mReg <- runSqlPool (get (ME.courseRegistrationFollowUpRegistrationId followUp)) envPool
+      -- The claim and its notification commit together: a failed notification
+      -- rolls the claim back, so the next run retries the reminder.
+      (Just dueAt, Just recipient) -> flip runSqlPool envPool $ do
+        mReg <- get (ME.courseRegistrationFollowUpRegistrationId followUp)
         for_ mReg $ \reg ->
           when (T.toLower (ME.courseRegistrationStatus reg) /= "cancelled") $ do
-            claim <- runSqlPool (insertUnique ME.CourseFollowUpReminderDelivery
+            claim <- insertUnique ME.CourseFollowUpReminderDelivery
               { ME.courseFollowUpReminderDeliveryFollowUpId = followUpKey
               , ME.courseFollowUpReminderDeliveryDueAt = dueAt
               , ME.courseFollowUpReminderDeliveryRecipientPartyId = T.pack (show (fromSqlKey recipient))
               , ME.courseFollowUpReminderDeliveryDeliveredAt = now
-              }) envPool
-            for_ claim $ \_ -> runSqlPool (insert_ Notification
+              }
+            for_ claim $ \_ -> insert_ Notification
               { notificationRecipientPartyId = recipient
               , notificationNotifType = "course_follow_up_reminder"
               , notificationTitle = "Recordatorio de seguimiento · " <> courseFollowUpReminderName reg
@@ -286,7 +302,7 @@ sendDueCourseFollowUpReminders Env{envPool} = do
               , notificationTargetKey = Just (ME.courseRegistrationCourseSlug reg)
               , notificationIsRead = False
               , notificationCreatedAt = now
-              }) envPool
+              }
       _ -> pure ()
 
 courseFollowUpReminderName :: ME.CourseRegistration -> Text
