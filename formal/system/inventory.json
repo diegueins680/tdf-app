@@ -9504,13 +9504,13 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "5a60ed2d3c0821733cc85d6fb61db40cc709d42282584d1f15e7a6453646338f",
+      "sha256": "be2a3097c38a19c8fab71e221a77f74d32999971f8d578b04dc74271ad8b762f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "9ce84c4ecc6b7f3e427f814310d7e2baf2817c4237e10a980cadb89fa5661970",
+      "sha256": "1c5b55003a6f5e7d666cfddfe7d3724f2f1b0b491085b5f62392d22578e2b409",
       "semanticConformance": "not-established-by-discovery"
     },
     {
