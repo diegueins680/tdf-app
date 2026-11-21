@@ -54,6 +54,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
+jest.unstable_mockModule('../api/eventAttendees', () => ({ listAttendees: jest.fn() }));
 jest.unstable_mockModule('../api/eventTickets', () => ({ EventTickets: { getStorefront: storefrontMock } }));
 // Keep the real feed component while isolating its explicit domain API boundary.
 // Do not invent successful low-level transport methods merely to satisfy imports.

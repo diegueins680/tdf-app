@@ -41,6 +41,10 @@ jest.unstable_mockModule('./SidebarNav', () => ({
   ),
 }));
 
+jest.unstable_mockModule('./NotificationBell', () => ({
+  default: () => <button type="button" aria-label="Notificaciones">campana</button>,
+}));
+
 const { default: PublicBranding } = await import('./PublicBranding');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -301,6 +305,20 @@ it('opens the shared feature menu from a signed-in public page and closes it aft
     await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label="Menú de funciones"]')).toBeNull());
     expect(button!.getAttribute('aria-expanded')).toBe('false');
   } finally { await view.cleanup(); container.remove(); activeSession = null; }
+});
+
+it('shows the notification bell on public pages for signed-in visitors only', async () => {
+  activeSession = { username: 'fan', displayName: 'Fan', roles: ['Fan'], partyId: 77 };
+  const signedIn = document.createElement('div'); document.body.appendChild(signedIn);
+  const signedInView = await renderBranding(signedIn, '/fans');
+  try {
+    await waitFor(() => expect(signedIn.querySelector('button[aria-label="Notificaciones"]')).not.toBeNull());
+  } finally { await signedInView.cleanup(); signedIn.remove(); activeSession = null; }
+
+  const guest = document.createElement('div'); document.body.appendChild(guest);
+  const guestView = await renderBranding(guest, '/fans');
+  try { expect(guest.querySelector('button[aria-label="Notificaciones"]')).toBeNull(); }
+  finally { await guestView.cleanup(); guest.remove(); }
 });
 
 it('keeps the authenticated feature menu out of the guest header', async () => {

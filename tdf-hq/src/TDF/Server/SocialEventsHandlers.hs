@@ -336,6 +336,7 @@ import TDF.Models
     , Party (..)
     , PartyId
     )
+import TDF.Server.EventAttendees (attendeesQuery)
 import TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
 import TDF.Server.SocialArtistOwnership (duplicateArtistOwner, ensureAvailableArtistOwner)
@@ -3771,6 +3772,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             :<|> upsertMyRsvp
             :<|> deleteMyRsvp
             :<|> getRsvpSummary
+            :<|> listAttendees
             :<|> listRsvpsForOrganizer
             :<|> listProfileRsvpFeed
             :<|> listDirectoryProfileRsvpFeed
@@ -3839,6 +3841,13 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         eventKey <- parseKeyOr400 "event" eventIdStr
         _ <- requireRsvpEventAccess eventKey False
         liftIO $ runSqlPool (rsvpSummaryForEvent eventKey) envPool
+
+    listAttendees :: T.Text -> T.Text -> Maybe Int64 -> AppM Aeson.Value
+    listAttendees eventIdStr status after = do
+        Env{..} <- ask
+        eventKey <- parseKeyOr400 "event" eventIdStr
+        _ <- requireRsvpEventAccess eventKey False
+        maybe (throwError err400{errBody = "Invalid attendee filter"}) (liftIO . (`runSqlPool` envPool)) (attendeesQuery eventKey currentPartyId status after)
 
     listRsvpsForOrganizer :: T.Text -> Maybe T.Text -> Maybe Int -> AppM RsvpAdminPageDTO
     listRsvpsForOrganizer eventIdStr mCursor mLimit = do
