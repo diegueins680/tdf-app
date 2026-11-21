@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "059ef215725d7779e8312c9f7ca0a97f9296a3f6",
+  "mobileRevision": "1ff9c1386f3df896f9281e293122f23cd3614499",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -4002,7 +4002,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "bfac1ff91e3afef21c3d2d831ad0cc70bdb608428419df22697d2e3a33f1f7b7",
+      "sha256": "7bc3e78d1e219b64bcff17eaabaef2566aba2bed5fd1af0322f38c2e59c40de7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21402,7 +21402,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "336834d6d6684dfadd32f0d0ab8a822bc4b922b2616ba836c76f1883d988c08e",
+      "sha256": "6a0f79ce639fc1dd061bb6194ebd9ecc15ffd14d724b770d31b0b09a767c90f9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
