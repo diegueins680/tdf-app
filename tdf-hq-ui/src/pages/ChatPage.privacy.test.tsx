@@ -10,7 +10,8 @@ const listThreads = jest.fn<() => Promise<ChatThreadDTO[]>>();
 const listMessages = jest.fn<(threadId: number, options: { limit: number }) => Promise<ChatMessageDTO[]>>();
 const sendMessage = jest.fn<(thread: number, body: string) => Promise<ChatMessageDTO>>();
 const getOrCreateDmThread = jest.fn<() => Promise<ChatThreadDTO>>();
-jest.unstable_mockModule('../api/chat', () => ({ ChatAPI: { listThreads, listMessages, sendMessage, getOrCreateDmThread } }));
+const markThreadRead = jest.fn<(threadId: number, lastMessageId: number) => Promise<void>>();
+jest.unstable_mockModule('../api/chat', () => ({ ChatAPI: { listThreads, listMessages, sendMessage, getOrCreateDmThread, markThreadRead } }));
 jest.unstable_mockModule('../api/meta', () => ({ Meta: { health: async () => ({ status: 'ok' }) } }));
 jest.unstable_mockModule('../api/social', () => ({ SocialAPI: {
   listFriends: async () => [], listProfiles: async () => [], getProfile: async () => ({ sppDisplayName: 'Private peer' }),
@@ -42,6 +43,7 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = jest.fn();
   Element.prototype.scrollTo = jest.fn();
   listThreads.mockResolvedValue([thread]); listMessages.mockResolvedValue([message]); sendMessage.mockResolvedValue(message);
+  markThreadRead.mockResolvedValue(undefined);
 });
 afterEach(() => { cleanup(); clients.splice(0).forEach((client) => client.clear()); onlineManager.setOnline(true); });
 it('follows incoming messages inside their viewport without scrolling ancestors', async () => {
@@ -118,6 +120,16 @@ it('isolates cached conversations and drafts when switching accounts', async () 
   await waitFor(() => expect(view.client.getQueryData(['chat-threads', 3])).toEqual([]));
   expect(sendMessage).not.toHaveBeenCalled();
 });
+it('records a server read receipt once per newest message (MSG-DELIVERY-001)', async () => {
+  const { client } = setup();
+  await screen.findByText('Private body');
+  await waitFor(() => expect(markThreadRead).toHaveBeenCalledWith(10, 1));
+  await act(async () => { await client.refetchQueries({ queryKey: ['chat-messages', 1, 10] }); });
+  expect(markThreadRead).toHaveBeenCalledTimes(1);
+  listMessages.mockResolvedValue([message, { ...message, cmId: 2, cmBody: 'Newer body' }]);
+  await act(async () => { await client.refetchQueries({ queryKey: ['chat-messages', 1, 10] }); });
+  await waitFor(() => expect(markThreadRead).toHaveBeenLastCalledWith(10, 2));
+});
 it('keeps the API send contract and trims through its existing adapter', async () => {
   setup(); await screen.findByText('Private body');
   fireEvent.change(screen.getByRole('textbox', { name: 'Escribe un mensaje' }), { target: { value: 'Booking follow-up' } });
@@ -146,7 +158,7 @@ it.each([true, false])('rechecks notification authorization during same-route na
   fireEvent.click(screen.getByRole('button', { name: 'Open chat notification' }));
   expect(screen.queryByText('Private body')).toBeNull();
   expect(screen.queryByText('Private preview')).toBeNull();
-  expect(loadChatReadMap(1)['10']).toBeUndefined();
+  expect(loadChatReadMap(1)['10']).toBeUndefined(); expect(markThreadRead).not.toHaveBeenCalledWith(10, expect.anything());
   expect(screen.getByTestId('location').textContent).toBe('?threadId=10');
   await waitFor(() => expect(listThreads.mock.calls.length).toBeGreaterThan(requestsBeforeLink));
   expect(listMessages.mock.calls.every(([id]) => id !== 10)).toBe(true);
@@ -158,7 +170,7 @@ it.each([true, false])('rechecks notification authorization during same-route na
     await screen.findByText('La conversación de esta notificación no está disponible.');
     expect(screen.queryByText('Private body')).toBeNull();
     expect(screen.queryByText('Private preview')).toBeNull();
-    expect(loadChatReadMap(1)['10']).toBeUndefined();
+    expect(loadChatReadMap(1)['10']).toBeUndefined(); expect(markThreadRead).not.toHaveBeenCalledWith(10, expect.anything());
     expect(listMessages.mock.calls.every(([id]) => id !== 10)).toBe(true);
   }
   expect(getOrCreateDmThread).not.toHaveBeenCalled();
@@ -196,7 +208,7 @@ it.each([
   if (oldFirst) await act(async () => { resolveOld([thread]); });
   expect(screen.queryByText('Private body')).toBeNull();
   expect(screen.queryByText('Private preview')).toBeNull();
-  expect(loadChatReadMap(1)['10']).toBeUndefined();
+  expect(loadChatReadMap(1)['10']).toBeUndefined(); expect(markThreadRead).not.toHaveBeenCalledWith(10, expect.anything());
   expect(screen.getByTestId('location').textContent).toBe('?threadId=10');
   await act(async () => { resolveCurrent([]); });
   await screen.findByText('La conversación de esta notificación no está disponible.');
@@ -207,7 +219,7 @@ it.each([
   expect(screen.queryByText('Private body')).toBeNull();
   expect(screen.queryByText('Private preview')).toBeNull();
   expect(listMessages.mock.calls.every(([id]) => id !== 10)).toBe(true);
-  expect(loadChatReadMap(1)['10']).toBeUndefined();
+  expect(loadChatReadMap(1)['10']).toBeUndefined(); expect(markThreadRead).not.toHaveBeenCalledWith(10, expect.anything());
   // A genuinely fresh ordinary response may restore the sidebar, while only an
   // explicit conversation choice may leave the unavailable-link state.
   await act(async () => { resolveFreshPoll([other, thread]); });
@@ -216,7 +228,7 @@ it.each([
   expect(screen.queryByText('Private body')).toBeNull();
   expect(screen.getByText('La conversación de esta notificación no está disponible.')).toBeTruthy();
   expect(listMessages.mock.calls.every(([id]) => id !== 10)).toBe(true);
-  expect(loadChatReadMap(1)['10']).toBeUndefined();
+  expect(loadChatReadMap(1)['10']).toBeUndefined(); expect(markThreadRead).not.toHaveBeenCalledWith(10, expect.anything());
 });
 it.each([
   { allowed: true, staleTime: 0 },
@@ -234,7 +246,7 @@ it.each([
   expect(screen.queryByText('Private preview')).toBeNull();
   await waitFor(() => expect(listThreads).toHaveBeenCalled());
   expect(listMessages).not.toHaveBeenCalled();
-  expect(loadChatReadMap(1)).toEqual({});
+  expect(loadChatReadMap(1)).toEqual({}); expect(markThreadRead).not.toHaveBeenCalledWith(10, expect.anything());
   expect(screen.getByRole('button', { name: 'Enviar mensaje' }).hasAttribute('disabled')).toBe(true);
   expect(screen.getByTestId('location').textContent).toBe('?threadId=10');
   await act(async () => { resolveThreads(allowed ? [thread] : []); });
@@ -246,7 +258,7 @@ it.each([
     await screen.findByText('La conversación de esta notificación no está disponible.');
     expect(screen.queryByText('Private body')).toBeNull();
     expect(listMessages).not.toHaveBeenCalled();
-    expect(loadChatReadMap(1)).toEqual({});
+    expect(loadChatReadMap(1)).toEqual({}); expect(markThreadRead).not.toHaveBeenCalledWith(10, expect.anything());
   }
   expect(getOrCreateDmThread).not.toHaveBeenCalled();
 });
@@ -262,7 +274,7 @@ it('withholds cached notification content while authorization is offline-paused'
     .some((query) => query.state.fetchStatus === 'paused')).toBe(true);
   expect(screen.queryByText('Private body')).toBeNull();
   expect(screen.queryByText('Private preview')).toBeNull();
-  expect(loadChatReadMap(1)).toEqual({});
+  expect(loadChatReadMap(1)).toEqual({}); expect(markThreadRead).not.toHaveBeenCalledWith(10, expect.anything());
   expect(listThreads).not.toHaveBeenCalled();
   expect(listMessages).not.toHaveBeenCalled();
   expect(screen.getByTestId('location').textContent).toBe('?threadId=10');
@@ -272,7 +284,7 @@ it('withholds cached notification content while authorization is offline-paused'
   await act(async () => { resolveThreads([]); });
   await screen.findByText('La conversación de esta notificación no está disponible.');
   expect(listMessages).not.toHaveBeenCalled();
-  expect(loadChatReadMap(1)).toEqual({});
+  expect(loadChatReadMap(1)).toEqual({}); expect(markThreadRead).not.toHaveBeenCalledWith(10, expect.anything());
 });
 it.each(['999', '0', '-1', '9007199254740992', 'https://evil.example'])('rejects an unavailable notification thread %s', async (id) => {
   const { client } = setup(`/chat?threadId=${encodeURIComponent(id)}`);

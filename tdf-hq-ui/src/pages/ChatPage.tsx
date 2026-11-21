@@ -34,6 +34,7 @@ import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { EmptyState } from '../components/PageShell';
 import { ChatAPI } from '../api/chat';
+import ChatNotificationChannels from '../components/ChatNotificationChannels';
 import { Meta } from '../api/meta';
 import { SocialAPI } from '../api/social';
 import LazyPaginatedList from '../components/LazyPaginatedList';
@@ -213,6 +214,8 @@ function ChatWorkspace() {
   const [selectionNavigation, setSelectionNavigation] = useState(0);
   const revealedNavigationRef = useRef(null as number | null);
   const requestParamConsumed = useRef<string | null>(null);
+  // Highest message id already reported read to the server, per account and conversation.
+  const serverReadRef = useRef(new Map<string, number>());
   const [readVersion, setReadVersion] = useState(0);
 
   useEffect(() => subscribeToChatReadState(() => setReadVersion((v) => v + 1), myPartyId ?? 0), [myPartyId]);
@@ -360,7 +363,19 @@ function ChatWorkspace() {
     const lastMessageAt = messages[messages.length - 1]?.cmCreatedAt ?? selectedThread?.ctLastMessageAt ?? selectedThread?.ctUpdatedAt;
     if (!lastMessageAt) return;
     markThreadSeen(selectedThreadId, lastMessageAt, myPartyId ?? 0);
-  }, [myPartyId, messages, messagesQuery.data, messagesQuery.isError, selectedThread, selectedThread?.ctLastMessageAt, selectedThread?.ctUpdatedAt, selectedThreadId]);
+    // Server-side receipt: stops email/phone reminders for what was already seen and
+    // clears this conversation's bell notices. Best effort; the local mark above stays.
+    const lastMessageId = messages[messages.length - 1]?.cmId;
+    const readKey = `${myPartyId ?? 0}:${selectedThreadId}`;
+    if (!lastMessageId || (serverReadRef.current.get(readKey) ?? 0) >= lastMessageId) return;
+    serverReadRef.current.set(readKey, lastMessageId);
+    ChatAPI.markThreadRead(selectedThreadId, lastMessageId)
+      .then(() => Promise.all([
+        qc.invalidateQueries({ queryKey: ['notification-count'] }),
+        qc.invalidateQueries({ queryKey: ['notifications'] }),
+      ]))
+      .catch(() => { serverReadRef.current.delete(readKey); });
+  }, [qc, myPartyId, messages, messagesQuery.data, messagesQuery.isError, selectedThread, selectedThread?.ctLastMessageAt, selectedThread?.ctUpdatedAt, selectedThreadId]);
 
   const createThreadMutation = useMutation({
     mutationFn: (otherPartyId: number) => ChatAPI.getOrCreateDmThread(otherPartyId),
@@ -533,6 +548,7 @@ function ChatWorkspace() {
           >
             Conexiones
           </Button>
+          <ChatNotificationChannels />
         </Stack>
       </Stack>
 

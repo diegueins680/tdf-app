@@ -51,7 +51,8 @@ flowchart LR
   Notice --> Filter[Current chat read authority]
   Filter --> Bell[Notification list, detail and count]
   Bell --> Link[Authorized thread in web chat]
-  Notice -. not implemented .-> Delivery[Email and device push]
+  Notice --> Outbox[Delivery intents, MSG-DELIVERY-001]
+  Outbox --> Delivery[Email and device push, when enabled]
 ```
 
 Message retries after an ambiguous HTTP response may still create two distinct
@@ -136,3 +137,53 @@ denied notification. Otherwise its default authorized response can race the
 privacy assertion. Both earlier-response completion orders retain preview/body,
 badge and read-marker assertions. Releasing the fresh poll may restore authorized
 sidebar previews; it does not select, fetch or mark the unavailable target read.
+
+## External delivery (MSG-DELIVERY-001, 2026-11-20)
+
+Implemented after a production report on 2026-11-20: a recipient received the
+in-app notice but nothing outside the web app.
+
+- **Intent.** `2026-11-20_chat_external_delivery.sql` extends the existing
+  producer: the same transaction that stores the message and notice inserts one
+  `push` intent (due now) and one `email` intent (due in 10 minutes) into
+  `chat_delivery_outbox`. Historical messages are not enqueued.
+- **Read state.** `POST /chat/threads/{id}/read` stores a monotonic
+  `chat_thread_read_receipt` and marks that conversation's notices read. The web
+  chat calls it only after the conversation's authorized messages load, so a
+  denied notification target never writes a receipt.
+- **Preferences.** `GET/PUT /notifications/channels` (chat → email/push, default
+  on). The web chat exposes them under «Avisos».
+- **Devices.** `POST /notifications/push-subscriptions` stores an Expo token
+  encrypted with `NOTIFICATION_PUSH_TOKEN_KEY`, keyed by its SHA-256 digest; a
+  token re-registered by another account moves to it. `.../revoke` deactivates it
+  (the mobile app calls it before clearing the session on logout).
+- **Dispatch.** `TDF.Chat.Delivery` leases due intents every 15 s
+  (`FOR UPDATE SKIP LOCKED`, 120 s lease), rechecks eligibility with
+  `chat_delivery_decision` and completes with `chat_delivery_complete`, fenced by
+  the lease token. Skip reasons: `read`, `not_visible` (consent, block, deletion
+  or closed account through `interaction_notification_visible`),
+  `inactive_recipient`, `opted_out`, `expired` (>24 h), `no_address`,
+  `no_subscription`, `coalesced` (one email per conversation per 6 h, one push per
+  conversation per minute), `provider_unconfigured`. Provider failures back off
+  1, 2, 4, 8 minutes and dead-letter after 5 attempts.
+- **Content.** Email subject «Tienes un mensaje nuevo en TDF» with a link to the
+  exact conversation; push «Nuevo mensaje» with `data.notificationId` only. No
+  message text, sender name or address in either.
+
+### Enabling in production
+
+All channels are off by default. After the migration is applied through the
+governed release process, set in the API environment:
+
+```
+CHAT_EMAIL_DELIVERY_ENABLED=true          # requires the existing SMTP settings
+CHAT_PUSH_DELIVERY_ENABLED=true           # requires the key below
+NOTIFICATION_PUSH_TOKEN_KEY=<>=32 random characters, kept in the secret store>
+EXPO_ACCESS_TOKEN=<optional, if Expo enhanced push security is on>
+```
+
+Push also needs the mobile release that registers tokens (tdf-mobile PR #215)
+and FCM/APNs credentials in EAS for project `218aca4d-c096-4892-a353-c1dd7df23448`.
+Provider acceptance (`provider_accepted`) is not proof of mailbox or device
+delivery; confirm on a real recipient before claiming delivery. Browser Web Push
+is not implemented.

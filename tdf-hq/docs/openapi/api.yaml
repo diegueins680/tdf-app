@@ -6023,6 +6023,107 @@ paths:
           description: Not allowed
         '404':
           description: Not found
+  /chat/threads/{threadId}/read:
+    parameters:
+      - name: threadId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    post:
+      tags: [Chat]
+      summary: Record that the caller read a conversation
+      description: Stores a recipient read receipt up to a message and marks that conversation's chat notices read. External email/push reminders are not sent for messages already read.
+      operationId: markChatThreadRead
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatThreadReadRequest'
+      responses:
+        '204':
+          description: Receipt stored
+        '400':
+          description: Invalid identifiers
+        '404':
+          description: Not a participant
+  /notifications/channels:
+    get:
+      tags: [Notifications]
+      summary: Get chat reminder channels
+      description: Email and phone reminder preferences for chat notices. The in-app notice is always on.
+      operationId: getNotificationChannels
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Current channels
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationChannels'
+    put:
+      tags: [Notifications]
+      summary: Update chat reminder channels
+      operationId: updateNotificationChannels
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationChannels'
+      responses:
+        '200':
+          description: Saved channels
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationChannels'
+  /notifications/push-subscriptions:
+    post:
+      tags: [Notifications]
+      summary: Register this device for push notifications
+      description: Registers an Expo push token for the caller. The token is stored encrypted; a token registered by another account moves to the caller.
+      operationId: registerPushSubscription
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscriptionRegister'
+      responses:
+        '204':
+          description: Registered
+        '422':
+          description: Unsupported provider, platform or token
+        '503':
+          description: Push notifications are not configured
+  /notifications/push-subscriptions/revoke:
+    post:
+      tags: [Notifications]
+      summary: Stop push notifications on this device
+      operationId: revokePushSubscription
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscriptionRevoke'
+      responses:
+        '204':
+          description: Revoked (or already inactive)
+        '422':
+          description: Invalid token
   /drive/token:
     delete:
       tags: [Drive]
@@ -10815,6 +10916,46 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    ChatThreadReadRequest:
+      type: object
+      additionalProperties: false
+      required: [lastMessageId]
+      properties:
+        lastMessageId:
+          type: integer
+          format: int64
+          minimum: 1
+    NotificationChannels:
+      type: object
+      additionalProperties: false
+      required: [email, push]
+      properties:
+        email:
+          type: boolean
+        push:
+          type: boolean
+    PushSubscriptionRegister:
+      type: object
+      additionalProperties: false
+      required: [provider, token, platform]
+      properties:
+        provider:
+          type: string
+          description: Push provider; the backend accepts `expo`.
+        token:
+          type: string
+          maxLength: 255
+        platform:
+          type: string
+          description: Device platform; the backend accepts `ios` or `android`.
+    PushSubscriptionRevoke:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        token:
+          type: string
+          maxLength: 255
     VideoCampaignWrite:
       type: object
       additionalProperties: false
