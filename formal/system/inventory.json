@@ -2552,6 +2552,7 @@
       "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
       "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
       "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs",
+      "tdf-hq/src/TDF/Server/NotificationDelivery.hs",
       "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
       "tdf-hq/src/TDF/Server/PaymentCapabilities.hs",
       "tdf-hq/src/TDF/Server/ProviderExecution.hs",
@@ -17484,7 +17485,7 @@
     {
       "id": "SURFACE-fd919e749d5f7980",
       "path": "tdf-hq/src/TDF/Chat/Delivery.hs",
-      "sha256": "99c64ca2c24a85666ce6383b1182c36a907b8b59bfb901329999838d8abd0dc4",
+      "sha256": "1a2817b74ff0ec4961c88ccbff379309a219d3e24d7052d88e44cdd7608bb550",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18246,7 +18247,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "3d1dba2122048066f3221fb9fc7d4d41d1e3e3f89be3231669ce4cf585eea669",
+      "sha256": "273759516baa16e5f2cee4112c250bbf49e6c59adc93415f3ddcd96cb5096992",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18373,6 +18374,12 @@
       "id": "SURFACE-6c006756e0fbc323",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs",
       "sha256": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e935dcf0035d3f6f",
+      "path": "tdf-hq/src/TDF/Server/NotificationDelivery.hs",
+      "sha256": "d307fb3570a9cf510205f376f2ef96878b59bff9d9a2333ba69cd563ab308ea0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18810,7 +18817,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "0c90eab2b8150b865c88196e790a25c3a01e48b008a1eaf8cacf565f8b995871",
+      "sha256": "f148dd2e53ce5142ea2954bcd9e6272180cfad4a5770c1ab0168a05fee859082",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32010,7 +32017,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "33b7e641a47897a83ae0d2bd2148346181f019f34d01fcdf2c0c0658c93d16ed",
+      "sha256": "37759fa6c9bb8118541eab411ac255d0801196fdfa9a0d8d187762b2872bba0f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -11557,6 +11557,7 @@
       "implementation": [
         "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
         "tdf-hq/src/TDF/Chat/Delivery.hs",
+        "tdf-hq/src/TDF/Server/NotificationDelivery.hs",
         "tdf-hq/src/TDF/API/NotificationDelivery.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -30498,7 +30499,7 @@
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "e918ed18cf1351d63b16a111af524f6f42541c873974da43299cc5134ce990d0",
     "tdf-hq/src/TDF/Catalog/Security.hs": "bf5ec6b5b0a740ca58709fac5a04118d29cfacf1002ecd4299c35d8a142313e0",
     "tdf-hq/src/TDF/Catalog/Seed.hs": "50badb8bb7b8e413086ec8f656cbfea8818733394f96af51464b8367e4e814d0",
-    "tdf-hq/src/TDF/Chat/Delivery.hs": "99c64ca2c24a85666ce6383b1182c36a907b8b59bfb901329999838d8abd0dc4",
+    "tdf-hq/src/TDF/Chat/Delivery.hs": "1a2817b74ff0ec4961c88ccbff379309a219d3e24d7052d88e44cdd7608bb550",
     "tdf-hq/src/TDF/Commerce/ArtistTip.hs": "023febe6a6fc4a1dd49f9d463a6f673572e80b08901df77f72b67f020cc60fdb",
     "tdf-hq/src/TDF/Commerce/ArtistTipStore.hs": "2963db1597da29ad46498dd329df42ed521f314ff091f03113d6cd6acb36e7af",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "4e1031e6416fa416dafdd8da29d80cb383c96966a4b7a9b4981d975feecdbaa9",
@@ -30590,7 +30591,7 @@
     "tdf-hq/src/TDF/Routes/DomoRefunds.hs": "b30e9a615d9ea754e2ffe29a257e272d4fc7342d17ec919e1235a199aeff34fd",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "c5b5eac3f58fbb0a24651c2bb2e57664720a6526ac25a69d2bf9f49acfdcc438",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "3d1dba2122048066f3221fb9fc7d4d41d1e3e3f89be3231669ce4cf585eea669",
+    "tdf-hq/src/TDF/Server.hs": "273759516baa16e5f2cee4112c250bbf49e6c59adc93415f3ddcd96cb5096992",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
@@ -30612,6 +30613,7 @@
     "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "603e2bc8e39a6fac1f8814fc7c5ce3e9440e47b76ce033bbe68fa9875fdbed8d",
     "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs": "803f46e01864c6b3afd56c46b106c9150251bfa7f2a54d980b3899c7dc5e5b70",
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
+    "tdf-hq/src/TDF/Server/NotificationDelivery.hs": "d307fb3570a9cf510205f376f2ef96878b59bff9d9a2333ba69cd563ab308ea0",
     "tdf-hq/src/TDF/Server/PaymentAvailability.hs": "b5c07724c67c4f02591abd0bec054547c47f45795f269b804318b7e85f062fae",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "d5129a96d1450d4c428ff8d6886abb1311116c24c43f40b8ae3e01327dfd3116",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "f42c6b0bf7913cf6f0a0deeae6aa6c14785644edf2d50d97dd840d1202080cae",
@@ -30665,7 +30667,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "0c90eab2b8150b865c88196e790a25c3a01e48b008a1eaf8cacf565f8b995871",
+    "tdf-hq/tdf-hq.cabal": "f148dd2e53ce5142ea2954bcd9e6272180cfad4a5770c1ab0168a05fee859082",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -44774,6 +44776,12 @@
       }
     ],
     "tdf-hq/src/TDF/Chat/Delivery.hs": [
+      {
+        "requirement": "MSG-DELIVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/NotificationDelivery.hs": [
       {
         "requirement": "MSG-DELIVERY-001",
         "relationship": "implementation"
@@ -77905,7 +77913,7 @@
     {
       "id": "SURFACE-fd919e749d5f7980",
       "path": "tdf-hq/src/TDF/Chat/Delivery.hs",
-      "sha256": "99c64ca2c24a85666ce6383b1182c36a907b8b59bfb901329999838d8abd0dc4",
+      "sha256": "1a2817b74ff0ec4961c88ccbff379309a219d3e24d7052d88e44cdd7608bb550",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79774,7 +79782,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "3d1dba2122048066f3221fb9fc7d4d41d1e3e3f89be3231669ce4cf585eea669",
+      "sha256": "273759516baa16e5f2cee4112c250bbf49e6c59adc93415f3ddcd96cb5096992",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -80567,6 +80575,18 @@
         },
         {
           "requirement": "MEDIA-MUSIC-UPLOAD-SESSION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e935dcf0035d3f6f",
+      "path": "tdf-hq/src/TDF/Server/NotificationDelivery.hs",
+      "sha256": "d307fb3570a9cf510205f376f2ef96878b59bff9d9a2333ba69cd563ab308ea0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MSG-DELIVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -81871,7 +81891,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "0c90eab2b8150b865c88196e790a25c3a01e48b008a1eaf8cacf565f8b995871",
+      "sha256": "f148dd2e53ce5142ea2954bcd9e6272180cfad4a5770c1ab0168a05fee859082",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -91193,7 +91213,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "33b7e641a47897a83ae0d2bd2148346181f019f34d01fcdf2c0c0658c93d16ed",
+      "sourceSha256": "37759fa6c9bb8118541eab411ac255d0801196fdfa9a0d8d187762b2872bba0f",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -91221,7 +91241,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "33b7e641a47897a83ae0d2bd2148346181f019f34d01fcdf2c0c0658c93d16ed",
+      "sourceSha256": "37759fa6c9bb8118541eab411ac255d0801196fdfa9a0d8d187762b2872bba0f",
       "definition": {
         "states": [
           "absent",
@@ -91251,7 +91271,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "33b7e641a47897a83ae0d2bd2148346181f019f34d01fcdf2c0c0658c93d16ed",
+      "sourceSha256": "37759fa6c9bb8118541eab411ac255d0801196fdfa9a0d8d187762b2872bba0f",
       "definition": {
         "export": [
           "queued",
