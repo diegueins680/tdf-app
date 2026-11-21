@@ -246,6 +246,7 @@ library
     TDF.Server.TicketManualPayments
     TDF.Server.TicketPaymentReceipt
     TDF.Server.TicketTaxDocuments
+    TDF.Server.PublicBookingNotifications
     TDF.Server.TicketRefunds
     TDF.ServerLiveSessions
     TDF.ServerFeedback
