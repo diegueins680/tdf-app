@@ -715,7 +715,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(false);
       expect(document.body.textContent).not.toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
     });
 
@@ -771,7 +771,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(false);
       expect(document.body.textContent).toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
     });
 
@@ -784,7 +784,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
       expect(hasLabel(document.body, 'Asunto')).toBe(true);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(true);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(true);
     });
 
     await act(async () => {
@@ -7694,7 +7694,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Tipo')).toBe(false);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(false);
       expect(document.body.textContent).toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
       expect(getButtonByText(document.body, 'Agregar detalles opcionales')).toBeTruthy();
       expect(
@@ -7726,7 +7726,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'Tipo')).toBe(true);
       expect(hasLabel(document.body, 'Asunto')).toBe(true);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(true);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(true);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
     });
 
@@ -7964,7 +7964,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'Asunto')).toBe(true);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(true);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(true);
       expect(getButtonByText(document.body, 'Ocultar detalles opcionales')).toBeTruthy();
     });
 

@@ -1716,6 +1716,8 @@
       "tdf-hq-ui/src/utils/externalTicketing.ts",
       "tdf-hq-ui/src/utils/featureRegistry.test.ts",
       "tdf-hq-ui/src/utils/featureRegistry.ts",
+      "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
+      "tdf-hq-ui/src/utils/followUpCalendar.ts",
       "tdf-hq-ui/src/utils/formatPhone.ts",
       "tdf-hq-ui/src/utils/formatters.test.ts",
       "tdf-hq-ui/src/utils/formatters.ts",
@@ -2324,6 +2326,8 @@
       "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql",
+      "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql",
+      "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -3995,7 +3999,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "bfac1ff91e3afef21c3d2d831ad0cc70bdb608428419df22697d2e3a33f1f7b7",
+      "sha256": "a690ce40a719a0c3c5e7250091e11c4b687294c8aa58f9ca1b97fb83c087120c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5387,7 +5391,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "3b468da722b3e7db855309e4b1cb133d01c3e03ddb0745e9f9f36ecb2c3d7be4",
+      "sha256": "b2581954bf71df4691d0a1829a5350e5271c7cc575896a3381266e9496580ab9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5591,7 +5595,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "892a12010cecf0235af44bc846a4d78eb9ca2133236b581d14adb6e4508fd77f",
+      "sha256": "0dbb8e912749a3494375958cf100f9378d50f1f817a68cb7dbaf59a3cdfd292d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11387,13 +11391,13 @@
     {
       "id": "SURFACE-b584e0770511a16a",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
-      "sha256": "769a23d6403d4c2cd9d9e31c676e4d9a4174c3057b381f4ca374ceb0d78f0e59",
+      "sha256": "a450286cb01e4a9d5f8bce4a6f852bdf279bf5498cc1cb10dc0486d3450954b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-bf79c7904e71c2d9",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-      "sha256": "6c9bc2d583f30483444f06277351d1324cf49e1a22b10780a4f7b025796a74d4",
+      "sha256": "3b38ac5e0fff7c409d375f99236b04b6655ba55cb8d4e349b099886694aff55f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13362,6 +13366,18 @@
       "id": "SURFACE-3b8899145aa5725f",
       "path": "tdf-hq-ui/src/utils/featureRegistry.ts",
       "sha256": "59783b97f00c4d2e07261116d9ee813aea4049c33ed8606660b4ff8f4eeb1c70",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0d41a7fe9efbf447",
+      "path": "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
+      "sha256": "4aea61a1111566ac478242a6896c2a26dd4d92caa797ba4f59fcd2823056b555",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6b381b93f828b6d1",
+      "path": "tdf-hq-ui/src/utils/followUpCalendar.ts",
+      "sha256": "d700f15f8024aaed1707c16b0ee4dedba3c6aceb9adc00478fdc21fee7ab2f21",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17001,6 +17017,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6a369025a50bc49c",
+      "path": "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql",
+      "sha256": "09dec141f5de428cb9bda712bf2aa9b4ec4f75ee13a16bc511c6e16a34031edd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-94aab7e703fbb551",
+      "path": "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql",
+      "sha256": "510f4ab65e13fd0faf203afd83a68e8c2df817723452b98603580b27f9586219",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -17315,7 +17343,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
+      "sha256": "24dd49cd023be713846d7f8629fd253a519e7847e9664a893b350a03cb987bb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17735,7 +17763,7 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
+      "sha256": "20183b2f2bfe61bbb767aa7df2daf52b70dbb9f26aaa87c3d42fa89c34700678",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18059,7 +18087,7 @@
     {
       "id": "SURFACE-de59a337fc1e94a1",
       "path": "tdf-hq/src/TDF/ModelsExtra.hs",
-      "sha256": "d3e32f2ed9802c6b967729235fb4a5ebb9a21541afa73325e0950231539a12dc",
+      "sha256": "08d7358681bb8d4df7fb1c6aad4ad6c93d2f4add460c92a90cdcf5ef2dcf91f0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18845,7 +18873,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "7ef32ba3699ea33cbe3c1728f8f32db4351651311c8d99fbdeaa75720a936455",
+      "sha256": "86683498e066038db5f7a5dcbae0a2aa705739d0966fb39c531ea78a59fb2c37",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31099,6 +31127,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/course-follow-up-reminders.md",
+      "sha256": "9f161be392cafdb90db281c13b93039f2c4c558d47313458cc705b1bf2ca8e5a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/csv-export-text.md",
       "sha256": "4ab0b237a5b34b00d5a8b1e928f61bee534527f26f29839834b64fa1057df9f5",
       "authority": "inferred",
@@ -31961,7 +31996,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7f51931284d2083352bd27929951b888ef85f99d129db2daead649aed4862b52",
+      "sha256": "c7a283f7ed19944df9722f08e9262e8df1fd3ee0fff81ad01ae5d0158174f307",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
