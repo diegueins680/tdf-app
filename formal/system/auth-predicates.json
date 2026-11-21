@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "92b06c484787facaf795af857a55dbb51c40a2eb1f1ea81096d54ee173ed5112"
+    "tdf-hq/tdf-hq.cabal": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654"
   },
   "obligations": [
     {
@@ -874,6 +874,15 @@
       "currentSha256": "92b06c484787facaf795af857a55dbb51c40a2eb1f1ea81096d54ee173ed5112",
       "change": "Reconcile protected main de3b79ed2 with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
       "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "5a81672285dc9c03130fc9fd8355e2b4c58e9e12",
+      "previousSha256": "92b06c484787facaf795af857a55dbb51c40a2eb1f1ea81096d54ee173ed5112",
+      "currentSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "change": "Register the new TDF.Server.EventAttendees module in the library's other-modules on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly one added line, the TDF.Server.EventAttendees module entry. That module holds one read query for the attendee roster and is imported only by the social events server; it adds no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
       "qualification": "This review covers the conditional solver source context."
     }
   ]
