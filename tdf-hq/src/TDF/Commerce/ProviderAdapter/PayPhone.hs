@@ -30,7 +30,7 @@ import           Crypto.Data.Padding (Format(PKCS7), pad)
 import           Crypto.Error (CryptoFailable(..))
 import           Data.Aeson ((.:), (.:?), (.=), Value)
 import qualified Data.Aeson as A
-import           Data.Aeson.Types (Parser, parseEither)
+import           Data.Aeson.Types (Parser, parseEither, parseMaybe)
 import qualified Data.ByteArray.Encoding as BAE
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
@@ -426,8 +426,27 @@ parseQuery locator value = do
 
 -- | Check the financial binding and keep the transaction identity distinct
 -- from the stored resource (the preparation ID for Button payments).
+--
+-- Observed in the PayPhone sandbox (2026-11-17): @GET /api/Sale/client/{ref}@
+-- answers a Button payment with a JSON array of transactions, not an object.
+-- Only an array holding exactly one transaction for this reference is read;
+-- an empty array, or several transactions for one reference, is ambiguous and
+-- rejected, so nothing is applied from it. The Button confirmation answers
+-- with a single object.
 parseTransaction :: PaymentLocator -> Value -> Parser (Int64, AdapterResult)
-parseTransaction locator = A.withObject "PayPhone query response" $ \object -> do
+parseTransaction locator value = case value of
+  A.Array transactions ->
+    case filter forThisReference (foldr (:) [] transactions) of
+      [single] -> parseTransactionObject locator single
+      _ -> fail "PayPhone query must list exactly one transaction for this reference"
+  _ -> parseTransactionObject locator value
+  where
+    forThisReference transaction =
+      parseMaybe (A.withObject "PayPhone transaction" (.: "clientTransactionId")) transaction
+        == Just (epReference (plExpected locator))
+
+parseTransactionObject :: PaymentLocator -> Value -> Parser (Int64, AdapterResult)
+parseTransactionObject locator = A.withObject "PayPhone query response" $ \object -> do
   clientReference <- object .: "clientTransactionId"
   transactionId <- object .: "transactionId" :: Parser Int64
   amountMinor <- object .: "amount" :: Parser Int64

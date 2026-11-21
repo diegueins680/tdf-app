@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Alert, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Stack } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { Catalogs, type WorkflowState } from '../../api/catalogs';
 import { SocialEventsAPI, type SocialEventDTO } from '../../api/socialEvents';
@@ -36,12 +36,19 @@ export function resolvePublishTarget(
   return target ? { workflowStateId: target.id } : null;
 }
 
-export default function EventPublishControl({ event }: { event: SocialEventDTO }) {
+interface EventPublishControlProps {
+  event: SocialEventDTO;
+  promptAfterSave?: boolean;
+  artUploadFailed?: boolean;
+  onPublished?: (event: SocialEventDTO) => void;
+}
+
+export default function EventPublishControl({ event, promptAfterSave = false, artUploadFailed = false, onPublished }: EventPublishControlProps) {
   const eventId = event.eventId!;
   const queryClient = useQueryClient();
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-  const [confirming, setConfirming] = useState(false);
+  const [confirming, setConfirming] = useState(promptAfterSave);
   const published = event.eventIsPublic === true && event.eventPublicListable === true;
   const statesQuery = useQuery({
     // Only ids, capabilities and transitions are read: no localized names.
@@ -67,9 +74,10 @@ export default function EventPublishControl({ event }: { event: SocialEventDTO }
       ensureSameSession();
       const latest = await SocialEventsAPI.getEvent(eventId);
       ensureSameSession();
+      if (latest.eventIsPublic && latest.eventPublicListable) return latest;
       const latestTarget = resolvePublishTarget(latest, states);
       if (!latestTarget) throw new Error('El estado del evento cambió. Recarga la página antes de publicar.');
-      return SocialEventsAPI.updateEvent(eventId, {
+      const updated = await SocialEventsAPI.updateEvent(eventId, {
         eventTitle: latest.eventTitle,
         eventStart: latest.eventStart,
         eventEnd: latest.eventEnd,
@@ -83,8 +91,13 @@ export default function EventPublishControl({ event }: { event: SocialEventDTO }
         eventIsPublic: true,
         ...(latestTarget.workflowStateId ? { eventWorkflowStateId: latestTarget.workflowStateId } : {}),
       });
+      ensureSameSession();
+      if (!updated.eventIsPublic || !updated.eventPublicListable) {
+        throw new Error('No se pudo confirmar la publicación. Revisa el evento e inténtalo de nuevo.');
+      }
+      return updated;
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       try {
         captureGrowthEvent(getAnalyticsClient(), 'event_published', { platform: 'web', event_id: eventId });
       } catch {
@@ -94,7 +107,11 @@ export default function EventPublishControl({ event }: { event: SocialEventDTO }
       void queryClient.invalidateQueries({ queryKey: ['social-events'] });
       void queryClient.invalidateQueries({ queryKey: ['public-upcoming-events'] });
       void queryClient.invalidateQueries({ queryKey: ['upcoming-events-carousel'] });
-      if (mounted.current) setConfirming(false);
+      void queryClient.invalidateQueries({ queryKey: ['dashboard-my-events'] });
+      if (mounted.current) {
+        setConfirming(false);
+        onPublished?.(updated);
+      }
     },
   });
 
@@ -108,33 +125,61 @@ export default function EventPublishControl({ event }: { event: SocialEventDTO }
       </Alert>
     );
   }
-  if (!target) return null;
+  if (!target && !confirming) return null;
+  const dismiss = () => {
+    if (mutation.isPending) return;
+    mutation.reset();
+    setConfirming(false);
+  };
   return (
-    <Stack spacing={1} component="section" aria-labelledby="event-publish-title">
-      <Typography id="event-publish-title" component="h3" variant="subtitle1" fontWeight={700}>Publicar el evento</Typography>
-      <Typography variant="body2" color="text.secondary">
-        Hoy solo tú y tu equipo pueden verlo. Al publicarlo tendrá una página pública para compartir y aceptará confirmaciones de asistencia.
-      </Typography>
-      {mutation.isError && (
-        <Alert severity="error">{mutation.error instanceof Error ? mutation.error.message : 'No se pudo publicar. Inténtalo de nuevo.'}</Alert>
+    <>
+      {target && (
+        <Button variant="contained" color="primary" sx={{ alignSelf: 'flex-start' }} onClick={() => setConfirming(true)}>
+          Publicar evento
+        </Button>
       )}
-      {confirming ? (
-        <Alert
-          severity="warning"
-          action={(
-            <Stack direction="row" spacing={1}>
-              <Button color="inherit" size="small" disabled={mutation.isPending} onClick={() => { mutation.reset(); setConfirming(false); }}>Cancelar</Button>
-              <Button color="inherit" size="small" variant="outlined" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
-                {mutation.isPending ? <><CircularProgress size={14} sx={{ mr: 1 }} color="inherit" />Publicando…</> : 'Publicar ahora'}
-              </Button>
-            </Stack>
-          )}
-        >
-          Cualquier persona podrá ver el nombre, la fecha, el lugar y el afiche. Revísalos antes de publicar.
-        </Alert>
-      ) : (
-        <Stack direction="row"><Button variant="contained" color="secondary" onClick={() => setConfirming(true)}>Publicar evento</Button></Stack>
-      )}
-    </Stack>
+      <Dialog
+        open={confirming}
+        onClose={dismiss}
+        disableEscapeKeyDown={mutation.isPending}
+        aria-labelledby="event-publish-title"
+        aria-describedby="event-publish-description"
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle id="event-publish-title">¿Publicar el evento?</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2}>
+            {promptAfterSave && <DialogContentText>El evento se guardó en planificación.</DialogContentText>}
+            <DialogContentText id="event-publish-description">
+              Cualquier persona podrá ver el nombre, la fecha, el lugar y el afiche. El evento aparecerá en el catálogo y podrá recibir confirmaciones de asistencia.
+            </DialogContentText>
+            {artUploadFailed && <Alert severity="warning">El afiche aún no se ha subido. Puedes agregarlo desde el evento.</Alert>}
+            {statesQuery.isPending && <CircularProgress size={20} aria-label="Comprobando si el evento se puede publicar" />}
+            {statesQuery.isError && (
+              <Alert severity="error" action={<Button color="inherit" onClick={() => { void statesQuery.refetch(); }}>Reintentar</Button>}>
+                No se pudo comprobar si el evento se puede publicar.
+              </Alert>
+            )}
+            {statesQuery.isSuccess && !target && <Alert severity="info">La publicación no está disponible para el estado actual del evento.</Alert>}
+            {mutation.isError && (
+              <Alert severity="error">{mutation.error instanceof Error ? mutation.error.message : 'No se pudo publicar. Inténtalo de nuevo.'}</Alert>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ flexWrap: 'wrap' }}>
+          <Button disabled={mutation.isPending} onClick={dismiss}>
+            {promptAfterSave ? 'Seguir en planificación' : 'Cancelar'}
+          </Button>
+          <Button
+            variant="contained"
+            disabled={!target || mutation.isPending}
+            onClick={() => mutation.mutate()}
+          >
+            {mutation.isPending ? <><CircularProgress size={14} sx={{ mr: 1 }} color="inherit" />Publicando…</> : 'Publicar ahora'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

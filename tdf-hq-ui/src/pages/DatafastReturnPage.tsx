@@ -5,7 +5,7 @@ import { Marketplace, loadMarketplaceLookupToken } from '../api/marketplace';
 import type { MarketplaceOrderDTO } from '../api/types';
 import { getOrderStatusMeta, isPaidOrderStatus } from '../utils/marketplace';
 import { clearSessionPersonalData, readSessionPersonalData } from '../utils/sessionPersonalData';
-import { clearStoredCart } from '../features/marketplace/cartSummary';
+import { clearStoredCart } from '../services/cartSummary';
 import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 
 const MARKETPLACE_BUYER_INFO_KEY = 'tdf-marketplace-buyer';
