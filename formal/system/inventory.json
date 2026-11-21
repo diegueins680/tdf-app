@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "1ff9c1386f3df896f9281e293122f23cd3614499",
+  "mobileRevision": "059ef215725d7779e8312c9f7ca0a97f9296a3f6",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -454,7 +454,6 @@
       "scripts/social/SessionModelCases.hs",
       "scripts/social/SessionSpec.hs",
       "scripts/social/benchmark.sql",
-      "scripts/social/chat-delivery.sql",
       "scripts/social/chat-notifications.sql",
       "scripts/social/check-dm-model.sh",
       "scripts/social/check-dm-reads-model.sh",
@@ -1039,8 +1038,6 @@
       "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
       "tdf-hq-ui/src/components/BrandLogo.tsx",
       "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
-      "tdf-hq-ui/src/components/ChatNotificationChannels.test.tsx",
-      "tdf-hq-ui/src/components/ChatNotificationChannels.tsx",
       "tdf-hq-ui/src/components/ConfirmDialog.tsx",
       "tdf-hq-ui/src/components/DataTable.tsx",
       "tdf-hq-ui/src/components/EnrollmentSuccessDialog.tsx",
@@ -1267,6 +1264,8 @@
       "tdf-hq-ui/src/features/marketplace/agreements.ts",
       "tdf-hq-ui/src/features/marketplace/offers.test.ts",
       "tdf-hq-ui/src/features/marketplace/offers.ts",
+      "tdf-hq-ui/src/features/records/RecordDescription.test.tsx",
+      "tdf-hq-ui/src/features/records/RecordDescription.tsx",
       "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
       "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
       "tdf-hq-ui/src/features/records/SelectedRecordPublication.test.tsx",
@@ -2327,7 +2326,6 @@
       "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql",
-      "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2360,7 +2358,6 @@
       "tdf-hq/src/TDF/API/Merch.hs",
       "tdf-hq/src/TDF/API/MerchReputation.hs",
       "tdf-hq/src/TDF/API/MusicRelease.hs",
-      "tdf-hq/src/TDF/API/NotificationDelivery.hs",
       "tdf-hq/src/TDF/API/PaymentCapabilities.hs",
       "tdf-hq/src/TDF/API/Payments.hs",
       "tdf-hq/src/TDF/API/Pipelines.hs",
@@ -2403,7 +2400,6 @@
       "tdf-hq/src/TDF/Catalog/Security.hs",
       "tdf-hq/src/TDF/Catalog/Seed.hs",
       "tdf-hq/src/TDF/Catalog/Types.hs",
-      "tdf-hq/src/TDF/Chat/Delivery.hs",
       "tdf-hq/src/TDF/Commerce/ArtistTip.hs",
       "tdf-hq/src/TDF/Commerce/ArtistTipStore.hs",
       "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
@@ -2552,7 +2548,6 @@
       "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
       "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
       "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs",
-      "tdf-hq/src/TDF/Server/NotificationDelivery.hs",
       "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
       "tdf-hq/src/TDF/Server/PaymentCapabilities.hs",
       "tdf-hq/src/TDF/Server/ProviderExecution.hs",
@@ -2648,7 +2643,6 @@
       "tdf-hq/test/TDF/Catalog/PipelineSpec.hs",
       "tdf-hq/test/TDF/Catalog/RecordsSpec.hs",
       "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
-      "tdf-hq/test/TDF/ChatDeliverySpec.hs",
       "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
       "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs",
       "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
@@ -3847,7 +3841,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "ac9d2301115c8f86fcf339c1191f5937b9677312c16a4bcd582ef71779628611",
+      "sha256": "3a5ac05d5e1333ef9891090641ad1eaa4a47f3714c82b82806355de8d653b20d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4003,7 +3997,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "35560bdf209e50b2d93b477f6faf996807ab3ad4ac389d8048a201aceb08d313",
+      "sha256": "849449156f6de29cb814244959cfdd2d14d769adc837d1a9b178e770c2a2281b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5599,7 +5593,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "1b1af9aa061ca496b4f0f7a9b3de473ec7ec76c1a400535c76c30d9e060c4228",
+      "sha256": "892a12010cecf0235af44bc846a4d78eb9ca2133236b581d14adb6e4508fd77f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5846,12 +5840,6 @@
       "id": "SURFACE-c6d8995610ec7a67",
       "path": "scripts/social/benchmark.sql",
       "sha256": "de2c24e9524e62fcae978eac8390507be2cb49544c4deccdb7bc0e9b066ea07d",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-8cfd686a9c88329c",
-      "path": "scripts/social/chat-delivery.sql",
-      "sha256": "cba67e765456aec7ce04f5b21ff1a35ed0d95aef2a354a3d47f347ff68506f6f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6277,7 +6265,7 @@
     {
       "id": "SURFACE-325b7de63b17b31f",
       "path": "scripts/test-chat-notifications.sh",
-      "sha256": "1fc07b78ce46f1fe6b8dbda96c3a522e57147cd1e29b65b931643f2c5f04b9f5",
+      "sha256": "d01a8cbf2c0852222f53b36bd813a7f2dc8875ae6f3b53ea0ab108fba1f2b552",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8383,7 +8371,7 @@
     {
       "id": "SURFACE-b690ccffe85ff16b",
       "path": "tdf-hq-ui/src/api/chat.ts",
-      "sha256": "9bffa39419166e05055c5f508182ed6d5dcd7fe4f6549268c501c9cc2c6af8c8",
+      "sha256": "5e60c9d524b930fa50303f78f4fdd87bcbc876df5a781436be0fed96841f1acc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8641,7 +8629,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "6a0f79ce639fc1dd061bb6194ebd9ecc15ffd14d724b770d31b0b09a767c90f9",
+      "sha256": "336834d6d6684dfadd32f0d0ab8a822bc4b922b2616ba836c76f1883d988c08e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9308,18 +9296,6 @@
       "id": "SURFACE-85a789593d432274",
       "path": "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
       "sha256": "0875707b1e3bbb8a2d239f8010d28acf6c00f0d2b4c8987bb6f9727903d26945",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-ef37071211d6df64",
-      "path": "tdf-hq-ui/src/components/ChatNotificationChannels.test.tsx",
-      "sha256": "f08be2fa42471413c6fd504b110e25f23c71ad3e2427fc2446bef9912f28eb26",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-fc3b4035b6e66ac0",
-      "path": "tdf-hq-ui/src/components/ChatNotificationChannels.tsx",
-      "sha256": "9491df1e5d6131d53888259c1334c57af6dd62f4ab5eaa13c1794fe974377033",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10679,6 +10655,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-753c2ab899daa537",
+      "path": "tdf-hq-ui/src/features/records/RecordDescription.test.tsx",
+      "sha256": "24cdf4b7a3859f6262af7fea7c0ac6ca148bedb659844b3b95a20084c004fee1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c83ccd742453ac1a",
+      "path": "tdf-hq-ui/src/features/records/RecordDescription.tsx",
+      "sha256": "43e7c30d57e63f857efd5a4e9dfd5e3af7bca80661b5ed28e749763505fd9a56",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1feafb0155431191",
       "path": "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
       "sha256": "02a247376b7685688d733469e04a0c9444e7042db2f17e8a0097782a3d674c68",
@@ -11263,13 +11251,13 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "a6f6bc1e4f6c7720c1210dbf2f17a1b2cab655765b9a9ff7d15d03624fca5075",
+      "sha256": "e3b22e86857e5a41608cb7fbaeb5dad9b91084165b084d4653fcd4d95250ccc9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "6fc83a5c4b31fb489471645ef0139d92c9f027006ae3c9e7a8e942d5a8d76f16",
+      "sha256": "7e1384c2582230276df3cfa8f746381182952b28494c8c60527abc4635c1b4bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12229,7 +12217,7 @@
     {
       "id": "SURFACE-56568ee47192d217",
       "path": "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
-      "sha256": "5bffd54fb89d208c192a607c5e921f7c7c862555c7d922dad018d43088a3b85a",
+      "sha256": "5856f66931a8496d04dac6f647c8cd0eebfffab4d20f48e7fc0ca5af5881473e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13975,7 +13963,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "b1f1cbbae4c86c997e543d110b40c8012a1f306c84fc162e6c96749423326917",
+      "sha256": "12ede085314babcc113ec58a29291490e8e3cc2064b3db8a2319d0f0881a4761",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17027,12 +17015,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-1c1db34e299cc07b",
-      "path": "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
-      "sha256": "3f1c4adb14514ad589b689cbf3003c877077766cb67247b332b033906e2acb61",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -17065,7 +17047,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "e3d28f8c6b19b576c53e3a0a90e2db3c55a2aa7fc6bcb6b1b3454fa7331d6759",
+      "sha256": "ef1ed6b71b5bc4a490c9074808094513c7c6396dbefd58606ae30f954d59ea4e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17225,12 +17207,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-275635dc99314531",
-      "path": "tdf-hq/src/TDF/API/NotificationDelivery.hs",
-      "sha256": "5e3ae4c9ab2f8fc188b138288c7bcfd7d9597230aa9643492c020496773fc2e3",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-076082895c77848b",
       "path": "tdf-hq/src/TDF/API/PaymentCapabilities.hs",
       "sha256": "166e3af4ce0f2152c8dfe048285ba48d453a659d9bc5466a2cb9f3b812ef001d",
@@ -17353,7 +17329,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "38e7b8ca5ee1bc51208d95a3b0a8a51cfed76e578a6c208cfe38302ef13f5343",
+      "sha256": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17480,12 +17456,6 @@
       "id": "SURFACE-68f141730b470989",
       "path": "tdf-hq/src/TDF/Catalog/Types.hs",
       "sha256": "388f43be3b7ef9461b3e63ba8fcdbf43000339c221324da4a866cf936cc8a382",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-fd919e749d5f7980",
-      "path": "tdf-hq/src/TDF/Chat/Delivery.hs",
-      "sha256": "1a2817b74ff0ec4961c88ccbff379309a219d3e24d7052d88e44cdd7608bb550",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18247,7 +18217,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "273759516baa16e5f2cee4112c250bbf49e6c59adc93415f3ddcd96cb5096992",
+      "sha256": "10cfaf282a49b1b78b23d820b65339cb2cbe5dd0ed5152688362e0ac034b1aa1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18374,12 +18344,6 @@
       "id": "SURFACE-6c006756e0fbc323",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs",
       "sha256": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-e935dcf0035d3f6f",
-      "path": "tdf-hq/src/TDF/Server/NotificationDelivery.hs",
-      "sha256": "d307fb3570a9cf510205f376f2ef96878b59bff9d9a2333ba69cd563ab308ea0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18817,7 +18781,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "f148dd2e53ce5142ea2954bcd9e6272180cfad4a5770c1ab0168a05fee859082",
+      "sha256": "7c0ee9e661a11f56f2b9f109139f78ad19a1cd7235fb9ca286f1b00a423bb5c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18895,7 +18859,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "99aef738fa51e84f11c886ef62620706b6aec9753f626cd3052c5bd7218a1f37",
+      "sha256": "7ef32ba3699ea33cbe3c1728f8f32db4351651311c8d99fbdeaa75720a936455",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18950,12 +18914,6 @@
       "id": "SURFACE-65f05df89af717ae",
       "path": "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
       "sha256": "d2d30b69518718f169d26a18dfa81c8f526fdf8b3c15294f6f6e30ee75cd9d48",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-b47e32d28ca04cf0",
-      "path": "tdf-hq/test/TDF/ChatDeliverySpec.hs",
-      "sha256": "cddf18e1c12f6c5fbd83cdabed65b517b05a535f1cacde7fd8214fe6cea71c5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21409,7 +21367,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "6a0f79ce639fc1dd061bb6194ebd9ecc15ffd14d724b770d31b0b09a767c90f9",
+      "sha256": "336834d6d6684dfadd32f0d0ab8a822bc4b922b2616ba836c76f1883d988c08e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24982,7 +24940,7 @@
     },
     {
       "path": "docs/notifications/chat-delivery-2026-10-13.md",
-      "sha256": "7901a766b0d391dbe2ea5522b09c83033d504234059942742e1fe048df264d35",
+      "sha256": "a9c03cc324cd74ecf8d1430d97caf5c18415e96bb98c8701036533fad1427b83",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32017,7 +31975,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7c4a62fda5662290e3cce94702dabb940d74f7052c7a7241cb31ba722910a551",
+      "sha256": "fc799d8d5977315d021b97e13731038f65d5cd27e97fec8911c79e808fc9c03a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32451,7 +32409,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "b1f1cbbae4c86c997e543d110b40c8012a1f306c84fc162e6c96749423326917",
+      "sha256": "12ede085314babcc113ec58a29291490e8e3cc2064b3db8a2319d0f0881a4761",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
