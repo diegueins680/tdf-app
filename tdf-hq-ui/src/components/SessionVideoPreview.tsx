@@ -3,8 +3,8 @@ import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import { resolveVideoSource } from '../utils/videoSource';
 import { VideoWatch } from '../utils/videoWatch';
 import { getAnalyticsClient } from '../analytics/posthog';
-import { videoAttribution } from '../features/campaigns/videoAttribution';
-import { safeVideoUrl } from '../features/campaigns/videoCampaign';
+import { videoAttribution } from '../services/videoAttribution';
+import { safeVideoUrl } from '../utils/videoCampaign';
 import { normalizeArtistImageUrl } from '../utils/artistImage';
 import { isProviderPlaceholder } from '../utils/resolveRecordThumbnail';
 

@@ -42,7 +42,7 @@ import { formatDateForUser } from '../utils/formatters';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { ArtistMerchStores } from '../components/merch/MerchReputationSummary';
-import { recordVideoConversion, videoAttribution } from '../features/campaigns/videoAttribution';
+import { recordVideoConversion, videoAttribution } from '../services/videoAttribution';
 import { VideoCampaigns } from '../api/videoCampaigns';
 import { safeArtistId, buildArtistFollowAuthPath, isArtistFollowResume } from '../utils/artistFollowIntent';
 export { buildArtistFollowAuthPath, isArtistFollowResume } from '../utils/artistFollowIntent';

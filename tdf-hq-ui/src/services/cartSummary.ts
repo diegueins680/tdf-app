@@ -3,7 +3,7 @@ import {
   readOptionalBrowserStorage,
   removeOptionalBrowserPreference,
   writeOptionalBrowserPreference,
-} from '../../utils/optionalBrowserStorage';
+} from '../utils/optionalBrowserStorage';
 
 // Shared marketplace cart summary.
 //

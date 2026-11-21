@@ -9394,14 +9394,14 @@
       "observability": "Existing marketplace analytics; jest and browser evidence.",
       "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
       "implementation": [
-        "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
+        "tdf-hq-ui/src/services/cartSummary.ts",
         "tdf-hq-ui/src/components/MarketplaceCartButton.tsx",
         "tdf-hq-ui/src/components/PublicBranding.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/DatafastReturnPage.tsx"
       ],
       "tests": [
-        "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts",
+        "tdf-hq-ui/src/services/cartSummary.test.ts",
         "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
         "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "e2e/web/marketplace-cart.spec.mjs"
@@ -26212,8 +26212,8 @@
         "tdf-hq/sql/2026-10-20_video_campaigns.sql",
         "tdf-hq-ui/src/api/videoCampaigns.ts",
         "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
-        "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
-        "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
+        "tdf-hq-ui/src/utils/videoCampaign.ts",
+        "tdf-hq-ui/src/services/videoAttribution.ts",
         "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
@@ -26233,8 +26233,8 @@
       "tests": [
         "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
         "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
-        "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
-        "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
+        "tdf-hq-ui/src/utils/videoCampaign.test.ts",
+        "tdf-hq-ui/src/services/videoAttribution.test.ts",
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
         "e2e/web/video-campaigns.spec.mjs",
@@ -27898,7 +27898,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "The ratchet is enforced; 8 backend imports, 10 web imports and 16 oversized files remain listed debt."
+        "reason": "The ratchet is enforced; 8 backend imports, 7 web imports and 16 oversized files remain listed debt."
       },
       "authority": "User request 2026-11-10; layer definitions and limits are an engineering decision recorded in ADR 0133, owner confirmation pending.",
       "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",
