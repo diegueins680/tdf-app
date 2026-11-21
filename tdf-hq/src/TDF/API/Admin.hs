@@ -5,6 +5,7 @@
 
 module TDF.API.Admin where
 
+import TDF.Routes.DomoRefunds (DomoRefundAdminAPI)
 import TDF.API.RecordsIngestion (RecordsIngestionAPI)
 import qualified Data.ByteString.Lazy as BL
 import           Data.Text     (Text)
@@ -173,6 +174,7 @@ type AdminAPI =
   :<|> RagAdminAPI
   :<|> SocialAdminAPI
   :<|> DomoAdminAPI
+  :<|> DomoRefundAdminAPI
   :<|> "records-ingestion" :> RecordsIngestionAPI
 
 -- | PAY-DOMO-CANCEL-001 (AUTHORITY-093): an operator cancels a Domo quote on

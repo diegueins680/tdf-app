@@ -158,7 +158,6 @@
       ],
       "knownViolations": [
         "api/authHeader.ts -> session/SessionContext.tsx",
-        "api/drive.ts -> services/googleDrive.ts",
         "utils/chatkit.ts -> api/client.ts",
         "utils/directoryPreviewImage.ts -> api/client.ts",
         "utils/inAppBrowser.ts -> mobile/distribution.ts",
