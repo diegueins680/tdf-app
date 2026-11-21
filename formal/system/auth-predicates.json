@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654"
+    "tdf-hq/tdf-hq.cabal": "3572a1afd73c7ec2b40da2d9b281cb1ea34a718217e7a30c5000af695288022f"
   },
   "obligations": [
     {
@@ -883,6 +883,15 @@
       "currentSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
       "change": "Register the new TDF.Server.EventAttendees module in the library's other-modules on current protected main.",
       "semanticReview": "The merged Cabal file differs from protected main's by exactly one added line, the TDF.Server.EventAttendees module entry. That module holds one read query for the attendee roster and is imported only by the social events server; it adds no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "403ba9acc943b62c6d9658bfbc38e16c742f9c30",
+      "previousSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "currentSha256": "3572a1afd73c7ec2b40da2d9b281cb1ea34a718217e7a30c5000af695288022f",
+      "change": "Register the new TDF.Server.PublicBookingNotifications module in the library's other-modules on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly one added line, the TDF.Server.PublicBookingNotifications module entry. That module sends the staff and customer notices for a public booking request and is imported only by the server; it adds no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
       "qualification": "This review covers the conditional solver source context."
     }
   ]
