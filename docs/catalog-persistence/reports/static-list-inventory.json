@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-20T21:50:59.544Z",
+  "generatedAt": "2026-11-21T00:09:31.926Z",
   "repositoryRoot": ".",
   "filesScanned": 2812,
   "candidateCount": 1474,
@@ -60635,7 +60635,7 @@
       "domain": "fan-social",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 312,
+      "line": 315,
       "values": [
         "new",
         "hot",
@@ -60644,7 +60644,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        312
+        315
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -60669,7 +60669,7 @@
       "domain": "fan-social",
       "kind": "switch-cases",
       "name": "status",
-      "line": 408,
+      "line": 411,
       "values": [
         "unread",
         "opened",
@@ -60679,7 +60679,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        408
+        411
       ],
       "consumerCount": 1268,
       "backendConsumers": [
