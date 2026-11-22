@@ -18,6 +18,7 @@ import qualified TDF.ContentStorage as ContentStorage
 import qualified TDF.StorageVault as StorageVault
 import qualified TDF.Calendar.TokenCipher as CalendarTokenCipher
 import qualified TDF.Social.Chat as SocialChat
+import           TDF.Server.NotificationDelivery (notificationDeliveryServer)
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
 import qualified TDF.Social.RelationshipReads as SocialReads
@@ -3971,6 +3972,7 @@ protectedServer user =
   :<|> whatsappConsentServer user
   :<|> socialServer user
   :<|> chatServer user
+  :<|> notificationDeliveryServer user
   :<|> chatkitSessionServer user
   :<|> tidalAgentServer user
   :<|> socialSyncServer user
