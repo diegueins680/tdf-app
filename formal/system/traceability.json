@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "a35aa28c0a51799a18888ae36e01e051de19460f",
+  "mobileRevision": "528c9576007176045c6038298ed254f55c43569e",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -19250,6 +19250,83 @@
       "historicalStatus": null
     },
     {
+      "id": "COMMUNITY-FAN-RECOMMENDATION-001",
+      "title": "Artist recommendations for a fan from shared followers",
+      "statement": "A signed-in fan reads the publicly listed artists they do not follow yet and are allowed to follow, ordered by how strongly the followers of the artists they follow also follow each one (sum of cosine similarities of follower sets), completed with the most followed artists when the evidence gives fewer than the requested number. Route: GET /fans/me/recommendations.",
+      "domain": "COMMUNITY",
+      "authority": "Owner request of 2026-11-21 to build item-to-item recommendations for the Fan Hub; the similarity measure, fallback and limits were chosen by the implementer and await owner review. formal/system/fan-recommendations.md.",
+      "source": "formal/system/fan-recommendations.md",
+      "contract": "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
+      "property": "For every returned artist a: listed(a) /\\ a \\notin followed(fan) /\\ a # fan /\\ (policyInstalled => followable(fan, a)); similar_fans entries precede popular ones and are ordered by score descending; score(a) = SUM over listed s \\in followed(fan) of min(shared(s,a), followers(s), followers(a)) / sqrt(followers(s) * followers(a)); at most limit artists, each once.",
+      "actors": [
+        "Fan"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect)",
+        "fan_follow rows as created by tdf-hq/sql/init_schema.sql"
+      ],
+      "inputs": [
+        "GET /fans/me/recommendations",
+        "limit (optional; default 6, clamped to 1..24)"
+      ],
+      "state": {
+        "initial": "Stored fan_follow rows",
+        "terminal": [
+          "Ranked list",
+          "Refusal without read"
+        ]
+      },
+      "allowedTransitions": [
+        "None; the route reads and never writes."
+      ],
+      "forbiddenTransitions": [
+        "Returning an artist that is not publicly listed, is already followed by the caller, or is the caller",
+        "Returning an artist the caller may not follow under the installed social-v2 follow policy (block, closed profile, organisation or inactive account)",
+        "Naming a hidden artist as the reason for a recommendation",
+        "Any write"
+      ],
+      "effects": [
+        "None; read-only."
+      ],
+      "authorization": "requireFanAccess; the caller's own party only, taken from the session.",
+      "privacy": "Reads the caller's follows and aggregate counts; no other fan's identity is read or returned. Hidden artists are neither returned nor used as evidence. A block in either direction removes the artist from the caller's list where the follow policy is installed.",
+      "concurrency": "Three aggregate reads in one transaction at the pool's default isolation; a shared count exceeding a follower count read at another instant is clamped.",
+      "idempotency": "Read-only.",
+      "failure": "401 without a session; 403 without Fan or Customer access. An out-of-range limit is clamped, not refused.",
+      "recovery": "Not applicable.",
+      "observability": "HTTP status only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq-ui/src/features/fans/RecommendedArtists.tsx",
+        "tdf-hq-ui/src/features/fans/artistRecommendations.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs",
+        "scripts/test-fan-recommendations-sql.py",
+        "scripts/test-fan-recommendations-postgres.sh",
+        "tdf-hq-ui/src/features/fans/RecommendedArtists.test.tsx",
+        "tdf-hq-ui/src/features/fans/artistRecommendations.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Ranking by Hspec examples and QuickCheck properties (bounds, exclusions, visibility, ordering, input-order independence); the SQL extracted from the Haskell source runs on PostgreSQL against a fixture; web resolution and rendering by Jest.",
+      "evidence": "tdf-hq-test ArtistRecommendationsSpec run; scripts/test-fan-recommendations-postgres.sh output; Jest RecommendedArtists and artistRecommendations runs.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "High for the ranking function and the SQL on the fixture; the handler wiring is covered by compilation and review only.",
+      "ambiguity": [
+        "Only follows are evidence; plays, favourites and RSVPs are not used.",
+        "A single shared fan is enough to recommend; no minimum-support threshold is set.",
+        "No HTTP-level test runs the route against a fully migrated database.",
+        "The follow-policy filter is exercised against a stand-in function with the migrated signature, not the migrated social_v2_profile_eligible itself."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Ranking, SQL and web tested at unit and SQL level; HTTP-level checks on the migrated schema and owner confirmation of the ranking rule remain."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "COMMUNITY-FAN-NOTIFICATION-001",
       "title": "Marking own notifications read",
       "statement": "A signed-in party marks one or all of their own notifications read. Routes: POST /fans/me/notifications/{notifId}/read; POST /fans/me/notifications/read-all.",
@@ -29164,7 +29241,7 @@
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/domo-refund-validation.yml": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
-    ".github/workflows/event-operations-formal.yml": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
+    ".github/workflows/event-operations-formal.yml": "178504a7ba104d480c8ee839b167ff3f3c6eaa9abf523e4358ef0877d9813014",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -29172,7 +29249,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "98a643b2acd8d93a07f96bc7c283178aaae5fcddf1b81b821a1370def26e9190",
+    "docs/catalog-persistence/catalog-list-decisions.json": "c99df20d96e56b27ce0fcdba0df47e47b412b3451e2ba7c7b23e4edf1747e01c",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -29574,13 +29651,13 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
-    "formal/system/compiled-api-surface.json": "e227c6afb82883509fc0cb9937fd4518e5b7661c3c849ae0198b6669b0bdcf16",
+    "formal/system/compiled-api-surface.json": "7248a035ed547e49d5c1d15a6be548cd296011259e9de0c6d023dedba55e832d",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
     "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "6db2e0d6a7325ff99d7d04359e89c6167cda1f9e37a5d4c010182b04f94fdcd9",
+    "formal/system/recovery-expiry-arithmetic.json": "74157c4162b4fb95460a22b82d585abd539c3f4aad0013b503d9557d1082ab3d",
     "formal/system/route-requirements.json": "df5ba57041c1061ce8c325253fc66e48dd5558680f6fcf279ef7403be63355fb",
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -29892,6 +29969,8 @@
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-event-raci-browser.sh": "1f5732fd0fd9fb56085843be0c3746d92dab1f337973447fec44adca6e8afbd5",
     "scripts/test-event-ticket-sale.sh": "c0c48f9127eaad19269847d29dafb7b056ba433936e81e96a32f252dc60c5c64",
+    "scripts/test-fan-recommendations-postgres.sh": "e0499f45114c54a8cf3b46419b1b1c9f963a0799a27a7de46db5c0c94c07a38e",
+    "scripts/test-fan-recommendations-sql.py": "e8e7bac3b429385c1225d7aa8d9a9709031606b978380770e43c4403c02a2690",
     "scripts/test-google-account-name-verifier.py": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
     "scripts/test-guarded-release.py": "072a3aea42d088aac1cb00825bf34c7f3d08ff9fff21c630017f2ee5c9977a74",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -30164,11 +30243,11 @@
     "tdf-hq-ui/src/api/eventMemoryModeration.ts": "0b771dcdeb9318776a5955c1ae543d97ae2b9f06af31dc13e2f397f010bb4ed5",
     "tdf-hq-ui/src/api/eventTickets.test.ts": "a411fe9ca5267672db4db1ec3481aecd3fda6d8a19bc913c0885db2eb65ea541",
     "tdf-hq-ui/src/api/eventTickets.ts": "9ed3528a555397f16261758e2fe98aa6b57348ffbda8ed45b6ac629daeaeb736",
-    "tdf-hq-ui/src/api/fans.test.ts": "950ce9aa232eb1bc40b85f24b4ee05dc53599dff908edea22fd96d04f1c00c08",
-    "tdf-hq-ui/src/api/fans.ts": "75f0d175c04cd78845fb2fb305577eb00db074d30f2cc693a70d4d3a023a7046",
+    "tdf-hq-ui/src/api/fans.test.ts": "c3db1d5ad738382a954094ff375a67ce23eb98dd3f2205ab74f9ed158a5ff1e7",
+    "tdf-hq-ui/src/api/fans.ts": "0e444c2c417b6ff4fe25bdbf169437dfcc37a66e7bdeaa6521d4a5aeca91e5a3",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "4d69c011a18e29d7d141d37f27046b912a04d2e1c56267961e95b404e2922dc3",
+    "tdf-hq-ui/src/api/generated/types.ts": "813f02eba3a197ce5fce470dcb1681fb5cafb265d9d00d40a685650a14f160d2",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "579339fc25f2a17e8d34cfd23b25562a6242cca6df291887f904bac5483acc02",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "da727168f7e65d08d52a371cbe8ccfe0d0b1c91d4de940b827f7c37fdac72f85",
@@ -30200,7 +30279,7 @@
     "tdf-hq-ui/src/api/socialEvents.test.ts": "94e606bd6901c34bcf460a614294be9f4eb027c39b9ef2110e55df65aef5962b",
     "tdf-hq-ui/src/api/socialEvents.ts": "25e32c48510e880ef653fcdae775faa63d77ba8ccb1775612191c0d116c71efc",
     "tdf-hq-ui/src/api/socialV2.test.ts": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
-    "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
+    "tdf-hq-ui/src/api/types.ts": "0879b24ae1ff60ef60de657be2ee774de2f4bcf89c804a251857e3bf14175114",
     "tdf-hq-ui/src/api/uploadFailure.test.ts": "f1000f520cc6cfdc88fad9fbb03329ed4b58f93bc15d8b07928f54c90a69bb6e",
     "tdf-hq-ui/src/api/uploadFailure.ts": "634dd14ff7c3b25258bc4017cc6a82929675e517518170bd390877342313cfd1",
     "tdf-hq-ui/src/api/uploadQueue.test.ts": "64a4197e7bcbf2c1c9e4a180453c4ebffbf5c109a8c9b1967f186752ff8b0e8f",
@@ -30354,8 +30433,12 @@
     "tdf-hq-ui/src/features/fans/FirstFollowStarter.tsx": "947bea9efc951f911eeaa7ae9f41698ace9a150541c5a18f813637fdb34b2f34",
     "tdf-hq-ui/src/features/fans/FollowedArtists.tsx": "625d4c58450a76a62d7023e3a11b6ef2e89a10c7ee7a354887a2c586ce35da84",
     "tdf-hq-ui/src/features/fans/ProfileSectionCard.tsx": "c85106ee5581576c6d5d54c5c1b479e91725210b516bd334ad8569c11733e4f0",
+    "tdf-hq-ui/src/features/fans/RecommendedArtists.test.tsx": "97997e998f670c3a6af22a87af2da657d2b1f336e1995ab02f99c9b2f1d1c309",
+    "tdf-hq-ui/src/features/fans/RecommendedArtists.tsx": "7fc79232feabda05b3ecf321864828c6f7003636f193fd1c26eb4f3abbf3e51f",
     "tdf-hq-ui/src/features/fans/artistAudience.test.ts": "7a159ad02adc92895af13a68e7af525b61b90337d74a2dd3d43aa9c972cec6c2",
     "tdf-hq-ui/src/features/fans/artistAudience.ts": "cfc29f38e81930764756ed66badd00da723f8b62b1ada9a46a04031f34207b95",
+    "tdf-hq-ui/src/features/fans/artistRecommendations.test.ts": "2cada24ae59e49b3c54e67b21fc7f50b2ffd0528c3629dc743c8b16fb9cd0470",
+    "tdf-hq-ui/src/features/fans/artistRecommendations.ts": "69b02c0dab8f6b42dc02ea24222b65543f7a9aa86e9e1c4854e2be7c99da7245",
     "tdf-hq-ui/src/features/fans/reconcileFollowState.test.ts": "782a11f3d42cf616f73e42f872468efabd2b40ee902a5d66a9fc7cb449b98db4",
     "tdf-hq-ui/src/features/fans/reconcileFollowState.ts": "e88364850fb7660faa7a731f35754d05e097036a549c7207682356c5a10392d1",
     "tdf-hq-ui/src/features/fans/useFanProfile.ts": "5d5117b2bc97d999546a3ea417cb38ee797883744f4329c113b791e6bde0b53f",
@@ -30473,11 +30556,11 @@
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "33a335a1602ea6c4ac3ea14cad84261b77454e4be0f31a20ecbca3e2d117ebd3",
     "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx": "bcdc52df4473943366c816b123566a674e88f1e55e5e0c79611273b8f934f77a",
     "tdf-hq-ui/src/pages/FanClubPage.tsx": "1611c4e2a786f85b97e408bfe6a53df183d10f61bf2883e59ab3b9cf04b5671b",
-    "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "6d1a4156273bc94c6fd44e89ba9c9cff52bb47e7b0f4d4af5fc45085e24feaa3",
-    "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "bc32c42d85f2702f331c7c170764546c3988000c23596cfd3d691e24b4e2c024",
-    "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b7c85fe3881529c7b6c6e601085352dfcd5550ae06509c922eefa0eb60575734",
-    "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": "70b02ed4fec675ddcbc2a53ad2c167498719c9e9b9363c2517c0b29a033e1fdb",
-    "tdf-hq-ui/src/pages/FanHubPage.tsx": "cd9eb15dbfda661f7672a549e21bd5ca61850b894d13ede798616930bb954b28",
+    "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "087c18cc14e7c1fae2b04f4fc1f823540d80af489f42b0b71896fc8c04fb12ee",
+    "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "ba635a3cfde688206b980e65aeeb73ff6792b1c7274331e7ace7827270c3a1fc",
+    "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "7126bd51b9588447787a899294f755d35e9efa2da8722943c472a3eaf98c8895",
+    "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": "289b46d5b875816cc0356f3fe9715389238a8f7ed57eb3d734784751f07b4f03",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx": "9632387392d17c6e5f208bf4a2e9cd9ca3a8974c4749b8fb685cc3c43a8046c8",
     "tdf-hq-ui/src/pages/ForbiddenPage.test.tsx": "2ba38f5c1c525ecf177bedb9a90bdf80cb05d34532561e036c0567cb643fca7c",
     "tdf-hq-ui/src/pages/ForbiddenPage.tsx": "85aefe25db80e0d38615004356ca9c354425cba95757edb76f62b26b8534be7b",
     "tdf-hq-ui/src/pages/GoogleDriveCallbackPage.tsx": "edceff3b6fe2336ec1b234dbc421fb13a559fbbc56e1156321bb899dcf25ad39",
@@ -30750,7 +30833,7 @@
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
     "tdf-hq/assets/feature-registry.json": "11392498d31056c0a3eef9ff2dab3813848b5fa44e8d55176adb57133f7142ca",
     "tdf-hq/config/default.env.example": "b0754a5fe5aa2ae3635b6bdaf6dfed9211466bf077f73fc430d9ab0207379494",
-    "tdf-hq/docs/openapi/api.yaml": "fe5cd443b400722be794c27aa7d29696696f0328fbb8beb408ddc6fc7f9c892d",
+    "tdf-hq/docs/openapi/api.yaml": "93c52de817ad1df485f50ccd686cf0a1ba23fe57ce4fe8fdddf97361a06d678d",
     "tdf-hq/docs/openapi/artist-playback.yaml": "16c71adea21002fb54ecff645bba84be251a8537828d38342b1fb67a78acabcf",
     "tdf-hq/docs/openapi/directory.yaml": "796a92d53f69e5be446ac9de7f18da1916c151de4b0ead2f95d1d2751813e7e3",
     "tdf-hq/docs/openapi/interactions.yaml": "8d3ca2368a0ef1ea36a6c8f996b00d9a404c102fca1b44bf47eef8532a1fe598",
@@ -30945,7 +31028,7 @@
     "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql": "510f4ab65e13fd0faf203afd83a68e8c2df817723452b98603580b27f9586219",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
-    "tdf-hq/src/TDF/API.hs": "ef1ed6b71b5bc4a490c9074808094513c7c6396dbefd58606ae30f954d59ea4e",
+    "tdf-hq/src/TDF/API.hs": "89506b9a17e7b30c897d87e28e4258fef82db972aeaefa877cd48b68ceae7993",
     "tdf-hq/src/TDF/API/Admin.hs": "6bdbea3f4b2cccc20247f1e4d9a77dcefe0545b4158ff546312ffe7d59db825e",
     "tdf-hq/src/TDF/API/Catalog.hs": "a062b9681db64a9f68114888a0c296935944903efcbfedd672de2a3991e9d781",
     "tdf-hq/src/TDF/API/ContentStorage.hs": "252b724cba9b5a963757472792a4073f8562e7e1819b6e6840ca270dc5bf9f9b",
@@ -31028,7 +31111,7 @@
     "tdf-hq/src/TDF/Cron.hs": "84817904ba8fbfe8b9c077715e79795a6b63ac0f4cbd2e753f2389ad85a17fbb",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
-    "tdf-hq/src/TDF/DTO.hs": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
+    "tdf-hq/src/TDF/DTO.hs": "3887fd05051d11801dfde029a84502f51538e0562b43ba334f6b29f7a2cfadff",
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "2e0495d75a099784e39a7cc793d57b3e90183c7892ff475de6cf22b16da81a92",
     "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs": "79047936e9a4fff6cbf15767563a68cba32c1d4eaff754a2e6f18046615d3a43",
     "tdf-hq/src/TDF/Directory/Policy.hs": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
@@ -31036,6 +31119,7 @@
     "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
     "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs": "1b3937abe97b188d3dcd1f330485332651295a5e75e65d14702091c193245d27",
     "tdf-hq/src/TDF/EventOperations/Server.hs": "52efa5b303a134cf22fdbe5df9240b6c53620664b9283982e4e29c4ee7cfeed6",
+    "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs": "5337ce7774dfe5e94936069062c4a9e5d657aebe2ccd829df87f832f49427c36",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
     "tdf-hq/src/TDF/Handlers/InputList.hs": "57565241bce5f077ef7703008e3dba09686952c804b5fee0910326f47cad42e3",
     "tdf-hq/src/TDF/Interactions/API.hs": "1c87397e99ddc44da1178cdb7e696a32966dc02760e58ea32863c162df88d58b",
@@ -31073,7 +31157,7 @@
     "tdf-hq/src/TDF/Routes/DomoRefunds.hs": "b30e9a615d9ea754e2ffe29a257e272d4fc7342d17ec919e1235a199aeff34fd",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "c5b5eac3f58fbb0a24651c2bb2e57664720a6526ac25a69d2bf9f49acfdcc438",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "10cfaf282a49b1b78b23d820b65339cb2cbe5dd0ed5152688362e0ac034b1aa1",
+    "tdf-hq/src/TDF/Server.hs": "21b9a57abbf1ed54ad20f37063fb2beecf36c1f5f35b7bfeafac795edc9e0ae1",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
@@ -31151,7 +31235,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
+    "tdf-hq/tdf-hq.cabal": "b2699bc782904be3a871579f71a9928443135ca4d347d6d5769f23254d345f95",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -31159,7 +31243,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "115ae71490900a022ac559368575add15083f7b2a280ccf9519a919883f2c629",
+    "tdf-hq/test/Spec.hs": "9d3df18db6f8878c7a0acbb494ccf370177e8d562305db6fa074c47afff9bced",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -31200,6 +31284,7 @@
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
     "tdf-hq/test/TDF/EventTicketSaleSpec.hs": "c0645218656951aee61012df54df63ec2f9128b8d787d6899fcd323bc90294dd",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
+    "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs": "5d5b8fccdd5f61ce7fdd84f8f342cea0463752abb8e330708a9d212b7dae9cfd",
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
@@ -31365,7 +31450,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
-    "tdf-mobile/src/api/generated/types.ts": "4d69c011a18e29d7d141d37f27046b912a04d2e1c56267961e95b404e2922dc3",
+    "tdf-mobile/src/api/generated/types.ts": "813f02eba3a197ce5fce470dcb1681fb5cafb265d9d00d40a685650a14f160d2",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/api/upload.compatibility.test.ts": "21e4e097cea0449549484f2ba0ba09726585c58a5aa9c4cccbdddba8b00600ba",
@@ -32425,6 +32510,10 @@
       },
       {
         "requirement": "COMMUNITY-FAN-FOLLOW-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
         "relationship": "implementation"
       },
       {
@@ -48454,6 +48543,54 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs": [
+      {
+        "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/features/fans/RecommendedArtists.tsx": [
+      {
+        "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/features/fans/artistRecommendations.ts": [
+      {
+        "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs": [
+      {
+        "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-fan-recommendations-sql.py": [
+      {
+        "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-fan-recommendations-postgres.sh": [
+      {
+        "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/features/fans/RecommendedArtists.test.tsx": [
+      {
+        "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/features/fans/artistRecommendations.test.ts": [
+      {
+        "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/sql/2026-09-28_interaction_compatibility.sql": [
       {
         "requirement": "COMMUNITY-CLUB-PARTICIPATION-001",
@@ -52283,7 +52420,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
+      "sha256": "178504a7ba104d480c8ee839b167ff3f3c6eaa9abf523e4358ef0877d9813014",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59236,6 +59373,30 @@
       ]
     },
     {
+      "id": "SURFACE-e1ca12144977d994",
+      "path": "scripts/test-fan-recommendations-postgres.sh",
+      "sha256": "e0499f45114c54a8cf3b46419b1b1c9f963a0799a27a7de46db5c0c94c07a38e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-298bcd9bf352449e",
+      "path": "scripts/test-fan-recommendations-sql.py",
+      "sha256": "e8e7bac3b429385c1225d7aa8d9a9709031606b978380770e43c4403c02a2690",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-ec70a1725f0a44fe",
       "path": "scripts/test-feature-migrations.sh",
       "sha256": "b26598f05f4b69568e4f2d27167212cc644b045bdf8657348d0e8c961b04189f",
@@ -63479,7 +63640,7 @@
     {
       "id": "SURFACE-743e4202864493ee",
       "path": "tdf-hq-ui/src/api/fans.test.ts",
-      "sha256": "950ce9aa232eb1bc40b85f24b4ee05dc53599dff908edea22fd96d04f1c00c08",
+      "sha256": "c3db1d5ad738382a954094ff375a67ce23eb98dd3f2205ab74f9ed158a5ff1e7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63491,7 +63652,7 @@
     {
       "id": "SURFACE-ffd1f7d4f06774cf",
       "path": "tdf-hq-ui/src/api/fans.ts",
-      "sha256": "75f0d175c04cd78845fb2fb305577eb00db074d30f2cc693a70d4d3a023a7046",
+      "sha256": "0e444c2c417b6ff4fe25bdbf169437dfcc37a66e7bdeaa6521d4a5aeca91e5a3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63552,7 +63713,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "4d69c011a18e29d7d141d37f27046b912a04d2e1c56267961e95b404e2922dc3",
+      "sha256": "813f02eba3a197ce5fce470dcb1681fb5cafb265d9d00d40a685650a14f160d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64374,7 +64535,7 @@
     {
       "id": "SURFACE-9bac22f287db5deb",
       "path": "tdf-hq-ui/src/api/types.ts",
-      "sha256": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
+      "sha256": "0879b24ae1ff60ef60de657be2ee774de2f4bcf89c804a251857e3bf14175114",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67059,6 +67220,30 @@
       ]
     },
     {
+      "id": "SURFACE-ecc58d7cd6d94965",
+      "path": "tdf-hq-ui/src/features/fans/RecommendedArtists.test.tsx",
+      "sha256": "97997e998f670c3a6af22a87af2da657d2b1f336e1995ab02f99c9b2f1d1c309",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-9b6e93988a319b40",
+      "path": "tdf-hq-ui/src/features/fans/RecommendedArtists.tsx",
+      "sha256": "7fc79232feabda05b3ecf321864828c6f7003636f193fd1c26eb4f3abbf3e51f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-f6a6f1b8864f9350",
       "path": "tdf-hq-ui/src/features/fans/artistAudience.test.ts",
       "sha256": "7a159ad02adc92895af13a68e7af525b61b90337d74a2dd3d43aa9c972cec6c2",
@@ -67078,6 +67263,30 @@
       "requirements": [
         {
           "requirement": "MEDIA-ARTIST-CATALOG-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d6eaccf61f8488b5",
+      "path": "tdf-hq-ui/src/features/fans/artistRecommendations.test.ts",
+      "sha256": "2cada24ae59e49b3c54e67b21fc7f50b2ffd0528c3629dc743c8b16fb9cd0470",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-baff66803823d83f",
+      "path": "tdf-hq-ui/src/features/fans/artistRecommendations.ts",
+      "sha256": "69b02c0dab8f6b42dc02ea24222b65543f7a9aa86e9e1c4854e2be7c99da7245",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
           "relationship": "implementation"
         }
       ]
@@ -69498,7 +69707,7 @@
     {
       "id": "SURFACE-843ecd90497b82eb",
       "path": "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-      "sha256": "6d1a4156273bc94c6fd44e89ba9c9cff52bb47e7b0f4d4af5fc45085e24feaa3",
+      "sha256": "087c18cc14e7c1fae2b04f4fc1f823540d80af489f42b0b71896fc8c04fb12ee",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -69522,7 +69731,7 @@
     {
       "id": "SURFACE-8e582de4b6234f44",
       "path": "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-      "sha256": "bc32c42d85f2702f331c7c170764546c3988000c23596cfd3d691e24b4e2c024",
+      "sha256": "ba635a3cfde688206b980e65aeeb73ff6792b1c7274331e7ace7827270c3a1fc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -69546,7 +69755,7 @@
     {
       "id": "SURFACE-3d536aa30411edce",
       "path": "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-      "sha256": "b7c85fe3881529c7b6c6e601085352dfcd5550ae06509c922eefa0eb60575734",
+      "sha256": "7126bd51b9588447787a899294f755d35e9efa2da8722943c472a3eaf98c8895",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -69562,7 +69771,7 @@
     {
       "id": "SURFACE-2bbd93102a783ed1",
       "path": "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
-      "sha256": "70b02ed4fec675ddcbc2a53ad2c167498719c9e9b9363c2517c0b29a033e1fdb",
+      "sha256": "289b46d5b875816cc0356f3fe9715389238a8f7ed57eb3d734784751f07b4f03",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -69586,7 +69795,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "cd9eb15dbfda661f7672a549e21bd5ca61850b894d13ede798616930bb954b28",
+      "sha256": "9632387392d17c6e5f208bf4a2e9cd9ca3a8974c4749b8fb685cc3c43a8046c8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74809,7 +75018,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "fe5cd443b400722be794c27aa7d29696696f0328fbb8beb408ddc6fc7f9c892d",
+      "sha256": "93c52de817ad1df485f50ccd686cf0a1ba23fe57ce4fe8fdddf97361a06d678d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79647,7 +79856,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "ef1ed6b71b5bc4a490c9074808094513c7c6396dbefd58606ae30f954d59ea4e",
+      "sha256": "89506b9a17e7b30c897d87e28e4258fef82db972aeaefa877cd48b68ceae7993",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81479,7 +81688,7 @@
     {
       "id": "SURFACE-70ca6d20ed6232ae",
       "path": "tdf-hq/src/TDF/DTO.hs",
-      "sha256": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
+      "sha256": "3887fd05051d11801dfde029a84502f51538e0562b43ba334f6b29f7a2cfadff",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81726,6 +81935,18 @@
       "sha256": "04e18fa04d8876bad418393ac9b66912e43364d5fb62b18bd7448a785983b3d3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-a014c1742322a2bb",
+      "path": "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
+      "sha256": "5337ce7774dfe5e94936069062c4a9e5d657aebe2ccd829df87f832f49427c36",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6c2b99a15ac48184",
@@ -82432,7 +82653,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "10cfaf282a49b1b78b23d820b65339cb2cbe5dd0ed5152688362e0ac034b1aa1",
+      "sha256": "21b9a57abbf1ed54ad20f37063fb2beecf36c1f5f35b7bfeafac795edc9e0ae1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -82545,6 +82766,10 @@
         },
         {
           "requirement": "COMMUNITY-FAN-FOLLOW-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
           "relationship": "implementation"
         },
         {
@@ -84569,7 +84794,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
+      "sha256": "b2699bc782904be3a871579f71a9928443135ca4d347d6d5769f23254d345f95",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84764,7 +84989,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "115ae71490900a022ac559368575add15083f7b2a280ccf9519a919883f2c629",
+      "sha256": "9d3df18db6f8878c7a0acbb494ccf370177e8d562305db6fa074c47afff9bced",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85641,6 +85866,18 @@
       "requirements": [
         {
           "requirement": "PRIV-ERROR-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-590912916bfb765f",
+      "path": "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs",
+      "sha256": "5d5b8fccdd5f61ce7fdd84f8f342cea0463752abb8e330708a9d212b7dae9cfd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
           "relationship": "tests"
         }
       ]
@@ -89732,7 +89969,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "4d69c011a18e29d7d141d37f27046b912a04d2e1c56267961e95b404e2922dc3",
+      "sha256": "813f02eba3a197ce5fce470dcb1681fb5cafb265d9d00d40a685650a14f160d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -93861,7 +94098,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6aa73431750e9fad5c9bd4d5710816970014a4a9a0e17b371e38cbf1005780bb",
+      "sourceSha256": "e9bf3e80a43f8104a8bde694fc10f019a4121bcb65dfe84bccf35f3d963ec5b2",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -93889,7 +94126,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6aa73431750e9fad5c9bd4d5710816970014a4a9a0e17b371e38cbf1005780bb",
+      "sourceSha256": "e9bf3e80a43f8104a8bde694fc10f019a4121bcb65dfe84bccf35f3d963ec5b2",
       "definition": {
         "states": [
           "absent",
@@ -93919,7 +94156,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6aa73431750e9fad5c9bd4d5710816970014a4a9a0e17b371e38cbf1005780bb",
+      "sourceSha256": "e9bf3e80a43f8104a8bde694fc10f019a4121bcb65dfe84bccf35f3d963ec5b2",
       "definition": {
         "export": [
           "queued",
@@ -97011,6 +97248,22 @@
       ],
       "responses": [
         "200"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /fans/me/recommendations",
+      "operationId": "listFanArtistRecommendations",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "401",
+        "403"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -117310,7 +117563,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 231,
+    "PARTIAL": 232,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
