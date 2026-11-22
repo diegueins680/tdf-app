@@ -321,6 +321,18 @@ CourseRegistrationFollowUp
     updatedAt      UTCTime default=now()
     deriving Show Generic
 
+-- One row per reminder sent, so a rescheduled follow-up reminds again
+-- and replicas never send the same reminder twice. The recipient is the
+-- party id as text, like EventLogisticsAlertDelivery, so this claim table
+-- stays outside the identity Party reference registry.
+CourseFollowUpReminderDelivery
+    followUpId       CourseRegistrationFollowUpId OnDeleteCascade
+    dueAt            UTCTime
+    recipientPartyId Text
+    deliveredAt      UTCTime
+    UniqueCourseFollowUpReminderDelivery followUpId dueAt recipientPartyId
+    deriving Show Generic
+
 CourseEmailEvent
     courseSlug      Text
     registrationId  CourseRegistrationId Maybe

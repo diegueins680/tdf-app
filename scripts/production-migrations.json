@@ -1335,6 +1335,11 @@
       "introducedBy": "d77cd1319a67e89675e12e9e9082641bdf9fcc66"
     },
     {
+      "id": "2026-11-20_course_follow_up_reminder_delivery",
+      "path": "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql",
+      "introducedBy": "7da005edcdcce714343d3bbf7273fc31dd0743f4"
+    },
+    {
       "id": "2026-11-21_school_schedule_occupancy",
       "path": "tdf-hq/sql/2026-11-21_school_schedule_occupancy.sql",
       "introducedBy": "c97018569ad80d494695b58e7c79f74b26c41025"
