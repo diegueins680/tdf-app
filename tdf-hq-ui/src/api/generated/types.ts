@@ -3051,6 +3051,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/fans/me/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recommend artists to follow
+         * @description Returns publicly listed artists the authenticated fan does not follow yet, best match first. Artists followed by the same fans as the artists the caller follows come first (`similar_fans`, cosine similarity of the follower sets); when those are fewer than `limit` the list is completed with the most followed artists (`popular`). Read-only.
+         */
+        get: operations["listFanArtistRecommendations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/fans/me/artist-profile": {
         parameters: {
             query?: never;
@@ -15103,6 +15123,19 @@ export interface components {
             /** Format: date */
             ffStartedAt?: string;
         };
+        ArtistRecommendation: {
+            /** Format: int64 */
+            arecArtistId: number;
+            /** @enum {string} */
+            arecReason: "similar_fans" | "popular";
+            /**
+             * Format: double
+             * @description Sum of the cosine similarities to the followed artists; 0 for `popular`.
+             */
+            arecScore: number;
+            /** @description Followed artists behind a `similar_fans` entry, strongest first (at most 3). */
+            arecSeedArtistIds: number[];
+        };
         CourseSession: {
             label?: string;
             /** Format: date */
@@ -26556,6 +26589,43 @@ export interface operations {
         responses: {
             /** @description Follow removed */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listFanArtistRecommendations: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of artists; values outside 1..24 are clamped. */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recommended artists */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistRecommendation"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fan access required */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -19,6 +19,7 @@ jest.unstable_mockModule('../components/events/MyEventsPanel', () => ({ default:
 jest.unstable_mockModule('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session, loading: false }), getActiveSession: () => session, getStoredSessionToken: () => null }));
 jest.unstable_mockModule('../api/fans', () => ({ Fans: {
+  listRecommendations: async () => [],
   listArtists: async () => [], listFollows: async () => [{ ffArtistId: 7, ffArtistName: 'Sofia Marquez', ffSpotifyUrl: artistFallback }],
   listMyClubs: async () => [], getMyArtistProfile: async () => null,
 } }));

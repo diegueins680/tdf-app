@@ -4200,6 +4200,40 @@ paths:
       responses:
         '200':
           description: Follow removed
+  /fans/me/recommendations:
+    get:
+      tags: [FanHub]
+      summary: Recommend artists to follow
+      description: >-
+        Returns publicly listed artists the authenticated fan does not follow yet,
+        best match first. Artists followed by the same fans as the artists the
+        caller follows come first (`similar_fans`, cosine similarity of the
+        follower sets); when those are fewer than `limit` the list is completed
+        with the most followed artists (`popular`). Read-only.
+      operationId: listFanArtistRecommendations
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of artists; values outside 1..24 are clamped.
+          schema:
+            type: integer
+            default: 6
+      responses:
+        '200':
+          description: Recommended artists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArtistRecommendation'
+        '401':
+          description: Authentication required
+        '403':
+          description: Fan access required
   /fans/me/artist-profile:
     get:
       tags: [FanHub]
@@ -17717,6 +17751,26 @@ components:
         ffStartedAt:
           type: string
           format: date
+    ArtistRecommendation:
+      type: object
+      required: [arecArtistId, arecReason, arecScore, arecSeedArtistIds]
+      properties:
+        arecArtistId:
+          type: integer
+          format: int64
+        arecReason:
+          type: string
+          enum: [similar_fans, popular]
+        arecScore:
+          type: number
+          format: double
+          description: Sum of the cosine similarities to the followed artists; 0 for `popular`.
+        arecSeedArtistIds:
+          type: array
+          description: Followed artists behind a `similar_fans` entry, strongest first (at most 3).
+          items:
+            type: integer
+            format: int64
     CourseSession:
       type: object
       properties:

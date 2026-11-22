@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "23bcc385b9064598661effe9dbc2036c95f293bca271c01b2b00bc54428b8abb"
+    "tdf-hq/tdf-hq.cabal": "2e9ab4e74acdcfae906de9dfee0fe1a79e800266f2b49d1a87e998647b0fcd1d"
   },
   "obligations": [
     {
@@ -950,9 +950,36 @@
     },
     {
       "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "403ba9acc943b62c6d9658bfbc38e16c742f9c30",
+      "previousSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "currentSha256": "ac2c532ac44d40fa90deccf0617c0d3f8663993541b17a02fa81f322352cd155",
+      "change": "Register the new TDF.Fans.ArtistRecommendations library module and its TDF.Fans.ArtistRecommendationsSpec test module on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly two added lines: the TDF.Fans.ArtistRecommendations entry in the library's other-modules and the TDF.Fans.ArtistRecommendationsSpec entry in the test suite's other-modules. The library module holds a pure ranking function and three read-only aggregate queries over fan_follow, imports only TDF.Models and TDF.Profiles.ArtistVisibility from this package, and is imported only by TDF.Server; the test module imports only that module. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "0e05c05762d661e18f9636d121c10c7c8e8e7389",
+      "previousSha256": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
+      "currentSha256": "b2699bc782904be3a871579f71a9928443135ca4d347d6d5769f23254d345f95",
+      "change": "Reconcile protected main 0e05c0576 with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the two module lines this branch added and reviewed above (TDF.Fans.ArtistRecommendations and TDF.Fans.ArtistRecommendationsSpec); git merged them without conflicts, so that review describes every difference from protected main and the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
       "reviewedAgainst": "6142acf4cb33bee1aff32daf4c283210344feb4b",
       "previousSha256": "0b89be834848ce754673da5f456c73092effd2b7dcf6f8558c42b08c97c171de",
-      "currentSha256": "23bcc385b9064598661effe9dbc2036c95f293bca271c01b2b00bc54428b8abb",
+      "currentSha256": "1958140b10c2e13a43dc83f4d0aaf38fc8be222bba91d3446fc29eb7252c86b4",
+      "change": "Reconcile protected main 6142acf4c with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "0d9f2aaed81c5919b558c16a7a38f6050faa6039",
+      "previousSha256": "1958140b10c2e13a43dc83f4d0aaf38fc8be222bba91d3446fc29eb7252c86b4",
+      "currentSha256": "2e9ab4e74acdcfae906de9dfee0fe1a79e800266f2b49d1a87e998647b0fcd1d",
       "change": "Register the new TDF.Directory.SemanticIndex and TDF.Directory.SemanticSearch library modules and their TDF.Directory.SemanticSearchPostgresSpec and TDF.Directory.SemanticSearchSpec test modules on current protected main.",
       "semanticReview": "The merged Cabal file differs from protected main's by exactly four added lines: the TDF.Directory.SemanticIndex and TDF.Directory.SemanticSearch entries in the library's exposed-modules and the TDF.Directory.SemanticSearchPostgresSpec and TDF.Directory.SemanticSearchSpec entries in the test suite's other-modules. TDF.Directory.SemanticSearch is pure ranking arithmetic and SQL text for directory search and imports nothing from this package; TDF.Directory.SemanticIndex runs the embedding sweep and the query-vector lookup, imports only TDF.Config, TDF.DB, TDF.Directory.SemanticSearch and TDF.RagStore from this package, and is imported only by TDF.App.Boot and TDF.Server.Directory. Neither imports TDF.Auth, TDF.ServerAuth, a role type or a recovery binding. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
       "qualification": "This review covers the conditional solver source context."
