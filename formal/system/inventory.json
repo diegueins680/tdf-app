@@ -3787,7 +3787,7 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "fdef41e789e2df22b64a134bcfe5f91ca1a39780dfd8252aa6da756110e395a6",
+      "sha256": "b8dfc95a6888fc98187b336efcbe1c86b5a4db91196add6df16a0f6722216b47",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11653,13 +11653,13 @@
     {
       "id": "SURFACE-a7de3e18000e0445",
       "path": "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx",
-      "sha256": "ecca330dd538d32f47bcc65cbef24063549d7ae9e89c6716504653e86b4945c9",
+      "sha256": "356168a13ba1aca4beb81ee07518ee2ec29d7b8b3eda55d3a512c2236dee873a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b81f0abcff43675c",
       "path": "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
-      "sha256": "612c53c07b538d3a47aaa7e94da22e68c0da2926c6de7d18fac5dec33d1e1686",
+      "sha256": "69476756de4f5c677584aa8ba74a51738779c8d499294620526f866529f4d788",
       "semanticConformance": "not-established-by-discovery"
     },
     {

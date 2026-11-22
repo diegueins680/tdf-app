@@ -131,7 +131,7 @@ describe('DomoVenuePage pricing truthfulness', () => {
     expect(submit.hasAttribute('disabled')).toBe(false);
 
     fireEvent.click(submit);
-    await screen.findByText(/Solicitud enviada\. Este flujo manual no retiene la fecha ni confirma un pago/);
+    await screen.findByText(/Solicitud enviada\. El horario queda apartado de forma tentativa/);
 
     expect(createPublicMock).toHaveBeenCalledTimes(2);
     expect(createPublicMock.mock.calls[0]?.[0]).toMatchObject({

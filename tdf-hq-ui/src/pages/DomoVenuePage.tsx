@@ -345,7 +345,7 @@ const buildBookingNotes = (form: BookingFormState, summary: ReturnType<typeof su
     `Invitados: ${summary.guests}`,
     `Duración solicitada: ${summary.durationHours} horas + ${summary.setupHours} horas de montaje`,
     'Precio: pendiente de cotización autoritativa y versionada',
-    'Disponibilidad: no verificada; esta solicitud no retiene la fecha',
+    'Disponibilidad: por confirmar; el horario queda apartado de forma tentativa',
     summary.selectedAddons.length ? `Adicionales: ${summary.selectedAddons.join(', ')}` : 'Adicionales: ninguno',
     form.notes.trim() ? `Notas del cliente: ${form.notes.trim()}` : null,
   ]
@@ -491,7 +491,7 @@ export default function DomoVenuePage() {
       await Bookings.createPublic(payload, submissionIdempotency.current.key);
       setStatus({
         severity: 'success',
-        message: 'Solicitud enviada. Este flujo manual no retiene la fecha ni confirma un pago; el equipo revisará disponibilidad y te contactará.',
+        message: 'Solicitud enviada. El horario queda apartado de forma tentativa mientras el equipo revisa disponibilidad; aún no está confirmado ni registra un pago. Te contactaremos.',
       });
     } catch (err) {
       setStatus({
@@ -896,7 +896,7 @@ export default function DomoVenuePage() {
                     <Typography color="text.secondary">
                       {authoritativeQuotesAvailable
                         ? `El servidor calculará la tarifa aprobada y retendrá la fecha por ${domoStorefrontQuery.data?.quoteHoldMinutes ?? 15} minutos. Crear la cotización no significa aceptar ni pagar.`
-                        : 'El checkout autoritativo no está habilitado. Puedes enviar una solicitud manual; no confirma disponibilidad, no retiene la fecha y no crea un pago.'}
+                        : 'El checkout autoritativo no está habilitado. Puedes enviar una solicitud manual: aparta el horario de forma tentativa hasta que el equipo la confirme o la cancele, y no crea un pago.'}
                     </Typography>
                   </Stack>
 
@@ -1070,7 +1070,7 @@ export default function DomoVenuePage() {
                   <Alert severity={authoritativeQuotesAvailable ? 'info' : 'warning'}>
                     {authoritativeQuotesAvailable
                       ? 'El cliente no calcula precios. La siguiente pantalla mostrará la cotización inmutable, impuesto, depósito, saldo, versión de términos y vencimiento emitidos por el servidor.'
-                      : 'El precio, impuestos, depósito y políticas vendrán en una cotización versionada emitida por TDF. Esta solicitud manual no separa la fecha.'}
+                      : 'El precio, impuestos, depósito y políticas vendrán en una cotización versionada emitida por TDF. Esta solicitud manual aparta la fecha solo de forma tentativa y no la confirma.'}
                   </Alert>
                 </Stack>
               </CardContent>
