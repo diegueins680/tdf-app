@@ -21,6 +21,20 @@ import { Courses, type CourseUpsert, type CourseMetadata } from '../api/courses'
 import { COURSE_DEFAULTS, COURSE_PATH_BASE } from '../config/appConfig';
 import { resolveRuntimeCurrency } from '../utils/formatters';
 import { useAutoSave } from '../hooks/useAutoSave';
+import { formatPriceCentsInput, parseOptionalPriceCents } from '../utils/priceInput';
+import { formatCourseMetadataPriceInput } from '../utils/coursePriceInput';
+
+// Draft-only editor state must never be sent as a course API payload.
+type CourseBuilderDraft = Omit<CourseUpsert, 'priceCents'> & {
+  priceCents?: number;
+  priceInput?: string;
+  priceInputError?: string;
+};
+const COURSE_DRAFT_KEY = 'tdf-course-builder-draft';
+const readDraftSnapshot = (): string | null | undefined => {
+  try { return window.localStorage.getItem(COURSE_DRAFT_KEY); }
+  catch { return undefined; }
+};
 
 interface SessionInput { label: string; date: string }
 interface SyllabusInput { title: string; topics: string }
@@ -105,6 +119,16 @@ export default function CourseBuilderPage() {
   const [format, setFormat] = useState('Presencial');
   const [duration, setDuration] = useState('Cuatro sábados (16 horas en total)');
   const [price, setPrice] = useState('150');
+  const [priceLoadError, setPriceLoadError] = useState<string | null>(null);
+  const priceValue = useMemo(() => {
+    if (priceLoadError) return { cents: null, error: priceLoadError };
+    try {
+      const cents = parseOptionalPriceCents(price);
+      return { cents, error: cents === null ? 'Ingresa un precio; usa 0 si el curso es gratuito.' : null };
+    } catch {
+      return { cents: null, error: 'Usa un precio no negativo con hasta dos decimales, dentro del rango admitido.' };
+    }
+  }, [price, priceLoadError]);
   const [currency, setCurrency] = useState(resolveRuntimeCurrency);
   const [capacity, setCapacity] = useState('16');
   const [sessionStartHour, setSessionStartHour] = useState('15');
@@ -125,13 +149,16 @@ export default function CourseBuilderPage() {
   const [loadSlug, setLoadSlug] = useState(COURSE_DEFAULTS.slug);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [hasDraft, setHasDraft] = useState(false);
+  const [draftReady, setDraftReady] = useState(false);
   const [showPayloadPreview, setShowPayloadPreview] = useState(false);
   const [showExistingCourseLoader, setShowExistingCourseLoader] = useState(false);
   const draftLoadedRef = useRef(false);
   const autoLoadedRef = useRef(false);
   const hasLocalEditsRef = useRef(false);
+  const editRevision = useRef(0);
   const markDirty = useCallback(() => {
     hasLocalEditsRef.current = true;
+    editRevision.current += 1;
   }, []);
   const sections = [
     { key: 'detalles', label: 'Detalles' },
@@ -201,7 +228,7 @@ export default function CourseBuilderPage() {
     }
   };
 
-  const buildPayload = useCallback((): CourseUpsert => {
+  const buildDraft = useCallback((): CourseBuilderDraft => {
     const toOptionalNumber = (value: string) => {
       const trimmed = value.trim();
       if (!trimmed) return null;
@@ -209,8 +236,6 @@ export default function CourseBuilderPage() {
       return Number.isFinite(num) ? num : null;
     };
     const cleanCapacity = Number.isFinite(Number(capacity)) ? Number(capacity) : 0;
-    const numericPrice = Number(price);
-    const cleanPrice = Number.isFinite(numericPrice) ? Math.max(0, Math.round(numericPrice * 100)) : 0;
     const landing = landingUrl.trim();
     const sessionStart = toOptionalNumber(sessionStartHour);
     const sessionDuration = toOptionalNumber(sessionDurationHours);
@@ -220,7 +245,9 @@ export default function CourseBuilderPage() {
       subtitle: subtitle.trim() || null,
       format: format.trim() || null,
       duration: duration.trim() || null,
-      priceCents: cleanPrice,
+      priceCents: priceValue.cents ?? undefined,
+      priceInput: price,
+      priceInputError: priceLoadError ?? undefined,
       currency: currency.trim() || resolveRuntimeCurrency(),
       capacity: Math.max(0, Math.round(cleanCapacity)),
       sessionStartHour: sessionStart ?? null,
@@ -258,6 +285,8 @@ export default function CourseBuilderPage() {
     locationLabel,
     locationMapUrl,
     price,
+    priceValue.cents,
+    priceLoadError,
     sessionDurationHours,
     sessionStartHour,
     sessions,
@@ -268,22 +297,41 @@ export default function CourseBuilderPage() {
     whatsappCtaUrl,
   ]);
 
-  const payload = buildPayload();
+  const buildPayload = useCallback((): CourseUpsert => {
+    if (priceValue.error || priceValue.cents === null) {
+      throw new Error(priceValue.error ?? 'Ingresa un precio válido.');
+    }
+    const draft = buildDraft();
+    delete draft.priceInput;
+    delete draft.priceInputError;
+    return { ...draft, priceCents: priceValue.cents };
+  }, [buildDraft, priceValue]);
+  const payload = buildDraft();
   const { loadDraft, saveDraft, clearDraft } = useAutoSave('course-builder', payload, {
-    enabled: hasLocalEditsRef.current,
+    enabled: hasLocalEditsRef.current && draftReady,
     debounceMs: 2000,
-    storageKey: 'tdf-course-builder-draft',
+    storageKey: COURSE_DRAFT_KEY,
   });
 
   const createMutation = useMutation({
     mutationFn: async () => {
       const p = buildPayload();
+      const revision = editRevision.current;
+      const draftSnapshot = readDraftSnapshot();
       await Courses.upsert(p);
+      return { revision, draftSnapshot };
     },
-    onSuccess: () => {
-      clearDraft();
+    onSuccess: ({ revision, draftSnapshot }) => {
+      // A delayed save must not discard edits made while it was in flight.
+      if (revision === editRevision.current) {
+        hasLocalEditsRef.current = false;
+        // Another editor can replace this shared browser draft while saving.
+        if (draftSnapshot !== undefined && readDraftSnapshot() === draftSnapshot) clearDraft();
+        setHasDraft(false);
+      }
     },
   });
+  const courseSaved = createMutation.isSuccess && createMutation.data?.revision === editRevision.current;
 
   const handleSessionChange = (idx: number, field: keyof SessionInput, value: string) => {
     markDirty();
@@ -323,7 +371,9 @@ export default function CourseBuilderPage() {
     setSyllabus((prev) => [...prev, { title: '', topics: '' }]);
   };
 
-  const payloadPreview = JSON.stringify(buildPayload(), null, 2);
+  const payloadPreview = priceValue.error
+    ? 'Corrige el precio para ver el payload del curso.'
+    : JSON.stringify(buildPayload(), null, 2);
   const canResetLanding = landingUrlTouched && landingUrl !== landingFor(slug);
   const landingUrlHelperText = canResetLanding
     ? `Editaste la URL. Slug sugerido: ${slug}.`
@@ -332,30 +382,40 @@ export default function CourseBuilderPage() {
 
   useEffect(() => {
     if (draftLoadedRef.current) return;
-    const draft = loadDraft() as Partial<CourseUpsert> | null;
+    setDraftReady(true);
+    const draft = loadDraft() as Partial<CourseBuilderDraft> | null;
     if (!draft || (!draft.title && !draft.slug)) return;
     setTitle((prev) => draft.title ?? prev);
-    setSubtitle((prev) => draft.subtitle ?? prev);
-    setFormat((prev) => draft.format ?? prev);
-    setDuration((prev) => draft.duration ?? prev);
-    setPrice((prev) =>
-      draft.priceCents != null ? String(Math.round(draft.priceCents / 100)) : prev,
-    );
+    setSubtitle((prev) => draft.subtitle === undefined ? prev : draft.subtitle ?? '');
+    setFormat((prev) => draft.format === undefined ? prev : draft.format ?? '');
+    setDuration((prev) => draft.duration === undefined ? prev : draft.duration ?? '');
+    if (typeof draft.priceInput === 'string') {
+      setPrice(draft.priceInput);
+      setPriceLoadError(typeof draft.priceInputError === 'string' ? draft.priceInputError : null);
+    } else {
+      try {
+        setPrice(formatPriceCentsInput(draft.priceCents));
+        setPriceLoadError(null);
+      } catch {
+        setPrice('');
+        setPriceLoadError('El precio del borrador no conserva centavos exactos. Vuelve a ingresarlo.');
+      }
+    }
     setCurrency((prev) => draft.currency ?? prev);
     setCapacity((prev) => (draft.capacity != null ? String(draft.capacity) : prev));
-    setSessionStartHour((prev) => (draft.sessionStartHour != null ? String(draft.sessionStartHour) : prev));
+    setSessionStartHour((prev) => draft.sessionStartHour === undefined ? prev : draft.sessionStartHour === null ? '' : String(draft.sessionStartHour));
     setSessionDurationHours((prev) =>
-      draft.sessionDurationHours != null ? String(draft.sessionDurationHours) : prev,
+      draft.sessionDurationHours === undefined ? prev : draft.sessionDurationHours === null ? '' : String(draft.sessionDurationHours),
     );
-    setLocationLabel((prev) => draft.locationLabel ?? prev);
-    setLocationMapUrl((prev) => draft.locationMapUrl ?? prev);
-    setWhatsappCtaUrl((prev) => draft.whatsappCtaUrl ?? prev);
-    setLandingUrl((prev) => draft.landingUrl ?? prev);
-    setDaws((prev) => (draft.daws?.length ? draft.daws.join('\n') : prev));
-    setIncludes((prev) => (draft.includes?.length ? draft.includes.join('\n') : prev));
-    setInstructorName((prev) => draft.instructorName ?? prev);
-    setInstructorBio((prev) => draft.instructorBio ?? prev);
-    setInstructorAvatarUrl((prev) => draft.instructorAvatarUrl ?? prev);
+    setLocationLabel((prev) => draft.locationLabel === undefined ? prev : draft.locationLabel ?? '');
+    setLocationMapUrl((prev) => draft.locationMapUrl === undefined ? prev : draft.locationMapUrl ?? '');
+    setWhatsappCtaUrl((prev) => draft.whatsappCtaUrl === undefined ? prev : draft.whatsappCtaUrl ?? '');
+    setLandingUrl((prev) => draft.landingUrl === undefined ? prev : draft.landingUrl ?? '');
+    setDaws((prev) => Array.isArray(draft.daws) ? draft.daws.join('\n') : prev);
+    setIncludes((prev) => Array.isArray(draft.includes) ? draft.includes.join('\n') : prev);
+    setInstructorName((prev) => draft.instructorName === undefined ? prev : draft.instructorName ?? '');
+    setInstructorBio((prev) => draft.instructorBio === undefined ? prev : draft.instructorBio ?? '');
+    setInstructorAvatarUrl((prev) => draft.instructorAvatarUrl === undefined ? prev : draft.instructorAvatarUrl ?? '');
     setSessions((prev) =>
       draft.sessions
         ? draft.sessions.map((s) => ({ label: s.label ?? '', date: s.date ?? '' }))
@@ -372,9 +432,9 @@ export default function CourseBuilderPage() {
   }, [loadDraft]);
 
   useEffect(() => {
-    if (!hasLocalEditsRef.current) return;
+    if (!draftReady || !hasLocalEditsRef.current) return;
     saveDraft(payload);
-  }, [payload, saveDraft]);
+  }, [draftReady, payload, saveDraft]);
 
   const applyMetadata = (meta: CourseMetadata) => {
     const sanitizedSessions =
@@ -397,7 +457,13 @@ export default function CourseBuilderPage() {
     setSubtitle(meta.subtitle ?? '');
     setFormat(meta.format ?? '');
     setDuration(meta.duration ?? '');
-    setPrice(meta.price ? String(Math.round(meta.price)) : '0');
+    try {
+      setPrice(formatCourseMetadataPriceInput(meta.price));
+      setPriceLoadError(null);
+    } catch {
+      setPrice('');
+      setPriceLoadError('El precio recibido no conserva centavos exactos. Vuelve a ingresarlo.');
+    }
     setCurrency(meta.currency ?? resolveRuntimeCurrency());
     setCapacity(meta.capacity ? String(meta.capacity) : '0');
     setSessionStartHour(meta.sessionStartHour != null ? String(meta.sessionStartHour) : '');
@@ -451,6 +517,7 @@ export default function CourseBuilderPage() {
       return;
     }
     hasLocalEditsRef.current = false;
+    editRevision.current += 1;
     draftLoadedRef.current = false;
     setHasDraft(false);
     loadCourseMutation.mutate({ slug: target, source: 'manual' });
@@ -474,7 +541,7 @@ export default function CourseBuilderPage() {
             Publica un nuevo curso. Requiere permisos de administrador/webmaster (guarda en tablas de Escuela).
           </Typography>
         </Box>
-        {createMutation.isSuccess && (
+        {courseSaved && (
           <Stack direction="row" spacing={1}>
             <Chip label="Estado: Publicado" color="success" />
           </Stack>
@@ -573,7 +640,7 @@ export default function CourseBuilderPage() {
         </Alert>
       )}
 
-      {createMutation.isSuccess && (
+      {courseSaved && (
         <Alert severity="success">
           Curso publicado. Revisa la landing en <strong>/curso/{slug}</strong>.
         </Alert>
@@ -647,13 +714,17 @@ export default function CourseBuilderPage() {
             </Grid>
             <Grid item xs={12} md={3}>
               <TextField
-                label="Precio"
+                label={`Precio (${currency.trim() || resolveRuntimeCurrency()})`}
                 fullWidth
                 value={price}
                 onChange={(e) => {
                   setPrice(e.target.value);
+                  setPriceLoadError(null);
                   markDirty();
                 }}
+                inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+                error={Boolean(priceValue.error)}
+                helperText={priceValue.error ?? 'Hasta dos decimales, con punto o coma. Usa 0 para un curso gratuito.'}
               />
             </Grid>
             <Grid item xs={12} md={3}>
@@ -949,7 +1020,7 @@ export default function CourseBuilderPage() {
             <Button
               variant="contained"
               onClick={() => createMutation.mutate()}
-              disabled={createMutation.isPending}
+              disabled={createMutation.isPending || Boolean(priceValue.error)}
             >
               {createMutation.isPending ? 'Guardando...' : 'Publicar curso'}
             </Button>

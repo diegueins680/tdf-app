@@ -1,6 +1,6 @@
 import MarkdownText from '../MarkdownText';
 import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import type { PublicEventTicketBankTransfer } from '../../api/eventTickets';
 
@@ -25,9 +25,16 @@ export default function TicketBankTransferPanel({
   const [reference, setReference] = useState('');
   const [receipt, setReceipt] = useState<File>();
   const [fileError, setFileError] = useState<string | null>(null);
+  const [referenceTouched, setReferenceTouched] = useState(false);
+  const referenceInput = useRef<HTMLInputElement | null>(null);
+  const receiptInput = useRef<HTMLInputElement | null>(null);
   const supportsReceiptUpload = typeof transfer.receiptAttached === 'boolean';
   const canSubmit = transfer.evidenceStatus === 'awaiting_evidence' || transfer.evidenceStatus === 'rejected';
   const trimmed = reference.trim();
+  const referenceValid = trimmed.length >= 3 && trimmed.length <= 120;
+  const referenceError = referenceTouched && !referenceValid
+    ? (english ? 'Enter a receipt number between 3 and 120 characters.' : 'Ingresa un número de comprobante de entre 3 y 120 caracteres.')
+    : null;
 
   return (
     <Stack spacing={1.5} component="section" aria-labelledby="ticket-bank-transfer-title">
@@ -70,13 +77,16 @@ export default function TicketBankTransferPanel({
       {canSubmit && (
         <Stack
           component="form"
+          noValidate
           spacing={1}
           onSubmit={(event) => {
             event.preventDefault();
-            if (trimmed.length >= 3 && !fileError && !busy) {
-              if (receipt && supportsReceiptUpload) onSubmitReference(trimmed, receipt);
-              else onSubmitReference(trimmed);
-            }
+            if (busy) return;
+            setReferenceTouched(true);
+            if (!referenceValid) { referenceInput.current?.focus(); return; }
+            if (fileError) { receiptInput.current?.focus(); return; }
+            if (receipt && supportsReceiptUpload) onSubmitReference(trimmed, receipt);
+            else onSubmitReference(trimmed);
           }}
         >
           <TextField
@@ -85,11 +95,14 @@ export default function TicketBankTransferPanel({
             disabled={busy}
             label={english ? 'Transfer receipt number' : 'Número de comprobante de la transferencia'}
             value={reference}
+            inputRef={referenceInput}
+            error={Boolean(referenceError)}
+            onBlur={() => setReferenceTouched(true)}
             onChange={(event) => setReference(event.target.value)}
             inputProps={{ minLength: 3, maxLength: 120 }}
-            helperText={english
+            helperText={referenceError ?? (english
               ? 'Send it after making the transfer so we can match your deposit.'
-              : 'Envíalo después de transferir para que podamos identificar tu depósito.'}
+              : 'Envíalo después de transferir para que podamos identificar tu depósito.')}
           />
           {supportsReceiptUpload && <Stack spacing={0.5}>
             <Typography component="label" variant="body2" htmlFor="ticket-transfer-receipt">
@@ -98,6 +111,9 @@ export default function TicketBankTransferPanel({
             <input
               id="ticket-transfer-receipt"
               type="file"
+              ref={receiptInput}
+              aria-invalid={Boolean(fileError)}
+              aria-describedby={`ticket-transfer-receipt-help${fileError ? ' ticket-transfer-receipt-error' : ''}`}
               accept="image/jpeg,image/png,application/pdf"
               disabled={busy}
               onChange={(event) => {
@@ -107,12 +123,12 @@ export default function TicketBankTransferPanel({
                 setReceipt(invalid ? undefined : file);
               }}
             />
-            <Typography variant="caption" color="text.secondary">
+            <Typography id="ticket-transfer-receipt-help" variant="caption" color="text.secondary">
               {english ? 'JPG, PNG or PDF, up to 5 MB. Only event staff can view it.' : 'JPG, PNG o PDF, hasta 5 MB. Solo el personal del evento podrá verlo.'}
             </Typography>
-            {fileError && <Alert severity="error">{fileError}</Alert>}
+            {fileError && <Alert id="ticket-transfer-receipt-error" severity="error">{fileError}</Alert>}
           </Stack>}
-          <Button type="submit" variant="contained" disabled={busy || trimmed.length < 3 || !!fileError} sx={{ alignSelf: 'flex-start', minHeight: 56 }}>
+          <Button type="submit" variant="contained" disabled={busy || !referenceValid || !!fileError} sx={{ alignSelf: 'flex-start', minHeight: 56 }}>
             {english ? 'I made the transfer' : 'Ya transferí'}
           </Button>
         </Stack>
