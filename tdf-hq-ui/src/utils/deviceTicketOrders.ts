@@ -43,15 +43,17 @@ export function listDeviceTicketOrders(storage: Storage | null = storageOrNull()
   return found.sort((left, right) => right.orderId - left.orderId).slice(0, DEVICE_ORDER_LIMIT);
 }
 
-export type TicketOrderStage = 'paid' | 'pending' | 'closed';
+export type TicketOrderStage = 'paid' | 'pending' | 'closed' | 'unknown';
 
 const PENDING_STATUS = /^(holding|awaiting_payment|processing|pending)$/;
 const PAID_STATUS = /^(paid|partially_refunded)$/;
+const CLOSED_STATUS = /^(expired|refunded|cancelled)$/;
 
 /** Groups payment statuses into what a buyer needs to know: entry, pending payment, or no entry. */
 export function ticketOrderStage(status: string): TicketOrderStage {
   const normalized = status.trim().toLowerCase();
   if (PAID_STATUS.test(normalized)) return 'paid';
   if (PENDING_STATUS.test(normalized)) return 'pending';
-  return 'closed';
+  if (CLOSED_STATUS.test(normalized)) return 'closed';
+  return 'unknown';
 }

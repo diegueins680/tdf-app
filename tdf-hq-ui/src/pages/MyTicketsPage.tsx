@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useId, useMemo } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import {
@@ -20,6 +20,7 @@ import { EVENTS_PATH } from '../components/events/UpcomingEventsCarousel';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
+import { useSessionOwner } from '../session/useSessionOwner';
 import { listDeviceTicketOrders, ticketOrderStage, type TicketOrderStage } from '../utils/deviceTicketOrders';
 
 interface TicketOrderRow {
@@ -33,6 +34,7 @@ interface TicketOrderRow {
   codes: string[];
   /** Guest orders open their private order page; account orders open the event. */
   href: string;
+  canContinuePayment: boolean;
 }
 
 const positiveId = (value: string | null | undefined): number | null => {
@@ -45,6 +47,8 @@ export default function MyTicketsPage() {
   const { locale, timezone } = useLocalePreferences();
   const english = locale.toLowerCase().startsWith('en');
   const signedIn = Boolean(session);
+  const pageScope = useId();
+  const { identity, isCurrentOwner } = useSessionOwner(session?.partyId ?? null);
 
   useMetaTags({
     title: english ? 'My tickets' : 'Mis entradas',
@@ -52,26 +56,38 @@ export default function MyTicketsPage() {
     robots: 'noindex,nofollow',
   });
 
-  const deviceRefs = useMemo(() => listDeviceTicketOrders(), []);
+  const deviceSnapshot = useMemo(() => ({ identity, refs: listDeviceTicketOrders() }), [identity]);
+  const deviceRefs = deviceSnapshot.refs;
   const deviceOrders = useQueries({
     queries: deviceRefs.map((ref) => ({
-      queryKey: ['my-tickets-device-order', ref.eventId, ref.orderId],
-      queryFn: () => EventTickets.getCheckout(ref.eventId, ref.orderId, ref.lookupToken),
+      queryKey: ['my-tickets-device-order', pageScope, identity, ref.eventId, ref.orderId],
+      queryFn: async ({ signal }) => {
+        const order = await EventTickets.getCheckout(ref.eventId, ref.orderId, ref.lookupToken);
+        if (signal.aborted || !isCurrentOwner()) throw new Error('Session changed');
+        if (order.eventId !== ref.eventId || order.orderId !== ref.orderId) throw new Error('Order identity changed');
+        return order;
+      },
       retry: false,
     })),
   });
 
   const accountOrders = useQuery({
-    queryKey: ['my-ticket-orders', session?.partyId ?? null],
-    queryFn: listMyTicketOrders,
+    queryKey: ['my-ticket-orders', pageScope, identity],
+    queryFn: async ({ signal }) => {
+      const orders = await listMyTicketOrders();
+      if (signal.aborted || !isCurrentOwner()) throw new Error('Session changed');
+      return orders;
+    },
     enabled: signedIn,
     retry: false,
   });
 
   const rows = useMemo<TicketOrderRow[]>(() => {
+    if (!isCurrentOwner()) return [];
     const byKey = new Map<string, TicketOrderRow>();
     deviceRefs.forEach((ref, index) => {
-      const order = deviceOrders[index]?.data;
+      const query = deviceOrders[index];
+      const order = query?.isSuccess ? query.data : undefined;
       if (!order) return;
       const key = `${ref.eventId}:${ref.orderId}`;
       byKey.set(key, {
@@ -84,9 +100,11 @@ export default function MyTicketsPage() {
         stage: ticketOrderStage(order.paymentStatus),
         codes: [],
         href: `/eventos/${ref.eventId}/orden/${ref.orderId}`,
+        canContinuePayment: (order.paymentStatus === 'awaiting_payment' || order.paymentStatus === 'holding')
+          && order.fulfillmentStatus === 'seat_held' && Date.parse(order.holdExpiresAt) > Date.now(),
       });
     });
-    for (const order of accountOrders.data ?? []) {
+    for (const order of accountOrders.isSuccess ? accountOrders.data : []) {
       const eventId = positiveId(order.ticketOrderEventId);
       const orderId = positiveId(order.ticketOrderId);
       if (!eventId || !orderId) continue;
@@ -101,12 +119,14 @@ export default function MyTicketsPage() {
         totalMinor: order.ticketOrderAmountCents,
         currency: order.ticketOrderCurrency,
         stage,
-        codes: stage === 'paid' ? order.ticketOrderTickets.map((ticket) => ticket.ticketCode) : [],
+        codes: stage === 'paid' ? order.ticketOrderTickets
+          .filter((ticket) => ticket.ticketStatus === 'issued').map((ticket) => ticket.ticketCode) : [],
         href: `/eventos/${eventId}`,
+        canContinuePayment: false,
       });
     }
     return [...byKey.values()].sort((left, right) => right.orderId - left.orderId);
-  }, [accountOrders.data, deviceOrders, deviceRefs]);
+  }, [accountOrders.data, accountOrders.isSuccess, deviceOrders, deviceRefs, isCurrentOwner]);
 
   const eventIds = useMemo(() => [...new Set(rows.map((row) => row.eventId))], [rows]);
   const storefronts = useQueries({
@@ -121,6 +141,7 @@ export default function MyTicketsPage() {
 
   const loading = deviceOrders.some((query) => query.isLoading) || (signedIn && accountOrders.isLoading);
   const unreadableDevice = deviceOrders.filter((query) => query.isError).length;
+  const readFailed = unreadableDevice > 0 || (signedIn && accountOrders.isError);
 
   const money = (minor: number, currency: string) => {
     try {
@@ -138,6 +159,7 @@ export default function MyTicketsPage() {
   const stageChip = (stage: TicketOrderStage) => {
     if (stage === 'paid') return <Chip size="small" color="success" label={english ? 'Paid' : 'Pagada'} />;
     if (stage === 'pending') return <Chip size="small" color="warning" label={english ? 'Payment pending' : 'Pago pendiente'} />;
+    if (stage === 'unknown') return <Chip size="small" variant="outlined" label={english ? 'Status unconfirmed' : 'Estado por confirmar'} />;
     return <Chip size="small" variant="outlined" label={english ? 'No valid tickets' : 'Sin entradas válidas'} />;
   };
 
@@ -188,7 +210,7 @@ export default function MyTicketsPage() {
           </Alert>
         )}
 
-        {!loading && rows.length === 0 && (
+        {!loading && !readFailed && rows.length === 0 && (
           <Card variant="outlined">
             <CardContent>
               <Stack spacing={1.5} alignItems="flex-start">
@@ -229,18 +251,20 @@ export default function MyTicketsPage() {
                   </Typography>
                   {row.codes.length > 0 && (
                     <Typography variant="body2" sx={{ fontFamily: 'monospace', overflowWrap: 'anywhere' }}>
-                      {(english ? 'Codes: ' : 'Códigos: ') + row.codes.join(', ')}
+                      {(english ? 'Current ticket codes: ' : 'Códigos vigentes: ') + row.codes.join(', ')}
                     </Typography>
                   )}
                   <Box>
-                    {guestOrder && row.stage === 'pending' ? (
+                    {guestOrder && row.canContinuePayment ? (
                       <Button component={RouterLink} to={row.href} variant="contained" size="small">
                         {english ? 'Finish payment' : 'Completar pago'}
                       </Button>
                     ) : (
                       <Link component={RouterLink} to={row.href}>
                         {guestOrder
-                          ? (english ? 'Open order' : 'Ver la orden')
+                          ? (row.stage === 'pending'
+                            ? (english ? 'Check payment status' : 'Ver estado de pago')
+                            : (english ? 'Open order' : 'Ver la orden'))
                           : (english ? 'Open event' : 'Ver el evento')}
                       </Link>
                     )}

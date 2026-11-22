@@ -25,6 +25,7 @@ jest.unstable_mockModule('../contexts/LocalePreferencesContext', () => ({
 }));
 
 const { default: MyTicketsPage } = await import('./MyTicketsPage');
+const { advanceAuthSessionEpoch } = await import('../auth/authEvents');
 
 const guestCheckout = (orderId: number, paymentStatus: string) => ({
   orderId,
@@ -47,6 +48,13 @@ const flush = async () => {
 describe('MyTicketsPage', () => {
   let container: HTMLDivElement;
   let root: Root;
+  let client: QueryClient;
+
+  const accountOrder = (code: string) => ({
+    ticketOrderId: '150', ticketOrderEventId: '41', ticketOrderQuantity: 1,
+    ticketOrderAmountCents: 1200, ticketOrderCurrency: 'USD', ticketOrderStatusValue: 'paid',
+    ticketOrderTickets: [{ ticketCode: code, ticketStatus: 'issued' }],
+  });
 
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -58,6 +66,7 @@ describe('MyTicketsPage', () => {
     getCheckoutMock.mockReset();
     getStorefrontMock.mockReset();
     listMyTicketOrdersMock.mockReset();
+    client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     getStorefrontMock.mockResolvedValue({
       eventId: 41, title: 'Noche Patch', startsAt: '2030-01-10T01:00:00Z', timezone: 'America/Guayaquil', venueName: 'Domo',
     });
@@ -68,11 +77,11 @@ describe('MyTicketsPage', () => {
 
   afterEach(async () => {
     await act(async () => root.unmount());
+    client.clear();
     container.remove();
   });
 
   const render = async () => {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     await act(async () => {
       root.render(
         <QueryClientProvider client={client}>
@@ -139,5 +148,82 @@ describe('MyTicketsPage', () => {
     expect(linkTo('/eventos/41')?.textContent).toBe('Ver el evento');
     expect(container.textContent).toContain('TDF-ABC123');
     expect(linkTo('/login?redirect=%2Fmis-entradas')).toBeNull();
+  });
+
+  it('removes cached account ticket codes when the authoritative read is denied', async () => {
+    sessionValue = { partyId: 7 };
+    listMyTicketOrdersMock.mockResolvedValue([accountOrder('TDF-REVOKED')]);
+    await render();
+    expect(container.textContent).toContain('TDF-REVOKED');
+    listMyTicketOrdersMock.mockRejectedValue(new Error('403'));
+    await act(async () => { await client.invalidateQueries({ queryKey: ['my-ticket-orders'] }); });
+    await flush();
+    expect(container.textContent).toContain('No pudimos cargar las entradas de tu cuenta.');
+    expect(container.textContent).not.toContain('TDF-REVOKED');
+    expect(container.textContent).not.toContain('Todavía no tienes entradas aquí.');
+  });
+
+  it('removes a cached browser order after its private key is refused', async () => {
+    window.localStorage.setItem('tdf:event-ticket-checkout:41:92', 'secure-lookup-token');
+    getCheckoutMock.mockResolvedValue(guestCheckout(92, 'paid'));
+    await render();
+    expect(container.textContent).toContain('Pagada');
+    getCheckoutMock.mockRejectedValue(new Error('404'));
+    await act(async () => { await client.invalidateQueries({ queryKey: ['my-tickets-device-order'] }); });
+    await flush();
+    expect(container.textContent).toContain('No pudimos leer una compra guardada');
+    expect(container.textContent).not.toContain('Pagada');
+    expect(linkTo('/eventos/41/orden/92')).toBeNull();
+  });
+
+  it('does not reuse an earlier login response for a new login by the same account', async () => {
+    let finishOld!: (value: unknown) => void;
+    listMyTicketOrdersMock.mockReturnValueOnce(new Promise(resolve => { finishOld = resolve; }));
+    sessionValue = { partyId: 7 };
+    await render();
+    sessionValue = null;
+    advanceAuthSessionEpoch();
+    await render();
+    listMyTicketOrdersMock.mockResolvedValue([accountOrder('TDF-CURRENT')]);
+    sessionValue = { partyId: 7 };
+    advanceAuthSessionEpoch();
+    await render();
+    expect(listMyTicketOrdersMock).toHaveBeenCalledTimes(2);
+    await act(async () => finishOld([accountOrder('TDF-OLD-SESSION')]));
+    await flush();
+    expect(container.textContent).toContain('TDF-CURRENT');
+    expect(container.textContent).not.toContain('TDF-OLD-SESSION');
+  });
+
+  it('does not display a browser response for a different order identity', async () => {
+    window.localStorage.setItem('tdf:event-ticket-checkout:41:92', 'secure-lookup-token');
+    getCheckoutMock.mockResolvedValue(guestCheckout(93, 'paid'));
+    await render();
+    expect(container.textContent).toContain('No pudimos leer una compra guardada');
+    expect(container.textContent).not.toContain('Pagada');
+    expect(linkTo('/eventos/41/orden/92')).toBeNull();
+  });
+
+  it('does not invite a second payment while processing remains unconfirmed', async () => {
+    window.localStorage.setItem('tdf:event-ticket-checkout:41:92', 'secure-lookup-token');
+    getCheckoutMock.mockResolvedValue(guestCheckout(92, 'processing'));
+    await render();
+    expect(container.textContent).toContain('Pago pendiente');
+    expect(container.textContent).not.toContain('Completar pago');
+    expect(linkTo('/eventos/41/orden/92')?.textContent).toBe('Ver estado de pago');
+  });
+
+  it('lists only issued codes after a partial refund', async () => {
+    sessionValue = { partyId: 7 };
+    listMyTicketOrdersMock.mockResolvedValue([{
+      ...accountOrder('TDF-CURRENT'), ticketOrderStatusValue: 'partially_refunded',
+      ticketOrderTickets: [
+        { ticketCode: 'TDF-CURRENT', ticketStatus: 'issued' },
+        { ticketCode: 'TDF-REFUNDED', ticketStatus: 'refunded' },
+      ],
+    }]);
+    await render();
+    expect(container.textContent).toContain('TDF-CURRENT');
+    expect(container.textContent).not.toContain('TDF-REFUNDED');
   });
 });

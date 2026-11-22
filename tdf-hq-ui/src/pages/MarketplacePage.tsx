@@ -1,3 +1,5 @@
+import { formatPriceCentsInput } from '../utils/priceInput';
+import { rentalPriceField } from '../utils/rentalPriceInput';
 import StripePaymentAlternativesNotice from '../components/payments/StripePaymentAlternativesNotice';
 import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import MarkdownText from '../components/MarkdownText';
@@ -62,7 +64,7 @@ import {
   readCartMeta,
   writeCartMeta,
   type MarketplaceCartMeta,
-} from '../features/marketplace/cartSummary';
+} from '../services/cartSummary';
 import { BOTTOM_DOCK_OFFSET } from '../utils/bottomDock';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 // The pure entry defers injecting js.stripe.com until checkout actually calls loadStripe.
@@ -90,6 +92,7 @@ import CreditCardIcon from '@mui/icons-material/CreditCard';
 import { Inventory } from '../api/inventory';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { useSession } from '../session/SessionContext';
+import { sessionContactDefaults } from '../session/sessionContactDefaults';
 import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDrive';
 import { buildAccessibleModuleSet } from '../utils/accessControl';
 import { assertNever } from '../utils/assertNever';
@@ -522,8 +525,10 @@ export default function MarketplacePage() {
   const [purpose, setPurpose] = useState<'all' | 'rent' | 'sale'>(initialViewState.purpose);
   const [condition, setCondition] = useState<string>(initialViewState.condition);
   const [sort, setSort] = useState<'relevance' | 'price-asc' | 'price-desc' | 'title-asc'>(initialViewState.sort);
-  const [buyerName, setBuyerName] = useState(initialBuyerSnapshot.name ?? '');
-  const [buyerEmail, setBuyerEmail] = useState(initialBuyerSnapshot.email ?? '');
+  // Contact saved on this device wins; otherwise a signed-in buyer starts from
+  // what the account already knows.
+  const [buyerName, setBuyerName] = useState(() => (hasBuyerInfo(initialBuyerSnapshot) ? initialBuyerSnapshot.name ?? '' : sessionContactDefaults(session).name));
+  const [buyerEmail, setBuyerEmail] = useState(() => (hasBuyerInfo(initialBuyerSnapshot) ? initialBuyerSnapshot.email ?? '' : sessionContactDefaults(session).email));
   const [buyerPhone, setBuyerPhone] = useState(initialBuyerSnapshot.phone ?? '');
   const [contactPref, setContactPref] = useState<'email' | 'phone'>(initialBuyerSnapshot.pref ?? 'email');
   const [savedBuyerSnapshot, setSavedBuyerSnapshot] = useState<SavedBuyer | null>(
@@ -978,14 +983,13 @@ export default function MarketplacePage() {
   const updateRentalTermsMutation = useMutation({
     mutationFn: () => {
       if (!rentalTermsDialogListing) throw new Error('No rental listing selected');
+      if (rentalTermsFormInvalid) throw new Error('Revisa los importes y límites de renta.');
       const readInteger = (value: string) => Number(value.trim());
       return Marketplace.updateRentalTerms(rentalTermsDialogListing.miListingId, {
-        mrtuDailyRateUsdCents: readInteger(rentalTermsForm.dailyRate),
-        mrtuWeeklyRateUsdCents: rentalTermsForm.weeklyRate.trim()
-          ? readInteger(rentalTermsForm.weeklyRate)
-          : null,
-        mrtuSecurityDepositUsdCents: readInteger(rentalTermsForm.deposit),
-        mrtuLateFeeUsdCents: readInteger(rentalTermsForm.lateFee),
+        mrtuDailyRateUsdCents: rentalAmounts.dailyRate.cents!,
+        mrtuWeeklyRateUsdCents: rentalAmounts.weeklyRate.cents,
+        mrtuSecurityDepositUsdCents: rentalAmounts.deposit.cents!,
+        mrtuLateFeeUsdCents: rentalAmounts.lateFee.cents!,
         mrtuMinDays: readInteger(rentalTermsForm.minDays),
         mrtuMaxDays: readInteger(rentalTermsForm.maxDays),
         mrtuCancellationWindowHours: readInteger(rentalTermsForm.cancellationHours),
@@ -1423,7 +1427,7 @@ export default function MarketplacePage() {
       setLastOrder(order);
       if (isPaidOrderStatus(order.moCheckoutStatus ?? order.moStatus)) {
         clearCheckoutCart();
-        setToast('El servidor verificó el pago con Stripe. Gracias por tu compra.');
+        setToast('Pago confirmado con Stripe. Gracias por tu compra.');
       } else {
         setToast('Stripe devolvió el navegador, pero el servidor aún no verificó el pago. Conservamos tu carrito.');
       }
@@ -1528,10 +1532,10 @@ export default function MarketplacePage() {
     if (!canManagePhotos || listing.miPurpose !== 'rent') return;
     setRentalTermsDialogListing(listing);
     setRentalTermsForm({
-      dailyRate: String(listing.miPriceUsdCents),
-      weeklyRate: listing.miRentalWeeklyPriceUsdCents == null ? '' : String(listing.miRentalWeeklyPriceUsdCents),
-      deposit: String(listing.miRentalSecurityDepositUsdCents ?? 0),
-      lateFee: String(listing.miRentalLateFeeUsdCents ?? listing.miPriceUsdCents),
+      dailyRate: formatPriceCentsInput(listing.miPriceUsdCents),
+      weeklyRate: formatPriceCentsInput(listing.miRentalWeeklyPriceUsdCents),
+      deposit: formatPriceCentsInput(listing.miRentalSecurityDepositUsdCents ?? 0),
+      lateFee: formatPriceCentsInput(listing.miRentalLateFeeUsdCents ?? listing.miPriceUsdCents),
       minDays: String(listing.miRentalMinDays ?? 1),
       maxDays: String(listing.miRentalMaxDays ?? 30),
       cancellationHours: String(listing.miRentalCancellationWindowHours ?? 24),
@@ -1542,25 +1546,36 @@ export default function MarketplacePage() {
     updateRentalTermsMutation.reset();
   };
 
-  const rentalTermsFormInvalid = useMemo(() => {
-    const integerFields = [
-      rentalTermsForm.dailyRate,
-      rentalTermsForm.deposit,
-      rentalTermsForm.lateFee,
-      rentalTermsForm.minDays,
-      rentalTermsForm.maxDays,
-      rentalTermsForm.cancellationHours,
-      ...(rentalTermsForm.weeklyRate.trim() ? [rentalTermsForm.weeklyRate] : []),
-    ];
-    const values = integerFields.map(Number);
-    return values.some((value) => !Number.isSafeInteger(value) || value < 0)
-      || Number(rentalTermsForm.dailyRate) < 1
-      || Number(rentalTermsForm.minDays) < 1
-      || Number(rentalTermsForm.maxDays) < Number(rentalTermsForm.minDays)
-      || Number(rentalTermsForm.maxDays) > 366
-      || !rentalTermsForm.version.trim()
-      || !rentalTermsForm.summary.trim();
-  }, [rentalTermsForm]);
+  const rentalAmounts = {
+    dailyRate: rentalPriceField(rentalTermsForm.dailyRate, true),
+    weeklyRate: rentalPriceField(rentalTermsForm.weeklyRate, true, true),
+    deposit: rentalPriceField(rentalTermsForm.deposit, false),
+    lateFee: rentalPriceField(rentalTermsForm.lateFee, false),
+  };
+  const rentalTermsFormInvalid = Object.values(rentalAmounts).some((field) => field.error)
+    || [rentalTermsForm.minDays, rentalTermsForm.maxDays, rentalTermsForm.cancellationHours]
+      .some((value) => !/^\d+$/.test(value.trim()) || !Number.isSafeInteger(Number(value)))
+    || Number(rentalTermsForm.minDays) < 1
+    || Number(rentalTermsForm.maxDays) < Number(rentalTermsForm.minDays)
+    || Number(rentalTermsForm.maxDays) > 366
+    || Number(rentalTermsForm.cancellationHours) > 8760
+    || !rentalTermsForm.version.trim() || rentalTermsForm.version.trim().length > 80
+    || !rentalTermsForm.summary.trim() || rentalTermsForm.summary.trim().length > 1000;
+
+  const rentalAmountInput = (key: keyof typeof rentalAmounts, label: string) => (
+    <Grid item xs={12} sm={6}>
+      <TextField
+        label={label}
+        value={rentalTermsForm[key]}
+        onChange={(event) => setRentalTermsForm((current) => ({ ...current, [key]: event.target.value }))}
+        disabled={updateRentalTermsMutation.isPending}
+        inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+        error={Boolean(rentalAmounts[key].error)}
+        helperText={rentalAmounts[key].error ?? 'USD. Usa punto o coma; hasta dos decimales.'}
+        fullWidth
+      />
+    </Grid>
+  );
 
   const handleRestoreCart = () => {
     if (!savedCartMeta?.cartId) return;
@@ -3027,11 +3042,11 @@ export default function MarketplacePage() {
               Activar esta versión la publica para nuevos checkouts. Las órdenes existentes conservan sus fechas, importes y versión aceptada.
             </Alert>
             <Grid container spacing={1.5}>
+              {rentalAmountInput('dailyRate', 'Tarifa diaria (USD)')}
+              {rentalAmountInput('weeklyRate', 'Tarifa semanal (USD, opcional)')}
+              {rentalAmountInput('deposit', 'Depósito reembolsable (USD)')}
+              {rentalAmountInput('lateFee', 'Cargo tardío (USD)')}
               {([
-                ['Tarifa diaria (centavos)', 'dailyRate'],
-                ['Tarifa semanal (centavos, opcional)', 'weeklyRate'],
-                ['Depósito reembolsable (centavos)', 'deposit'],
-                ['Cargo tardío (centavos)', 'lateFee'],
                 ['Días mínimos', 'minDays'],
                 ['Días máximos', 'maxDays'],
                 ['Ventana de cancelación (horas)', 'cancellationHours'],
@@ -3042,7 +3057,7 @@ export default function MarketplacePage() {
                     type="number"
                     value={rentalTermsForm[key as keyof typeof rentalTermsForm]}
                     onChange={(event) => setRentalTermsForm((current) => ({ ...current, [key]: event.target.value }))}
-                    inputProps={{ min: key === 'dailyRate' || key === 'minDays' || key === 'maxDays' ? 1 : 0, step: 1 }}
+                    inputProps={{ min: key === 'minDays' || key === 'maxDays' ? 1 : 0, step: 1 }}
                     fullWidth
                   />
                 </Grid>

@@ -1,3 +1,4 @@
+import PaymentMethodChoices, { PaymentMethodButton } from '../components/payments/PaymentMethodChoices';
 import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import MarkdownText from '../components/MarkdownText';
 import {
@@ -8,6 +9,8 @@ import {
   CardContent,
   Checkbox,
   Chip,
+  IconButton,
+  InputAdornment,
   CircularProgress,
   Container,
   Dialog,
@@ -20,10 +23,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+import AddIcon from '@mui/icons-material/Add';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import EventIcon from '@mui/icons-material/Event';
-import PlaceIcon from '@mui/icons-material/Place';
+import RemoveIcon from '@mui/icons-material/Remove';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -41,6 +43,8 @@ import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import MobilePromo from '../mobile/MobilePromo';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useMetaTags } from '../hooks/useMetaTags';
+import { useSession } from '../session/SessionContext';
+import { sessionContactDefaults } from '../session/sessionContactDefaults';
 import { env } from '../utils/env';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { findExternalTicketLink, localizeTicketUnavailableReason } from '../utils/externalTicketing';
@@ -69,6 +73,12 @@ const saveLookupToken = (eventId: number, orderId: number, token: string) => {
     // The live response remains usable if browser storage is unavailable.
   }
 };
+
+// The confirmation email links to the order with its key after "#acceso=". A
+// fragment is not sent with the page request, and analytics drops it; the page
+// keeps the key like one from a purchase on this device and clears the address.
+const emailedLookupToken = (hash: string): string | null =>
+  /^#acceso=([0-9a-f]{64})$/.exec(hash)?.[1] ?? null;
 
 const loadLookupToken = (eventId: number, orderId: number): string | null => {
   try {
@@ -99,10 +109,14 @@ export default function PublicEventTicketsPage() {
     const parsed = Number(prefilledQuantity);
     return Number.isSafeInteger(parsed) && parsed >= 1 && parsed <= 10 ? String(parsed) : '1';
   });
-  const [buyerName, setBuyerName] = useState('');
-  const [buyerEmail, setBuyerEmail] = useState('');
+  // A signed-in buyer does not retype what the account already knows; both
+  // fields stay editable.
+  const { session } = useSession();
+  const [buyerName, setBuyerName] = useState(() => sessionContactDefaults(session).name);
+  const [buyerEmail, setBuyerEmail] = useState(() => sessionContactDefaults(session).email);
   const [buyerPhone, setBuyerPhone] = useState('');
   const [promoCode, setPromoCode] = useState('');
+  const [extrasOpen, setExtrasOpen] = useState(false);
   const [billingIdType, setBillingIdType] = useState<'consumidor_final' | 'cedula' | 'ruc' | 'pasaporte'>('consumidor_final');
   const [billingIdNumber, setBillingIdNumber] = useState('');
   const [billingName, setBillingName] = useState('');
@@ -121,6 +135,15 @@ export default function PublicEventTicketsPage() {
   const orderStale = lookupFailed || paymentUnconfirmed;
   const flaggedOrder = useRef<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // Quantity problems are shown on the quantity field, not in the general alert.
+  const [quantityError, setQuantityError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<'name' | 'email' | 'billingId' | 'billingName', string>>>({});
+  const checkoutForm = useRef<HTMLFormElement | null>(null);
+  const [validationAttempt, setValidationAttempt] = useState(0);
+
+  useEffect(() => {
+    checkoutForm.current?.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus();
+  }, [validationAttempt]);
   const [lookupRevision, setLookupRevision] = useState(0);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const liveLookup = useRef<{ eventId: number; orderId: number; token: string } | null>(null);
@@ -190,14 +213,20 @@ export default function PublicEventTicketsPage() {
       setLookupFailed(false);
       setPaymentUnconfirmed(false);
     }
+    const emailed = emailedLookupToken(location.hash);
+    if (emailed) {
+      liveLookup.current = { eventId, orderId: routeOrderId, token: emailed };
+      saveLookupToken(eventId, routeOrderId, emailed);
+      navigate(`${location.pathname}${location.search}`, { replace: true });
+    }
     const live = liveLookup.current;
     const token = live?.eventId === eventId && live.orderId === routeOrderId
       ? live.token : loadLookupToken(eventId, routeOrderId);
     if (!token) {
       setPaymentBusy(false);
       setMessage(english
-        ? 'Open this order in the browser where you bought your tickets, or use the ticket codes in your confirmation email.'
-        : 'Abre esta orden en el navegador donde compraste tus entradas o usa los códigos del correo de confirmación.');
+        ? 'Open this order from the link in your confirmation email, or in the browser where you bought your tickets.'
+        : 'Abre esta orden desde el enlace de tu correo de confirmación o en el navegador donde compraste tus entradas.');
       return;
     }
     const query = new URLSearchParams(location.search);
@@ -225,7 +254,7 @@ export default function PublicEventTicketsPage() {
       })
       .finally(() => { if (active) setPaymentBusy(false); });
     return () => { active = false; };
-  }, [english, eventId, location.pathname, location.search, lookupRevision, navigate, routeOrderId, validEventId, validOrderId]);
+  }, [english, eventId, location.hash, location.pathname, location.search, lookupRevision, navigate, routeOrderId, validEventId, validOrderId]);
 
   const title = storefront.data?.title ?? (english ? 'Event tickets' : 'Entradas para eventos');
   const description = storefront.data?.description
@@ -253,26 +282,44 @@ export default function PublicEventTicketsPage() {
 
   const handleCreateCheckout = async () => {
     if (!storefront.data?.checkoutAvailable) return;
+    setValidationAttempt((attempt) => attempt + 1);
     if (!termsAccepted) {
       setMessage(english
-        ? 'Accept the event terms before holding tickets.'
-        : 'Acepta los términos del evento antes de retener entradas.');
+        ? 'Accept the event terms to continue.'
+        : 'Acepta los términos del evento para continuar.');
       return;
     }
     const selectedTierId = Number(tierId);
     const selectedQuantity = Number(quantity);
     if (!Number.isSafeInteger(selectedTierId) || selectedTierId <= 0
         || !Number.isSafeInteger(selectedQuantity) || selectedQuantity <= 0) {
-      setMessage(english ? 'Choose a valid ticket and quantity.' : 'Elige una entrada y cantidad válidas.');
+      setQuantityError(english ? 'Choose a valid ticket and quantity.' : 'Elige una entrada y cantidad válidas.');
       return;
     }
     const maximumQuantity = storefront.data.policy?.maxTicketsPerOrder ?? 100;
     if (selectedQuantity > maximumQuantity) {
-      setMessage(english
+      setQuantityError(english
         ? `You can buy up to ${maximumQuantity} tickets per order.`
         : `Puedes comprar hasta ${maximumQuantity} entradas por orden.`);
       return;
     }
+    const chosenTier = storefront.data.tiers.find((tier) => tier.tierId === selectedTierId);
+    if (!chosenTier || selectedQuantity > chosenTier.remaining) {
+      setQuantityError(english ? 'There are not enough tickets left. Choose a smaller quantity.' : 'No quedan suficientes entradas. Elige una cantidad menor.');
+      return;
+    }
+    setQuantityError(null);
+    const errors: typeof fieldErrors = {};
+    if (!buyerName.trim()) errors.name = english ? 'Enter your full name.' : 'Ingresa tu nombre completo.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail.trim())) {
+      errors.email = english ? 'Enter a valid email to receive your tickets.' : 'Ingresa un correo válido para recibir tus entradas.';
+    }
+    if (storefront.data.policy?.taxInvoiceIssued && billingIdType !== 'consumidor_final') {
+      if (!billingIdNumber.trim()) errors.billingId = english ? 'Enter the invoice ID number.' : 'Ingresa la identificación para tu factura.';
+      if (!billingName.trim()) errors.billingName = english ? 'Enter the name or business name for your invoice.' : 'Ingresa el nombre o razón social para tu factura.';
+    }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
     const payload: PublicEventTicketCheckoutRequest = {
       tierId: selectedTierId,
       quantity: selectedQuantity,
@@ -311,8 +358,8 @@ export default function PublicEventTicketsPage() {
       navigate(`/eventos/${response.eventId}/orden/${response.orderId}`, { replace: false });
     } catch {
       setMessage(english
-        ? 'We could not hold these tickets. No order or payment success is assumed.'
-        : 'No pudimos retener estas entradas. No asumimos que exista una orden ni un pago exitoso.');
+        ? 'We could not reserve these tickets. You have not been charged. Try again.'
+        : 'No pudimos reservar estas entradas. No se te cobró nada. Inténtalo de nuevo.');
     } finally {
       setSubmitting(false);
     }
@@ -525,8 +572,23 @@ export default function PublicEventTicketsPage() {
   }
 
   const selectedTier = storefront.data?.tiers.find((tier) => String(tier.tierId) === tierId);
+  const quantityLimit = Math.min(storefront.data?.policy?.maxTicketsPerOrder ?? 100, selectedTier?.remaining ?? 1);
+  const stepQuantity = (delta: number) => {
+    const current = Number(quantity);
+    const next = (Number.isSafeInteger(current) ? current : 1) + delta;
+    setQuantity(String(Math.max(1, Math.min(quantityLimit, next))));
+  };
+  const chosenQuantity = Number(quantity);
+  const subtotalLabel = selectedTier && Number.isSafeInteger(chosenQuantity) && chosenQuantity >= 1
+    ? `${chosenQuantity} × ${money(selectedTier.unitPriceMinor, selectedTier.currency)} = ${money(selectedTier.unitPriceMinor * chosenQuantity, selectedTier.currency)}`
+    : null;
   const paid = checkout?.paymentStatus === 'paid';
   const offeredPaymentMethods = orderStale ? [] : (checkout?.paymentMethods ?? []);
+  const legacyPaymentMethods = !paid && (offeredPaymentMethods.includes('datafast') || offeredPaymentMethods.includes('paypal') || (offeredPaymentMethods.includes('bank_transfer') && !checkout?.bankTransfer)) ? (<>
+                        {offeredPaymentMethods.includes('datafast') && <PaymentMethodButton disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>{english ? 'Card · Datafast' : 'Tarjeta · Datafast'}</PaymentMethodButton>}
+                        {offeredPaymentMethods.includes('paypal') && <PaymentMethodButton disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</PaymentMethodButton>}
+                        {offeredPaymentMethods.includes('bank_transfer') && !checkout?.bankTransfer && <PaymentMethodButton disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleBankTransfer()}>{english ? 'Bank transfer' : 'Transferencia bancaria'}</PaymentMethodButton>}
+                    </>) : null;
   const issued = checkout?.fulfillmentStatus === 'issued';
   const datafastReturnUrl = checkout && typeof window !== 'undefined'
     ? new URL(`/eventos/${checkout.eventId}/orden/${checkout.orderId}`, window.location.origin).toString()
@@ -539,33 +601,23 @@ export default function PublicEventTicketsPage() {
           <Button component={RouterLink} to={`/eventos/${eventId}`} sx={{ alignSelf: 'flex-start' }}>
             {english ? 'Back to event' : 'Volver al evento'}
           </Button>
-          {storefront.data ? <Card variant="outlined" sx={{ borderRadius: 4, overflow: 'hidden' }}>
+          {storefront.data ? <Stack direction="row" spacing={2} alignItems="center">
             {storefront.data.imageUrl && (
               <Box
                 component="img"
                 src={storefront.data.imageUrl}
                 alt={english ? `${storefront.data.title} artwork` : `Arte de ${storefront.data.title}`}
                 loading="eager"
-                sx={{ display: 'block', width: '100%', maxHeight: { xs: 520, md: 640 }, objectFit: 'contain', bgcolor: 'grey.900' }}
+                sx={{ display: 'block', width: 72, height: 72, flexShrink: 0, objectFit: 'cover', borderRadius: 2, bgcolor: 'grey.900' }}
               />
             )}
-            <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-              <Stack spacing={2}>
-                <Chip icon={<ConfirmationNumberIcon />} label={english ? 'Official TDF checkout' : 'Checkout oficial TDF'} color="primary" sx={{ alignSelf: 'flex-start' }} />
-                <Typography component="h1" variant="h3" fontWeight={900}>{storefront.data.title}</Typography>
-                {storefront.data.description && <MarkdownText color="text.secondary">{storefront.data.description}</MarkdownText>}
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-                  <Chip icon={<EventIcon />} label={date(storefront.data.startsAt)} variant="outlined" />
-                  {storefront.data.venueName && <Chip icon={<PlaceIcon />} label={storefront.data.venueName} variant="outlined" />}
-                </Stack>
-                {storefront.data.checkoutAvailable && (
-                  <Alert severity="info">{english
-                    ? 'Review the full total before paying. Your tickets are held for the time shown.'
-                    : 'Revisa el total antes de pagar. Tus entradas se reservan durante el tiempo indicado.'}</Alert>
-                )}
-              </Stack>
-            </CardContent>
-          </Card> : <Typography component="h1" variant="h4">{english ? 'Your ticket order' : 'Tu orden de entradas'}</Typography>}
+            <Box sx={{ minWidth: 0 }}>
+              <Typography component="h1" variant="h5" fontWeight={900}>{storefront.data.title}</Typography>
+              <Typography color="text.secondary">
+                {date(storefront.data.startsAt)}{storefront.data.venueName ? ` · ${storefront.data.venueName}` : ''}
+              </Typography>
+            </Box>
+          </Stack> : <Typography component="h1" variant="h4">{english ? 'Your ticket order' : 'Tu orden de entradas'}</Typography>}
 
           {!checkout && storefront.data && !storefront.data.checkoutAvailable && (
             <Card variant="outlined" data-testid="ticket-checkout-unavailable">
@@ -604,31 +656,93 @@ export default function PublicEventTicketsPage() {
           {!checkout && storefront.data?.checkoutAvailable ? (
             <Card variant="outlined">
               <CardContent>
-                <Stack spacing={2} component="form" onSubmit={(event) => { event.preventDefault(); void handleCreateCheckout(); }}>
+                <Stack spacing={2} component="form" ref={checkoutForm} noValidate onSubmit={(event) => { event.preventDefault(); void handleCreateCheckout(); }}>
                   <Typography variant="h5" fontWeight={800}>{english ? 'Choose tickets' : 'Elige tus entradas'}</Typography>
-                  <TextField select required label={english ? 'Ticket type' : 'Tipo de entrada'} value={tierId} onChange={(event) => setTierId(event.target.value)}>
-                    {storefront.data.tiers.map((tier) => (
-                      <MenuItem key={tier.tierId} value={String(tier.tierId)} disabled={tier.remaining <= 0}>
-                        {tier.name} · {money(tier.unitPriceMinor, tier.currency)} · {tier.remaining} {english ? 'left' : 'disponibles'}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  <TextField required type="number" label={english ? 'Quantity' : 'Cantidad'} value={quantity} onChange={(event) => setQuantity(event.target.value)} inputProps={{ min: 1, max: Math.min(storefront.data.policy?.maxTicketsPerOrder ?? 100, selectedTier?.remaining ?? 1), step: 1 }}
-                    helperText={english
+                  {storefront.data.tiers.length === 1 && selectedTier ? (
+                    <Typography>
+                      {selectedTier.name} · {money(selectedTier.unitPriceMinor, selectedTier.currency)} · {selectedTier.remaining} {english ? 'left' : 'disponibles'}
+                    </Typography>
+                  ) : (
+                    <TextField select required label={english ? 'Ticket type' : 'Tipo de entrada'} value={tierId} onChange={(event) => setTierId(event.target.value)}>
+                      {storefront.data.tiers.map((tier) => (
+                        <MenuItem key={tier.tierId} value={String(tier.tierId)} disabled={tier.remaining <= 0}>
+                          {tier.name} · {money(tier.unitPriceMinor, tier.currency)} · {tier.remaining} {english ? 'left' : 'disponibles'}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                  <TextField required type="number" label={english ? 'Quantity' : 'Cantidad'} value={quantity} onChange={(event) => { setQuantity(event.target.value); setQuantityError(null); }}
+                    error={Boolean(quantityError)}
+                    inputProps={{ min: 1, max: quantityLimit, step: 1, style: { textAlign: 'center' } }}
+                    sx={{ maxWidth: 220 }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <IconButton edge="start" aria-label={english ? 'One ticket fewer' : 'Una entrada menos'} disabled={!(Number(quantity) > 1)} onClick={() => stepQuantity(-1)}>
+                            <RemoveIcon />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton edge="end" aria-label={english ? 'One ticket more' : 'Una entrada más'} disabled={Number(quantity) >= quantityLimit} onClick={() => stepQuantity(1)}>
+                            <AddIcon />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                    helperText={quantityError ?? (english
                       ? `Up to ${storefront.data.policy?.maxTicketsPerOrder ?? 100} tickets per order.`
-                      : `Hasta ${storefront.data.policy?.maxTicketsPerOrder ?? 100} entradas por orden.`}
+                      : `Hasta ${storefront.data.policy?.maxTicketsPerOrder ?? 100} entradas por orden.`)}
                   />
-                  <TextField required label={english ? 'Full name' : 'Nombre completo'} value={buyerName} onChange={(event) => setBuyerName(event.target.value)} inputProps={{ maxLength: 160 }} />
-                  <TextField required type="email" label="Email" value={buyerEmail} onChange={(event) => setBuyerEmail(event.target.value)} inputProps={{ maxLength: 254 }} />
-                  <TextField label={english ? 'Phone (optional)' : 'Teléfono (opcional)'} value={buyerPhone} onChange={(event) => setBuyerPhone(event.target.value)} inputProps={{ maxLength: 24 }} />
-                  <TextField label={english ? 'Promo code (optional)' : 'Código promocional (opcional)'} value={promoCode} onChange={(event) => setPromoCode(event.target.value)} inputProps={{ maxLength: 50 }} />
+                  {subtotalLabel && (
+                    <Typography aria-live="polite" data-testid="ticket-subtotal">
+                      <strong>{english ? 'Tickets' : 'Entradas'}: {subtotalLabel}</strong>
+                      {storefront.data.policy && storefront.data.policy.buyerFeeBps > 0
+                        ? ` + ${english ? 'buyer fee' : 'tarifa al comprador'} ${percentage(storefront.data.policy.buyerFeeBps, locale)}`
+                        : ''}
+                      {'. '}
+                      {english ? 'You will see the exact total before paying.' : 'Verás el total exacto antes de pagar.'}
+                    </Typography>
+                  )}
+                  <TextField
+                    required label={english ? 'Full name' : 'Nombre completo'} value={buyerName}
+                    onChange={(event) => {
+                      setBuyerName(event.target.value);
+                      setFieldErrors((current) => ({ ...current, name: undefined }));
+                    }}
+                    error={Boolean(fieldErrors.name)} helperText={fieldErrors.name}
+                    autoComplete="name" inputProps={{ maxLength: 160 }}
+                  />
+                  <TextField
+                    required type="email" label={english ? 'Email' : 'Correo'} value={buyerEmail}
+                    onChange={(event) => {
+                      setBuyerEmail(event.target.value);
+                      setFieldErrors((current) => ({ ...current, email: undefined }));
+                    }}
+                    error={Boolean(fieldErrors.email)} helperText={fieldErrors.email}
+                    autoComplete="email" inputProps={{ maxLength: 254 }}
+                  />
+                  {extrasOpen || buyerPhone || promoCode ? (
+                    <>
+                      <TextField label={english ? 'Phone (optional)' : 'Teléfono (opcional)'} value={buyerPhone} onChange={(event) => setBuyerPhone(event.target.value)} inputProps={{ maxLength: 24 }} />
+                      <TextField label={english ? 'Promo code (optional)' : 'Código promocional (opcional)'} value={promoCode} onChange={(event) => setPromoCode(event.target.value)} inputProps={{ maxLength: 50 }} />
+                    </>
+                  ) : (
+                    <Button variant="text" onClick={() => setExtrasOpen(true)} sx={{ alignSelf: 'flex-start' }}>
+                      {english ? 'Add a phone or promo code' : 'Agregar teléfono o código promocional'}
+                    </Button>
+                  )}
                   {storefront.data.policy?.taxInvoiceIssued && (
                     <Stack spacing={1.5} component="fieldset" sx={{ border: 0, p: 0, m: 0 }}>
                       <Typography component="legend" variant="subtitle2" fontWeight={800}>
                         {english ? 'Electronic invoice details' : 'Datos para tu factura electrónica'}
                       </Typography>
                       <TextField select label={english ? 'Invoice to' : 'Facturar a'} value={billingIdType}
-                        onChange={(event) => setBillingIdType(event.target.value as typeof billingIdType)}
+                        onChange={(event) => {
+                          setBillingIdType(event.target.value as typeof billingIdType);
+                          setFieldErrors((current) => ({ ...current, billingId: undefined, billingName: undefined }));
+                        }}
                         helperText={english
                           ? 'Final consumer is allowed up to USD 50. Above that, enter an ID.'
                           : 'Consumidor final se permite hasta USD 50. Sobre ese valor, ingresa una identificación.'}>
@@ -640,9 +754,19 @@ export default function PublicEventTicketsPage() {
                       {billingIdType !== 'consumidor_final' && (
                         <>
                           <TextField required label={english ? 'ID number' : 'Número de identificación'} value={billingIdNumber}
-                            onChange={(event) => setBillingIdNumber(event.target.value)} inputProps={{ maxLength: 20, inputMode: billingIdType === 'pasaporte' ? 'text' : 'numeric' }} />
+                            onChange={(event) => {
+                              setBillingIdNumber(event.target.value);
+                              setFieldErrors((current) => ({ ...current, billingId: undefined }));
+                            }}
+                            error={Boolean(fieldErrors.billingId)} helperText={fieldErrors.billingId}
+                            inputProps={{ maxLength: 20, inputMode: billingIdType === 'pasaporte' ? 'text' : 'numeric' }} />
                           <TextField required label={english ? 'Name or business name' : 'Nombre o razón social'} value={billingName}
-                            onChange={(event) => setBillingName(event.target.value)} inputProps={{ maxLength: 300 }} />
+                            onChange={(event) => {
+                              setBillingName(event.target.value);
+                              setFieldErrors((current) => ({ ...current, billingName: undefined }));
+                            }}
+                            error={Boolean(fieldErrors.billingName)} helperText={fieldErrors.billingName}
+                            inputProps={{ maxLength: 300 }} />
                         </>
                       )}
                     </Stack>
@@ -659,7 +783,7 @@ export default function PublicEventTicketsPage() {
                           {storefront.data.policy.taxIncluded ? (english ? 'Included tax' : 'Impuesto incluido') : (english ? 'Additional tax' : 'Impuesto adicional')}: {percentage(storefront.data.policy.taxBps, locale)}
                         </Typography>
                         <Typography variant="body2">
-                          {english ? 'Temporary inventory hold' : 'Retención temporal de inventario'}: {storefront.data.policy.holdMinutes} {english ? 'minutes' : 'minutos'} ·{' '}
+                          {english ? 'Temporary inventory hold' : 'Reserva temporal de entradas'}: {storefront.data.policy.holdMinutes} {english ? 'minutes' : 'minutos'} ·{' '}
                           {english ? 'Transfers' : 'Transferencias'}: {storefront.data.policy.transferAllowed
                             ? (english ? 'allowed' : 'permitidas')
                             : (english ? 'not allowed' : 'no permitidas')}
@@ -704,7 +828,7 @@ export default function PublicEventTicketsPage() {
                     : 'Acepto los términos versionados, las tarifas y la política de reembolso indicados arriba.'} />
                   {message && <Alert severity="warning">{message}</Alert>}
                   <Button type="submit" variant="contained" size="large" disabled={!storefront.data.checkoutAvailable || !termsAccepted || submitting || !selectedTier || selectedTier.remaining <= 0}>
-                    {submitting ? <CircularProgress size={22} color="inherit" /> : (english ? 'Hold tickets and review total' : 'Retener entradas y revisar total')}
+                    {submitting ? <CircularProgress size={22} color="inherit" /> : (english ? 'Continue to payment' : 'Continuar al pago')}
                   </Button>
                 </Stack>
               </CardContent>
@@ -720,11 +844,11 @@ export default function PublicEventTicketsPage() {
                     {english ? 'Refresh order status' : 'Actualizar estado de la orden'}
                   </Button>
                   {paid ? <Alert severity="success">{issued
-                    ? (english ? 'Payment was verified by the server and the tickets were issued.' : 'El servidor verificó el pago y emitió las entradas.')
-                    : (english ? 'Payment was verified. Ticket fulfillment is still pending.' : 'El pago fue verificado. La emisión de entradas todavía está pendiente.')}</Alert>
+                    ? (english ? 'Payment was verified by the server and the tickets were issued.' : 'Pago confirmado. Tus entradas ya fueron emitidas.')
+                    : (english ? 'Payment was verified. Ticket fulfillment is still pending.' : 'Recibimos tu pago. La emisión de entradas todavía está pendiente.')}</Alert>
                     : <Alert severity="warning">{english
                       ? 'Tickets are held temporarily. The order is not paid and no ticket has been issued.'
-                      : 'Las entradas están retenidas temporalmente. La orden no está pagada y no se emitió ninguna entrada.'}</Alert>}
+                      : 'Tus entradas están reservadas por tiempo limitado. La orden no está pagada y aún no se emitió ninguna entrada.'}</Alert>}
                   {paid && (
                     <Button component={RouterLink} to="/mis-entradas" size="small" sx={{ alignSelf: 'flex-start' }}>
                       {english ? 'All my tickets' : 'Ver todas mis entradas'}
@@ -736,34 +860,19 @@ export default function PublicEventTicketsPage() {
                     {checkout.quote.taxMinor > 0 && <Chip label={`${checkout.quote.taxIncluded ? (english ? 'Included tax' : 'Impuesto incluido') : (english ? 'Tax' : 'Impuesto')}: ${money(checkout.quote.taxMinor, checkout.quote.currency)}`} />}
                     <Chip color="primary" label={`${english ? 'Total' : 'Total'}: ${money(checkout.quote.checkoutTotalMinor, checkout.quote.currency)}`} />
                   </Stack>
-                  {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La retención vence'} {date(checkout.holdExpiresAt)}.</Typography>}
+                  {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La reserva vence'} {date(checkout.holdExpiresAt)}.</Typography>}
                   {message && <Alert severity="warning">{message}</Alert>}
                   {!paid && paymentUnconfirmed && <Alert severity="warning">{english
                     ? 'A payment for this order may have been taken but is not confirmed yet. Do not pay again; refresh the order status later or contact us.'
                     : 'Es posible que ya se haya cobrado un pago de esta orden, pero aún no está confirmado. No vuelvas a pagar; actualiza el estado más tarde o contáctanos.'}</Alert>}
                   {!paid && !orderStale && checkout.paymentMethods.length === 0 && <Alert severity="info">{english
                     ? 'No real payment provider is enabled for this order. The hold does not mean payment.'
-                    : 'No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.'}</Alert>}
+                    : 'Todavía no hay un método de pago en línea para esta orden. La reserva no equivale a pago.'}</Alert>}
                   <Stack spacing={1.5}>
-                    {!paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                        {offeredPaymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
-                        {offeredPaymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
-                        {offeredPaymentMethods.includes('bank_transfer') && !checkout.bankTransfer && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleBankTransfer()}>{english ? 'Bank transfer' : 'Transferencia bancaria'}</Button>}
-                    </Stack>}
-                    {/* A stale order may already be paid by another rail: no transfer
-                        instructions or evidence form until it is read again. */}
-                    {!paid && !orderStale && checkout.bankTransfer && (
-                      <TicketBankTransferPanel
-                        transfer={checkout.bankTransfer}
-                        english={english}
-                        amountLabel={money(checkout.bankTransfer.amountMinor, checkout.bankTransfer.currency)}
-                        holdExpiresLabel={date(checkout.holdExpiresAt)}
-                        busy={paymentBusy}
-                        onSubmitReference={(reference, receipt) => void handleBankTransferEvidence(reference, receipt)}
-                      />
-                    )}
+                    {!checkoutLookupToken && legacyPaymentMethods && <PaymentMethodChoices methods={legacyPaymentMethods} english={english} />}
                     {checkoutLookupToken && (
                         <HostedProviderCheckout
+                          additionalMethods={legacyPaymentMethods}
                           checkout={{
                             checkoutId: checkout.checkoutId,
                             lookupToken: checkoutLookupToken,
@@ -791,6 +900,18 @@ export default function PublicEventTicketsPage() {
                             ));
                           }}
                         />
+                    )}
+                    {/* A stale order may already be paid by another rail: no transfer
+                        instructions or evidence form until it is read again. */}
+                    {!paid && !orderStale && checkout.bankTransfer && (
+                      <TicketBankTransferPanel
+                        transfer={checkout.bankTransfer}
+                        english={english}
+                        amountLabel={money(checkout.bankTransfer.amountMinor, checkout.bankTransfer.currency)}
+                        holdExpiresLabel={date(checkout.holdExpiresAt)}
+                        busy={paymentBusy}
+                        onSubmitReference={(reference, receipt) => void handleBankTransferEvidence(reference, receipt)}
+                      />
                     )}
                   </Stack>
                   {paid && issued && checkout.tickets.length > 0 && (

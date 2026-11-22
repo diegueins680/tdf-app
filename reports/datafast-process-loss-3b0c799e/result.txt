@@ -1,0 +1,9 @@
+Full payment schema applied and replayed: 258 migrations
+origin: committed post-snapshot confirmation; exiting
+After original process exited: 1 paid checkout, 12515 minor units
+recovery binding lookup: Provider callback does not match an immutable payment binding
+synthetic recovery flag and merchant readiness: true
+durable recovery jobs enqueued: 0
+After restore and fresh recovery process: 0 paid checkouts, 0 applied minor units
+waiting for server to shut down.... done
+server stopped

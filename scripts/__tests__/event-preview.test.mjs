@@ -32,6 +32,13 @@ const reportContext = async (overrides = {}) => ({
   ...overrides,
 });
 
+test('puts the event poster before scripts and preload links for preview readers', () => {
+  const html = injectEventPreview('<html><head><script src="/app.js"></script></head></html>', renderEventMetadata(publicEvent, '42'));
+  assert.ok(html.indexOf('property="og:image"') > 0);
+  assert.ok(html.indexOf('property="og:image"') < html.indexOf('/app.js'));
+  assert.match(html, /property="og:image:secure_url" content="https:\/\/cdn.example.test\/poster.jpg"/);
+});
+
 test('the report is readable without login only with the complete capability', async () => {
   const response = await reportRequest(await reportContext());
   assert.equal(response.status, 200);

@@ -60,6 +60,8 @@ library
     TDF.API.Drive
     TDF.API.ContentStorage
     TDF.ContentStorage
+    TDF.StorageVault
+    TDF.DriveOAuthClient
     TDF.API.Rooms
     TDF.API.Services
     TDF.API.Sessions
@@ -101,6 +103,7 @@ library
     TDF.Ticketing.Issuance
     TDF.Ticketing.Refund
     TDF.Ticketing.Confirmation
+    TDF.Ticketing.LookupToken
     TDF.Ticketing.Inventory
     TDF.Ticketing.Transfer
     TDF.Commerce.MarketplaceSales
@@ -120,6 +123,7 @@ library
     TDF.Commerce.ProviderReconciliation
     TDF.Commerce.ProviderRuntimeConfig
     TDF.Commerce.DatafastConfig
+    TDF.Commerce.DatafastClientIP
     TDF.Commerce.TicketBuyerContact
     TDF.Commerce.ProviderAdapter
     TDF.Commerce.ProviderAdapter.Http
@@ -222,7 +226,11 @@ library
     TDF.ServerInternships
     TDF.ServerInternAudit
     TDF.Server.EventAdminDelegation
+    TDF.Server.EventTicketSale
+    TDF.Server.EventAttendees
+    TDF.Server.TicketSalesWindow
     TDF.Server.SocialEventsHandlers
+    TDF.Server.SocialArtistOwnership
     TDF.Server.StripeTicketCapture
     TDF.Server.EventResearch
     TDF.Server.DDEX
@@ -233,6 +241,7 @@ library
     TDF.Server.MerchReputation
     TDF.Server.Catalog
     TDF.Server.ServiceStorefront
+    TDF.Server.DatafastCheckoutContext
     TDF.Server.ProviderTransport
     TDF.Server.TicketManualPayments
     TDF.Server.TicketPaymentReceipt
@@ -290,6 +299,9 @@ library
     TDF.Commerce.DepositPolicy
     TDF.Commerce.DomoCancellation
     TDF.Commerce.DomoCancellationStore
+    TDF.Commerce.DomoRefundStore
+    TDF.Routes.DomoRefunds
+    TDF.Server.DomoRefunds
     TDF.Profiles.ArtistVisibility
     TDF.Social.AccountOwnership
     TDF.Social.AccountOwnershipStore
@@ -336,6 +348,7 @@ library
     , mtl
     , network
     , network-uri
+    , iproute
     , mime-mail
     , unordered-containers
     , uuid-types
@@ -355,6 +368,7 @@ library
     , tagged
     , crypton
     , memory
+    , unix
     , JuicyPixels
 
 
@@ -402,6 +416,7 @@ test-suite tdf-hq-test
     TDF.MusicPublicationSpec
     TDF.InteractionWriteBudgetSpec
     TDF.MusicPurchaseSpec
+    TDF.StorageSecuritySpec
     TDF.MusicCredentialCacheSpec
     TDF.DriveReplaySpec
     TDF.WhatsAppRedeliverySpec
@@ -413,6 +428,7 @@ test-suite tdf-hq-test
     TDF.Commerce.CheckoutMoneySpec
     TDF.Commerce.PaymentArithmeticSpec
     TDF.Commerce.DatafastConfigSpec
+    TDF.Commerce.DatafastClientIPSpec
     TDF.EmailHeadersSpec
     TDF.CorsSpec
     TDF.Invoice.ReceiptSpec
@@ -422,6 +438,7 @@ test-suite tdf-hq-test
     TDF.ReadinessSpec
     TDF.TicketConfirmationSpec
     TDF.EventAdminDelegationSpec
+    TDF.EventTicketSaleSpec
     TDF.EventOrganizerSpec
     TDF.InvoiceDatilSpec
     TDF.TicketManualReviewSpec
@@ -523,6 +540,8 @@ test-suite tdf-hq-test
     , mtl
     , network
     , network-uri
+    , iproute
+    , wai-extra
     , mime-mail
     , tagged
     , unordered-containers
