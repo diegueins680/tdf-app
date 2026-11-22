@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+    "tdf-hq/tdf-hq.cabal": "0dbca64cd430514d0d8548c09ebf88e7663bbdfc03898e3ab35b11937af6c4d3",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -934,6 +934,15 @@
       "change": "Register the new TDF.Server.EventAttendees module in the library's other-modules on current protected main.",
       "semanticReview": "The merged Cabal file differs from protected main's by exactly one added line, the TDF.Server.EventAttendees module entry. That module holds one read query for the attendee roster and is imported only by the social events server; it adds no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
       "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "fb9cee97fa8241c10b73f0a3ee9da44ea9cdebb3",
+      "previousSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "currentSha256": "0dbca64cd430514d0d8548c09ebf88e7663bbdfc03898e3ab35b11937af6c4d3",
+      "change": "Expose the gallery validation module in the protected backend library.",
+      "semanticReview": "The library exposes the studio module. The dependency versions, build options and modules implementing the reviewed authorization and recovery predicates retain their previous definitions.",
+      "qualification": "This review binds the build context for the existing verifier obligations."
     }
   ]
 }

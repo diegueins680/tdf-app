@@ -240,6 +240,7 @@ library
     TDF.Server.Reviews
     TDF.Server.MerchReputation
     TDF.Server.Catalog
+    TDF.Studio.Gallery
     TDF.Server.ServiceStorefront
     TDF.Server.DatafastCheckoutContext
     TDF.Server.ProviderTransport

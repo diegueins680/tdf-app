@@ -65,6 +65,7 @@ import           Data.Aeson (ToJSON(..), Value(..), Object, object, (.=), decode
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKeyMap
 import           Data.Aeson.Types (Parser, parseEither, parseMaybe, withObject, (.:), (.:?), (.!=))
+import TDF.Studio.Gallery (validateStudioGalleryPayload)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -20369,6 +20370,8 @@ cmsAdminServer user =
       title <- either throwError pure (validateOptionalCmsTitle cciTitle)
       payload <- either throwError pure (validateOptionalCmsPayload cciPayload)
       either throwError pure (validateCmsPayloadSchema contentType payload)
+      for_ (cmsPayloadShapeProblem True contentType payload) $ \problem ->
+        throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 problem) }
       nextVersion <- runDB $ do
         mLatest <- selectFirst
           [ CMS.CmsContentAuthoredContentId ==. Just authoredContentUuid
@@ -20405,6 +20408,19 @@ cmsAdminServer user =
             throwError err409 { errBody = "Legacy CMS content has no canonical authored content ID" }
           when (CMS.cmsContentCreatedBy ent == Just (auPartyId user)) $
             throwError err403 { errBody = "CMS draft authors cannot approve their own changes" }
+          -- Drafts may be incomplete, and may predate these rules or come from
+          -- another client, so the complete shape is checked again here.
+          mContentType <- case CMS.cmsContentAuthoredContentId ent of
+            Nothing -> pure Nothing
+            Just authoredId -> runDB $ do
+              mAuthored <- get (Catalog.AuthoredContentKey authoredId)
+              maybe (pure Nothing) (get . Catalog.authoredContentContentTypeId) mAuthored
+          contentType <- maybe
+            (throwError err503 { errBody = "Authored content type is unavailable" })
+            pure
+            mContentType
+          for_ (cmsPayloadShapeProblem False contentType (CMS.unAesonValue <$> CMS.cmsContentPayload ent)) $ \problem ->
+            throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 problem) }
           runDB $ do
             updateWhere
               [ CMS.CmsContentAuthoredContentId ==. CMS.cmsContentAuthoredContentId ent
@@ -20508,6 +20524,19 @@ validateCmsPayloadSchema contentType payload =
       | not (T.null (T.strip fieldName)) = Right (T.strip fieldName)
     requiredFieldName _ = Left err503
       { errBody = "Persisted content type schema contains a non-string required field" }
+
+-- | Content types whose payload has a stricter shape than the persisted
+-- @required@ list can express. A draft may leave required text incomplete;
+-- publication must satisfy the rules the public page enforces, because one
+-- malformed published revision replaces the whole public gallery with a
+-- warning.
+cmsPayloadShapeProblem :: Bool -> Catalog.ContentType -> Maybe Value -> Maybe Text
+cmsPayloadShapeProblem allowIncomplete contentType payload
+  | Catalog.contentTypeCode contentType /= "studio-photo-gallery" = Nothing
+  | otherwise =
+      case maybe (Left "a payload is required") (validateStudioGalleryPayload allowIncomplete) payload of
+        Right () -> Nothing
+        Left problem -> Just ("studio gallery payload is invalid: " <> problem)
 
 entityKeyInt :: ToBackendKey SqlBackend record => Key record -> Int
 entityKeyInt = fromIntegral . fromSqlKey
