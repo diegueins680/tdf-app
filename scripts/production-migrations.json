@@ -1330,6 +1330,11 @@
       "introducedBy": "a8b31cefcf5c6ce45a3fc38406f23f11a3616b56"
     },
     {
+      "id": "2026-11-07_studio_gallery",
+      "path": "tdf-hq/sql/2026-11-07_studio_gallery.sql",
+      "introducedBy": "d77cd1319a67e89675e12e9e9082641bdf9fcc66"
+    },
+    {
       "id": "2026-11-21_school_schedule_occupancy",
       "path": "tdf-hq/sql/2026-11-21_school_schedule_occupancy.sql",
       "introducedBy": "c97018569ad80d494695b58e7c79f74b26c41025"

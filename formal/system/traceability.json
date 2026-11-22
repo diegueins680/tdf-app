@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "8577d7718d3ff336db7b689ed98e8168d0dc94f5",
+  "mobileRevision": "86f6b48ef15f964bb180c3bb8f70d26608a26d25",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -12834,7 +12834,8 @@
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq-ui/src/components/StudioGallery.tsx",
-        "tdf-hq-ui/src/pages/NotFoundPage.tsx"
+        "tdf-hq-ui/src/pages/NotFoundPage.tsx",
+        "tdf-hq/sql/2026-11-07_studio_gallery.sql"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
@@ -12846,7 +12847,9 @@
         "e2e/web/directory-language.spec.mjs",
         "e2e/web/public-welcome.spec.mjs",
         "tdf-hq-ui/src/components/StudioGallery.test.tsx",
-        "tdf-hq-ui/src/pages/NotFoundPage.test.tsx"
+        "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
+        "scripts/test-studio-gallery-migration.sh",
+        "scripts/test-studio-gallery-runner-safety.py"
       ],
       "formalModels": [],
       "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",
@@ -19853,7 +19856,7 @@
       ],
       "authorization": "ensureSchoolAccess: ModuleScheduling plus Teacher or school staff (Admin, Manager, StudioManager, Reception); staff-only routes add isSchoolStaff.",
       "privacy": "Unchanged; see the route table.",
-      "concurrency": "Conflict checks are unlocked. Where tdf-hq/sql/2026-11-21_school_schedule_occupancy.sql is applied, the schedule exclusion constraint rejects an overlapping teacher, student or room at the write and the handler answers 409 (SCHOOL-SLOT-SUGGESTION-001).",
+      "concurrency": "Conflict checks are unlocked.",
       "idempotency": "None: retries create duplicate sessions and purchases.",
       "failure": "400 invalid; 403 access; 404 missing; 409 conflict; 422 role or room.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
@@ -19872,7 +19875,7 @@
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "Before the schedule occupancy migration, double booking is possible between the conflict check and the write; after it the database rejects the second write (SCHOOL-SLOT-SUGGESTION-001).",
+        "Double booking is possible between the conflict check and the write.",
         "Purchases take the price from the client, accept inactive packages and have no idempotency key.",
         "A session's bookingId is not validated against its room, time or student; attended sessions stay editable.",
         "Attendance does not consume purchased minutes or create a commission."
@@ -28908,107 +28911,6 @@
         "classification": "PARTIAL",
         "reason": "Focused web implementation of the audit's quick wins; mobile, backend-dependent and structural plan items remain separate obligations."
       }
-    },
-    {
-      "id": "SCHOOL-SLOT-SUGGESTION-001",
-      "title": "Slot suggestions for one lesson booking and the schedule exclusion calendar",
-      "statement": "A teacher or school staff member reads the best feasible slots for one new lesson of a teacher, a student and a subject (room given or chosen) in a bounded horizon; the service only suggests and never writes. Lessons, trial lessons and active studio allocations occupy one calendar whose exclusion constraint rejects any overlapping teacher, student or resource. Route: GET /trials/v1/class-sessions/suggestions.",
-      "domain": "SCHOOL",
-      "authority": "Owner request of 2026-11-21; the product owner approved the schema route (one occupancy table), the objective order (preferred windows, teacher gaps, room priority, earliest), the hard constraints (opening hours 08:00-22:00 America/Guayaquil, 12-hour notice, teacher availability, valid package) and the constants on 2026-11-21 before implementation. formal/system/lesson-slot-suggestions.md.",
-      "source": "formal/system/lesson-slot-suggestions.md",
-      "contract": "tdf-hq/src/TDF/Trials/SlotSuggestions.hs",
-      "property": "For every returned slot s with room r: onGrid30(s) /\\ duration(s) = requested /\\ start(s) >= max(from, now) /\\ start(s) >= now + 12h /\\ end(s) <= max(from, now) + days /\\ 08:00 <= studioLocal(s) <= 22:00 on one day /\\ teaches(teacher, subject) /\\ activeRoomAllowed(r, subject) /\\ no teacher, student or resource(r) row of school_schedule_occupancy overlaps s (half-open) /\\ no non-cancelled booking on r overlaps s /\\ s inside the union of the teacher's availability windows for (subject, r) /\\ end(s) <= latest expiry of the student's open packages of the subject. Returned slots are ordered by (outsidePreferred, teacherGapMinutes or 840, roomPriority, start, roomId), one per start, at most limit; the list is empty iff no candidate is feasible. Database: no two rows of school_schedule_occupancy with equal (subject_kind, subject_id) overlap.",
-      "actors": [
-        "Teacher",
-        "School staff"
-      ],
-      "preconditions": [
-        "Authenticated bearer session (AuthProtect)",
-        "LESSON_SLOT_SUGGESTIONS_ENABLED=true",
-        "tdf-hq/sql/2026-11-21_school_schedule_occupancy.sql applied"
-      ],
-      "inputs": [
-        "GET /trials/v1/class-sessions/suggestions",
-        "teacherId, studentId, subjectId (required)",
-        "roomId (optional)",
-        "durationMinutes (default 60; 30..180 step 30)",
-        "from (default now)",
-        "days (default 14; 1..28)",
-        "limit (default 5; 1..20)",
-        "preferredStart/preferredEnd pairs (at most 5)"
-      ],
-      "state": {
-        "initial": "Stored calendar, availability, room and package rows",
-        "terminal": [
-          "Ranked list",
-          "Refusal without suggestion"
-        ]
-      },
-      "allowedTransitions": [
-        "None for the route; it reads and never writes.",
-        "Calendar projection by triggers inside the transaction that writes a lesson, a trial assignment or a resource allocation."
-      ],
-      "forbiddenTransitions": [
-        "Any write by the suggestion route",
-        "Returning a slot that violates a hard constraint on the snapshot",
-        "Two overlapping calendar rows for the same teacher, student or resource",
-        "Naming who occupies a busy slot",
-        "Treating a suggestion as a reservation"
-      ],
-      "effects": [
-        "None for the route; read-only.",
-        "school_schedule_occupancy rows follow class_session, trial_assignment and service_booking_resource_allocation writes."
-      ],
-      "authorization": "ensureSchoolAccess (ModuleScheduling plus Teacher or school staff); a non-staff caller must be the teacher, be linked to the subject and own the student, as createClassH requires for creating a lesson.",
-      "privacy": "The answer holds free slots only; it never names the occupant of a busy slot nor which of teacher, student or room was busy. No behavioural history is used: preferred windows come from the request and are not stored. Preferred windows never change feasibility, and a request without them is ranked by the non-personalised criteria alone.",
-      "concurrency": "The snapshot is one SELECT, read at one instant; existence and authorization reads precede it in the same transaction. A suggestion is advice: lesson creation re-validates and the exclusion constraint rejects a slot taken meanwhile (SQLSTATE 23P01, answered 409).",
-      "idempotency": "Read-only.",
-      "failure": "400 missing, malformed or out-of-range parameter (never clamped); 401 without a session; 403 access; 404 unknown teacher, student, subject or room, or flag off; 422 room type or room not allowed; 500 undecodable snapshot. The migration aborts on a pre-existing future overlap or empty interval.",
-      "recovery": "Ask again; a 409 on creation means the advice went stale. Migration rollback: tdf-hq/sql/2026-11-21_school_schedule_occupancy_rollback.sql.",
-      "observability": "HTTP status and computedAt only.",
-      "implementation": [
-        "tdf-hq/src/TDF/Trials/SlotSuggestions.hs",
-        "tdf-hq/src/TDF/Trials/Server.hs",
-        "tdf-hq/src/TDF/Trials/API.hs",
-        "tdf-hq/src/TDF/Trials/DTO.hs",
-        "tdf-hq/app/SlotSuggestionsOracle.hs",
-        "tdf-hq/sql/2026-11-21_school_schedule_occupancy.sql",
-        "tdf-hq/sql/2026-11-21_school_schedule_occupancy_rollback.sql",
-        "tdf-hq-ui/src/features/school/LessonSlotSuggestions.tsx",
-        "tdf-hq-ui/src/features/school/slotSuggestionHelpers.ts",
-        "tdf-hq-ui/src/pages/ClassesPage.tsx"
-      ],
-      "tests": [
-        "tdf-hq/test/TDF/Trials/SlotSuggestionsSpec.hs",
-        "scripts/test-lesson-slot-suggestions-sql.py",
-        "scripts/test-lesson-slot-suggestions-postgres.sh",
-        "scripts/verify-lesson-slot-suggestions.py",
-        "tdf-hq-ui/src/features/school/LessonSlotSuggestions.test.tsx",
-        "tdf-hq-ui/src/features/school/slotSuggestionHelpers.test.ts"
-      ],
-      "formalModels": [
-        "formal/school/LessonSlotAdvice.tla"
-      ],
-      "verification": "PROVED (Z3, all integer instants): the Haskell overlap predicate, read from source, is equivalent to two non-empty half-open ranges sharing an instant. PROVED FOR THE MODEL (Apalache inductive invariant, every set of up to 4 clients and 3 slots, unbounded steps; TLC bounded run; negative controls without exclusion and for stale advice): a stale suggestion is rejected and no slot is booked twice. PROVED PER INSTANCE (Z3 against the compiled core, every one of 48384 instances of the family stated in scripts/verify-lesson-slot-suggestions.py; runner-up refuted as negative control): the first suggestion is feasible and optimal, or nothing is feasible. TESTED: soundness of feasible candidates against the exclusion constraint on PostgreSQL 16 for one fixture day via the compiled oracle; migration backfill, abort, triggers and rollback; completeness, order, determinism, fallback invariant and request validation by Hspec and QuickCheck against a brute-force reference; no writes (single SELECT, keyword check, READ ONLY transaction); web panel by Jest.",
-      "evidence": "scripts/verify-lesson-slot-suggestions.py output; scripts/verify-inductive-proofs.sh LessonSlotAdvice results; scripts/test-lesson-slot-suggestions-sql.py output; tdf-hq-test SlotSuggestionsSpec run; Jest runs.",
-      "critical": true,
-      "status": "specified and implemented",
-      "confidence": "High for the overlap predicate (proof) and for the pure search on small calendars (proof per instance plus properties). Medium for the database correspondence: tested on a fixture, with the model proof covering an abstraction of PostgreSQL, not PostgreSQL. The handler wiring is covered by compilation and review only.",
-      "ambiguity": [
-        "The TLA+ result is about the model (one cell per slot, no interval geometry, no cancellation), not about PostgreSQL; that triggers run in the writer's transaction is tested, not proved.",
-        "Optimality is proved only for the enumerated family (one day, two rooms); larger calendars are covered by QuickCheck tests.",
-        "Soundness against the exclusion constraint is tested on one fixture, not proved over all database states; the reading of tstzrange && as instant sharing is trusted.",
-        "A legacy booking without an allocation row and a trial student's overlap are not enforced by the database.",
-        "Availability is read as teacher, subject and room; whether a window should allow any permitted room is open.",
-        "A valid package means open and unexpired; remaining hours are not tracked.",
-        "Lesson creation itself does not enforce opening hours, notice, availability or package validity.",
-        "No HTTP-level test runs the route against a fully migrated database, and the migration has not been run against production data."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Pure core proved on a bounded family and tested beyond it; predicate proved; concurrency proved for a model; database correspondence and migration tested on fixtures. HTTP-level checks on the migrated schema and a production overlap check remain."
-      },
-      "historicalStatus": null
     }
   ],
   "sourceFingerprints": {
@@ -29019,11 +28921,11 @@
     ".github/workflows/check-messaging-token.yml": "68ee6bacc89bb3d49176cd023a289b68c5fcaabf616fe599c645be7b34a20ddf",
     ".github/workflows/check-mobile-distribution.yml": "a02130cf5379c4a451ec8588b989a057a683dcf275fd3d6638b275aaec0ba599",
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
-    ".github/workflows/ci.yml": "28e2ce1d13c611522f9661ff26358b40e66adf4285a67682efe0c35bfb8c845c",
+    ".github/workflows/ci.yml": "7881225540928b2134b6aaf82a3f7d77570dd99b6ca1e36c69678065ee38f086",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/domo-refund-validation.yml": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
-    ".github/workflows/event-operations-formal.yml": "e6ed6a81f3f5f01f3fea5f61ea1150c73b79518357c3e6e096fcf3fd769bfedc",
+    ".github/workflows/event-operations-formal.yml": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -29031,7 +28933,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "54d4fe89728782fb77f4c36aec269211a19307b339db9cb9875fac2320d7aa76",
+    "docs/catalog-persistence/catalog-list-decisions.json": "9c88ec456858418f592fdf25c2b9b925240561b5e1599c63c81a96133f613552",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -29424,7 +29326,6 @@
     "formal/payments/placetopay_query_admission.py": "7ca957486b0e01a9e4badcb3dbd354f11fbb60b0f334806ad71f84c0cff9731e",
     "formal/payments/provider_binding_admission.py": "dba36ddd9614166b7c5257399f755e71874ef86619c64b9ee1c308a7d74d350a",
     "formal/payments/stripe_ticket_capture.py": "0f2196fcad2327bb7f7889b1dabf7190f85637dacd6c860f20895fe7c1e78c5d",
-    "formal/school/LessonSlotAdvice.tla": "2751061fea96c2604aded38d5eee2138fef820ba3a1b5832fb1b38e9a101856a",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
@@ -29432,13 +29333,13 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
-    "formal/system/compiled-api-surface.json": "b07dc3af86c48c039c0607ec5a557789e4e845fb56a7eecaafe5a5a7e228fb8d",
+    "formal/system/compiled-api-surface.json": "e227c6afb82883509fc0cb9937fd4518e5b7661c3c849ae0198b6669b0bdcf16",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
     "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "49dc1e7bd7d4eff4da28fcbb6fee95659633dfa303e0e84bb91a22125b32b85e",
+    "formal/system/recovery-expiry-arithmetic.json": "295b95d49c91a52a8b5bcaa7f037f3657be2807af9c450ad991529292bb94dfd",
     "formal/system/route-requirements.json": "df5ba57041c1061ce8c325253fc66e48dd5558680f6fcf279ef7403be63355fb",
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -29490,7 +29391,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "0f0ded993ea5261302f4e1e197648573d8e48c521bd10a4b7c33b785ccc8b526",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "c42453218ea4e89aae9b5da80d93cc413adc4196522073c91ef278e4a1decad3",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -29679,7 +29580,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "90410774268c15cf175eb8628dba424983744a6ed108b65cdb68bafa7d52383d",
+    "scripts/production-migrations.json": "bd6d076759b48588c1155bb7c83d0efaf53ff1ef9e5254df30966a53ee305249",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "e497d1ce41e8b1bdc3ae776a164b0cb3c6317b5c799ecce85205ef9c79602729",
@@ -29761,8 +29662,6 @@
     "scripts/test-invoice-worker.sh": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
     "scripts/test-isolated-application-canary.py": "3b50fccf75e7ae6e11d2765b07b02154239a8ec8295022f7c3c6042c7a4b9078",
     "scripts/test-ledger-posting.sh": "c70fc5c138cde076c328c5f91059a1c4d90732f428f449eccb8162e8706ce860",
-    "scripts/test-lesson-slot-suggestions-postgres.sh": "1dbc042b8a93e2aafaccf96d0b155b205cbc6ab571a50c075cfecfb6317bc215",
-    "scripts/test-lesson-slot-suggestions-sql.py": "5e5f58361c28d5dde4382fbeb1b56b95c51b3355ffce39823235ed9e7dd72509",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-marketplace-operations-migration.sh": "320bf8ef28435b8d9401d6bfd3fd3bc3f7c9de7b91dce3f0e2998ee055e8bd55",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
@@ -29827,6 +29726,8 @@
     "scripts/test-specification-inventory.py": "803f1a3ba0e54e29c3f7ea8fcc2c7e263a0b1c450c0e358912091bd745332369",
     "scripts/test-state-machines.py": "8b04bc8695f89b092627c7a9e58c83ba4a718e12d83dfad3cd07634d0c8d8f72",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
+    "scripts/test-studio-gallery-migration.sh": "42cf15ffb993ed44439390aec75f82944a94a8dcb92b9ec86fd44fb3a6604087",
+    "scripts/test-studio-gallery-runner-safety.py": "2b2905f47cd1f07113cc8af3e9be163338ef27cc164bba03b3779738f7541dfd",
     "scripts/test-studio-internship-audit-api-e2e.mjs": "2c4671ee52541c181cfe9e00d8bc7d0f98e8e54921adc513c0bf9aa657662c40",
     "scripts/test-studio-internship-audit-api-e2e.sh": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
     "scripts/test-studio-internship-audit-migration.sh": "0898a7f6b32336840a85bf97c29a9aca4bbe7addc9e6360c97ac21169fc7f99e",
@@ -29858,10 +29759,9 @@
     "scripts/verify-event-operations-formal.sh": "a17b08e8c4d12ee0537ed8707d8675e8fa60fe7a1b2aa985391c204cf6d0351b",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
     "scripts/verify-google-account-name.py": "db797f61655c32d3df0c6737a18514ea8d49312bfa245253e7c45e521d9ce4e9",
-    "scripts/verify-inductive-proofs.sh": "ab416caa2847fcedfb71d3a90f351158a06a67b2da3aa6929965dad462c9e8e4",
+    "scripts/verify-inductive-proofs.sh": "690c47575dc80407e8fbc43a5680f9addc5f92adb415eff9f7629ba9fd9d1bdc",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
-    "scripts/verify-lesson-slot-suggestions.py": "5f008ce192e3caa0076d1e48b8f6c265a598a0600ac2ffcc05dcc747020e145e",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
     "scripts/verify-payment-arithmetic.py": "b5453ad687564a682d01f363d8c74c47851bfefb5ab5f2c09025b92b675db6f8",
     "scripts/verify-payment-intent-expiry.py": "7eefe7a53984897caed042f9eff42c2cdd654412239600af4cea4a8f4f1aab09",
@@ -30026,7 +29926,7 @@
     "tdf-hq-ui/src/api/fans.ts": "75f0d175c04cd78845fb2fb305577eb00db074d30f2cc693a70d4d3a023a7046",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "00f51bd19f4c6f1fecbd66abd4a7c91da7da1287097c3e2436be604266f215fa",
+    "tdf-hq-ui/src/api/generated/types.ts": "4d69c011a18e29d7d141d37f27046b912a04d2e1c56267961e95b404e2922dc3",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "579339fc25f2a17e8d34cfd23b25562a6242cca6df291887f904bac5483acc02",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "da727168f7e65d08d52a371cbe8ccfe0d0b1c91d4de940b827f7c37fdac72f85",
@@ -30255,10 +30155,6 @@
     "tdf-hq-ui/src/features/releases/catalogQueries.test.ts": "0abd74326e5225fed06e81cf01921d6247cb41b23b0c1f33932c43b8a513a2d2",
     "tdf-hq-ui/src/features/releases/catalogQueries.ts": "ab1ac999aeac0c22d337184124e83e5d4f3817d4ba6a242445a877b68ee0113d",
     "tdf-hq-ui/src/features/releases/useReleaseFeed.ts": "d14328c34a608a3748610ffb35448acf5beed529601883f3f5077b70d445ff49",
-    "tdf-hq-ui/src/features/school/LessonSlotSuggestions.test.tsx": "ad2de9e441d17789ef86cdff091a4e875a80d8a4af4a5182e696a331e038443c",
-    "tdf-hq-ui/src/features/school/LessonSlotSuggestions.tsx": "806d4fff84767b75a900119c3e73eb13603bd011de5d65a956ab218abee691cb",
-    "tdf-hq-ui/src/features/school/slotSuggestionHelpers.test.ts": "11be4018fd68595eae9ffb15bc413f6c685d4bd2e4631795db5e518438320175",
-    "tdf-hq-ui/src/features/school/slotSuggestionHelpers.ts": "c8da45b4ce7d4e8453689d8abcbcc4dea0972321f3d1151e0b9ce470aa63c224",
     "tdf-hq-ui/src/features/social/SocialWorkspace.tsx": "82492087c813de1f062dd59680c17fd9320142073e3dc96e8737fade9b0660a6",
     "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx": "32ce9ba81961dd9e313c85e4b1f83624faea1ce96374a6eda593916f11e55f8d",
     "tdf-hq-ui/src/hooks/useGoogleDriveAuth.ts": "04bcbfd3e8aef525f943efd6c2aa626cda020d844e517f561f184ad7ee15a498",
@@ -30303,7 +30199,7 @@
     "tdf-hq-ui/src/pages/CampaignAutomationsPage.tsx": "436a6542811cca0cef5c33ef4979487907e967ef8ac74756fc05c0fa7fb42226",
     "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "e3b22e86857e5a41608cb7fbaeb5dad9b91084165b084d4653fcd4d95250ccc9",
     "tdf-hq-ui/src/pages/ChatPage.tsx": "7e1384c2582230276df3cfa8f746381182952b28494c8c60527abc4635c1b4bb",
-    "tdf-hq-ui/src/pages/ClassesPage.tsx": "b7fa2258a340e6d6e2df21893fd6c594d53625866450c693cce6941722afa516",
+    "tdf-hq-ui/src/pages/ClassesPage.tsx": "2c4c084a7e9287144589b96f3ac9a2ff6c3775bc854c0df027f3717bfa85c203",
     "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
     "tdf-hq-ui/src/pages/CmsAdminPage.tsx": "34d190a224e5011cc799fbb9c25c86d5a8cc98a56bfd01a4df7e718d728a5ec8",
     "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": "c3c495db7182a016a8d4ff2e119853f838157ef7f3892c9124be9131d13f613e",
@@ -30602,10 +30498,9 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
-    "tdf-hq/app/SlotSuggestionsOracle.hs": "6c7c97b7d3b575418900067593200e497a7457e14ad487794cc3997e162bac7d",
     "tdf-hq/assets/feature-registry.json": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
-    "tdf-hq/config/default.env.example": "fbe8ed3320870185e759b39f071c8ef52feeee8ecc115496e8fe1fff270103d2",
-    "tdf-hq/docs/openapi/api.yaml": "82fed41522684e8b488df40a9ab0196a209880f12ff7318524505cae347a5b56",
+    "tdf-hq/config/default.env.example": "b0754a5fe5aa2ae3635b6bdaf6dfed9211466bf077f73fc430d9ab0207379494",
+    "tdf-hq/docs/openapi/api.yaml": "fe5cd443b400722be794c27aa7d29696696f0328fbb8beb408ddc6fc7f9c892d",
     "tdf-hq/docs/openapi/artist-playback.yaml": "16c71adea21002fb54ecff645bba84be251a8537828d38342b1fb67a78acabcf",
     "tdf-hq/docs/openapi/directory.yaml": "796a92d53f69e5be446ac9de7f18da1916c151de4b0ead2f95d1d2751813e7e3",
     "tdf-hq/docs/openapi/interactions.yaml": "8d3ca2368a0ef1ea36a6c8f996b00d9a404c102fca1b44bf47eef8532a1fe598",
@@ -30785,6 +30680,7 @@
     "tdf-hq/sql/2026-11-07_content_storage_identity_guards.sql": "dfb550368223e3b7d641c18f15fcbe6a0566ac370318138b3c068099dbe28a9d",
     "tdf-hq/sql/2026-11-07_content_storage_identity_guards_rollback.sql": "840aed49b8c7182f1d059e46d9ba628237a40b964e66c17caebee2308509268c",
     "tdf-hq/sql/2026-11-07_music_featured_source_health.sql": "e28257cbb4288c0185272133c1474dc744f67a8d6f0226a0920dc0be512e0cc6",
+    "tdf-hq/sql/2026-11-07_studio_gallery.sql": "7da04908fd0947a2fa420932eeaf9fa8a224d88b0a238913d652173654571cab",
     "tdf-hq/sql/2026-11-08_marketplace_offers.sql": "fb65c76c3474d465f5463b63d441d9dcd0965e311af8bde7eb6527d1ac8a3ea5",
     "tdf-hq/sql/2026-11-08_marketplace_offers_rollback.sql": "4086427dccbc526e2c9694253155d6e80065ccea0b281b4baab2917640ea4480",
     "tdf-hq/sql/2026-11-10_auth_rate_limit.sql": "278f16a38d411fbf41cbb0068f2588f93f9ba710c3026830c9307f2a2108d7c5",
@@ -30795,8 +30691,6 @@
     "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql": "86483222ece86b79a88a693a2cd403cdf3d9b3fd183ef1182df4bf447c873f95",
     "tdf-hq/sql/2026-11-12_marketplace_agreements.sql": "cba023d9107d987ce7f336181505334538bd0a0a00782e596fab1faf4a14fdbf",
     "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql": "47a811221f03817022572f6bee479567c08f714897b56706cea4f75c8b39ac8f",
-    "tdf-hq/sql/2026-11-21_school_schedule_occupancy.sql": "c45efc93521da8da94082adbf13eda6c2ed43b4e42dc7c111afd39acf09a582d",
-    "tdf-hq/sql/2026-11-21_school_schedule_occupancy_rollback.sql": "bbc6bb3811f0d04b74287aaf9617e4527d102fbf222e3c0495b83c87afde8ab8",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
     "tdf-hq/src/TDF/API.hs": "ef1ed6b71b5bc4a490c9074808094513c7c6396dbefd58606ae30f954d59ea4e",
@@ -30869,7 +30763,7 @@
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "7b33d92413ab2ef23d3f4064257448e8ff87109da4098308b752828b679a6edc",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Commerce/TicketBuyerContact.hs": "f0ddbaf6649a0830f2743a520e5e7cd00e989a049e7d85eb65b08dd3fb3892ac",
-    "tdf-hq/src/TDF/Config.hs": "6aa7a131454c3aec49bf00967bb6fe116c2dd8fbe0d1ae3c4a57e854646b5b7d",
+    "tdf-hq/src/TDF/Config.hs": "5c41c41baf78a5dc1d5b79fe2039dcb6004f41abf1fe58cb146d047d4e4115ee",
     "tdf-hq/src/TDF/ContentStorage.hs": "9b09965c48bd8fa4f240cb157fb24c76e073cd329741440c46c7adc267ee4cbb",
     "tdf-hq/src/TDF/Contracts/API.hs": "5030fec3414c8afbc5fb71895609ad035be9bdbd0fa95d448f788fc50ac82540",
     "tdf-hq/src/TDF/Contracts/Server.hs": "874d4fd54c05dc35103a2182a8793d3b8277f845803cc963e41582b5a403538d",
@@ -30967,7 +30861,7 @@
     "tdf-hq/src/TDF/Server/TicketSalesWindow.hs": "fd215386f1396fb5dc12414bae565889b31f196de8efcc431037df4f9517fa9a",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "275d926b7861b10ac4022f8d6f3ddf7d1348fcce214ec9416938cf6e2c43f645",
-    "tdf-hq/src/TDF/ServerAuth.hs": "2215624a3c8dc69a0ab7bc24d176cf93a6b3af33e3340916ebfda012fc4552e2",
+    "tdf-hq/src/TDF/ServerAuth.hs": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
     "tdf-hq/src/TDF/ServerExtra.hs": "8d687b85c57102a16614ec245ba96c2d1d53f8a9ac2e63ac61d3a5ad1d5cd892",
     "tdf-hq/src/TDF/ServerFanClub.hs": "6ea3bfe20754fa492c21c0044ff7caa0024784e90ce77f5c7d3247b5f709d07f",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
@@ -30996,17 +30890,15 @@
     "tdf-hq/src/TDF/Ticketing/LookupToken.hs": "a3698541dc758077f54fe9027d9888a933be209d976bbcf381f49eda48639958",
     "tdf-hq/src/TDF/Ticketing/Refund.hs": "fffa6d4c96c372218fa827af114cacdcc43d6ac9aa2c84bfc5e1552a9e72dc29",
     "tdf-hq/src/TDF/Ticketing/Transfer.hs": "edfefec16e7943820a62c0f655677db2045a311ee6b324b63b7999b5501e8791",
-    "tdf-hq/src/TDF/Trials/API.hs": "e6a73b9a2999e95f713b34620fefb9217027c505acbe6f2dab6703f359c4f0ec",
-    "tdf-hq/src/TDF/Trials/DTO.hs": "151f8670f041102883d6c4aeb25bdeb2b445d180de61f55a75b9c48d389771b0",
+    "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
-    "tdf-hq/src/TDF/Trials/Server.hs": "63fb60b4ade0b1638b9e327f381fca1bcc25b00f074ab7959f37e70f4865af52",
-    "tdf-hq/src/TDF/Trials/SlotSuggestions.hs": "fd1f7fae54b51c6795ff2baa375c1ccb7eff4fc013778c52cd50dae9b6d6ea3c",
+    "tdf-hq/src/TDF/Trials/Server.hs": "c617719d5173d354e462ee6d64fc334243313958beeaa69a6cd911d69743d4a0",
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/VideoCampaigns.hs": "39e55365c71ec6bbaa77749048141519a192a112220a5ab1494229c427dbb25c",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "c943105f4f1b10d7553dcec7bab679244787d43a370ad1645ab98049d0ddaeba",
+    "tdf-hq/tdf-hq.cabal": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -31014,7 +30906,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "75e1b254c2cbbfbc8ffa9611ad4aabcd1386fdfa4a4f9b4d2dc3675e9af6f181",
+    "tdf-hq/test/Spec.hs": "7ef32ba3699ea33cbe3c1728f8f32db4351651311c8d99fbdeaa75720a936455",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -31050,7 +30942,7 @@
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "3fac72c8e53e52a81933aeba58c908980c90b6db398eb17716dea7d70b0d3f7c",
     "tdf-hq/test/TDF/EventAdminDelegationSpec.hs": "73b13ff14472e7f3df54cbc44718263313bf255244a71bc9534326998ca63f20",
     "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs": "01a1bacba4c441d49e68162267f0e590b39e2db57f94a29818a7057423ff1065",
-    "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "69f032de23ccc8bc5e4f709d593c41f748f6aed281514470fbb00ef071e28c38",
+    "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "bc4f5e6053643ddcbae742e1690e44f5698c6f527f86874723c3bf014ceda57a",
     "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs": "65bdfb6d20e33eb7a062cebdeef4c1e3dbb48e83b10eda578a9dcdeddd9249dc",
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
     "tdf-hq/test/TDF/EventTicketSaleSpec.hs": "c0645218656951aee61012df54df63ec2f9128b8d787d6899fcd323bc90294dd",
@@ -31085,7 +30977,7 @@
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "4746db879d19f0d2387b5198f6d402b7262b7ed2f50b4ec7772b6585172ae474",
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "0cff8f4196afbd1c7247802a051a70a720eb53ef135d2bc5f5f789efd37f1162",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
-    "tdf-hq/test/TDF/ServerSpec.hs": "1911c06627e072446d0059774ea170e0f4cc4459080f372e1a5365eb3e809b5e",
+    "tdf-hq/test/TDF/ServerSpec.hs": "f1f75ad6c396357a04567b49f5150976942b20617a734b540e54aed7a3d250fc",
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
@@ -31097,9 +30989,8 @@
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "787b4aca5216a0e5ee10906523087f49791ef9b86a2a59eb9d487478e97440e2",
     "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "e39aced356e643801238fd0b935d1e3dd97f713c28fd1fa7722f639f516c8015",
     "tdf-hq/test/TDF/TicketPaymentReceiptSpec.hs": "cec7960d91dcca1fdb69846eef1ed504824a0cda51c252aceb32e162ae5ef432",
-    "tdf-hq/test/TDF/TrialIdentitySpec.hs": "0396689e05f550caa0dd75909cf0536bca39bc3ed64f0c50ff780750b530511b",
-    "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": "f74f8ac1026283bf624373db16161741794f20a0e8305328709e7dd6ff55fb3a",
-    "tdf-hq/test/TDF/Trials/SlotSuggestionsSpec.hs": "78cf6987131f09f5618277304b9dd11766bcde27d6bb6df807b3c8bc12f3989e",
+    "tdf-hq/test/TDF/TrialIdentitySpec.hs": "b0aedc327dffadf0a90fa678a2a1baa4a5a619175585c0a8ad469c37fa4a2f63",
+    "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": "eebde69c59c367555188cf00435c64dadb9b0c0c99fa724f58cade0c427b2242",
     "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "8a3d61f60286b5846516d8ea0bfd68154fa62172354f69232dc385e4615daad2",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
     "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "793ceed7d044f4ae86b61fd5bcbdf200fc833977d1408d6461f5536ac3c500fd",
@@ -31221,7 +31112,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
-    "tdf-mobile/src/api/generated/types.ts": "00f51bd19f4c6f1fecbd66abd4a7c91da7da1287097c3e2436be604266f215fa",
+    "tdf-mobile/src/api/generated/types.ts": "4d69c011a18e29d7d141d37f27046b912a04d2e1c56267961e95b404e2922dc3",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/api/upload.compatibility.test.ts": "21e4e097cea0449549484f2ba0ba09726585c58a5aa9c4cccbdddba8b00600ba",
@@ -36206,10 +36097,6 @@
       {
         "requirement": "SCHOOL-TEACHER-STUDENT-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Courses/Production.hs": [
@@ -36789,10 +36676,6 @@
       },
       {
         "requirement": "SCHOOL-TEACHER-STUDENT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
         "relationship": "implementation"
       }
     ],
@@ -45888,6 +45771,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-11-07_studio_gallery.sql": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx": [
       {
         "requirement": "UX-WELCOME-001",
@@ -45917,6 +45806,18 @@
       }
     ],
     "tdf-hq-ui/src/pages/NotFoundPage.test.tsx": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-studio-gallery-migration.sh": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-studio-gallery-runner-safety.py": [
       {
         "requirement": "UX-WELCOME-001",
         "relationship": "tests"
@@ -47439,10 +47340,6 @@
     "tdf-hq-ui/src/pages/ClassesPage.tsx": [
       {
         "requirement": "WEB-CONTENT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
         "relationship": "implementation"
       }
     ],
@@ -51719,90 +51616,6 @@
         "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
-    ],
-    "tdf-hq/src/TDF/Trials/SlotSuggestions.hs": [
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/src/TDF/Trials/DTO.hs": [
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/app/SlotSuggestionsOracle.hs": [
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/sql/2026-11-21_school_schedule_occupancy.sql": [
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/sql/2026-11-21_school_schedule_occupancy_rollback.sql": [
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/features/school/LessonSlotSuggestions.tsx": [
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/features/school/slotSuggestionHelpers.ts": [
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/test/TDF/Trials/SlotSuggestionsSpec.hs": [
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/test-lesson-slot-suggestions-sql.py": [
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/test-lesson-slot-suggestions-postgres.sh": [
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/verify-lesson-slot-suggestions.py": [
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq-ui/src/features/school/LessonSlotSuggestions.test.tsx": [
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq-ui/src/features/school/slotSuggestionHelpers.test.ts": [
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "tests"
-      }
-    ],
-    "formal/school/LessonSlotAdvice.tla": [
-      {
-        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-        "relationship": "formalModels"
-      }
     ]
   },
   "surfaces": [
@@ -51897,7 +51710,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "28e2ce1d13c611522f9661ff26358b40e66adf4285a67682efe0c35bfb8c845c",
+      "sha256": "7881225540928b2134b6aaf82a3f7d77570dd99b6ca1e36c69678065ee38f086",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52045,7 +51858,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "e6ed6a81f3f5f01f3fea5f61ea1150c73b79518357c3e6e096fcf3fd769bfedc",
+      "sha256": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53772,7 +53585,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "0f0ded993ea5261302f4e1e197648573d8e48c521bd10a4b7c33b785ccc8b526",
+      "sha256": "c42453218ea4e89aae9b5da80d93cc413adc4196522073c91ef278e4a1decad3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57035,7 +56848,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "90410774268c15cf175eb8628dba424983744a6ed108b65cdb68bafa7d52383d",
+      "sha256": "bd6d076759b48588c1155bb7c83d0efaf53ff1ef9e5254df30966a53ee305249",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59140,30 +58953,6 @@
       ]
     },
     {
-      "id": "SURFACE-20c062bcdab0419a",
-      "path": "scripts/test-lesson-slot-suggestions-postgres.sh",
-      "sha256": "1dbc042b8a93e2aafaccf96d0b155b205cbc6ab571a50c075cfecfb6317bc215",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-530d963172e49838",
-      "path": "scripts/test-lesson-slot-suggestions-sql.py",
-      "sha256": "5e5f58361c28d5dde4382fbeb1b56b95c51b3355ffce39823235ed9e7dd72509",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-6c0e76dafbb5a45f",
       "path": "scripts/test-live-intake-identity.sh",
       "sha256": "00362c34ed01b182a825ec767a0dfaaa8e1d65a5792592c9bd978364b702bd45",
@@ -60164,6 +59953,30 @@
       ]
     },
     {
+      "id": "SURFACE-078dea30964c514e",
+      "path": "scripts/test-studio-gallery-migration.sh",
+      "sha256": "42cf15ffb993ed44439390aec75f82944a94a8dcb92b9ec86fd44fb3a6604087",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-210fe9c567c3a287",
+      "path": "scripts/test-studio-gallery-runner-safety.py",
+      "sha256": "2b2905f47cd1f07113cc8af3e9be163338ef27cc164bba03b3779738f7541dfd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-df93425ce321f1fb",
       "path": "scripts/test-studio-internship-audit-api-e2e.mjs",
       "sha256": "2c4671ee52541c181cfe9e00d8bc7d0f98e8e54921adc513c0bf9aa657662c40",
@@ -60735,7 +60548,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "ab416caa2847fcedfb71d3a90f351158a06a67b2da3aa6929965dad462c9e8e4",
+      "sha256": "690c47575dc80407e8fbc43a5680f9addc5f92adb415eff9f7629ba9fd9d1bdc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60776,18 +60589,6 @@
       "requirements": [
         {
           "requirement": "PAY-INVOICE-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-1fa60e8e102a61f0",
-      "path": "scripts/verify-lesson-slot-suggestions.py",
-      "sha256": "5f008ce192e3caa0076d1e48b8f6c265a598a0600ac2ffcc05dcc747020e145e",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
           "relationship": "tests"
         }
       ]
@@ -63274,7 +63075,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "00f51bd19f4c6f1fecbd66abd4a7c91da7da1287097c3e2436be604266f215fa",
+      "sha256": "4d69c011a18e29d7d141d37f27046b912a04d2e1c56267961e95b404e2922dc3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64073,7 +63874,7 @@
     {
       "id": "SURFACE-356a0fb82dec0531",
       "path": "tdf-hq-ui/src/api/trials.ts",
-      "sha256": "81a2d1a7b1df340c1c7f9e624750de8e1c1dfc7fa286d6055c459077f00d75fa",
+      "sha256": "fca9409feb0bf923e58c3d814bfa9ad3390855c417898415d769d3da054b1da6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -67444,54 +67245,6 @@
       ]
     },
     {
-      "id": "SURFACE-c967a1b6522860dc",
-      "path": "tdf-hq-ui/src/features/school/LessonSlotSuggestions.test.tsx",
-      "sha256": "ad2de9e441d17789ef86cdff091a4e875a80d8a4af4a5182e696a331e038443c",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-e54f738b76dabce0",
-      "path": "tdf-hq-ui/src/features/school/LessonSlotSuggestions.tsx",
-      "sha256": "806d4fff84767b75a900119c3e73eb13603bd011de5d65a956ab218abee691cb",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-e63de345c7d87dc7",
-      "path": "tdf-hq-ui/src/features/school/slotSuggestionHelpers.test.ts",
-      "sha256": "11be4018fd68595eae9ffb15bc413f6c685d4bd2e4631795db5e518438320175",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-3849f5e53c738672",
-      "path": "tdf-hq-ui/src/features/school/slotSuggestionHelpers.ts",
-      "sha256": "c8da45b4ce7d4e8453689d8abcbcc4dea0972321f3d1151e0b9ce470aa63c224",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-becf808f14372711",
       "path": "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
       "sha256": "d6419557dc90a2248dc8560cfc5a8260e0297fc3354e7b652fd6f11098bc67e5",
@@ -68533,15 +68286,11 @@
     {
       "id": "SURFACE-79ffba0a412d33ff",
       "path": "tdf-hq-ui/src/pages/ClassesPage.tsx",
-      "sha256": "b7fa2258a340e6d6e2df21893fd6c594d53625866450c693cce6941722afa516",
+      "sha256": "2c4c084a7e9287144589b96f3ac9a2ff6c3775bc854c0df027f3717bfa85c203",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "WEB-CONTENT-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
           "relationship": "implementation"
         }
       ]
@@ -74335,18 +74084,6 @@
       "requirements": []
     },
     {
-      "id": "SURFACE-378298bad2ee1dcb",
-      "path": "tdf-hq/app/SlotSuggestionsOracle.hs",
-      "sha256": "6c7c97b7d3b575418900067593200e497a7457e14ad487794cc3997e162bac7d",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-33d7f13a443a2699",
       "path": "tdf-hq/app/gen-migration.hs",
       "sha256": "c2498fec18b3d1f5a4bf4d65accf95635a4a78712b29c4b598655c5048019da6",
@@ -74467,7 +74204,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "82fed41522684e8b488df40a9ab0196a209880f12ff7318524505cae347a5b56",
+      "sha256": "fe5cd443b400722be794c27aa7d29696696f0328fbb8beb408ddc6fc7f9c892d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79098,6 +78835,18 @@
       ]
     },
     {
+      "id": "SURFACE-d4ecbdf088675af2",
+      "path": "tdf-hq/sql/2026-11-07_studio_gallery.sql",
+      "sha256": "7da04908fd0947a2fa420932eeaf9fa8a224d88b0a238913d652173654571cab",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-a5284041219da02a",
       "path": "tdf-hq/sql/2026-11-08_marketplace_offers.sql",
       "sha256": "fb65c76c3474d465f5463b63d441d9dcd0965e311af8bde7eb6527d1ac8a3ea5",
@@ -79217,30 +78966,6 @@
       "requirements": [
         {
           "requirement": "MKT-AGREEMENT-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-64f0d33241d88cb0",
-      "path": "tdf-hq/sql/2026-11-21_school_schedule_occupancy.sql",
-      "sha256": "c45efc93521da8da94082adbf13eda6c2ed43b4e42dc7c111afd39acf09a582d",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-1f2783ae92290923",
-      "path": "tdf-hq/sql/2026-11-21_school_schedule_occupancy_rollback.sql",
-      "sha256": "bbc6bb3811f0d04b74287aaf9617e4527d102fbf222e3c0495b83c87afde8ab8",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
           "relationship": "implementation"
         }
       ]
@@ -80804,7 +80529,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "6aa7a131454c3aec49bf00967bb6fe116c2dd8fbe0d1ae3c4a57e854646b5b7d",
+      "sha256": "5c41c41baf78a5dc1d5b79fe2039dcb6004f41abf1fe58cb146d047d4e4115ee",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83373,7 +83098,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "2215624a3c8dc69a0ab7bc24d176cf93a6b3af33e3340916ebfda012fc4552e2",
+      "sha256": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83990,7 +83715,7 @@
     {
       "id": "SURFACE-4d1393b620b6aed0",
       "path": "tdf-hq/src/TDF/Trials/API.hs",
-      "sha256": "e6a73b9a2999e95f713b34620fefb9217027c505acbe6f2dab6703f359c4f0ec",
+      "sha256": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84016,24 +83741,15 @@
         {
           "requirement": "SCHOOL-TEACHER-STUDENT-001",
           "relationship": "implementation"
-        },
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-          "relationship": "implementation"
         }
       ]
     },
     {
       "id": "SURFACE-981d668b9e163412",
       "path": "tdf-hq/src/TDF/Trials/DTO.hs",
-      "sha256": "151f8670f041102883d6c4aeb25bdeb2b445d180de61f55a75b9c48d389771b0",
+      "sha256": "38d67a2f72bb7f574fa2ba47b748dc3dde2a1dd87d12a329a31d011519d7dfbf",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-fef2c7b829d4aefc",
@@ -84057,7 +83773,7 @@
     {
       "id": "SURFACE-f9d35ff622573006",
       "path": "tdf-hq/src/TDF/Trials/Server.hs",
-      "sha256": "63fb60b4ade0b1638b9e327f381fca1bcc25b00f074ab7959f37e70f4865af52",
+      "sha256": "c617719d5173d354e462ee6d64fc334243313958beeaa69a6cd911d69743d4a0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84090,22 +83806,6 @@
         },
         {
           "requirement": "SCHOOL-TEACHER-STUDENT-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-7319ba3beaa31203",
-      "path": "tdf-hq/src/TDF/Trials/SlotSuggestions.hs",
-      "sha256": "fd1f7fae54b51c6795ff2baa375c1ccb7eff4fc013778c52cd50dae9b6d6ea3c",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
           "relationship": "implementation"
         }
       ]
@@ -84208,7 +83908,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "c943105f4f1b10d7553dcec7bab679244787d43a370ad1645ab98049d0ddaeba",
+      "sha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84399,7 +84099,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "75e1b254c2cbbfbc8ffa9611ad4aabcd1386fdfa4a4f9b4d2dc3675e9af6f181",
+      "sha256": "7ef32ba3699ea33cbe3c1728f8f32db4351651311c8d99fbdeaa75720a936455",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85204,7 +84904,7 @@
     {
       "id": "SURFACE-6a2ebecd249230c2",
       "path": "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
-      "sha256": "69f032de23ccc8bc5e4f709d593c41f748f6aed281514470fbb00ef071e28c38",
+      "sha256": "bc4f5e6053643ddcbae742e1690e44f5698c6f527f86874723c3bf014ceda57a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85907,7 +85607,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "1911c06627e072446d0059774ea170e0f4cc4459080f372e1a5365eb3e809b5e",
+      "sha256": "f1f75ad6c396357a04567b49f5150976942b20617a734b540e54aed7a3d250fc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86368,7 +86068,7 @@
     {
       "id": "SURFACE-6a608596a0a41e90",
       "path": "tdf-hq/test/TDF/TrialIdentitySpec.hs",
-      "sha256": "0396689e05f550caa0dd75909cf0536bca39bc3ed64f0c50ff780750b530511b",
+      "sha256": "b0aedc327dffadf0a90fa678a2a1baa4a5a619175585c0a8ad469c37fa4a2f63",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86384,7 +86084,7 @@
     {
       "id": "SURFACE-15bc343962df8561",
       "path": "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
-      "sha256": "f74f8ac1026283bf624373db16161741794f20a0e8305328709e7dd6ff55fb3a",
+      "sha256": "eebde69c59c367555188cf00435c64dadb9b0c0c99fa724f58cade0c427b2242",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86409,18 +86109,6 @@
         },
         {
           "requirement": "SCHOOL-TEACHER-STUDENT-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-7017451c6e1e194d",
-      "path": "tdf-hq/test/TDF/Trials/SlotSuggestionsSpec.hs",
-      "sha256": "78cf6987131f09f5618277304b9dd11766bcde27d6bb6df807b3c8bc12f3989e",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
           "relationship": "tests"
         }
       ]
@@ -89371,7 +89059,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "00f51bd19f4c6f1fecbd66abd4a7c91da7da1287097c3e2436be604266f215fa",
+      "sha256": "4d69c011a18e29d7d141d37f27046b912a04d2e1c56267961e95b404e2922dc3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -91842,6 +91530,7 @@
     "SURFACE-85aae9756eda5339",
     "SURFACE-5f3c565954968d6a",
     "SURFACE-24f8d92d510c1f2c",
+    "SURFACE-981d668b9e163412",
     "SURFACE-8f34cfa4bb16ce16",
     "SURFACE-35696a048b2fd035",
     "SURFACE-41f19892e354f9ef",
@@ -93499,7 +93188,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "97baa9cf70787d247f3393bd7df8e3d33bad5256d57cdb33e9d33f9e5ff7cb76",
+      "sourceSha256": "09f26ccf76b575627975bb48e13541cc4a0c2f27116abf6aaa5baa60dffcf36b",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -93527,7 +93216,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "97baa9cf70787d247f3393bd7df8e3d33bad5256d57cdb33e9d33f9e5ff7cb76",
+      "sourceSha256": "09f26ccf76b575627975bb48e13541cc4a0c2f27116abf6aaa5baa60dffcf36b",
       "definition": {
         "states": [
           "absent",
@@ -93557,7 +93246,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "97baa9cf70787d247f3393bd7df8e3d33bad5256d57cdb33e9d33f9e5ff7cb76",
+      "sourceSha256": "09f26ccf76b575627975bb48e13541cc4a0c2f27116abf6aaa5baa60dffcf36b",
       "definition": {
         "export": [
           "queued",
@@ -94782,25 +94471,6 @@
         "401",
         "403",
         "409"
-      ],
-      "conformance": "not-established-by-client-generation"
-    },
-    {
-      "id": "GET /trials/v1/class-sessions/suggestions",
-      "operationId": "suggestLessonSlots",
-      "source": "tdf-hq/docs/openapi/api.yaml",
-      "security": [
-        {
-          "bearerAuth": []
-        }
-      ],
-      "responses": [
-        "200",
-        "400",
-        "401",
-        "403",
-        "404",
-        "422"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -116967,7 +116637,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 229,
+    "PARTIAL": 228,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
