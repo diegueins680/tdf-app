@@ -21589,6 +21589,84 @@
       "historicalStatus": null
     },
     {
+      "id": "EVT-MY-TICKETS-001",
+      "title": "Mis entradas on the web lists the buyer's ticket orders without new access",
+      "domain": "EVT",
+      "statement": "/mis-entradas lists, newest first, the ticket orders whose private lookup key this browser saved during guest checkout (at most 30 per visit, each read with its own key through the existing public order endpoint) and, when signed in, the orders returned by GET /social-events/ticket-orders for the account. Each order shows event title, date, venue, ticket count, total and one of four states (paid, payment pending, no valid tickets, status unconfirmed). A guest order opens its private order page, with 'Completar pago' only for a known holding/awaiting-payment order with an unexpired seat hold; processing orders link to payment status; an account order opens its event and lists only its issued ticket codes once paid or partially refunded. An order present in both sources is shown once. A paid guest order page links to /mis-entradas. The registry lists social.tickets at /mis-entradas with optional authentication.",
+      "authority": "Owner request 2026-11-10/11: implement the fixes and improvements from the cognitive-load audit (plan item 27, Mis entradas on the web), within its guardrails; owner said 'Continue' on 2026-11-19.",
+      "source": "Cognitive-load audit 2026-11-10, plan item 27.",
+      "contract": "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
+      "actors": [
+        "Visitor with guest purchases in this browser",
+        "Signed-in buyer"
+      ],
+      "preconditions": [
+        "Guest orders: a lookup key saved by PublicEventTicketsPage in this browser",
+        "Account orders: a signed-in session"
+      ],
+      "inputs": [
+        "GET /public/events/{eventId}/ticket-orders/{orderId} with X-Order-Lookup-Token",
+        "GET /public/events/{eventId}/tickets",
+        "GET /social-events/ticket-orders"
+      ],
+      "state": {
+        "order": [
+          "paid",
+          "payment pending",
+          "no valid tickets",
+          "status unconfirmed",
+          "unreadable"
+        ]
+      },
+      "allowedTransitions": [
+        "payment pending -> paid when the server reports a paid order"
+      ],
+      "forbiddenTransitions": [
+        "An order shown as paid without a server-reported paid status",
+        "An unreadable saved order shown with a guessed status"
+      ],
+      "effects": [
+        "None: the page only reads"
+      ],
+      "authorization": "No new access. Guest orders are readable only with the key this browser already holds; account orders come from the existing authenticated endpoint scoped to the caller.",
+      "privacy": "Lookup keys never appear in visible text or URLs; the order page reads its key from browser storage. The page is noindex,nofollow.",
+      "concurrency": "Each mounted view and current account/session epoch owns its query results. Reads completing after an ownership or auth-epoch change are rejected. Query keys contain no lookup credentials.",
+      "idempotency": "Read-only.",
+      "failure": "An order whose key no longer reads is counted in a notice pointing to its confirmation email and is not listed with a status. A failed account read shows a retry and keeps browser orders. A missing event title falls back to the event number. Failed rereads hide cached private data; guest responses with different order/event identities are rejected. Unknown server statuses remain unconfirmed, and failed reads never produce the empty-purchases state.",
+      "recovery": "Retry for account orders; a reload re-reads browser orders.",
+      "observability": "None beyond existing API telemetry.",
+      "property": "Listed orders are exactly the readable saved-key orders plus the account's orders, each once, with a state derived only from the server status.",
+      "implementation": [
+        "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
+        "tdf-hq-ui/src/utils/deviceTicketOrders.ts",
+        "tdf-hq-ui/src/api/myTicketOrders.ts",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq/assets/feature-registry.json"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx",
+        "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "e2e/web/my-tickets.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "16 focused unit cases and 14 browser journeys across all seven configured profiles; full UI TypeScript and focused lint.",
+      "evidence": "Local unit/browser execution with synthetic API fixtures and screenshots; no provider or production evidence.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Focused unit and seven-profile browser evidence cover guest keys, account tickets, session changes, cached read failures, mismatched order identities, processing and unknown statuses, and partial refunds. No production observation.",
+      "ambiguity": [
+        "Guest web orders are not linked to an account, so a purchase made in another browser appears only through its confirmation email link."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Verified read-only UI boundary with synthetic APIs; deployment, provider payments and production use remain unverified."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "QA-REPORT-AUTHORING-001",
       "title": "Internal testing report drafting, editing and submission",
       "statement": "A tester drafts an internal report linked to their active audit task, edits it while it is a draft or needs information, and submits it; administrators triage it through its state machine. Routes: POST /feedback/internal; PATCH /feedback/internal/{reportId}; POST /feedback/internal/{reportId}/submit.",
