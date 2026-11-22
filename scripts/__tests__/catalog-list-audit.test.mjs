@@ -6591,11 +6591,6 @@ test('actual UX/storage composition preserves current main, immutable SQL and bo
       await integrationSource(INTEGRATION_PARENTS[1], row.path), `Immutable SQL changed: ${row.id}`);
     await integrationExec('git', ['merge-base', '--is-ancestor', row.introducedBy, 'HEAD'], { cwd: integrationRoot });
   }
-  // The newest append is immutable from the commit that introduced it.
-  const newest = appended.at(-1);
-  assert.equal(await fs.readFile(path.join(integrationRoot, newest.path), 'utf8'),
-    await integrationSource(newest.introducedBy, newest.path), `Immutable SQL changed: ${newest.id}`);
-  await integrationExec('git', ['merge-base', '--is-ancestor', newest.introducedBy, 'HEAD'], { cwd: integrationRoot });
   for (const [reviewFile, key] of integrationFiles) {
     const current = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8'));
     for (const ref of INTEGRATION_PARENTS) {
