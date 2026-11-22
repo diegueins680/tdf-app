@@ -19246,6 +19246,104 @@
       "historicalStatus": null
     },
     {
+      "id": "COMMUNITY-FRIEND-SUGGESTION-001",
+      "title": "Friend suggestions ranked by personalized PageRank over follows",
+      "statement": "Behind FRIEND_SUGGESTIONS_PAGERANK_ENABLED (off by default), GET /social/suggestions returns the stored result of a nightly personalized PageRank over party_follow for the signed-in viewer: a random walk with restart at the viewer (damping 0.85, 100 iterations, dead ends return to the viewer) over live, provider-verified people at least seven days old with an open profile and no block with the viewer, ordered by score and then party id, at most 20 of the 50 stored. With the flag off, for a viewer who opted out of personalization, without the schema or social-v2 policy, without a stored result younger than 48 hours, when any party that carried score for the viewer is no longer eligible, or on any read failure, the route returns exactly the previous second-degree count answer.",
+      "domain": "COMMUNITY",
+      "authority": "Owner request and approval of 2026-11-21: the rule, its constants and the nine decisions of the proposal in formal/system/friend-suggestions-pagerank.md. Four departures from the approved text are recorded there.",
+      "source": "formal/system/friend-suggestions-pagerank.md",
+      "contract": "tdf-hq/src/TDF/Social/SuggestionRank.hs",
+      "property": "For every viewer v and step t: p_t >= 0 /\\ SUM p_t = 1 /\\ (a \\notin nodes(G_v) => p_t(a) = 0); p_t depends only on v and the follows between nodes of G_v; norm1(p_100 - p*) <= 2 * 0.85^100 < 2e-7. For every returned personalized entry a: a # v /\\ a stored for v /\\ eligibleNow(v, a) /\\ no follow between v and a /\\ every party in support(v) is eligible now. flagOff \\/ optedOut(v) => response = fallback(v).",
+      "actors": [
+        "Authenticated party",
+        "Nightly run (one API replica under an advisory lock)"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect), revalidated in the read transaction",
+        "Migration tdf-hq/sql/2026-11-21_social_friend_suggestions.sql applied and the social-v2 policy installed; otherwise the fallback is returned",
+        "FRIEND_SUGGESTIONS_PAGERANK_ENABLED=true when the API starts, for the run to be scheduled"
+      ],
+      "inputs": [
+        "GET /social/suggestions",
+        "party_follow, party, user_credential, auth_provider_identity, social_v2_preference and social_v2_pair rows at the run's snapshot"
+      ],
+      "state": {
+        "initial": "No stored result",
+        "terminal": [
+          "Stored result of the latest run",
+          "Fallback answer"
+        ]
+      },
+      "allowedTransitions": [
+        "Run: snapshot -> scores for every eligible viewer that did not opt out -> replace all stored results in one transaction",
+        "Read: stored result usable -> personalized entries; otherwise -> fallback"
+      ],
+      "forbiddenTransitions": [
+        "A blocked, closed, deactivated, organisation, too new or unverified party holding score or passing score to another party",
+        "Returning a party the installed follow policy refuses for the viewer, the viewer, or a party connected to the viewer by a follow",
+        "Serving a stored result while any party of its support is no longer eligible for the viewer",
+        "Returning a personalized entry to a viewer who opted out, or while the flag is off",
+        "Returning a score or a count derived from other parties' follows",
+        "A reader observing a mixture of two runs"
+      ],
+      "effects": [
+        "Run: one social_suggestion_run row, one social_suggestion_viewer row per computed viewer and up to 50 social_suggestion_score rows each; every earlier run is deleted.",
+        "Read: none."
+      ],
+      "authorization": "The caller's own party only, taken from the session. Stored rows are read only for their viewer.",
+      "privacy": "Follows are used as evidence without being disclosed: a personalized entry carries a party id and the reason code only, no score, no count and no third party. Hidden, closed, blocked and deactivated parties are neither returned nor used as evidence at the run, and a later exclusion of any evidence party sends the viewer to the fallback. A viewer with personalized=false receives exactly the fallback and has no stored rows after the next run.",
+      "concurrency": "The run reads one REPEATABLE READ snapshot and replaces all results in one transaction; a PostgreSQL advisory lock admits one replica. Reads run at the pool's default isolation and re-apply eligibility and connection checks at request time.",
+      "idempotency": "The read is read-only. A repeated run replaces the stored results with the results of the later snapshot.",
+      "failure": "Any refusal, missing schema, stale or missing result, invalid session or database error on the personalized path leads to the fallback, which applies its own checks and errors. A failed run leaves the previous results, which stop being served 48 hours after their run.",
+      "recovery": "Turn the flag off: the route returns the fallback without touching the tables. tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql drops the three derived tables.",
+      "observability": "One log line per run with viewer and candidate counts, or the failure.",
+      "implementation": [
+        "tdf-hq/src/TDF/Social/SuggestionRank.hs",
+        "tdf-hq/src/TDF/Social/SuggestionStore.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/src/TDF/Social/RelationshipReads.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql",
+        "tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql",
+        "tdf-hq-ui/src/features/social/suggestionReason.ts",
+        "tdf-hq-ui/src/pages/SocialPage.tsx",
+        "tdf-hq-ui/src/api/types.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs",
+        "tdf-hq/test/TDF/Social/SuggestionStoreSpec.hs",
+        "scripts/test-friend-suggestions-sql.py",
+        "scripts/test-friend-suggestions-postgres.sh",
+        "scripts/verify-friend-suggestion-pagerank.py",
+        "tdf-hq-ui/src/features/social/suggestionReason.test.ts"
+      ],
+      "formalModels": [
+        "formal/event-operations/FriendSuggestionGraph.als",
+        "scripts/verify-friend-suggestion-pagerank.py"
+      ],
+      "verification": "PROVED (Z3, exact reals, one step, every viewer, node set and follow relation up to 4 accounts; negative control for each): a step keeps a distribution on the viewer's graph a distribution, dead ends included; an account outside the graph holds no score and follow rows touching it do not change the step; a step contracts the L1 distance by the damping (symbolic up to 3 accounts, per follow relation with the viewer fixed and all accounts nodes at 4); 2 * 0.85^100 < 2e-7. The induction over iterations and the fixed-point argument are a hand proof in the contract. BOUNDED MODEL (Alloy 6.2.0, up to 5 accounts, six mutation controls): follows by or to accounts failing the age or email filter leave every viewer's graph unchanged; only live, aged, verified accounts are reachable; a block in either direction removes the account. TESTED (Hspec + QuickCheck): the Haskell ranking over exact Rational and over Double (sum within 1e-9), exclusions, ordering, limits, input-order independence, the run's per-viewer computation, the flag and the fallback JSON. TESTED (PostgreSQL 16): the statements extracted from the Haskell source and the migration, 12 accounts and 15 read scenarios including opt-out, staleness and each evidence exclusion. TESTED (Jest): the web label.",
+      "evidence": "scripts/verify-friend-suggestion-pagerank.py --max-nodes 4 output; scripts/verify-alloy-controls.mjs result for FriendSuggestionGraph.als; tdf-hq-test SuggestionRankSpec and SuggestionStoreSpec runs; scripts/test-friend-suggestions-sql.py output; Jest suggestionReason run.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the one-step walk properties on bounded graphs (machine-checked) and for the Haskell ranking and the SQL on the fixture (tested). Medium for convergence at any size, which rests on a hand proof whose step is machine-checked only on bounded graphs. The handler and job wiring are covered by compilation, the flag-off and no-session tests and review only.",
+      "ambiguity": [
+        "The Z3 step is a hand translation of walkStep; correspondence with the Haskell and SQL text is not machine-checked, and Double rounding is outside the proof.",
+        "Verified email means an auth_provider_identity binding; a completed password reset is not counted, so password-only accounts always receive the fallback (narrower than approved).",
+        "The follow-policy filter is exercised against a stand-in with the migrated signature, not the migrated social_v2_profile_eligible itself; no HTTP-level test runs the route or the run against a fully migrated database.",
+        "Account age is party.created_at; credentials have no creation time.",
+        "The filters stop only accounts that fail them; whether the legacy friend writer still lets one side create both directions was not checked.",
+        "Mobile reads the route with a hand-written type and would show a zero mutual count for a personalized entry; the flag must stay off until Mobile handles sfReason.",
+        "The migration is not registered in scripts/production-migrations.json; the manifest successor review is pending, so production has no score tables and the route returns the fallback even with the flag on.",
+        "Production activation state of social-v2 and the size of party_follow were not observed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Core properties proved on bounded graphs and tested; SQL tested on a fixture; HTTP-level checks on the migrated schema, the Mobile presentation and production observations remain."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "COMMUNITY-FAN-NOTIFICATION-001",
       "title": "Marking own notifications read",
       "statement": "A signed-in party marks one or all of their own notifications read. Routes: POST /fans/me/notifications/{notifId}/read; POST /fans/me/notifications/read-all.",

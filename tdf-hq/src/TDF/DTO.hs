@@ -280,11 +280,16 @@ data PartyFollowDTO = PartyFollowDTO
   } deriving (Show, Generic)
 instance ToJSON PartyFollowDTO
 
+-- | @sfReason@ is absent for the mutual-count answer, whose JSON is unchanged,
+-- and @"network"@ for an entry ranked by COMMUNITY-FRIEND-SUGGESTION-001, whose
+-- @sfMutualCount@ is 0 and carries no meaning.
 data SuggestedFriendDTO = SuggestedFriendDTO
   { sfPartyId       :: Int64
   , sfMutualCount   :: Int
+  , sfReason        :: Maybe Text
   } deriving (Show, Generic)
-instance ToJSON SuggestedFriendDTO
+instance ToJSON SuggestedFriendDTO where
+  toJSON = genericToJSON defaultOptions { omitNothingFields = True }
 
 data ChatThreadDTO = ChatThreadDTO
   { ctThreadId         :: Int64

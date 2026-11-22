@@ -19247,6 +19247,104 @@
       "historicalStatus": null
     },
     {
+      "id": "COMMUNITY-FRIEND-SUGGESTION-001",
+      "title": "Friend suggestions ranked by personalized PageRank over follows",
+      "statement": "Behind FRIEND_SUGGESTIONS_PAGERANK_ENABLED (off by default), GET /social/suggestions returns the stored result of a nightly personalized PageRank over party_follow for the signed-in viewer: a random walk with restart at the viewer (damping 0.85, 100 iterations, dead ends return to the viewer) over live, provider-verified people at least seven days old with an open profile and no block with the viewer, ordered by score and then party id, at most 20 of the 50 stored. With the flag off, for a viewer who opted out of personalization, without the schema or social-v2 policy, without a stored result younger than 48 hours, when any party that carried score for the viewer is no longer eligible, or on any read failure, the route returns exactly the previous second-degree count answer.",
+      "domain": "COMMUNITY",
+      "authority": "Owner request and approval of 2026-11-21: the rule, its constants and the nine decisions of the proposal in formal/system/friend-suggestions-pagerank.md. Four departures from the approved text are recorded there.",
+      "source": "formal/system/friend-suggestions-pagerank.md",
+      "contract": "tdf-hq/src/TDF/Social/SuggestionRank.hs",
+      "property": "For every viewer v and step t: p_t >= 0 /\\ SUM p_t = 1 /\\ (a \\notin nodes(G_v) => p_t(a) = 0); p_t depends only on v and the follows between nodes of G_v; norm1(p_100 - p*) <= 2 * 0.85^100 < 2e-7. For every returned personalized entry a: a # v /\\ a stored for v /\\ eligibleNow(v, a) /\\ no follow between v and a /\\ every party in support(v) is eligible now. flagOff \\/ optedOut(v) => response = fallback(v).",
+      "actors": [
+        "Authenticated party",
+        "Nightly run (one API replica under an advisory lock)"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect), revalidated in the read transaction",
+        "Migration tdf-hq/sql/2026-11-21_social_friend_suggestions.sql applied and the social-v2 policy installed; otherwise the fallback is returned",
+        "FRIEND_SUGGESTIONS_PAGERANK_ENABLED=true when the API starts, for the run to be scheduled"
+      ],
+      "inputs": [
+        "GET /social/suggestions",
+        "party_follow, party, user_credential, auth_provider_identity, social_v2_preference and social_v2_pair rows at the run's snapshot"
+      ],
+      "state": {
+        "initial": "No stored result",
+        "terminal": [
+          "Stored result of the latest run",
+          "Fallback answer"
+        ]
+      },
+      "allowedTransitions": [
+        "Run: snapshot -> scores for every eligible viewer that did not opt out -> replace all stored results in one transaction",
+        "Read: stored result usable -> personalized entries; otherwise -> fallback"
+      ],
+      "forbiddenTransitions": [
+        "A blocked, closed, deactivated, organisation, too new or unverified party holding score or passing score to another party",
+        "Returning a party the installed follow policy refuses for the viewer, the viewer, or a party connected to the viewer by a follow",
+        "Serving a stored result while any party of its support is no longer eligible for the viewer",
+        "Returning a personalized entry to a viewer who opted out, or while the flag is off",
+        "Returning a score or a count derived from other parties' follows",
+        "A reader observing a mixture of two runs"
+      ],
+      "effects": [
+        "Run: one social_suggestion_run row, one social_suggestion_viewer row per computed viewer and up to 50 social_suggestion_score rows each; every earlier run is deleted.",
+        "Read: none."
+      ],
+      "authorization": "The caller's own party only, taken from the session. Stored rows are read only for their viewer.",
+      "privacy": "Follows are used as evidence without being disclosed: a personalized entry carries a party id and the reason code only, no score, no count and no third party. Hidden, closed, blocked and deactivated parties are neither returned nor used as evidence at the run, and a later exclusion of any evidence party sends the viewer to the fallback. A viewer with personalized=false receives exactly the fallback and has no stored rows after the next run.",
+      "concurrency": "The run reads one REPEATABLE READ snapshot and replaces all results in one transaction; a PostgreSQL advisory lock admits one replica. Reads run at the pool's default isolation and re-apply eligibility and connection checks at request time.",
+      "idempotency": "The read is read-only. A repeated run replaces the stored results with the results of the later snapshot.",
+      "failure": "Any refusal, missing schema, stale or missing result, invalid session or database error on the personalized path leads to the fallback, which applies its own checks and errors. A failed run leaves the previous results, which stop being served 48 hours after their run.",
+      "recovery": "Turn the flag off: the route returns the fallback without touching the tables. tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql drops the three derived tables.",
+      "observability": "One log line per run with viewer and candidate counts, or the failure.",
+      "implementation": [
+        "tdf-hq/src/TDF/Social/SuggestionRank.hs",
+        "tdf-hq/src/TDF/Social/SuggestionStore.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/src/TDF/Social/RelationshipReads.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql",
+        "tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql",
+        "tdf-hq-ui/src/features/social/suggestionReason.ts",
+        "tdf-hq-ui/src/pages/SocialPage.tsx",
+        "tdf-hq-ui/src/api/types.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs",
+        "tdf-hq/test/TDF/Social/SuggestionStoreSpec.hs",
+        "scripts/test-friend-suggestions-sql.py",
+        "scripts/test-friend-suggestions-postgres.sh",
+        "scripts/verify-friend-suggestion-pagerank.py",
+        "tdf-hq-ui/src/features/social/suggestionReason.test.ts"
+      ],
+      "formalModels": [
+        "formal/event-operations/FriendSuggestionGraph.als",
+        "scripts/verify-friend-suggestion-pagerank.py"
+      ],
+      "verification": "PROVED (Z3, exact reals, one step, every viewer, node set and follow relation up to 4 accounts; negative control for each): a step keeps a distribution on the viewer's graph a distribution, dead ends included; an account outside the graph holds no score and follow rows touching it do not change the step; a step contracts the L1 distance by the damping (symbolic up to 3 accounts, per follow relation with the viewer fixed and all accounts nodes at 4); 2 * 0.85^100 < 2e-7. The induction over iterations and the fixed-point argument are a hand proof in the contract. BOUNDED MODEL (Alloy 6.2.0, up to 5 accounts, six mutation controls): follows by or to accounts failing the age or email filter leave every viewer's graph unchanged; only live, aged, verified accounts are reachable; a block in either direction removes the account. TESTED (Hspec + QuickCheck): the Haskell ranking over exact Rational and over Double (sum within 1e-9), exclusions, ordering, limits, input-order independence, the run's per-viewer computation, the flag and the fallback JSON. TESTED (PostgreSQL 16): the statements extracted from the Haskell source and the migration, 12 accounts and 15 read scenarios including opt-out, staleness and each evidence exclusion. TESTED (Jest): the web label.",
+      "evidence": "scripts/verify-friend-suggestion-pagerank.py --max-nodes 4 output; scripts/verify-alloy-controls.mjs result for FriendSuggestionGraph.als; tdf-hq-test SuggestionRankSpec and SuggestionStoreSpec runs; scripts/test-friend-suggestions-sql.py output; Jest suggestionReason run.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the one-step walk properties on bounded graphs (machine-checked) and for the Haskell ranking and the SQL on the fixture (tested). Medium for convergence at any size, which rests on a hand proof whose step is machine-checked only on bounded graphs. The handler and job wiring are covered by compilation, the flag-off and no-session tests and review only.",
+      "ambiguity": [
+        "The Z3 step is a hand translation of walkStep; correspondence with the Haskell and SQL text is not machine-checked, and Double rounding is outside the proof.",
+        "Verified email means an auth_provider_identity binding; a completed password reset is not counted, so password-only accounts always receive the fallback (narrower than approved).",
+        "The follow-policy filter is exercised against a stand-in with the migrated signature, not the migrated social_v2_profile_eligible itself; no HTTP-level test runs the route or the run against a fully migrated database.",
+        "Account age is party.created_at; credentials have no creation time.",
+        "The filters stop only accounts that fail them; whether the legacy friend writer still lets one side create both directions was not checked.",
+        "Mobile reads the route with a hand-written type and would show a zero mutual count for a personalized entry; the flag must stay off until Mobile handles sfReason.",
+        "The migration is not registered in scripts/production-migrations.json; the manifest successor review is pending, so production has no score tables and the route returns the fallback even with the flag on.",
+        "Production activation state of social-v2 and the size of party_follow were not observed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Core properties proved on bounded graphs and tested; SQL tested on a fixture; HTTP-level checks on the migrated schema, the Mobile presentation and production observations remain."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "COMMUNITY-FAN-NOTIFICATION-001",
       "title": "Marking own notifications read",
       "statement": "A signed-in party marks one or all of their own notifications read. Routes: POST /fans/me/notifications/{notifId}/read; POST /fans/me/notifications/read-all.",
@@ -28922,7 +29020,7 @@
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/domo-refund-validation.yml": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
-    ".github/workflows/event-operations-formal.yml": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
+    ".github/workflows/event-operations-formal.yml": "c21eb6b54adb591f22cd8b7de5c72ddae5976f07550d05785521256eb8f0ef09",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -29068,6 +29166,7 @@
     "formal/event-operations/EventOrganizerTrustEarlierRead.cfg": "55781bffd01b28268c218fe896d026901db6ad84803b38c89359a5e290f2b430",
     "formal/event-operations/EventOrganizerUnconditionalWrite.cfg": "f735a2ec461f4995718cd73d66940e3e81e74cb166498b239100051de506e479",
     "formal/event-operations/FanHubOnboarding.tla": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
+    "formal/event-operations/FriendSuggestionGraph.als": "87c56e84eef9fb4d86abe2f89fe5665ba4e524eab1c340d175a2147c0c681323",
     "formal/event-operations/HostedServicePayment.cfg": "29663fa3078459cb0abf5de479b7206aa840c6779fc9522f2eefa9d1592d2227",
     "formal/event-operations/HostedServicePayment.tla": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
     "formal/event-operations/HostedServicePaymentAtomic.cfg": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
@@ -29336,7 +29435,7 @@
     "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "295b95d49c91a52a8b5bcaa7f037f3657be2807af9c450ad991529292bb94dfd",
+    "formal/system/recovery-expiry-arithmetic.json": "c4e7ef6487e88f433b9f1f80fc8e9aba4e3059b13795289e265f8e117d005199",
     "formal/system/route-requirements.json": "df5ba57041c1061ce8c325253fc66e48dd5558680f6fcf279ef7403be63355fb",
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -29527,7 +29626,7 @@
     "scripts/install-recovery-tools.py": "87e21bcbbf08076148d6b5d0aca5464afedad77ec209a5cf95439ab440e286a0",
     "scripts/interactions/test-api.py": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
     "scripts/interactions/test-http.sh": "087ac80166a5381eff9e60417685428c462721533324a7dd7c96cf6b7968a41a",
-    "scripts/lib/alloy-controls.mjs": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
+    "scripts/lib/alloy-controls.mjs": "365e27d342ff335f000bf81887f8546cf5ecd9e9cbc7424c857f0ecc0402efa7",
     "scripts/lib/auth_throttle_http.py": "c30b34ba0e5057b013ffd601421ed462c61a71e61e51e25f233e130d3c915989",
     "scripts/lib/compiled-api-surface.mjs": "71831644e36c3e2d5e2a51309d701aab8b08f5b3a43ca9ff4ea085b30aef1437",
     "scripts/lib/continuous-improvement-loop-verify.mjs": "3db41dd0683f33d1a03d46f402e6cd9c25a4e07cd2b690a179ba8e6744fc9f97",
@@ -29648,6 +29747,8 @@
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-event-raci-browser.sh": "1f5732fd0fd9fb56085843be0c3746d92dab1f337973447fec44adca6e8afbd5",
     "scripts/test-event-ticket-sale.sh": "c0c48f9127eaad19269847d29dafb7b056ba433936e81e96a32f252dc60c5c64",
+    "scripts/test-friend-suggestions-postgres.sh": "475a761847eb4abcd395f68d65a852de2ac280d8b7f93d70bb150df4185600c9",
+    "scripts/test-friend-suggestions-sql.py": "c6d66ef429fc593889a520b760887bc4ddfc2236c2ef0d6be52fc8a1c73993f3",
     "scripts/test-google-account-name-verifier.py": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
     "scripts/test-guarded-release.py": "072a3aea42d088aac1cb00825bf34c7f3d08ff9fff21c630017f2ee5c9977a74",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -29753,6 +29854,7 @@
     "scripts/verify-datafast-reference.py": "8c5d503657b82ab6d5508a281ca61d416f76d89c2a15a00f746b9a3718019c9f",
     "scripts/verify-event-operations-formal.sh": "a17b08e8c4d12ee0537ed8707d8675e8fa60fe7a1b2aa985391c204cf6d0351b",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
+    "scripts/verify-friend-suggestion-pagerank.py": "5c14674955a43f1874dda45b41f3ab3142187b8527132672ed59fe1cb4aba38a",
     "scripts/verify-google-account-name.py": "db797f61655c32d3df0c6737a18514ea8d49312bfa245253e7c45e521d9ce4e9",
     "scripts/verify-inductive-proofs.sh": "690c47575dc80407e8fbc43a5680f9addc5f92adb415eff9f7629ba9fd9d1bdc",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
@@ -29952,7 +30054,7 @@
     "tdf-hq-ui/src/api/socialEvents.test.ts": "94e606bd6901c34bcf460a614294be9f4eb027c39b9ef2110e55df65aef5962b",
     "tdf-hq-ui/src/api/socialEvents.ts": "61c417f97c4915a2a3a09cc59cf731fef5a451cce1e59bc2304a8a0498dbbc8d",
     "tdf-hq-ui/src/api/socialV2.test.ts": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
-    "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
+    "tdf-hq-ui/src/api/types.ts": "ada5fdeab18803cef40506d44d7b9d60512c4f0939edd9924b79cb339dfb5d08",
     "tdf-hq-ui/src/api/uploadFailure.test.ts": "f1000f520cc6cfdc88fad9fbb03329ed4b58f93bc15d8b07928f54c90a69bb6e",
     "tdf-hq-ui/src/api/uploadFailure.ts": "634dd14ff7c3b25258bc4017cc6a82929675e517518170bd390877342313cfd1",
     "tdf-hq-ui/src/api/uploadQueue.test.ts": "64a4197e7bcbf2c1c9e4a180453c4ebffbf5c109a8c9b1967f186752ff8b0e8f",
@@ -30151,6 +30253,8 @@
     "tdf-hq-ui/src/features/releases/catalogQueries.ts": "ab1ac999aeac0c22d337184124e83e5d4f3817d4ba6a242445a877b68ee0113d",
     "tdf-hq-ui/src/features/releases/useReleaseFeed.ts": "d14328c34a608a3748610ffb35448acf5beed529601883f3f5077b70d445ff49",
     "tdf-hq-ui/src/features/social/SocialWorkspace.tsx": "82492087c813de1f062dd59680c17fd9320142073e3dc96e8737fade9b0660a6",
+    "tdf-hq-ui/src/features/social/suggestionReason.test.ts": "49de92d7b4710a2574f0b8f4776984d0586daec223bc1c4bce3e61c35bc76336",
+    "tdf-hq-ui/src/features/social/suggestionReason.ts": "f0c6a9b9fc8b8de2250e617a5361c695f57817be069b15fc7bc067337dd1e472",
     "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx": "32ce9ba81961dd9e313c85e4b1f83624faea1ce96374a6eda593916f11e55f8d",
     "tdf-hq-ui/src/hooks/useGoogleDriveAuth.ts": "04bcbfd3e8aef525f943efd6c2aa626cda020d844e517f561f184ad7ee15a498",
     "tdf-hq-ui/src/hooks/useMetaTags.test.tsx": "8cce0eb1170e36a446f878f719010bf45c8b53625b9bc9785ec00bcaccb43b02",
@@ -30324,7 +30428,7 @@
     "tdf-hq-ui/src/pages/SocialEventsPage.money-input.test.tsx": "b0d544fef605fa4b6acd13d29476439f5d3135d8b37549bd46ce61a9a792a907",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "2c91783b2a6018cc74a5222e910925b8ff23cf4809a23565aa696ce910d94eb2",
     "tdf-hq-ui/src/pages/SocialInboxPage.tsx": "df7168e2986e8eab0e85a8ce46a3bfa29fcbc033c95ae43fefef228d47e1bb18",
-    "tdf-hq-ui/src/pages/SocialPage.tsx": "eb1162e3cc9418ef3aef29a2a85842aaaaa96f32079062d48a88522912fc4d9d",
+    "tdf-hq-ui/src/pages/SocialPage.tsx": "ff5f02cc3712386460da4957865800857f880e10b828e55c2b36de0a858432f7",
     "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx": "6ba4f8f777f72fe88da87c5e4f0730a353132d7812eaec2b957e1ebed5c4d38e",
     "tdf-hq-ui/src/pages/TdfPlatformPage.tsx": "9a8e4993313f12a39537882a555efffc12d698d5d13abb487c8eda1b64dc2210",
     "tdf-hq-ui/src/pages/TeacherPortalPage.tsx": "bd6b1b8c0510f54d06b90a5575933a5bb1cb8c0eca5f11884d2252a5c6cacd60",
@@ -30685,6 +30789,8 @@
     "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql": "86483222ece86b79a88a693a2cd403cdf3d9b3fd183ef1182df4bf447c873f95",
     "tdf-hq/sql/2026-11-12_marketplace_agreements.sql": "cba023d9107d987ce7f336181505334538bd0a0a00782e596fab1faf4a14fdbf",
     "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql": "47a811221f03817022572f6bee479567c08f714897b56706cea4f75c8b39ac8f",
+    "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql": "b7d366fcce022210a7d969b4cbd283d39f2e817e77f52cac889ef0c8bf28ae6e",
+    "tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql": "b33a1e5f1bf62a3846c3dfa2da284aac894c6697f253e98b66720be18e08aacf",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
     "tdf-hq/src/TDF/API.hs": "ef1ed6b71b5bc4a490c9074808094513c7c6396dbefd58606ae30f954d59ea4e",
@@ -30706,7 +30812,7 @@
     "tdf-hq/src/TDF/API/ServiceStorefront.hs": "9695a49d51f2b9c62f4c9703f09266daa50698dfab767dc473e6e2e7186d8d25",
     "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "b89de6214d43abcd667be184d8b7e4b3ed1dadbad7699c2e88b913b3b84a5769",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
-    "tdf-hq/src/TDF/App/Boot.hs": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
+    "tdf-hq/src/TDF/App/Boot.hs": "d4d241ab16a03f357a094445d2e88802c0ac49c22f80f42db36d34f1a1001f90",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "158b961935c20e95aa6a43637e1ede2f078bb8ecb594de1d5f8abbf91764004f",
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
@@ -30770,7 +30876,7 @@
     "tdf-hq/src/TDF/Cron.hs": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
-    "tdf-hq/src/TDF/DTO.hs": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
+    "tdf-hq/src/TDF/DTO.hs": "96a475610211ce4f89d703e14b1d0d8b8d23ec2a28815e746aa0833cd06c9d04",
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "6a299ff4d440fd6abc65602f88049606e79becc9b749db8871f7e5625b567062",
     "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs": "79047936e9a4fff6cbf15767563a68cba32c1d4eaff754a2e6f18046615d3a43",
     "tdf-hq/src/TDF/Directory/Policy.hs": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
@@ -30815,7 +30921,7 @@
     "tdf-hq/src/TDF/Routes/DomoRefunds.hs": "b30e9a615d9ea754e2ffe29a257e272d4fc7342d17ec919e1235a199aeff34fd",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "c5b5eac3f58fbb0a24651c2bb2e57664720a6526ac25a69d2bf9f49acfdcc438",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "10cfaf282a49b1b78b23d820b65339cb2cbe5dd0ed5152688362e0ac034b1aa1",
+    "tdf-hq/src/TDF/Server.hs": "9df8d16c0a414c5ae93a2d7eebdf355b8c2be98acb18ff71d8a9b58d254e975b",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
@@ -30873,9 +30979,12 @@
     "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs": "9cb6b2f5d808ce531655c3aa7fdff67fc64026c2a419067313e7805c6317df2f",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
     "tdf-hq/src/TDF/Social/FanEffects.hs": "a55587dcef94c2f5efe35da182a3cd934ca705dc5a685b5ab15eccb89f3a7b26",
+    "tdf-hq/src/TDF/Social/RelationshipReads.hs": "c483e2673f057b8d969b11714e391821b4c4c5edc2b3865a16c9236a5f72f924",
     "tdf-hq/src/TDF/Social/RelationshipWrites.hs": "fbe2ab38e7a2730ed13ad065859dffe186646a35d04ff99268597a0ac0fcec7c",
     "tdf-hq/src/TDF/Social/Server.hs": "3b1b4af11566dd037bf44c8fd89b2c198a085171ee23d5d2b4d1f11ab630a731",
     "tdf-hq/src/TDF/Social/Session.hs": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
+    "tdf-hq/src/TDF/Social/SuggestionRank.hs": "5e9e231e34f9693c0a09a9f580420285037aa9c69512bee291fc220b21b0c860",
+    "tdf-hq/src/TDF/Social/SuggestionStore.hs": "eeac3d21cf5a7b85b4a9b520324aabbf27ec805af2fefc4c464163927164ce01",
     "tdf-hq/src/TDF/StorageVault.hs": "7f5d13cfc664291e3d23044322859c95f359b1e4bb00fbc82a87794e5da1849b",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "a2568ecfb8235b9c91c0ce144ac5cec72ef0eb5cd52e06f42c3130ed7e347142",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "1cc32127c70c016568235631cc097e92a230125d6742c05aa2c833d6d15db480",
@@ -30892,7 +31001,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+    "tdf-hq/tdf-hq.cabal": "5b127a60a4f156f7b7aad07f300c71ec183ac1f855bee1a83cd7db577fd7e359",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -30900,7 +31009,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "7ef32ba3699ea33cbe3c1728f8f32db4351651311c8d99fbdeaa75720a936455",
+    "tdf-hq/test/Spec.hs": "f8fa49de6f1d6d2674db680da53a10ab6a8949a22420db697b394417f60b3d7a",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -30977,6 +31086,8 @@
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "8f2afb5dd7d0baa4e33c516b6f40ca6029783744e794a19ea3c832a628410109",
     "tdf-hq/test/TDF/Social/FollowSpec.hs": "fb6640d2e4e415809328254799fc89c884e1f08e75a4678ef6996f0805c7867b",
+    "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs": "f85567f40ae2e3e2b8bee19e37362fe683594fb7de3a28c4c4f009c9002b5ee4",
+    "tdf-hq/test/TDF/Social/SuggestionStoreSpec.hs": "a0e5b1887a5fc564610398c0017c1f638ac5697131c3784f335c36153cf603c6",
     "tdf-hq/test/TDF/StorageSecuritySpec.hs": "3358d870189320cab3387e054111df56893fbdb826b5ea09741579207a71d300",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "d57960358b7aa404aff386e6b5fb319a61eef4162cffb5c2877f179360195845",
@@ -32162,6 +32273,10 @@
       },
       {
         "requirement": "COMMUNITY-FAN-FOLLOW-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
         "relationship": "implementation"
       },
       {
@@ -38445,6 +38560,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "AUTH-CREDENTIAL-INTAKE-001",
         "relationship": "implementation"
       },
@@ -38758,6 +38877,10 @@
       },
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
         "relationship": "implementation"
       },
       {
@@ -39890,6 +40013,10 @@
     "tdf-hq-ui/src/api/types.ts": [
       {
         "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
         "relationship": "implementation"
       }
     ],
@@ -47521,6 +47648,10 @@
       {
         "requirement": "WEB-CONTENT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/TeacherPortalPage.tsx": [
@@ -48095,6 +48226,88 @@
       {
         "requirement": "COMMUNITY-CLUB-ELECTION-001",
         "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Social/SuggestionRank.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Social/SuggestionStore.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Social/RelationshipReads.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/features/social/suggestionReason.ts": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/Social/SuggestionStoreSpec.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-friend-suggestions-sql.py": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-friend-suggestions-postgres.sh": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/verify-friend-suggestion-pagerank.py": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq-ui/src/features/social/suggestionReason.test.ts": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/FriendSuggestionGraph.als": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/sql/2026-09-28_interaction_compatibility.sql": [
@@ -51834,7 +52047,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
+      "sha256": "c21eb6b54adb591f22cd8b7de5c72ddae5976f07550d05785521256eb8f0ef09",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55969,7 +56182,7 @@
     {
       "id": "SURFACE-348e3d2bac6fc15e",
       "path": "scripts/lib/alloy-controls.mjs",
-      "sha256": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
+      "sha256": "365e27d342ff335f000bf81887f8546cf5ecd9e9cbc7424c857f0ecc0402efa7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58758,6 +58971,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-af1c9a8a744055e3",
+      "path": "scripts/test-friend-suggestions-postgres.sh",
+      "sha256": "475a761847eb4abcd395f68d65a852de2ac280d8b7f93d70bb150df4185600c9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b8aeb29dd33939a7",
+      "path": "scripts/test-friend-suggestions-sql.py",
+      "sha256": "c6d66ef429fc593889a520b760887bc4ddfc2236c2ef0d6be52fc8a1c73993f3",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-25d21d29a24eded2",
       "path": "scripts/test-google-account-name-verifier.py",
       "sha256": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
@@ -60475,6 +60712,22 @@
         {
           "requirement": "SYS-VERIFY-001",
           "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-0cc1d90a7ac978a7",
+      "path": "scripts/verify-friend-suggestion-pagerank.py",
+      "sha256": "5c14674955a43f1874dda45b41f3ab3142187b8527132672ed59fe1cb4aba38a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "formalModels"
         }
       ]
     },
@@ -63833,11 +64086,15 @@
     {
       "id": "SURFACE-9bac22f287db5deb",
       "path": "tdf-hq-ui/src/api/types.ts",
-      "sha256": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
+      "sha256": "ada5fdeab18803cef40506d44d7b9d60512c4f0939edd9924b79cb339dfb5d08",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         }
       ]
@@ -67215,6 +67472,30 @@
         },
         {
           "requirement": "MEDIA-ARTIST-CATALOG-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-78dcbc3cd8f072e5",
+      "path": "tdf-hq-ui/src/features/social/suggestionReason.test.ts",
+      "sha256": "49de92d7b4710a2574f0b8f4776984d0586daec223bc1c4bce3e61c35bc76336",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2f51101da513c0be",
+      "path": "tdf-hq-ui/src/features/social/suggestionReason.ts",
+      "sha256": "f0c6a9b9fc8b8de2250e617a5361c695f57817be069b15fc7bc067337dd1e472",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         }
       ]
@@ -71015,11 +71296,15 @@
     {
       "id": "SURFACE-ab3dd253ad980d5f",
       "path": "tdf-hq-ui/src/pages/SocialPage.tsx",
-      "sha256": "eb1162e3cc9418ef3aef29a2a85842aaaaa96f32079062d48a88522912fc4d9d",
+      "sha256": "ff5f02cc3712386460da4957865800857f880e10b828e55c2b36de0a858432f7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         }
       ]
@@ -78911,6 +79196,30 @@
       ]
     },
     {
+      "id": "SURFACE-fdcf4dd42241601b",
+      "path": "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql",
+      "sha256": "b7d366fcce022210a7d969b4cbd283d39f2e817e77f52cac889ef0c8bf28ae6e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2bbd98190d25a1d9",
+      "path": "tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql",
+      "sha256": "b33a1e5f1bf62a3846c3dfa2da284aac894c6697f253e98b66720be18e08aacf",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -79522,7 +79831,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
+      "sha256": "d4d241ab16a03f357a094445d2e88802c0ac49c22f80f42db36d34f1a1001f90",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79539,6 +79848,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-PAYMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         },
         {
@@ -80782,7 +81095,7 @@
     {
       "id": "SURFACE-70ca6d20ed6232ae",
       "path": "tdf-hq/src/TDF/DTO.hs",
-      "sha256": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
+      "sha256": "96a475610211ce4f89d703e14b1d0d8b8d23ec2a28815e746aa0833cd06c9d04",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -80791,6 +81104,10 @@
         },
         {
           "requirement": "AUTH-ARTIST-INVITE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         },
         {
@@ -81727,7 +82044,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "10cfaf282a49b1b78b23d820b65339cb2cbe5dd0ed5152688362e0ac034b1aa1",
+      "sha256": "9df8d16c0a414c5ae93a2d7eebdf355b8c2be98acb18ff71d8a9b58d254e975b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81840,6 +82157,10 @@
         },
         {
           "requirement": "COMMUNITY-FAN-FOLLOW-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         },
         {
@@ -83481,9 +83802,14 @@
     {
       "id": "SURFACE-5f3c565954968d6a",
       "path": "tdf-hq/src/TDF/Social/RelationshipReads.hs",
-      "sha256": "fa198d4316f33858346b9fced5c97084577dd6c67faa7bdfb1d468d1d24716ca",
+      "sha256": "c483e2673f057b8d969b11714e391821b4c4c5edc2b3865a16c9236a5f72f924",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-effe2030880b0cfd",
@@ -83529,6 +83855,30 @@
         },
         {
           "requirement": "SOCIAL-RELATIONSHIP-WRITES-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6188be4360fef16d",
+      "path": "tdf-hq/src/TDF/Social/SuggestionRank.hs",
+      "sha256": "5e9e231e34f9693c0a09a9f580420285037aa9c69512bee291fc220b21b0c860",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-824227145b08a710",
+      "path": "tdf-hq/src/TDF/Social/SuggestionStore.hs",
+      "sha256": "eeac3d21cf5a7b85b4a9b520324aabbf27ec805af2fefc4c464163927164ce01",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         }
       ]
@@ -83848,7 +84198,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "sha256": "5b127a60a4f156f7b7aad07f300c71ec183ac1f855bee1a83cd7db577fd7e359",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84039,7 +84389,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "7ef32ba3699ea33cbe3c1728f8f32db4351651311c8d99fbdeaa75720a936455",
+      "sha256": "f8fa49de6f1d6d2674db680da53a10ab6a8949a22420db697b394417f60b3d7a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85882,6 +86232,30 @@
       "requirements": [
         {
           "requirement": "SOCIAL-RELATIONSHIP-WRITES-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-91acfb74d71a1c29",
+      "path": "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs",
+      "sha256": "f85567f40ae2e3e2b8bee19e37362fe683594fb7de3a28c4c4f009c9002b5ee4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c38c57423312ecae",
+      "path": "tdf-hq/test/TDF/Social/SuggestionStoreSpec.hs",
+      "sha256": "a0e5b1887a5fc564610398c0017c1f638ac5697131c3784f335c36153cf603c6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "tests"
         }
       ]
@@ -91468,7 +91842,6 @@
     "SURFACE-4053a4f2498e072d",
     "SURFACE-dcd6c643453694a2",
     "SURFACE-85aae9756eda5339",
-    "SURFACE-5f3c565954968d6a",
     "SURFACE-24f8d92d510c1f2c",
     "SURFACE-981d668b9e163412",
     "SURFACE-8f34cfa4bb16ce16",
@@ -93128,7 +93501,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d2c363537a85213dda5f27f8cada98c7131c16533d6a64e169d50f3ae7efdc5a",
+      "sourceSha256": "89839544a42c93822cb01a059cb0e19113feb4fc5dbe230fc80b46b7ba1c8dbb",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -93156,7 +93529,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d2c363537a85213dda5f27f8cada98c7131c16533d6a64e169d50f3ae7efdc5a",
+      "sourceSha256": "89839544a42c93822cb01a059cb0e19113feb4fc5dbe230fc80b46b7ba1c8dbb",
       "definition": {
         "states": [
           "absent",
@@ -93186,7 +93559,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d2c363537a85213dda5f27f8cada98c7131c16533d6a64e169d50f3ae7efdc5a",
+      "sourceSha256": "89839544a42c93822cb01a059cb0e19113feb4fc5dbe230fc80b46b7ba1c8dbb",
       "definition": {
         "export": [
           "queued",
@@ -116577,7 +116950,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 228,
+    "PARTIAL": 229,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

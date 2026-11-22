@@ -747,6 +747,11 @@ export interface PartyFollowDTO {
 export interface SuggestedFriendDTO {
   sfPartyId: number;
   sfMutualCount: number;
+  /**
+   * Present only on entries ranked by the follow network
+   * (COMMUNITY-FRIEND-SUGGESTION-001); their sfMutualCount is 0 and means nothing.
+   */
+  sfReason?: string;
 }
 
 export interface ChatThreadDTO {

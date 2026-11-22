@@ -21,6 +21,7 @@ import qualified TDF.Social.Chat as SocialChat
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
 import qualified TDF.Social.RelationshipReads as SocialReads
+import qualified TDF.Social.SuggestionStore as SocialSuggestions
 import qualified TDF.Social.RelationshipWrites as SocialWrites
 import qualified TDF.Social.Profiles as SocialProfiles
 import TDF.Social.Server (socialV2Server)
@@ -3247,7 +3248,8 @@ socialServer user =
   :<|> socialRemoveFriend user
   :<|> SocialProfiles.profileList user (socialListProfiles user)
   :<|> SocialProfiles.profileGet user (socialGetProfile user)
-  :<|> SocialReads.suggestions user (socialListSuggestedFriends user)
+  :<|> SocialSuggestions.suggestions user
+         (SocialReads.suggestions user (socialListSuggestedFriends user))
   :<|> socialV2Server user
 
 chatServer :: AuthedUser -> ServerT ChatAPI AppM
@@ -8194,6 +8196,7 @@ socialListSuggestedFriends user = do
           [ SuggestedFriendDTO
               { sfPartyId = fromSqlKey candidateId
               , sfMutualCount = mutuals
+              , sfReason = Nothing
               }
           | (candidateId, mutuals) <- ordered
           ]
