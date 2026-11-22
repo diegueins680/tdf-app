@@ -171,6 +171,9 @@ const createPublicCheckoutMock = jest.fn<
   },
   paymentMethods: [],
 }));
+type CheckoutFixture = Awaited<ReturnType<typeof createPublicCheckoutMock>>;
+const selectManualMock = jest.fn<() => Promise<CheckoutFixture>>();
+const submitManualMock = jest.fn<(id: number, reference: string, token: string) => Promise<CheckoutFixture>>();
 const storePublicBookingLookupTokenMock = jest.fn();
 const logoutMock = jest.fn();
 const listPublicServicesMock = jest.fn<() => Promise<PublicServiceCatalogItem[]>>(
@@ -200,8 +203,8 @@ jest.unstable_mockModule('../api/bookings', () => ({
     createPublicDatafastCheckout: jest.fn(),
     createPublicPaypalOrder: jest.fn(),
     capturePublicPaypalOrder: jest.fn(),
-    selectPublicManualPayment: jest.fn(),
-    submitPublicManualEvidence: jest.fn(),
+    selectPublicManualPayment: selectManualMock,
+    submitPublicManualEvidence: submitManualMock,
   },
 }));
 
@@ -223,8 +226,10 @@ jest.unstable_mockModule('../api/engineers', () => ({
   },
 }));
 
+let bookingSession: { username: string; displayName: string; roles: string[]; partyId: number } | null = null;
+
 jest.unstable_mockModule('../session/SessionContext', () => ({
-  useSession: () => ({ session: null, logout: logoutMock }),
+  useSession: () => ({ session: bookingSession, logout: logoutMock }),
   getStoredSessionToken: () => null,
 }));
 
@@ -254,6 +259,14 @@ const renderPage = async (
   });
   return {
     qc,
+    rerender: async () => {
+      await act(async () => {
+        root?.render(<MemoryRouter initialEntries={[options.route ?? '/reservar']}>
+          <QueryClientProvider client={qc}><PublicBookingPage {...options.props} /></QueryClientProvider>
+        </MemoryRouter>);
+        await flushPromises();
+      });
+    },
     cleanup: async () => {
       if (!root) return;
       await act(async () => {
@@ -335,6 +348,7 @@ describe('PublicBookingPage', () => {
   beforeEach(() => {
     createPublicMock.mockClear();
     createPublicCheckoutMock.mockClear();
+    selectManualMock.mockReset(); submitManualMock.mockReset();
     storePublicBookingLookupTokenMock.mockClear();
     listPublicServicesMock.mockReset();
     listPublicServicesMock.mockResolvedValue(defaultPublicServices);
@@ -466,7 +480,7 @@ describe('PublicBookingPage', () => {
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
-    expect(container.textContent).toContain('Elige tu servicio');
+    expect(container.textContent).toContain('Elige el servicio');
     const serviceSelect = container.querySelector<HTMLElement>('[role="combobox"]');
     expect(serviceSelect).not.toBeNull();
     expect(serviceSelect?.textContent).toContain('Grabación de banda');
@@ -557,7 +571,7 @@ describe('PublicBookingPage', () => {
 
     expect(loginLink?.getAttribute('href')).toBe(`/login?redirect=${expectedRedirect}`);
     expect(signupLink?.getAttribute('href')).toBe(`/login?redirect=${expectedRedirect}&signup=1`);
-    expect(container.textContent).toContain('Crear una cuenta es opcional.');
+    expect(container.textContent).toContain('No necesitas cuenta.');
     expect(container.textContent).not.toContain('crearemos tu acceso automáticamente');
 
     await cleanup();
@@ -583,6 +597,10 @@ describe('PublicBookingPage', () => {
         setInputValue(date, selectedStart);
         await flushPromises();
       });
+      const disclosure = container.querySelector<HTMLDetailsElement>('details')!;
+      expect(disclosure.open).toBe(false);
+      disclosure.querySelector('summary')!.click();
+      expect(disclosure.open).toBe(true);
       for (let click = 0; click < 2; click += 1) {
         await act(async () => {
           const suggestion = Array.from(container.querySelectorAll<HTMLElement>('[role="button"]'))
@@ -652,10 +670,6 @@ describe('PublicBookingPage', () => {
       await flushPromises();
     });
 
-    await act(async () => {
-      clickButtonByText(container, 'Revisar reserva');
-      await flushPromises();
-    });
 
     await act(async () => {
       const submitButton = container.querySelector<HTMLButtonElement>('button[type="submit"]');
@@ -682,6 +696,31 @@ describe('PublicBookingPage', () => {
 
     await cleanup();
     document.body.removeChild(container);
+  });
+
+  it('cannot turn a pending price check into an unconsented tentative booking', async () => {
+    const pending: ((value: unknown) => void)[] = [];
+    globalThis.fetch = jest.fn(() => new Promise((resolve) => { pending.push(resolve); })) as unknown as typeof fetch;
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await act(async () => {
+        setInputValue(getInputByLabel(container, 'Nombre completo'), 'Compradora sintética');
+        setInputValue(getInputByLabel(container, 'Correo'), 'buyer@example.invalid');
+        submitBookingForm(container);
+        await flushPromises();
+      });
+      expect(container.textContent).toContain('Resumen rápido');
+      expect(container.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(true);
+      await act(async () => { submitBookingForm(container); await flushPromises(); });
+      expect(container.textContent).toContain('Espera a que terminemos de consultar');
+      expect(createPublicMock).not.toHaveBeenCalled();
+      expect(createPublicCheckoutMock).not.toHaveBeenCalled();
+    } finally {
+      await cleanup();
+      container.remove();
+    }
   });
 
   it('creates an idempotent deposit checkout only from an authoritative server quote', async () => {
@@ -732,16 +771,16 @@ describe('PublicBookingPage', () => {
       await flushPromises();
     });
 
-    await act(async () => {
-      clickButtonByText(container, 'Revisar reserva');
-      await flushPromises();
-    });
 
     expect(container.textContent).toContain('Precio autorizado: USD 230.00 total · depósito USD 115.00');
     const termsCheckbox = container.querySelector<HTMLInputElement>(
       'input[aria-label="Aceptar precio y política de reserva"]',
     );
     if (!termsCheckbox) throw new Error('Terms checkbox not found');
+    await act(async () => { submitBookingForm(container); await flushPromises(); });
+    expect(createPublicCheckoutMock).not.toHaveBeenCalled();
+    expect(createPublicMock).not.toHaveBeenCalled();
+    expect(container.textContent).toContain('Acepta la política y el precio');
 
     await act(async () => {
       termsCheckbox.click();
@@ -830,10 +869,6 @@ describe('PublicBookingPage', () => {
       await flushPromises();
     });
 
-    await act(async () => {
-      clickButtonByText(container, 'Revisar reserva');
-      await flushPromises();
-    });
 
     await act(async () => {
       const submitButton = container.querySelector<HTMLButtonElement>('button[type="submit"]');
@@ -944,7 +979,7 @@ describe('PublicBookingPage', () => {
     document.body.removeChild(container);
   });
 
-  it('advances by step on form submit before sending booking', async () => {
+  it('shows the summary with the schedule and sends only on the second step submit', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -968,7 +1003,6 @@ describe('PublicBookingPage', () => {
       const dateInput = getInputByLabel(container, 'Fecha y hora');
       setInputValue(dateInput, desiredUser.toFormat("yyyy-MM-dd'T'HH:mm"));
       clickCheckboxNearText(container, 'Asignar ingeniero después');
-      submitBookingForm(container);
       await flushPromises();
     });
     expect(container.textContent).toContain('Resumen rápido');
@@ -1015,10 +1049,6 @@ describe('PublicBookingPage', () => {
         await flushPromises();
       });
 
-      await act(async () => {
-        clickButtonByText(container, 'Revisar reserva');
-        await flushPromises();
-      });
 
       await act(async () => {
         const submitButton = container.querySelector<HTMLButtonElement>('button[type="submit"]');
@@ -1047,4 +1077,118 @@ describe('PublicBookingPage', () => {
       consoleErrorSpy.mockRestore();
     }
   });
+
+  it('associates transfer-reference errors with the field, preserves rejected evidence and prevents edits while sending', async () => {
+    const fixture = await createPublicCheckoutMock.getMockImplementation()!({
+      pbcServiceOfferingId: BAND_RECORDING_ID, pbcDurationMinutes: 120, pbcTermsAccepted: true,
+    }, 'synthetic-fixture-key');
+    const checkout: CheckoutFixture = { ...fixture, paymentMethods: ['bank_transfer'] };
+    createPublicCheckoutMock.mockResolvedValueOnce(checkout);
+    selectManualMock.mockResolvedValue({ ...checkout, manualPayment: { paymentMethod: 'bank_transfer', status: 'awaiting_evidence' } });
+    globalThis.fetch = jest.fn(async () => ({ ok: true, json: async () => ({ available: true, quote: checkout.quote }) })) as unknown as typeof fetch;
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await act(async () => {
+        setInputValue(getInputByLabel(container, 'Nombre completo'), 'Contacto sintético');
+        setInputValue(getInputByLabel(container, 'Correo'), 'contact@example.test');
+        clickButtonByText(container, 'Continuar'); await flushPromises();
+      });
+      await act(async () => {
+        const zone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
+        setInputValue(getInputByLabel(container, 'Fecha y hora'), DateTime.fromISO('2030-01-01T12:00', { zone: 'America/Guayaquil' }).setZone(zone).toFormat("yyyy-MM-dd'T'HH:mm"));
+        setInputValue(getInputByLabel(container, 'Duración (min)'), '120');
+        clickCheckboxNearText(container, 'Asignar ingeniero después'); await flushPromises();
+      });
+      await act(async () => {
+        container.querySelector<HTMLInputElement>('input[aria-label="Aceptar precio y política de reserva"]')!.click();
+        await flushPromises(); submitBookingForm(container); await flushPromises();
+      });
+      await act(async () => { clickButtonByText(container, 'Registrar transferencia'); await flushPromises(); });
+      const input = getInputByLabel(document.body, 'Referencia o comprobante bancario');
+      await act(async () => { setInputValue(input, 'aa'); });
+      expect(input.getAttribute('aria-invalid')).toBe('true');
+      expect(document.getElementById(input.getAttribute('aria-describedby')!)?.textContent).toContain('3 a 120');
+      const submit = () => Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent?.trim() === 'Enviar para revisión')!;
+      expect(submit().disabled).toBe(true); expect(submitManualMock).not.toHaveBeenCalled();
+      await act(async () => { setInputValue(input, 'R'.repeat(121)); });
+      expect(input.getAttribute('aria-invalid')).toBe('true'); expect(submit().disabled).toBe(true);
+      submitManualMock.mockRejectedValueOnce(new Error('Synthetic rejection'));
+      await act(async () => { setInputValue(input, '  REF-SYNTHETIC-77  '); submit().click(); await flushPromises(); });
+      expect(submitManualMock).toHaveBeenCalledWith(456, 'REF-SYNTHETIC-77', 'lookup-secret');
+      expect(input.value).toBe('  REF-SYNTHETIC-77  ');
+      expect(document.body.textContent).toContain('No pudimos enviar la referencia. No se confirmó ningún pago.');
+      let finish!: (result: CheckoutFixture) => void;
+      submitManualMock.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+      await act(async () => { submit().click(); await flushPromises(); });
+      expect(input.disabled).toBe(true); expect(submit().disabled).toBe(true);
+      await act(async () => { finish({ ...checkout, manualPayment: { paymentMethod: 'bank_transfer', status: 'submitted' } }); await flushPromises(); });
+      expect(submitManualMock).toHaveBeenCalledTimes(2);
+      expect(submitManualMock.mock.calls[1]).toEqual(submitManualMock.mock.calls[0]);
+      expect(container.textContent).toContain('Permanece pendiente');
+    } finally { await cleanup(); container.remove(); }
+  });
+
+});
+
+it('skips the optional account card for a visitor who is already signed in', async () => {
+  bookingSession = { username: 'ana@example.com', displayName: 'Ana', roles: ['customer'], partyId: 9 };
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  const { cleanup } = await renderPage(container);
+  try {
+    expect(container.textContent).not.toContain('¿Ya tienes cuenta?');
+    expect(Array.from(container.querySelectorAll('a')).some((link) => link.textContent?.trim() === 'Iniciar sesión')).toBe(false);
+  } finally { bookingSession = null; await cleanup(); document.body.removeChild(container); }
+});
+
+
+it('summarizes complete account contact, preserves explicit edits and manages focus without creating a booking', async () => {
+  createPublicMock.mockClear(); createPublicCheckoutMock.mockClear();
+  bookingSession = { username: 'contact@example.test', displayName: 'Contacto sintético', roles: ['customer'], partyId: 9 };
+  window.sessionStorage.clear();
+  const container = document.createElement('div'); document.body.appendChild(container);
+  const { cleanup } = await renderPage(container);
+  try {
+    const fields = container.querySelector<HTMLElement>('#booking-contact-fields')!;
+    expect(fields.hidden).toBe(true);
+    expect(container.querySelector('[aria-label="Datos de contacto"]')?.textContent).toContain('contact@example.test');
+    await act(async () => clickButtonByText(container, 'Editar datos'));
+    expect(fields.hidden).toBe(false);
+    expect(document.activeElement).toBe(getInputByLabel(container, 'Nombre completo'));
+    await act(async () => { setInputValue(getInputByLabel(container, 'Correo'), 'edited@example.test'); });
+    expect(fields.hidden).toBe(false);
+    await act(async () => clickButtonByText(container, 'Usar estos datos de contacto'));
+    expect(fields.hidden).toBe(true);
+    const edit = container.querySelector<HTMLButtonElement>('[aria-controls="booking-contact-fields"]')!;
+    expect(edit.getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(edit);
+    expect(container.querySelector('[aria-label="Datos de contacto"]')?.textContent).toContain('edited@example.test');
+    await act(async () => clickButtonByText(container, 'Continuar'));
+    expect(getInputByLabel(container, 'Fecha y hora')).not.toBeNull();
+    expect(createPublicMock).not.toHaveBeenCalled(); expect(createPublicCheckoutMock).not.toHaveBeenCalled();
+  } finally { bookingSession = null; await cleanup(); container.remove(); }
+});
+
+it('keeps incomplete contacts and manual edits open when a signed-in account arrives later', async () => {
+  createPublicMock.mockClear(); createPublicCheckoutMock.mockClear();
+  bookingSession = null; window.sessionStorage.clear();
+  const container = document.createElement('div'); document.body.appendChild(container);
+  const { cleanup, rerender } = await renderPage(container);
+  try {
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Nombre completo'), 'Nombre editado');
+      setInputValue(getInputByLabel(container, 'Correo'), 'invalid');
+      clickButtonByText(container, 'Continuar');
+    });
+    expect(container.querySelector<HTMLElement>('#booking-contact-fields')?.hidden).toBe(false);
+    expect(container.textContent).toContain('Ingresa un correo válido');
+    bookingSession = { username: 'account@example.test', displayName: 'Nombre cuenta', roles: ['customer'], partyId: 9 };
+    await rerender();
+    expect(getInputByLabel(container, 'Nombre completo').value).toBe('Nombre editado');
+    expect(getInputByLabel(container, 'Correo').value).toBe('invalid');
+    await act(async () => setInputValue(getInputByLabel(container, 'Correo'), 'corrected@example.test'));
+    expect(container.querySelector<HTMLElement>('#booking-contact-fields')?.hidden).toBe(false);
+    expect(createPublicMock).not.toHaveBeenCalled(); expect(createPublicCheckoutMock).not.toHaveBeenCalled();
+  } finally { bookingSession = null; await cleanup(); container.remove(); }
 });

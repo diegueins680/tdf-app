@@ -51,3 +51,15 @@ describe('work account report builder', () => {
     expect(pdf).toContain('$30,00');
   });
 });
+
+
+describe('exact report currency formatting', () => {
+  it.each([29, 110, 2550, 0, -1, -110])('preserves the existing locale presentation for %s cents', cents => {
+    const legacy = new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD',
+      minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cents / 100).replace('USD', '$');
+    expect(formatCurrency(cents)).toBe(legacy);
+  });
+  it.each([Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER])('prints the last cent at the safe integer boundary %s', cents => {
+    expect(formatCurrency(cents).replace(/[^\d,-]/g, '')).toBe(`${cents < 0 ? '-' : ''}90071992547409,91`);
+  });
+});
