@@ -1,6 +1,6 @@
 ---- MODULE LogoutIntent ----
 (***************************************************************************)
-(* AUTH-LOGOUT-001. Browser logout intent (tdf-hq-ui/src/session/           *)
+(* AUTH-LOGOUT-001. Browser logout intent (tdf-hq-ui/src/auth/              *)
 (* logoutIntent.ts). An explicit logout begins an intent with a fresh      *)
 (* revision; the server call finishes it as confirmed or unconfirmed; only *)
 (* fresh interactive authentication clears it, again with a fresh revision. *)

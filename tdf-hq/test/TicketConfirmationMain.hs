@@ -11,11 +11,13 @@ import qualified Data.ByteString.Char8 as BS
 import Data.Text (Text)
 import Database.Persist.Sql hiding (loadConfig)
 import Database.Persist.Postgresql (withPostgresqlPool)
-import System.Environment (getEnv, lookupEnv)
+import Control.Exception (finally)
+import System.Environment (getEnv, lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
 import TDF.Config (loadConfig,AppConfig(..))
 import TDF.DB (Env(..))
 import TDF.DisposableTicketDatabase (safeConfirmationDatabase)
+import TDF.Ticketing.LookupToken (deriveTicketLookupToken)
 import TDF.Ticketing.Confirmation
 
 main :: IO ()
@@ -38,6 +40,7 @@ main = do
           sql "UPDATE social_event SET timezone='America/Guayaquil' WHERE id=1"
           sql "UPDATE event_ticket_order SET status='paid' WHERE id=1"
           sql "UPDATE event_ticket SET status='issued',checked_in_at=NULL,current_holder_party_id=NULL WHERE order_ref_id=1"
+          sql "UPDATE event_ticket_checkout_runtime SET lookup_token_hash='' WHERE order_id=1"
         state = runSqlPool (rawSql "SELECT state FROM event_ticket_confirmation_delivery WHERE order_id=1" [] :: SqlPersistT IO [Single Text]) pool
     hspec $ before_ reset $ describe "durable public ticket confirmation worker on PostgreSQL" $ do
       it "allows only one of eight workers to send a queued confirmation" $ do
@@ -70,6 +73,33 @@ main = do
         processConfirmationWith env (const (fail "Backoff was bypassed")) `shouldReturn` False
         sql "UPDATE event_ticket_confirmation_delivery SET next_attempt_at=NOW()-INTERVAL '1 minute'"
         processConfirmationWith env (const (pure ())) `shouldReturn` True
+        state `shouldReturn` [Single "accepted"]
+      it "links the order page with the key the order was created with" $ do
+        let secret = "synthetic-ticket-lookup-secret-0000000000"
+            token = either (error . show) id
+              (deriveTicketLookupToken (BS.pack secret) "synthetic-idempotency-key-0001" 1)
+        runSqlPool (rawExecute
+          "UPDATE event_ticket_checkout_runtime SET lookup_token_hash=encode(sha256(convert_to(?,'UTF8')),'hex') WHERE order_id=1"
+          [PersistText token]) pool
+        queue
+        sent <- newMVar ([] :: [Confirmation])
+        (do
+          setEnv "COMMERCE_LOOKUP_TOKEN_SECRET" secret
+          processConfirmationWith env (\receipt -> modifyMVar_ sent (pure . (receipt:))) `shouldReturn` True
+          ) `finally` unsetEnv "COMMERCE_LOOKUP_TOKEN_SECRET"
+        messages <- readMVar sent
+        map confirmationOrderUrl messages
+          `shouldBe` [Just ("https://www.tdfrecords.net/eventos/1/orden/1#acceso=" <> token)]
+      it "leaves the order link out when the derived key does not open the order" $ do
+        queue
+        sent <- newMVar ([] :: [Confirmation])
+        (do
+          setEnv "COMMERCE_LOOKUP_TOKEN_SECRET" "rotated-synthetic-lookup-secret-0000000000"
+          processConfirmationWith env (\receipt -> modifyMVar_ sent (pure . (receipt:))) `shouldReturn` True
+          ) `finally` unsetEnv "COMMERCE_LOOKUP_TOKEN_SECRET"
+        messages <- readMVar sent
+        map confirmationOrderUrl messages `shouldBe` [Nothing]
+        map confirmationCodes messages `shouldBe` [["TDF-ABCDEF012345","TDF-ABCDEF012346"]]
         state `shouldReturn` [Single "accepted"]
       it "does not send codes after cancellation" $ do
         queue

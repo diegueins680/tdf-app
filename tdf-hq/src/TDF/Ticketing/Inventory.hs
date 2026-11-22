@@ -34,6 +34,9 @@ reserveTicketInventory eventKey tierKey quantity now
       case (events, tiers) of
         ([Entity _ event], [Entity _ tier])
           | M.eventTicketTierIsActive tier
+          -- Every new hold uses the post-lock admission clock, including the
+          -- event cutoff. Tier/promotion/policy contention cannot extend sales.
+          , maybe True (now <) (M.socialEventEndTime event)
           , maybe True (<= now) (M.eventTicketTierSalesStart tier)
           , maybe True (now <=) (M.eventTicketTierSalesEnd tier) -> do
               soldRows <- rawSql

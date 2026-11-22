@@ -6,6 +6,8 @@
 
 module TDF.API where
 
+import TDF.Commerce.DatafastClientIP (DatafastClientRequest)
+
 import qualified TDF.API.Chat as Chat
 import TDF.VideoCampaigns (VideoCampaignAPI)
 import TDF.API.FanFollowing (FollowArtistAPI, UnfollowArtistAPI)
@@ -384,7 +386,7 @@ type BookingPublicAPI =
   :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
          :> "datafast" :> "checkout"
          :> Header "X-Order-Lookup-Token" Text
-         :> Post '[JSON] DatafastCheckoutDTO
+         :> DatafastClientRequest :> Post '[JSON] DatafastCheckoutDTO
   :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
          :> "datafast" :> "status"
          :> Header "X-Order-Lookup-Token" Text
@@ -440,7 +442,11 @@ type McpAPI = ReqBody '[JSON] Value :> Post '[JSON] Value
 
 type SessionCookieHeaders = Headers '[Header "Set-Cookie" Text]
 
-type LoginAPI = ReqBody '[JSON] LoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
+-- The forwarded header and the peer give the client address of the
+-- per-address login limit (TDF.Auth.ClientAddress).
+type LoginAPI =
+  Header "X-Forwarded-For" Text :> RemoteHost
+    :> ReqBody '[JSON] LoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 type GoogleLoginAPI = ReqBody '[JSON] GoogleLoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 type AppleLoginAPI = ReqBody '[JSON] AppleLoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 

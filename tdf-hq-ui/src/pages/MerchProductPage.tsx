@@ -11,7 +11,7 @@ import { MerchReputation } from '../api/merchReputation';
 import { MerchReputationSummary } from '../components/merch/MerchReputationSummary';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { getAnalyticsClient } from '../analytics/posthog';
-import { formatMerchMoney, merchLanguage, resolveMerchImageUrl } from '../utils/merch';
+import { merchCategoryLabel, formatMerchMoney, merchLanguage, resolveMerchImageUrl } from '../utils/merch';
 import { useSession } from '../session/SessionContext';
 
 type Variant = NonNullable<MerchProduct['variants']>[number];
@@ -99,7 +99,7 @@ export default function MerchProductPage() {
           <Button component={RouterLink} to={`/tienda/${storeSlug}`} sx={{ alignSelf: 'flex-start' }}>← {product.storeName ?? storeSlug}</Button>
           <Typography component="h1" variant="h3" fontWeight={900}>{product.name}</Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap">
-            <Chip label={product.category.replace(/_/g, ' ')} />
+            <Chip label={merchCategoryLabel(product.category, language)} />
             {product.availabilityMode === 'preorder' && <Chip color="secondary" label={language === 'en' ? 'Preorder' : 'Preventa'} />}
             {product.availabilityMode === 'made_to_order' && <Chip color="info" label={language === 'en' ? 'Made to order' : 'Hecho bajo pedido'} />}
           </Stack>

@@ -2,7 +2,7 @@
 
 ## Browser logout intent
 
-`LogoutIntent.tla` models `tdf-hq-ui/src/session/logoutIntent.ts`: an explicit
+`LogoutIntent.tla` models `tdf-hq-ui/src/auth/logoutIntent.ts`: an explicit
 logout begins an intent with a fresh revision and a pending server call; the
 call finishes the intent as confirmed or unconfirmed; only fresh interactive
 authentication clears it, again with a fresh revision. Callbacks carry the
@@ -96,20 +96,46 @@ QuickCheck suite `tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs`.
 `tdf-hq/src/TDF/Auth/Throttle.hs` (limits, windows, window start, Retry-After,
 lockout and over-limit predicates) and the login transaction of
 `tdf-hq/src/TDF/ServerAuth.hs`. It refuses to run when the text of either
-region changes. Attempts on one subject are taken one after another; that the
-advisory lock achieves this is PostgreSQL behaviour and is assumed.
+region changes. Login counts failures on three counters (identifier at the
+client address 10, client address 50, identifier 100). Attempts sharing a
+counter are taken one after another; that the advisory locks achieve this is
+PostgreSQL behaviour and is assumed.
 
 | Obligation | Result |
 |---|---|
 | The window start is a multiple of the window and contains the instant; two instants share a window exactly when they share the quotient | proved for the three scopes |
 | Retry-After is between one second and the window and reaches the next window | proved |
-| Login: the counter equals the failed password checks of the window and never exceeds ten (inductive) | proved |
-| Login: a locked-out attempt checks no password and changes nothing; only a failed check moves the counter | proved |
+| Login: each of the three counters never exceeds its limit (inductive) | proved |
+| Login: a locked-out attempt checks no password and changes nothing; below every limit the password is checked; only a failed check moves the counters, all three by one | proved |
+| Login: the owner at an address with no failures of its own is refused only by the identifier counter, which needs failures from at least ten addresses | proved |
 | Signup and reset: every request is counted and exactly the first five of a window are admitted (inductive) | proved |
-| Tenth failed check, lockout, fifth admitted signup and refused sixth are reachable | witnesses found |
-| Dropping the lockout check, the failure count, the window alignment or the strict over-limit comparison | each breaks at least one proof |
+| Tenth failed check, lockout of the pair, of the address and of the identifier (from a fresh address), fifth admitted signup and refused sixth are reachable | witnesses found |
+| Dropping the lockout check, the failure count, the window alignment, the strict over-limit comparison or any one counter from the lockout check | each breaks at least one proof |
 | The `max 1` of `authThrottleRetryAfterSeconds` | not load-bearing: the ceiling is already at least one |
 
 Not modelled: the subject hash, the SQL upsert, a timestamp read before the
 lock is granted, the silent answer of the reset route past its limit, and any
 per-address limit (there is none).
+
+## Sealed calendar token storage (`INTEG-GOOGLE-CALENDAR-001`)
+
+`calendar_token_storage.py` (Z3 4.13.3, pinned) encodes the length of a sealed
+Google Calendar token (`sealedCalendarTokenLength`, `calendarTokenStoredLimit`
+of `tdf-hq/src/TDF/Calendar/TokenCipher.hs`), which token is sealed at all
+(`sealCalendarTokenForStorage`) and which stored value is accepted on read
+(`validateStoredGoogleCalendarOAuthToken`, both in `tdf-hq/src/TDF/Server.hs`).
+It refuses to run when the text of any of those regions changes.
+
+| Obligation | Result |
+|---|---|
+| Every token that is sealed for storage yields a stored value the validator accepts | proved (UNSAT of the negation) |
+| Only a clean token of 1 to 4096 characters that does not already look sealed is sealed | proved |
+| A sealed value is longer than its token; sealed length is monotone | proved |
+| The stored limit admits no sealed value holding more than 4097 bytes; an unsealed value keeps 4096 | proved |
+| Previous rule: a 3039-character token is stored and then refused on read; 3038 is the last that survived | witness found |
+| Current rule: no admissible token is stranded | no witness exists |
+| Dropping the sealed-value limit, the intake length check or the refusal of a sealed-looking token | each breaks at least one proof |
+
+Not modelled: AES-GCM, the nonce source, the key derivation, and that every
+write of the token columns goes through `sealCalendarTokenForStorage`. The
+sealed value carries no associated data.

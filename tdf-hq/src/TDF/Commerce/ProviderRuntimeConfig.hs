@@ -77,19 +77,27 @@ loadRuntimeProviderAdapter environment provider = case provider of
     token <- required "PAYPHONE_TOKEN"
     storeId <- required "PAYPHONE_STORE_ID"
     returnUrl <- requiredHttps "PAYPHONE_RESPONSE_URL"
+    -- The payment button (card method) needs no buyer phone and is offered
+    -- with or without a split. Only a split charge (ADR 0136) needs the
+    -- store's coding password; without it the adapter refuses that charge
+    -- before any provider call, and marketplace routing still requires
+    -- verified split capabilities.
+    codingPassword <- optional "PAYPHONE_CODING_PASSWORD"
     pure $ do
       validatedToken <- token
       validatedStoreId <- storeId
       validatedReturn <- returnUrl
+      validatedPassword <- codingPassword
       adapter <- firstAdapterError (payPhoneAdapter PayPhoneConfig
         { payPhoneToken = validatedToken
         , payPhoneStoreId = validatedStoreId
+        , payPhoneCodingPassword = validatedPassword
         })
       Right RuntimeProviderAdapter
         { rpaAdapter = adapter
         , rpaReturnUrl = validatedReturn
         , rpaNotificationUrl = Nothing
-        , rpaConfiguredMethods = [MethodPayPhoneWallet]
+        , rpaConfiguredMethods = [MethodPayPhoneWallet, MethodCard]
         }
   _ -> pure (Left "Shared provider executor does not support this provider")
 

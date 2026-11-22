@@ -3,7 +3,7 @@ import { act, isValidElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import type { NavGroup } from './SidebarNav';
-import { featureRegistry } from '../features/featureRegistry';
+import { featureRegistry } from '../utils/featureRegistry';
 import { COURSE_REGISTRATIONS_NAV_LABEL } from '../utils/navigationLabels';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
@@ -285,6 +285,31 @@ describe('SidebarNav', () => {
     } finally {
       await cleanup();
     }
+  });
+
+  it('leaves out groups the viewer cannot use instead of showing them locked', async () => {
+    const roles = session.roles; const modules = session.modules;
+    session.roles = ['fan']; session.modules = [];
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderNav(container, '/fans');
+    try {
+      expect(container.textContent).not.toContain('No tienes acceso a esta sección');
+      expect(container.textContent).not.toContain('Solicitar acceso');
+      expect(container.textContent).not.toContain('ADMIN');
+    } finally { session.roles = roles; session.modules = modules; await cleanup(); }
+  });
+
+  it('lists globalMenu:false destinations only through search or while they are open', async () => {
+    const searchOnly = NAV_GROUPS.flatMap(group => group.items).filter(item => item.searchOnly).map(item => item.path);
+    expect(searchOnly).toContain('/mi-tienda');
+    expect(searchOnly).not.toContain('/admin/directorio');
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderNav(container, '/admin/merch');
+    try {
+      expect(container.querySelector('a[href="/admin/merch"]')).not.toBeNull();
+      await setSearchFilter(container, '/mi-tienda');
+      expect(container.querySelector('a[href="/mi-tienda"]')).not.toBeNull();
+    } finally { await cleanup(); }
   });
 
   it('keeps support and tool links collapsed away from the active admin section', async () => {

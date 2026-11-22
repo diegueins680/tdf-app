@@ -18,6 +18,7 @@ import Database.Persist.Sql (SqlPersistT)
 
 import TDF.Models.SocialEventsModels
 import TDF.Server.EventAdminDelegation (isTicketTierSaleOpen)
+import TDF.Server.TicketSalesWindow (ticketSalesOpenBeforeEventEnd)
 
 data PublicTicketCardSummary = PublicTicketCardSummary
     { ptcsFromPriceCents :: Maybe Int
@@ -45,7 +46,7 @@ summarizePublicTicketTiers now eventEnd capacity tiers =
                 PublicTicketCardSummary (Just (minimum (map eventTicketTierPriceCents inStock))) (Just currency) False
             _ -> PublicTicketCardSummary Nothing Nothing False
   where
-    eventOpen = maybe True (now <) eventEnd
+    eventOpen = ticketSalesOpenBeforeEventEnd now eventEnd
     onSale =
         [ tier
         | eventOpen
@@ -53,9 +54,12 @@ summarizePublicTicketTiers now eventEnd capacity tiers =
         , eventTicketTierPriceCents tier > 0
         , isTicketTierSaleOpen now tier
         ]
-    totalSold = sum (map eventTicketTierQuantitySold tiers)
-    eventRemaining = (\limit -> max 0 (limit - totalSold)) <$> capacity
+    -- Aggregate with unbounded integers: several individually valid tier
+    -- counts can exceed Int without creating inventory for a full event.
+    totalSold = sum (map (toInteger . eventTicketTierQuantitySold) tiers)
+    eventRemaining = (\limit -> max 0 (toInteger limit - totalSold)) <$> capacity
     remaining tier =
-        let tierRemaining = max 0 (eventTicketTierQuantityTotal tier - eventTicketTierQuantitySold tier)
+        let tierRemaining = max 0
+                (toInteger (eventTicketTierQuantityTotal tier) - toInteger (eventTicketTierQuantitySold tier))
          in maybe tierRemaining (min tierRemaining) eventRemaining
     inStock = filter ((> 0) . remaining) onSale

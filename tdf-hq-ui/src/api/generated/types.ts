@@ -4,6 +4,47 @@
  */
 
 export interface paths {
+    "/music/artists/{artistPartyId}/featured-track": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the artist's currently public featured track reference
+         * @description Requires music_releases.public. Rechecks artist membership, published context and current public asset authorization for canonical recordings. Unavailable references are omitted. No signed URL or media grant is returned.
+         */
+        get: operations["getArtistFeaturedTrack"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/me/featured-track": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the authenticated artist's saved preference, including unavailable references */
+        get: operations["getOwnArtistFeaturedTrack"];
+        /**
+         * Select or clear the authenticated artist's featured track
+         * @description artistPartyId must match the authenticated Party even for an administrator. Only a currently public recording or legacy release belonging to that artist can be selected. Null or omitted source fields clear the preference. Saving does not publish a recording, grant media access or interrupt playback. Concurrent writes use the last successful server write.
+         */
+        put: operations["setOwnArtistFeaturedTrack"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/artists/video-campaigns": {
         parameters: {
             query?: never;
@@ -1285,6 +1326,23 @@ export interface paths {
         post?: never;
         /** Delete the authenticated user's RSVP */
         delete: operations["deleteMyEventRsvp"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/attendees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List visible attendee profiles for one RSVP status */
+        get: operations["listEventAttendees"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -4139,10 +4197,14 @@ export interface paths {
         put?: never;
         /**
          * Exchange Google Drive OAuth code
-         * @description Exchanges a Google OAuth code (PKCE) for Drive tokens.
+         * @description Stores delegated Google credentials encrypted on the server and returns an owner-bound opaque TDFConnection handle. Provider access and refresh tokens are never returned. Legacy browser tokens require new consent.
          */
         post: operations["exchangeDriveToken"];
-        delete?: never;
+        /**
+         * Disconnect personal Google Drive
+         * @description Erases this account's encrypted delegated credential. In-flight refreshes cannot restore it. Existing external files remain in the user's provider account. Provider-wide OAuth revocation is separately managed in Google permissions.
+         */
+        delete: operations["disconnectDrive"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4159,7 +4221,7 @@ export interface paths {
         put?: never;
         /**
          * Refresh Google Drive access token
-         * @description Refreshes a Google Drive access token using a refresh token.
+         * @description Resolves the authenticated owner-bound TDFConnection handle; refreshes provider credentials inside the encrypted server vault when required. Raw Google refresh tokens are rejected.
          */
         post: operations["refreshDriveToken"];
         delete?: never;
@@ -7101,6 +7163,23 @@ export interface paths {
         patch: operations["decideDirectoryVerification"];
         trace?: never;
     };
+    "/directory/admin/agreements/disputes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Disputed marketplace agreements waiting for an administrator, oldest dispute first (ADR 0136) */
+        get: operations["listAgreementDisputes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/directory/admin/moderation": {
         parameters: {
             query?: never;
@@ -7652,6 +7731,146 @@ export interface paths {
          * @description Strict administrators only. The approved cancellation policy prices the refund (customer ladder or full refund when TDF cancels) and the refund request is created in the same transaction with the administrator as requester; a different party must approve it. Called on a customer-cancelled quote with an open obligation, it creates that refund request.
          */
         post: operations["adminCancelDomoQuote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the bound cancellation refund
+         * @description Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+         */
+        get: operations["getDomoRefund"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/refund/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve independently without contacting the provider
+         * @description Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+         */
+        post: operations["approveDomoRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/refund/execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Claim one execution permit; automatic PayPal POST or manual handoff
+         * @description Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+         */
+        post: operations["executeDomoRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/refund/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Query a known PayPal refund; exact completion alone settles the obligation
+         * @description Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+         */
+        post: operations["reconcileDomoRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/refund/manual-evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record immutable evidence of a manual refund without completing it
+         * @description Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+         */
+        post: operations["recordDomoManualRefundEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/refund/confirm-manual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Independently verify the recorded receipt and post the canonical refund
+         * @description Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+         */
+        post: operations["confirmDomoManualRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/refund/provider-reference": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record an operator-discovered PayPal refund ID for exact authenticated readback
+         * @description Current strict administrator distinct from the requester. A query candidate is not evidence of returned money. The original processing fence and existing provider identity are retained; this route never issues a refund POST.
+         */
+        post: operations["bindDomoRefundProviderReference"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9400,6 +9619,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/music/legacy/{sourceId}/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicLegacyMediaAccess"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/media-health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listOwnMusicMediaHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/media-health/{sourceKind}/{sourceId}/revalidate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["revalidateOwnMusicMedia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -9479,6 +9746,26 @@ export interface components {
             defaultDestination: "tdf" | "google_drive" | null;
             /** Format: int64 */
             revision: number;
+        };
+        ArtistFeaturedTrack: {
+            /** Format: int64 */
+            artistPartyId: number;
+            /** Format: uuid */
+            recordingId: string | null;
+            /** Format: int64 */
+            legacyReleaseId: number | null;
+            /** @description Current public reference eligibility; actual decoding is validated by the player. */
+            available: boolean;
+            /** Format: date-time */
+            updatedAt: string | null;
+        };
+        MusicArtistFeaturedTrackRequest: {
+            /** Format: int64 */
+            artistPartyId: number;
+            /** Format: uuid */
+            recordingId?: string | null;
+            /** Format: int64 */
+            legacyReleaseId?: number | null;
         };
         InvoiceLineDTO: {
             /** Format: int64 */
@@ -11074,7 +11361,7 @@ export interface components {
             refundDueMinor: number;
             currency: string;
             /** @enum {string} */
-            refundStatus: "none" | "awaiting_operator" | "requested";
+            refundStatus: "none" | "awaiting_operator" | "requested" | "approved" | "processing" | "succeeded" | "failed" | "cancelled";
             /** @description True when the quote was cancelled earlier and the stored record is returned */
             alreadyCancelled: boolean;
         };
@@ -11082,6 +11369,19 @@ export interface components {
             /** @enum {string} */
             canceller: "customer" | "tdf";
             note?: string;
+        };
+        DomoRefundProviderReference: {
+            providerRefundId: string;
+        };
+        DomoManualRefundEvidence: {
+            externalReference: string;
+            /** @description Secure internal reference to the actual receipt; never a credential or raw bank document */
+            evidenceReference: string;
+            /** Format: int64 */
+            amountMinor: number;
+            currency: string;
+            /** Format: date-time */
+            occurredAt: string;
         };
         PublicDomoQuoteLine: {
             code: string;
@@ -11133,7 +11433,8 @@ export interface components {
             termsAcceptedAt?: string | null;
             /** Format: date-time */
             depositPaidAt?: string | null;
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
+            cancellation?: components["schemas"]["PublicDomoCancellation"] | null;
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card")[];
         };
         PublicDomoPaypalCaptureRequest: {
             paypalOrderId: string;
@@ -11265,7 +11566,7 @@ export interface components {
             /** Format: date-time */
             holdExpiresAt: string;
             quote: components["schemas"]["PublicEventTicketQuote"];
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "bank_transfer")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card" | "bank_transfer")[];
             /** @description Empty until fulfillment issues tickets after verified payment. */
             tickets: components["schemas"]["PublicEventTicket"][];
             /** @description Present only after the buyer selected bank transfer. */
@@ -11468,7 +11769,7 @@ export interface components {
             holdExpiresAt: string;
             quote: components["schemas"]["PublicBookingQuote"];
             /** @description Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown. */
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "bank_transfer")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card" | "bank_transfer")[];
             manualPayment: components["schemas"]["PublicBookingManualPayment"] | null;
         };
         PublicBookingManualPaymentCreate: {
@@ -14800,7 +15101,7 @@ export interface components {
             /** Format: date-time */
             holdExpiresAt: string | null;
             quote: components["schemas"]["CourseCheckoutQuote"] | null;
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card")[];
             checkoutAvailable: boolean;
         };
         CoursePaypalCaptureRequest: {
@@ -14822,6 +15123,7 @@ export interface components {
         DriveTokenRefreshRequest: {
             refreshToken: string;
         };
+        /** @description Nonsecret TDFConnection descriptor. accessToken and refreshToken contain the same opaque owner-bound handle; neither contains a provider credential. */
         DriveTokenResponse: {
             accessToken: string;
             refreshToken?: string | null;
@@ -16948,6 +17250,15 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        /** @description Who opened the dispute of an agreement, from which state and why. Present only in the administrator dispute queue (ADR 0136). */
+        AgreementDispute: {
+            reason?: string | null;
+            /** @enum {string|null} */
+            openedBy?: "buyer" | "provider" | "admin" | null;
+            previousStatus?: string | null;
+            /** Format: date-time */
+            openedAt?: string | null;
+        };
         /** @description Private to its two parties and authorized admins. Amounts and terms are frozen when the offer is accepted (ADR 0135). */
         MarketplaceAgreement: {
             /** Format: uuid */
@@ -17020,6 +17331,7 @@ export interface components {
             payments?: components["schemas"]["AgreementPayment"][];
             /** @description Payment providers through which the provider profile can be paid */
             payoutProviders?: ("payphone" | "stripe")[];
+            dispute?: components["schemas"]["AgreementDispute"];
         };
         AgreementPaymentRequest: {
             /** @enum {string} */
@@ -17380,6 +17692,22 @@ export interface components {
             durationMs: number | null;
             sources: components["schemas"]["MusicTrackSearchSource"][];
         };
+        /** @enum {string} */
+        MusicMediaSourceKind: "asset" | "legacy";
+        MusicMediaHealth: {
+            sourceKind: components["schemas"]["MusicMediaSourceKind"];
+            sourceId: string;
+            sourceVersion: string;
+            /** Format: int64 */
+            artistPartyId: number;
+            /** @enum {string} */
+            status: "pending" | "valid" | "temporary" | "invalid";
+            reason: string | null;
+            /** Format: date-time */
+            checkedAt: string | null;
+            /** Format: date-time */
+            nextCheckAt: string;
+        };
     };
     responses: {
         /** @description Not found or not publicly eligible */
@@ -17465,6 +17793,134 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getArtistFeaturedTrack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistPartyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current reference or the default catalogue order */
+            200: {
+                headers: {
+                    /** @description private, no-store */
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistFeaturedTrack"];
+                };
+            };
+            /** @description Invalid artist identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public music disabled */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getOwnArtistFeaturedTrack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authenticated owner's preference; never another Party's */
+            200: {
+                headers: {
+                    /** @description private, no-store */
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistFeaturedTrack"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public music disabled */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    setOwnArtistFeaturedTrack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MusicArtistFeaturedTrackRequest"];
+            };
+        };
+        responses: {
+            /** @description Authoritative saved preference */
+            200: {
+                headers: {
+                    /** @description private, no-store */
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistFeaturedTrack"];
+                };
+            };
+            /** @description Invalid */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request belongs to another authenticated Party */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public music disabled */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listVideoCampaigns: {
         parameters: {
             query?: {
@@ -22546,6 +23002,59 @@ export interface operations {
             };
             /** @description Mutation rate limit exceeded */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventAttendees: {
+        parameters: {
+            query: {
+                status: "accepted" | "maybe";
+                after?: number;
+            };
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Up to 20 profiles visible to the viewer, ordered by stable RSVP identifier */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        nextCursor: string | null;
+                        items: {
+                            id: string;
+                            name: string;
+                            avatarUrl: string | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Invalid status or cursor */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event is missing or inaccessible */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -28263,6 +28772,31 @@ export interface operations {
             };
             /** @description Google OAuth error */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    disconnectDrive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Personal connection erased */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authenticated session required */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -34857,6 +35391,33 @@ export interface operations {
             };
         };
     };
+    listAgreementDisputes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Disputed agreements with who opened the dispute and why */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceAgreement"][];
+                };
+            };
+            /** @description Requires the Admin role and module */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listDirectoryModerationQueue: {
         parameters: {
             query?: never;
@@ -36191,6 +36752,497 @@ export interface operations {
             };
             /** @description No approved cancellation policy exists */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getDomoRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current refund state; processing does not mean money returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid quote identifier or evidence */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session revoked or expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator or module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing independent approval or inconsistent binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider query quota exhausted */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider outcome unverified; keep the same refund ID */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Qualified capabilities or configuration disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    approveDomoRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current refund state; processing does not mean money returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid quote identifier or evidence */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session revoked or expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator or module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing independent approval or inconsistent binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider query quota exhausted */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider outcome unverified; keep the same refund ID */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Qualified capabilities or configuration disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    executeDomoRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current refund state; processing does not mean money returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid quote identifier or evidence */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session revoked or expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator or module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing independent approval or inconsistent binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider query quota exhausted */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider outcome unverified; keep the same refund ID */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Qualified capabilities or configuration disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reconcileDomoRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current refund state; processing does not mean money returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid quote identifier or evidence */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session revoked or expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator or module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing independent approval or inconsistent binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider query quota exhausted */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider outcome unverified; keep the same refund ID */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Qualified capabilities or configuration disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordDomoManualRefundEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DomoManualRefundEvidence"];
+            };
+        };
+        responses: {
+            /** @description Current refund state; processing does not mean money returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid quote identifier or evidence */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session revoked or expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator or module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing independent approval or inconsistent binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider query quota exhausted */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider outcome unverified; keep the same refund ID */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Qualified capabilities or configuration disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmDomoManualRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current refund state; processing does not mean money returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid quote identifier or evidence */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session revoked or expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator or module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing independent approval or inconsistent binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider query quota exhausted */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider outcome unverified; keep the same refund ID */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Qualified capabilities or configuration disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    bindDomoRefundProviderReference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DomoRefundProviderReference"];
+            };
+        };
+        responses: {
+            /** @description Current processing refund and its immutable query candidate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Malformed identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authenticated session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator and Admin module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider identity */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -39526,6 +40578,121 @@ export interface operations {
             };
             /** @description Persisted automatic assignment policy is unavailable or inconsistent */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicLegacyMediaAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sourceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current public source; private files keep their existing access controls */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        url: string;
+                        mediaType: string;
+                        sourceVersion: string;
+                    };
+                };
+            };
+            /** @description Missing */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listOwnMusicMediaHealth: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description Last returned source kind; must be paired with afterId */
+                afterKind?: components["schemas"]["MusicMediaSourceKind"];
+                /** @description Last returned source ID; must be paired with afterKind */
+                afterId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One bounded page of current owner/team sources; administrators may traverse all sources. Stable source-kind/ID ordering; pass the last returned identity as cursor when the page fills the requested limit. Every page rechecks current permission. A page sequence is not a database snapshot. */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicMediaHealth"][];
+                };
+            };
+            /** @description Invalid limit, incomplete cursor or unsupported source kind */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    revalidateOwnMusicMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sourceKind: components["schemas"]["MusicMediaSourceKind"];
+                sourceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revalidation queued without clearing an existing invalid verdict */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        queued: boolean;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Source missing or caller cannot manage its artist */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

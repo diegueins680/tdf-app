@@ -54,6 +54,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
+jest.unstable_mockModule('../api/eventAttendees', () => ({ listAttendees: jest.fn() }));
 jest.unstable_mockModule('../api/eventTickets', () => ({ EventTickets: { getStorefront: storefrontMock } }));
 // Keep the real feed component while isolating its explicit domain API boundary.
 // Do not invent successful low-level transport methods merely to satisfy imports.
@@ -349,6 +350,16 @@ describe('canonical public event authentication fallback', () => {
   });
   afterEach(() => { cleanup(); jest.restoreAllMocks(); });
 
+  it.each([
+    ['Dirección del evento: Calle de Prueba 12, Quito\n\nJam de barrio', 'Calle de Prueba 12, Quito'],
+    ['Jam de barrio', 'Quito, EC'],
+  ])('renders the organizer-provided location or city for %s', async (description, expected) => {
+    profileMock.mockResolvedValueOnce({ ...event, description, location: { city: 'Quito', countryCode: 'EC' } });
+    renderPage('/eventos/141', '/login?redirect=event');
+    expect(await screen.findByText(expected)).toBeTruthy();
+    expect(screen.queryByText(/ubicación pública es aproximada/i)).toBeNull();
+  });
+
   it.each([401, 403, 404])('retains the original protected target when public metadata is unavailable (%s)', async status => {
     profileMock.mockRejectedValueOnce(new ApiError('Unavailable', status));
     const login = '/login?redirect=%2Fsocial%2Feventos%2F141%3Futm_source%3Dinvitation%23momentos';
@@ -396,6 +407,20 @@ describe('canonical public event authentication fallback', () => {
     renderPage('/eventos/141');
     const link = await screen.findByRole('link', { name: 'Ver entradas' });
     expect(link.getAttribute('href')).toBe('/eventos/141/entradas');
+  });
+
+  it('states the lowest in-stock price beside the buy button and drops the profile contact panel on events', async () => {
+    profileMock.mockResolvedValueOnce(event);
+    storefrontMock.mockResolvedValueOnce({ eventId: 141, checkoutAvailable: true, policy: {}, unavailableReason: null, tiers: [
+      { tierId: 1, unitPriceMinor: 1000, currency: 'USD', remaining: 0 },
+      { tierId: 2, unitPriceMinor: 3500, currency: 'USD', remaining: 4 },
+      { tierId: 3, unitPriceMinor: 2000, currency: 'USD', remaining: 9 },
+    ] });
+    renderPage('/eventos/141');
+    await screen.findByRole('link', { name: 'Ver entradas' });
+    expect(screen.getByText(/^(Desde|From) .*20[,.]00/)).toBeTruthy();
+    expect(screen.queryByText('¿Quieres contactar este perfil?')).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Ingresar para contactar' })).toBeNull();
   });
 
   it('explains a closed storefront in Spanish instead of exposing the raw server reason', async () => {

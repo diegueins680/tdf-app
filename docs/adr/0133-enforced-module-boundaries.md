@@ -41,7 +41,7 @@ Web (`tdf-hq-ui/src`, 521 non-test modules):
    and the executables).
 
    Web: `foundation` (`vendor`, `assets`, `styles`, `lib`, `i18n`) → `utils` →
-   `config` → `api` → `app-services` (session, services, analytics, contexts,
+   `config` → `auth-state` (`auth/`) → `api` → `app-services` (session, services, analytics, contexts,
    hooks, player, mobile, desktop, theme) → `components` → `features` → `pages`
    → `routing` → `shell` (`App.tsx`, `main.tsx`, `player/PlayerShell.tsx`).
 
@@ -81,18 +81,43 @@ code reaching into HTTP delivery drops from four imports to two.
 Listed in `docs/architecture/module-boundaries.json`: 11 backend imports, 21 web
 imports, 17 oversized files. Suggested order, each as its own small change:
 
-1. `TDF.Cron -> TDF.Server`: move the course metadata helpers and the RAG reply
-   function into domain modules. This removes the worker's dependency on the
-   whole HTTP server and is the first real cut into `TDF.Server`.
-2. `TDF.Commerce.ProviderEventWorker -> TDF.Server.ServiceStorefront`: move
-   PayPal webhook parsing and processing under `TDF.Commerce`.
-3. `TicketPaymentReceipt`: move the response type out of the handler module so
-   the route contract stops importing delivery.
-4. Web `api -> session`: move `logoutIntent` and `authEvents` below `api`; they
-   are storage and event primitives, not session UI.
-5. Web `features/featureRegistry.ts`: it is static registry data used from
-   `utils`, `api` and `components`; move it to a low layer.
-6. Split the oversized files along the seams their own section comments mark,
+1. Done in the follow-up change: `TDF.Cron` no longer imports `TDF.Server`. The
+   course metadata helpers moved to `TDF.Courses.Metadata` and the
+   chat-completion client to `TDF.Services.LlmChat` (759 lines out of
+   `TDF.Server`). The move surfaced one import that the god module had hidden:
+   `TDF.Courses.Metadata -> TDF.Routes.Courses`, because the course transfer
+   types are declared beside the route definitions. It is listed; retiring it
+   means moving those types under `TDF.DTO`.
+2. Done: PayPal webhook parsing and processing moved to
+   `TDF.Commerce.PaypalWebhook`, and the paid-order ticket issuance it calls
+   moved from `TDF.Server.SocialEventsHandlers` to `TDF.Ticketing.Issuance`.
+   No background or domain module imports an HTTP handler module any more, and
+   `TDF.Server.ServiceStorefront` is back under the size limit.
+3. Done: the `TicketPaymentReceipt` wire type moved to
+   `TDF.DTO.TicketPaymentReceipt`; the handler module re-exports it. The route
+   contract no longer imports HTTP delivery.
+4. Done: `logoutIntent` and `authEvents` moved from `session/` to `auth/`, a
+   new `auth-state` layer directly below `api`. Neither imports anything, and
+   both are storage and event primitives that the api client needs, not session
+   UI. Seven of the eight `api -> session` imports are gone. The two value lists
+   they declare keep their catalog reviews as successors under the new paths.
+   The last one, `api/authHeader.ts -> session/SessionContext.tsx`, reads the
+   token that `SessionProvider` keeps in module state, and about 25 tests stub
+   `SessionContext` to control it; moving it is a separate change.
+5. Done: `featureRegistry.ts` (static registry data plus pure access
+   evaluation, importing only the registry JSON and `utils/stringValues`) moved
+   from `features/` to `utils/`, its lowest consumer's layer. The four imports
+   of it from `utils` and `components` are gone, and its eleven value lists keep
+   their catalog reviews as successors under the new path.
+6. Done: the three `components -> features` imports are gone. The video
+   campaign model (`videoCampaign.ts`: types, a zod schema and pure helpers,
+   whose types `api/videoCampaigns.ts` also uses) moved to `utils/`. Campaign
+   attribution (`videoAttribution.ts`, which records conversions through the
+   api) and the marketplace cart summary store (`cartSummary.ts`, browser
+   storage plus a React subscription) moved to `services/`, the app-services
+   layer between `api` and `components`. The three value lists in the campaign
+   model keep their catalog reviews as successors under the new path.
+7. Split the oversized files along the seams their own section comments mark,
    lowering each ceiling in the same change.
 
 ## Consequences

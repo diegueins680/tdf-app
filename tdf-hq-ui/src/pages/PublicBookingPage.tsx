@@ -1,3 +1,5 @@
+import PaymentMethodChoices, { PaymentMethodButton } from '../components/payments/PaymentMethodChoices';
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import { logger } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -34,10 +36,6 @@ import {
   Typography,
   useMediaQuery,
 } from '@mui/material';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
-import PersonIcon from '@mui/icons-material/Person';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { DateTime } from 'luxon';
 import {
@@ -55,6 +53,7 @@ import { Engineers, type PublicEngineer } from '../api/engineers';
 import { Services } from '../api/services';
 import { STUDIO_MAP_URL, STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
+import { bookingBillingUnitLabel } from '../utils/bookingBillingUnitLabel';
 import { env } from '../utils/env';
 import { useSession } from '../session/SessionContext';
 import { resolveRuntimeCurrency } from '../utils/formatters';
@@ -99,7 +98,7 @@ const STUDIO_TIME_ZONE = 'America/Guayaquil';
 const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
 const MAX_DURATION_MINUTES = (OPEN_HOURS.end - OPEN_HOURS.start) * 60;
 const QUICK_SLOT_STEP_MINUTES = 30;
-const BOOKING_STEPS = ['Contacto', 'Horario', 'Confirmación'] as const;
+const BOOKING_STEPS = ['Contacto', 'Horario y confirmación'] as const;
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
 
 // Page column: the booking card and the service reviews stack vertically so a
@@ -328,7 +327,7 @@ export default function PublicBookingPage() {
   const bookingReturnPath = `${location.pathname}${location.search}${location.hash}`;
   const loginPath = buildLoginRedirectPath(bookingReturnPath);
   const signupPath = `${loginPath}&signup=1`;
-  const { session, logout } = useSession();
+  const { session } = useSession();
   const isMobile = useMediaQuery('(max-width:600px)');
   const appliedServiceQuery = useRef(false);
   const appliedStoredProfile = useRef(false);
@@ -366,17 +365,7 @@ export default function PublicBookingPage() {
   }, [requiresManualConfirmation, serviceCatalogUnavailable]);
   const pageEyebrow = 'Agenda pública';
   const pageTitle = 'Reserva un servicio con TDF';
-  const pageDescription =
-    'Completa tus datos y agenda el horario que prefieras. Puedes reservar como invitado; crear una cuenta es opcional.';
-  const introChips = [
-    '1. Elige tu servicio y agenda sin crear cuenta',
-    '2. Recibe un ID de reserva',
-    '3. Coordina ajustes por WhatsApp',
-  ];
-  const contactTitle = 'Datos de contacto';
-  const contactDescription = 'Usa un correo válido para identificar la reserva. Crear una cuenta es opcional.';
-  const calendarNote = 'Bloque tentativo en el calendario.';
-  const durationNote = 'Duración estándar de 1h (ajústala si necesitas más tiempo).';
+  const pageDescription = 'Elige el servicio y el horario. No necesitas cuenta.';
   const notesPlaceholder = 'Cuéntanos qué necesitas (ej: grabación de voz, mezcla, ensayo, DJ booth, etc.)';
   const [form, setForm] = useState<FormState>(buildInitialForm);
   const userZoneLabel = useMemo(() => zoneLabel(userTimeZone, form.startsAt), [userTimeZone, form.startsAt]);
@@ -387,6 +376,7 @@ export default function PublicBookingPage() {
   const [authoritativeQuote, setAuthoritativeQuote] = useState<PublicBookingQuoteDTO | null>(null);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
+  const [attemptedPaymentMethod, setAttemptedPaymentMethod] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
   const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
@@ -399,9 +389,15 @@ export default function PublicBookingPage() {
   const paypalClientId = useMemo(() => env.read('VITE_PAYPAL_CLIENT_ID') ?? '', []);
   const [manualDialogOpen, setManualDialogOpen] = useState(false);
   const [manualReference, setManualReference] = useState('');
+  const [manualReferenceError, setManualReferenceError] = useState<string | null>(null);
+  const manualReferenceInput = useRef<HTMLInputElement>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const bookingIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const [rememberProfile, setRememberProfile] = useState(false);
+  const [editContact, setEditContact] = useState(false);
+  const contactNameInput = useRef<HTMLInputElement>(null);
+  const contactEditButton = useRef<HTMLButtonElement>(null);
+  const contactFocusTarget = useRef<'fields' | 'summary' | null>(null);
   const [engineers, setEngineers] = useState<PublicEngineer[]>([]);
   const [engineersLoading, setEngineersLoading] = useState(false);
   const [engineersError, setEngineersError] = useState<string | null>(null);
@@ -648,6 +644,17 @@ export default function PublicBookingPage() {
     return null;
   };
 
+  const contactSummarized = Boolean(session) && !editContact && !validateContactStep();
+  useEffect(() => {
+    if (contactFocusTarget.current === 'fields' && !contactSummarized) {
+      contactNameInput.current?.focus();
+      contactFocusTarget.current = null;
+    } else if (contactFocusTarget.current === 'summary' && contactSummarized) {
+      contactEditButton.current?.focus();
+      contactFocusTarget.current = null;
+    }
+  }, [contactSummarized]);
+
   const validateScheduleStep = () => {
     const selectedService = services.find((service) => service.id === form.serviceOfferingId);
     if (!selectedService) return 'Selecciona un servicio publicado.';
@@ -690,19 +697,13 @@ export default function PublicBookingPage() {
     setActiveStep(1);
   };
 
-  const goToConfirmStep = () => {
-    setError(null);
-    const message = validateScheduleStep();
-    if (message) {
-      setError(message);
-      return;
-    }
-    setActiveStep(2);
-  };
-
   const handleSubmit = async () => {
     setError(null);
     setSuccess(null);
+    if (availabilityStatus === 'checking') {
+      setError('Espera a que terminemos de consultar el horario y el precio.');
+      return;
+    }
 
     const contactError = validateContactStep();
     if (contactError) {
@@ -802,10 +803,6 @@ export default function PublicBookingPage() {
       goToScheduleStep();
       return;
     }
-    if (activeStep === 1) {
-      goToConfirmStep();
-      return;
-    }
     void handleSubmit();
   };
 
@@ -827,7 +824,8 @@ export default function PublicBookingPage() {
     services.forEach((svc) => {
       if (svc.priceCents == null) return;
       const display = `${svc.currency} ${(svc.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-      const unit = svc.billingUnit ? ` / ${svc.billingUnit}` : '';
+      const label = bookingBillingUnitLabel(svc.billingUnit);
+      const unit = label ? ` / ${label}` : '';
       map.set(svc.id, `${display}${unit}`);
     });
     return map;
@@ -844,7 +842,8 @@ export default function PublicBookingPage() {
       const total = (svc.priceCents / 100) * hours;
       return `${svc.currency} ${total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} aprox (${hours.toFixed(1)}h)`;
     }
-    return `${base}${svc.billingUnit ? ` / ${svc.billingUnit}` : ''}`;
+    const label = bookingBillingUnitLabel(svc.billingUnit);
+    return `${base}${label ? ` / ${label}` : ''}`;
   }, [authoritativeQuote, form.durationMinutes, form.serviceOfferingId, services]);
   const selectedPrice = servicePriceLookup.get(form.serviceOfferingId);
 
@@ -1141,6 +1140,7 @@ export default function PublicBookingPage() {
   }, [checkoutSuccess]);
 
   const handleDatafastDeposit = useCallback(async () => {
+    setAttemptedPaymentMethod('datafast');
     if (!checkoutSuccess || !checkoutLookupToken) {
       setPaymentError('No encontramos el acceso seguro de esta orden. Crea una nueva reserva.');
       return;
@@ -1163,6 +1163,7 @@ export default function PublicBookingPage() {
   }, [checkoutLookupToken, checkoutSuccess]);
 
   const handlePaypalDeposit = useCallback(async () => {
+    setAttemptedPaymentMethod('paypal');
     if (!checkoutSuccess || !checkoutLookupToken) {
       setPaymentError('No encontramos el acceso seguro de esta orden. Crea una nueva reserva.');
       return;
@@ -1188,6 +1189,7 @@ export default function PublicBookingPage() {
   }, [checkoutLookupToken, checkoutSuccess, paypalClientId]);
 
   const handleManualDeposit = useCallback(async () => {
+    setAttemptedPaymentMethod('bank_transfer');
     if (!checkoutSuccess || !checkoutLookupToken) {
       setPaymentError('No encontramos el acceso seguro de esta orden. Crea una nueva reserva.');
       return;
@@ -1212,9 +1214,11 @@ export default function PublicBookingPage() {
     if (!checkoutSuccess || !checkoutLookupToken) return;
     const reference = manualReference.trim();
     if (reference.length < 3 || reference.length > 120) {
-      setPaymentError('Ingresa una referencia bancaria de 3 a 120 caracteres.');
+      setManualReferenceError('Ingresa una referencia bancaria de 3 a 120 caracteres.');
+      manualReferenceInput.current?.focus();
       return;
     }
+    setManualReferenceError(null);
     setPaymentBusy(true);
     setPaymentError(null);
     try {
@@ -1226,6 +1230,7 @@ export default function PublicBookingPage() {
       setCheckoutSuccess({ ...updated, lookupToken: checkoutLookupToken });
       setManualDialogOpen(false);
       setManualReference('');
+      setManualReferenceError(null);
       setSnackbar({
         open: true,
         message: 'Referencia enviada para revisión. El depósito todavía no está confirmado.',
@@ -1244,9 +1249,12 @@ export default function PublicBookingPage() {
     const script = document.createElement('script');
     script.src = datafastCheckout.dcWidgetUrl;
     script.async = true;
-    script.onerror = () => setPaymentError(
+    script.onerror = () => {
+      setAttemptedPaymentMethod('datafast');
+      setPaymentError(
       'No se pudo cargar el formulario Datafast. No se confirmó ningún pago.',
     );
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [datafastCheckout, datafastDialogOpen, datafastWidgetKey]);
@@ -1262,9 +1270,12 @@ export default function PublicBookingPage() {
     script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=${encodeURIComponent(checkoutSuccess?.quote.currency ?? 'USD')}`;
     script.async = true;
     script.onload = () => setPaypalReady(true);
-    script.onerror = () => setPaymentError(
+    script.onerror = () => {
+      setAttemptedPaymentMethod('paypal');
+      setPaymentError(
       'No se pudo cargar PayPal. La reserva continúa sin pago confirmado.',
     );
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [checkoutSuccess?.paymentMethods, checkoutSuccess?.quote.currency, paypalClientId]);
@@ -1363,6 +1374,32 @@ export default function PublicBookingPage() {
     const depositPaid = checkoutSuccess?.paymentStatus === 'paid';
     const depositProcessing = checkoutSuccess?.paymentStatus === 'processing';
     const paymentMethods = checkoutSuccess?.paymentMethods ?? [];
+    const legacyPaymentMethods = (paymentMethods.includes('datafast') || (paymentMethods.includes('paypal') && paypalClientId) || paymentMethods.includes('bank_transfer')) ? (<>
+                              {paymentMethods.includes('datafast') && (
+                                <PaymentMethodButton
+                                  disabled={paymentBusy || hostedPaymentLocked}
+                                  onClick={() => void handleDatafastDeposit()}
+                                >
+                                  Tarjeta · Datafast
+                                </PaymentMethodButton>
+                              )}
+                              {paymentMethods.includes('paypal') && paypalClientId && (
+                                <PaymentMethodButton
+                                  disabled={paymentBusy || hostedPaymentLocked}
+                                  onClick={() => void handlePaypalDeposit()}
+                                >
+                                  Pagar con PayPal
+                                </PaymentMethodButton>
+                              )}
+                              {paymentMethods.includes('bank_transfer') && (
+                                <PaymentMethodButton
+                                  disabled={paymentBusy || hostedPaymentLocked}
+                                  onClick={() => void handleManualDeposit()}
+                                >
+                                  Registrar transferencia
+                                </PaymentMethodButton>
+                              )}
+                            </>) : null;
     const manualPayment = checkoutSuccess?.manualPayment;
 
     return (
@@ -1452,7 +1489,7 @@ export default function PublicBookingPage() {
                         <Stack spacing={1.5}>
                           <Typography variant="subtitle1" fontWeight={800}>Pagar depósito</Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Elige únicamente un método habilitado por el servidor. Abrir un proveedor no confirma el pago.
+                            Elige un método. El pago cuenta solo cuando lo confirmemos aquí.
                           </Typography>
                           {paymentError && <Alert severity="warning">{paymentError}</Alert>}
                           {manualPayment?.status === 'submitted' && (
@@ -1472,47 +1509,23 @@ export default function PublicBookingPage() {
                           )}
                           {paymentMethods.length === 0 && (
                             <Alert severity="info" variant="outlined">
-                              No hay un rail en línea habilitado para esta orden. El horario sigue solamente en retención temporal.
+                              Todavía no hay un método de pago en línea para esta orden. El horario sigue reservado solo temporalmente.
                             </Alert>
                           )}
                           <Stack spacing={1.5}>
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                              {paymentMethods.includes('datafast') && (
-                                <Button
-                                  variant="contained"
-                                  disabled={paymentBusy || hostedPaymentLocked}
-                                  onClick={() => void handleDatafastDeposit()}
-                                >
-                                  Pagar con tarjeta · Datafast
-                                </Button>
-                              )}
-                              {paymentMethods.includes('paypal') && paypalClientId && (
-                                <Button
-                                  variant="outlined"
-                                  disabled={paymentBusy || hostedPaymentLocked}
-                                  onClick={() => void handlePaypalDeposit()}
-                                >
-                                  Pagar con PayPal
-                                </Button>
-                              )}
-                              {paymentMethods.includes('bank_transfer') && (
-                                <Button
-                                  variant="outlined"
-                                  disabled={paymentBusy || hostedPaymentLocked}
-                                  onClick={() => void handleManualDeposit()}
-                                >
-                                  Registrar transferencia
-                                </Button>
-                              )}
-                            </Stack>
+                            {!checkoutLookupToken && legacyPaymentMethods && <PaymentMethodChoices methods={legacyPaymentMethods} />}
                             {checkoutLookupToken && (
                               <HostedProviderCheckout
+                                additionalMethods={legacyPaymentMethods}
                                 checkout={{
                                   checkoutId: checkoutSuccess.checkoutId,
                                   lookupToken: checkoutLookupToken,
                                   returnPath: `/reservas/orden/${checkoutSuccess.booking.bookingId}`,
                                 }}
                                 offeredMethods={paymentMethods}
+                                alternativeMethods={paymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                                paymentFailure={paymentError && !depositPaid
+                                  ? { method: attemptedPaymentMethod, needsVerification: true } : null}
                                 disabled={paymentBusy || datafastDialogOpen || paypalDialogOpen || manualDialogOpen}
                                 initialBuyerPhone={form.phone}
                                 onSafetyLockChange={setHostedPaymentLocked}
@@ -1540,15 +1553,15 @@ export default function PublicBookingPage() {
                     <Typography variant="body2" color="text.secondary">
                       {checkoutSuccess
                         ? depositPaid
-                          ? '• Depósito verificado por el servidor; revisa el saldo antes de la sesión.'
-                          : `• Retención hasta ${DateTime.fromISO(checkoutSuccess.holdExpiresAt).setZone(userTimeZone).toLocaleString(DateTime.DATETIME_MED)}; no constituye pago.`
+                          ? '• Depósito confirmado; revisa el saldo antes de la sesión.'
+                          : `• Horario reservado hasta ${DateTime.fromISO(checkoutSuccess.holdExpiresAt).setZone(userTimeZone).toLocaleString(DateTime.DATETIME_MED)}; todavía no está pagado.`
                         : '• Guarda el ID de reserva y contáctanos si necesitas ajustar recursos.'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {checkoutSuccess
                         ? paymentMethods.length > 0
-                          ? '• El estado cambia solo después de una verificación del servidor.'
-                          : '• Datafast/PayPal permanecen ocultos mientras el servidor no habilite un rail real.'
+                          ? '• El estado cambia cuando confirmemos el pago.'
+                          : '• Te avisaremos cuando haya un método de pago en línea disponible.'
                         : '• Llega 10 minutos antes para hacer check-in y preparar la sala.'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -1568,7 +1581,8 @@ export default function PublicBookingPage() {
                         Seguir esta orden
                       </Button>
                     )}
-                    <Button variant="contained" size="medium" onClick={resetForm}>
+                    {/* While the deposit is unpaid, paying it is the one primary action. */}
+                    <Button variant={checkoutSuccess && !depositPaid ? 'text' : 'contained'} size="medium" onClick={resetForm}>
                       Crear otra reserva
                     </Button>
                     <Button
@@ -1620,6 +1634,11 @@ export default function PublicBookingPage() {
                 El formulario es alojado por el proveedor. Al volver, TDF consultará el estado en el servidor antes de confirmar.
               </Alert>
               {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+              {paymentError && <PaymentAlternativesNotice
+                methods={(checkoutSuccess?.paymentMethods ?? []).filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                failedMethod={attemptedPaymentMethod}
+                blocked
+              />}
               {datafastCheckout && datafastReturnUrl && (
                 <Box ref={datafastFormRef} key={datafastWidgetKey} sx={{ minHeight: 360 }}>
                   <form
@@ -1649,6 +1668,11 @@ export default function PublicBookingPage() {
                 Aprobar en PayPal no es confirmación. TDF capturará y verificará importe, moneda, comercio y referencia en el servidor.
               </Alert>
               {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+              {paymentError && <PaymentAlternativesNotice
+                methods={(checkoutSuccess?.paymentMethods ?? []).filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                failedMethod={attemptedPaymentMethod}
+                blocked
+              />}
               <Box ref={paypalButtonRef} sx={{ minHeight: 48 }} />
             </Stack>
           </DialogContent>
@@ -1659,6 +1683,7 @@ export default function PublicBookingPage() {
         <Dialog
           open={manualDialogOpen}
           onClose={() => { if (!paymentBusy) setManualDialogOpen(false); }}
+          TransitionProps={{ onEntered: () => manualReferenceInput.current?.focus() }}
           maxWidth="xs"
           fullWidth
         >
@@ -1672,15 +1697,34 @@ export default function PublicBookingPage() {
                 Usa únicamente las instrucciones bancarias oficiales que TDF te haya proporcionado. No incluyas claves, números completos de cuenta ni datos de tarjeta.
               </Typography>
               <TextField
+                id="booking-transfer-reference"
                 label="Referencia o comprobante bancario"
                 value={manualReference}
-                onChange={(event) => setManualReference(event.target.value)}
+                inputRef={manualReferenceInput}
+                disabled={paymentBusy}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  setManualReference(next);
+                  setManualReferenceError(next.trim().length < 3 || next.trim().length > 120
+                    ? 'Ingresa una referencia bancaria de 3 a 120 caracteres.' : null);
+                }}
+                onBlur={() => {
+                  if (manualReference.trim().length < 3 || manualReference.trim().length > 120) {
+                    setManualReferenceError('Ingresa una referencia bancaria de 3 a 120 caracteres.');
+                  }
+                }}
                 inputProps={{ maxLength: 120 }}
-                helperText="3–120 caracteres. La referencia queda protegida para revisión financiera."
+                error={Boolean(manualReferenceError)}
+                helperText={manualReferenceError ?? '3–120 caracteres. La referencia queda protegida para revisión financiera.'}
                 autoComplete="off"
                 fullWidth
               />
               {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+              {paymentError && <PaymentAlternativesNotice
+                methods={(checkoutSuccess?.paymentMethods ?? []).filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                failedMethod={attemptedPaymentMethod}
+                blocked
+              />}
             </Stack>
           </DialogContent>
           <DialogActions>
@@ -1690,7 +1734,7 @@ export default function PublicBookingPage() {
             <Button
               variant="contained"
               onClick={() => void handleManualEvidenceSubmit()}
-              disabled={paymentBusy || manualReference.trim().length < 3}
+              disabled={paymentBusy || manualReference.trim().length < 3 || manualReference.trim().length > 120}
             >
               Enviar para revisión
             </Button>
@@ -1701,10 +1745,20 @@ export default function PublicBookingPage() {
   }
 
   const serviceField = (
-    <Grid item xs={12}>
+    <Grid item xs={12} sx={{ minWidth: 0 }} data-testid="booking-service-field">
       <TextField
         label="Servicio"
         select
+        SelectProps={{
+          renderValue: (value) => services.find((service) => service.id === value)?.name ?? '',
+          MenuProps: { PaperProps: { sx: { maxWidth: 'calc(100vw - 32px)' } } },
+        }}
+        sx={{
+          minWidth: 0,
+          '& .MuiInputBase-root': { minWidth: 0 },
+          '& .MuiSelect-select.MuiSelect-select': { whiteSpace: 'normal', overflowWrap: 'anywhere', height: 'auto' },
+          '& .MuiFormHelperText-root': { overflowWrap: 'anywhere' },
+        }}
         value={form.serviceOfferingId}
         onChange={(e) => {
           const nextService = services.find((service) => service.id === e.target.value);
@@ -1728,10 +1782,10 @@ export default function PublicBookingPage() {
         }
       >
         {services.map((svc) => (
-          <MenuItem key={svc.id} value={svc.id}>
-            <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
+          <MenuItem key={svc.id} value={svc.id} sx={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
+            <Stack spacing={0.25} sx={{ width: '100%', minWidth: 0 }}>
               <Typography>{svc.name}</Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.primary">
                 {servicePriceLookup.get(svc.id)}
               </Typography>
             </Stack>
@@ -1755,7 +1809,7 @@ export default function PublicBookingPage() {
         }}
       >
         <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-          <Stack spacing={2.5}>
+          <Stack spacing={2.5} useFlexGap>
             <Stack spacing={0.6}>
               <Typography variant="overline" color="text.secondary">
                 {pageEyebrow}
@@ -1766,19 +1820,28 @@ export default function PublicBookingPage() {
                 </Typography>
                 {bookingStatusChip}
               </Stack>
-              <Typography variant="body1" color="text.secondary">
-                {pageDescription}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Horario del estudio: <strong>08:00–22:00, Quito ({studioZoneLabel})</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {authoritativeQuote ? (
-                  <>Precio y depósito calculados por el servidor en <strong>{authoritativeQuote.currency}</strong>.</>
-                ) : (
-                  <>Precios de referencia en <strong>{studioCurrency}</strong>; confirmamos el total contigo antes de agendar.</>
-                )}
-              </Typography>
+              <Box data-testid="booking-introduction">
+                <Typography data-testid="booking-introduction-copy" variant="body1" color="text.secondary">
+                  {pageDescription}
+                </Typography>
+                <Box component="details" data-testid="booking-practical-details" sx={{ mt: 1 }}>
+                  <Typography component="summary" variant="body2" color="text.secondary" sx={{ cursor: 'pointer', py: 1.25, minHeight: 44, boxSizing: 'border-box' }}>
+                    Horario y precios
+                  </Typography>
+                  <Stack spacing={1} sx={{ pt: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Horario del estudio: <strong>08:00–22:00, Quito ({studioZoneLabel})</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {authoritativeQuote ? (
+                        <>Revisa el precio y el depósito antes de confirmar, en <strong>{authoritativeQuote.currency}</strong>.</>
+                      ) : (
+                        <>Precios de referencia en <strong>{studioCurrency}</strong>; confirmamos el total contigo antes de agendar.</>
+                      )}
+                    </Typography>
+                  </Stack>
+                </Box>
+              </Box>
               {priceBanner && (
                 <Alert severity="info" variant="outlined">
                   {priceBanner}
@@ -1801,11 +1864,7 @@ export default function PublicBookingPage() {
                   </Stack>
                 </Alert>
               )}
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap" sx={WRAPPING_CHIP_ROW_SX}>
-                {introChips.map((label) => (
-                  <Chip key={label} label={label} size="small" variant="outlined" />
-                ))}
-              </Stack>
+              {!session && (
               <Card
                 variant="outlined"
                 sx={{
@@ -1826,7 +1885,7 @@ export default function PublicBookingPage() {
                     <Stack spacing={0.3} sx={{ minWidth: 0, flex: { sm: '1 1 240px' } }}>
                       <Typography variant="subtitle2">¿Ya tienes cuenta?</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Inicia sesión para completar tus datos guardados. Si no tienes cuenta, puedes crearla de forma opcional.
+                        Inicia sesión y completamos tus datos.
                       </Typography>
                     </Stack>
                     <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ ...WRAPPING_CHIP_ROW_SX, maxWidth: '100%' }}>
@@ -1836,57 +1895,17 @@ export default function PublicBookingPage() {
                       <Button size="small" variant="text" component={RouterLink} to={signupPath}>
                         Crear cuenta
                       </Button>
-                      {session && (
-                        <Chip
-                          label={`Conectado como ${session.displayName}`}
-                          color="primary"
-                          onDelete={logout}
-                          variant="outlined"
-                          sx={{ borderRadius: 999 }}
-                        />
-                      )}
                     </Stack>
                   </Stack>
                 </CardContent>
               </Card>
+              )}
             </Stack>
 
             <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <Stack spacing={1.2}>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <PersonIcon color="primary" fontSize="small" />
-                    <Typography variant="subtitle2" color="text.secondary">
-                      {contactTitle}
-                    </Typography>
-                  </Stack>
-                  <Typography variant="body2" color="text.secondary">
-                    {contactDescription}
-                  </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <EventAvailableIcon color="primary" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {calendarNote}
-                    </Typography>
-                  </Stack>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <AccessTimeIcon color="primary" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {durationNote}
-                    </Typography>
-                  </Stack>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <LocalPhoneIcon color="primary" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      Añade tu WhatsApp si prefieres coordinar por ahí.
-                    </Typography>
-                  </Stack>
-                </Stack>
-              </Grid>
-
-              <Grid item xs={12} md={8}>
+              <Grid item xs={12}>
                 <form onSubmit={handleFormSubmit}>
-                  <Stack spacing={2.5}>
+                  <Stack spacing={2.5} useFlexGap>
                     {isMobile ? (
                       <Stack spacing={1}>
                         <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1} useFlexGap flexWrap="wrap">
@@ -1922,11 +1941,26 @@ export default function PublicBookingPage() {
                       {activeStep === 0 && (
                         <>
                           {serviceField}
+                          {contactSummarized && <Grid item xs={12}>
+                            <Box component="section" aria-label="Datos de contacto" sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
+                              <Typography variant="subtitle2">Datos de contacto</Typography>
+                              <Typography sx={{ overflowWrap: 'anywhere' }}>{form.fullName}</Typography>
+                              <Typography sx={{ overflowWrap: 'anywhere' }}>{form.email}</Typography>
+                              {form.phone && <Typography sx={{ overflowWrap: 'anywhere' }}>{form.phone}</Typography>}
+                              <Button ref={contactEditButton} aria-controls="booking-contact-fields" aria-expanded={false}
+                                disabled={formDisabled} onClick={() => { contactFocusTarget.current = 'fields'; setEditContact(true); }}>
+                                Editar datos
+                              </Button>
+                            </Box>
+                          </Grid>}
+                          <Grid item xs={12} id="booking-contact-fields" hidden={contactSummarized} sx={contactSummarized ? { display: 'none' } : undefined}>
+                            <Grid container spacing={2.5}>
                           <Grid item xs={12} sm={6}>
                             <TextField
                               label="Nombre completo"
+                              inputRef={contactNameInput}
                               value={form.fullName}
-                              onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))}
+                              onChange={(e) => { setEditContact(true); setForm((prev) => ({ ...prev, fullName: e.target.value })); }}
                               fullWidth
                               required
                               disabled={formDisabled}
@@ -1937,7 +1971,7 @@ export default function PublicBookingPage() {
                               label="Correo"
                               type="email"
                               value={form.email}
-                              onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+                              onChange={(e) => { setEditContact(true); setForm((prev) => ({ ...prev, email: e.target.value })); }}
                               fullWidth
                               required
                               disabled={formDisabled}
@@ -1948,7 +1982,7 @@ export default function PublicBookingPage() {
                               type="tel"
                               label="WhatsApp / Teléfono"
                               value={form.phone}
-                              onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
+                              onChange={(e) => { setEditContact(true); setForm((prev) => ({ ...prev, phone: e.target.value })); }}
                               fullWidth
                               disabled={formDisabled}
                             />
@@ -1976,6 +2010,13 @@ export default function PublicBookingPage() {
                               </Button>
                             </Stack>
                           </Grid>
+                            </Grid>
+                            {session && editContact && !validateContactStep() && <Button
+                              disabled={formDisabled} aria-controls="booking-contact-fields" aria-expanded={true}
+                              onClick={() => { contactFocusTarget.current = 'summary'; setEditContact(false); }}>
+                              Usar estos datos de contacto
+                            </Button>}
+                          </Grid>
                           <Grid item xs={12}>
                             <Stack
                               direction={{ xs: 'column', sm: 'row' }}
@@ -1997,7 +2038,18 @@ export default function PublicBookingPage() {
 
                       {activeStep === 1 && (
                         <>
-                          {serviceField}
+                          {/* The service is chosen once, in step 1; here it is shown with a way back. */}
+                          <Grid item xs={12}>
+                            <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+                              <Typography variant="body2" color="text.secondary">
+                                Servicio: <strong>{form.serviceType || 'Sin elegir'}</strong>
+                                {estimatePriceLabel ? ` · ${estimatePriceLabel}` : ''}
+                              </Typography>
+                              <Button size="small" variant="text" disabled={formDisabled} onClick={() => setActiveStep(0)}>
+                                Cambiar
+                              </Button>
+                            </Stack>
+                          </Grid>
                           <Grid item xs={12} sm={7}>
                             <TextField
                               label="Fecha y hora"
@@ -2133,11 +2185,11 @@ export default function PublicBookingPage() {
                           </Grid>
                           {suggestedSlots.length > 0 && (
                             <Grid item xs={12}>
-                              <Stack spacing={0.5}>
-                                <Typography variant="body2" color="text.secondary">
-                                  Sugerencias rápidas
+                              <Box component="details">
+                                <Typography component="summary" variant="body2" color="text.secondary" sx={{ cursor: 'pointer', py: 1.25, minHeight: 44, boxSizing: 'border-box' }}>
+                                  Horarios sugeridos
                                 </Typography>
-                                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
                                   {suggestedSlots.map((slot) => (
                                     <Tooltip
                                       key={slot.value}
@@ -2164,7 +2216,7 @@ export default function PublicBookingPage() {
                                     </Tooltip>
                                   ))}
                                 </Stack>
-                              </Stack>
+                              </Box>
                             </Grid>
                           )}
                           {selectedServiceRequiresEngineer && (
@@ -2277,35 +2329,6 @@ export default function PublicBookingPage() {
                             />
                           </Grid>
                           <Grid item xs={12}>
-                            <Stack
-                              direction={{ xs: 'column', sm: 'row' }}
-                              justifyContent="space-between"
-                              spacing={1}
-                            >
-                              <Button
-                                variant="text"
-                                onClick={() => setActiveStep(0)}
-                                disabled={formDisabled}
-                                fullWidth={isMobile}
-                              >
-                                Volver
-                              </Button>
-                              <Button
-                                variant="contained"
-                                onClick={goToConfirmStep}
-                                disabled={formDisabled}
-                                fullWidth={isMobile}
-                              >
-                                Revisar reserva
-                              </Button>
-                            </Stack>
-                          </Grid>
-                        </>
-                      )}
-
-                      {activeStep === 2 && (
-                        <>
-                          <Grid item xs={12}>
                             <Card
                               variant="outlined"
                               sx={{
@@ -2405,8 +2428,8 @@ export default function PublicBookingPage() {
                             >
                               <Button
                                 variant="text"
-                                onClick={() => setActiveStep(1)}
-                                disabled={formDisabled || Boolean(authoritativeQuote && !termsAccepted)}
+                                onClick={() => setActiveStep(0)}
+                                disabled={formDisabled}
                                 fullWidth={isMobile}
                               >
                                 Volver
@@ -2415,7 +2438,7 @@ export default function PublicBookingPage() {
                                 type="submit"
                                 variant="contained"
                                 size="large"
-                                disabled={formDisabled}
+                                disabled={formDisabled || availabilityStatus === 'checking'}
                                 fullWidth={isMobile}
                               >
                                 {success

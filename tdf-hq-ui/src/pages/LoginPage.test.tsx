@@ -73,7 +73,7 @@ const { default: LoginPage, isGoogleSignupConsentRequiredError, focusSignupEmail
   './LoginPage'
 );
 
-const { beginLogoutIntent, finishLogoutIntent } = await import('../session/logoutIntent');
+const { beginLogoutIntent, finishLogoutIntent } = await import('../auth/logoutIntent');
 
 function RouteStateProbe() { const location = useLocation(); return <output data-testid="route-state">{JSON.stringify(location.state)}</output>; }
 
@@ -215,6 +215,19 @@ describe('LoginPage Google signup consent flow', () => {
       await waitFor(() => expect(screen.queryByText('Google login test button')).not.toBeNull());
       expect(screen.queryByTestId('in-app-browser-notice')).toBeNull();
     } finally { userAgent.mockRestore(); await cleanup(); }
+  });
+
+  it('keeps the sign-in card to its core actions without helper copy or duplicate links', async () => {
+    const cleanup = await renderLoginPage('/login');
+    try {
+      expect(screen.queryByRole('button', { name: 'Crear cuenta general' })).not.toBeNull();
+      expect(screen.queryByRole('link', { name: 'Explorar sin cuenta' })).not.toBeNull();
+      expect(screen.queryByRole('button', { name: 'Recuperar acceso' })).not.toBeNull();
+      expect(screen.queryByText('Ir a la comunidad')).toBeNull();
+      expect(screen.queryByText('Solicitar clase de prueba')).toBeNull();
+      expect(screen.queryByText(/Usa tus credenciales/)).toBeNull();
+      expect(screen.queryByText(/Mantendremos tu sesión/)).toBeNull();
+    } finally { await cleanup(); }
   });
 
   it('recognizes only the server consent precondition', () => {

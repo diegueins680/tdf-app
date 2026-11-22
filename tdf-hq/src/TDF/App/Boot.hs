@@ -71,6 +71,7 @@ import TDF.Catalog.Integrity (applyCatalogIntegrity)
 import TDF.Catalog.Security (ensureBootstrapSecurityRole, validateSecurityRegistry)
 import TDF.Catalog.Seed (seedCatalogFoundation, validateCatalogRuntimeRegistries)
 import qualified TDF.DDEX.Models as Ddex
+import TDF.Server.Directory (startAgreementDepositExpiryJob)
 import TDF.Cron (
     startCoursePaymentReminderJob,
     startEventDiscoveryJob,
@@ -149,6 +150,7 @@ runBootServer = do
         let env = Env{envPool = pool, envConfig = cfg}
         writeIORef appRef (wrapApp (mkApp env))
         startCoursePaymentReminderJob env
+        startAgreementDepositExpiryJob env
         startRecordsIngestionJob (envPool env)
         startInteractionNotifications (envPool env)
         startEventDiscoveryJob env

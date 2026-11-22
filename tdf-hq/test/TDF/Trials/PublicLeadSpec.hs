@@ -41,7 +41,7 @@ import TDF.Trials.API
   ( AttendIn (..)
   , ClassSessionIn (..)
   , CommissionDTO
-  , ClassSessionOut
+  , ClassSessionOut (ClassSessionOut)
   , InterestIn (..)
   , PackageDTO
   , PurchaseIn (..)
@@ -2699,6 +2699,37 @@ spec = do
                 expectationFailure "Expected invalid class booking references to be rejected on create"
       assertRejected 400 "bookingId" 0
       assertRejected 404 "Reserva no encontrada" 9999
+
+    it "recomputes scheduled minutes when shortening a class" $ do
+      minutes <- runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        teacher <- insertTeacherFixture "Teacher One" now
+        student <- insertPartyFixture "Student One" now
+        room <- insertRoomFixture "Sala A" "sala-a"
+        subject <- insert (Subject "Piano" True)
+        key <- insert (Trials.ClassSession student teacher subject now (addUTCTime 5400 now)
+                        room Nothing False Nothing 90 Nothing)
+        _ <- privateUpdateClassHandler (fromIntegral (fromSqlKey key))
+          (ClassSessionUpdate Nothing Nothing Nothing Nothing (Just (addUTCTime 3600 now))
+            Nothing Nothing Nothing)
+        Trials.classSessionConsumedMinutes . entityVal <$> getJustEntity key
+      minutes `shouldBe` 60
+
+    it "repairs a stale stored duration when recording attendance" $ do
+      minutes <- runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        teacher <- insertTeacherFixture "Teacher One" now
+        student <- insertPartyFixture "Student One" now
+        room <- insertRoomFixture "Sala A" "sala-a"
+        subject <- insert (Subject "Piano" True)
+        key <- insert (Trials.ClassSession student teacher subject now (addUTCTime 3600 now)
+                        room Nothing False Nothing 90 Nothing)
+        let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
+              :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> attend :<|> _ = privateTrialsServer adminUser
+        ClassSessionOut _ reported <- attend (fromIntegral (fromSqlKey key)) (AttendIn True Nothing)
+        saved <- getJustEntity key
+        pure (reported, Trials.classSessionConsumedMinutes (entityVal saved))
+      minutes `shouldBe` (60,60)
 
     it "rejects updating a class to a non-teacher party instead of storing an invalid teacher assignment" $ do
       result <- try $ runTrialsInMemory $ do

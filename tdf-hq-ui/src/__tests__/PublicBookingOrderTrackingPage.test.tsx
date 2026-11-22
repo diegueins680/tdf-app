@@ -95,7 +95,7 @@ describe('PublicBookingOrderTrackingPage', () => {
       'lookup-secret',
     );
     expect(container.textContent).toContain('Pago en verificación');
-    expect(container.textContent).toContain('no representa un cobro exitoso');
+    expect(container.textContent).toContain('Aún no lo damos por pagado');
     expect(container.textContent).not.toContain('Depósito verificado');
   });
 
@@ -114,7 +114,7 @@ describe('PublicBookingOrderTrackingPage', () => {
 
     expect(getPublicCheckoutMock).toHaveBeenCalledWith(456, 'lookup-secret');
     expect(container.textContent).toContain('Depósito verificado');
-    expect(container.textContent).toContain('Pago: paid');
+    expect(container.textContent).not.toContain('Pago: paid');
   });
 
   it('shows manual evidence review without claiming payment success', async () => {
@@ -138,7 +138,7 @@ describe('PublicBookingOrderTrackingPage', () => {
     await flush();
 
     expect(container.textContent).toContain('está bajo revisión financiera');
-    expect(container.textContent).toContain('Pago: awaiting_payment');
+    expect(container.textContent).not.toContain('awaiting_payment');
     expect(container.textContent).not.toContain('Depósito verificado');
   });
 });
