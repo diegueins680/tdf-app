@@ -31004,7 +31004,7 @@
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "315ba0aaff4bfa27d20e6f22758289a1524a65d3f64d882f541a5192006397ed",
     "tdf-hq/src/TDF/Server/SocialArtistOwnership.hs": "d6900b5226644c608988dc840a8138ee85973add27284f5763092d39ea50835f",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "d4f22192d5a0429ae9ba15170fcfcd32eee28d7b19d34427110f9ead14c56a61",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "008aaca2e2a9fa427f7ffc5161ca8ba16cf2ab5c52ddc6ab28779696c22dceba",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/StripeTicketCapture.hs": "b2a93b8ef71726410abeb79ec0ec07ef8e96d845ada7d7c0a401fda9b5b7c842",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
@@ -83396,7 +83396,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "d4f22192d5a0429ae9ba15170fcfcd32eee28d7b19d34427110f9ead14c56a61",
+      "sha256": "008aaca2e2a9fa427f7ffc5161ca8ba16cf2ab5c52ddc6ab28779696c22dceba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

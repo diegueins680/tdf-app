@@ -18868,7 +18868,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "d4f22192d5a0429ae9ba15170fcfcd32eee28d7b19d34427110f9ead14c56a61",
+      "sha256": "008aaca2e2a9fa427f7ffc5161ca8ba16cf2ab5c52ddc6ab28779696c22dceba",
       "semanticConformance": "not-established-by-discovery"
     },
     {

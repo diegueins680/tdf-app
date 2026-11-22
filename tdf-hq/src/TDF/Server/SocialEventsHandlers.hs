@@ -2272,10 +2272,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             ( EventAdmin.EventAdminDeps parseVisibleEventKey (parseKeyOr400 "administrator invitation") (parseKeyOr400 "ticket tier")
                 lockSocialEventForMutation isImportedEventHidden validateTicketPurchaseBuyerName validateTicketPurchaseBuyerEmail
                 issueMissingTicketsForOrder ticketOrderEntityToDTO sendTicketConfirmationForOrder )
-        :<|> memoryInvitationsServer
-        :<|> eventWorkspaceServer user
-        :<|> EventTicketSale.eventTicketSaleServer user currentPartyId
-            (EventTicketSale.EventTicketSaleDeps parseVisibleEventKey lockSocialEventForMutation)
+        :<|> memoryInvitationsServer :<|> eventWorkspaceServer user
+        :<|> EventTicketSale.eventTicketSaleServer user currentPartyId (EventTicketSale.EventTicketSaleDeps parseVisibleEventKey lockSocialEventForMutation)
   where
     currentPartyId :: T.Text
     currentPartyId = renderPartyId user
