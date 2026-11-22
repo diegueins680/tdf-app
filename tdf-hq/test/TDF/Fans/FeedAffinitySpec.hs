@@ -31,10 +31,10 @@ viewer = 1
 newtype Feed = Feed [FanClubFeedItemDTO]
 
 instance Show Feed where
-  show (Feed items) = show (map describe items)
+  show (Feed items) = show (map summarise items)
 
-describe :: FanClubFeedItemDTO -> (T.Text, Int64, Int64, Int, UTCTime, Bool)
-describe item =
+summarise :: FanClubFeedItemDTO -> (T.Text, Int64, Int64, Int, UTCTime, Bool)
+summarise item =
   ( fcfKind item, fcfId item, fcfAuthorId item, rsTotal (fcfReactions item)
   , fcfCreatedAt item, fcfIsPinned item )
 
@@ -92,8 +92,8 @@ legacySort sortMode n items =
     hotScore :: FanClubFeedItemDTO -> Double
     hotScore item =
       let hoursSincePublish = max 1.0 (realToFrac (diffUTCTime n (fcfCreatedAt item)) / 3600.0)
-          total = fromIntegral (rsTotal (fcfReactions item))
-      in total / (hoursSincePublish ** 0.8)
+          reactionTotal = fromIntegral (rsTotal (fcfReactions item))
+      in reactionTotal / (hoursSincePublish ** 0.8)
 
 -- | The order in which the handler hands items to the sort: posts newest
 -- first, then memories newest first. Ties are broken the way the new order
@@ -198,10 +198,13 @@ spec = describe "fan-club feed affinity ranking (COMMUNITY-FEED-AFFINITY-001)" $
 
     it "lets an item be overtaken only by items within a factor of 3 of its base score" $
       property $ \(Feed items) (Evidence evidence) ->
-        let sorted = filter (not . fcfIsPinned) (sortFeedItems (personalised evidence) "hot" now items)
+        let mode = personalised evidence
+            sorted = filter (not . fcfIsPinned) (sortFeedItems mode "hot" now items)
             pairs = [ (y, x) | (index, x) <- zip [0 :: Int ..] sorted, y <- take index sorted ]
-            within (y, x) = maxAffinity * baseScore y >= baseScore x * (1 - 1e-9)
-        in conjoin [ counterexample (show (describe y, describe x)) (within (y, x)) | (y, x) <- pairs ]
+            bounded (y, x) = maxAffinity * baseScore y >= baseScore x * (1 - 1e-9)
+        in cover 40 (isPersonalised mode && length sorted > 1) "personalised, several items" $
+             isPersonalised mode ==>
+               conjoin [ counterexample (show (summarise y, summarise x)) (bounded (y, x)) | (y, x) <- pairs ]
 
     it "lifts a fresh post without reactions from an author the viewer interacts with" $ do
       let item ident author = FanClubFeedItemDTO
