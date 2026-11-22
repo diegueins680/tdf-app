@@ -19439,6 +19439,83 @@
       "historicalStatus": null
     },
     {
+      "id": "COMMUNITY-FAN-RECOMMENDATION-001",
+      "title": "Artist recommendations for a fan from shared followers",
+      "statement": "A signed-in fan reads the publicly listed artists they do not follow yet and are allowed to follow, ordered by how strongly the followers of the artists they follow also follow each one (sum of cosine similarities of follower sets), completed with the most followed artists when the evidence gives fewer than the requested number. Route: GET /fans/me/recommendations.",
+      "domain": "COMMUNITY",
+      "authority": "Owner request of 2026-11-21 to build item-to-item recommendations for the Fan Hub; the similarity measure, fallback and limits were chosen by the implementer and await owner review. formal/system/fan-recommendations.md.",
+      "source": "formal/system/fan-recommendations.md",
+      "contract": "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
+      "property": "For every returned artist a: listed(a) /\\ a \\notin followed(fan) /\\ a # fan /\\ (policyInstalled => followable(fan, a)); similar_fans entries precede popular ones and are ordered by score descending; score(a) = SUM over listed s \\in followed(fan) of min(shared(s,a), followers(s), followers(a)) / sqrt(followers(s) * followers(a)); at most limit artists, each once.",
+      "actors": [
+        "Fan"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect)",
+        "fan_follow rows as created by tdf-hq/sql/init_schema.sql"
+      ],
+      "inputs": [
+        "GET /fans/me/recommendations",
+        "limit (optional; default 6, clamped to 1..24)"
+      ],
+      "state": {
+        "initial": "Stored fan_follow rows",
+        "terminal": [
+          "Ranked list",
+          "Refusal without read"
+        ]
+      },
+      "allowedTransitions": [
+        "None; the route reads and never writes."
+      ],
+      "forbiddenTransitions": [
+        "Returning an artist that is not publicly listed, is already followed by the caller, or is the caller",
+        "Returning an artist the caller may not follow under the installed social-v2 follow policy (block, closed profile, organisation or inactive account)",
+        "Naming a hidden artist as the reason for a recommendation",
+        "Any write"
+      ],
+      "effects": [
+        "None; read-only."
+      ],
+      "authorization": "requireFanAccess; the caller's own party only, taken from the session.",
+      "privacy": "Reads the caller's follows and aggregate counts; no other fan's identity is read or returned. Hidden artists are neither returned nor used as evidence. A block in either direction removes the artist from the caller's list where the follow policy is installed.",
+      "concurrency": "Three aggregate reads in one transaction at the pool's default isolation; a shared count exceeding a follower count read at another instant is clamped.",
+      "idempotency": "Read-only.",
+      "failure": "401 without a session; 403 without Fan or Customer access. An out-of-range limit is clamped, not refused.",
+      "recovery": "Not applicable.",
+      "observability": "HTTP status only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq-ui/src/features/fans/RecommendedArtists.tsx",
+        "tdf-hq-ui/src/features/fans/artistRecommendations.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs",
+        "scripts/test-fan-recommendations-sql.py",
+        "scripts/test-fan-recommendations-postgres.sh",
+        "tdf-hq-ui/src/features/fans/RecommendedArtists.test.tsx",
+        "tdf-hq-ui/src/features/fans/artistRecommendations.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Ranking by Hspec examples and QuickCheck properties (bounds, exclusions, visibility, ordering, input-order independence); the SQL extracted from the Haskell source runs on PostgreSQL against a fixture; web resolution and rendering by Jest.",
+      "evidence": "tdf-hq-test ArtistRecommendationsSpec run; scripts/test-fan-recommendations-postgres.sh output; Jest RecommendedArtists and artistRecommendations runs.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "High for the ranking function and the SQL on the fixture; the handler wiring is covered by compilation and review only.",
+      "ambiguity": [
+        "Only follows are evidence; plays, favourites and RSVPs are not used.",
+        "A single shared fan is enough to recommend; no minimum-support threshold is set.",
+        "No HTTP-level test runs the route against a fully migrated database.",
+        "The follow-policy filter is exercised against a stand-in function with the migrated signature, not the migrated social_v2_profile_eligible itself."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Ranking, SQL and web tested at unit and SQL level; HTTP-level checks on the migrated schema and owner confirmation of the ranking rule remain."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "COMMUNITY-FAN-NOTIFICATION-001",
       "title": "Marking own notifications read",
       "statement": "A signed-in party marks one or all of their own notifications read. Routes: POST /fans/me/notifications/{notifId}/read; POST /fans/me/notifications/read-all.",

@@ -967743,6 +967743,44 @@
       }
     },
     {
+      "id": "c09b76b0baf52e1fc0dc",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Treating the reason as an editable catalog would let a stored value disagree with how the ranking actually produced the entry.",
+      "justification": "Individually reviewed discriminant of the GET /fans/me/recommendations response (COMMUNITY-FAN-RECOMMENDATION-001). The two values are computed by the ranking function in tdf-hq/src/TDF/Fans/ArtistRecommendations.hs (shared-fan evidence or popularity fallback); nobody selects, stores or edits them.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "fan-artist-recommendations-2026-11-21",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/types.ts",
+        "line": 726,
+        "kind": "literal-union",
+        "name": "ArtistRecommendationReason",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "cb9cec594bc6e12a38e0",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Treating the reason as an editable catalog would let a stored value disagree with how the ranking actually produced the entry.",
+      "justification": "Individually reviewed discriminant of the GET /fans/me/recommendations response (COMMUNITY-FAN-RECOMMENDATION-001). The two values are computed by the ranking function in tdf-hq/src/TDF/Fans/ArtistRecommendations.hs (shared-fan evidence or popularity fallback); nobody selects, stores or edits them.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "fan-artist-recommendations-2026-11-21",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 17590,
+        "kind": "openapi-enum",
+        "name": "arecReason",
+        "valueCount": 2
+      }
+    },
+    {
       "id": "7bb8d76c84af1653c926",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",

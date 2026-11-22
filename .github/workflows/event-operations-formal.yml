@@ -232,6 +232,9 @@ jobs:
       - name: Check friend suggestion SQL and migration on isolated PostgreSQL
         run: sh scripts/test-friend-suggestions-postgres.sh
 
+      - name: Check fan recommendation SQL on isolated PostgreSQL
+        run: sh scripts/test-fan-recommendations-postgres.sh
+
       - name: Check artist tip idempotency migration on isolated PostgreSQL
         run: sh scripts/test-artist-tip-idempotency-postgres.sh
 

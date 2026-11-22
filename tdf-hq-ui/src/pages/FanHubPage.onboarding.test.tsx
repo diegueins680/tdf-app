@@ -60,6 +60,7 @@ jest.unstable_mockModule('../api/fans', () => ({
   Fans: {
     listArtists: listArtistsMock,
     listFollows: listFollowsMock,
+    listRecommendations: jest.fn(async () => []),
     listMyClubs: listMyClubsMock,
     getMyArtistProfile: getMyArtistProfileMock,
     updateMyArtistProfile: updateMyArtistProfileMock,
