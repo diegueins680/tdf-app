@@ -24,6 +24,9 @@ const listRegistrationsMock = jest.fn<
 const getRegistrationDossierMock = jest.fn<
   (slug: string, registrationId: number) => Promise<CourseRegistrationDossierDTO | null>
 >();
+const getRegistrationMock = jest.fn<
+  (slug: string, registrationId: number) => Promise<CourseRegistrationDTO>
+>();
 const listRegistrationEmailsMock = jest.fn<
   (registrationId: number, limit?: number) => Promise<CourseEmailEventDTO[]>
 >();
@@ -34,6 +37,7 @@ jest.unstable_mockModule('../api/courses', () => ({
     listRegistrations: (params?: { slug?: string; status?: string; limit?: number }) => listRegistrationsMock(params),
     getRegistrationDossier: (slug: string, registrationId: number) =>
       getRegistrationDossierMock(slug, registrationId),
+    getRegistration: (slug: string, registrationId: number) => getRegistrationMock(slug, registrationId),
     listRegistrationEmails: (registrationId: number, limit?: number) =>
       listRegistrationEmailsMock(registrationId, limit),
     updateStatus: jest.fn(() => Promise.resolve(null)),
@@ -579,6 +583,8 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockReset();
     getRegistrationDossierMock.mockReset();
     listRegistrationEmailsMock.mockReset();
+    getRegistrationMock.mockReset();
+    getRegistrationMock.mockRejectedValue(new Error('not found'));
     listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' }]);
     listRegistrationsMock.mockResolvedValue([buildRegistration()]);
     getRegistrationDossierMock.mockResolvedValue(null);
@@ -718,7 +724,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(false);
       expect(document.body.textContent).not.toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
     });
 
@@ -774,7 +780,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(false);
       expect(document.body.textContent).toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
     });
 
@@ -787,7 +793,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
       expect(hasLabel(document.body, 'Asunto')).toBe(true);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(true);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(true);
     });
 
     await act(async () => {
@@ -1199,6 +1205,54 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
     });
+
+    await cleanup();
+  });
+
+  it('opens a linked registration that the limited list does not include and keeps the link until it resolves', async () => {
+    const linked = buildRegistration({ crId: 987, crCourseSlug: 'cohorte-antigua', crFullName: 'Grace Hopper' });
+    let resolveLinked: (reg: CourseRegistrationDTO) => void = () => undefined;
+    getRegistrationMock.mockImplementation(() => new Promise((resolve) => { resolveLinked = resolve; }));
+    getRegistrationDossierMock.mockImplementation(() => new Promise(() => undefined));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(
+      container,
+      '/inscripciones-curso?registration=987&slug=cohorte-antigua',
+    );
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalled();
+      expect(getRegistrationMock).toHaveBeenCalledWith('cohorte-antigua', 987);
+    });
+    expect(getRegistrationDossierMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      resolveLinked(linked);
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getRegistrationDossierMock).toHaveBeenCalledWith('cohorte-antigua', 987);
+      expect(document.body.textContent).toContain('Expediente de inscripción');
+    });
+
+    await cleanup();
+  });
+
+  it('explains when a linked registration cannot be opened', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(
+      container,
+      '/inscripciones-curso?registration=987&slug=cohorte-antigua',
+    );
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('No pudimos abrir la inscripción del enlace.');
+    });
+    expect(getRegistrationDossierMock).not.toHaveBeenCalled();
 
     await cleanup();
   });
@@ -7697,7 +7751,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Tipo')).toBe(false);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(false);
       expect(document.body.textContent).toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
       expect(getButtonByText(document.body, 'Agregar detalles opcionales')).toBeTruthy();
       expect(
@@ -7729,7 +7783,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'Tipo')).toBe(true);
       expect(hasLabel(document.body, 'Asunto')).toBe(true);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(true);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(true);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
     });
 
@@ -7967,7 +8021,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'Asunto')).toBe(true);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(true);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(true);
       expect(getButtonByText(document.body, 'Ocultar detalles opcionales')).toBeTruthy();
     });
 

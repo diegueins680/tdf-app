@@ -6558,9 +6558,21 @@ async function integrationSource(ref, file) {
 // Retain both original published parents and additionally guard latest published main.
 const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1", "5a81672285dc9c03130fc9fd8355e2b4c58e9e12"];
 
+// Course follow-up reminders append one migration after the studio gallery.
+// Verify it is the original, unchanged entry, then compare the rest as before.
+const COURSE_REMINDER_ENTRY = '2026-11-20_course_follow_up_reminder_delivery';
+async function withoutCourseReminder(manifest) {
+  const appended = manifest.migrations.at(-1);
+  if (appended?.id !== COURSE_REMINDER_ENTRY) return manifest;
+  await integrationExec('git', ['merge-base', '--is-ancestor', appended.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const { stdout } = await integrationExec('git', ['show', appended.introducedBy + ':' + appended.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, appended.path), 'utf8'), stdout);
+  return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
+}
+
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const combined = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const combined = await withoutCourseReminder(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
   assert.equal(combined.migrations.at(-1).id, '2026-11-07_studio_gallery');
   const actual = { ...combined, migrations: combined.migrations.slice(0, -1) };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
@@ -6594,7 +6606,7 @@ test('studio gallery appends its original migration and preserves both complete 
   const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
   const before = await integrationParent(base, file);
   const original = (await integrationParent(gallery, file)).migrations.at(-1);
-  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const current = await withoutCourseReminder(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
   assert.equal(original.id, '2026-11-07_studio_gallery');
   assert.deepEqual(current, { ...before, migrations: [...before.migrations, original] });
   const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
