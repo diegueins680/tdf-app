@@ -4920,7 +4920,8 @@
         "tdf-hq-ui/src/utils/checkoutStripe.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq/src/TDF/Server/TicketSalesWindow.hs",
-        "tdf-hq/tdf-hq.cabal"
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/src/TDF/Ticketing/ParticipantArtist.hs"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",
@@ -30030,8 +30031,8 @@
     "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx": "f28e0af04c8548c34193d0be952af2b2105ffc27e1cc464376a6c141f309ebf9",
     "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.test.tsx": "e12697e1e24c433a4d4b24d959028c8fe0c84e9096cd4fc4babb011a7da80410",
     "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx": "a41c223c8cf200fa5aca85b295b54826ff73cd0c29f3cff4513283eeb2a8f2c3",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "68f7a68e44a96a32446a50aad3e730170f8890e6423b8c8a9a73d6e30b09f6d6",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "39d8d5afb9e62580964f7d301e37fdd14c608ba7987a76075b14ca5707492401",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "a9898a5e0756a03238615073ce5c8059046f25dcf14e5631a21433943a94cb32",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "1b0f097f290d5c119123103b8b33cd4a0a732fd85bfc8aac123becec919599ff",
     "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx": "15dd2db47fab984029cfbabfd5e60830f3f29e4b8d93753f7da33f7f123c6a66",
     "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": "94ef4c36895a388db4d47e7f8bddb6057ed4594a5aa997694ae57f110cd6d7b3",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "309b788cb21ae6505fff38577913e2bf5e7b23a7a2acf9d6fc704ed3119cd3c9",
@@ -30571,8 +30572,9 @@
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "a2568ecfb8235b9c91c0ce144ac5cec72ef0eb5cd52e06f42c3130ed7e347142",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "1cc32127c70c016568235631cc097e92a230125d6742c05aa2c833d6d15db480",
     "tdf-hq/src/TDF/Ticketing/Inventory.hs": "7debfcbb6f15e152edc32c62292093625ec358b107344a6c450dcdfdb4ffb6d2",
-    "tdf-hq/src/TDF/Ticketing/Issuance.hs": "398c68514db13ca6c396a3b160cdf10d9b0524c48acb10e7c21032d15e5e25b7",
+    "tdf-hq/src/TDF/Ticketing/Issuance.hs": "728c68222e6ce7f1af8a3019a6a1916fe9bc5d89a68dea361d752b95e2b43c4d",
     "tdf-hq/src/TDF/Ticketing/LookupToken.hs": "a3698541dc758077f54fe9027d9888a933be209d976bbcf381f49eda48639958",
+    "tdf-hq/src/TDF/Ticketing/ParticipantArtist.hs": "d24e4a10ac6b2d7939e7db189479c5e70e19150038e54ba5dee0ff2c44c463b3",
     "tdf-hq/src/TDF/Ticketing/Refund.hs": "fffa6d4c96c372218fa827af114cacdcc43d6ac9aa2c84bfc5e1552a9e72dc29",
     "tdf-hq/src/TDF/Ticketing/Transfer.hs": "edfefec16e7943820a62c0f655677db2045a311ee6b324b63b7999b5501e8791",
     "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
@@ -30583,7 +30585,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+    "tdf-hq/tdf-hq.cabal": "bb1bfb2596822065828f8f242319685b37db02a00c6b150b16a39c98794a1da9",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -30666,7 +30668,7 @@
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
-    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "8f2afb5dd7d0baa4e33c516b6f40ca6029783744e794a19ea3c832a628410109",
+    "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "e1b480560af61f37677ebe5c6ea46ddbfd5275ad674bec346376eb37fe0e23a1",
     "tdf-hq/test/TDF/Social/FollowSpec.hs": "fb6640d2e4e415809328254799fc89c884e1f08e75a4678ef6996f0805c7867b",
     "tdf-hq/test/TDF/StorageSecuritySpec.hs": "3358d870189320cab3387e054111df56893fbdb826b5ea09741579207a71d300",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
@@ -37543,6 +37545,12 @@
       }
     ],
     "tdf-hq/src/TDF/Server/TicketSalesWindow.hs": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Ticketing/ParticipantArtist.hs": [
       {
         "requirement": "EVT-TICKET-001",
         "relationship": "implementation"
@@ -68944,7 +68952,7 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "68f7a68e44a96a32446a50aad3e730170f8890e6423b8c8a9a73d6e30b09f6d6",
+      "sha256": "a9898a5e0756a03238615073ce5c8059046f25dcf14e5631a21433943a94cb32",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68984,7 +68992,7 @@
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "39d8d5afb9e62580964f7d301e37fdd14c608ba7987a76075b14ca5707492401",
+      "sha256": "1b0f097f290d5c119123103b8b33cd4a0a732fd85bfc8aac123becec919599ff",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81467,7 +81475,7 @@
     {
       "id": "SURFACE-43aa8fca8f095e2e",
       "path": "tdf-hq/src/TDF/Ticketing/Issuance.hs",
-      "sha256": "398c68514db13ca6c396a3b160cdf10d9b0524c48acb10e7c21032d15e5e25b7",
+      "sha256": "728c68222e6ce7f1af8a3019a6a1916fe9bc5d89a68dea361d752b95e2b43c4d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81484,6 +81492,18 @@
       "requirements": [
         {
           "requirement": "NOTIF-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-9af30fe53768298b",
+      "path": "tdf-hq/src/TDF/Ticketing/ParticipantArtist.hs",
+      "sha256": "d24e4a10ac6b2d7939e7db189479c5e70e19150038e54ba5dee0ff2c44c463b3",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
           "relationship": "implementation"
         }
       ]
@@ -81716,7 +81736,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "sha256": "bb1bfb2596822065828f8f242319685b37db02a00c6b150b16a39c98794a1da9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83681,7 +83701,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "8f2afb5dd7d0baa4e33c516b6f40ca6029783744e794a19ea3c832a628410109",
+      "sha256": "e1b480560af61f37677ebe5c6ea46ddbfd5275ad674bec346376eb37fe0e23a1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -91025,7 +91045,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3e6290afbbe3be683a3024ae7f63ef1e0ce5b9eae2a63d4604a4e5f4e4d96850",
+      "sourceSha256": "621217a68420119497fdc9b273e2344b8717191334e49ae794212e79a7f90110",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -91053,7 +91073,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3e6290afbbe3be683a3024ae7f63ef1e0ce5b9eae2a63d4604a4e5f4e4d96850",
+      "sourceSha256": "621217a68420119497fdc9b273e2344b8717191334e49ae794212e79a7f90110",
       "definition": {
         "states": [
           "absent",
@@ -91083,7 +91103,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3e6290afbbe3be683a3024ae7f63ef1e0ce5b9eae2a63d4604a4e5f4e4d96850",
+      "sourceSha256": "621217a68420119497fdc9b273e2344b8717191334e49ae794212e79a7f90110",
       "definition": {
         "export": [
           "queued",
