@@ -15,7 +15,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () =>
 jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({ default: () => null }));
 jest.unstable_mockModule('../features/interactions/InteractionPanel', () => ({ InteractionPanel: () => null }));
 jest.unstable_mockModule('../components/PageShell', () => ({ default: ({ children }: { children: ReactNode }) => <>{children}</>, SkeletonCards: () => null, EmptyState: () => <div>Empty</div> }));
-jest.unstable_mockModule('@mui/icons-material', () => Object.fromEntries(['PushPinOutlined', 'VisibilityOff', 'HowToVote', 'CalendarMonth', 'Forum', 'Groups', 'Add', 'PhotoLibrary', 'Report', 'Person', 'LockOutlined', 'MailOutline', 'Whatshot', 'TrendingUp', 'FiberNew'].map((name) => [name, () => null])));
+jest.unstable_mockModule('@mui/icons-material', () => Object.fromEntries(['PushPinOutlined', 'DeleteOutline', 'VisibilityOff', 'HowToVote', 'CalendarMonth', 'Forum', 'Groups', 'Add', 'PhotoLibrary', 'Report', 'Person', 'LockOutlined', 'MailOutline', 'Whatshot', 'TrendingUp', 'FiberNew'].map((name) => [name, () => null])));
 const { default: FanClubPage } = await import('./FanClubPage');
 afterEach(cleanup);
 beforeEach(() => Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: jest.fn() }));
