@@ -1,0 +1,15 @@
+{
+  "id": "2c23d0fa2bac40b01a98",
+  "classification": "security-system-registry",
+  "disposition": "canonical-contract",
+  "specializedModel": "notification_destination_registry",
+  "priority": "P1-integrity",
+  "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+  "justification": "Generated destination allowlist from the canonical notification navigation registry; prevents arbitrary URL navigation.",
+  "reviewed": true,
+  "evidence": {
+    "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+    "line": 15
+  },
+  "reviewBatch": "universal-interactions-2026-09-28"
+}

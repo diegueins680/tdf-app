@@ -1,0 +1,20 @@
+{
+  "id": "2a0d6d57a51e35d91376",
+  "classification": "security-system-registry",
+  "disposition": "canonical-contract",
+  "specializedModel": "notification_destination_registry",
+  "priority": "P1-integrity",
+  "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+  "justification": "Canonical web notification allowlist now matches merged Mobile main for chat_thread, using only a positive safe numeric thread ID and a fixed same-origin fallback. Existing routes are preserved; generator equality and invalid-ID/URL regression tests enforce the boundary.",
+  "reviewed": true,
+  "evidence": {
+    "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+    "line": 14
+  },
+  "reviewBatch": "music-release-platform-sync-2026-10-07",
+  "reviewMethod": "successor-of-reviewed-decision",
+  "previousDecision": {
+    "$historyRef": "sha256:345ed5c8cf9c92048d772eba814d208f7af6a33dbe1f8c6623641aa9a098f4c9"
+  },
+  "previousFingerprint": "1a20aae8bb74a6df248f"
+}

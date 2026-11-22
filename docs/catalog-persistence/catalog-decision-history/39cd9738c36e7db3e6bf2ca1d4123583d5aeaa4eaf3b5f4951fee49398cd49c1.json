@@ -1,0 +1,22 @@
+{
+  "id": "a7561a719beb23884345",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+  "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-mobile/src/api/events.ts",
+    "line": 435,
+    "kind": "object-registry",
+    "name": "Events",
+    "valueCount": 30,
+    "consumerCount": 213,
+    "exactDuplicateIds": [],
+    "similarCandidateIds": []
+  }
+}

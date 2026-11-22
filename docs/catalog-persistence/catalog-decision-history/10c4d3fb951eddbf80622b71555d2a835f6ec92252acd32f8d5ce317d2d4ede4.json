@@ -1,0 +1,22 @@
+{
+  "id": "950146db7f779ed96298",
+  "classification": "dynamic-business-catalog",
+  "disposition": "historical-evidence-replaced-by-forward-migration",
+  "specializedModel": "domain-specific catalog table selected during consumer refactor",
+  "priority": "P1-cross-platform",
+  "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+  "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-hq/sql/2026-09-10_contextual_reputation_pilot_cohort.sql",
+    "line": 12,
+    "kind": "sql-check-values",
+    "name": "CHECK IN",
+    "valueCount": 3,
+    "consumerCount": 41,
+    "exactDuplicateIds": [],
+    "similarCandidateIds": []
+  }
+}

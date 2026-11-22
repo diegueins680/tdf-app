@@ -1,0 +1,70 @@
+{
+  "id": "8229b8202552298c955e",
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "justification": "The221-entry deployment execution registry preserves protected main 5114fe95ac8e328b58162a8dcae5c9015a47ce09 as its exact220-entry ordered prefix, including all213 historically applied migration objects/SQL and all seven financial migration entries/SQL/introduction ancestors. Only the original saved-search parity migration introduced by eb2f71d62740783369a6eb2a6d35fc024484cb71 is appended. Exact reviewed213,214 and220 decisions and both parent review lineages remain immutable provenance; retired fingerprints never authorize current source. This technical classification authorizes no production execution, financial transaction, provider activation or release-gate waiver. Exact-head full-prefix/runtime and independent protected review remain separate obligations.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "directory-financial-main-integration-20261026",
+  "sourceReviewReferences": [
+    {
+      "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+      "sourceEntry": {
+        "id": "3f336173e03f10fc023c"
+      },
+      "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+      "sourceEntry": {
+        "id": "2b073f20afd2f3798b1e"
+      },
+      "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+      "sourceEntry": {
+        "id": "a1eb1e750e7543b88fe1"
+      },
+      "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+      "sourceEntry": {
+        "id": "b7cc47848f3f9882770f"
+      },
+      "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "ba964c442ac6b466d5f0e896242023990fdc12709b7a764215679b1ee6186778",
+      "sourceEntry": {
+        "id": "c94cd70c1272ec9ede1b"
+      },
+      "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    }
+  ],
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 221
+  }
+}

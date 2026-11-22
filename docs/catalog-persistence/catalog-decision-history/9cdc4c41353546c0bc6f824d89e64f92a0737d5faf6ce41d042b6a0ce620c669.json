@@ -1,0 +1,10 @@
+{
+  "id": "f0efc071b84fe0a2cb13",
+  "classification": "security-system-registry",
+  "disposition": "retain-as-redacted-provider-status-projection",
+  "specializedModel": "Fly app and machine operational status vocabulary",
+  "priority": "P0-security",
+  "risk": "Echoing arbitrary status strings from hosting payloads could disclose sensitive or attacker-controlled content in CI logs and artifacts.",
+  "justification": "This fixed output vocabulary redacts all unrecognized app/machine states to unknown. It is not a payment state machine or business catalog, does not control availability, and cannot authorize a payment or deployment.",
+  "reviewed": true
+}

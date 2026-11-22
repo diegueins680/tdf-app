@@ -7,6 +7,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { DECISIONS_FILE, readExpandedDecisions } from '../lib/catalog-decision-history.mjs';
 
 // Complete retained parent assertions; dated inputs are explicitly projected.
 {
@@ -6516,8 +6517,17 @@ async function integrationParent(ref, file) {
     { cwd: integrationRoot, maxBuffer: 64 * 1024 * 1024 }).then(({ stdout }) => JSON.parse(stdout)));
   return integrationCache.get(key);
 }
+// The decisions file stores its review history by reference
+// (scripts/lib/catalog-decision-history.mjs); read it fully expanded, exactly
+// as the nested document it represents.
+let expandedDecisionsText;
+async function integrationCurrentText(file, encoding) {
+  if (file !== DECISIONS_FILE) return fs.readFile(path.join(integrationRoot, file), encoding);
+  expandedDecisionsText ??= `${JSON.stringify(readExpandedDecisions(integrationRoot), null, 2)}\n`;
+  return expandedDecisionsText;
+}
 async function integrationRead(ref, file, encoding) {
-  const actualBytes = await fs.readFile(path.join(integrationRoot, file), encoding);
+  const actualBytes = await integrationCurrentText(file, encoding);
   if (file === 'scripts/production-migrations.json' || integrationFiles.has(file)) {
     if (!integrationCurrentFiles.has(file)) integrationCurrentFiles.set(file, { bytes: actualBytes, value: JSON.parse(actualBytes) });
     assert.equal(integrationCurrentFiles.get(file).bytes, actualBytes, `Composed source changed during parent assertions: ${file}`);
@@ -6571,7 +6581,7 @@ test('actual UX/storage composition preserves current main, immutable SQL and bo
     await integrationExec('git', ['merge-base', '--is-ancestor', row.introducedBy, 'HEAD'], { cwd: integrationRoot });
   }
   for (const [reviewFile, key] of integrationFiles) {
-    const current = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8'));
+    const current = JSON.parse(await integrationCurrentText(reviewFile, 'utf8'));
     for (const ref of INTEGRATION_PARENTS) {
       const prior = await integrationParent(ref, reviewFile);
       for (const row of prior[key]) assert.ok(integrationFind(current, row), `Lost whole parent object: ${ref}:${reviewFile}`);
@@ -6597,7 +6607,7 @@ test('studio gallery appends its original migration and preserves both complete 
   const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
   assert.equal(await fs.readFile(path.join(integrationRoot, original.path), 'utf8'), stdout);
   for (const [reviewFile, key] of integrationFiles) {
-    const currentReview = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8'));
+    const currentReview = JSON.parse(await integrationCurrentText(reviewFile, 'utf8'));
     for (const parent of [base, gallery]) {
       const old = await integrationParent(parent, reviewFile);
       const row = old[key].find(r => r.evidence?.file === file || r.name === 'migrations' || r.source?.name === 'migrations');

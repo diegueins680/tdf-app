@@ -1,0 +1,20 @@
+{
+  "id": "2511cbba2fc7279bc28a",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Incorrect typed method dispatch can redirect authenticated writes or expose private transfer evidence; server scope and ownership remain authoritative.",
+  "justification": "Reviewed all 78 transport method keys: getVenue reads the existing GET /social-events/venues/{id} endpoint so the events page can name venues referenced by loaded events that fall outside the bounded venue list page. The key is typed HTTP dispatch, not a selectable venue or business catalog; persisted Venue rows remain authoritative. The prior 77-method review is retained as previousDecision.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "event-discovery-filtering-2026-11-04",
+  "evidence": {
+    "file": "tdf-hq-ui/src/api/socialEvents.ts",
+    "line": 598,
+    "valueCount": 78
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:84e75f32a12e65ee16f88a7c909dae214abb6f88c260e63f888301104439477e"
+  }
+}

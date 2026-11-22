@@ -1,0 +1,10 @@
+{
+  "id": "2b2fe601e00052bd7a21",
+  "classification": "security-system-registry",
+  "disposition": "retain-as-versioned-redaction-projection",
+  "specializedModel": "commerce_reconciliation_exception",
+  "priority": "P0-security",
+  "risk": "Echoing raw exception text could expose private diagnostics. Editable classifications could mislabel held payments or imply financial-release authority.",
+  "justification": "Reviewed the five creReason response tokens against loadReconciliationEntries.safeReason, actual exception emitters and the generated contract. Only four known stored exception types are mapped; every other value becomes unrecognized. This output-only redaction vocabulary cannot mutate workflow, post money or release a hold. Contract parity, legacy-private-reason and closed-approval regressions cover this boundary; ADR 0125 records its limits.",
+  "reviewed": true
+}

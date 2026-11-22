@@ -1,0 +1,19 @@
+{
+  "id": "c94cd70c1272ec9ede1b",
+  "classification": "genuine-technical-constant",
+  "disposition": "explicit-allowlist",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P0-cutover",
+  "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+  "justification": "The 214-entry deployment execution registry preserves protected main 9a927fa390066f43cc27c872800bf1b0412e166e as its exact 213-entry prefix and appends one non-geographic directory saved-search parity migration. All213 shared entry objects, introduction anchors and historical SQL bytes remain unchanged. The new introduction anchor is eb2f71d62740783369a6eb2a6d35fc024484cb71; subsequent unpublished candidate corrections are reviewed separately. Disposable full-prefix/replay, exact rollback/reapply and authenticated application qualification are separate evidence; this classification authorizes no production application or activation.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "directory-saved-search-parity-20261025",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 214
+  }
+}
