@@ -6564,7 +6564,9 @@ const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
   // The event agreement migrations append afterwards and have their own review below.
-  const actual = withoutAgreementMigrations(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
+  const combined = withoutAgreementMigrations(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
+  assert.equal(combined.migrations.at(-1).id, '2026-11-07_studio_gallery');
+  const actual = { ...combined, migrations: combined.migrations.slice(0, -1) };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
   assert.deepEqual(actual, main);
   assert.deepEqual(actual.migrations.slice(0, ux.migrations.length), ux.migrations);
@@ -6590,12 +6592,34 @@ test('actual UX/storage composition preserves current main, immutable SQL and bo
   }
 });
 
+test('studio gallery appends its original migration and preserves both complete manifest reviews', async () => {
+  const file = 'scripts/production-migrations.json';
+  const base = '985117b3d9e23b1a84837040d39784e3debcb48e';
+  const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
+  const before = await integrationParent(base, file);
+  const original = (await integrationParent(gallery, file)).migrations.at(-1);
+  // The event agreement migrations append afterwards and have their own review below.
+  const current = withoutAgreementMigrations(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
+  assert.equal(original.id, '2026-11-07_studio_gallery');
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, original] });
+  const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, original.path), 'utf8'), stdout);
+  for (const [reviewFile, key] of integrationFiles) {
+    const currentReview = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8'));
+    for (const parent of [base, gallery]) {
+      const old = await integrationParent(parent, reviewFile);
+      const row = old[key].find(r => r.evidence?.file === file || r.name === 'migrations' || r.source?.name === 'migrations');
+      if (row) assert.ok(integrationFind(currentReview, row), 'Missing reviewed migration history for ' + parent);
+    }
+  }
+});
+
 // Event agreements (PR #700), resynced onto protected main.
-const AGREEMENT_PROTECTED_MAIN = '985117b3d9e23b1a84837040d39784e3debcb48e';
+const AGREEMENT_PROTECTED_MAIN = 'a4851729d1ca6816edb3fa535e4b65b7ea5b32dd';
 // Head of the branch before it was resynced onto main; its SQL is the reviewed SQL.
 const AGREEMENT_REVIEW_HEAD = '4d879f48033ee41095ce293ec168ff2713a03b13';
 const AGREEMENT_MIGRATIONS = ['2026-11-03_event_agreements', '2026-11-07_event_agreement_identity_guards'];
-const AGREEMENT_MANIFEST_REVIEW = '21eb9ca646404de87826';
+const AGREEMENT_MANIFEST_REVIEW = '396c28e24ddc3bb16887';
 const AGREEMENT_REGISTRY_REVIEW = 'ec2d69fb10a7f2751902';
 const agreementRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const agreementFiles = [
@@ -6626,10 +6650,10 @@ async function agreementRegistrySuccessor(mainReview) {
 test('event agreement migrations append after every migration of protected main and nest both review graphs', async () => {
   const file = 'scripts/production-migrations.json';
   const [actual, main] = await Promise.all([agreementJson(file), agreementParent(file)]);
-  assert.equal(main.migrations.length, 261);
+  assert.equal(main.migrations.length, 262);
   assert.deepEqual(withoutAgreementMigrations(actual), main);
-  assert.deepEqual(actual.migrations.slice(261).map(row => row.id), AGREEMENT_MIGRATIONS);
-  for (const row of actual.migrations.slice(261)) {
+  assert.deepEqual(actual.migrations.slice(262).map(row => row.id), AGREEMENT_MIGRATIONS);
+  for (const row of actual.migrations.slice(262)) {
     assert.equal(await fs.readFile(path.join(agreementRoot, row.path), 'utf8'),
       await agreementGit('show', `${AGREEMENT_REVIEW_HEAD}:${row.path}`), `Reviewed SQL changed: ${row.id}`);
     await agreementGit('merge-base', '--is-ancestor', row.introducedBy, 'HEAD');
@@ -6643,7 +6667,7 @@ test('event agreement migrations append after every migration of protected main 
 
   // Every review of protected main is either still active, unchanged, or nested whole in its one successor.
   const replaced = new Map([
-    ['7362b266dc1dd2eaabfb', AGREEMENT_MANIFEST_REVIEW],
+    ['59a6c2f1ad6d61a54f96', AGREEMENT_MANIFEST_REVIEW],
     ['ea29c6e8a6cd165802a8', AGREEMENT_REGISTRY_REVIEW],
     ['da4f880a8da74120e456', 'ba6bb68ad52cd91babeb'],
     ['92f5d2006375f7fb9757', 'a5df3b08d4f1d5495b10'],
@@ -6661,7 +6685,7 @@ test('event agreement migrations append after every migration of protected main 
   }
 
   const manifestReview = byId.get(AGREEMENT_MANIFEST_REVIEW);
-  assert.equal(manifestReview.evidence.valueCount, 263);
+  assert.equal(manifestReview.evidence.valueCount, 264);
   assert.equal(manifestReview.concurrentReviewHistory.length, 1);
   assert.equal(manifestReview.concurrentReviewHistory[0].id, 'a8f9141a64c6bef1232b');
   assert.equal(manifestReview.concurrentReviewHistory[0].concurrentReviewHistory[0].id, '739640d4416fd7a9ffaa');
