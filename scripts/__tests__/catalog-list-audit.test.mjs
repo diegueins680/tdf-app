@@ -6462,14 +6462,9 @@ test('dated-storage-parent: actual storage/refund composition retains all 261 mi
   const ids = new Set(main.migrations.map(row => row.id));
   const extra = storage.migrations.filter(row => !ids.has(row.id));
   assert.deepEqual(extra.map(row => row.id), ['2026-11-06_content_storage_security', '2026-11-07_content_storage_identity_guards']);
-  // The 261-entry composition stays an exact, unmodified prefix. Later reviewed
-  // appends are listed explicitly; MSG-DELIVERY-001 added one on 2026-11-20.
-  const composed = [...main.migrations, ...extra];
-  assert.deepEqual({ ...actual, migrations: actual.migrations.slice(0, composed.length) }, { ...main, migrations: composed });
-  assert.equal(composed.length, 261);
-  assert.deepEqual(actual.migrations.slice(composed.length).map(row => row.id), ['2026-11-20_chat_external_delivery']);
-  assert.equal(new Set(actual.migrations.map(row => row.id)).size, actual.migrations.length);
-  for (const row of actual.migrations.slice(0, composed.length)) {
+  assert.deepEqual(actual, { ...main, migrations: [...main.migrations, ...extra] });
+  assert.equal(actual.migrations.length, 261); assert.equal(new Set(actual.migrations.map(row => row.id)).size, 261);
+  for (const row of actual.migrations) {
     const ref = ids.has(row.id) ? COMPOSED_PARENTS[0] : COMPOSED_PARENTS[1];
     const { stdout } = await composedExec('git', ['show', `${ref}:${row.path}`], { cwd: composedRoot, maxBuffer: 32 * 1024 * 1024 });
     assert.equal(await fs.readFile(path.join(composedRoot, row.path), 'utf8'), stdout, `Immutable SQL changed: ${row.id}`);
@@ -6564,11 +6559,18 @@ test('actual UX/storage composition preserves current main, immutable SQL and bo
   const file = 'scripts/production-migrations.json';
   const actual = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
-  assert.deepEqual(actual, main);
+  // The 261 parent migrations stay an exact, unmodified prefix. Later reviewed
+  // appends are listed explicitly; MSG-DELIVERY-001 added one on 2026-11-20.
+  assert.deepEqual({ ...actual, migrations: actual.migrations.slice(0, main.migrations.length) }, main);
   assert.deepEqual(actual.migrations.slice(0, ux.migrations.length), ux.migrations);
-  assert.equal(actual.migrations.length, 261);
-  assert.equal(new Set(actual.migrations.map(row => row.id)).size, 261);
-  for (const row of actual.migrations) {
+  assert.equal(main.migrations.length, 261);
+  const appended = actual.migrations.slice(main.migrations.length);
+  assert.deepEqual(appended.map(row => row.id), ['2026-11-20_chat_external_delivery']);
+  assert.equal(new Set(actual.migrations.map(row => row.id)).size, actual.migrations.length);
+  for (const row of appended) {
+    await integrationExec('git', ['merge-base', '--is-ancestor', row.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  }
+  for (const row of actual.migrations.slice(0, main.migrations.length)) {
     assert.equal(await fs.readFile(path.join(integrationRoot, row.path), 'utf8'),
       await integrationSource(INTEGRATION_PARENTS[1], row.path), `Immutable SQL changed: ${row.id}`);
     await integrationExec('git', ['merge-base', '--is-ancestor', row.introducedBy, 'HEAD'], { cwd: integrationRoot });
