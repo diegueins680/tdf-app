@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-22T04:40:11.885Z",
+  "generatedAt": "2026-11-22T06:41:30.493Z",
   "repositoryRoot": ".",
-  "filesScanned": 2850,
+  "filesScanned": 2852,
   "candidateCount": 1492,
   "byClassification": {
     "dynamic-business-catalog": 978,
@@ -4646,7 +4646,7 @@
       "lines": [
         566
       ],
-      "consumerCount": 303,
+      "consumerCount": 304,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -5089,7 +5089,7 @@
       "lines": [
         312
       ],
-      "consumerCount": 1284,
+      "consumerCount": 1285,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -5377,7 +5377,7 @@
       "lines": [
         789
       ],
-      "consumerCount": 1283,
+      "consumerCount": 1284,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -5834,7 +5834,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 150,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
@@ -5956,6 +5956,7 @@
         "scripts/test-music-directory-migration.sh",
         "scripts/test-music-track-search.mjs",
         "scripts/test-notification-alert-context.mjs",
+        "scripts/test-public-event-card-tickets-http.py",
         "scripts/test-records-youtube-catalog-migration.sh",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "scripts/verify-music-money-wire.py"
@@ -6588,7 +6589,7 @@
       "lines": [
         80
       ],
-      "consumerCount": 948,
+      "consumerCount": 950,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -6875,7 +6876,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 948,
+      "consumerCount": 950,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -7858,7 +7859,7 @@
       "lines": [
         42
       ],
-      "consumerCount": 230,
+      "consumerCount": 231,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -8018,6 +8019,7 @@
         "scripts/test-guarded-release.py",
         "scripts/test-notification-navigation-migration.sh",
         "scripts/test-privacy-request-ledger.py",
+        "scripts/test-public-event-card-tickets-http.py",
         "scripts/test-release-journal.py",
         "scripts/test-specification-conformance.py",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
@@ -8251,7 +8253,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 767,
+      "consumerCount": 768,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -9114,7 +9116,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 1283,
+      "consumerCount": 1284,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -9751,7 +9753,7 @@
       "lines": [
         601
       ],
-      "consumerCount": 1700,
+      "consumerCount": 1701,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -11397,7 +11399,7 @@
       "lines": [
         101
       ],
-      "consumerCount": 109,
+      "consumerCount": 111,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -11477,6 +11479,7 @@
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
         "tdf-hq-ui/src/pages/TdfDomoCampaignPage.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
         "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.tsx",
         "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
         "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
@@ -11510,6 +11513,7 @@
         "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-music-directory-contract.mjs",
         "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-event-card-tickets-http.py",
         "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
@@ -15646,7 +15650,7 @@
       "lines": [
         175
       ],
-      "consumerCount": 71,
+      "consumerCount": 72,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -15676,6 +15680,7 @@
         "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
         "tdf-hq/src/TDF/Server/EventTicketSale.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs",
+        "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/src/TDF/Social/AccountOwnership.hs",
@@ -16363,7 +16368,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 96,
+      "consumerCount": 97,
       "backendConsumers": [
         "tdf-hq/sql/001_multi_role_migration.sql",
         "tdf-hq/sql/2026-07-15_social_sync_runtime_schema.sql",
@@ -16703,7 +16708,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 964,
+      "consumerCount": 966,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17486,7 +17491,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 957,
+      "consumerCount": 959,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17776,7 +17781,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 957,
+      "consumerCount": 959,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -19426,7 +19431,7 @@
       "lines": [
         798
       ],
-      "consumerCount": 800,
+      "consumerCount": 801,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -22811,13 +22816,15 @@
       "lines": [
         46
       ],
-      "consumerCount": 22,
+      "consumerCount": 28,
       "backendConsumers": [
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
         "tdf-hq/src/TDF/Routes/EventTickets.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/TicketPaymentGateSpec.hs"
       ],
@@ -22826,6 +22833,7 @@
         "tdf-hq-ui/src/api/checkoutPaymentAlternatives.test.ts",
         "tdf-hq-ui/src/api/checkoutPaymentAlternatives.ts",
         "tdf-hq-ui/src/api/eventTickets.test.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
@@ -22835,15 +22843,20 @@
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
         "tdf-hq-ui/src/utils/deviceTicketOrders.ts"
       ],
       "mobileConsumers": [],
-      "automationConsumers": [],
+      "automationConsumers": [
+        "scripts/test-public-event-card-tickets-http.py"
+      ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/checkoutPaymentAlternatives.test.ts",
         "tdf-hq-ui/src/api/checkoutPaymentAlternatives.ts",
         "tdf-hq-ui/src/api/eventTickets.test.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx"
       ],
@@ -26112,7 +26125,7 @@
       "domain": "events-ticketing",
       "kind": "literal-union",
       "name": "SocialRsvpStatus",
-      "line": 137,
+      "line": 142,
       "values": [
         "accepted",
         "maybe",
@@ -26121,7 +26134,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        137
+        142
       ],
       "consumerCount": 97,
       "backendConsumers": [
@@ -26259,7 +26272,7 @@
       "domain": "security-authorization",
       "kind": "literal-union",
       "name": "LogisticsAccessRole",
-      "line": 296,
+      "line": 301,
       "values": [
         "owner",
         "editor",
@@ -26268,7 +26281,7 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        296
+        301
       ],
       "consumerCount": 41,
       "backendConsumers": [
@@ -26343,7 +26356,7 @@
       "domain": "events-ticketing",
       "kind": "literal-union",
       "name": "LogisticsActivityType",
-      "line": 297,
+      "line": 302,
       "values": [
         "task",
         "milestone",
@@ -26353,7 +26366,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        297
+        302
       ],
       "consumerCount": 6,
       "backendConsumers": [
@@ -26391,7 +26404,7 @@
       "domain": "events-ticketing",
       "kind": "literal-union",
       "name": "LogisticsTravelMode",
-      "line": 298,
+      "line": 303,
       "values": [
         "drive",
         "walk",
@@ -26402,7 +26415,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        298
+        303
       ],
       "consumerCount": 11,
       "backendConsumers": [
@@ -26447,7 +26460,7 @@
       "domain": "events-ticketing",
       "kind": "literal-union",
       "name": "EventAdminAccessLevel",
-      "line": 551,
+      "line": 556,
       "values": [
         "owner",
         "admin",
@@ -26456,7 +26469,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        551
+        556
       ],
       "consumerCount": 145,
       "backendConsumers": [
@@ -26625,7 +26638,7 @@
       "domain": "events-ticketing",
       "kind": "literal-union",
       "name": "EventAdminInvitationStatus",
-      "line": 552,
+      "line": 557,
       "values": [
         "pending",
         "accepted",
@@ -26635,7 +26648,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        552
+        557
       ],
       "consumerCount": 163,
       "backendConsumers": [
@@ -26802,7 +26815,7 @@
       "domain": "events-ticketing",
       "kind": "object-registry",
       "name": "SocialEventsAPI",
-      "line": 686,
+      "line": 691,
       "values": [
         "listPublicUpcomingEvents",
         "listEvents",
@@ -26898,7 +26911,7 @@
       "valueCount": 90,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        686
+        691
       ],
       "consumerCount": 68,
       "backendConsumers": [
@@ -27383,7 +27396,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 1033,
+      "consumerCount": 1035,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -28456,7 +28469,7 @@
       "lines": [
         1
       ],
-      "consumerCount": 59,
+      "consumerCount": 60,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
@@ -28522,7 +28535,8 @@
         "scripts/test-music-media-health.py",
         "scripts/test-music-release-api-e2e.mjs",
         "scripts/test-music-s3-local.mjs",
-        "scripts/test-persistent-uploads-container.py"
+        "scripts/test-persistent-uploads-container.py",
+        "scripts/test-public-event-card-tickets-http.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/drive.ts",
@@ -29267,7 +29281,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 825,
+      "consumerCount": 826,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -30097,7 +30111,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1131,
+      "consumerCount": 1133,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -30395,7 +30409,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 1131,
+      "consumerCount": 1133,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -31497,7 +31511,7 @@
       "lines": [
         14
       ],
-      "consumerCount": 1131,
+      "consumerCount": 1133,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -34124,7 +34138,7 @@
       "lines": [
         1411
       ],
-      "consumerCount": 1180,
+      "consumerCount": 1182,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -34886,7 +34900,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 338,
+      "consumerCount": 339,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -35161,7 +35175,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 801,
+      "consumerCount": 802,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -35702,7 +35716,7 @@
       "lines": [
         141
       ],
-      "consumerCount": 362,
+      "consumerCount": 363,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -35889,7 +35903,7 @@
         "scripts/test-persistent-uploads-container.py",
         "scripts/test-physical-postgres-docker.py",
         "scripts/test-proof-certificates.py",
-        "scripts/test-specification-conformance.py"
+        "scripts/test-public-event-card-tickets-http.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/verify-datafast-cart.py",
@@ -35986,7 +36000,7 @@
       "lines": [
         165
       ],
-      "consumerCount": 362,
+      "consumerCount": 363,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -36173,7 +36187,7 @@
         "scripts/test-persistent-uploads-container.py",
         "scripts/test-physical-postgres-docker.py",
         "scripts/test-proof-certificates.py",
-        "scripts/test-specification-conformance.py"
+        "scripts/test-public-event-card-tickets-http.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/verify-datafast-cart.py",
@@ -36258,7 +36272,7 @@
       "lines": [
         189
       ],
-      "consumerCount": 362,
+      "consumerCount": 363,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -36445,7 +36459,7 @@
         "scripts/test-persistent-uploads-container.py",
         "scripts/test-physical-postgres-docker.py",
         "scripts/test-proof-certificates.py",
-        "scripts/test-specification-conformance.py"
+        "scripts/test-public-event-card-tickets-http.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/verify-datafast-cart.py",
@@ -36531,7 +36545,7 @@
       "lines": [
         201
       ],
-      "consumerCount": 362,
+      "consumerCount": 363,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -36718,7 +36732,7 @@
         "scripts/test-persistent-uploads-container.py",
         "scripts/test-physical-postgres-docker.py",
         "scripts/test-proof-certificates.py",
-        "scripts/test-specification-conformance.py"
+        "scripts/test-public-event-card-tickets-http.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/verify-datafast-cart.py",
@@ -36817,7 +36831,7 @@
       "lines": [
         214
       ],
-      "consumerCount": 362,
+      "consumerCount": 363,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -37004,7 +37018,7 @@
         "scripts/test-persistent-uploads-container.py",
         "scripts/test-physical-postgres-docker.py",
         "scripts/test-proof-certificates.py",
-        "scripts/test-specification-conformance.py"
+        "scripts/test-public-event-card-tickets-http.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/verify-datafast-cart.py",
@@ -37087,7 +37101,7 @@
       "lines": [
         240
       ],
-      "consumerCount": 362,
+      "consumerCount": 363,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -37274,7 +37288,7 @@
         "scripts/test-persistent-uploads-container.py",
         "scripts/test-physical-postgres-docker.py",
         "scripts/test-proof-certificates.py",
-        "scripts/test-specification-conformance.py"
+        "scripts/test-public-event-card-tickets-http.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/verify-datafast-cart.py",
@@ -37359,7 +37373,7 @@
       "lines": [
         250
       ],
-      "consumerCount": 362,
+      "consumerCount": 363,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -37546,7 +37560,7 @@
         "scripts/test-persistent-uploads-container.py",
         "scripts/test-physical-postgres-docker.py",
         "scripts/test-proof-certificates.py",
-        "scripts/test-specification-conformance.py"
+        "scripts/test-public-event-card-tickets-http.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/verify-datafast-cart.py",
@@ -38500,7 +38514,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 801,
+      "consumerCount": 802,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -41944,7 +41958,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 208,
+      "consumerCount": 210,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -42092,6 +42106,7 @@
         "scripts/test-music-money-wire-verifier.py",
         "scripts/test-music-source-projection.mjs",
         "scripts/test-music-track-search.mjs",
+        "scripts/test-public-event-card-tickets-http.py",
         "scripts/verify-invoice-receipt-api.mjs"
       ],
       "apiAndIntegrationConsumers": [
@@ -43559,7 +43574,7 @@
       "lines": [
         57
       ],
-      "consumerCount": 49,
+      "consumerCount": 51,
       "backendConsumers": [
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/sql/2026-08-05_platform_internationalization.sql",
@@ -43568,6 +43583,7 @@
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/EventResearch.hs",
@@ -43615,7 +43631,8 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/capture-music-directory-visuals.mjs",
         "scripts/test-music-directory-contract.mjs",
-        "scripts/test-music-directory-migration.sh"
+        "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-event-card-tickets-http.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/catalogs.test.ts",
@@ -51351,7 +51368,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 1063,
+      "consumerCount": 1065,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -54591,7 +54608,7 @@
       "lines": [
         62
       ],
-      "consumerCount": 375,
+      "consumerCount": 376,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -56275,7 +56292,7 @@
       "lines": [
         4448
       ],
-      "consumerCount": 375,
+      "consumerCount": 376,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -58682,7 +58699,7 @@
       "lines": [
         149
       ],
-      "consumerCount": 1311,
+      "consumerCount": 1312,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -59118,7 +59135,7 @@
       "lines": [
         344
       ],
-      "consumerCount": 1177,
+      "consumerCount": 1179,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -60420,7 +60437,7 @@
       "lines": [
         269
       ],
-      "consumerCount": 44,
+      "consumerCount": 45,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -60471,7 +60488,8 @@
         "scripts/test-domo-deposit-policy-validator.sh",
         "scripts/test-domo-quote-checkout-runtime-migration.sh",
         "scripts/test-event-memories-http.py",
-        "scripts/test-event-memory-source-permissions.py"
+        "scripts/test-event-memory-source-permissions.py",
+        "scripts/test-public-event-card-tickets-http.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/domoQuotes.test.ts",
@@ -60662,7 +60680,7 @@
       "lines": [
         414
       ],
-      "consumerCount": 1286,
+      "consumerCount": 1287,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -61561,7 +61579,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 838,
+      "consumerCount": 839,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -62008,7 +62026,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 1063,
+      "consumerCount": 1065,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -67343,7 +67361,7 @@
       "lines": [
         1067
       ],
-      "consumerCount": 369,
+      "consumerCount": 370,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -68874,7 +68892,7 @@
       "lines": [
         124
       ],
-      "consumerCount": 114,
+      "consumerCount": 118,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -68903,6 +68921,7 @@
         "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/EventTicketSale.hs",
+        "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
         "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
@@ -68924,8 +68943,7 @@
         "tdf-hq/test/integration/ticket_admission_fixture.sql",
         "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql",
         "tdf-hq/test/integration/ticket_inclusive_tax.sql",
-        "tdf-hq/test/integration/ticket_manual_bank_transfer.sql",
-        "tdf-hq/test/integration/ticket_manual_review_fixture.sql"
+        "tdf-hq/test/integration/ticket_manual_bank_transfer.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
@@ -68962,6 +68980,8 @@
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.money-input.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
         "tdf-hq-ui/src/pages/socialEventsPageState.test.ts",
         "tdf-hq-ui/src/pages/socialEventsPageState.ts",
         "tdf-hq-ui/src/utils/externalTicketing.ts"
@@ -68991,6 +69011,7 @@
         "scripts/sync-concerts-with-apis.py",
         "scripts/test-checkout-event-refund-runtime-migration.sh",
         "scripts/test-checkout-policy-terms-identity-migration.sh",
+        "scripts/test-public-event-card-tickets-http.py",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-checkout-runtime-migration.sh",
         "scripts/test-service-storefront-phase0-migration.sh"
@@ -71942,7 +71963,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 1063,
+      "consumerCount": 1065,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -72242,7 +72263,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 1063,
+      "consumerCount": 1065,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -73211,7 +73232,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1295,
+      "consumerCount": 1296,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -73511,7 +73532,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 383,
+      "consumerCount": 384,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -74132,7 +74153,7 @@
       "lines": [
         141
       ],
-      "consumerCount": 1063,
+      "consumerCount": 1065,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -74689,7 +74710,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 1131,
+      "consumerCount": 1133,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -74989,7 +75010,7 @@
       "lines": [
         47
       ],
-      "consumerCount": 1131,
+      "consumerCount": 1133,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -75940,7 +75961,7 @@
       "lines": [
         100
       ],
-      "consumerCount": 574,
+      "consumerCount": 576,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -76690,7 +76711,7 @@
       "lines": [
         103
       ],
-      "consumerCount": 49,
+      "consumerCount": 50,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-07_user_experiment_assignment.sql",
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
@@ -76741,6 +76762,7 @@
         "scripts/test-booking-conformance.py",
         "scripts/test-event-memories-http.py",
         "scripts/test-music-release-api-e2e.mjs",
+        "scripts/test-public-event-card-tickets-http.py",
         "scripts/test-state-machines.py",
         "scripts/test-user-experiment-assignment-migration.sh",
         "scripts/verify-cors-boundary.py",
@@ -77092,7 +77114,7 @@
       "lines": [
         726
       ],
-      "consumerCount": 49,
+      "consumerCount": 50,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-07_user_experiment_assignment.sql",
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
@@ -77143,6 +77165,7 @@
         "scripts/test-booking-conformance.py",
         "scripts/test-event-memories-http.py",
         "scripts/test-music-release-api-e2e.mjs",
+        "scripts/test-public-event-card-tickets-http.py",
         "scripts/test-state-machines.py",
         "scripts/test-user-experiment-assignment-migration.sh",
         "scripts/verify-cors-boundary.py",
@@ -78271,7 +78294,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 846,
+      "consumerCount": 847,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -78558,7 +78581,7 @@
       "lines": [
         67
       ],
-      "consumerCount": 313,
+      "consumerCount": 314,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -78803,7 +78826,7 @@
       "lines": [
         182
       ],
-      "consumerCount": 249,
+      "consumerCount": 250,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -78966,13 +78989,13 @@
         "scripts/test-guarded-release.py",
         "scripts/test-notification-navigation-migration.sh",
         "scripts/test-privacy-request-ledger.py",
+        "scripts/test-public-event-card-tickets-http.py",
         "scripts/test-release-journal.py",
         "scripts/test-specification-conformance.py",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "scripts/test-studio-internship-audit-api-e2e.sh",
         "scripts/test-studio-internship-audit-migration.sh",
-        "scripts/verification-report.py",
-        "scripts/weekly-platform-metrics.py"
+        "scripts/verification-report.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/domoQuotes.test.ts",
@@ -79085,7 +79108,7 @@
       "lines": [
         45
       ],
-      "consumerCount": 208,
+      "consumerCount": 210,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -79233,6 +79256,7 @@
         "scripts/test-music-money-wire-verifier.py",
         "scripts/test-music-source-projection.mjs",
         "scripts/test-music-track-search.mjs",
+        "scripts/test-public-event-card-tickets-http.py",
         "scripts/verify-invoice-receipt-api.mjs"
       ],
       "apiAndIntegrationConsumers": [
@@ -79652,7 +79676,7 @@
       "lines": [
         108
       ],
-      "consumerCount": 313,
+      "consumerCount": 314,
       "backendConsumers": [
         "tdf-hq/.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -79882,7 +79906,7 @@
       "lines": [
         706
       ],
-      "consumerCount": 1180,
+      "consumerCount": 1182,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -80644,7 +80668,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 801,
+      "consumerCount": 802,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -81159,7 +81183,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 978,
+      "consumerCount": 980,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -82216,7 +82240,7 @@
       "lines": [
         56
       ],
-      "consumerCount": 43,
+      "consumerCount": 44,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/src/TDF/Config.hs",
@@ -82266,7 +82290,8 @@
         "scripts/lib/production-release.mjs",
         "scripts/production-release.mjs",
         "scripts/test-booking-conformance.py",
-        "scripts/test-event-memories-http.py"
+        "scripts/test-event-memories-http.py",
+        "scripts/test-public-event-card-tickets-http.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -87254,7 +87279,7 @@
       "lines": [
         138
       ],
-      "consumerCount": 776,
+      "consumerCount": 777,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -93001,7 +93026,7 @@
       "lines": [
         1
       ],
-      "consumerCount": 375,
+      "consumerCount": 376,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
         "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",
@@ -93324,7 +93349,7 @@
       "lines": [
         1
       ],
-      "consumerCount": 377,
+      "consumerCount": 378,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
         "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",
@@ -94307,7 +94332,7 @@
         3477,
         3579
       ],
-      "consumerCount": 391,
+      "consumerCount": 392,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -94826,7 +94851,7 @@
       "lines": [
         8256
       ],
-      "consumerCount": 499,
+      "consumerCount": 500,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -95351,7 +95376,7 @@
       "lines": [
         11453
       ],
-      "consumerCount": 321,
+      "consumerCount": 322,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -95673,7 +95698,7 @@
       "lines": [
         11528
       ],
-      "consumerCount": 1090,
+      "consumerCount": 1092,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -99277,7 +99302,7 @@
       "lines": [
         14807
       ],
-      "consumerCount": 1284,
+      "consumerCount": 1285,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -100313,7 +100338,7 @@
       "lines": [
         15251
       ],
-      "consumerCount": 1284,
+      "consumerCount": 1285,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -102414,7 +102439,7 @@
         17712,
         17764
       ],
-      "consumerCount": 1283,
+      "consumerCount": 1284,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -104244,7 +104269,7 @@
       "lines": [
         19259
       ],
-      "consumerCount": 1083,
+      "consumerCount": 1085,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -104533,7 +104558,7 @@
       "lines": [
         19262
       ],
-      "consumerCount": 43,
+      "consumerCount": 44,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
         "tdf-hq/src/TDF/API.hs",
@@ -104583,7 +104608,8 @@
         "scripts/test-booking-conformance.py",
         "scripts/test-event-memories-http.py",
         "scripts/test-music-release-api-e2e.mjs",
-        "scripts/test-music-release-worker-runtime.mjs"
+        "scripts/test-music-release-worker-runtime.mjs",
+        "scripts/test-public-event-card-tickets-http.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/drive.ts",
@@ -104626,7 +104652,7 @@
       "lines": [
         19302
       ],
-      "consumerCount": 1294,
+      "consumerCount": 1295,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -157324,7 +157350,7 @@
         16,
         76
       ],
-      "consumerCount": 318,
+      "consumerCount": 319,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -169030,7 +169056,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "eventUpdateAllowedKeys",
-      "line": 570,
+      "line": 576,
       "values": [
         "eventId",
         "eventOrganizerPartyId",
@@ -169062,7 +169088,7 @@
       "valueCount": 26,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        570
+        576
       ],
       "consumerCount": 39,
       "backendConsumers": [
@@ -169138,7 +169164,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "promoCodeAllowedKeys",
-      "line": 1275,
+      "line": 1281,
       "values": [
         "promoCodeId",
         "promoCodeEventId",
@@ -169160,7 +169186,7 @@
       "valueCount": 16,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        1275
+        1281
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -169185,7 +169211,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "refundRequestAllowedKeys",
-      "line": 1433,
+      "line": 1439,
       "values": [
         "refundRequestReason",
         "refundRequestAmountCents"
@@ -169193,7 +169219,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1433
+        1439
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -172482,7 +172508,7 @@
       "lines": [
         226
       ],
-      "consumerCount": 403,
+      "consumerCount": 405,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -173572,7 +173598,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "storedEventMetadataAllowedKeys",
-      "line": 1725,
+      "line": 1705,
       "values": [
         "ticketUrl",
         "imageUrl",
@@ -173583,9 +173609,9 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        1725
+        1705
       ],
-      "consumerCount": 98,
+      "consumerCount": 100,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -173659,6 +173685,7 @@
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
         "tdf-hq-ui/src/pages/TdfDomoCampaignPage.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
         "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.tsx",
         "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
         "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
@@ -173690,7 +173717,8 @@
         "scripts/test-directory-event-visibility-migration.sh",
         "scripts/test-event-memory-source-permissions.py",
         "scripts/test-event-rsvp-identity-migration.sh",
-        "scripts/test-music-directory-migration.sh"
+        "scripts/test-music-directory-migration.sh",
+        "scripts/test-public-event-card-tickets-http.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
@@ -176102,7 +176130,7 @@
       "lines": [
         30
       ],
-      "consumerCount": 167,
+      "consumerCount": 168,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
@@ -176233,6 +176261,7 @@
         "scripts/test-event-rsvp-identity-migration.sh",
         "scripts/test-isolated-application-canary.py",
         "scripts/test-player-session-model.mjs",
+        "scripts/test-public-event-card-tickets-http.py",
         "scripts/test-records-youtube-catalog-migration.sh",
         "scripts/test-weekly-platform-metrics.py",
         "scripts/weekly-platform-metrics.py"
@@ -176274,7 +176303,7 @@
       "lines": [
         45
       ],
-      "consumerCount": 28,
+      "consumerCount": 29,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -176286,6 +176315,7 @@
         "tdf-hq/sql/2026-10-25_event_memory_invitations_rollback.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Server/EventResearch.hs",
+        "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Server/TicketSalesWindow.hs",
         "tdf-hq/test/TDF/Catalog/RecordsSpec.hs",
@@ -176814,7 +176844,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 779,
+      "line": 780,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -176826,7 +176856,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        779
+        780
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -177502,7 +177532,7 @@
       "lines": [
         22
       ],
-      "consumerCount": 105,
+      "consumerCount": 106,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -177609,6 +177639,7 @@
         "scripts/test-physical-postgres-docker.py",
         "scripts/test-provider-domain-binding.py",
         "scripts/test-provider-execution-runtime-migration.sh",
+        "scripts/test-public-event-card-tickets-http.py",
         "scripts/test-recovery-files.py",
         "scripts/test-recovery-tools.py",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
@@ -177668,7 +177699,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 658,
+      "consumerCount": 659,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -177981,7 +178012,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 1063,
+      "consumerCount": 1065,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -179604,7 +179635,7 @@
       "lines": [
         436
       ],
-      "consumerCount": 295,
+      "consumerCount": 296,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -179650,12 +179681,12 @@
         "tdf-hq/src/TDF/Server/EventResearch.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/EventTicketSale.hs",
+        "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
         "tdf-hq/src/TDF/Server/Reviews.hs",
         "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
         "tdf-hq/src/TDF/Server/SocialArtistOwnership.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
-        "tdf-hq/src/TDF/Server/TicketRefunds.hs"
+        "tdf-hq/src/TDF/Server/TicketManualPayments.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
@@ -179833,7 +179864,7 @@
       "lines": [
         1211
       ],
-      "consumerCount": 1283,
+      "consumerCount": 1284,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
