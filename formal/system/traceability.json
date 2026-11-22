@@ -31110,7 +31110,7 @@
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "8229ba3570ed3d0935709634d59a05279cbb25189497587d6e6bdf7f832c5c3e",
     "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs": "ee4a8d3cf9ad83a44752aa9e90021a981941bc48cf7842aa62cc50ec9615d3e3",
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "87adc6974c0b77da9983747c5900ec34687cd4c790084db30fcb521750daedb8",
-    "tdf-hq/test/TDF/MusicRelease/LoudnessSpec.hs": "dffff110f9c9efe79d183eb28d7704b4b611e90f1c054115860954c4a4edfa1a",
+    "tdf-hq/test/TDF/MusicRelease/LoudnessSpec.hs": "ae4b92c50c63bcbd583c1b44c072d0e4367711641896e90469022a49aeb3a3cd",
     "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs": "fef56adf244a0b899797b6b6f465233f135259cd52a762185611c5ba08c0d735",
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
     "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs": "3a3aeb59ce2c378361aa9a9ff9787deb3eb51ce164643b61ae37b2c575b3ea39",
@@ -85640,7 +85640,7 @@
     {
       "id": "SURFACE-922237140cfed986",
       "path": "tdf-hq/test/TDF/MusicRelease/LoudnessSpec.hs",
-      "sha256": "dffff110f9c9efe79d183eb28d7704b4b611e90f1c054115860954c4a4edfa1a",
+      "sha256": "ae4b92c50c63bcbd583c1b44c072d0e4367711641896e90469022a49aeb3a3cd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

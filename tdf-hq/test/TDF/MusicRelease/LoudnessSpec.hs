@@ -41,6 +41,21 @@ genStored = StoredMeasurement <$> genAsset <*> genSha <*> genState
   <*> liftArbitrary genTenths <*> liftArbitrary genTenths
   <*> liftArbitrary (elements loudnessFailureReasons)
 
+-- A master and a row that half of the time is a complete measurement of that
+-- very file, so the checked case is common rather than a rare coincidence.
+genPair :: Gen (Maybe MasterFile, Maybe StoredMeasurement)
+genPair = oneof
+  [ (,) <$> liftArbitrary genMaster <*> liftArbitrary genStored
+  , do
+      file <- genMaster
+      usable <- frequency [(4, pure True), (1, pure False)]
+      integrated <- genTenths
+      peak <- genTenths
+      pure ( Just file { masterUsable = usable }
+           , Just (StoredMeasurement (masterAssetId file) (masterSha256 file) Measured
+               (Just integrated) (Just peak) Nothing) )
+  ]
+
 spec :: Spec
 spec = describe "music loudness check" $ do
   describe "decision" $ do
@@ -124,17 +139,19 @@ spec = describe "music loudness check" $ do
         `shouldBe` map Just [minBound .. maxBound :: MeasurementState]
 
   describe "binding to one file (L1)" $ do
-    prop "checked implies a measured row of the same asset and the same SHA-256" $
-      forAll ((,,) <$> genLimits <*> liftArbitrary genMaster <*> liftArbitrary genStored) $
-        \(limits, master, stored) ->
-          let check = trackCheck limits master stored
-          in checkChecked check ==> case (master, stored) of
-               (Just file, Just row) ->
-                 storedAssetId row == masterAssetId file
-                   && storedSourceSha256 row == masterSha256 file
-                   && storedState row == Measured && masterUsable file
-                   && isJust (storedIntegrated row) && isJust (storedTruePeak row)
-               _ -> False
+    prop "checked exactly when the row is a complete measurement of the same usable asset and SHA-256" $
+      forAll ((,) <$> genLimits <*> genPair) $ \(limits, (master, stored)) ->
+        let check = trackCheck limits master stored
+            bound = case (master, stored) of
+              (Just file, Just row) ->
+                storedAssetId row == masterAssetId file
+                  && storedSourceSha256 row == masterSha256 file
+                  && storedState row == Measured && masterUsable file
+                  && isJust (storedIntegrated row) && isJust (storedTruePeak row)
+              _ -> False
+        in checkCoverage $ cover 20 (checkChecked check) "checked" $
+             cover 20 (not (checkChecked check)) "not checked" $
+               checkChecked check === bound
 
     prop "a row of another file or asset reveals nothing about the track" $
       forAll ((,,) <$> genLimits <*> genMaster <*> genStored) $ \(limits, file, row) ->
@@ -143,8 +160,7 @@ spec = describe "music loudness check" $ do
                 === TrackCheck CheckNotMeasured False [] Nothing Nothing Nothing
 
     prop "pass and warn are reported only for checked tracks, with both values" $
-      forAll ((,,) <$> genLimits <*> liftArbitrary genMaster <*> liftArbitrary genStored) $
-        \(limits, master, stored) ->
+      forAll ((,) <$> genLimits <*> genPair) $ \(limits, (master, stored)) ->
           let check = trackCheck limits master stored
               decided = checkStatus check `elem` [CheckPass, CheckWarn]
           in decided === checkChecked check
