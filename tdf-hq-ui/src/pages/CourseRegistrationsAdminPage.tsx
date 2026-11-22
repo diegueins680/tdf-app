@@ -1,7 +1,7 @@
 import PrivateAttachmentLink from '../components/PrivateAttachmentLink';
 import { storageFileIdFromUrl } from '../api/contentStorage';
 import MarkdownText from '../components/MarkdownText';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Alert,
   Box,
@@ -4297,6 +4297,36 @@ const registrationContactSummary = (
   const parts = [trimmedEmail, trimmedPhone].filter((value) => value !== '');
   if (parts.length === 0) return missingContactSummary;
   return visibleRegistrationContactParts(parts, visibleIdentityValues).join(' · ');
+};
+
+export const buildWhatsAppComposerUrl = (phone: string | null | undefined): string | null => {
+  const digits = (normalizeRegistrationContactValue(phone) ?? '').replace(/\D/g, '');
+  if (digits.length < 8 || digits.length > 15) return null;
+  return `https://wa.me/${digits}`;
+};
+
+const renderWithWhatsAppPhoneLink = (text: string, phone: string | null | undefined): ReactNode => {
+  const trimmedPhone = normalizeRegistrationContactValue(phone) ?? '';
+  const whatsappUrl = buildWhatsAppComposerUrl(trimmedPhone);
+  if (!whatsappUrl || !trimmedPhone) return text;
+  const index = text.indexOf(trimmedPhone);
+  if (index < 0) return text;
+  return (
+    <>
+      {text.slice(0, index)}
+      <Link
+        href={whatsappUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        underline="hover"
+        title={`Escribir por WhatsApp a ${trimmedPhone}`}
+        aria-label={`Escribir por WhatsApp a ${trimmedPhone}`}
+      >
+        {trimmedPhone}
+      </Link>
+      {text.slice(index + trimmedPhone.length)}
+    </>
+  );
 };
 
 const registrationActionTargetLabel = (
@@ -9095,12 +9125,16 @@ export default function CourseRegistrationsAdminPage() {
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Stack spacing={1.5}>
                   <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                    <Typography variant="h6">{activeRegistrationIdentity.primary}</Typography>
+                    <Typography variant="h6">
+                      {renderWithWhatsAppPhoneLink(activeRegistrationIdentity.primary, activeRegistration.crPhoneE164)}
+                    </Typography>
                     {showActiveRegistrationStatusChip && statusChip(activeRegistrationStatus)}
                   </Stack>
                   {activeRegistrationSecondaryLine && (
                     <Typography variant="body2" color="text.secondary">
-                      {activeRegistrationSecondaryLine}
+                      {showInternalRegistrationReference
+                        ? activeRegistrationSecondaryLine
+                        : renderWithWhatsAppPhoneLink(activeRegistrationSecondaryLine, activeRegistration.crPhoneE164)}
                     </Typography>
                   )}
                   {activeRegistrationSummary && (
