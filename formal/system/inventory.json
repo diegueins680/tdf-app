@@ -167,7 +167,6 @@
       "scripts/__tests__/build-trust.test.mjs",
       "scripts/__tests__/calendar-http-runtime.mjs",
       "scripts/__tests__/campaign-tiktok-ui.test.mjs",
-      "scripts/__tests__/catalog-decision-history.test.mjs",
       "scripts/__tests__/catalog-list-audit.test.mjs",
       "scripts/__tests__/checkout-amount-postgres.mjs",
       "scripts/__tests__/checkout-money-http.mjs",
@@ -302,7 +301,6 @@
       "scripts/build-ui-with-install.sh",
       "scripts/capture-feature-audit-visuals.mjs",
       "scripts/capture-music-directory-visuals.mjs",
-      "scripts/catalog-decision-history.mjs",
       "scripts/catalog-list-audit.mjs",
       "scripts/check-admin-guards.py",
       "scripts/check-api-availability.mjs",
@@ -370,7 +368,6 @@
       "scripts/interactions/test-schema.sh",
       "scripts/lib/alloy-controls.mjs",
       "scripts/lib/auth_throttle_http.py",
-      "scripts/lib/catalog-decision-history.mjs",
       "scripts/lib/compiled-api-surface.mjs",
       "scripts/lib/continuous-improvement-loop-verify.mjs",
       "scripts/lib/continuous-improvement-loop.mjs",
@@ -1070,6 +1067,7 @@
       "tdf-hq-ui/src/components/ConfirmDialog.tsx",
       "tdf-hq-ui/src/components/DataTable.tsx",
       "tdf-hq-ui/src/components/EnrollmentSuccessDialog.tsx",
+      "tdf-hq-ui/src/components/FollowUpCalendarActions.tsx",
       "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx",
       "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
       "tdf-hq-ui/src/components/InAppBrowserNotice.tsx",
@@ -1770,6 +1768,8 @@
       "tdf-hq-ui/src/utils/externalTicketing.ts",
       "tdf-hq-ui/src/utils/featureRegistry.test.ts",
       "tdf-hq-ui/src/utils/featureRegistry.ts",
+      "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
+      "tdf-hq-ui/src/utils/followUpCalendar.ts",
       "tdf-hq-ui/src/utils/formatPhone.ts",
       "tdf-hq-ui/src/utils/formatters.test.ts",
       "tdf-hq-ui/src/utils/formatters.ts",
@@ -2385,6 +2385,8 @@
       "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql",
+      "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql",
+      "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -4107,7 +4109,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "5fe81add4eef1c0bfddb256fa9425ec65865e2e9ae8025950879f49c60f814a6",
+      "sha256": "3b75451201352914e57227c19008fee7c8e8747ff00bf81ae3a43a7a3512fa6b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4183,15 +4185,9 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-06d2d6277df17fbc",
-      "path": "scripts/__tests__/catalog-decision-history.test.mjs",
-      "sha256": "9ad3bbd3935b32fe1c9ebd8dc9c3a69ac14087b4476c1ef710af6b1ddbfa2bcd",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "612d9689d1ab163f31f4ec10a568734fa99bb2094de1407dab8ae973a65c768c",
+      "sha256": "8d9431da2d3ac258c069dc12a28be58903231367e8756df354ee0b5059809825",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4993,12 +4989,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-ca761aa510f5ae58",
-      "path": "scripts/catalog-decision-history.mjs",
-      "sha256": "5582b801a0cbbbb9bd754dc9a7a89a10340ea768083157e0ec136fbbcef7fb9a",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-74289e89f4a7d171",
       "path": "scripts/catalog-list-audit.mjs",
       "sha256": "0fe478a23657510ee4b447c089b1db245b055075e2fbe3e7802bdf4c418e66c1",
@@ -5139,7 +5129,7 @@
     {
       "id": "SURFACE-dcc180d2a4916e98",
       "path": "scripts/continuous-improvement-loop-verify.mjs",
-      "sha256": "cda066e5c99afe1f8d2018e559813afaf8814216c23ad7df7cb2b6d67a46be76",
+      "sha256": "2c25693b5cc8608695c2353f3a7e31f5ec918e02fbd670bb6f0bfaa2f2e7d96c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5401,12 +5391,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-87f61f7e51faf3c1",
-      "path": "scripts/lib/catalog-decision-history.mjs",
-      "sha256": "57c2b822b62515f22aaf324db783d46a0a83229b5ec3c32fe403da7444f383f7",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-33d3dc767fe336d3",
       "path": "scripts/lib/compiled-api-surface.mjs",
       "sha256": "71831644e36c3e2d5e2a51309d701aab8b08f5b3a43ca9ff4ea085b30aef1437",
@@ -5595,7 +5579,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "3b468da722b3e7db855309e4b1cb133d01c3e03ddb0745e9f9f36ecb2c3d7be4",
+      "sha256": "b2581954bf71df4691d0a1829a5350e5271c7cc575896a3381266e9496580ab9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5799,7 +5783,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "bd6d076759b48588c1155bb7c83d0efaf53ff1ef9e5254df30966a53ee305249",
+      "sha256": "c5876e58c70088b1357996aabe1df90938e7404095099107a837bb25942140d7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9553,6 +9537,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8513fe43d104b125",
+      "path": "tdf-hq-ui/src/components/FollowUpCalendarActions.tsx",
+      "sha256": "35a10159b6ba74b4c3f30b85b0f64ddaa52c6579e284bec71a263ecfb83d5ee7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-e0b55665797583ff",
       "path": "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx",
       "sha256": "1faa71b1331653c4bf9fb12a32726732d94b63d1929b336f79bd7b11da3c0d94",
@@ -11619,13 +11609,13 @@
     {
       "id": "SURFACE-b584e0770511a16a",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
-      "sha256": "f62fd82553679bd61d98babfb732c8a3715b2f3d0ea0fb145147daf3c426139a",
+      "sha256": "d747f4d2c7cf597114f167fcdeb01fdd6f5315ce40ca6e5c426b5bcd1ce17c08",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-bf79c7904e71c2d9",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-      "sha256": "086e47d05d9f0a038fb6cbe875900aca96d67e1a71ee359913943eef463a0a99",
+      "sha256": "b10a52c61bd8e5aee2c80629d3726153be387f93ef174766dbcb30621daf87a1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13750,6 +13740,18 @@
       "id": "SURFACE-3b8899145aa5725f",
       "path": "tdf-hq-ui/src/utils/featureRegistry.ts",
       "sha256": "59783b97f00c4d2e07261116d9ee813aea4049c33ed8606660b4ff8f4eeb1c70",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0d41a7fe9efbf447",
+      "path": "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
+      "sha256": "8d8c16ae0f5b7cfffc000551cd669a31600e27f6e341722cbbc2209bc411d20f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6b381b93f828b6d1",
+      "path": "tdf-hq-ui/src/utils/followUpCalendar.ts",
+      "sha256": "3418d5213a8320c8929c0becb73f091ea97cd5e1afb7c9050b9a3aee8c385f9a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17431,6 +17433,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6a369025a50bc49c",
+      "path": "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql",
+      "sha256": "09dec141f5de428cb9bda712bf2aa9b4ec4f75ee13a16bc511c6e16a34031edd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-94aab7e703fbb551",
+      "path": "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql",
+      "sha256": "510f4ab65e13fd0faf203afd83a68e8c2df817723452b98603580b27f9586219",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -17745,7 +17759,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
+      "sha256": "24dd49cd023be713846d7f8629fd253a519e7847e9664a893b350a03cb987bb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18165,7 +18179,7 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
+      "sha256": "84817904ba8fbfe8b9c077715e79795a6b63ac0f4cbd2e753f2389ad85a17fbb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18489,7 +18503,7 @@
     {
       "id": "SURFACE-de59a337fc1e94a1",
       "path": "tdf-hq/src/TDF/ModelsExtra.hs",
-      "sha256": "d3e32f2ed9802c6b967729235fb4a5ebb9a21541afa73325e0950231539a12dc",
+      "sha256": "08d7358681bb8d4df7fb1c6aad4ad6c93d2f4add460c92a90cdcf5ef2dcf91f0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19293,7 +19307,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "3025b33657e3570185cc65d65def21673b7c513e63810d1a870d40a76a5d07c5",
+      "sha256": "115ae71490900a022ac559368575add15083f7b2a280ccf9519a919883f2c629",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23561,7 +23575,7 @@
     },
     {
       "path": "docs/catalog-persistence/README.md",
-      "sha256": "808e0f0fa3f86525cfc7ef729e24ecf9850c6b58c88bb73b1c18b6ba1376b555",
+      "sha256": "a373acea2f4f04a453c52a38cd1c77383586c1c5f75ca8f8f008a0e7c774f604",
       "authority": "inferred",
       "authorityBasis": "Status: implementation in progress. This directory records the immutable baseline, architecture,",
       "kind": "requirement-candidate"
@@ -31547,6 +31561,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/course-follow-up-reminders.md",
+      "sha256": "61aded79a3a9715fe6c9254c79071df5883663a347a53250d01ad0a6a3793d6c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/csv-export-text.md",
       "sha256": "4ab0b237a5b34b00d5a8b1e928f61bee534527f26f29839834b64fa1057df9f5",
       "authority": "inferred",
@@ -32409,7 +32430,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4bc4d5db8666db7a9610e2d3e6c6a93757dd52898f89b3753d77f520bf0fad43",
+      "sha256": "6aa73431750e9fad5c9bd4d5710816970014a4a9a0e17b371e38cbf1005780bb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -31411,26 +31411,21 @@
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "59a6c2f1ad6d61a54f96",
+      "id": "555cf6fbf926c0b2ceab",
       "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "studio-gallery-storage-integration",
-      "justification": "Append the studio gallery seed after the reviewed storage identity guards, preserving both original SQL introductions and complete parent reviews.",
+      "justification": "Preserve all 262 migration objects of the previously reviewed manifest in exact order and append only 2026-11-20_course_follow_up_reminder_delivery, an additive table for course follow-up reminder claims, introduced by 7da005edcdcce714343d3bbf7273fc31dd0743f4. No applied SQL is rewritten. This is an author review of the deployment registry composition; it does not authorize applying migrations or release and supplies no independent approval.",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "reviewBatch": "course-follow-up-reminders-2026-11-20",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 262
+        "valueCount": 263
       },
       "previousDecision": {
-        "$historyRef": "sha256:bf108393c08def26f949d45b305bec6da83df6ab14504e6362ce0b7489672a97"
-      },
-      "concurrentReviewHistory": [
-        {
-          "$historyRef": "sha256:9aeb2180100432499d9bd1d33a4ef3a707a21966e8f82e716d4e41e9182eee0b"
-        }
-      ]
+        "$historyRef": "sha256:57e201c3d6db92f10f8d1a76a26b960d319cab441cd42fb0cc0d58eca3d2525c"
+      }
     },
     {
       "id": "9256b774f7f853c0a060",
