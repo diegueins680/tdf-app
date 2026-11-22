@@ -176,10 +176,10 @@ spec = do
                     [ (ident, verdict)
                     | (ident, verdict) <- verdicts
                     , case verdict of
-                        Must present -> present /= Set.member ident members
-                        Either'      -> False
+                        Just present -> present /= Set.member ident members
+                        Nothing      -> False
                     ]
-                  exact = all ((/= Either') . snd) verdicts
+                  exact = all (isJust . snd) verdicts
               pure $
                 classify exact "no venue inside the tolerance band" $
                 classify (isJust (vsqNear query) && not (null full)) "distance query with matches" $
@@ -211,7 +211,7 @@ spec = do
               pure (ordered, answers)) pool
             length ordered `shouldBe` size
             forM_ (zip queries answers) $ \(query, answer) -> do
-              [() | row <- ordered, Either' <- [expectation query (entityFields row)]] `shouldBe` []
+              [() | row <- ordered, Nothing <- [expectation query (entityFields row)]] `shouldBe` []
               map entityId answer `shouldBe` map entityId (venueSearchSpec entityFields query ordered)
           ordered <- runSqlPool allVenues pool
           let beyond = VenueSearchQuery Nothing (Just needle) Nothing 500 300
@@ -264,27 +264,25 @@ spec = do
           offAgain <- list
           map venueId offAgain `shouldBe` map venueId off
 
--- | What the SQL answer must say about one venue.
-data Verdict = Must Bool | Either' deriving (Eq, Show)
-
--- | The specification decides, except where the contract leaves the answer
+-- | What the SQL answer must say about one venue; 'Nothing' leaves it open.
+-- The specification decides, except where the contract leaves the answer
 -- open: a distance within the tolerance of the radius, and an out-of-range
 -- coordinate whose haversine term sits on the edge of its domain. A coordinate
 -- above the ceiling or not finite never matches.
-expectation :: VenueSearchQuery -> VenueSearchFields -> Verdict
+expectation :: VenueSearchQuery -> VenueSearchFields -> Maybe Bool
 expectation query venue
-  | not (inCity query venue && hasText) = Must False
+  | not (inCity query venue && hasText) = Just False
   | otherwise = case (vsqNear query, vsfLatitude venue, vsfLongitude venue) of
-      (Nothing, _, _) -> Must True
+      (Nothing, _, _) -> Just True
       (Just (lat, lng, radiusKm), Just venueLat, Just venueLng)
-        | absurd venue -> Must False
-        | abs (distance - radiusKm) <= venueSearchToleranceKm -> Either'
-        | outOfRange && (isNaN distance || distance <= venueSearchToleranceKm) -> Either'
-        | otherwise -> Must (distance <= radiusKm)
+        | absurd venue -> Just False
+        | abs (distance - radiusKm) <= venueSearchToleranceKm -> Nothing
+        | outOfRange && (isNaN distance || distance <= venueSearchToleranceKm) -> Nothing
+        | otherwise -> Just (distance <= radiusKm)
         where
           distance = haversineDistanceKm lat lng venueLat venueLng
           outOfRange = abs venueLat > 90 || abs venueLng > 180
-      _ -> Must False
+      _ -> Just False
   where
     hasText = case vsqNeedle query of
       Just needle | not (T.null needle) -> matchesVenueText needle venue
