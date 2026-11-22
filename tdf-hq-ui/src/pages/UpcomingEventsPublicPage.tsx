@@ -35,6 +35,29 @@ const formatEventDate = (value?: string | null) => {
   return parsed.isValid ? parsed.toFormat("cccc d 'de' LLLL, HH:mm") : 'Fecha por confirmar';
 };
 
+// Says only what the ticket tiers support: a starting price while something is
+// on sale, or that it sold out. No tier data means no line, never "free".
+const ticketLine = (event: PublicUpcomingEventDTO): string | null => {
+  if (event.publicUpcomingEventTicketsSoldOut === true) return 'Agotado';
+  const cents = event.publicUpcomingEventTicketFromPriceCents;
+  const currency = event.publicUpcomingEventTicketCurrency?.trim().toUpperCase();
+  if (typeof cents !== 'number' || !Number.isSafeInteger(cents) || cents <= 0 || !currency) return null;
+  try {
+    const price = new Intl.NumberFormat('es-EC', { style: 'currency', currency }).format(cents / 100);
+    return `Entradas desde ${price}`;
+  } catch {
+    return null;
+  }
+};
+
+const placeLine = (event: PublicUpcomingEventDTO): string => {
+  const venue = event.publicUpcomingEventVenueName?.trim();
+  const city = event.publicUpcomingEventCity?.trim();
+  return [venue, city && city.toLocaleLowerCase('es') !== venue?.toLocaleLowerCase('es') ? city : null]
+    .filter(Boolean)
+    .join(' · ');
+};
+
 const eventPath = (event: PublicUpcomingEventDTO) => `/eventos/${encodeURIComponent(event.publicUpcomingEventId)}`;
 
 export default function UpcomingEventsPublicPage() {
@@ -116,6 +139,8 @@ function EventCard({ event }: { event: PublicUpcomingEventDTO }) {
   }, [event.publicUpcomingEventId, trackFunnel]);
   const fallbackImageUrl = new URL(EVENT_IMAGE_FALLBACK, window.location.origin).toString();
   const imageUrl = resolveEventImageUrl(event.publicUpcomingEventImageUrl) ?? fallbackImageUrl;
+  const place = placeLine(event);
+  const tickets = ticketLine(event);
 
   return (
     <Card
@@ -153,7 +178,8 @@ function EventCard({ event }: { event: PublicUpcomingEventDTO }) {
       <CardContent sx={{ minWidth: 0, alignSelf: 'center' }}>
         <Typography variant="h6" component="h2" fontWeight={750}>{event.publicUpcomingEventTitle}</Typography>
         <Typography color="primary" sx={{ mt: 0.75 }}>{formatEventDate(event.publicUpcomingEventStart)}</Typography>
-        {event.publicUpcomingEventCity && <Typography color="text.secondary" sx={{ mt: 0.5 }}>{event.publicUpcomingEventCity}</Typography>}
+        {place && <Typography color="text.secondary" sx={{ mt: 0.5 }}>{place}</Typography>}
+        {tickets && <Typography fontWeight={700} sx={{ mt: 0.5 }}>{tickets}</Typography>}
         {event.publicUpcomingEventDescription && (
           <MarkdownText disableLinks inline
             color="text.secondary"
