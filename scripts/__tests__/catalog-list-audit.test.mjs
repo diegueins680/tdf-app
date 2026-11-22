@@ -173,6 +173,12 @@ async function readReconciliation(beforePlayer = false) {
     .map(row => [row.id, row]));
   // A moved list's successor stands in for the review it nests.
   for (const row of movedFileSuccessors(active)) byId.set(row.previousDecision.id, row);
+  // Web Mis entradas (EVT-MY-TICKETS-001) succeeds the generated mobile registry
+  // review; the earlier catalog still names that exact review, nested unchanged.
+  for (const row of active.filter(candidate => candidate.reviewBatch === 'web-my-tickets-20261119'
+    && candidate.reviewMethod === 'successor-of-reviewed-decision')) {
+    byId.set(row.previousDecision.id, row.previousDecision);
+  }
   // EVT-TICKET-SALE-001 extended the typed client registry; its successor
   // review nests the 86-method review unchanged and stands in for it.
   const ticketSaleClient = active.find(row => row.previousDecision?.id === '083bd1a66e9f23f02866');
@@ -1590,16 +1596,15 @@ test('dated-UX-parent: main-parent: actual Mobile mirror matches its generator a
   try {
     const output = path.join(temporary, 'generated');
     await fs.mkdir(path.join(output, 'src/features'), { recursive: true });
-    await execFileAsync(process.execPath, [path.join(workspaceRoot, 'scripts/generate-mobile-feature-registry.mjs')],
-      { cwd: workspaceRoot, env: { ...process.env, TDF_MOBILE_ROOT: output } });
-    const source = await readPreservedParentFile('2c6dd64b9bd28d3fec6ac8d961eddea338d448d5', mobileFile, 'utf8');
+    await generatePreservedParentMirror('2c6dd64b9bd28d3fec6ac8d961eddea338d448d5', output);
+    const source = await integrationSource('2c6dd64b9bd28d3fec6ac8d961eddea338d448d5', mobileFile);
     assert.equal(source, await fs.readFile(path.join(output, generatedFile), 'utf8'));
     const repo = path.join(temporary, 'repo');
     await fs.mkdir(repo);
     await execFileAsync('git', ['init', '-b', 'main'], { cwd: repo });
     await writeFile(repo, mobileFile, source);
     await execFileAsync('git', ['add', '--', mobileFile], { cwd: repo });
-    const report = JSON.parse(await readPreservedParentFile('2c6dd64b9bd28d3fec6ac8d961eddea338d448d5', 'docs/catalog-persistence/reports/static-list-inventory.json', 'utf8'));
+    const report = JSON.parse(await integrationSource('2c6dd64b9bd28d3fec6ac8d961eddea338d448d5', 'docs/catalog-persistence/reports/static-list-inventory.json'));
     const ids = new Set(report.candidates.filter(row => row.file === mobileFile).map(row => row.id));
     const selected = register.decisions.filter(row => ids.has(row.id));
     assert.equal(selected.length, ids.size);
@@ -4836,16 +4841,15 @@ test('dated-storage-parent: refund-parent: actual Mobile mirror matches its gene
   try {
     const output = path.join(temporary, 'generated');
     await fs.mkdir(path.join(output, 'src/features'), { recursive: true });
-    await execFileAsync(process.execPath, [path.join(workspaceRoot, 'scripts/generate-mobile-feature-registry.mjs')],
-      { cwd: workspaceRoot, env: { ...process.env, TDF_MOBILE_ROOT: output } });
-    const source = await readPreservedParentFile('d65017d10f16e8089c43b82bdbcacf3177d206f5', mobileFile, 'utf8');
+    await generatePreservedParentMirror('d65017d10f16e8089c43b82bdbcacf3177d206f5', output);
+    const source = await integrationSource('d65017d10f16e8089c43b82bdbcacf3177d206f5', mobileFile);
     assert.equal(source, await fs.readFile(path.join(output, generatedFile), 'utf8'));
     const repo = path.join(temporary, 'repo');
     await fs.mkdir(repo);
     await execFileAsync('git', ['init', '-b', 'main'], { cwd: repo });
     await writeFile(repo, mobileFile, source);
     await execFileAsync('git', ['add', '--', mobileFile], { cwd: repo });
-    const report = JSON.parse(await readPreservedParentFile('d65017d10f16e8089c43b82bdbcacf3177d206f5', 'docs/catalog-persistence/reports/static-list-inventory.json', 'utf8'));
+    const report = JSON.parse(await integrationSource('d65017d10f16e8089c43b82bdbcacf3177d206f5', 'docs/catalog-persistence/reports/static-list-inventory.json'));
     const ids = new Set(report.candidates.filter(row => row.file === mobileFile).map(row => row.id));
     const selected = register.decisions.filter(row => ids.has(row.id));
     assert.equal(selected.length, ids.size);
@@ -6372,16 +6376,15 @@ test('dated-storage-parent: storage-parent: actual Mobile mirror matches its gen
   try {
     const output = path.join(temporary, 'generated');
     await fs.mkdir(path.join(output, 'src/features'), { recursive: true });
-    await execFileAsync(process.execPath, [path.join(workspaceRoot, 'scripts/generate-mobile-feature-registry.mjs')],
-      { cwd: workspaceRoot, env: { ...process.env, TDF_MOBILE_ROOT: output } });
-    const source = await readPreservedParentFile('cdf57961e4058f403ee4dd903bacfced2a5ee258', mobileFile, 'utf8');
+    await generatePreservedParentMirror('cdf57961e4058f403ee4dd903bacfced2a5ee258', output);
+    const source = await integrationSource('cdf57961e4058f403ee4dd903bacfced2a5ee258', mobileFile);
     assert.equal(source, await fs.readFile(path.join(output, generatedFile), 'utf8'));
     const repo = path.join(temporary, 'repo');
     await fs.mkdir(repo);
     await execFileAsync('git', ['init', '-b', 'main'], { cwd: repo });
     await writeFile(repo, mobileFile, source);
     await execFileAsync('git', ['add', '--', mobileFile], { cwd: repo });
-    const report = JSON.parse(await readPreservedParentFile('cdf57961e4058f403ee4dd903bacfced2a5ee258', 'docs/catalog-persistence/reports/static-list-inventory.json', 'utf8'));
+    const report = JSON.parse(await integrationSource('cdf57961e4058f403ee4dd903bacfced2a5ee258', 'docs/catalog-persistence/reports/static-list-inventory.json'));
     const ids = new Set(report.candidates.filter(row => row.file === mobileFile).map(row => row.id));
     const selected = register.decisions.filter(row => ids.has(row.id));
     assert.equal(selected.length, ids.size);
@@ -6603,5 +6606,91 @@ test('studio gallery appends its original migration and preserves both complete 
       const row = old[key].find(r => r.evidence?.file === file || r.name === 'migrations' || r.source?.name === 'migrations');
       if (row) assert.ok(integrationFind(currentReview, row), 'Missing reviewed migration history for ' + parent);
     }
+  }
+});
+
+
+test('My tickets retains both complete published review graphs and immutable migrations', async () => {
+  const assertParent = async (ref) => {
+    for (const [file, key] of integrationFiles) {
+      const current = integrationCurrentFiles.get(file)?.value
+        ?? JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+      const before = await integrationParent(ref, file);
+      for (const row of before[key]) {
+        assert.ok(integrationFind(current, row), `Lost whole ticket parent object: ${ref}:${file}`);
+      }
+      for (const [field, value] of Object.entries(before)) {
+        if (field === key) continue;
+        if (value && typeof value === 'object') {
+          assert.ok(integrationFind(current, value), `Lost whole ticket parent metadata: ${ref}:${file}:${field}`);
+        } else {
+          assert.ok(current[field] === value
+            || current.sourceContextHistory?.some(entry => entry.metadata?.[field] === value),
+            `Lost ticket parent context: ${ref}:${file}:${field}`);
+        }
+      }
+    }
+    const file = 'scripts/production-migrations.json';
+    const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+    const before = await integrationParent(ref, file);
+    for (const migration of before.migrations) {
+      assert.deepEqual(current.migrations.find(row => row.id === migration.id), migration);
+      assert.equal(await fs.readFile(path.join(integrationRoot, migration.path), 'utf8'),
+        await integrationSource(ref, migration.path));
+    }
+  };
+  await assertParent('a4851729d1ca6816edb3fa535e4b65b7ea5b32dd');
+  await assertParent('5fc4facba6664408f7ec5fd95ec02109a6ea824b');
+});
+
+
+async function generatePreservedParentMirror(ref, output) {
+  // Dated positive and negative assertions execute their own published
+  // generator and source registry, never today's different feature list.
+  const fixture = path.join(output, 'historical-source');
+  await fs.mkdir(path.join(fixture, 'scripts'), { recursive: true });
+  await fs.mkdir(path.join(fixture, 'tdf-hq/assets'), { recursive: true });
+  const script = 'scripts/generate-mobile-feature-registry.mjs';
+  const registry = 'tdf-hq/assets/feature-registry.json';
+  await fs.writeFile(path.join(fixture, script), await integrationSource(ref, script));
+  await fs.writeFile(path.join(fixture, registry), await integrationSource(ref, registry));
+  await integrationExec(process.execPath, [path.join(fixture, script)],
+    { cwd: fixture, env: { ...process.env, TDF_MOBILE_ROOT: output } });
+}
+
+test('current My tickets mirror matches its generator and rejects the prior main review', async () => {
+  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'catalog-my-tickets-mirror-'));
+  const file = 'tdf-mobile/src/features/generatedFeatureRegistry.ts';
+  try {
+    const output = path.join(temporary, 'generated');
+    await fs.mkdir(path.join(output, 'src/features'), { recursive: true });
+    await integrationExec(process.execPath, [path.join(integrationRoot, 'scripts/generate-mobile-feature-registry.mjs')],
+      { cwd: integrationRoot, env: { ...process.env, TDF_MOBILE_ROOT: output } });
+    const source = await fs.readFile(path.join(integrationRoot, file), 'utf8');
+    assert.equal(source, await fs.readFile(path.join(output, 'src/features/generatedFeatureRegistry.ts'), 'utf8'));
+    const repo = path.join(temporary, 'repo');
+    await fs.mkdir(repo);
+    await integrationExec('git', ['init', '-b', 'main'], { cwd: repo });
+    await fs.mkdir(path.join(repo, 'tdf-mobile/src/features'), { recursive: true });
+    await fs.writeFile(path.join(repo, file), source);
+    await integrationExec('git', ['add', '--', file], { cwd: repo });
+    const report = JSON.parse(await fs.readFile(path.join(integrationRoot, 'docs/catalog-persistence/reports/static-list-inventory.json'), 'utf8'));
+    const ids = new Set(report.candidates.filter(row => row.file === file).map(row => row.id));
+    const register = JSON.parse(await fs.readFile(path.join(integrationRoot, 'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
+    const selected = register.decisions.filter(row => ids.has(row.id));
+    assert.equal(selected.length, ids.size);
+    const current = selected.find(row => row.evidence?.name === 'mobileFeatureRegistry');
+    assert.ok(current);
+    assert.equal(current.id, '105fd7b2786498f6bb56');
+    assert.equal(current.previousDecision.id, 'ea29c6e8a6cd165802a8');
+    const decisions = path.join(temporary, 'decisions.json');
+    await fs.writeFile(decisions, JSON.stringify(selected));
+    const args = [path.join(integrationRoot, 'scripts/catalog-list-audit.mjs'), '--root', repo, '--decisions', decisions, '--fail-on-unreviewed'];
+    await integrationExec(process.execPath, args, { cwd: repo });
+    await fs.writeFile(decisions, JSON.stringify(selected.map(row => row === current ? current.previousDecision : row)));
+    await assert.rejects(integrationExec(process.execPath, args, { cwd: repo }),
+      error => error.code === 1 && error.stderr.includes('1 unreviewed candidate(s), 1 stale decision(s)'));
+  } finally {
+    await fs.rm(temporary, { recursive: true, force: true });
   }
 });
