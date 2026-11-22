@@ -87,6 +87,8 @@ async function inspect(page) {
 }
 
 test('rental requests preserve invalid text and recover the same uncertain attempt before changes @critical @mobile-flow', async ({ page, baseURL }, info) => {
+  // Seven validation, recovery and axe passes take ~26s on emulated WebKit iPhone; keep headroom like the merch recovery specs.
+  test.setTimeout(60_000);
   const state = await fixture(page, baseURL);
   const form = page.getByTestId('marketplace-request-form'), submit = form.getByRole('button', { name: 'Enviar solicitud', exact: true });
   const type = form.getByRole('combobox', { name: /^Tipo de solicitud/ });

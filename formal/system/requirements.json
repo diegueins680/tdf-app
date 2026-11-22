@@ -11496,6 +11496,95 @@
       ]
     },
     {
+      "domain": "MSG",
+      "actors": [
+        "Chat message recipient controlling their reminder channels and devices",
+        "Chat message sender",
+        "Delivery worker (API process) and external providers (SMTP, Expo push)"
+      ],
+      "authority": "explicit operator requirement",
+      "source": "Operator confirmation on 2026-10-13 (issue #577) and 2026-11-20 request: chat notices must reach the recipient by email and phone, not only in the web app.",
+      "contract": "docs/notifications/chat-delivery-2026-10-13.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "privacy": "Email and push carry no message text, sender name or address; push metadata is only the notice id. Device tokens are stored encrypted (pgp_sym_encrypt with NOTIFICATION_PUSH_TOKEN_KEY) and addressed by SHA-256 digest; outbox outcomes are minimized codes.",
+      "idempotency": "One delivery intent per notice and channel (UNIQUE notification_id, channel). Completion is fenced by a per-lease token, so a lost or duplicate worker cannot complete twice. Provider calls themselves are at-least-once on retry.",
+      "recovery": "Channels default off; disabling CHAT_EMAIL_DELIVERY_ENABLED/CHAT_PUSH_DELIVERY_ENABLED stops dispatch without losing intents. Intents older than 24 hours are skipped as expired, so re-enabling never sends retrospective reminders. Keep the additive schema on application rollback.",
+      "observability": "chat_delivery_outbox state/outcome/attempts per intent (no content); push subscription last_success_at/last_failure_code; API log lines tagged [ChatDelivery].",
+      "confidence": "Synthetic PostgreSQL assertions, Haskell unit tests and web tests; real SMTP mailbox delivery, Expo/FCM/APNs device delivery and production rollout remain unverified.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local SQL/unit/web evidence; provider credentials, mobile release, production migration and recipient-side device/mailbox evidence are pending."
+      },
+      "id": "MSG-DELIVERY-001",
+      "title": "Recipient-controlled email and phone reminders for chat notices",
+      "statement": "Every chat notice must create, in the message transaction, one email and one push delivery intent. A worker may send a reminder only when its channel is enabled and, at dispatch, the notice is still unread, the conversation has no newer read receipt, the current chat policy still shows the notice, the recipient account is active, the recipient has not opted out, the notice is under 24 hours old and coalescing allows it.",
+      "property": "Push is due immediately; email waits 10 minutes (offline window). At most one email per conversation per 6 hours and one push per conversation per minute. Reading the conversation records a monotonic receipt and marks its notices read. Retries back off exponentially and dead-letter after 5 attempts; expired leases are re-leased with the same budget. Each intent is leased immediately before its dispatch, at most one delivery is in flight per recipient, conversation and channel, an expired lease may not start a send, and provider calls are bounded (SMTP 60 s; Expo 15 s to the response headers and 30 s for the whole exchange) inside the 120 s lease. The web chat retries a failed read receipt up to 5 times with backoff. The authenticated routes are POST /chat/threads/{threadId}/read (read receipt, participants only), PUT /notifications/channels (the caller's email and push opt-out), POST /notifications/push-subscriptions (register the caller's device token) and POST /notifications/push-subscriptions/revoke (deactivate it).",
+      "preconditions": [
+        "Governed production migration 2026-11-20_chat_external_delivery installed after 2026-10-13_chat_message_notifications.",
+        "Provider configuration through the approved release process: SMTP, CHAT_*_DELIVERY_ENABLED, NOTIFICATION_PUSH_TOKEN_KEY (>=32 chars), optional EXPO_ACCESS_TOKEN; EAS FCM/APNs credentials for the mobile app."
+      ],
+      "inputs": [
+        "Committed chat message and its notice",
+        "Recipient read receipts, channel preferences and device push subscriptions"
+      ],
+      "state": {
+        "variables": [
+          "chat_delivery_outbox intents, leases and outcomes",
+          "chat_thread_read_receipt",
+          "notification_channel_preference",
+          "notification_push_subscription (encrypted tokens)"
+        ],
+        "bounds": "Synthetic PostgreSQL assertions over one conversation; no concurrency proof beyond FOR UPDATE SKIP LOCKED and lease fencing; no liveness claim for providers."
+      },
+      "allowedTransitions": [
+        "Send stores message, notice and two pending intents together.",
+        "Worker leases due intents for enabled channels only.",
+        "Dispatch recheck skips with a minimized reason (read, not_visible, inactive_recipient, opted_out, expired, no_address, no_subscription, coalesced).",
+        "Provider acceptance completes the lease as accepted; transient failure reschedules; budget exhaustion dead-letters.",
+        "A device token registered by another account moves to the newest registrant; Expo DeviceNotRegistered deactivates it."
+      ],
+      "forbiddenTransitions": [
+        "A reminder for a notice the recipient already read or can no longer see.",
+        "A reminder through a disabled or opted-out channel.",
+        "A reminder containing message text or sender identity.",
+        "A completion without the current lease token.",
+        "Enqueueing or sending reminders for historical messages."
+      ],
+      "effects": [
+        "External email via SMTP and push via Expo when enabled; durable minimized outcomes."
+      ],
+      "authorization": "Push subscription, preference and receipt endpoints act only on the authenticated party; a receipt requires conversation membership. Dispatch reuses interaction_notification_visible, so current consent, block and message deletion apply.",
+      "concurrency": "chat_delivery_lease uses FOR UPDATE SKIP LOCKED; chat_delivery_complete updates only the row holding the lease token. Receipts use GREATEST so they never move backwards.",
+      "failure": "Provider errors retry with 1,2,4,8-minute backoff then dead-letter; SMTP not configured or no push key skips with provider_unconfigured; missing migration leaves the worker idle.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
+        "tdf-hq/src/TDF/Chat/Delivery.hs",
+        "tdf-hq/src/TDF/Server/NotificationDelivery.hs",
+        "tdf-hq/src/TDF/API/NotificationDelivery.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/chat.ts",
+        "tdf-hq-ui/src/components/ChatNotificationChannels.tsx",
+        "tdf-hq-ui/src/pages/ChatPage.tsx",
+        "scripts/production-migrations.json"
+      ],
+      "tests": [
+        "scripts/social/chat-delivery.sql",
+        "scripts/test-chat-notifications.sh",
+        "tdf-hq/test/TDF/ChatDeliverySpec.hs",
+        "tdf-hq-ui/src/components/ChatNotificationChannels.test.tsx",
+        "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Fully migrated synthetic PostgreSQL: transactional intents, channel gating, dispatch rechecks (opt-out, block, inactive account, read receipt, freshness), lease fencing, retry/dead letter, coalescing; Haskell unit tests for environment defaults, backoff, token validation, payload minimization and Expo ticket classification; web tests for read receipts (including no receipt for unauthorized notification targets) and channel preferences.",
+      "evidence": "docs/notifications/chat-delivery-2026-10-13.md; current branch test receipts.",
+      "ambiguity": [
+        "Browser Web Push (VAPID) is not implemented; phone push covers the TDF mobile app only.",
+        "Expo push receipts (post-ticket device delivery) are not polled; acceptance is recorded as provider_accepted."
+      ]
+    },
+    {
       "id": "SYS-CI-DB-001",
       "title": "Event-operations API fixtures wait for final PostgreSQL readiness",
       "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
@@ -21995,7 +22084,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/bookings-routes.md.",
       "source": "formal/system/bookings-routes.md",
       "contract": "formal/system/bookings-routes.md",
-      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); an engineer email is sent only for a newly created booking.",
+      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); only a newly created legacy tentative booking notifies: the assigned engineer by email, every active Admin, Manager and StudioManager by an in-app notification (public_booking_request, target booking) plus email and WhatsApp, and the customer by a receipt email stating the request is unconfirmed and records no payment, and that it holds its slot tentatively until staff confirm or release it only when the created booking was allocated rooms or resources; without allocations it says no slot is held (the staff email and the Domo request page make the same distinction). The in-app rows are written before the response; emails and WhatsApp are sent on a background thread after it, so provider latency never delays or fails the accepted request. Each delivery is best-effort and logged.",
       "actors": [
         "Anonymous customer"
       ],
@@ -22029,7 +22118,9 @@
         "service_booking_checkout_runtime",
         "service_booking_tentative_request",
         "service_booking_event",
-        "engineer email"
+        "engineer, staff and customer email",
+        "staff notification rows",
+        "staff WhatsApp alert"
       ],
       "authorization": "None beyond the key (public-intake).",
       "privacy": "Stores customer contact details from anonymous input.",
@@ -22040,13 +22131,21 @@
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs",
         "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
-        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql"
+        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
+        "tdf-hq/src/TDF/Email.hs",
+        "tdf-hq/src/TDF/Email/Service.hs",
+        "tdf-hq-ui/src/components/notificationTarget.ts",
+        "tdf-mobile/src/navigation/notificationTarget.ts",
+        "tdf-hq-ui/src/pages/DomoVenuePage.tsx"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "scripts/test-public-booking-http-concurrency.sh",
-        "scripts/test-public-booking-tentative-idempotency-migration.sh"
+        "scripts/test-public-booking-tentative-idempotency-migration.sh",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx"
       ],
       "formalModels": [],
       "verification": "publicBookingSqlConflict is tested in tdf-hq/test/TDF/ServerSpec.hs; the HTTP concurrency script drives concurrent public checkouts; the rest is read from the handlers.",

@@ -21,6 +21,7 @@ export function notificationTargetPath(notification: NotificationDTO): string | 
     case 'event_logistics': return id ? `/social/eventos/${id}/logistica${activity ? `?activity=${activity}` : ''}` : null;
     case 'intern_audit_plan': return key ? `/practicas/auditorias/${key}` : null;
     case 'internal_feedback_report': return key ? `/feedback/interno/${key}` : null;
+    case 'booking': return id ? '/estudio/calendario' : null;
     case 'directory_application': return key ? `/mis-clasificados?application=${key}` : null;
     case 'directory_invitation': return key ? `/mis-clasificados?invitation=${key}` : null;
     case 'directory_review': return key ? `/mis-clasificados?review=${key}` : null;
@@ -41,6 +42,7 @@ export function notificationFallbackPath(notification: NotificationDTO): string 
   if (kind === 'intern_audit_plan' || kind === 'internship_task') return '/practicas';
   if (kind === 'event_memories') return '/social/eventos';
   if (kind === 'event_logistics') return '/social/eventos';
+  if (kind === 'booking') return '/estudio/calendario';
   return '/inicio';
 }
 
