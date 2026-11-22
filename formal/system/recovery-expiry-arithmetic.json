@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "1c6c0c24e27cdfe42c0dd9c3bddc73e731a4f96400ef9bc919fb462296b37438",
+    "tdf-hq/tdf-hq.cabal": "69ec9047cb87c9e74bc0535d2a9be5980da68ade6f1892d3539441c980b247f3",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -936,6 +936,24 @@
       "qualification": "This review covers the conditional solver source context."
     },
     {
+      "reviewedAgainst": "5084d8a8a4d7a7a3b8d30d1f55ae5d9c8c032b9b",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+      "currentSha256": "78aff2bfc0573838f5be3072161efa079dd416c74df5b9e67fa97d67228b8d2e",
+      "change": "Register one new library module, TDF.Server.PublicEventTicketSummary (read-only summary of an event's ticket tiers for the public upcoming-events list, kept out of SocialEventsHandlers to respect its size ceiling). No other line changes.",
+      "semanticReview": "Removing exactly the one added exposed-module line reproduces the Cabal bytes of main at 5084d8a8a4d7. No dependency, flag, extension, source path or existing registration changes; the module uses packages already listed (base, text, time, persistent). Its only project imports are the social event models and isTicketTierSaleOpen from TDF.Server.EventAdminDelegation; it does not import or redefine an authorization predicate, RoleEnum, ingestion admission or recovery arithmetic. Auth.hs, Models.hs, Server/RecordsIngestion.hs, the recovery expiry SQL and Stack/lock are byte-identical to that revision. Obligation claims, assumptions and translations are unchanged.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "985117b3d9e23b1a84837040d39784e3debcb48e",
+      "previousSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "currentSha256": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
+      "change": "Register TDF.Server.PublicEventTicketSummary alongside current main modules; exactly one Cabal line is added.",
+      "semanticReview": "Removing the single module registration reproduces current main Cabal bytes exactly. Existing dependencies, flags, extensions, source directories and registrations remain unchanged. The focused module uses current event models/DTOs and existing workflow and sale-window helpers. The oversized handler retains its strict metadata decoder and passes only its four public fields; the existing public-card projection moves into the focused module without changing metadata, workflow or identity admission. No authentication, ingestion or recovery predicate, assumption or translation changes. Every other pinned source remains byte-identical to current main; both parent review histories are preserved.",
+      "qualification": "Conditional source-context correspondence only. Fresh solver execution, replay, negative controls, current hosted checks and independent review remain required."
+    },
+    {
       "source": "tdf-hq/tdf-hq.cabal",
       "reviewedAgainst": "403ba9acc943b62c6d9658bfbc38e16c742f9c30",
       "previousSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
@@ -943,6 +961,15 @@
       "change": "Register the chat delivery modules (TDF.API.NotificationDelivery, TDF.Chat.Delivery, TDF.Server.NotificationDelivery) and the TDF.ChatDeliverySpec test module on current protected main.",
       "semanticReview": "The merged Cabal file differs from protected main's by exactly four added lines: three library module entries for the chat notification delivery API, worker and handlers, and one test module entry. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
       "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "0e05c05762d661e18f9636d121c10c7c8e8e7389",
+      "previousSha256": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
+      "currentSha256": "69ec9047cb87c9e74bc0535d2a9be5980da68ade6f1892d3539441c980b247f3",
+      "change": "Integrate the chat delivery module registrations (TDF.API.NotificationDelivery, TDF.Chat.Delivery, TDF.Server.NotificationDelivery, TDF.ChatDeliverySpec) with current main, which now registers TDF.Server.PublicEventTicketSummary.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly the four added module lines already reviewed for the chat delivery branch. No dependency, flag, extension or source directory changes, and every other controlled source is byte-identical to current main, so the conditional authentication and recovery context is unchanged. Both parent review histories are preserved.",
+      "qualification": "Conditional source-context correspondence only. Fresh solver execution, replay, negative controls, current hosted checks and independent review remain required."
     }
   ]
 }
