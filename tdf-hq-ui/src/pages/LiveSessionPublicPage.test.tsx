@@ -8,9 +8,9 @@ const fetchMock = jest.fn<typeof fetch>();
 jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session: null }), setTransientApiToken: transient }));
 jest.unstable_mockModule('../config/apiBase', () => ({ resolveApiBase: () => '' }));
 jest.unstable_mockModule('../components/PublicBrandBar', () => ({ default: () => null }));
-function MockIntakeForm({ accessCode }: { accessCode?: string }) {
+function MockIntakeForm({ accessCode, contactEmailDefault }: { accessCode?: string; contactEmailDefault?: string }) {
  const theme = useTheme();
- return <input aria-label="Nombre de banda" data-access-code={accessCode ?? ''} data-palette-mode={theme.palette.mode} data-text-secondary={theme.palette.text.secondary} data-action-active={theme.palette.action.active} />;
+ return <input aria-label="Nombre de banda" data-access-code={accessCode ?? ''} data-contact-email={contactEmailDefault ?? ''} data-palette-mode={theme.palette.mode} data-text-secondary={theme.palette.text.secondary} data-action-active={theme.palette.action.active} />;
 }
 jest.unstable_mockModule('./LiveSessionIntakePage', () => ({ LiveSessionIntakeForm: MockIntakeForm }));
 const { default: Page } = await import('./LiveSessionPublicPage');
@@ -27,6 +27,9 @@ it('validates the existing session endpoint even with a same-origin API and enab
  await waitFor(() => expect(screen.getByLabelText('Nombre de banda')).toBeEnabled());
  expect(fetchMock).toHaveBeenCalledWith('/session', expect.objectContaining({ headers: { Authorization: 'Bearer synthetic-code' }, credentials: 'omit', signal: expect.any(AbortSignal) }));
  expect(screen.getByLabelText('Nombre de banda')).toHaveAttribute('data-access-code', 'synthetic-code');
+ fireEvent.blur(screen.getByLabelText('Código de acceso'));
+ expect(fetchMock).toHaveBeenCalledTimes(1);
+ expect(screen.getByLabelText('Nombre de banda')).toBeEnabled();
  expect(transient).not.toHaveBeenCalled();
 });
 it.each([null, {}, { status: 'ok' }, { partyId: -1 }])('rejects a superficial successful response: %j', async (body) => {
@@ -41,8 +44,9 @@ it('ignores an old successful validation after the code changes', async () => {
  fetchMock.mockReturnValueOnce(old); show(); enter('synthetic-old'); validate();
  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
  enter('synthetic-new');
- await act(async () => { finish(response({ partyId: 42 })); await old; });
+ await act(async () => { finish(response({ partyId: 42, username: 'stale@example.test' })); await old; });
  expect(screen.getByLabelText('Nombre de banda')).toBeDisabled();
+ expect(screen.getByLabelText('Nombre de banda')).toHaveAttribute('data-contact-email', '');
  expect(transient).not.toHaveBeenCalledWith('synthetic-old');
  expect(transient).not.toHaveBeenCalledWith('synthetic-new');
  fetchMock.mockResolvedValue(response({ partyId: 43 })); validate();
@@ -87,4 +91,16 @@ it('renders the navy shell and embedded form under a dark theme so muted copy an
  const toggle = screen.getByRole('button', { name: 'Mostrar código' });
  fireEvent.click(toggle);
  expect(screen.getByRole('button', { name: 'Ocultar código' })).toBeInTheDocument();
+});
+
+
+it.each(['  verified@example.test  ', 'a-handle', 123, null])('prefills only the validated account’s email-shaped username (%j)', async username => {
+ fetchMock.mockResolvedValue(response({ partyId: 42, username })); show();
+ expect(screen.getByLabelText('Nombre de banda')).toHaveAttribute('data-contact-email', '');
+ enter('synthetic-code'); validate();
+ await waitFor(() => expect(screen.getByLabelText('Nombre de banda')).toBeEnabled());
+ expect(screen.getByLabelText('Nombre de banda')).toHaveAttribute('data-contact-email', typeof username === 'string' && username.includes('@') ? 'verified@example.test' : '');
+ enter('another-code');
+ expect(screen.getByLabelText('Nombre de banda')).toBeDisabled();
+ expect(screen.getByLabelText('Nombre de banda')).toHaveAttribute('data-contact-email', '');
 });

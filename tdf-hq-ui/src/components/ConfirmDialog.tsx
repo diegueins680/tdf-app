@@ -1,3 +1,4 @@
+import { getContrastRatio } from '@mui/material/styles';
 import {
   Dialog,
   DialogTitle,
@@ -17,6 +18,9 @@ interface ConfirmDialogProps {
   confirmLabel?: string;
   severity?: 'danger' | 'warning' | 'info';
   confirming?: boolean;
+  confirmDisabled?: boolean;
+  cancelLabel?: string;
+  confirmingLabel?: string;
 }
 
 export default function ConfirmDialog({
@@ -28,6 +32,9 @@ export default function ConfirmDialog({
   confirmLabel = 'Confirmar',
   severity = 'warning',
   confirming = false,
+  confirmDisabled = false,
+  cancelLabel = 'Cancelar',
+  confirmingLabel = 'Confirmando…',
 }: ConfirmDialogProps) {
   const titleId = 'confirm-dialog-title';
   const descriptionId = 'confirm-dialog-description';
@@ -48,16 +55,26 @@ export default function ConfirmDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={confirming}>
-          Cancelar
+          {cancelLabel}
         </Button>
         <Button
           onClick={onConfirm}
           variant="contained"
           color={confirmButtonColor}
-          disabled={confirming}
+          sx={severity === 'danger' ? (theme) => {
+            const background = theme.palette.error.dark;
+            const foreground = getContrastRatio(background, theme.palette.common.white) >= 4.5
+              ? theme.palette.common.white : theme.palette.common.black;
+            return {
+              backgroundColor: background, color: foreground,
+              '&:hover': { backgroundColor: background, color: foreground },
+              '&.Mui-disabled': { backgroundColor: theme.palette.action.disabledBackground, color: theme.palette.action.disabled },
+            };
+          } : undefined}
+          disabled={confirming || confirmDisabled}
           startIcon={confirming ? <CircularProgress size={16} /> : undefined}
         >
-          {confirming ? 'Confirmando…' : confirmLabel}
+          {confirming ? confirmingLabel : confirmLabel}
         </Button>
       </DialogActions>
     </Dialog>

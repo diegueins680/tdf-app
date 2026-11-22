@@ -255,13 +255,25 @@ export type DavidCelayaReport = ReturnType<typeof buildDavidCelayaReport>;
 
 export const DAVID_CELAYA_REPORT_PDF_FILENAME = 'reporte-david-celaya.pdf';
 
-export const formatCurrency = (cents: number) =>
-  new Intl.NumberFormat('es-EC', {
+export const formatCurrency = (cents: number) => {
+  const formatter = new Intl.NumberFormat('es-EC', {
     style: 'currency',
     currency: 'USD',
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,
-  }).format(cents / 100).replace('USD', '$');
+  });
+  // Format integer cents without losing the last cent when a large amount
+  // cannot be represented as a major-unit Number. Keep legacy preview
+  // formatting for noninteger calculations; the builder blocks their export.
+  if (!Number.isSafeInteger(cents)) return formatter.format(cents / 100).replace('USD', '$');
+  const minor = BigInt(cents);
+  const magnitude = minor < 0n ? -minor : minor;
+  const whole = magnitude / 100n;
+  const signedWhole = minor < 0n ? (whole === 0n ? -0 : -whole) : whole;
+  const fraction = String(magnitude % 100n).padStart(2, '0');
+  return formatter.formatToParts(signedWhole)
+    .map((part) => part.type === 'fraction' ? fraction : part.value).join('').replace('USD', '$');
+};
 
 const normalizePdfText = (value: string) =>
   value

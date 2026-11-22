@@ -1,14 +1,62 @@
 import { API_BASE_URL } from '../api/client';
 import { serializeCsvCell } from './csv';
+import { formatEventMoney } from './eventFinanceMoney';
+import { parseOptionalPriceCents } from './priceInput';
 
 export const formatMerchMoney = (minor: number, currency = 'USD', locale = 'es-EC') =>
-  new Intl.NumberFormat(locale, { style: 'currency', currency }).format(minor / 100);
+  formatEventMoney(minor, currency, locale);
+
+export const readMerchMoneyInput = (
+  raw: string,
+  language: 'es' | 'en',
+  { required = false, positive = false }: { required?: boolean; positive?: boolean } = {},
+): { minor: number | null; error: string | null } => {
+  try {
+    const minor = parseOptionalPriceCents(raw);
+    if (required && minor === null) return { minor, error: language === 'en' ? 'Enter an amount.' : 'Ingresa un monto.' };
+    if (positive && minor === 0) return { minor, error: language === 'en' ? 'The amount must be greater than zero.' : 'El monto debe ser mayor que cero.' };
+    return { minor, error: null };
+  } catch {
+    return { minor: null, error: language === 'en'
+      ? 'Use a non-negative amount with up to two decimals, within the supported range.'
+      : 'Usa un monto no negativo con hasta dos decimales, dentro del rango admitido.' };
+  }
+};
 
 export const resolveMerchImageUrl = (value?: string | null) => {
   if (!value) return undefined;
   if (/^https:\/\//i.test(value)) return value;
   const base = API_BASE_URL.replace(/\/$/, '');
   return `${base}/${value.replace(/^\//, '')}`;
+};
+
+// INTEGER columns in the merch schema; weights have the narrower server limit.
+export const readMerchIntegerInput = (raw: string, language: 'es' | 'en', minimum = 0, maximum = 2147483647): {
+  value: number | null; error: string | null;
+} => {
+  const text = raw.trim();
+  const value = /^\d+$/.test(text) ? Number(text) : NaN;
+  if (!Number.isSafeInteger(value) || value < minimum || value > maximum) return {
+    value: null,
+    error: language === 'en' ? `Enter a whole number from ${minimum} to ${maximum}.`
+      : `Ingresa un número entero entre ${minimum} y ${maximum}.`,
+  };
+  return { value, error: null };
+};
+
+export const merchCategoryLabel = (category: string, language: 'es' | 'en') => {
+  switch (category) {
+    case 'apparel': return language === 'en' ? 'Clothing' : 'Ropa';
+    case 'vinyl': return language === 'en' ? 'Vinyl' : 'Vinilo';
+    case 'cd': return 'CD';
+    case 'cassette': return language === 'en' ? 'Cassette' : 'Casete';
+    case 'poster': return language === 'en' ? 'Poster' : 'Afiche';
+    case 'accessory': return language === 'en' ? 'Accessory' : 'Accesorio';
+    case 'limited_edition': return language === 'en' ? 'Limited edition' : 'Edición limitada';
+    case 'bundle': return language === 'en' ? 'Bundle' : 'Paquete';
+    case 'other': return language === 'en' ? 'Other' : 'Otros';
+    default: return language === 'en' ? 'Other category' : 'Otra categoría';
+  }
 };
 
 export const merchStatusLabel = (status: string, language: 'es' | 'en') => {
@@ -41,6 +89,42 @@ export const merchStatusLabel = (status: string, language: 'es' | 'en') => {
     shipped: ['Enviado', 'Shipped'],
     delivered: ['Entregado', 'Delivered'],
     problem: ['Con incidencia', 'Issue reported'],
+    // Existing server states and issue types; these labels do not advance any
+    // workflow or equate support review/approval with movement of funds.
+    withdrawn: ['Solicitud retirada', 'Application withdrawn'],
+    inactive: ['Inactiva', 'Inactive'],
+    closed: ['Cerrada', 'Closed'],
+    created: ['Creado', 'Created'],
+    confirmed: ['Confirmado', 'Confirmed'],
+    completed: ['Completado', 'Completed'],
+    paid: ['Pagado', 'Paid'],
+    partially_refunded: ['Reembolsado parcialmente', 'Partially refunded'],
+    refunded: ['Reembolsado', 'Refunded'],
+    disputed: ['En disputa', 'Disputed'],
+    return_requested: ['Devolución solicitada', 'Return requested'],
+    returned: ['Devuelto', 'Returned'],
+    none: ['Ninguno', 'None'],
+    partial: ['Parcial', 'Partial'],
+    open: ['Abierto', 'Open'],
+    not_ready: ['Aún no disponible', 'Not ready'],
+    ready: ['Listo', 'Ready'],
+    held: ['Retenido', 'Held'],
+    adjusted: ['Ajustado', 'Adjusted'],
+    reversed: ['Revertido', 'Reversed'],
+    seller_review: ['En revisión del vendedor', 'Under seller review'],
+    staff_review: ['En revisión del equipo TDF', 'Under TDF staff review'],
+    awaiting_buyer: ['Esperando al comprador', 'Awaiting buyer'],
+    resolved: ['Resuelto', 'Resolved'],
+    general: ['Consulta general', 'General inquiry'],
+    address: ['Dirección', 'Address'],
+    stock: ['Existencias', 'Stock'],
+    shipping: ['Envío', 'Shipping'],
+    damaged: ['Producto dañado', 'Damaged product'],
+    missing: ['Producto faltante', 'Missing product'],
+    cancellation: ['Cancelación', 'Cancellation'],
+    return: ['Devolución', 'Return'],
+    refund: ['Reembolso', 'Refund'],
+    fraud: ['Posible fraude', 'Suspected fraud'],
   };
   return labels[status]?.[language === 'en' ? 1 : 0] ?? status.replace(/_/g, ' ');
 };
