@@ -1,5 +1,6 @@
 import ArtistProfileLink from '../components/ArtistProfileLink';
 import { formatEventMoney as formatMoney } from '../utils/eventFinanceMoney';
+import { parseOptionalPriceCents } from '../utils/priceInput';
 import { buildEventFinanceCsvRows } from '../utils/eventFinanceCsv';
 import { serializeCsvCell, type CsvCell } from '../utils/csv';
 import MarkdownText from '../components/MarkdownText';
@@ -75,6 +76,7 @@ import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventManualPaymentsPanel from '../components/events/EventManualPaymentsPanel';
 import EventTaxDocumentsPanel from '../components/events/EventTaxDocumentsPanel';
 import { RefundManagementPanel } from '../components/RefundManagementPanel';
+import ConfirmDialog from '../components/ConfirmDialog';
 import EventArtistSelector from '../components/events/EventArtistSelector';
 import { EVENT_PAGE_SIZE, eventArtistIds, eventPage, isPastEvent } from './eventDiscoveryFilters';
 
@@ -111,7 +113,7 @@ interface BudgetLineFormState {
   name: string;
   type: 'income' | 'expense';
   category: string;
-  plannedCents: string;
+  plannedAmount: string;
   notes: string;
 }
 
@@ -121,7 +123,7 @@ interface FinanceEntryFormState {
   source: string;
   category: string;
   concept: string;
-  amountCents: string;
+  amount: string;
   currency: string;
   status: 'draft' | 'posted' | 'pending' | 'void';
   externalRef: string;
@@ -133,7 +135,7 @@ interface ContractDraftState {
   kind: string;
   counterparty: string;
   concept: string;
-  amountCents: string;
+  amount: string;
   currency: string;
   status: 'draft' | 'pending' | 'posted';
   notes: string;
@@ -246,6 +248,15 @@ const parseOptionalUnsignedInt = (value: string): number | null => {
   const trimmed = value.trim();
   if (!trimmed) return null;
   return parseUnsignedSafeInt(trimmed);
+};
+
+const currencyAmountError = (raw: string, positive = false): string | null => {
+  try {
+    const cents = parseOptionalPriceCents(raw);
+    return positive && cents === 0 ? 'El monto debe ser mayor que cero.' : null;
+  } catch (error) {
+    return error instanceof Error ? error.message : 'Ingresa un monto válido.';
+  }
 };
 
 const dateKeyFromIso = (iso: string) => DateTime.fromISO(iso).toISODate() ?? '';
@@ -604,10 +615,10 @@ export default function SocialEventsPage() {
         quantity: '',
         currency: preferredCurrency,
       };
-      const priceCents = parseOptionalUnsignedInt(draft.price);
+      const priceCents = parseOptionalPriceCents(draft.price);
       const quantity = parseOptionalUnsignedInt(draft.quantity);
       if (!draft.name.trim()) throw new Error('Nombre del ticket requerido.');
-      if (priceCents === null) throw new Error('Precio inválido (usa centavos).');
+      if (priceCents === null) throw new Error('Ingresa un precio; usa 0 para una entrada gratis.');
       if (quantity === null || quantity <= 0) throw new Error('Cantidad inválida.');
       return {
         ticketTierCode: draft.code.trim() || draft.name,
@@ -635,6 +646,8 @@ export default function SocialEventsPage() {
     },
   );
 
+  // Cancelling or refunding a paid order cannot be undone, so each asks first and names the order.
+  const [pendingOrderAction, setPendingOrderAction] = useState<{ eventId: string; orderId: string; status: 'cancelled' | 'refunded' } | null>(null);
   const updateOrderStatusMutation = useMutation({
     mutationFn: ({ eventId, orderId, status }: { eventId: string; orderId: string; status: 'cancelled' | 'refunded' }) =>
       SocialEventsAPI.updateTicketOrderStatus(eventId, orderId, status),
@@ -681,12 +694,12 @@ export default function SocialEventsPage() {
         name: '',
         type: 'expense',
         category: 'general',
-        plannedCents: '',
+        plannedAmount: '',
         notes: '',
       };
-      const plannedCents = parseOptionalUnsignedInt(draft.plannedCents);
+      const plannedCents = parseOptionalPriceCents(draft.plannedAmount);
       if (!draft.name.trim()) throw new Error('Nombre de línea presupuestaria requerido.');
-      if (plannedCents === null) throw new Error('Presupuesto inválido (usa centavos).');
+      if (plannedCents === null) throw new Error('Ingresa un presupuesto; usa 0 si aún no hay un monto previsto.');
       const payload: SocialEventBudgetLineDTO = {
         eblCode: draft.code.trim() || draft.name,
         eblName: draft.name.trim(),
@@ -701,7 +714,7 @@ export default function SocialEventsPage() {
     onSuccess: (_line, { eventId }) => {
       setBudgetLineForms((prev) => ({
         ...prev,
-        [eventId]: { code: '', name: '', type: 'expense', category: 'general', plannedCents: '', notes: '' },
+        [eventId]: { code: '', name: '', type: 'expense', category: 'general', plannedAmount: '', notes: '' },
       }));
       void qc.invalidateQueries({ queryKey: ['social-budget-lines', eventId] });
       void qc.invalidateQueries({ queryKey: ['social-finance-summary', eventId] });
@@ -749,14 +762,14 @@ export default function SocialEventsPage() {
         kind: 'event_vendor_contract',
         counterparty: '',
         concept: '',
-        amountCents: '',
+        amount: '',
         currency: preferredCurrency,
         status: 'pending' as const,
         notes: '',
       };
-      const amountCents = parseOptionalUnsignedInt(draft.amountCents);
+      const amountCents = parseOptionalPriceCents(draft.amount);
       if (!draft.concept.trim()) throw new Error('Concepto de contrato requerido.');
-      if (amountCents === null || amountCents <= 0) throw new Error('Monto de contrato inválido (usa centavos).');
+      if (amountCents === null || amountCents <= 0) throw new Error('El monto del contrato debe ser mayor que cero.');
       const currency = draft.currency.trim().toUpperCase() || preferredCurrency;
       const contractResponse = await ContractsAPI.create({
         kind: draft.kind.trim() || 'event_vendor_contract',
@@ -794,7 +807,7 @@ export default function SocialEventsPage() {
           kind: 'event_vendor_contract',
           counterparty: '',
           concept: '',
-          amountCents: '',
+          amount: '',
           currency: preferredCurrency,
           status: 'pending',
           notes: '',
@@ -833,16 +846,16 @@ export default function SocialEventsPage() {
         source: 'manual',
         category: 'general',
         concept: '',
-        amountCents: '',
+        amount: '',
         currency: preferredCurrency,
         status: 'posted',
         externalRef: '',
         notes: '',
         occurredAt: toDateTimeInputValue(),
       };
-      const amountCents = parseOptionalUnsignedInt(draft.amountCents);
+      const amountCents = parseOptionalPriceCents(draft.amount);
       if (!draft.concept.trim()) throw new Error('Concepto contable requerido.');
-      if (amountCents === null || amountCents <= 0) throw new Error('Monto inválido (usa centavos).');
+      if (amountCents === null || amountCents <= 0) throw new Error('El monto debe ser mayor que cero.');
       const payload: SocialEventFinanceEntryDTO = {
         efeBudgetLineId: draft.budgetLineId.trim() || null,
         efeDirection: draft.direction,
@@ -867,7 +880,7 @@ export default function SocialEventsPage() {
           source: 'manual',
           category: 'general',
           concept: '',
-          amountCents: '',
+          amount: '',
           currency: preferredCurrency,
           status: 'posted',
           externalRef: '',
@@ -952,7 +965,7 @@ export default function SocialEventsPage() {
                     size="small"
                     variant="outlined"
                     color="warning"
-                    onClick={() => updateOrderStatusMutation.mutate({ eventId, orderId: oid, status: 'cancelled' })}
+                    onClick={() => setPendingOrderAction({ eventId, orderId: oid, status: 'cancelled' })}
                     disabled={updateOrderStatusMutation.isPending}
                   >
                     Cancelar
@@ -961,11 +974,25 @@ export default function SocialEventsPage() {
                     size="small"
                     variant="outlined"
                     color="error"
-                    onClick={() => updateOrderStatusMutation.mutate({ eventId, orderId: oid, status: 'refunded' })}
+                    onClick={() => setPendingOrderAction({ eventId, orderId: oid, status: 'refunded' })}
                     disabled={updateOrderStatusMutation.isPending}
                   >
                     Reembolsar
                   </Button>
+                  {pendingOrderAction?.eventId === eventId && pendingOrderAction.orderId === oid && (
+                    <ConfirmDialog
+                      open
+                      severity="danger"
+                      title={pendingOrderAction.status === 'refunded' ? '¿Reembolsar esta orden?' : '¿Cancelar esta orden?'}
+                      description={`Orden ${oid.slice(0, 8)} · ${formatMoney(order.ticketOrderAmountCents, order.ticketOrderCurrency)} · ${order.ticketOrderTickets.length} ${order.ticketOrderTickets.length === 1 ? 'entrada' : 'entradas'}. Esta acción no se puede deshacer.`}
+                      confirmLabel={pendingOrderAction.status === 'refunded' ? 'Reembolsar orden' : 'Cancelar orden'}
+                      onClose={() => setPendingOrderAction(null)}
+                      onConfirm={() => {
+                        updateOrderStatusMutation.mutate(pendingOrderAction);
+                        setPendingOrderAction(null);
+                      }}
+                    />
+                  )}
                 </Stack>
               )}
             </Box>
@@ -1233,7 +1260,7 @@ export default function SocialEventsPage() {
               name: '',
               type: 'expense' as const,
               category: 'general',
-              plannedCents: '',
+              plannedAmount: '',
               notes: '',
             };
             const financeDraft = financeEntryForms[eventId] ?? {
@@ -1242,7 +1269,7 @@ export default function SocialEventsPage() {
               source: 'manual',
               category: 'general',
               concept: '',
-              amountCents: '',
+              amount: '',
               currency: ev.eventCurrency ?? preferredCurrency,
               status: 'posted' as const,
               externalRef: '',
@@ -1253,11 +1280,15 @@ export default function SocialEventsPage() {
               kind: 'event_vendor_contract',
               counterparty: '',
               concept: '',
-              amountCents: '',
+              amount: '',
               currency: ev.eventCurrency ?? preferredCurrency,
               status: 'pending' as const,
               notes: '',
             };
+            const tierPriceError = currencyAmountError(tierDraft.price);
+            const budgetAmountError = currencyAmountError(budgetDraft.plannedAmount);
+            const contractAmountError = currencyAmountError(contractDraft.amount, true);
+            const financeAmountError = currencyAmountError(financeDraft.amount, true);
             const contractRefs = Array.from(
               new Set(
                 financeEntries
@@ -1611,9 +1642,11 @@ export default function SocialEventsPage() {
                               sx={{ width: 140 }}
                             />
                             <TextField
-                              label="Precio (centavos)"
+                              label={`Precio (${tierDraft.currency.trim().toUpperCase() || preferredCurrency})`}
                               size="small"
-                              type="number"
+                              inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+                              error={Boolean(tierPriceError)}
+                              helperText={tierPriceError ?? 'Hasta dos decimales, por ejemplo 25,50.'}
                               value={tierDraft.price}
                               onChange={(e) => setTicketTierForms((prev) => ({
                                 ...prev,
@@ -1813,13 +1846,15 @@ export default function SocialEventsPage() {
                                 ))}
                               </TextField>
                               <TextField
-                                label="Plan (centavos)"
+                                label={`Plan (${ev.eventCurrency ?? preferredCurrency})`}
                                 size="small"
-                                type="number"
-                                value={budgetDraft.plannedCents}
+                                inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+                                error={Boolean(budgetAmountError)}
+                                helperText={budgetAmountError ?? 'Hasta dos decimales, por ejemplo 25,50.'}
+                                value={budgetDraft.plannedAmount}
                                 onChange={(e) => setBudgetLineForms((prev) => ({
                                   ...prev,
-                                  [eventId]: { ...budgetDraft, plannedCents: e.target.value },
+                                  [eventId]: { ...budgetDraft, plannedAmount: e.target.value },
                                 }))}
                                 sx={{ width: 150 }}
                               />
@@ -1926,14 +1961,16 @@ export default function SocialEventsPage() {
 
                             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                               <TextField
-                                label="Monto (centavos)"
+                                label={`Monto (${contractDraft.currency.trim().toUpperCase() || preferredCurrency})`}
                                 size="small"
-                                type="number"
-                                value={contractDraft.amountCents}
+                                inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+                                error={Boolean(contractAmountError)}
+                                helperText={contractAmountError ?? 'Hasta dos decimales, por ejemplo 25,50.'}
+                                value={contractDraft.amount}
                                 onChange={(e) =>
                                   setContractDrafts((prev) => ({
                                     ...prev,
-                                    [eventId]: { ...contractDraft, amountCents: e.target.value },
+                                    [eventId]: { ...contractDraft, amount: e.target.value },
                                   }))
                                 }
                                 sx={{ width: 170 }}
@@ -2130,13 +2167,15 @@ export default function SocialEventsPage() {
                             </Stack>
                             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                               <TextField
-                                label="Monto (centavos)"
+                                label={`Monto (${financeDraft.currency.trim().toUpperCase() || preferredCurrency})`}
                                 size="small"
-                                type="number"
-                                value={financeDraft.amountCents}
+                                inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+                                error={Boolean(financeAmountError)}
+                                helperText={financeAmountError ?? 'Hasta dos decimales, por ejemplo 25,50.'}
+                                value={financeDraft.amount}
                                 onChange={(e) => setFinanceEntryForms((prev) => ({
                                   ...prev,
-                                  [eventId]: { ...financeDraft, amountCents: e.target.value },
+                                  [eventId]: { ...financeDraft, amount: e.target.value },
                                 }))}
                                 sx={{ width: 160 }}
                               />
