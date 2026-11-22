@@ -12681,15 +12681,26 @@
         "formal/directory/DirectoryEmbeddingIndexNoHashCheck.cfg",
         "scripts/verify-inductive-proofs.sh"
       ],
-      "verification": "PENDING",
-      "evidence": "PENDING",
+      "verification": "Three strengths of evidence, kept apart. PROVED (Z3 4.13.3, formal/directory/semantic_rank.py, real-number model of the formula with six-decimal rounding, constants parsed from the pinned SQL text): P1 an exact title match outranks every other match for all components in range and any semantic term in [0, 1], likewise the prefix and contains tiers; the P3 formula part (similarity 0 leaves the weighted sum equal to the alias-only sum); P4 score in [0, 1]; monotonicity in the similarity; three necessity controls (unclamped similarity, doubled semantic weight, doubled image boost) each break P1. PROVED (Apalache 0.62.4 inductive invariant, formal/directory/DirectoryEmbeddingIndex.tla, any nonempty set of up to three documents and up to three edits each, executions of any length): P2 as NeverServed, NeverIndexed, NeverStale and SentOnlyPublic, with one reachable-violation control. BOUNDED (TLC 1.7.2): two documents and three versions without violation; four negative controls (unguarded write, no trigger, search driven from the embedding table, no hash check) each violate the named invariant. TESTED (Hspec and QuickCheck on the pure core): P1 and the tiers, P3 plan and statement identity for a lexical plan, P4, P5 comparator totality, redaction, vector admission, and that the semantic statement differs from today's in exactly the input row and the alias term. TESTED (PostgreSQL 16 with pgvector on the migrated production schema fixture, provider replaced by a recording function): sweep embeds public documents only and without e-mail or telephone patterns; provider failure and unusable vectors write nothing; the trigger deletes on hide and rewrite; the guarded write refuses after hide or rewrite; the purge removes what the trigger did not; rows of the semantic statement equal today's rows without a usable pair (no embedding, other provider, stale hash, zero vector); similarity reorders inside a tier and never passes an exact title; a hidden document with an embedding is not returned; paging neither repeats nor skips; query cache, budget and fallback; the migration applies twice, rolls back twice and applies again, and the 262-migration production batch with its schema verification passes.",
+      "evidence": "Runs of formal/directory/semantic_rank.py, scripts/verify-inductive-proofs.sh, the tdf-hq-test groups 'directory semantic search', 'directory semantic index' and 'directory-semantic-search-postgresql' (scripts/test-directory-semantic-search.sh), and scripts/test-automatic-migrations-production-schema.sh on the candidate; hosted CI receipts for the same commands are required and are not inherited from the author's local runs.",
       "critical": true,
       "status": "specified and implemented",
-      "confidence": "PENDING",
-      "ambiguity": [],
+      "confidence": "High for the ranking envelope and the index invariants within their stated models; medium for the correspondence between those models and PostgreSQL, which is by review and test; the usefulness of the ranking change is not assessed, and nothing here says an embedding is a good one.",
+      "ambiguity": [
+        "The Z3 model is over real numbers; agreement with PostgreSQL float8 and numeric evaluation is tested on examples, not proved.",
+        "The TLA+ model treats each statement as atomic; that FOR SHARE on the document row makes the guarded write atomic against a concurrent update is assumed PostgreSQL behaviour.",
+        "The model's public state is the search document's own columns; a profile hidden without a refresh of its search document is excluded by the read predicate at once and by the sweep within a minute, not by the trigger.",
+        "The range proofs assume quality, availability and reputation in [0, 1] (CHECK constraints) and source_updated_at not in the future; a future timestamp already takes the activity term out of range in the unmodified statement.",
+        "Similarity only reorders documents that pass the text filter; whether it should also admit documents is an open owner decision.",
+        "If the query embedding is available for one page and not the next, an item can repeat or be skipped between pages; the cache makes this rare and does not exclude it.",
+        "The redaction of contact details is a pattern match on words containing @ and on runs with seven or more digits.",
+        "The profile branch of the claim statement is validated by PostgreSQL as part of the statement but no test claims a profile row; the fixtures are classified documents.",
+        "No HTTP-level test drives GET /directory/search with the flag on, and no test calls the real provider.",
+        "A model with another dimension than 1536 leaves the feature inert until a migration changes the columns."
+      ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "PENDING"
+        "reason": "Ranking envelope and index invariants proved for their models and exercised on PostgreSQL with a stand-in provider; HTTP-level checks with the flag on, a profile-row fixture, hosted CI receipts and the owner decision on enabling the flag in production remain."
       },
       "historicalStatus": null
     },
