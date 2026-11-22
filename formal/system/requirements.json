@@ -12663,7 +12663,8 @@
         "tdf-hq/sql/2026-11-21_directory_semantic_search_rollback.sql",
         "scripts/production-migrations.json",
         "scripts/lib/production-release.mjs",
-        "docs/catalog-persistence/catalog-list-decisions.json"
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "ops/hetzner/inspect-runtime.py"
       ],
       "tests": [
         "tdf-hq/test/TDF/Directory/SemanticSearchSpec.hs",
@@ -12671,7 +12672,8 @@
         "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
         "scripts/test-directory-semantic-search.sh",
         "scripts/__tests__/production-release.test.mjs",
-        "scripts/__tests__/catalog-list-audit.test.mjs"
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/test-hetzner-inspection.py"
       ],
       "formalModels": [
         "formal/directory/semantic_rank.py",

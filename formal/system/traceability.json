@@ -12664,7 +12664,8 @@
         "tdf-hq/sql/2026-11-21_directory_semantic_search_rollback.sql",
         "scripts/production-migrations.json",
         "scripts/lib/production-release.mjs",
-        "docs/catalog-persistence/catalog-list-decisions.json"
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "ops/hetzner/inspect-runtime.py"
       ],
       "tests": [
         "tdf-hq/test/TDF/Directory/SemanticSearchSpec.hs",
@@ -12672,7 +12673,8 @@
         "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
         "scripts/test-directory-semantic-search.sh",
         "scripts/__tests__/production-release.test.mjs",
-        "scripts/__tests__/catalog-list-audit.test.mjs"
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/test-hetzner-inspection.py"
       ],
       "formalModels": [
         "formal/directory/semantic_rank.py",
@@ -29474,7 +29476,7 @@
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
     "ops/hetzner/guarded-release.py": "4551cec5f09215463ad98ea7a4dc3e3c47417b02fc5ccbd50fad63c20e15239b",
-    "ops/hetzner/inspect-runtime.py": "3a5ac05d5e1333ef9891090641ad1eaa4a47f3714c82b82806355de8d653b20d",
+    "ops/hetzner/inspect-runtime.py": "25f987c2886b528f590ef2d1706bb272928fe2a621416f5eda33c037ac0bdfcf",
     "ops/hetzner/isolated-application-canary.py": "a21c2ad244d0c2b5a340c6f51b867a3f5b4c1551340e0953836a1c46375ed83f",
     "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
@@ -35343,6 +35345,10 @@
       {
         "requirement": "DEPLOY-BACKUP-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-SEMANTIC-SEARCH-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/inspect-hetzner-production.mjs": [
@@ -35408,6 +35414,10 @@
       },
       {
         "requirement": "DEPLOY-BACKUP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-SEMANTIC-SEARCH-001",
         "relationship": "tests"
       }
     ],
@@ -53477,7 +53487,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "3a5ac05d5e1333ef9891090641ad1eaa4a47f3714c82b82806355de8d653b20d",
+      "sha256": "25f987c2886b528f590ef2d1706bb272928fe2a621416f5eda33c037ac0bdfcf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53494,6 +53504,10 @@
         },
         {
           "requirement": "DEPLOY-BACKUP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DIR-SEMANTIC-SEARCH-001",
           "relationship": "implementation"
         }
       ]
@@ -59109,6 +59123,10 @@
         },
         {
           "requirement": "DEPLOY-BACKUP-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DIR-SEMANTIC-SEARCH-001",
           "relationship": "tests"
         }
       ]
@@ -93552,7 +93570,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a1c37567334c36ceed7fb693415fe1fb31730b1b8a338813722d7382f1153ad1",
+      "sourceSha256": "eaa9a7aa3d6ed169d0ffd42482a96a77c318b167d87c05a49d213637d4dc0003",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -93580,7 +93598,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a1c37567334c36ceed7fb693415fe1fb31730b1b8a338813722d7382f1153ad1",
+      "sourceSha256": "eaa9a7aa3d6ed169d0ffd42482a96a77c318b167d87c05a49d213637d4dc0003",
       "definition": {
         "states": [
           "absent",
@@ -93610,7 +93628,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a1c37567334c36ceed7fb693415fe1fb31730b1b8a338813722d7382f1153ad1",
+      "sourceSha256": "eaa9a7aa3d6ed169d0ffd42482a96a77c318b167d87c05a49d213637d4dc0003",
       "definition": {
         "export": [
           "queued",
