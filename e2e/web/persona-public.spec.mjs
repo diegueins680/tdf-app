@@ -516,7 +516,7 @@ test('PW-PER-01-DOMO retries one truthful manual request in Ecuador time', async
   await submit.click();
   expect((await successfulAttempt).status()).toBe(200);
   await expect(page.getByRole('alert').filter({
-    hasText: 'Solicitud enviada. Este flujo manual no retiene la fecha ni confirma un pago',
+    hasText: 'Solicitud enviada. Aún no está confirmada, no aparta el horario',
   })).toBeVisible();
 
   expect(bookingPayloads).toHaveLength(2);
@@ -527,7 +527,8 @@ test('PW-PER-01-DOMO retries one truthful manual request in Ecuador time', async
     pbStartsAt: '2030-01-15T15:00:00Z',
     pbDurationMinutes: 480,
   });
-  expect(bookingPayloads[0].pbNotes).toContain('Disponibilidad: no verificada; esta solicitud no retiene la fecha');
+  expect(bookingPayloads[0].pbNotes).toContain('Disponibilidad: por confirmar');
+  expect(bookingPayloads[0].pbNotes).not.toContain('apartado');
   expect(bookingPayloads[1]).toEqual(bookingPayloads[0]);
   expect(bookingIdempotencyKeys).toHaveLength(2);
   expect(bookingIdempotencyKeys[0]).toMatch(/^service-booking-/);
