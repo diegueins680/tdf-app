@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Unbounded safety proofs by inductive invariants (Apalache) plus bounded TLC
-# exploration and negative controls for formal/payments and formal/auth.
+# exploration and negative controls for formal/payments, formal/auth and
+# formal/directory.
 #
 # Requires the pinned official artifacts:
 #   APALACHE_TGZ   apalache.tgz from apalache-mc/apalache release v0.62.4
@@ -16,6 +17,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 MODEL_DIR="${REPO_DIR}/formal/payments"
 AUTH_MODEL_DIR="${REPO_DIR}/formal/auth"
+DIRECTORY_MODEL_DIR="${REPO_DIR}/formal/directory"
 JAVA_BIN="${JAVA_BIN:-java}"
 APALACHE_TGZ="${APALACHE_TGZ:-}"
 TLA2TOOLS_JAR="${TLA2TOOLS_JAR:-}"
@@ -189,6 +191,23 @@ apalache_expect "${E}" CInitCurrent IndInv IndInv 1 NoError "SessionExpiry-conse
 apalache_expect "${E}" CInitCurrent IndInv Safe 0 NoError "SessionExpiry-implication"
 apalache_expect "${E}" CInitCurrent Init NoMintedSessionUsed 3 Error "SessionExpiry-reachability-witness"
 apalache_expect "${E}" CInitNotFailClosed Init Safe 4 Error "SessionExpiryNotFailClosed-reachable-violation"
+unset CURRENT_MODEL_DIR
+
+D=DirectoryEmbeddingIndex.tla
+CURRENT_MODEL_DIR="${DIRECTORY_MODEL_DIR}"
+
+# DIR-SEMANTIC-SEARCH-001: a hidden document is never returned, every
+# stored embedding belongs to a public document and its current text, stale
+# embeddings never rank, and only text that was public reaches the provider.
+tlc_expect "${D}" DirectoryEmbeddingIndex.cfg pass
+tlc_expect "${D}" DirectoryEmbeddingIndexUnguardedWrite.cfg violation
+tlc_expect "${D}" DirectoryEmbeddingIndexNoTrigger.cfg violation
+tlc_expect "${D}" DirectoryEmbeddingIndexEmbeddingAdmits.cfg violation
+tlc_expect "${D}" DirectoryEmbeddingIndexNoHashCheck.cfg violation
+apalache_expect "${D}" CInitGuarded Init IndInv 0 NoError "DirectoryEmbeddingIndex-initiation"
+apalache_expect "${D}" CInitGuarded IndInv IndInv 1 NoError "DirectoryEmbeddingIndex-consecution"
+apalache_expect "${D}" CInitGuarded IndInv Safe 0 NoError "DirectoryEmbeddingIndex-implication"
+apalache_expect "${D}" CInitUnguardedWrite Init Safe 5 Error "DirectoryEmbeddingIndexUnguardedWrite-reachable-violation"
 unset CURRENT_MODEL_DIR
 
 echo "Inductive proofs and controls passed."

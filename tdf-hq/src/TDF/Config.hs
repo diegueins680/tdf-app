@@ -109,6 +109,7 @@ data AppConfig = AppConfig
   , stripePublishableKey :: Maybe Text
   , stripeWebhookSecret :: Maybe Text
   , contextualReputationEnabled :: Bool
+  , directorySemanticSearchEnabled :: Bool
   , publicReputationProjectionEnabled :: Bool
   , singleFeatureOnboardingExperimentEnabled :: Bool
   , eventDiscoveryEnabled :: Bool
@@ -807,6 +808,7 @@ loadConfig = do
   stripePublishableKeyEnv <- lookupEnv "STRIPE_PUBLISHABLE_KEY"
   stripeWebhookSecretEnv <- lookupEnv "STRIPE_WEBHOOK_SECRET"
   contextualReputationEnabledEnv <- lookupEnv "CONTEXTUAL_REPUTATION_ENABLED"
+  directorySemanticSearchEnabledEnv <- lookupEnv "DIRECTORY_SEMANTIC_SEARCH_ENABLED"
   publicReputationProjectionEnabledEnv <- lookupEnv "PUBLIC_REPUTATION_PROJECTION_ENABLED"
   singleFeatureOnboardingExperimentEnabledEnv <- lookupEnv "SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED"
   eventDiscoveryEnabledEnv <- lookupEnv "EVENT_DISCOVERY_ENABLED"
@@ -876,6 +878,11 @@ loadConfig = do
   resetDbVal <- validateStartupBooleanFlag "RESET_DB" False rdbEnv
   seedDatabaseVal <- validateStartupBooleanFlag "SEED_DB" False sdbEnv
   runMigrationsVal <- validateStartupBooleanFlag "RUN_MIGRATIONS" True migEnv
+  directorySemanticSearchEnabledVal <-
+    validateStartupBooleanFlag
+      "DIRECTORY_SEMANTIC_SEARCH_ENABLED"
+      False
+      directorySemanticSearchEnabledEnv
   contextualReputationEnabledVal <-
     validateStartupBooleanFlag
       "CONTEXTUAL_REPUTATION_ENABLED"
@@ -1100,6 +1107,7 @@ loadConfig = do
     , stripePublishableKey = fmap T.pack stripePublishableKeyEnv
     , stripeWebhookSecret = fmap T.pack stripeWebhookSecretEnv
     , contextualReputationEnabled = contextualReputationEnabledVal
+    , directorySemanticSearchEnabled = directorySemanticSearchEnabledVal
     , publicReputationProjectionEnabled = publicReputationProjectionEnabledVal
     , singleFeatureOnboardingExperimentEnabled = singleFeatureOnboardingExperimentEnabledVal
     , eventDiscoveryEnabled = eventDiscoveryEnabledVal

@@ -812,7 +812,7 @@ test('buildMigrationBatchSql verifies the ADR 0135 marketplace agreement schema 
   const agreementCheck = /Marketplace agreement schema \(ADR 0135\) is missing/;
   assert.match(buildMigrationBatchSql([before]), agreementCheck);
   assert.match(buildMigrationBatchSql([before]), /Marketplace agreement default pricing rule is missing/);
-  const prefix = buildMigrationBatchSql([before], { socialDesignationIncluded: false, marketplaceOffersIncluded: false, marketplaceAgreementsIncluded: false, marketplaceAgreementPaymentsIncluded: false });
+  const prefix = buildMigrationBatchSql([before], { socialDesignationIncluded: false, marketplaceOffersIncluded: false, marketplaceAgreementsIncluded: false, marketplaceAgreementPaymentsIncluded: false, directorySemanticSearchIncluded: false });
   assert.doesNotMatch(prefix, agreementCheck);
   const paymentCheck = /Marketplace agreement payment schema \(ADR 0136\) is missing/;
   assert.doesNotMatch(prefix, paymentCheck);
@@ -820,6 +820,12 @@ test('buildMigrationBatchSql verifies the ADR 0135 marketplace agreement schema 
   assert.match(buildMigrationBatchSql([before]), paymentCheck);
   assert.match(buildMigrationBatchSql([before], { marketplaceAgreementsIncluded: false }), paymentCheck);
   assert.match(buildSchemaVerificationSql(), paymentCheck);
+  const semanticCheck = /Directory semantic search schema \(DIR-SEMANTIC-SEARCH-001\) is missing/;
+  assert.doesNotMatch(prefix, semanticCheck);
+  assert.match(prefix, /DIR-SEMANTIC-SEARCH-001: directory embeddings verified only when the batch applies 2026-11-21_directory_semantic_search/);
+  assert.match(buildMigrationBatchSql([before]), semanticCheck);
+  assert.match(buildSchemaVerificationSql(), semanticCheck);
+  assert.match(buildSchemaVerificationSql(), /A directory embedding belongs to a document that is not public/);
   assert.match(prefix, /ADR 0135: marketplace agreements verified only when the batch applies 2026-11-12_marketplace_agreements/);
   // Opting out of agreements alone keeps the offers verification.
   const offersOnly = buildMigrationBatchSql([before], { marketplaceAgreementsIncluded: false });
