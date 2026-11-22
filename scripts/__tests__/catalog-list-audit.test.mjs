@@ -173,6 +173,12 @@ async function readReconciliation(beforePlayer = false) {
     .map(row => [row.id, row]));
   // A moved list's successor stands in for the review it nests.
   for (const row of movedFileSuccessors(active)) byId.set(row.previousDecision.id, row);
+  // Web Mis entradas (EVT-MY-TICKETS-001) succeeds the generated mobile registry
+  // review; the earlier catalog still names that exact review, nested unchanged.
+  for (const row of active.filter(candidate => candidate.reviewBatch === 'web-my-tickets-20261119'
+    && candidate.reviewMethod === 'successor-of-reviewed-decision')) {
+    byId.set(row.previousDecision.id, row.previousDecision);
+  }
   // EVT-TICKET-SALE-001 extended the typed client registry; its successor
   // review nests the 86-method review unchanged and stands in for it.
   const ticketSaleClient = active.find(row => row.previousDecision?.id === '083bd1a66e9f23f02866');
@@ -6557,7 +6563,9 @@ const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26
 
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const actual = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const combined = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  assert.equal(combined.migrations.at(-1).id, '2026-11-07_studio_gallery');
+  const actual = { ...combined, migrations: combined.migrations.slice(0, -1) };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
   assert.deepEqual(actual, main);
   assert.deepEqual(actual.migrations.slice(0, ux.migrations.length), ux.migrations);
@@ -6581,4 +6589,59 @@ test('actual UX/storage composition preserves current main, immutable SQL and bo
       }
     }
   }
+});
+
+test('studio gallery appends its original migration and preserves both complete manifest reviews', async () => {
+  const file = 'scripts/production-migrations.json';
+  const base = '985117b3d9e23b1a84837040d39784e3debcb48e';
+  const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
+  const before = await integrationParent(base, file);
+  const original = (await integrationParent(gallery, file)).migrations.at(-1);
+  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  assert.equal(original.id, '2026-11-07_studio_gallery');
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, original] });
+  const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, original.path), 'utf8'), stdout);
+  for (const [reviewFile, key] of integrationFiles) {
+    const currentReview = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8'));
+    for (const parent of [base, gallery]) {
+      const old = await integrationParent(parent, reviewFile);
+      const row = old[key].find(r => r.evidence?.file === file || r.name === 'migrations' || r.source?.name === 'migrations');
+      if (row) assert.ok(integrationFind(currentReview, row), 'Missing reviewed migration history for ' + parent);
+    }
+  }
+});
+
+
+test('My tickets retains both complete published review graphs and immutable migrations', async () => {
+  const assertParent = async (ref) => {
+    for (const [file, key] of integrationFiles) {
+      const current = integrationCurrentFiles.get(file)?.value
+        ?? JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+      const before = await integrationParent(ref, file);
+      for (const row of before[key]) {
+        assert.ok(integrationFind(current, row), `Lost whole ticket parent object: ${ref}:${file}`);
+      }
+      for (const [field, value] of Object.entries(before)) {
+        if (field === key) continue;
+        if (value && typeof value === 'object') {
+          assert.ok(integrationFind(current, value), `Lost whole ticket parent metadata: ${ref}:${file}:${field}`);
+        } else {
+          assert.ok(current[field] === value
+            || current.sourceContextHistory?.some(entry => entry.metadata?.[field] === value),
+            `Lost ticket parent context: ${ref}:${file}:${field}`);
+        }
+      }
+    }
+    const file = 'scripts/production-migrations.json';
+    const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+    const before = await integrationParent(ref, file);
+    for (const migration of before.migrations) {
+      assert.deepEqual(current.migrations.find(row => row.id === migration.id), migration);
+      assert.equal(await fs.readFile(path.join(integrationRoot, migration.path), 'utf8'),
+        await integrationSource(ref, migration.path));
+    }
+  };
+  await assertParent('a4851729d1ca6816edb3fa535e4b65b7ea5b32dd');
+  await assertParent('5fc4facba6664408f7ec5fd95ec02109a6ea824b');
 });

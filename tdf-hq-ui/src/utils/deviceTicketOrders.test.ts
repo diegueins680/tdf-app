@@ -49,4 +49,9 @@ describe('ticketOrderStage', () => {
     expect(ticketOrderStage('refunded')).toBe('closed');
     expect(ticketOrderStage('cancelled')).toBe('closed');
   });
+
+  it('keeps unrecognized statuses unconfirmed instead of declaring tickets invalid', () => {
+    expect(ticketOrderStage('new_provider_outcome')).toBe('unknown');
+    expect(ticketOrderStage('')).toBe('unknown');
+  });
 });
