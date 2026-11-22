@@ -28972,18 +28972,18 @@
       ],
       "formalModels": [],
       "status": "specified and implemented",
-      "confidence": "Hspec cases cover the pure tier summary and a React test covers the card; the handler wiring is exercised only by compilation and the existing list test.",
+      "confidence": "Local verification passes 12 ticket-summary Hspec cases, the 2 canonical event-end cases and pagination case, 32 focused web cases, 7 configured browser profiles, and 13 actual HTTP assertions against the compiled backend and the full 261-entry schema. The HTTP fixture checks compiled commit identity and rejects a backend without the additive fields. Existing public metadata and workflow admission remain unchanged.",
       "ambiguity": [
         "Free events have no tier-based signal because the public storefront sells only priced tiers; the card stays silent for them.",
         "The summary does not check the payment policy or checkout environment, so a card can show a price for an event whose checkout is not yet enabled."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Unit and component tests exist; no database-backed handler test, hosted browser run or production verification of the new fields."
+        "reason": "Verified public-card projection and rendering only; this is not checkout-provider eligibility, payment activation, inventory reservation, production observation or system-wide conformance."
       },
       "authority": "approved by user",
       "property": "fromPrice = min price over tiers that are active, priced, in window, in stock and single-currency, for an event that has not ended; soldOut = on-sale tiers exist and none is in stock; the card renders only these.",
-      "verification": "Hspec unit cases for the tier summary and a React Testing Library case for the card.",
+      "verification": "Hspec summary and boundary cases, focused React suites, seven configured browser projects, and the compiled-server HTTP fixture in the backend CI lane.",
       "evidence": "tdf-hq/test/Spec.hs; tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx"
     }
   ]

@@ -137,6 +137,8 @@ def main():
                 return json.load(response)
 
         report['actualVersion'] = request('/version')
+        check('The actual compiled commit matches the checkout identity',
+              report['actualVersion']['commit'] == report['head'])
 
         def cards():
             rows = request('/social-events/upcoming?limit=200')
