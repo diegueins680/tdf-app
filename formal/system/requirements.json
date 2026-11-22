@@ -12833,7 +12833,8 @@
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq-ui/src/components/StudioGallery.tsx",
-        "tdf-hq-ui/src/pages/NotFoundPage.tsx"
+        "tdf-hq-ui/src/pages/NotFoundPage.tsx",
+        "tdf-hq/sql/2026-11-07_studio_gallery.sql"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
@@ -12845,7 +12846,9 @@
         "e2e/web/directory-language.spec.mjs",
         "e2e/web/public-welcome.spec.mjs",
         "tdf-hq-ui/src/components/StudioGallery.test.tsx",
-        "tdf-hq-ui/src/pages/NotFoundPage.test.tsx"
+        "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
+        "scripts/test-studio-gallery-migration.sh",
+        "scripts/test-studio-gallery-runner-safety.py"
       ],
       "formalModels": [],
       "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",
@@ -28972,7 +28975,7 @@
       ],
       "formalModels": [],
       "status": "specified and implemented",
-      "confidence": "Local verification passes 12 ticket-summary Hspec cases, the 2 canonical event-end cases and pagination case, 32 focused web cases, 7 configured browser profiles, and 13 actual HTTP assertions against the compiled backend and the full 261-entry schema. The HTTP fixture checks compiled commit identity and rejects a backend without the additive fields. Existing public metadata and workflow admission remain unchanged.",
+      "confidence": "Local verification passes 12 ticket-summary Hspec cases, the 2 canonical event-end cases and pagination case, 32 focused web cases, 7 configured browser profiles, and 13 actual HTTP assertions against the compiled backend and the full 262-entry schema. The HTTP fixture checks compiled commit identity and rejects a backend without the additive fields. Existing public metadata and workflow admission remain unchanged.",
       "ambiguity": [
         "Free events have no tier-based signal because the public storefront sells only priced tiers; the card stays silent for them.",
         "The summary does not check the payment policy or checkout environment, so a card can show a price for an event whose checkout is not yet enabled."
