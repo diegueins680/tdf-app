@@ -1333,6 +1333,11 @@
       "id": "2026-11-07_studio_gallery",
       "path": "tdf-hq/sql/2026-11-07_studio_gallery.sql",
       "introducedBy": "d77cd1319a67e89675e12e9e9082641bdf9fcc66"
+    },
+    {
+      "id": "2026-11-21_location_genre_filters",
+      "path": "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+      "introducedBy": "a0ca9cd7367ecdd7252dfe50d0a9c94365fc2fcf"
     }
   ]
 }

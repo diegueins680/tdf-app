@@ -5795,7 +5795,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6e1c6b4c0b7816a3c89eeef2006ac8efc4d427c2174dbfe34401d0de55942ea2",
+      "sha256": "c9d9bf8a57704e8bba28b7bfad2b61a169a6c6cbb5096e6eda479dbadf9c6fb1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32549,7 +32549,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "296d8493d59cfad492e1c44689e633102c9827f169b4f73bca13e992f8737931",
+      "sha256": "38bdee1be0fa4764a24720b985237a1e9a38dd1d7b963719e015ec9a91e98a1b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32619,7 +32619,7 @@
     },
     {
       "path": "formal/system/taxonomy-filters.md",
-      "sha256": "abc1124152d1f621412024e23ec6f3c51e66f908c3d9558a9c591c626150f458",
+      "sha256": "af842da282409aebf3246dc8907ed96a7583bc87b9a76bc24f1a98d1b02e98b7",
       "authority": "inferred",
       "authorityBasis": "Status: specified and implemented on 2026-11-21; local PostgreSQL, Hspec and",
       "kind": "requirement-candidate"

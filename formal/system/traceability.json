@@ -29015,7 +29015,13 @@
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-        "playwright.discovery.config.mjs"
+        "playwright.discovery.config.mjs",
+        "tdf-mobile/src/api/taxonomy.ts",
+        "tdf-mobile/src/features/taxonomyFilters/TaxonomyFilterBar.tsx",
+        "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterModel.ts",
+        "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterStore.ts",
+        "tdf-mobile/src/features/taxonomyFilters/useSharedCityDefault.ts",
+        "tdf-mobile/src/features/taxonomyFilters/useTaxonomyFilters.ts"
       ],
       "tests": [
         "scripts/test-community-search.py",
@@ -29027,7 +29033,10 @@
         "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
         "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
         "e2e/web/taxonomy-filters.spec.mjs",
-        "e2e/web/community-discovery.spec.mjs"
+        "e2e/web/community-discovery.spec.mjs",
+        "tdf-mobile/__tests__/DirectoryTaxonomyFilters.test.tsx",
+        "tdf-mobile/__tests__/taxonomyFilterModel.test.ts",
+        "tdf-mobile/__tests__/taxonomyFilterStore.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -29114,12 +29123,15 @@
         "tdf-hq-ui/src/features/taxonomyFilters/GenreSuggestionDialog.tsx",
         "tdf-hq-ui/src/pages/GenreSuggestionsAdminPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
-        "tdf-hq-ui/src/routes/protectedRoutes.tsx"
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-mobile/app/editArtistProfile.tsx",
+        "tdf-mobile/src/features/taxonomyFilters/GenreSuggestionModal.tsx"
       ],
       "tests": [
         "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs",
         "tdf-hq/test/Spec.hs",
-        "e2e/web/taxonomy-filters.spec.mjs"
+        "e2e/web/taxonomy-filters.spec.mjs",
+        "tdf-mobile/__tests__/GenreSuggestionModal.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -29158,7 +29170,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "c41a43364961282f0b32ee4f363d28499bdfbfbeeb25e2efe4e4733f202bf3cd",
+    "docs/catalog-persistence/catalog-list-decisions.json": "156928674272df78a61c8732152879bef4ed863c24fd4c90f674f1abe37771fb",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -29562,7 +29574,7 @@
     "formal/system/compiled-api-surface.json": "f98ed16a3b6eae3c49e1eec4e1824f0ebad33ca3304d0d0a3ac44c1e9e06acfb",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
-    "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
+    "formal/system/public-routes.json": "c2c6ccb156e5aec42bfecf84f6a248ccd5cae1a6c49790b5db11098e6c6274ee",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
     "formal/system/recovery-expiry-arithmetic.json": "295b95d49c91a52a8b5bcaa7f037f3657be2807af9c450ad991529292bb94dfd",
@@ -29806,7 +29818,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "6e1c6b4c0b7816a3c89eeef2006ac8efc4d427c2174dbfe34401d0de55942ea2",
+    "scripts/production-migrations.json": "c9d9bf8a57704e8bba28b7bfad2b61a169a6c6cbb5096e6eda479dbadf9c6fb1",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "e497d1ce41e8b1bdc3ae776a164b0cb3c6317b5c799ecce85205ef9c79602729",
@@ -31294,11 +31306,13 @@
     "tdf-mobile/__tests__/DdexPartners.test.tsx": "6311dc043ee8a286f62bd0ec4d588f3b4425f1990a73d8b94c91093cd9b99b57",
     "tdf-mobile/__tests__/DeepLinks.test.ts": "a3e87e89be7a43a5e0b58bcc23e5a9378e6337b1eb2a96f445b56eb4560e049a",
     "tdf-mobile/__tests__/DirectoryManage.test.tsx": "64c623e02b43a402d4f9cfc961a0660a20468d280550b944b6419f9afd93d82e",
+    "tdf-mobile/__tests__/DirectoryTaxonomyFilters.test.tsx": "73a65a0109e7e61cb6738cdd01b4cf52667b65ff13925eb65d505db3339950ac",
     "tdf-mobile/__tests__/EventCardTickets.test.tsx": "d98649ad19fed8b46dadbe20601e3d299ba334d75c6abea5aeb37e2782b6a519",
     "tdf-mobile/__tests__/EventDetailLiveBroadcastLifecycle.test.tsx": "5fa36d709f29921ac128350ccd07366dde32e309c923a217d6450c5f9018dd32",
     "tdf-mobile/__tests__/EventDetailMoments.test.tsx": "35c61d226b642b0b647cd66f79aca45ef3913e6beb1d35bb24d362d35d601569",
     "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx": "35c75aa6a37a6f9472abc454e5bd46abc51a6818fc0e93370f4c486e2ef96ac1",
     "tdf-mobile/__tests__/FirstRunProvider.test.tsx": "98e59e33e12c6aa88721c9cac49354a11793484b220689ead819b03629e65f72",
+    "tdf-mobile/__tests__/GenreSuggestionModal.test.tsx": "3339cde0274ce21ae96268c37040fd3c92790d7725410a4af9823730ba7a4ccc",
     "tdf-mobile/__tests__/LegalDisclosure.test.tsx": "06f672ea2d9396346ad7b16db1028148434f45537fe83ae1873853076822215c",
     "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx": "0269cfcb7eb5810b04164c968c0ffe237f797bdb50b9eaa7576016e02fd15e98",
     "tdf-mobile/__tests__/SocialScreen.test.tsx": "75d5a858f1e96b9848c15c8a2defd07d93fd010747331bc3452b1977a343628e",
@@ -31321,6 +31335,8 @@
     "tdf-mobile/__tests__/onboardingIntent.test.ts": "f3bd1ea4dac3045c16eda4be404807a7bcdbcd5266efa31225baa8aac3e4c1f2",
     "tdf-mobile/__tests__/savedEvents.test.ts": "ac739d4a8ad14f77b40ee8f310276b9e0073eae3084bcc671d3be946fd9cdbc8",
     "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts": "fc0cfd4f44e229e61e64320041776ef82ad457e14474206179cfd86351234455",
+    "tdf-mobile/__tests__/taxonomyFilterModel.test.ts": "355ab31e45d49b7429044b72c74f96151b44475c55b7922b9a02df2be20256d0",
+    "tdf-mobile/__tests__/taxonomyFilterStore.test.tsx": "be823e466cfa0f931aa9ff9c4d30c2c299e4249ddcf6f93ee1c642e38e44a1c4",
     "tdf-mobile/__tests__/usePartyOwnership.test.tsx": "ccdd151045745a81c7bd461d8aeddded98cd102a5cfa97e6cd561872cbf438d1",
     "tdf-mobile/app.config.ts": "7e8e36bb728bb9a2f3c4f9ef773e8addebbd8e4fc036c59e849057fb3f2c1a87",
     "tdf-mobile/app.json": "d2800274db4ea7adacf3aac8acf695ca0f3b64b513fcfec4e8da83294bc37ed0",
@@ -31334,6 +31350,7 @@
     "tdf-mobile/app/ddex/index.tsx": "8d534fd0a1a28f0bac5767a8535a91fe1ce7762d0decff518cec5931eb6149e1",
     "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
     "tdf-mobile/app/directory/manage.tsx": "86c9219769a3bddefd54fa47c6aca22b60f23c8f1be86ec65414ff84defd0724",
+    "tdf-mobile/app/editArtistProfile.tsx": "05113fefd18fbb7bbe035ce8797e385db9bd722466635b2cf297936262ba33b7",
     "tdf-mobile/app/eventDetail.tsx": "25d455699a1a707c9c0408aaa2c2841e6ec829c05ca73f1eb043d0b160f2f07f",
     "tdf-mobile/app/reputation/consents.tsx": "c040edf2f60acb2ffb11aa8398f03e050c7615f1897636af710268b9cc38ca4b",
     "tdf-mobile/app/ticketCheckout.tsx": "009598287928ffbeab933b348f727d5de8c2ebbf9979dc886ff6f250efc1ba8d",
@@ -31363,6 +31380,7 @@
     "tdf-mobile/src/api/generated/types.ts": "96742280bb2dd3de43867f4c70f313e22a5ca47c110f7f36cc2c73bc9e439086",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
+    "tdf-mobile/src/api/taxonomy.ts": "9d374c640bc64691a8acbd0198cedcdd9e0b71edde8fbeebfcd90819184dc616",
     "tdf-mobile/src/api/upload.compatibility.test.ts": "21e4e097cea0449549484f2ba0ba09726585c58a5aa9c4cccbdddba8b00600ba",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
     "tdf-mobile/src/components/DirectoryPublicDetailScreen.tsx": "1b5151b36f9e6a2541484ba768b02ca9cbae7ccca221db95afb83bbd5acec338",
@@ -31373,6 +31391,12 @@
     "tdf-mobile/src/features/directory/previewImage.ts": "c29605bbb2d8a794106068ab2dc1d3e0d568797403168a3e7fee0d7059c37674",
     "tdf-mobile/src/features/featureRegistry.ts": "1e4c7047aaaaf481b1dbeb0c5f07652eb0672bd382926a6863c82042f51f2864",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "b870bc7ff7d6542135dd646c762ed6e147edd274a99aed9334547041a3b76ec1",
+    "tdf-mobile/src/features/taxonomyFilters/GenreSuggestionModal.tsx": "2b96023315920351f90b6d4bd16fe99800f3f8e7c36c23064e38f717da69a6c5",
+    "tdf-mobile/src/features/taxonomyFilters/TaxonomyFilterBar.tsx": "8e2d749ccddc61dee448b898616bb8d494e3394df719808337057112d57c95de",
+    "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterModel.ts": "3c6082aa5f9f40b47fd8a8fd01998d1133bfd390714ba10d51e69007c37162e3",
+    "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterStore.ts": "212626329c8bafe097314fe44dfc7f75c205b771ac382c7c56740a5c1a4434cc",
+    "tdf-mobile/src/features/taxonomyFilters/useSharedCityDefault.ts": "3a31cbd55a5e41455fc0885feaaa686612ccc415997578c3ee128fdac9ef72f1",
+    "tdf-mobile/src/features/taxonomyFilters/useTaxonomyFilters.ts": "35910047d3bb7eba7038ad150fddf8897415e259ede071f70b43c3cd662eed7c",
     "tdf-mobile/src/feedback/FeedbackEntry.tsx": "7964eaf7976c58daf264bacf94ea4854af265f0146cfbd16a1429e385bc46e7b",
     "tdf-mobile/src/feedback/metadata.ts": "62336d3a2cf7f055624bdb4f4bd20aedbfd47afc3fbddb2cefaa2d4ce1e26861",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
@@ -52123,6 +52147,42 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-mobile/src/api/taxonomy.ts": [
+      {
+        "requirement": "TAX-FILTER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/features/taxonomyFilters/TaxonomyFilterBar.tsx": [
+      {
+        "requirement": "TAX-FILTER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterModel.ts": [
+      {
+        "requirement": "TAX-FILTER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterStore.ts": [
+      {
+        "requirement": "TAX-FILTER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/features/taxonomyFilters/useSharedCityDefault.ts": [
+      {
+        "requirement": "TAX-FILTER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/features/taxonomyFilters/useTaxonomyFilters.ts": [
+      {
+        "requirement": "TAX-FILTER-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/Taxonomy/FilterSpec.hs": [
       {
         "requirement": "TAX-FILTER-001",
@@ -52151,6 +52211,24 @@
         "relationship": "tests"
       }
     ],
+    "tdf-mobile/__tests__/DirectoryTaxonomyFilters.test.tsx": [
+      {
+        "requirement": "TAX-FILTER-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/taxonomyFilterModel.test.ts": [
+      {
+        "requirement": "TAX-FILTER-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/taxonomyFilterStore.test.tsx": [
+      {
+        "requirement": "TAX-FILTER-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/Taxonomy/GenreSuggestion.hs": [
       {
         "requirement": "TAX-GENRE-SUGGESTION-001",
@@ -52169,7 +52247,25 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-mobile/app/editArtistProfile.tsx": [
+      {
+        "requirement": "TAX-GENRE-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/features/taxonomyFilters/GenreSuggestionModal.tsx": [
+      {
+        "requirement": "TAX-GENRE-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs": [
+      {
+        "requirement": "TAX-GENRE-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/GenreSuggestionModal.test.tsx": [
       {
         "requirement": "TAX-GENRE-SUGGESTION-001",
         "relationship": "tests"
@@ -57426,7 +57522,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6e1c6b4c0b7816a3c89eeef2006ac8efc4d427c2174dbfe34401d0de55942ea2",
+      "sha256": "c9d9bf8a57704e8bba28b7bfad2b61a169a6c6cbb5096e6eda479dbadf9c6fb1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -88276,7 +88372,12 @@
       "path": "tdf-mobile/__tests__/DirectoryTaxonomyFilters.test.tsx",
       "sha256": "73a65a0109e7e61cb6738cdd01b4cf52667b65ff13925eb65d505db3339950ac",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "TAX-FILTER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-a4f08b34347d1281",
@@ -88354,7 +88455,12 @@
       "path": "tdf-mobile/__tests__/GenreSuggestionModal.test.tsx",
       "sha256": "3339cde0274ce21ae96268c37040fd3c92790d7725410a4af9823730ba7a4ccc",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "TAX-GENRE-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-adcc415d122d0352",
@@ -88927,14 +89033,24 @@
       "path": "tdf-mobile/__tests__/taxonomyFilterModel.test.ts",
       "sha256": "355ab31e45d49b7429044b72c74f96151b44475c55b7922b9a02df2be20256d0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "TAX-FILTER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-2624061d3bee639b",
       "path": "tdf-mobile/__tests__/taxonomyFilterStore.test.tsx",
       "sha256": "be823e466cfa0f931aa9ff9c4d30c2c299e4249ddcf6f93ee1c642e38e44a1c4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "TAX-FILTER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f93a5b36f29ce79c",
@@ -89323,7 +89439,12 @@
       "path": "tdf-mobile/app/editArtistProfile.tsx",
       "sha256": "05113fefd18fbb7bbe035ce8797e385db9bd722466635b2cf297936262ba33b7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "TAX-GENRE-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-ab43846a5d628103",
@@ -90268,7 +90389,12 @@
       "path": "tdf-mobile/src/api/taxonomy.ts",
       "sha256": "9d374c640bc64691a8acbd0198cedcdd9e0b71edde8fbeebfcd90819184dc616",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "TAX-FILTER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4a29841c2910dae2",
@@ -90665,42 +90791,72 @@
       "path": "tdf-mobile/src/features/taxonomyFilters/GenreSuggestionModal.tsx",
       "sha256": "2b96023315920351f90b6d4bd16fe99800f3f8e7c36c23064e38f717da69a6c5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "TAX-GENRE-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d7347db6e57b7b33",
       "path": "tdf-mobile/src/features/taxonomyFilters/TaxonomyFilterBar.tsx",
       "sha256": "8e2d749ccddc61dee448b898616bb8d494e3394df719808337057112d57c95de",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "TAX-FILTER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-1e29e7350e64603d",
       "path": "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterModel.ts",
       "sha256": "3c6082aa5f9f40b47fd8a8fd01998d1133bfd390714ba10d51e69007c37162e3",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "TAX-FILTER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-0f606b62875de4c4",
       "path": "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterStore.ts",
       "sha256": "212626329c8bafe097314fe44dfc7f75c205b771ac382c7c56740a5c1a4434cc",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "TAX-FILTER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d90d8a3d348e85db",
       "path": "tdf-mobile/src/features/taxonomyFilters/useSharedCityDefault.ts",
       "sha256": "3a31cbd55a5e41455fc0885feaaa686612ccc415997578c3ee128fdac9ef72f1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "TAX-FILTER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-f0e233926ef3acca",
       "path": "tdf-mobile/src/features/taxonomyFilters/useTaxonomyFilters.ts",
       "sha256": "35910047d3bb7eba7038ad150fddf8897415e259ede071f70b43c3cd662eed7c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "TAX-FILTER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9c21dce16740790a",
@@ -92686,9 +92842,7 @@
     "SURFACE-57fb42409e4fe3c1",
     "SURFACE-c2d3a0548b7f007b",
     "SURFACE-efcecbaa0e3acd71",
-    "SURFACE-06255c72512e1eb0",
     "SURFACE-7924613b1e052502",
-    "SURFACE-52de78cce0159064",
     "SURFACE-adcc415d122d0352",
     "SURFACE-99b5cd25c1db6135",
     "SURFACE-b5094e4b58658656",
@@ -92731,8 +92885,6 @@
     "SURFACE-3f53444fc1175241",
     "SURFACE-cf96b8497525f5f6",
     "SURFACE-4ce4ed0b5b303e85",
-    "SURFACE-5cfdd955e79c73d9",
-    "SURFACE-2624061d3bee639b",
     "SURFACE-f93a5b36f29ce79c",
     "SURFACE-bbc4187afb507320",
     "SURFACE-58c233508e8c95bf",
@@ -92763,7 +92915,6 @@
     "SURFACE-9f8cace47a1e130d",
     "SURFACE-cb8e4fcf471e53e1",
     "SURFACE-095e45eb2a4a4ad4",
-    "SURFACE-9ba898720027410e",
     "SURFACE-94bd0afe2e810e19",
     "SURFACE-c81dc193eacb9538",
     "SURFACE-9c44d04f2a433b19",
@@ -92842,7 +92993,6 @@
     "SURFACE-be0c9463aa2bf381",
     "SURFACE-7976405ee26783dd",
     "SURFACE-9742dd7e6fc15e5d",
-    "SURFACE-4191ad1074378e3c",
     "SURFACE-4a29841c2910dae2",
     "SURFACE-ceac2e6abbe05738",
     "SURFACE-44f0271f8adb8837",
@@ -92881,12 +93031,6 @@
     "SURFACE-499f915882243564",
     "SURFACE-f7d9103ac417db69",
     "SURFACE-44f9049b317d873e",
-    "SURFACE-10f7b0b88b708476",
-    "SURFACE-d7347db6e57b7b33",
-    "SURFACE-1e29e7350e64603d",
-    "SURFACE-0f606b62875de4c4",
-    "SURFACE-d90d8a3d348e85db",
-    "SURFACE-f0e233926ef3acca",
     "SURFACE-ac457e7680793333",
     "SURFACE-ae8457615b62fb27",
     "SURFACE-20f0809095655bce",
@@ -94262,7 +94406,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "296d8493d59cfad492e1c44689e633102c9827f169b4f73bca13e992f8737931",
+      "sourceSha256": "38bdee1be0fa4764a24720b985237a1e9a38dd1d7b963719e015ec9a91e98a1b",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -94290,7 +94434,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "296d8493d59cfad492e1c44689e633102c9827f169b4f73bca13e992f8737931",
+      "sourceSha256": "38bdee1be0fa4764a24720b985237a1e9a38dd1d7b963719e015ec9a91e98a1b",
       "definition": {
         "states": [
           "absent",
@@ -94320,7 +94464,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "296d8493d59cfad492e1c44689e633102c9827f169b4f73bca13e992f8737931",
+      "sourceSha256": "38bdee1be0fa4764a24720b985237a1e9a38dd1d7b963719e015ec9a91e98a1b",
       "definition": {
         "export": [
           "queued",
