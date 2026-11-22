@@ -1328,6 +1328,11 @@
       "id": "2026-11-07_content_storage_identity_guards",
       "path": "tdf-hq/sql/2026-11-07_content_storage_identity_guards.sql",
       "introducedBy": "a8b31cefcf5c6ce45a3fc38406f23f11a3616b56"
+    },
+    {
+      "id": "2026-11-21_directory_semantic_search",
+      "path": "tdf-hq/sql/2026-11-21_directory_semantic_search.sql",
+      "introducedBy": "7dd229965b98cdcd7609c1ca18f37891f8edc296"
     }
   ]
 }
