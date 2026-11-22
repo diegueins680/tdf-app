@@ -235,6 +235,7 @@ import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
 import TDF.Ticketing.Issuance (finalizePaidTicketOrder, issueMissingTicketsForOrder)
 import qualified TDF.Server.EventAdminDelegation as EventAdmin
+import TDF.Server.PublicEventTicketSummary (PublicEventCardMetadata (..), loadPublicEventCard)
 import qualified TDF.Server.EventTicketSale as EventTicketSale
 import TDF.Server.EventAdminDelegation (eventNotOrganizerError, eventWithoutOrganizerError, isEventManager, isTicketTierSaleOpen, requireEventManager)
 import qualified TDF.Ticketing.Inventory as TicketInventory
@@ -471,35 +472,14 @@ collectMatchingRows requestedLimit requestedPageSize loadPage matchRow
                 else go (offset + length rows) nextMatches
 
 publicUpcomingEventRow :: Maybe T.Text -> Entity SocialEvent -> SqlPersistT IO (Maybe PublicUpcomingEventDTO)
-publicUpcomingEventRow canonicalCity (Entity eventKey eventRow) = do
-    metadataResult <- pure (decodeStoredEventMetadata (socialEventMetadata eventRow))
-    venue <- maybe (pure Nothing) get (socialEventVenueId eventRow)
-    case (metadataResult, socialEventWorkflowStateId eventRow) of
-        (Right metadata, Just workflowStateId) -> do
-            workflow <- EventLifecycle.loadActiveSocialEventState workflowStateId
-            publicListable <- EventLifecycle.socialEventStateHasCapability workflowStateId "public-listable"
-            let city = canonicalCity
-            pure $
-                if publicListable && emIsPublic metadata /= Just False
-                    then do
-                        (stateCode, _, _) <- workflow
-                        Just PublicUpcomingEventDTO
-                            { publicUpcomingEventId = renderKeyText eventKey
-                            , publicUpcomingEventTitle = socialEventTitle eventRow
-                            , publicUpcomingEventDescription = socialEventDescription eventRow
-                            , publicUpcomingEventStart = socialEventStartTime eventRow
-                            , publicUpcomingEventEnd = socialEventEndTime eventRow
-                            , publicUpcomingEventTimezone = socialEventTimezone eventRow
-                            , publicUpcomingEventVenueName = SM.venueName <$> venue
-                            , publicUpcomingEventCity = city
-                            , publicUpcomingEventPriceCents = socialEventPriceCents eventRow
-                            , publicUpcomingEventCurrency = emCurrency metadata
-                            , publicUpcomingEventTicketUrl = emTicketUrl metadata
-                            , publicUpcomingEventImageUrl = emImageUrl metadata
-                            , publicUpcomingEventWorkflowStateCode = stateCode
-                            }
-                    else Nothing
-        _ -> pure Nothing
+publicUpcomingEventRow canonicalCity eventEntity@(Entity _ eventRow) =
+    loadPublicEventCard canonicalCity eventEntity $
+        (\metadata -> PublicEventCardMetadata
+            { pecmIsPublic = emIsPublic metadata
+            , pecmCurrency = emCurrency metadata
+            , pecmTicketUrl = emTicketUrl metadata
+            , pecmImageUrl = emImageUrl metadata
+            }) <$> decodeStoredEventMetadata (socialEventMetadata eventRow)
 
 validateSocialEventsFeatureAction :: T.Text -> T.Text -> AuthedUser -> Either ServerError ()
 validateSocialEventsFeatureAction featureId action user =
