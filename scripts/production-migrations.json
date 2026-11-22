@@ -1333,6 +1333,11 @@
       "id": "2026-11-07_studio_gallery",
       "path": "tdf-hq/sql/2026-11-07_studio_gallery.sql",
       "introducedBy": "d77cd1319a67e89675e12e9e9082641bdf9fcc66"
+    },
+    {
+      "id": "2026-11-21_venue_search_sql",
+      "path": "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
+      "introducedBy": "1c581e2e6016b76e04269a29b09d38665719559d"
     }
   ]
 }
