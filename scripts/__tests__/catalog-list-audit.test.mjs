@@ -6516,7 +6516,7 @@ function integrationFind(value, expected) {
 async function integrationParent(ref, file) {
   const key = `${ref}:${file}`;
   if (!integrationCache.has(key)) integrationCache.set(key, integrationExec('git', ['show', key],
-    { cwd: integrationRoot, maxBuffer: 64 * 1024 * 1024 }).then(({ stdout }) => JSON.parse(stdout)));
+    { cwd: integrationRoot, maxBuffer: 256 * 1024 * 1024 }).then(({ stdout }) => JSON.parse(stdout)));
   return integrationCache.get(key);
 }
 async function integrationRead(ref, file, encoding) {
