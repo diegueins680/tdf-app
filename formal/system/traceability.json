@@ -28811,6 +28811,7 @@
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
         "tdf-hq-ui/src/utils/followUpCalendar.ts",
+        "tdf-hq-ui/src/components/FollowUpCalendarActions.tsx",
         "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql",
         "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql",
         "scripts/production-migrations.json",
@@ -30226,6 +30227,7 @@
     "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx": "12b5c7fbb55aaaa9df265c3feb6832c61d75bfe45050f1459304f73f3b21cbcc",
     "tdf-hq-ui/src/components/BasicFeaturePage.tsx": "46faa93a4c4da7ee9ccab7d14cd8dbf07e7da57f4cee7425583ae6a2f482bc5e",
     "tdf-hq-ui/src/components/ConfirmDialog.tsx": "8581a25cd9959f56ba12a84066c5c87259dadd5da3d00ec56f4148efdeb554a6",
+    "tdf-hq-ui/src/components/FollowUpCalendarActions.tsx": "35a10159b6ba74b4c3f30b85b0f64ddaa52c6579e284bec71a263ecfb83d5ee7",
     "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx": "1faa71b1331653c4bf9fb12a32726732d94b63d1929b336f79bd7b11da3c0d94",
     "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx": "755ccd66be9250f7da44ee8d03aca541dc5583ae156841dcb88dfe21ca25ef3f",
     "tdf-hq-ui/src/components/InAppBrowserNotice.tsx": "ee2e97283f584ae5028f15da77b1b9783b8dcc7c03a4b6678feeede6a887775b",
@@ -30453,7 +30455,7 @@
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "c1e638d0ff65572119237c8c4112d832fe1bdef8e41b1c93824a07b1b95c7122",
     "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx": "d747f4d2c7cf597114f167fcdeb01fdd6f5315ce40ca6e5c426b5bcd1ce17c08",
-    "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx": "e0f09560837e8ae2456a36d683bd822a8c3f35ee2122555eb7640d5c32624920",
+    "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx": "b10a52c61bd8e5aee2c80629d3726153be387f93ef174766dbcb30621daf87a1",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "7502f83d2089e7f09827d17c4cd6f37d2e82bec39ed5c827b540de18c32bc3be",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "6346f5a36530f69a754f6f3d3988b95a5fd5ad3a7422d1797d1a2801a933c095",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "351c03a7f95ddf473ef8d86e01c0e5be7b4e2a0fbd2d842209b09feec1731fcd",
@@ -30694,8 +30696,8 @@
     "tdf-hq-ui/src/utils/externalTicketing.ts": "1224ccc2f203440828c55c99dc50b60f02b3a36747c2fa63826c73fde51ed8d5",
     "tdf-hq-ui/src/utils/featureRegistry.test.ts": "3e8ea3f9a0fdd8e13cfb846d7259dd7b4ad723b0154eddd187d99ae1cdb4d368",
     "tdf-hq-ui/src/utils/featureRegistry.ts": "59783b97f00c4d2e07261116d9ee813aea4049c33ed8606660b4ff8f4eeb1c70",
-    "tdf-hq-ui/src/utils/followUpCalendar.test.ts": "4aea61a1111566ac478242a6896c2a26dd4d92caa797ba4f59fcd2823056b555",
-    "tdf-hq-ui/src/utils/followUpCalendar.ts": "d700f15f8024aaed1707c16b0ee4dedba3c6aceb9adc00478fdc21fee7ab2f21",
+    "tdf-hq-ui/src/utils/followUpCalendar.test.ts": "8d8c16ae0f5b7cfffc000551cd669a31600e27f6e341722cbbc2209bc411d20f",
+    "tdf-hq-ui/src/utils/followUpCalendar.ts": "3418d5213a8320c8929c0becb73f091ea97cd5e1afb7c9050b9a3aee8c385f9a",
     "tdf-hq-ui/src/utils/inAppBrowser.test.ts": "1bc37ad8648797a57854e8c8e7d1ddb65e071c483b28aead5b2571545b24dcd2",
     "tdf-hq-ui/src/utils/inAppBrowser.ts": "e8cf3a4277519ec11f07f2533ff28a113595a2156406bd95d08162edbc793924",
     "tdf-hq-ui/src/utils/incrementalSha256.test.ts": "dfc75d64b7e8ea09c1606d830cb3f9a00c06c7e857e13640eb0e842d15d5184d",
@@ -51556,6 +51558,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/components/FollowUpCalendarActions.tsx": [
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql": [
       {
         "requirement": "COURSE-FOLLOWUP-REMINDER-001",
@@ -64813,6 +64821,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-8513fe43d104b125",
+      "path": "tdf-hq-ui/src/components/FollowUpCalendarActions.tsx",
+      "sha256": "35a10159b6ba74b4c3f30b85b0f64ddaa52c6579e284bec71a263ecfb83d5ee7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-e0b55665797583ff",
       "path": "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx",
       "sha256": "1faa71b1331653c4bf9fb12a32726732d94b63d1929b336f79bd7b11da3c0d94",
@@ -69005,7 +69025,7 @@
     {
       "id": "SURFACE-bf79c7904e71c2d9",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-      "sha256": "e0f09560837e8ae2456a36d683bd822a8c3f35ee2122555eb7640d5c32624920",
+      "sha256": "b10a52c61bd8e5aee2c80629d3726153be387f93ef174766dbcb30621daf87a1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -73678,7 +73698,7 @@
     {
       "id": "SURFACE-0d41a7fe9efbf447",
       "path": "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
-      "sha256": "4aea61a1111566ac478242a6896c2a26dd4d92caa797ba4f59fcd2823056b555",
+      "sha256": "8d8c16ae0f5b7cfffc000551cd669a31600e27f6e341722cbbc2209bc411d20f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -73690,7 +73710,7 @@
     {
       "id": "SURFACE-6b381b93f828b6d1",
       "path": "tdf-hq-ui/src/utils/followUpCalendar.ts",
-      "sha256": "d700f15f8024aaed1707c16b0ee4dedba3c6aceb9adc00478fdc21fee7ab2f21",
+      "sha256": "3418d5213a8320c8929c0becb73f091ea97cd5e1afb7c9050b9a3aee8c385f9a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -93841,7 +93861,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "678fec2f5a124a8718822917b791b7ff1495dff39f198fc7563cf03400b56d6b",
+      "sourceSha256": "6aa73431750e9fad5c9bd4d5710816970014a4a9a0e17b371e38cbf1005780bb",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -93869,7 +93889,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "678fec2f5a124a8718822917b791b7ff1495dff39f198fc7563cf03400b56d6b",
+      "sourceSha256": "6aa73431750e9fad5c9bd4d5710816970014a4a9a0e17b371e38cbf1005780bb",
       "definition": {
         "states": [
           "absent",
@@ -93899,7 +93919,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "678fec2f5a124a8718822917b791b7ff1495dff39f198fc7563cf03400b56d6b",
+      "sourceSha256": "6aa73431750e9fad5c9bd4d5710816970014a4a9a0e17b371e38cbf1005780bb",
       "definition": {
         "export": [
           "queued",

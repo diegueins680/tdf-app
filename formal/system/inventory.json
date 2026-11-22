@@ -1067,6 +1067,7 @@
       "tdf-hq-ui/src/components/ConfirmDialog.tsx",
       "tdf-hq-ui/src/components/DataTable.tsx",
       "tdf-hq-ui/src/components/EnrollmentSuccessDialog.tsx",
+      "tdf-hq-ui/src/components/FollowUpCalendarActions.tsx",
       "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx",
       "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
       "tdf-hq-ui/src/components/InAppBrowserNotice.tsx",
@@ -9536,6 +9537,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8513fe43d104b125",
+      "path": "tdf-hq-ui/src/components/FollowUpCalendarActions.tsx",
+      "sha256": "35a10159b6ba74b4c3f30b85b0f64ddaa52c6579e284bec71a263ecfb83d5ee7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-e0b55665797583ff",
       "path": "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx",
       "sha256": "1faa71b1331653c4bf9fb12a32726732d94b63d1929b336f79bd7b11da3c0d94",
@@ -11608,7 +11615,7 @@
     {
       "id": "SURFACE-bf79c7904e71c2d9",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-      "sha256": "e0f09560837e8ae2456a36d683bd822a8c3f35ee2122555eb7640d5c32624920",
+      "sha256": "b10a52c61bd8e5aee2c80629d3726153be387f93ef174766dbcb30621daf87a1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13738,13 +13745,13 @@
     {
       "id": "SURFACE-0d41a7fe9efbf447",
       "path": "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
-      "sha256": "4aea61a1111566ac478242a6896c2a26dd4d92caa797ba4f59fcd2823056b555",
+      "sha256": "8d8c16ae0f5b7cfffc000551cd669a31600e27f6e341722cbbc2209bc411d20f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6b381b93f828b6d1",
       "path": "tdf-hq-ui/src/utils/followUpCalendar.ts",
-      "sha256": "d700f15f8024aaed1707c16b0ee4dedba3c6aceb9adc00478fdc21fee7ab2f21",
+      "sha256": "3418d5213a8320c8929c0becb73f091ea97cd5e1afb7c9050b9a3aee8c385f9a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32423,7 +32430,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "678fec2f5a124a8718822917b791b7ff1495dff39f198fc7563cf03400b56d6b",
+      "sha256": "6aa73431750e9fad5c9bd4d5710816970014a4a9a0e17b371e38cbf1005780bb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
