@@ -14,6 +14,7 @@ import type { ChipProps } from '@mui/material';
 import {
   PushPinOutlined as PushPinOutlinedIcon,
   VisibilityOff as VisibilityOffIcon,
+  DeleteOutline as DeleteOutlineIcon,
   HowToVote as HowToVoteIcon,
   CalendarMonth as CalendarMonthIcon,
   Forum as ForumIcon,
@@ -30,6 +31,7 @@ import {
 } from '@mui/icons-material';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { LegacyClubReactions } from '../features/fanclubs/LegacyClubReactions';
 import { Fans } from '../api/fans';
@@ -705,6 +707,7 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
   const [mediaUrls, setMediaUrls] = useLocalValue('');
   const [reportOpen, setReportOpen] = useLocalValue(null as number | null);
   const [reportReason, setReportReason] = useLocalValue('');
+  const [pendingDelete, setPendingDelete] = useLocalValue(null as { id: number; title: string } | null);
 
   const createMemory = useMutation({
     mutationFn: () => Fans.createClubMemory(artistId, {
@@ -737,6 +740,7 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
       void qc.invalidateQueries({ queryKey: ['fan-club-memories', artistId] });
       void qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
     },
+    onSettled: () => setPendingDelete(null),
   });
 
   const reportMut = useMutation({
@@ -794,9 +798,9 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
                               <IconButton
                                 size="small"
                                 aria-label="Eliminar recuerdo"
-                                onClick={() => deleteMut.mutate(memory.fcmId)}
+                                onClick={() => setPendingDelete({ id: memory.fcmId, title: memory.fcmTitle })}
                               >
-                                {createElement(VisibilityOffIcon, { fontSize: 'small' })}
+                                {createElement(DeleteOutlineIcon, { fontSize: 'small' })}
                               </IconButton>
                             </Tooltip>
                           </>
@@ -834,6 +838,17 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
           )}
         />
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => { if (pendingDelete) deleteMut.mutate(pendingDelete.id); }}
+        title="Eliminar recuerdo"
+        description={`Se eliminará «${pendingDelete?.title ?? ''}» del club. No se puede deshacer.`}
+        confirmLabel="Eliminar recuerdo"
+        severity="danger"
+        confirming={deleteMut.isPending}
+      />
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Nuevo recuerdo</DialogTitle>

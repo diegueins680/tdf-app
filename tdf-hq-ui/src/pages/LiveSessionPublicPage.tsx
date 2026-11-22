@@ -22,6 +22,7 @@ import PublicBrandBar from '../components/PublicBrandBar';
 import { LiveSessionIntakeForm } from './LiveSessionIntakePage';
 import { resolveApiBase } from '../config/apiBase';
 import { createAppTheme } from '../theme/appTheme';
+import { sessionContactDefaults } from '../session/sessionContactDefaults';
 
 /**
  * The public registration shell is always a dark navy surface, regardless of
@@ -47,6 +48,7 @@ export default function LiveSessionPublicPage() {
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const [lastValidatedCode, setLastValidatedCode] = useState('');
   const [verifiedPartyId, setVerifiedPartyId] = useState<number>();
+  const [verifiedEmail, setVerifiedEmail] = useState('');
   const canUseForm = codeStatus === 'valid' && accessCode.trim() === lastValidatedCode;
   const validationGeneration = useRef(0);
   const pendingValidation = useRef<AbortController | null>(null);
@@ -88,6 +90,9 @@ export default function LiveSessionPublicPage() {
       }
       if (generation !== validationGeneration.current) return;
       setVerifiedPartyId(Number(account.partyId));
+      setVerifiedEmail(sessionContactDefaults({
+        username: 'username' in account && typeof account.username === 'string' ? account.username : null,
+      }).email);
       setCodeStatus('valid');
       setLastValidatedCode(code);
     } catch {
@@ -184,7 +189,7 @@ export default function LiveSessionPublicPage() {
                       setValidationMessage(null);
                     }}
                     onBlur={() => {
-                      void validateAccessCode();
+                      if (!canUseForm) void validateAccessCode();
                     }}
                     placeholder="Pega el código recibido"
                     fullWidth
@@ -247,7 +252,7 @@ export default function LiveSessionPublicPage() {
                 )}
               </Stack>
               <Box component="fieldset" disabled={!canUseForm} sx={{ minWidth: 0, m: 0, p: 0, border: 0 }}>
-                <LiveSessionIntakeForm key={verifiedPartyId ?? 'unverified'} variant="public" draftOwner={verifiedPartyId} accessCode={canUseForm ? lastValidatedCode : undefined} />
+                <LiveSessionIntakeForm key={verifiedPartyId ?? 'unverified'} variant="public" draftOwner={verifiedPartyId} accessCode={canUseForm ? lastValidatedCode : undefined} contactEmailDefault={canUseForm ? verifiedEmail : undefined} />
               </Box>
             </Stack>
           </Paper>

@@ -212,8 +212,9 @@ it.each([{ initial: [] }, { initial: ['7'] }])('searches past the first fifty ar
   act(() => input.focus());
   fireEvent.change(input, { target: { value: 'Beyond' } });
   expect(input.value).toBe('Beyond');
+  // Wait for the debounced request before scanning the full initial option list.
+  await waitFor(() => expect(listArtistOptions).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'Beyond', signal: expect.any(AbortSignal) })));
   await screen.findByRole('option', { name: 'Beyond initial fifty · #51' });
-  expect(listArtistOptions).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'Beyond', signal: expect.any(AbortSignal) }));
   expect(input.value).toBe('Beyond');
   fireEvent.click(screen.getByRole('option', { name: 'Beyond initial fifty · #51' }));
   await waitFor(() => expect(listEvents).toHaveBeenLastCalledWith(expect.objectContaining({ artistIds: [...initial, '51'] })));
