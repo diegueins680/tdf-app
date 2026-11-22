@@ -6555,9 +6555,33 @@ async function integrationSource(ref, file) {
 // Retain both original published parents and additionally guard latest published main.
 const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1", "5a81672285dc9c03130fc9fd8355e2b4c58e9e12"];
 
+// EVT-VENUE-SEARCH-001 appends one migration after the studio gallery seed.
+// Earlier reviews are verified over the manifest without that entry.
+const VENUE_SEARCH_ENTRY = '2026-11-21_venue_search_sql';
+const withoutVenueSearch = manifest => (
+  { ...manifest, migrations: manifest.migrations.filter(row => row.id !== VENUE_SEARCH_ENTRY) });
+
+test('venue search appends its migration last, unchanged since its introduction, with the previous review nested', async () => {
+  const file = 'scripts/production-migrations.json';
+  const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const entry = manifest.migrations.at(-1);
+  assert.equal(entry.id, VENUE_SEARCH_ENTRY);
+  assert.equal(manifest.migrations.filter(row => row.id === VENUE_SEARCH_ENTRY).length, 1);
+  await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const { stdout } = await integrationExec('git', ['show', entry.introducedBy + ':' + entry.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), stdout);
+  const decisions = JSON.parse(await fs.readFile(
+    path.join(integrationRoot, 'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8')).decisions;
+  const tip = decisions.find(row => row.evidence?.file === file);
+  assert.equal(tip.evidence.valueCount, manifest.migrations.length);
+  assert.equal(tip.previousDecision.evidence.valueCount, manifest.migrations.length - 1);
+  assert.equal(tip.classification, tip.previousDecision.classification);
+  assert.equal(tip.disposition, tip.previousDecision.disposition);
+});
+
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const combined = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const combined = withoutVenueSearch(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
   assert.equal(combined.migrations.at(-1).id, '2026-11-07_studio_gallery');
   const actual = { ...combined, migrations: combined.migrations.slice(0, -1) };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
@@ -6591,7 +6615,7 @@ test('studio gallery appends its original migration and preserves both complete 
   const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
   const before = await integrationParent(base, file);
   const original = (await integrationParent(gallery, file)).migrations.at(-1);
-  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const current = withoutVenueSearch(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
   assert.equal(original.id, '2026-11-07_studio_gallery');
   assert.deepEqual(current, { ...before, migrations: [...before.migrations, original] });
   const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
