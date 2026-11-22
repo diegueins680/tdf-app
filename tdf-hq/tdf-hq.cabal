@@ -44,6 +44,9 @@ library
     TDF.Social.API
     TDF.Social.Server
     TDF.API.Chat
+    TDF.API.NotificationDelivery
+    TDF.Chat.Delivery
+    TDF.Server.NotificationDelivery
     TDF.API.SocialProfiles
     TDF.Social.Profiles
     TDF.API.SocialRelationships
@@ -248,6 +251,7 @@ library
     TDF.Server.TicketManualPayments
     TDF.Server.TicketPaymentReceipt
     TDF.Server.TicketTaxDocuments
+    TDF.Server.PublicBookingNotifications
     TDF.Server.TicketRefunds
     TDF.ServerLiveSessions
     TDF.ServerFeedback
@@ -417,6 +421,7 @@ test-suite tdf-hq-test
     TDF.LedgerPostingSpec
     TDF.MusicPublicationSpec
     TDF.InteractionWriteBudgetSpec
+    TDF.ChatDeliverySpec
     TDF.MusicPurchaseSpec
     TDF.StorageSecuritySpec
     TDF.MusicCredentialCacheSpec

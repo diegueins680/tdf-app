@@ -9,6 +9,7 @@ module TDF.API where
 import TDF.Commerce.DatafastClientIP (DatafastClientRequest)
 
 import qualified TDF.API.Chat as Chat
+import TDF.API.NotificationDelivery (NotificationDeliveryAPI)
 import TDF.VideoCampaigns (VideoCampaignAPI)
 import TDF.API.FanFollowing (FollowArtistAPI, UnfollowArtistAPI)
 import TDF.API.SocialRelationships (FollowersAPI, FollowingAPI, FriendsAPI, SuggestionsAPI, AddFriendAPI, RemoveFriendAPI, VCardAPI)
@@ -636,6 +637,7 @@ type ProtectedAPI =
   :<|> WhatsAppConsentAPI
   :<|> "social" :> SocialAPI
   :<|> ChatAPI
+  :<|> NotificationDeliveryAPI
   :<|> ChatKitSessionAPI
   :<|> TidalAgentAPI
   :<|> "social-sync" :> SocialSyncAPI
