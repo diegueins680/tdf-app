@@ -45,7 +45,7 @@ import {
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventRsvpFeed from '../components/events/EventRsvpFeed';
 import { canonicalEventUrl } from '../utils/eventSharing';
-import { resolveDirectoryPreviewImage } from '../utils/directoryPreviewImage';
+import { resolveDirectoryPreviewImage } from '../services/directoryPreviewImage';
 import ExpandablePreviewImage from '../components/directory/ExpandablePreviewImage';
 import appI18n from '../i18n';
 import { useAnalytics } from '../analytics/useAnalytics';

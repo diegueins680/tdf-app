@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-21T22:41:17.081Z",
+  "generatedAt": "2026-11-22T02:14:12.253Z",
   "repositoryRoot": ".",
-  "filesScanned": 2842,
+  "filesScanned": 2843,
   "candidateCount": 1491,
   "byClassification": {
     "dynamic-business-catalog": 977,
@@ -18482,7 +18482,7 @@
         "tdf-hq-ui/src/player/analytics.ts",
         "tdf-hq-ui/src/routes/protectedRoutes.tsx",
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
-        "tdf-hq-ui/src/utils/accessControl.test.ts"
+        "tdf-hq-ui/src/services/chatkit.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/input-list/[id].tsx",
@@ -67602,7 +67602,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "categories",
-      "line": 13,
+      "line": 14,
       "values": [
         "apparel",
         "vinyl",
@@ -67616,7 +67616,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        13
+        14
       ],
       "consumerCount": 72,
       "backendConsumers": [
@@ -73456,7 +73456,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 381,
+      "consumerCount": 396,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -73538,6 +73538,7 @@
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/api/uploadFailure.test.ts",
         "tdf-hq-ui/src/api/uploadFailure.ts",
+        "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx",
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
         "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
@@ -73545,21 +73546,20 @@
         "tdf-hq-ui/src/components/MarketplaceCartButton.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
         "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
+        "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
+        "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx",
         "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx",
         "tdf-hq-ui/src/components/reviews/ExperienceReviews.tsx",
         "tdf-hq-ui/src/contexts/CurrencyContext.test.ts",
         "tdf-hq-ui/src/contexts/CurrencyContext.tsx",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
-        "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
-        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
-        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx",
-        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.ts",
-        "tdf-hq-ui/src/hooks/useInstagramAuth.test.tsx",
-        "tdf-hq-ui/src/hooks/useInstagramAuth.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts"
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/bookings.tsx",
@@ -79695,7 +79695,7 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/playbackSession.test.ts",
-        "tdf-hq-ui/src/utils/tidalAgent.test.ts",
+        "tdf-hq-ui/src/services/tidalAgent.test.ts",
         "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js"
       ],
       "mobileConsumers": [
@@ -91109,7 +91109,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "switch-cases",
       "name": "category",
-      "line": 48,
+      "line": 40,
       "values": [
         "apparel",
         "vinyl",
@@ -91124,7 +91124,7 @@
       "valueCount": 9,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        48
+        40
       ],
       "consumerCount": 185,
       "backendConsumers": [
@@ -91328,7 +91328,7 @@
       "domain": "payments-finance",
       "kind": "array",
       "name": "partially_refunded",
-      "line": 101,
+      "line": 93,
       "values": [
         "Reembolsado parcialmente",
         "Partially refunded"
@@ -91336,7 +91336,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        101
+        93
       ],
       "consumerCount": 39,
       "backendConsumers": [
@@ -91409,7 +91409,7 @@
       "domain": "payments-finance",
       "kind": "array",
       "name": "refunded",
-      "line": 102,
+      "line": 94,
       "values": [
         "Reembolsado",
         "Refunded"
@@ -91417,7 +91417,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        102
+        94
       ],
       "consumerCount": 97,
       "backendConsumers": [
@@ -91544,7 +91544,7 @@
       "domain": "payments-finance",
       "kind": "array",
       "name": "refund",
-      "line": 126,
+      "line": 118,
       "values": [
         "Reembolso",
         "Refund"
@@ -91552,7 +91552,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        126
+        118
       ],
       "consumerCount": 240,
       "backendConsumers": [

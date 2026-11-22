@@ -14,7 +14,7 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import { ChatKit, useChatKit } from '@openai/chatkit-react';
 import { env, reportMissingEnv } from '../utils/env';
-import { createChatKitClientSecretFetcher } from '../utils/chatkit';
+import { createChatKitClientSecretFetcher } from '../services/chatkit';
 import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
 import { useChatKitScript } from '../hooks/useChatKitScript';

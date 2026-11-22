@@ -11,7 +11,8 @@ import { MerchReputation } from '../api/merchReputation';
 import { MerchReputationSummary } from '../components/merch/MerchReputationSummary';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { getAnalyticsClient } from '../analytics/posthog';
-import { merchCategoryLabel, formatMerchMoney, merchLanguage, resolveMerchImageUrl } from '../utils/merch';
+import { merchCategoryLabel, formatMerchMoney, merchLanguage } from '../utils/merch';
+import { resolveMerchImageUrl } from '../services/merchImage';
 import { useSession } from '../session/SessionContext';
 
 type Variant = NonNullable<MerchProduct['variants']>[number];

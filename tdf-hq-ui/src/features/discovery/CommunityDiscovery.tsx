@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Alert, Box, Button, Card, CardActionArea, CardContent, LinearProgress, MenuItem, Stack, TablePagination, TextField, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
-import { resolveDirectoryPreviewImage } from '../../utils/directoryPreviewImage';
+import { resolveDirectoryPreviewImage } from '../../services/directoryPreviewImage';
 import { isArtistPlaceholderImage } from '../../utils/artistFallbacks';
 import ArtistProfileImage from '../../components/ArtistProfileImage';
 import { Directory, type DirectorySearchQuery } from '../../api/directory';
