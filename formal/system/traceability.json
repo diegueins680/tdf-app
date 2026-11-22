@@ -29553,7 +29553,7 @@
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
     "scripts/__tests__/catalog-decision-history.test.mjs": "9ad3bbd3935b32fe1c9ebd8dc9c3a69ac14087b4476c1ef710af6b1ddbfa2bcd",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "af2e3fa20eadf4209a063b79229b04f7ba7323f5e6686ce8eb3712174ed207e8",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "612d9689d1ab163f31f4ec10a568734fa99bb2094de1407dab8ae973a65c768c",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -53920,7 +53920,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "af2e3fa20eadf4209a063b79229b04f7ba7323f5e6686ce8eb3712174ed207e8",
+      "sha256": "612d9689d1ab163f31f4ec10a568734fa99bb2094de1407dab8ae973a65c768c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
