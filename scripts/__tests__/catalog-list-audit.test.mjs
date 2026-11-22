@@ -6601,7 +6601,10 @@ test('studio gallery appends its original migration and preserves both complete 
   const original = (await integrationParent(gallery, file)).migrations.at(-1);
   const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
   assert.equal(original.id, '2026-11-07_studio_gallery');
-  assert.deepEqual(current, { ...before, migrations: [...before.migrations, original] });
+  // Later reviewed appends follow the gallery entry; the composition test
+  // above names each of them. The manifest up to the gallery is unchanged.
+  const throughGallery = { ...current, migrations: current.migrations.slice(0, before.migrations.length + 1) };
+  assert.deepEqual(throughGallery, { ...before, migrations: [...before.migrations, original] });
   const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
   assert.equal(await fs.readFile(path.join(integrationRoot, original.path), 'utf8'), stdout);
   for (const [reviewFile, key] of integrationFiles) {
