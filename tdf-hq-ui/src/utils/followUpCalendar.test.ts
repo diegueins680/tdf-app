@@ -1,4 +1,10 @@
-import { buildFollowUpIcs, buildGoogleCalendarUrl, toCalendarUtcStamp, type FollowUpCalendarEntry } from './followUpCalendar';
+import {
+  buildFollowUpIcs,
+  buildGoogleCalendarUrl,
+  buildRegistrationFollowUpCalendarEntry,
+  toCalendarUtcStamp,
+  type FollowUpCalendarEntry,
+} from './followUpCalendar';
 
 const entry: FollowUpCalendarEntry = {
   title: 'Seguimiento: Diego Saa · Llamar, confirmar; pago',
@@ -33,5 +39,26 @@ describe('follow-up calendar entries', () => {
     expect(unfolded).toContain('BEGIN:VALARM');
     expect(unfolded).toContain('TRIGGER:-PT10M');
     expect(ics.split('\r\n').every((line) => Array.from(line).length <= 74)).toBe(true);
+  });
+
+  it('builds a registration follow-up entry that links back to the dossier', () => {
+    const built = buildRegistrationFollowUpCalendarEntry({
+      registration: { crId: 12, crCourseSlug: 'produccion musical', crFullName: '  ', crEmail: 'a@b.co', crPhoneE164: '+593999' },
+      followUpId: 7,
+      nextFollowUpAt: '2026-12-20T15:30:00Z',
+      subject: 'Llamar',
+      notes: ' En un mes. ',
+      origin: 'https://tdfrecords.net',
+    });
+    expect(built).toEqual({
+      title: 'Seguimiento: a@b.co · Llamar',
+      details: 'a@b.co · +593999\n\nEn un mes.',
+      startAt: new Date('2026-12-20T15:30:00Z'),
+      url: 'https://tdfrecords.net/configuracion/inscripciones-curso?registration=12&slug=produccion%20musical',
+      uid: `course-follow-up-7-${Date.parse('2026-12-20T15:30:00Z')}@tdfrecords.net`,
+    });
+    expect(buildRegistrationFollowUpCalendarEntry({
+      registration: { crId: 1, crCourseSlug: 'x' }, followUpId: 1, nextFollowUpAt: 'not a date', notes: '',
+    })).toBeNull();
   });
 });

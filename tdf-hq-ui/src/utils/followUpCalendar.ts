@@ -83,7 +83,46 @@ export const buildFollowUpIcs = (entry: FollowUpCalendarEntry, now: Date = new D
   return `${lines.map(foldIcsLine).join('\r\n')}\r\n`;
 };
 
-export const downloadFollowUpIcs = (entry: FollowUpCalendarEntry, fileName: string) => {
+export interface RegistrationFollowUpSource {
+  registration: {
+    crId: number;
+    crCourseSlug: string;
+    crFullName?: string | null;
+    crEmail?: string | null;
+    crPhoneE164?: string | null;
+  };
+  followUpId: number;
+  nextFollowUpAt?: string | null;
+  subject?: string | null;
+  notes: string;
+  origin?: string;
+}
+
+// Calendar entry for a course registration follow-up, linking back to its dossier.
+export const buildRegistrationFollowUpCalendarEntry = ({
+  registration: reg,
+  followUpId,
+  nextFollowUpAt,
+  subject,
+  notes,
+  origin,
+}: RegistrationFollowUpSource): FollowUpCalendarEntry | null => {
+  const startAt = nextFollowUpAt ? new Date(nextFollowUpAt) : null;
+  if (!startAt || Number.isNaN(startAt.getTime())) return null;
+  const name = [reg.crFullName?.trim(), reg.crEmail?.trim()].find(Boolean) ?? `Inscripción #${reg.crId}`;
+  const contact = [reg.crEmail?.trim(), reg.crPhoneE164?.trim()].filter(Boolean).join(' · ');
+  return {
+    title: `Seguimiento: ${name}${subject ? ` · ${subject}` : ''}`,
+    details: [contact, notes.trim()].filter(Boolean).join('\n\n'),
+    startAt,
+    url: origin
+      ? `${origin}/configuracion/inscripciones-curso?registration=${reg.crId}&slug=${encodeURIComponent(reg.crCourseSlug)}`
+      : undefined,
+    uid: `course-follow-up-${followUpId}-${startAt.getTime()}@tdfrecords.net`,
+  };
+};
+
+export const downloadFollowUpIcs =(entry: FollowUpCalendarEntry, fileName: string) => {
   const blob = new Blob([buildFollowUpIcs(entry)], { type: 'text/calendar;charset=utf-8' });
   const href = URL.createObjectURL(blob);
   const link = document.createElement('a');

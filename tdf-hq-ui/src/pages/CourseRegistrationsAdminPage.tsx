@@ -36,7 +36,6 @@ import SaveIcon from '@mui/icons-material/Save';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import AlarmAddIcon from '@mui/icons-material/AlarmAdd';
-import EventIcon from '@mui/icons-material/Event';
 import ClearIcon from '@mui/icons-material/Clear';
 import UndoIcon from '@mui/icons-material/Undo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -59,7 +58,8 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { formatTimestampForDisplay, parseTimestamp } from '../utils/dateTime';
-import { buildGoogleCalendarUrl, downloadFollowUpIcs, type FollowUpCalendarEntry } from '../utils/followUpCalendar';
+import { buildRegistrationFollowUpCalendarEntry } from '../utils/followUpCalendar';
+import FollowUpCalendarActions from '../components/FollowUpCalendarActions';
 
 type StatusFilter = 'all' | 'pending_payment' | 'paid' | 'cancelled';
 type RegistrationSortKey = 'default' | 'name' | 'createdAt' | 'updatedAt' | 'course' | 'status' | 'source';
@@ -6943,25 +6943,6 @@ export default function CourseRegistrationsAdminPage() {
     globalThis.setTimeout(() => followUpReminderInputRef.current?.focus(), 150);
   };
 
-  const followUpCalendarEntry = (entry: CourseRegistrationFollowUpDTO): FollowUpCalendarEntry | null => {
-    const startAt = entry.crfNextFollowUpAt ? new Date(entry.crfNextFollowUpAt) : null;
-    if (!startAt || Number.isNaN(startAt.getTime()) || !selectedDossier) return null;
-    const reg = selectedDossier.reg;
-    const name = [reg.crFullName?.trim(), reg.crEmail?.trim()].find(Boolean) ?? `Inscripción #${reg.crId}`;
-    const subject = followUpSubjectLabel(entry);
-    const contact = [reg.crEmail?.trim(), reg.crPhoneE164?.trim()].filter(Boolean).join(' · ');
-    const url = typeof window === 'undefined'
-      ? undefined
-      : `${window.location.origin}/configuracion/inscripciones-curso?registration=${reg.crId}&slug=${encodeURIComponent(reg.crCourseSlug)}`;
-    return {
-      title: `Seguimiento: ${name}${subject ? ` · ${subject}` : ''}`,
-      details: [contact, entry.crfNotes.trim()].filter(Boolean).join('\n\n'),
-      startAt,
-      url,
-      uid: `course-follow-up-${entry.crfId}-${startAt.getTime()}@tdfrecords.net`,
-    };
-  };
-
   const handleReceiptUpload = (files: DriveFileInfo[]) => {
     const file = files[0];
     if (!file) return;
@@ -9686,7 +9667,10 @@ export default function CourseRegistrationsAdminPage() {
                                 ? trimmedFollowUpAttachmentName
                                 : `Adjunto de ${followUpActionLabel}`;
                               const isFollowUpBeingEdited = followUpForm.editingId === entry.crfId;
-                              const followUpCalendar = followUpCalendarEntry(entry);
+                              const followUpCalendar = selectedDossier && buildRegistrationFollowUpCalendarEntry({
+                                registration: selectedDossier.reg, followUpId: entry.crfId, nextFollowUpAt: entry.crfNextFollowUpAt,
+                                subject: followUpSubjectLabel(entry), notes: entry.crfNotes, origin: globalThis.location?.origin,
+                              });
                               const showFollowUpReminderDate = !sharedFollowUpNextIsInSummary && !sharedFollowUpNextLabel;
 
                               return (
@@ -9750,36 +9734,12 @@ export default function CourseRegistrationsAdminPage() {
                                       </PrivateAttachmentLink>
                                     )}
                                     {followUpCalendar && (
-                                      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                                        {showFollowUpReminderDate && (
-                                          <Chip
-                                            size="small"
-                                            icon={<AlarmAddIcon />}
-                                            color={followUpCalendar.startAt.getTime() < Date.now() ? 'default' : 'warning'}
-                                            variant="outlined"
-                                            label={`Próximo: ${formatDate(entry.crfNextFollowUpAt)}`}
-                                          />
-                                        )}
-                                        <Button
-                                          size="small"
-                                          variant="text"
-                                          startIcon={<EventIcon />}
-                                          href={buildGoogleCalendarUrl(followUpCalendar)}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          aria-label={`Añadir recordatorio de ${followUpActionLabel} a Google Calendar`}
-                                        >
-                                          Google Calendar
-                                        </Button>
-                                        <Button
-                                          size="small"
-                                          variant="text"
-                                          onClick={() => downloadFollowUpIcs(followUpCalendar, `seguimiento-${entry.crfId}`)}
-                                          aria-label={`Descargar recordatorio de ${followUpActionLabel} para Apple Calendar u Outlook`}
-                                        >
-                                          Apple / Outlook (.ics)
-                                        </Button>
-                                      </Stack>
+                                      <FollowUpCalendarActions
+                                        entry={followUpCalendar}
+                                        dateLabel={showFollowUpReminderDate ? formatDate(entry.crfNextFollowUpAt) : undefined}
+                                        actionLabel={followUpActionLabel}
+                                        fileName={`seguimiento-${entry.crfId}`}
+                                      />
                                     )}
                                   </Stack>
                                 </Paper>
