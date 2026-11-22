@@ -94,6 +94,7 @@
       "e2e/web/payment-choices-contact.spec.mjs",
       "e2e/web/payment-field-errors.spec.mjs",
       "e2e/web/persona-public.spec.mjs",
+      "e2e/web/public-event-ticket-cards.spec.mjs",
       "e2e/web/public-text-reflow.spec.mjs",
       "e2e/web/public-welcome.spec.mjs",
       "e2e/web/radio-navigation.spec.mjs",
@@ -165,7 +166,6 @@
       "scripts/__tests__/build-trust.test.mjs",
       "scripts/__tests__/calendar-http-runtime.mjs",
       "scripts/__tests__/campaign-tiktok-ui.test.mjs",
-      "scripts/__tests__/catalog-decision-history.test.mjs",
       "scripts/__tests__/catalog-list-audit.test.mjs",
       "scripts/__tests__/checkout-amount-postgres.mjs",
       "scripts/__tests__/checkout-money-http.mjs",
@@ -300,7 +300,6 @@
       "scripts/build-ui-with-install.sh",
       "scripts/capture-feature-audit-visuals.mjs",
       "scripts/capture-music-directory-visuals.mjs",
-      "scripts/catalog-decision-history.mjs",
       "scripts/catalog-list-audit.mjs",
       "scripts/check-admin-guards.py",
       "scripts/check-api-availability.mjs",
@@ -368,7 +367,6 @@
       "scripts/interactions/test-schema.sh",
       "scripts/lib/alloy-controls.mjs",
       "scripts/lib/auth_throttle_http.py",
-      "scripts/lib/catalog-decision-history.mjs",
       "scripts/lib/compiled-api-surface.mjs",
       "scripts/lib/continuous-improvement-loop-verify.mjs",
       "scripts/lib/continuous-improvement-loop.mjs",
@@ -665,6 +663,7 @@
       "scripts/test-provider-retry-runtime.sh",
       "scripts/test-public-booking-http-concurrency.sh",
       "scripts/test-public-booking-tentative-idempotency-migration.sh",
+      "scripts/test-public-event-card-tickets-http.py",
       "scripts/test-public-route-denial.py",
       "scripts/test-public-routes.py",
       "scripts/test-public-ticket-checkout-runtime-migration.sh",
@@ -2604,6 +2603,7 @@
       "tdf-hq/src/TDF/Server/PaymentCapabilities.hs",
       "tdf-hq/src/TDF/Server/ProviderExecution.hs",
       "tdf-hq/src/TDF/Server/ProviderTransport.hs",
+      "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
       "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
       "tdf-hq/src/TDF/Server/Reviews.hs",
       "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
@@ -3324,7 +3324,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "7881225540928b2134b6aaf82a3f7d77570dd99b6ca1e36c69678065ee38f086",
+      "sha256": "df61981b457df2d5f221d20819451734938c7e851af760a3720113debdbf4ead",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3796,6 +3796,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-756cf21bbc77e83f",
+      "path": "e2e/web/public-event-ticket-cards.spec.mjs",
+      "sha256": "89313c86af9093c9e204f3a934003b0e90229e9d6d2dbab8d0fcac68b4566c0a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-e5280fb6cf4274bc",
       "path": "e2e/web/public-text-reflow.spec.mjs",
       "sha256": "16fd028ff663f392c6145e65866eb7ba1aeb1c82835307e3518c4a55578fd31d",
@@ -4086,7 +4092,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "5fe81add4eef1c0bfddb256fa9425ec65865e2e9ae8025950879f49c60f814a6",
+      "sha256": "3b75451201352914e57227c19008fee7c8e8747ff00bf81ae3a43a7a3512fa6b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4162,15 +4168,9 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-06d2d6277df17fbc",
-      "path": "scripts/__tests__/catalog-decision-history.test.mjs",
-      "sha256": "9ad3bbd3935b32fe1c9ebd8dc9c3a69ac14087b4476c1ef710af6b1ddbfa2bcd",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "c3c4072d11c1b643d0f678b14f3db2557060f91048c5730006abb5bd5354f186",
+      "sha256": "c42453218ea4e89aae9b5da80d93cc413adc4196522073c91ef278e4a1decad3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4972,12 +4972,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-ca761aa510f5ae58",
-      "path": "scripts/catalog-decision-history.mjs",
-      "sha256": "5582b801a0cbbbb9bd754dc9a7a89a10340ea768083157e0ec136fbbcef7fb9a",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-74289e89f4a7d171",
       "path": "scripts/catalog-list-audit.mjs",
       "sha256": "0fe478a23657510ee4b447c089b1db245b055075e2fbe3e7802bdf4c418e66c1",
@@ -5118,7 +5112,7 @@
     {
       "id": "SURFACE-dcc180d2a4916e98",
       "path": "scripts/continuous-improvement-loop-verify.mjs",
-      "sha256": "cda066e5c99afe1f8d2018e559813afaf8814216c23ad7df7cb2b6d67a46be76",
+      "sha256": "2c25693b5cc8608695c2353f3a7e31f5ec918e02fbd670bb6f0bfaa2f2e7d96c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5377,12 +5371,6 @@
       "id": "SURFACE-e51d4870cffa2db7",
       "path": "scripts/lib/auth_throttle_http.py",
       "sha256": "c30b34ba0e5057b013ffd601421ed462c61a71e61e51e25f233e130d3c915989",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-87f61f7e51faf3c1",
-      "path": "scripts/lib/catalog-decision-history.mjs",
-      "sha256": "57c2b822b62515f22aaf324db783d46a0a83229b5ec3c32fe403da7444f383f7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7159,6 +7147,12 @@
       "id": "SURFACE-6602092233544384",
       "path": "scripts/test-public-booking-tentative-idempotency-migration.sh",
       "sha256": "38afada9051290eabf477e2558badbcf0a5c6a0207761f82a7a364db4018030b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3644e59046fed6e3",
+      "path": "scripts/test-public-event-card-tickets-http.py",
+      "sha256": "32d44391832275eafe1fd9db7b8e425909f61aeab4c2233e7bbe67889073cdc8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9228,7 +9222,7 @@
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "61c417f97c4915a2a3a09cc59cf731fef5a451cce1e59bc2304a8a0498dbbc8d",
+      "sha256": "25e32c48510e880ef653fcdae775faa63d77ba8ccb1775612191c0d116c71efc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12720,13 +12714,13 @@
     {
       "id": "SURFACE-d4bbd15313dd4547",
       "path": "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
-      "sha256": "c6cedd57956d15064bd06ef0ef34446c7b23649b97b4bab8e395ec23d55e5f5c",
+      "sha256": "4bee42296f99eb3ec62c521b1100e697015da025862383e1320f4db68af50b5f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-d8426c3557e41bc4",
       "path": "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
-      "sha256": "bb3924027457e03a3fc80a02db6471d91c337c06ac0e257af71093bf499347ed",
+      "sha256": "0804ec845122bebf1c656def01be46e236cc7b755c2d3146094375c9021a4cbd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18240,7 +18234,7 @@
     {
       "id": "SURFACE-3ff9ad29b119eeb6",
       "path": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
-      "sha256": "6a299ff4d440fd6abc65602f88049606e79becc9b749db8871f7e5625b567062",
+      "sha256": "2e0495d75a099784e39a7cc793d57b3e90183c7892ff475de6cf22b16da81a92",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18736,6 +18730,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-47563c71827743f5",
+      "path": "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
+      "sha256": "9ec708b9886bc37b131a48003a35a2ae4ca97f1b09a2b78bd9d52587f5b10a6f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f67b06f0b5eec0fc",
       "path": "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
       "sha256": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
@@ -18768,7 +18768,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "cb35d49f3edb69bac4d2adc09ce09bc93d8bcb54f16f2cbdb2e0d8b8795f4a5d",
+      "sha256": "0ba938a52a4073212ea97db71ba9f2433c98ff41b783fd7217f111de5681d506",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19152,7 +19152,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "sha256": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19230,7 +19230,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "7ef32ba3699ea33cbe3c1728f8f32db4351651311c8d99fbdeaa75720a936455",
+      "sha256": "3025b33657e3570185cc65d65def21673b7c513e63810d1a870d40a76a5d07c5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23498,7 +23498,7 @@
     },
     {
       "path": "docs/catalog-persistence/README.md",
-      "sha256": "808e0f0fa3f86525cfc7ef729e24ecf9850c6b58c88bb73b1c18b6ba1376b555",
+      "sha256": "a373acea2f4f04a453c52a38cd1c77383586c1c5f75ca8f8f008a0e7c774f604",
       "authority": "inferred",
       "authorityBasis": "Status: implementation in progress. This directory records the immutable baseline, architecture,",
       "kind": "requirement-candidate"
@@ -32346,7 +32346,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "fe085ac7a33b8bdf2110b368b769c3a209c9502fa3a72a9d94ec15c33bb741d6",
+      "sha256": "599b00e1814192f2e6f7c41594c9203ebf1a36e2d08fc7c5609ed1a36a9429a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
