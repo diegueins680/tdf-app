@@ -6624,7 +6624,7 @@ test('My tickets retains both complete published review graphs and immutable mig
   const assertParent = async (ref) => {
     for (const [file, key] of integrationFiles) {
       const current = integrationCurrentFiles.get(file)?.value
-        ?? JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+        ?? JSON.parse(await integrationCurrentText(file, 'utf8'));
       const before = await integrationParent(ref, file);
       for (const row of before[key]) {
         assert.ok(integrationFind(current, row), `Lost whole ticket parent object: ${ref}:${file}`);
@@ -6686,7 +6686,7 @@ test('current My tickets mirror matches its generator and rejects the prior main
     await integrationExec('git', ['add', '--', file], { cwd: repo });
     const report = JSON.parse(await fs.readFile(path.join(integrationRoot, 'docs/catalog-persistence/reports/static-list-inventory.json'), 'utf8'));
     const ids = new Set(report.candidates.filter(row => row.file === file).map(row => row.id));
-    const register = JSON.parse(await fs.readFile(path.join(integrationRoot, 'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
+    const register = readExpandedDecisions(integrationRoot);
     const selected = register.decisions.filter(row => ids.has(row.id));
     assert.equal(selected.length, ids.size);
     const current = selected.find(row => row.evidence?.name === 'mobileFeatureRegistry');
