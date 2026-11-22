@@ -9620,7 +9620,12 @@
     {
       "id": "social.tickets",
       "parentId": "social.events",
-      "webRoute": null,
+      "webRoute": "/mis-entradas",
+      "requiredAuth": "optional",
+      "description": {
+        "es": "Entradas compradas con la cuenta y, en la web, las compradas en este navegador.",
+        "en": "Tickets bought with the account and, on the web, those bought in this browser."
+      },
       "routeType": "important-submodule",
       "classification": "important-submodule",
       "label": {
