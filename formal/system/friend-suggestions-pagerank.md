@@ -120,7 +120,8 @@ reals, bounded graphs, one step), **bounded model** (Alloy, graph structure only
 
 ## Departures from the approved proposal
 
-1. **No feature-registry entry.** The gate is the environment variable only. A registry
+1. **No feature-registry entry.** The gate is the environment variable only, listed
+   with the other backend boolean controls in `ops/hetzner/inspect-runtime.py`. A registry
    entry would change the generated Mobile registry, and the behaviour has no route or
    screen of its own.
 2. **The response field is optional and absent on fallback entries**, so the fallback

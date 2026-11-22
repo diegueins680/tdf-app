@@ -4017,7 +4017,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "3a5ac05d5e1333ef9891090641ad1eaa4a47f3714c82b82806355de8d653b20d",
+      "sha256": "86d79c57026c84527b53ea193ae1b0fb4046b507ce333a53201449e00b7a8fb1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31779,7 +31779,7 @@
     },
     {
       "path": "formal/system/friend-suggestions-pagerank.md",
-      "sha256": "51c5cdce060680a99ecc2d05c41a8549c658f40b79201f68467975c6041488ad",
+      "sha256": "77ee954209860248f6b9edfd726d4ba42c6a040cf5db9fcac385f9e341d7aae8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
