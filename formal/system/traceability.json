@@ -28979,7 +28979,8 @@
         "tdf-hq/sql/2026-11-21_school_schedule_occupancy_rollback.sql",
         "tdf-hq-ui/src/features/school/LessonSlotSuggestions.tsx",
         "tdf-hq-ui/src/features/school/slotSuggestionHelpers.ts",
-        "tdf-hq-ui/src/pages/ClassesPage.tsx"
+        "tdf-hq-ui/src/pages/ClassesPage.tsx",
+        "tdf-hq-ui/src/api/trials.ts"
       ],
       "tests": [
         "tdf-hq/test/TDF/Trials/SlotSuggestionsSpec.hs",
@@ -30062,6 +30063,7 @@
     "tdf-hq-ui/src/api/socialEvents.test.ts": "94e606bd6901c34bcf460a614294be9f4eb027c39b9ef2110e55df65aef5962b",
     "tdf-hq-ui/src/api/socialEvents.ts": "61c417f97c4915a2a3a09cc59cf731fef5a451cce1e59bc2304a8a0498dbbc8d",
     "tdf-hq-ui/src/api/socialV2.test.ts": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
+    "tdf-hq-ui/src/api/trials.ts": "81a2d1a7b1df340c1c7f9e624750de8e1c1dfc7fa286d6055c459077f00d75fa",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
     "tdf-hq-ui/src/api/uploadFailure.test.ts": "f1000f520cc6cfdc88fad9fbb03329ed4b58f93bc15d8b07928f54c90a69bb6e",
     "tdf-hq-ui/src/api/uploadFailure.ts": "634dd14ff7c3b25258bc4017cc6a82929675e517518170bd390877342313cfd1",
@@ -51786,6 +51788,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/api/trials.ts": [
+      {
+        "requirement": "SCHOOL-SLOT-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/Trials/SlotSuggestionsSpec.hs": [
       {
         "requirement": "SCHOOL-SLOT-SUGGESTION-001",
@@ -64123,7 +64131,12 @@
       "path": "tdf-hq-ui/src/api/trials.ts",
       "sha256": "81a2d1a7b1df340c1c7f9e624750de8e1c1dfc7fa286d6055c459077f00d75fa",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SCHOOL-SLOT-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9bac22f287db5deb",
@@ -91199,7 +91212,6 @@
     "SURFACE-44b36f2b091d43e1",
     "SURFACE-9e922e0be55cb4d9",
     "SURFACE-4db04fec7552683c",
-    "SURFACE-356a0fb82dec0531",
     "SURFACE-8843dbd0dcd5f79a",
     "SURFACE-8070ded38d77e27b",
     "SURFACE-7ea641b5f7015bf3",
@@ -93559,7 +93571,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "052d3561721dcb8f150232bcb69c528dad23107e7850e8ec857eb6d0ea2daca8",
+      "sourceSha256": "4618a5c9c137c9b0dd143ad8ab325457fa6d9355199ff030f740b90156061f6a",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -93587,7 +93599,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "052d3561721dcb8f150232bcb69c528dad23107e7850e8ec857eb6d0ea2daca8",
+      "sourceSha256": "4618a5c9c137c9b0dd143ad8ab325457fa6d9355199ff030f740b90156061f6a",
       "definition": {
         "states": [
           "absent",
@@ -93617,7 +93629,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "052d3561721dcb8f150232bcb69c528dad23107e7850e8ec857eb6d0ea2daca8",
+      "sourceSha256": "4618a5c9c137c9b0dd143ad8ab325457fa6d9355199ff030f740b90156061f6a",
       "definition": {
         "export": [
           "queued",
