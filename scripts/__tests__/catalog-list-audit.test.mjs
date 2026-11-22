@@ -6560,14 +6560,20 @@ const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26
 
 // Course follow-up reminders append one migration after the studio gallery.
 // Verify it is the original, unchanged entry, then compare the rest as before.
+// Shared location and genre filters (TAX-FILTER-001) then append one more,
+// verified the same way and removed first.
 const COURSE_REMINDER_ENTRY = '2026-11-20_course_follow_up_reminder_delivery';
-async function withoutCourseReminder(manifest) {
+const TAXONOMY_FILTERS_ENTRY = '2026-11-21_location_genre_filters';
+async function withoutAppendedEntry(manifest, id) {
   const appended = manifest.migrations.at(-1);
-  if (appended?.id !== COURSE_REMINDER_ENTRY) return manifest;
+  if (appended?.id !== id) return manifest;
   await integrationExec('git', ['merge-base', '--is-ancestor', appended.introducedBy, 'HEAD'], { cwd: integrationRoot });
   const { stdout } = await integrationExec('git', ['show', appended.introducedBy + ':' + appended.path], { cwd: integrationRoot });
   assert.equal(await fs.readFile(path.join(integrationRoot, appended.path), 'utf8'), stdout);
   return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
+}
+async function withoutCourseReminder(manifest) {
+  return withoutAppendedEntry(await withoutAppendedEntry(manifest, TAXONOMY_FILTERS_ENTRY), COURSE_REMINDER_ENTRY);
 }
 
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
@@ -6693,8 +6699,11 @@ test('current My tickets mirror matches its generator and rejects the prior main
     assert.equal(selected.length, ids.size);
     const current = selected.find(row => row.evidence?.name === 'mobileFeatureRegistry');
     assert.ok(current);
-    assert.equal(current.id, '105fd7b2786498f6bb56');
-    assert.equal(current.previousDecision.id, 'ea29c6e8a6cd165802a8');
+    // The taxonomy filters successor (one appended feature) keeps the My
+    // tickets review whole as its predecessor.
+    assert.equal(current.id, 'd2149b0cbd417238e171');
+    assert.equal(current.previousDecision.id, '105fd7b2786498f6bb56');
+    assert.equal(current.previousDecision.previousDecision.id, 'ea29c6e8a6cd165802a8');
     const decisions = path.join(temporary, 'decisions.json');
     await fs.writeFile(decisions, JSON.stringify(selected));
     const args = [path.join(integrationRoot, 'scripts/catalog-list-audit.mjs'), '--root', repo, '--decisions', decisions, '--fail-on-unreviewed'];
