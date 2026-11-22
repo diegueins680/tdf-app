@@ -21866,13 +21866,15 @@
         "tdf-hq/src/TDF/Email.hs",
         "tdf-hq/src/TDF/Email/Service.hs",
         "tdf-hq-ui/src/components/notificationTarget.ts",
-        "tdf-mobile/src/navigation/notificationTarget.ts"
+        "tdf-mobile/src/navigation/notificationTarget.ts",
+        "tdf-hq-ui/src/pages/DomoVenuePage.tsx"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-booking-tentative-idempotency-migration.sh",
-        "tdf-hq-ui/src/components/notificationTarget.test.ts"
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx"
       ],
       "formalModels": [],
       "verification": "publicBookingSqlConflict is tested in tdf-hq/test/TDF/ServerSpec.hs; the HTTP concurrency script drives concurrent public checkouts; the rest is read from the handlers.",

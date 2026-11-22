@@ -21867,13 +21867,15 @@
         "tdf-hq/src/TDF/Email.hs",
         "tdf-hq/src/TDF/Email/Service.hs",
         "tdf-hq-ui/src/components/notificationTarget.ts",
-        "tdf-mobile/src/navigation/notificationTarget.ts"
+        "tdf-mobile/src/navigation/notificationTarget.ts",
+        "tdf-hq-ui/src/pages/DomoVenuePage.tsx"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-booking-tentative-idempotency-migration.sh",
-        "tdf-hq-ui/src/components/notificationTarget.test.ts"
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx"
       ],
       "formalModels": [],
       "verification": "publicBookingSqlConflict is tested in tdf-hq/test/TDF/ServerSpec.hs; the HTTP concurrency script drives concurrent public checkouts; the rest is read from the handlers.",
@@ -30226,6 +30228,8 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "69d2e5c5578e6a197df30ed9a19b82e36fd3a207c26bf6d2358b922a94c673a1",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "8291bfa98091297a5b96ca67cf1f2b822bd8a4470d83a19fae59ff99a7682074",
     "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "cf84798fc9aa8afdad0af5272c6d1b4ba84f892325d35be8d7fc509ac174c1ab",
+    "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx": "356168a13ba1aca4beb81ee07518ee2ec29d7b8b3eda55d3a512c2236dee873a",
+    "tdf-hq-ui/src/pages/DomoVenuePage.tsx": "69476756de4f5c677584aa8ba74a51738779c8d499294620526f866529f4d788",
     "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx": "c0d2368f5146b8e0ed3552c6e8b98ce50be7ed215a88cc10092f7034843dc913",
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": "ef0bc404a0629dd450f959bfc86230b0d3c7bf08f6de74adb3e73a40b49cd4d9",
     "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx": "3b706df13cadd3dfa75ca932202c6dbc44f87c2146df911918c44e2d4c4adcfd",
@@ -48371,6 +48375,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/pages/DomoVenuePage.tsx": [
+      {
+        "requirement": "BOOK-PUBLIC-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-public-booking-http-concurrency.sh": [
       {
         "requirement": "BOOK-PUBLIC-INTAKE-001",
@@ -48378,6 +48388,12 @@
       }
     ],
     "scripts/test-public-booking-tentative-idempotency-migration.sh": [
+      {
+        "requirement": "BOOK-PUBLIC-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx": [
       {
         "requirement": "BOOK-PUBLIC-INTAKE-001",
         "relationship": "tests"
@@ -68828,14 +68844,24 @@
       "path": "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx",
       "sha256": "356168a13ba1aca4beb81ee07518ee2ec29d7b8b3eda55d3a512c2236dee873a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "BOOK-PUBLIC-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b81f0abcff43675c",
       "path": "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
       "sha256": "69476756de4f5c677584aa8ba74a51738779c8d499294620526f866529f4d788",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "BOOK-PUBLIC-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-069f0007a6d5497d",
@@ -90976,8 +91002,6 @@
     "SURFACE-857a51643aefc9ce",
     "SURFACE-cc7e604a9ece48cd",
     "SURFACE-09fec2498cbd88bf",
-    "SURFACE-a7de3e18000e0445",
-    "SURFACE-b81f0abcff43675c",
     "SURFACE-069f0007a6d5497d",
     "SURFACE-29fec1655a519178",
     "SURFACE-378a6bc30de606b4",
@@ -93198,7 +93222,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8b96dfb2d8556be5b947159a3246b50961759d148cebf28e84db92fd99413804",
+      "sourceSha256": "a96312a12c5e07e069ad30df61a2e8c408f0138ad4990662b76088b29e063709",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -93226,7 +93250,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8b96dfb2d8556be5b947159a3246b50961759d148cebf28e84db92fd99413804",
+      "sourceSha256": "a96312a12c5e07e069ad30df61a2e8c408f0138ad4990662b76088b29e063709",
       "definition": {
         "states": [
           "absent",
@@ -93256,7 +93280,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8b96dfb2d8556be5b947159a3246b50961759d148cebf28e84db92fd99413804",
+      "sourceSha256": "a96312a12c5e07e069ad30df61a2e8c408f0138ad4990662b76088b29e063709",
       "definition": {
         "export": [
           "queued",
