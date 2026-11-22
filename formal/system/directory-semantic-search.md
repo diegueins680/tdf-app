@@ -184,14 +184,25 @@ Assumptions the proofs rest on: quality, availability and reputation are in [0, 
 future (otherwise the activity term leaves [0, 1], as it does today); distances are not
 negative.
 
-## Open for the owner
+## Owner decisions
 
-- Whether to let similarity admit documents that fail the text filter. As built it
-  only reorders, and its weight is .03 of the score against .24 between title tiers.
-- The values in the constants table can change without touching the proofs, except the
-  semantic weight and the clamp.
-- Enabling the flag in production, after the migration is applied there.
+Taken on 2026-11-22, each the recommended default:
+
+- Similarity only reorders documents that pass the text filter; it does not admit.
+  Its weight is .03 of the score against .24 between title tiers, so the visible
+  effect is small by design. Admission is not planned in this requirement.
+- The constants stand as built, including the query cache retention of 30 days and
+  5000 rows. All can change without touching the proofs except the semantic weight and
+  the clamp.
+- The pattern-match redaction of contact details stands.
+- A page ordered with a query embedding followed by one ordered without it may repeat
+  or skip an item; accepted.
+- The flag stays off in production. Turning it on is a separate, explicit decision
+  after the migration is applied there.
+
+## Still open
+
 - A changed embedding model with another dimension needs a migration; until then the
   feature stays inert.
-- The redaction of contact details is heuristic.
-- No HTTP-level test drives the route with the flag on.
+- No HTTP-level test drives the route with the flag on, no test calls the real
+  provider, and the PostgreSQL fixtures are classified documents, not profiles.
