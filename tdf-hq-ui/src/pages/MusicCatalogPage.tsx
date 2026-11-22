@@ -16,7 +16,11 @@ import { useDeferredValue, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { musicReleases } from '../api/musicReleases';
+import { Taxonomy } from '../api/taxonomy';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import TaxonomyFilterBar from '../features/taxonomyFilters/TaxonomyFilterBar';
+import { useProfileCityDefault } from '../features/taxonomyFilters/useProfileCityDefault';
+import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from '../features/taxonomyFilters/useTaxonomyFilters';
 
 const PAGE_SIZE = 24;
 const MAX_PAGE = Math.floor(Number.MAX_SAFE_INTEGER / PAGE_SIZE);
@@ -29,15 +33,28 @@ export default function MusicCatalogPage() {
   const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 && requestedPage <= MAX_PAGE ? requestedPage : 1;
   // Defer the query and page together, avoiding a request for the previous
   // search at the newly reset page while the user edits the search field.
-  const request = useMemo(() => ({ query: query.trim(), page }), [query, page]);
+  // TAX-FILTER-001: releases follow the shared location and genre filters
+  // (a release's genres, or its artist's; its artist's location).
+  const taxonomyOptions = useTaxonomyFilterOptions();
+  useProfileCityDefault(taxonomyOptions.data);
+  const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true });
+  const taxonomyKey = JSON.stringify(taxonomyFilters.selection);
+  const request = useMemo(() => ({ query: query.trim(), page, taxonomy: taxonomyFilters.selection }),
+    [query, page, taxonomyKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const deferredRequest = useDeferredValue(request);
   const changingSearch = request !== deferredRequest;
   const releases = useQuery({
-    queryKey: ['music-release-catalog', deferredRequest.query, deferredRequest.page],
+    queryKey: ['music-release-catalog', deferredRequest.query, deferredRequest.page, JSON.stringify(deferredRequest.taxonomy)],
     queryFn: ({ signal }) => musicReleases.listPublic(deferredRequest.query, undefined, {
-      limit: PAGE_SIZE + 1, offset: (deferredRequest.page - 1) * PAGE_SIZE, signal,
+      limit: PAGE_SIZE + 1, offset: (deferredRequest.page - 1) * PAGE_SIZE, signal, taxonomy: deferredRequest.taxonomy,
     }),
     retry: false,
+  });
+  const facets = useQuery({
+    queryKey: ['music-release-catalog', 'facets', deferredRequest.query, JSON.stringify(deferredRequest.taxonomy)],
+    queryFn: ({ signal }) => Taxonomy.musicReleaseFacets(deferredRequest.taxonomy, deferredRequest.query, signal),
+    retry: false,
+    staleTime: 60_000,
   });
   // One extra authorized row establishes whether another page exists without
   // an additional count endpoint. Offsets advance by displayed rows, not 25.
@@ -62,6 +79,7 @@ export default function MusicCatalogPage() {
         return next;
       }, { replace: true });
     }} inputProps={{ maxLength: 200 }} InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }} />
+    <TaxonomyFilterBar idPrefix="music" filters={taxonomyFilters} options={taxonomyOptions.data} optionsError={taxonomyOptions.isError} facets={facets.data} />
     <Box role="region" aria-label="Resultados musicales" aria-busy={pending}>
       {(releases.isLoading || changingSearch) && <Box display="grid" sx={{ placeItems: 'center' }}><CircularProgress aria-label="Buscando lanzamientos" /></Box>}
       {!changingSearch && releases.isError && <Alert severity="warning" action={<Button onClick={() => void releases.refetch()} disabled={pending} aria-label="Reintentar catálogo">Reintentar</Button>}>El catálogo musical no está disponible en este momento.</Alert>}

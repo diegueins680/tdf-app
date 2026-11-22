@@ -8,6 +8,11 @@ import { fireEvent, waitFor } from '@testing-library/react';
 const search = jest.fn(async () => []);
 const clearPresence = jest.fn(async () => undefined);
 jest.unstable_mockModule('../api/radio', () => ({ RadioAPI: { search, clearPresence, listAutoStopOptions: jest.fn(async () => []) } }));
+jest.unstable_mockModule('../api/taxonomy', () => ({
+  Taxonomy: { filterOptions: jest.fn(async () => ({ countries: [], regions: [], cities: [], genres: [] })), radioFacets: jest.fn(async () => ({})) },
+  appendTaxonomyParams: (params: URLSearchParams) => params,
+}));
+jest.unstable_mockModule('../api/fans', () => ({ Fans: { getProfile: jest.fn(async () => ({})) } }));
 jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: { listItems: jest.fn(async () => ({ items: [], total: 0 })) } }));
 jest.unstable_mockModule('../utils/tidalAgent', () => ({ generateTidalCode: jest.fn() }));
 const { Slider } = await import('@mui/material');

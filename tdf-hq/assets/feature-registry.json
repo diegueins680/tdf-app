@@ -876,6 +876,77 @@
       ]
     },
     {
+      "id": "taxonomy.genre-suggestions",
+      "parentId": "directory.admin",
+      "webRoute": "/admin/generos",
+      "routeType": "primary",
+      "classification": "primary-destination",
+      "label": {
+        "es": "Sugerencias de géneros",
+        "en": "Genre suggestions"
+      },
+      "synonyms": {
+        "es": [
+          "géneros musicales",
+          "subgéneros",
+          "catálogo de géneros"
+        ],
+        "en": [
+          "music genres",
+          "subgenres",
+          "genre catalog"
+        ]
+      },
+      "keywords": [
+        "genres",
+        "taxonomy",
+        "suggestions",
+        "review"
+      ],
+      "description": {
+        "es": "Aprueba, rechaza o fusiona los géneros que sugieren los artistas.",
+        "en": "Approve, reject or merge the genres artists suggest."
+      },
+      "navigationGroup": "admin",
+      "icon": "verified-user",
+      "breadcrumb": [
+        "directory.search",
+        "directory.admin"
+      ],
+      "requiredAuth": "authenticated",
+      "requiredRoles": [
+        "Admin"
+      ],
+      "requiredModules": [
+        "Admin"
+      ],
+      "permissions": {
+        "discover": {},
+        "view": {},
+        "administer": {}
+      },
+      "recordScope": "admin-audited-review",
+      "globalMenu": true,
+      "favoriteEligible": true,
+      "pinEligible": true,
+      "recentBehavior": "record",
+      "mobilePresentation": {
+        "kind": "web-only",
+        "destination": null,
+        "documentedException": "Genre suggestion review is an administrative catalog decision handled in the responsive web control surface."
+      },
+      "accessRequestEligible": false,
+      "apiScopes": [
+        {
+          "pathPrefix": "/admin/genre-suggestions",
+          "methods": {
+            "GET": "view",
+            "POST": "administer"
+          }
+        }
+      ]
+    },
+    {
       "id": "community",
       "parentId": null,
       "webRoute": "/fans",

@@ -1,3 +1,13 @@
+import TaxonomyFilterBar from '../features/taxonomyFilters/TaxonomyFilterBar';
+import {
+  hasTaxonomyUrlState,
+  readTaxonomySelectionFromUrl,
+  TAXONOMY_LOCAL_SCOPE_KEY,
+  TAXONOMY_LOCAL_SCOPE_VALUE,
+  writeTaxonomySelectionToUrl,
+} from '../features/taxonomyFilters/taxonomyFilterModel';
+import { useProfileCityDefault } from '../features/taxonomyFilters/useProfileCityDefault';
+import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from '../features/taxonomyFilters/useTaxonomyFilters';
 import MarkdownText from '../components/MarkdownText';
 import { directoryResultPath, useDebouncedSearch, useDirectorySearch } from '../features/discovery/useDirectorySearch';
 import { useTranslation } from 'react-i18next';
@@ -118,8 +128,11 @@ const parseSearchUrl = (search: string): SearchUrlState => {
   };
 };
 
-const buildSearchUrl = (state: SearchUrlState, nearby: boolean) => {
-  const params = new URLSearchParams();
+// TAX-FILTER-001: the shared location and genre filters keep their own URL
+// keys; rebuilding the search URL carries them over unchanged.
+const buildSearchUrl = (state: SearchUrlState, nearby: boolean, currentSearch = '') => {
+  const params = writeTaxonomySelectionToUrl(new URLSearchParams(), null);
+  const current = new URLSearchParams(currentSearch);
   if (state.q) params.set('q', state.q);
   if (state.profileKind) params.set('profileKind', state.profileKind);
   if (state.entityType !== 'all') params.set('entityType', state.entityType);
@@ -132,7 +145,9 @@ const buildSearchUrl = (state: SearchUrlState, nearby: boolean) => {
   if (state.remote) params.set('remote', 'true');
   if (state.available) params.set('available', 'true');
   if (nearby) params.set('radiusKm', String(state.radiusKm));
-  return params.toString();
+  const taxonomy = readTaxonomySelectionFromUrl(current);
+  const local = current.get(TAXONOMY_LOCAL_SCOPE_KEY) === TAXONOMY_LOCAL_SCOPE_VALUE;
+  return writeTaxonomySelectionToUrl(params, hasTaxonomyUrlState(current) ? taxonomy : null, local).toString();
 };
 
 const formatEventDate = (value: string | null | undefined, language: string) => {
@@ -191,7 +206,7 @@ export default function DirectorySearchPage() {
   // nearby mode every change replaces: the consented coordinates live only in
   // memory, so a nearby entry restored by Back could never show its results.
   const updateSearch = (patch: Partial<SearchUrlState>, mode: 'push' | 'replace' = 'push', nearby = Boolean(coordinates)) => {
-    const next = buildSearchUrl({ ...urlState, cityId, ...patch }, nearby);
+    const next = buildSearchUrl({ ...urlState, cityId, ...patch }, nearby, location.search);
     if (location.search.replace(/^\?/, '') === next) return;
     navigate({ pathname: location.pathname, search: next }, { replace: mode === 'replace' || Boolean(coordinates) });
   };
@@ -201,7 +216,7 @@ export default function DirectorySearchPage() {
     if (previousQuery.current !== query) { previousQuery.current = query; return; }
     if (debouncedQuery !== query && debouncedQuery === draftQuery.trim().replace(/\s+/gu, ' ')) updateSearch({ q: debouncedQuery });
   }, [debouncedQuery, draftQuery, query]); // eslint-disable-line react-hooks/exhaustive-deps
-  const canonicalSearch = buildSearchUrl({ ...urlState, cityId }, Boolean(coordinates));
+  const canonicalSearch = buildSearchUrl({ ...urlState, cityId }, Boolean(coordinates), location.search);
   useEffect(() => {
     if (location.search.replace(/^\?/, '') === canonicalSearch) return;
     navigate({ pathname: location.pathname, search: canonicalSearch }, { replace: true });
@@ -222,6 +237,10 @@ export default function DirectorySearchPage() {
 
 
 
+  const taxonomyOptions = useTaxonomyFilterOptions();
+  useProfileCityDefault(taxonomyOptions.data);
+  const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true });
+  const taxonomySelection = taxonomyFilters.selection;
   const searchBase: DirectorySearchQuery = {
     q: query || undefined,
     profileKind: entityType === 'profile' || entityType === 'artist' ? urlState.profileKind : undefined,
@@ -233,6 +252,10 @@ export default function DirectorySearchPage() {
     serviceId: serviceId || undefined,
     instrumentId: instrumentId || undefined,
     genreId: genreId || undefined,
+    countryIds: taxonomySelection.countryIds,
+    regionIds: taxonomySelection.regionIds,
+    cityIds: taxonomySelection.cityIds,
+    genreIds: taxonomySelection.genreIds,
     remote: remote || undefined,
     available: available || undefined,
     latitude: coordinates?.latitude,
@@ -417,13 +440,6 @@ export default function DirectorySearchPage() {
                   </FormControl>
                 </>
               )}
-              <FormControl size="small" sx={{ minWidth: 190 }}>
-                <InputLabel id="directory-genre-label">{t('directorySearch.genre')}</InputLabel>
-                <Select labelId="directory-genre-label" label={t('directorySearch.genre')} value={genreId} onChange={(event) => updateSearch({ genreId: event.target.value })}>
-                  <MenuItem value="">{t('directorySearch.allMasculine')}</MenuItem>
-                  {(taxonomies.data?.genres ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
-                </Select>
-              </FormControl>
               {coordinates && <TextField size="small" type="number" label={t('directorySearch.radius')} value={radiusKm} onChange={(event) => updateSearch({ radiusKm: Math.min(500, Math.max(1, Number(event.target.value))) }, 'replace')} inputProps={{ min: 1, max: 500 }} sx={{ width: 140 }} />}
               {personFilters && (
                 <>
@@ -434,6 +450,11 @@ export default function DirectorySearchPage() {
               {!personFilters && <Typography variant="body2" color="text.secondary">{t('directorySearch.placeFiltersHint')}</Typography>}
               <Button onClick={() => updateSearch({ profileKind: undefined, professionId: '', serviceId: '', instrumentId: '', genreId: '', remote: false, available: false })}>{t('directorySearch.clearFilters')}</Button>
             </Stack>
+            <Box sx={{ mt: 1.5 }}>
+              {/* TAX-FILTER-001: country, region and genre (with subgenres); the city control above keeps its proximity search. */}
+              <TaxonomyFilterBar idPrefix="directory" filters={taxonomyFilters} options={taxonomyOptions.data} optionsError={taxonomyOptions.isError}
+                facets={facets?.taxonomy} dimensions={['countryIds', 'regionIds', 'genreIds']} />
+            </Box>
           </Paper>
 
           {favorites.isError && session?.partyId ? (
@@ -476,7 +497,7 @@ export default function DirectorySearchPage() {
             </Box>
           )}
 
-          {showMusic && <MusicSearchResults query={query} changingQuery={draftQuery.trim().replace(/\s+/gu, ' ') !== query.trim().replace(/\s+/gu, ' ')} />}
+          {showMusic && <MusicSearchResults query={query} taxonomy={taxonomySelection} changingQuery={draftQuery.trim().replace(/\s+/gu, ' ') !== query.trim().replace(/\s+/gu, ' ')} />}
 
           <Typography component="h2" variant="h5" fontWeight={800}>{t('directorySearch.organicResults', { count: facets?.total ?? items.length })}</Typography>
 

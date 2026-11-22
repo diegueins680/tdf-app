@@ -1,7 +1,7 @@
 const directorySearch = {
   music: {
     heading: 'Resultados musicales',
-    scope: 'Pistas publicadas disponibles para escuchar. Los filtros del directorio no se aplican a la música.',
+    scope: 'Pistas publicadas disponibles para escuchar. Solo los filtros de lugar y género se aplican a la música.',
     prompt: 'Escribe el título de una pista, un lanzamiento o un artista para buscar música.',
     loading: 'Buscando música…',
     error: 'La búsqueda musical no está disponible en este momento. Puedes reintentar sin perder los resultados del directorio.',

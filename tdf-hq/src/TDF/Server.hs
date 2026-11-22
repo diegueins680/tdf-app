@@ -222,6 +222,7 @@ import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Server.Directory as DirectoryServer
+import qualified TDF.Server.Taxonomy as TaxonomyServer
 import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MusicRelease as MusicReleaseServer
 import TDF.MusicRelease.CredentialCache (musicCredentialCache)
@@ -779,6 +780,7 @@ server env =
   :<|> CatalogServer.publicCatalogServer
   :<|> InteractionsServer.publicInteractionsServer
   :<|> DirectoryServer.directoryPublicServer
+  :<|> TaxonomyServer.taxonomyPublicServer
   :<|> MerchServer.merchPublicServer
   :<|> publicUpcomingEventsServer
   :<|> ReviewsServer.reviewsPublicServer
@@ -3995,6 +3997,7 @@ protectedServer user =
   :<|> AuthServer.artistInvitationsServer user
   :<|> navigationPreferencesServer user
   :<|> DirectoryServer.directoryProtectedServer user
+  :<|> TaxonomyServer.taxonomyProtectedServer user
   :<|> MerchServer.merchProtectedServer user
   :<|> OperationsServer.operationsServer user
   :<|> EventOperationsServer.eventOperationsServer user

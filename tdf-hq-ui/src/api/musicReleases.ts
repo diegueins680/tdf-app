@@ -1,3 +1,4 @@
+import { appendTaxonomyParams, type TaxonomySelection } from './taxonomy';
 import { del, get, post, put } from './client';
 import { IncrementalSha256 } from '../utils/incrementalSha256';
 import { parseMusicMultipartCompletion } from './musicStorageResponse';
@@ -608,6 +609,8 @@ export interface MusicPublicCatalogPage {
   limit?: number;
   offset?: number;
   signal?: AbortSignal;
+  /** TAX-FILTER-001 shared location and genre filters. */
+  taxonomy?: Partial<TaxonomySelection>;
 }
 
 export const musicReleases = {
@@ -624,6 +627,7 @@ export const musicReleases = {
       if (!Number.isSafeInteger(page.offset) || page.offset < 0) throw new RangeError('Search offset must be a nonnegative safe integer.');
       params.set('offset', String(page.offset));
     }
+    appendTaxonomyParams(params, page?.taxonomy);
     const suffix = params.toString();
     const path = apiPath(`/search${suffix ? `?${suffix}` : ''}`);
     const response = page?.signal ? get<unknown>(path, { signal: page.signal }) : get<unknown>(path);
@@ -642,6 +646,7 @@ export const musicReleases = {
       if (!Number.isSafeInteger(page.offset) || page.offset < 0) throw new RangeError('Catalog offset must be a nonnegative safe integer.');
       params.set('offset', String(page.offset));
     }
+    appendTaxonomyParams(params, page?.taxonomy);
     const suffix = params.toString();
     const path = apiPath(`/releases${suffix ? `?${suffix}` : ''}`);
     return page?.signal ? get<MusicPublicReleaseSummary[]>(path, { signal: page.signal }) : get<MusicPublicReleaseSummary[]>(path);

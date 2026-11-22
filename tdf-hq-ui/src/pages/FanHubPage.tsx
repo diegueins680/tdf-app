@@ -5,6 +5,7 @@ import { buildArtistPublicPath } from '../utils/artistIdentity';
 import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/artistAudience';
 import MarkdownText from '../components/MarkdownText';
 import CommunityDiscovery from '../features/discovery/CommunityDiscovery';
+import { GenreSuggestionDialog, PendingGenreSuggestions } from '../features/taxonomyFilters/GenreSuggestionDialog';
 import RecordThumbnail from '../features/records/RecordThumbnail';
 import { primaryRecordsResource } from '../features/records/resolveRecordThumbnail';
 import { buildArtistFollowAuthPath, safeArtistId } from '../utils/artistFollowIntent';
@@ -158,6 +159,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     queryFn: () => Records.getFeed('es'),
     staleTime: 5 * 60 * 1000,
   });
+
+  const [genreSuggestionOpen, setGenreSuggestionOpen] = useState(false);
   const genresCatalogQuery = useQuery({
     queryKey: ['catalog', 'public', 'genres', 'es'],
     queryFn: () => Catalogs.listPublicItems('genres', { locale: 'es', page: 1, pageSize: 500 }),
@@ -1875,6 +1878,23 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             />
                           )}
                           fullWidth
+                        />
+                        {/* TAX-GENRE-SUGGESTION-001: a missing genre can be suggested; pending ones stay visible here. */}
+                        <Stack spacing={1} sx={{ minWidth: { md: 200 } }}>
+                          <Button size="small" variant="outlined" onClick={() => setGenreSuggestionOpen(true)}>
+                            {t('taxonomyFilters.suggest.open')}
+                          </Button>
+                          <PendingGenreSuggestions enabled={Boolean(artistDraft)} />
+                        </Stack>
+                        <GenreSuggestionDialog
+                          open={genreSuggestionOpen}
+                          onClose={() => setGenreSuggestionOpen(false)}
+                          onGenreReady={(genreId) => {
+                            void genresCatalogQuery.refetch();
+                            setArtistDraft((prev) => (prev.apuGenreIds.includes(genreId)
+                              ? prev
+                              : { ...prev, apuGenreIds: [...prev.apuGenreIds, genreId] }));
+                          }}
                         />
                         <TextField
                           label="Highlights"

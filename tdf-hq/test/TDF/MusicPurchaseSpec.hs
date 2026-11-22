@@ -92,7 +92,7 @@ spec = describe "music-purchase-postgresql" $ do
         offer <- offerWith pool "'purchase',TRUE,9007199254740993,'USD'"
         slug <- runSqlPool (rawSql "SELECT canonical_slug FROM music_release WHERE id=?::uuid"
           [toPersistValue (offerRelease offer)]) pool
-        let _ :<|> getOne :<|> _ = musicReleasePublicServer
+        let _ :<|> _ :<|> getOne :<|> _ = musicReleasePublicServer
         case slug of
           [Single value] -> do
             response <- run pool (getOne value Nothing)
