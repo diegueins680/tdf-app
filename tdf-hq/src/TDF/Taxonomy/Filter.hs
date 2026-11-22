@@ -78,11 +78,16 @@ taxonomyInputParams value =
 -- | Predicate over one item. @input@ names the relation that carries the
 -- columns of 'taxonomyInputColumnsSql'; the other arguments are SQL
 -- expressions for the item's city id, country id and genre id array.
+--
+-- Each check is guarded by its own emptiness test so an unfiltered query never
+-- evaluates the per-item location or genre expressions (function arguments
+-- are computed before the call, even when the function would ignore them).
 taxonomyMatchSql :: Text -> Text -> Text -> Text -> Text
 taxonomyMatchSql input cityExpr countryExpr genresExpr =
-  "taxonomy_location_matches(" <> cityExpr <> "," <> countryExpr <> ","
-    <> input <> ".tax_country_ids," <> input <> ".tax_region_ids," <> input <> ".tax_city_ids)"
-    <> " AND taxonomy_genres_match(" <> genresExpr <> "," <> input <> ".tax_genre_ids)"
+  "(cardinality(" <> input <> ".tax_country_ids)+cardinality(" <> input <> ".tax_region_ids)+cardinality(" <> input <> ".tax_city_ids)=0"
+    <> " OR taxonomy_location_matches(" <> cityExpr <> "," <> countryExpr <> ","
+    <> input <> ".tax_country_ids," <> input <> ".tax_region_ids," <> input <> ".tax_city_ids))"
+    <> " AND (cardinality(" <> input <> ".tax_genre_ids)=0 OR taxonomy_genres_match(" <> genresExpr <> "," <> input <> ".tax_genre_ids))"
 
 -- | A jsonb expression with per-value counts for each dimension, computed
 -- over @base@ (columns: @item_key@, @city_id@, @country_id@, @genre_ids@) that
@@ -94,8 +99,12 @@ taxonomyFacetsSql :: Text -> Text -> Text
 taxonomyFacetsSql base input =
   "jsonb_build_object("
     <> "'genres'," <> counts
-         ("SELECT facet_genre.facet_genre_id facet_id,count(DISTINCT b.item_key) total FROM " <> base <> " b CROSS JOIN " <> input
-          <> " CROSS JOIN LATERAL unnest(taxonomy_genre_ancestors(b.genre_ids)) facet_genre(facet_genre_id) WHERE "
+         ("SELECT rollup.ancestor_id facet_id,count(DISTINCT b.item_key) total FROM " <> base <> " b CROSS JOIN " <> input
+          <> " CROSS JOIN LATERAL unnest(b.genre_ids) item_genre(genre_id)"
+          -- The genre -> ancestor rollup is computed once per genre, not per item.
+          <> " JOIN (SELECT rolled.id genre_id,ancestor.ancestor_id FROM genre rolled"
+          <> " CROSS JOIN LATERAL unnest(taxonomy_genre_ancestors(ARRAY[rolled.id])) ancestor(ancestor_id)) rollup"
+          <> " ON rollup.genre_id=item_genre.genre_id WHERE "
           <> location input "tax_country_ids" "tax_region_ids" "tax_city_ids" <> " GROUP BY 1")
     <> ",'countries'," <> counts
          ("SELECT coalesce(b.country_id,city.country_id) facet_id,count(DISTINCT b.item_key) total FROM " <> base <> " b CROSS JOIN " <> input

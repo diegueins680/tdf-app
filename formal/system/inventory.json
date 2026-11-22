@@ -4289,7 +4289,7 @@
     {
       "id": "SURFACE-38cae059ca169cb6",
       "path": "scripts/__tests__/directory-search-plan-parity.mjs",
-      "sha256": "d3f45fd24ceabcf7d7d02fba79f91c591b2b86ee2904d9961003277440b0e6e1",
+      "sha256": "3d76827cd4019f3bdff5859a2ec020682f5c860d5358b97815815e01db894088",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18719,7 +18719,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "6d113b3b9089e4eb23ab726c1f236d71c1808ff22b2e77a0b750ec95fdf14b6b",
+      "sha256": "31e1d3c92dad15314fdce865f68f0610ea40c32e723ed57e5d791a1b6564262c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19133,7 +19133,7 @@
     {
       "id": "SURFACE-26467b9eeb8fc8bb",
       "path": "tdf-hq/src/TDF/Taxonomy/Filter.hs",
-      "sha256": "3e5b15281c386cd8b269e6b182cc0ee08615f0be3a0cd0b8a99b634c4c4aa5de",
+      "sha256": "38c81161299e0cbb9cd604011f6d6addd9274f04562739ff9dce19492d3acc79",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19889,7 +19889,7 @@
     {
       "id": "SURFACE-562857883860626e",
       "path": "tdf-hq/test/TDF/Taxonomy/FilterSpec.hs",
-      "sha256": "d947960319325be03af461b6919d37f283f07eba0e890be461125c907003d463",
+      "sha256": "f1247072140c8e585402928b2b3de2822a082efc10fa087a2270e24604e1368b",
       "semanticConformance": "not-established-by-discovery"
     },
     {

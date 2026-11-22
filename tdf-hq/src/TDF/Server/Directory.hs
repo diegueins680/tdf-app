@@ -229,8 +229,8 @@ directoryFilterClause =
 -- code, its region from its city.
 directoryTaxonomyClause :: Text
 directoryTaxonomyClause =
-  "AND taxonomy_location_matches(document.city_id,(SELECT country.id FROM country_reference country WHERE country.alpha2=document.country_code),input.tax_country_ids,input.tax_region_ids,input.tax_city_ids) " <>
-  "AND taxonomy_genres_match(document.genre_ids,input.tax_genre_ids) "
+  "AND (cardinality(input.tax_country_ids)+cardinality(input.tax_region_ids)+cardinality(input.tax_city_ids)=0 OR taxonomy_location_matches(document.city_id,(SELECT country.id FROM country_reference country WHERE country.alpha2=document.country_code),input.tax_country_ids,input.tax_region_ids,input.tax_city_ids)) " <>
+  "AND (cardinality(input.tax_genre_ids)=0 OR document.genre_ids && input.tax_genre_ids) "
 
 -- Per-value taxonomy counts over taxonomy_base; equal to
 -- TDF.Taxonomy.Filter.taxonomyFacetsSql "taxonomy_base" "input" (checked in
@@ -238,7 +238,7 @@ directoryTaxonomyClause =
 directoryTaxonomyFacetsSql :: Text
 directoryTaxonomyFacetsSql =
   "jsonb_build_object('genres',coalesce((SELECT jsonb_agg(jsonb_build_object('id',facet_id," <>
-  "'count',total) ORDER BY total DESC,facet_id) FROM (SELECT facet_genre.facet_genre_id facet_id,count(DISTINCT b.item_key) total FROM taxonomy_base b CROSS JOIN input CROSS JOIN LATERAL unnest(taxonomy_genre_ancestors(b.genre_ids)) facet_genre(facet_genre_id) WHERE taxonomy_location_matches(b.city_id,b.country_id,input.tax_country_ids,input.tax_region_ids,input.tax_city_ids) GROUP BY 1) facet)," <>
+  "'count',total) ORDER BY total DESC,facet_id) FROM (SELECT rollup.ancestor_id facet_id,count(DISTINCT b.item_key) total FROM taxonomy_base b CROSS JOIN input CROSS JOIN LATERAL unnest(b.genre_ids) item_genre(genre_id) JOIN (SELECT rolled.id genre_id,ancestor.ancestor_id FROM genre rolled CROSS JOIN LATERAL unnest(taxonomy_genre_ancestors(ARRAY[rolled.id])) ancestor(ancestor_id)) rollup ON rollup.genre_id=item_genre.genre_id WHERE taxonomy_location_matches(b.city_id,b.country_id,input.tax_country_ids,input.tax_region_ids,input.tax_city_ids) GROUP BY 1) facet)," <>
   "'[]'::jsonb)," <>
   "'countries',coalesce((SELECT jsonb_agg(jsonb_build_object('id',facet_id," <>
   "'count',total) ORDER BY total DESC,facet_id) FROM (SELECT coalesce(b.country_id,city.country_id) facet_id,count(DISTINCT b.item_key) total FROM taxonomy_base b CROSS JOIN input LEFT JOIN city_reference city ON city.id=b.city_id WHERE coalesce(b.country_id,city.country_id) IS NOT NULL AND taxonomy_location_matches(b.city_id,b.country_id,NULL::uuid[],input.tax_region_ids,input.tax_city_ids) AND taxonomy_genres_match(b.genre_ids,input.tax_genre_ids) GROUP BY 1) facet)," <>

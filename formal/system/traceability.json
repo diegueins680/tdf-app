@@ -29644,7 +29644,7 @@
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
     "scripts/__tests__/directory-saved-search-http.mjs": "e578cd631b35124723a5e86f3ad01787b3ef45d8ea7fb5b4ad9fd4e6cca68c5f",
-    "scripts/__tests__/directory-search-plan-parity.mjs": "d3f45fd24ceabcf7d7d02fba79f91c591b2b86ee2904d9961003277440b0e6e1",
+    "scripts/__tests__/directory-search-plan-parity.mjs": "3d76827cd4019f3bdff5859a2ec020682f5c860d5358b97815815e01db894088",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "c3695447a6453d7e46dcfaec5856ea0b3d33cab0f81fbaeb22dbdd5bd9bb524e",
     "scripts/__tests__/event-draft-plan.test.mjs": "241bb7a8224dc46e0114da2a46ea85943de3130b20369b9343358fb64405ad1d",
     "scripts/__tests__/event-memory-http-password.test.mjs": "55dd32c763209f2395cf81602859dac92de349887f9d8f543f6c9dc8544eb87d",
@@ -31082,7 +31082,7 @@
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/DatafastCheckoutContext.hs": "9a97fe04a57add6ba76518a1dd9dc5342951a7f0bf060ad8964ed1a417f3855b",
-    "tdf-hq/src/TDF/Server/Directory.hs": "6d113b3b9089e4eb23ab726c1f236d71c1808ff22b2e77a0b750ec95fdf14b6b",
+    "tdf-hq/src/TDF/Server/Directory.hs": "31e1d3c92dad15314fdce865f68f0610ea40c32e723ed57e5d791a1b6564262c",
     "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs": "3fffa9b76eae802e1629413435696333a45947f8e946a48f28a8170bbe833c83",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "d8c8bd5a028e99f05395e9a2d916d22878ac4121864a3961b71e60a95e3b4af5",
     "tdf-hq/src/TDF/Server/DomoRefunds.hs": "6c520cd643346ad24be6ea7b02c1a6e76f4c407f7ab08176fbe48b47c7f9fd4c",
@@ -31139,7 +31139,7 @@
     "tdf-hq/src/TDF/Social/Server.hs": "3b1b4af11566dd037bf44c8fd89b2c198a085171ee23d5d2b4d1f11ab630a731",
     "tdf-hq/src/TDF/Social/Session.hs": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
     "tdf-hq/src/TDF/StorageVault.hs": "7f5d13cfc664291e3d23044322859c95f359b1e4bb00fbc82a87794e5da1849b",
-    "tdf-hq/src/TDF/Taxonomy/Filter.hs": "3e5b15281c386cd8b269e6b182cc0ee08615f0be3a0cd0b8a99b634c4c4aa5de",
+    "tdf-hq/src/TDF/Taxonomy/Filter.hs": "38c81161299e0cbb9cd604011f6d6addd9274f04562739ff9dce19492d3acc79",
     "tdf-hq/src/TDF/Taxonomy/GenreSuggestion.hs": "d4ba03730eb6d690340c64ff4dbd5c326a1a7522f894e562d67870f0790b53f1",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "a2568ecfb8235b9c91c0ce144ac5cec72ef0eb5cd52e06f42c3130ed7e347142",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "1cc32127c70c016568235631cc097e92a230125d6742c05aa2c833d6d15db480",
@@ -31242,7 +31242,7 @@
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "b7e084839124ff880822e8264211fbadebf88190bd18d2fbd904e1848bdbe9b9",
     "tdf-hq/test/TDF/Social/FollowSpec.hs": "fb6640d2e4e415809328254799fc89c884e1f08e75a4678ef6996f0805c7867b",
     "tdf-hq/test/TDF/StorageSecuritySpec.hs": "3358d870189320cab3387e054111df56893fbdb826b5ea09741579207a71d300",
-    "tdf-hq/test/TDF/Taxonomy/FilterSpec.hs": "d947960319325be03af461b6919d37f283f07eba0e890be461125c907003d463",
+    "tdf-hq/test/TDF/Taxonomy/FilterSpec.hs": "f1247072140c8e585402928b2b3de2822a082efc10fa087a2270e24604e1368b",
     "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs": "b95d77053f3611ae5627ec666fc34d61173208b40ff35aeb3a37844b47e99376",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "d57960358b7aa404aff386e6b5fb319a61eef4162cffb5c2877f179360195845",
@@ -54551,7 +54551,7 @@
     {
       "id": "SURFACE-38cae059ca169cb6",
       "path": "scripts/__tests__/directory-search-plan-parity.mjs",
-      "sha256": "d3f45fd24ceabcf7d7d02fba79f91c591b2b86ee2904d9961003277440b0e6e1",
+      "sha256": "3d76827cd4019f3bdff5859a2ec020682f5c860d5358b97815815e01db894088",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83155,7 +83155,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "6d113b3b9089e4eb23ab726c1f236d71c1808ff22b2e77a0b750ec95fdf14b6b",
+      "sha256": "31e1d3c92dad15314fdce865f68f0610ea40c32e723ed57e5d791a1b6564262c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84643,7 +84643,7 @@
     {
       "id": "SURFACE-26467b9eeb8fc8bb",
       "path": "tdf-hq/src/TDF/Taxonomy/Filter.hs",
-      "sha256": "3e5b15281c386cd8b269e6b182cc0ee08615f0be3a0cd0b8a99b634c4c4aa5de",
+      "sha256": "38c81161299e0cbb9cd604011f6d6addd9274f04562739ff9dce19492d3acc79",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87032,7 +87032,7 @@
     {
       "id": "SURFACE-562857883860626e",
       "path": "tdf-hq/test/TDF/Taxonomy/FilterSpec.hs",
-      "sha256": "d947960319325be03af461b6919d37f283f07eba0e890be461125c907003d463",
+      "sha256": "f1247072140c8e585402928b2b3de2822a082efc10fa087a2270e24604e1368b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

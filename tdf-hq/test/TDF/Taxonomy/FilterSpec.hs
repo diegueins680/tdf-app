@@ -46,13 +46,15 @@ spec = describe "TAX-FILTER-001 shared taxonomy filters" $ do
     let clause = taxonomyMatchSql "input" "item.city_id" "item.country_id" "item.genre_ids"
     clause `shouldSatisfy` T.isInfixOf "taxonomy_location_matches(item.city_id,item.country_id,input.tax_country_ids,input.tax_region_ids,input.tax_city_ids)"
     clause `shouldSatisfy` T.isInfixOf "taxonomy_genres_match(item.genre_ids,input.tax_genre_ids)"
+    clause `shouldSatisfy` T.isPrefixOf "(cardinality(input.tax_country_ids)+cardinality(input.tax_region_ids)+cardinality(input.tax_city_ids)=0 OR "
+    clause `shouldSatisfy` T.isInfixOf "(cardinality(input.tax_genre_ids)=0 OR "
 
   it "counts each dimension without its own selection" $ do
     let facets = taxonomyFacetsSql "base" "input"
     facets `shouldSatisfy` T.isInfixOf "taxonomy_location_matches(b.city_id,b.country_id,NULL::uuid[],input.tax_region_ids,input.tax_city_ids)"
     facets `shouldSatisfy` T.isInfixOf "taxonomy_location_matches(b.city_id,b.country_id,input.tax_country_ids,NULL::uuid[],input.tax_city_ids)"
     facets `shouldSatisfy` T.isInfixOf "taxonomy_location_matches(b.city_id,b.country_id,input.tax_country_ids,input.tax_region_ids,NULL::uuid[])"
-    facets `shouldSatisfy` T.isInfixOf "unnest(taxonomy_genre_ancestors(b.genre_ids))"
+    facets `shouldSatisfy` T.isInfixOf "unnest(taxonomy_genre_ancestors(ARRAY[rolled.id]))"
     T.count "?" facets `shouldBe` 0
 
   it "keeps the directory's literal facet SQL equal to the shared fragment" $
