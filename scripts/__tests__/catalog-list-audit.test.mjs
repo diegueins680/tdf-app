@@ -6555,9 +6555,23 @@ async function integrationSource(ref, file) {
 // Retain both original published parents and additionally guard latest published main.
 const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1", "5a81672285dc9c03130fc9fd8355e2b4c58e9e12"];
 
+// Course follow-up reminders append one migration after the studio gallery.
+// Verify it is the original, unchanged entry, then compare the rest as before.
+const COURSE_REMINDER_ENTRY = '2026-11-20_course_follow_up_reminder_delivery';
+async function withoutCourseReminder(manifest) {
+  const appended = manifest.migrations.at(-1);
+  if (appended?.id !== COURSE_REMINDER_ENTRY) return manifest;
+  await integrationExec('git', ['merge-base', '--is-ancestor', appended.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const { stdout } = await integrationExec('git', ['show', appended.introducedBy + ':' + appended.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, appended.path), 'utf8'), stdout);
+  return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
+}
+
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const actual = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const combined = await withoutCourseReminder(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
+  assert.equal(combined.migrations.at(-1).id, '2026-11-07_studio_gallery');
+  const actual = { ...combined, migrations: combined.migrations.slice(0, -1) };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
   assert.deepEqual(actual, main);
   assert.deepEqual(actual.migrations.slice(0, ux.migrations.length), ux.migrations);
@@ -6579,6 +6593,27 @@ test('actual UX/storage composition preserves current main, immutable SQL and bo
         else assert.ok(current[field] === value || current.sourceContextHistory?.some(entry => entry.metadata?.[field] === value),
           `Lost parent metadata: ${ref}:${reviewFile}:${field}`);
       }
+    }
+  }
+});
+
+test('studio gallery appends its original migration and preserves both complete manifest reviews', async () => {
+  const file = 'scripts/production-migrations.json';
+  const base = '985117b3d9e23b1a84837040d39784e3debcb48e';
+  const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
+  const before = await integrationParent(base, file);
+  const original = (await integrationParent(gallery, file)).migrations.at(-1);
+  const current = await withoutCourseReminder(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
+  assert.equal(original.id, '2026-11-07_studio_gallery');
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, original] });
+  const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, original.path), 'utf8'), stdout);
+  for (const [reviewFile, key] of integrationFiles) {
+    const currentReview = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8'));
+    for (const parent of [base, gallery]) {
+      const old = await integrationParent(parent, reviewFile);
+      const row = old[key].find(r => r.evidence?.file === file || r.name === 'migrations' || r.source?.name === 'migrations');
+      if (row) assert.ok(integrationFind(currentReview, row), 'Missing reviewed migration history for ' + parent);
     }
   }
 });
