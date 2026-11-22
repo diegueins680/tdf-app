@@ -399245,7 +399245,7 @@
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
       "reviewBatch": "chat-external-delivery-course-reminders-integration",
-      "justification": "Compose the two reviewed successors of 59a6c2f1ad6d61a54f96: keep main's manifest exactly, including 2026-11-20_course_follow_up_reminder_delivery appended after the studio gallery seed, then append only 2026-11-20_chat_external_delivery (introduced by 239fc3974a114d08d3d27d6f4899f9cfcf4fd81e), an additive, repeatable migration. Every earlier migration object, its order and its SQL stay unchanged, and both complete parent review graphs are retained. This author review does not authorize deployment or provider activation and is not independent approval.",
+      "justification": "Compose the two reviewed successors of 59a6c2f1ad6d61a54f96: keep main's manifest exactly, including 2026-11-20_course_follow_up_reminder_delivery appended after the studio gallery seed, then append only 2026-11-20_chat_external_delivery (introduced by 8da140ae64c51b8ef006e7678589c8bcf5ef38f3, the commit holding its final SQL), an additive, repeatable migration. Every earlier migration object, its order and its SQL stay unchanged, and both complete parent review graphs are retained. This author review does not authorize deployment or provider activation and is not independent approval.",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
