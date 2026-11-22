@@ -75,6 +75,7 @@ import { useReleaseFeed, type ReleaseFeedArtist } from '../features/releases/use
 import { ReleaseFeed } from '../features/releases/ReleaseFeed';
 import { FanProfileEditor } from '../features/fans/FanProfileEditor';
 import { FollowedArtists } from '../features/fans/FollowedArtists';
+import { RecommendedArtists } from '../features/fans/RecommendedArtists';
 import { ProfileSectionCard } from '../features/fans/ProfileSectionCard';
 import { useFanProfile } from '../features/fans/useFanProfile';
 import { useOwnedProfileDraft } from '../features/fans/useOwnedProfileDraft';
@@ -2004,17 +2005,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </Card>
         )}
 
-        {!isHomeManagerView && !showCatalogFallback && !hasFollows && suggestedArtists.length > 0 && (
-          <Card sx={{ p: 2, mb: 2 }}>
-            <Typography variant="h6" gutterBottom>Recomendados para ti</Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap">
-              {suggestedArtists.map((artist) => (
-                <ArtistProfileLink key={artist.apArtistId} partyId={artist.apArtistId} slug={artist.apSlug}>
-                  <Chip label={artist.apDisplayName} variant="outlined" />
-                </ArtistProfileLink>
-              ))}
-            </Stack>
-          </Card>
+        {!isHomeManagerView && !showCatalogFallback && (
+          <RecommendedArtists
+            viewerId={viewerId}
+            personalized={Boolean(isFan && hasAuthToken && !sessionLoading && followsQuery.isSuccess && hasFollows)}
+            artists={artists}
+            follows={follows}
+            starterArtists={hasFollows ? [] : suggestedArtists}
+          />
         )}
 
         {!isHomeManagerView && showCatalogFilters && (

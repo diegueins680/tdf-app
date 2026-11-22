@@ -252,6 +252,18 @@ data FanFollowDTO = FanFollowDTO
   } deriving (Show, Generic)
 instance ToJSON FanFollowDTO
 
+-- | One recommended artist for the signed-in fan
+-- (COMMUNITY-FAN-RECOMMENDATION-001). @arecReason@ is @similar_fans@ or
+-- @popular@; @arecSeedArtistIds@ are the followed artists behind a
+-- @similar_fans@ entry, strongest first.
+data ArtistRecommendationDTO = ArtistRecommendationDTO
+  { arecArtistId      :: Int64
+  , arecReason        :: Text
+  , arecScore         :: Double
+  , arecSeedArtistIds :: [Int64]
+  } deriving (Show, Generic)
+instance ToJSON ArtistRecommendationDTO
+
 data ArtistFanDTO = ArtistFanDTO
   { afFanId       :: Int64
   , afDisplayName :: Text
