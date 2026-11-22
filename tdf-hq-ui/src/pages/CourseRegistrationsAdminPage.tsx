@@ -1,7 +1,7 @@
 import PrivateAttachmentLink from '../components/PrivateAttachmentLink';
 import { storageFileIdFromUrl } from '../api/contentStorage';
 import MarkdownText from '../components/MarkdownText';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Alert,
   Box,
@@ -35,6 +35,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SaveIcon from '@mui/icons-material/Save';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import AlarmAddIcon from '@mui/icons-material/AlarmAdd';
 import ClearIcon from '@mui/icons-material/Clear';
 import UndoIcon from '@mui/icons-material/Undo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -57,6 +58,8 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { formatTimestampForDisplay, parseTimestamp } from '../utils/dateTime';
+import { buildRegistrationFollowUpCalendarEntry } from '../utils/followUpCalendar';
+import FollowUpCalendarActions from '../components/FollowUpCalendarActions';
 
 type StatusFilter = 'all' | 'pending_payment' | 'paid' | 'cancelled';
 type RegistrationSortKey = 'default' | 'name' | 'createdAt' | 'updatedAt' | 'course' | 'status' | 'source';
@@ -599,6 +602,17 @@ const normalizeStatusFilterAlias = (value: string): StatusFilter | null => {
 
 const parseStatusFilter = (value: string | null): StatusFilter => {
   return normalizeStatusFilterAlias(value ?? '') ?? 'all';
+};
+
+interface LinkedRegistrationTarget {
+  id: number;
+  slug: string;
+}
+
+const parseLinkedRegistrationTarget = (params: URLSearchParams): LinkedRegistrationTarget | null => {
+  const raw = (params.get('registration') ?? '').trim();
+  if (!/^[1-9]\d{0,14}$/.test(raw)) return null;
+  return { id: Number(raw), slug: (params.get('slug') ?? '').trim() };
 };
 
 const parsePositiveLimit = (value: string | null, fallback = DEFAULT_LIMIT): number => {
@@ -4299,6 +4313,36 @@ const registrationContactSummary = (
   return visibleRegistrationContactParts(parts, visibleIdentityValues).join(' · ');
 };
 
+export const buildWhatsAppComposerUrl = (phone: string | null | undefined): string | null => {
+  const digits = (normalizeRegistrationContactValue(phone) ?? '').replace(/\D/g, '');
+  if (digits.length < 8 || digits.length > 15) return null;
+  return `https://wa.me/${digits}`;
+};
+
+const renderWithWhatsAppPhoneLink = (text: string, phone: string | null | undefined): ReactNode => {
+  const trimmedPhone = normalizeRegistrationContactValue(phone) ?? '';
+  const whatsappUrl = buildWhatsAppComposerUrl(trimmedPhone);
+  if (!whatsappUrl || !trimmedPhone) return text;
+  const index = text.indexOf(trimmedPhone);
+  if (index < 0) return text;
+  return (
+    <>
+      {text.slice(0, index)}
+      <Link
+        href={whatsappUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        underline="hover"
+        title={`Escribir por WhatsApp a ${trimmedPhone}`}
+        aria-label={`Escribir por WhatsApp a ${trimmedPhone}`}
+      >
+        {trimmedPhone}
+      </Link>
+      {text.slice(index + trimmedPhone.length)}
+    </>
+  );
+};
+
 const registrationActionTargetLabel = (
   reg: Pick<CourseRegistrationDTO, 'crId' | 'crFullName' | 'crEmail' | 'crPhoneE164'>,
 ) => {
@@ -4896,6 +4940,11 @@ export default function CourseRegistrationsAdminPage() {
     initialRegistrationSortKey,
   );
   const [slug, setSlug] = useState(initialSlug);
+  // Reminder and calendar links arrive as ?registration=<id>&slug=<cohort>. The
+  // target stays here (and in the URL) until its dossier opens or lookup fails.
+  const [linkedRegistration, setLinkedRegistration] = useState<LinkedRegistrationTarget | null>(
+    () => parseLinkedRegistrationTarget(searchParams),
+  );
   const [status, setStatus] = useState<StatusFilter>(initialStatus);
   const [limit, setLimit] = useState(initialLimit);
   const [registrationSortKey, setRegistrationSortKey] = useState<RegistrationSortKey>(initialRegistrationSortKey);
@@ -4952,6 +5001,7 @@ export default function CourseRegistrationsAdminPage() {
   const [showReceiptUrlField, setShowReceiptUrlField] = useState(false);
   const [showFollowUpUrlField, setShowFollowUpUrlField] = useState(false);
   const [showFollowUpDetails, setShowFollowUpDetails] = useState(false);
+  const followUpReminderInputRef = useRef<HTMLInputElement | null>(null);
   const [showFollowUpComposer, setShowFollowUpComposer] = useState(false);
   const [markedPaidRegistrationId, setMarkedPaidRegistrationId] = useState<number | null>(null);
   const [deleteReceiptConfirmOpen, setDeleteReceiptConfirmOpen] = useState(false);
@@ -6596,8 +6646,9 @@ export default function CourseRegistrationsAdminPage() {
       params.set('sort', registrationSortKey);
       params.set('dir', registrationSortDirection);
     }
+    if (linkedRegistration) params.set('registration', String(linkedRegistration.id));
     setSearchParams(params, { replace: true });
-  }, [slug, status, limit, registrationSortKey, registrationSortDirection, setSearchParams]);
+  }, [slug, status, limit, registrationSortKey, registrationSortDirection, linkedRegistration, setSearchParams]);
 
   useEffect(() => {
     setCopyMessage(null);
@@ -6798,6 +6849,47 @@ export default function CourseRegistrationsAdminPage() {
     setSelectedDossier({ reg, intent });
   };
 
+  // A linked registration is fetched by id, so it opens even when it is older
+  // than the rows the list requested. Links without a cohort fall back to the list.
+  const linkedRegistrationQuery = useQuery<CourseRegistrationDTO>({
+    queryKey: ['admin', 'course-registration-link', linkedRegistration?.slug ?? '', linkedRegistration?.id ?? 0],
+    enabled: Boolean(linkedRegistration?.slug),
+    queryFn: () => {
+      if (!linkedRegistration?.slug) {
+        return Promise.reject(new Error('No hay una inscripción enlazada.'));
+      }
+      return Courses.getRegistration(linkedRegistration.slug, linkedRegistration.id);
+    },
+    retry: false,
+    staleTime: 0,
+  });
+  useEffect(() => {
+    if (!linkedRegistration) return;
+    const missingMessage = 'No pudimos abrir la inscripción del enlace. Búscala en la lista.';
+    if (linkedRegistration.slug) {
+      if (linkedRegistrationQuery.isSuccess && linkedRegistrationQuery.data?.crId === linkedRegistration.id) {
+        setSelectedDossier({ reg: linkedRegistrationQuery.data, intent: 'review' });
+        setLinkedRegistration(null);
+      } else if (linkedRegistrationQuery.isSuccess || linkedRegistrationQuery.isError) {
+        setPageFlash({ severity: 'error', message: missingMessage });
+        setLinkedRegistration(null);
+      }
+      return;
+    }
+    if (regsQuery.isLoading) return;
+    const linkedReg = registrations.find((reg) => reg.crId === linkedRegistration.id);
+    if (linkedReg) setSelectedDossier({ reg: linkedReg, intent: 'review' });
+    else setPageFlash({ severity: 'error', message: missingMessage });
+    setLinkedRegistration(null);
+  }, [
+    linkedRegistration,
+    linkedRegistrationQuery.data,
+    linkedRegistrationQuery.isError,
+    linkedRegistrationQuery.isSuccess,
+    regsQuery.isLoading,
+    registrations,
+  ]);
+
   const getPersistedNotesValue = () =>
     dossierQuery.data?.crdRegistration.crAdminNotes ?? selectedDossier?.reg.crAdminNotes ?? '';
 
@@ -6838,6 +6930,17 @@ export default function CourseRegistrationsAdminPage() {
   const handleOpenFollowUpComposer = () => {
     setShowFollowUpComposer(true);
     setDossierFlash(null);
+  };
+
+  const handleOpenReminderComposer = () => {
+    setShowFollowUpComposer(true);
+    setShowFollowUpDetails(true);
+    setDossierFlash(null);
+    setFollowUpForm((prev) => ({
+      ...prev,
+      subject: prev.subject.trim() ? prev.subject : 'Recordatorio',
+    }));
+    globalThis.setTimeout(() => followUpReminderInputRef.current?.focus(), 150);
   };
 
   const handleReceiptUpload = (files: DriveFileInfo[]) => {
@@ -9095,12 +9198,16 @@ export default function CourseRegistrationsAdminPage() {
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Stack spacing={1.5}>
                   <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                    <Typography variant="h6">{activeRegistrationIdentity.primary}</Typography>
+                    <Typography variant="h6">
+                      {renderWithWhatsAppPhoneLink(activeRegistrationIdentity.primary, activeRegistration.crPhoneE164)}
+                    </Typography>
                     {showActiveRegistrationStatusChip && statusChip(activeRegistrationStatus)}
                   </Stack>
                   {activeRegistrationSecondaryLine && (
                     <Typography variant="body2" color="text.secondary">
-                      {activeRegistrationSecondaryLine}
+                      {showInternalRegistrationReference
+                        ? activeRegistrationSecondaryLine
+                        : renderWithWhatsAppPhoneLink(activeRegistrationSecondaryLine, activeRegistration.crPhoneE164)}
                     </Typography>
                   )}
                   {activeRegistrationSummary && (
@@ -9315,15 +9422,27 @@ export default function CourseRegistrationsAdminPage() {
                           <Chip size="small" label={`${followUps.length} entrad${followUps.length === 1 ? 'a' : 'as'}`} />
                         )}
                       </Stack>
-                      {showAddFollowUpAction && (
-                        <Button
-                          size="small"
-                          variant="contained"
-                          onClick={handleOpenFollowUpComposer}
-                        >
-                          Agregar seguimiento
-                        </Button>
-                      )}
+                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                        {!hasOpenDossierComposer && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<AlarmAddIcon />}
+                            onClick={handleOpenReminderComposer}
+                          >
+                            Programar recordatorio
+                          </Button>
+                        )}
+                        {showAddFollowUpAction && (
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={handleOpenFollowUpComposer}
+                          >
+                            Agregar seguimiento
+                          </Button>
+                        )}
+                      </Stack>
                     </Stack>
                     {sharedFollowUpSummary ? (
                       <Typography variant="body2" color="text.secondary">
@@ -9411,10 +9530,12 @@ export default function CourseRegistrationsAdminPage() {
                                     fullWidth
                                   />
                                   <TextField
-                                    label="Próximo seguimiento"
+                                    label="Recordatorio (próximo seguimiento)"
                                     type="datetime-local"
                                     value={followUpForm.nextFollowUpAt}
                                     onChange={(e) => setFollowUpForm((prev) => ({ ...prev, nextFollowUpAt: e.target.value }))}
+                                    inputRef={followUpReminderInputRef}
+                                    helperText="A esa hora te avisaremos en la campana de notificaciones. Al guardar podrás añadirlo a tu calendario con alarma."
                                     fullWidth
                                     InputLabelProps={{ shrink: true }}
                                   />
@@ -9539,19 +9660,18 @@ export default function CourseRegistrationsAdminPage() {
                                 ? ''
                                 : formatOptionalDate(entry.crfCreatedAt);
                               const showFollowUpTypeChip = !sharedFollowUpTypeIsInSummary && !sharedFollowUpTypeLabel;
-                              const showFollowUpNextChip = Boolean(
-                                entry.crfNextFollowUpAt
-                                && !sharedFollowUpNextIsInSummary
-                                && !sharedFollowUpNextLabel,
-                              );
                               const showFollowUpMetadata = showFollowUpTypeChip
-                                || Boolean(followUpCreatedLabel)
-                                || showFollowUpNextChip;
+                                || Boolean(followUpCreatedLabel);
                               const trimmedFollowUpAttachmentName = entry.crfAttachmentName?.trim() ?? '';
                               const followUpAttachmentLabel = trimmedFollowUpAttachmentName
                                 ? trimmedFollowUpAttachmentName
                                 : `Adjunto de ${followUpActionLabel}`;
                               const isFollowUpBeingEdited = followUpForm.editingId === entry.crfId;
+                              const followUpCalendar = selectedDossier && buildRegistrationFollowUpCalendarEntry({
+                                registration: selectedDossier.reg, followUpId: entry.crfId, nextFollowUpAt: entry.crfNextFollowUpAt,
+                                subject: followUpSubjectLabel(entry), notes: entry.crfNotes, origin: globalThis.location?.origin,
+                              });
+                              const showFollowUpReminderDate = !sharedFollowUpNextIsInSummary && !sharedFollowUpNextLabel;
 
                               return (
                                 <Paper key={entry.crfId} variant="outlined" sx={{ p: 1.5 }}>
@@ -9572,13 +9692,6 @@ export default function CourseRegistrationsAdminPage() {
                                             <Typography variant="caption" color="text.secondary">
                                               {followUpCreatedLabel}
                                             </Typography>
-                                          )}
-                                          {showFollowUpNextChip && (
-                                            <Chip
-                                              size="small"
-                                              color="warning"
-                                              label={`Próximo: ${formatDate(entry.crfNextFollowUpAt)}`}
-                                            />
                                           )}
                                         </Stack>
                                       )}
@@ -9619,6 +9732,14 @@ export default function CourseRegistrationsAdminPage() {
                                           <span>{followUpAttachmentLabel}</span>
                                         </Stack>
                                       </PrivateAttachmentLink>
+                                    )}
+                                    {followUpCalendar && (
+                                      <FollowUpCalendarActions
+                                        entry={followUpCalendar}
+                                        dateLabel={showFollowUpReminderDate ? formatDate(entry.crfNextFollowUpAt) : undefined}
+                                        actionLabel={followUpActionLabel}
+                                        fileName={`seguimiento-${entry.crfId}`}
+                                      />
                                     )}
                                   </Stack>
                                 </Paper>
