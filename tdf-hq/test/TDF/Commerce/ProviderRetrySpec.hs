@@ -4805,10 +4805,10 @@ ticketReservationClockSpec = describe "ticket-reservation-clock" $ do
       admitted `shouldBe` True
     ticketAmountCounts pool eventKey tierKey `shouldReturn` [(Single 0,Single 0,Single 0)]
 
-  forM_ [(False,False,"Event"),(True,False,"Event"),(True,True,"Event"),
+  forM_ [False,True] $ \eventEndCutoff -> forM_ [(False,False,"Event"),(True,False,"Event"),(True,True,"Event"),
       (False,False,"Tier"),(True,True,"Promo")] $ \(viaCheckout,promotion,barrier) -> forM_ [False,True] $ \elapsed ->
     it ("enforces deadline after the " <> barrier <> " wait: checkout=" <> show viaCheckout <>
-        ", promo=" <> show promotion <> ", elapsed=" <> show elapsed) $ \pool -> do
+        ", promo=" <> show promotion <> ", elapsed=" <> show elapsed <> ", eventEnd=" <> show eventEndCutoff) $ \pool -> do
       (eventKey,tierKey,env,promo) <- if promotion then do
         (event,tier,environment,created) <- ticketPromoLimitFixture pool (Just 10)
         pure (event,tier,environment,Just created)
@@ -4819,6 +4819,9 @@ ticketReservationClockSpec = describe "ticket-reservation-clock" $ do
       [Single deadline] <- runSqlPool (rawSql
         "SELECT clock_timestamp()+(?::integer*interval '1 second')"
           [PersistInt64 (if elapsed then 5 else 600)]) pool :: IO [Single UTCTime]
+      when eventEndCutoff $ runSqlPool (rawExecute
+        "UPDATE social_event SET start_time=?::timestamptz-interval '1 hour',end_time=? WHERE id=?"
+        [PersistUTCTime deadline,PersistUTCTime deadline,PersistInt64 (fromSqlKey eventKey)]) pool
       let (editTier,_,_) = ticketInventoryHandlers (AuthedUser (toSqlKey 1) [] mempty Nothing Nothing)
           (_,editPromo) = ticketPromoHandlers (AuthedUser (toSqlKey 1) [] mempty Nothing Nothing)
           (_,buy,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
@@ -4832,12 +4835,12 @@ ticketReservationClockSpec = describe "ticket-reservation-clock" $ do
         Just created -> do
           codeId <- maybe (fail "Created promo must have an ID") pure (TD.promoCodeId created)
           _ <- runHandler (runReaderT (editPromo eventId codeId
-            (created {TD.promoCodeValidUntil=Just deadline})) env) >>= requireRight
+            (created {TD.promoCodeValidUntil=if eventEndCutoff then Nothing else Just deadline})) env) >>= requireRight
           pure ()
         Nothing -> do
           _ <- runHandler (runReaderT (editTier eventId (keyText (fromSqlKey tierKey))
             (TD.TicketTierDTO Nothing Nothing "test" "Synthetic free ticket" Nothing 0 "USD"
-              20 0 Nothing (Just deadline) True Nothing)) env) >>= requireRight
+              20 0 Nothing (if eventEndCutoff then Nothing else Just deadline) True Nothing)) env) >>= requireRight
           pure ()
       locked <- newEmptyMVar
       release <- newEmptyMVar

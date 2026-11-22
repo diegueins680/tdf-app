@@ -4825,7 +4825,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state. Legacy Stripe completion additionally requires a succeeded refund object with exact requested amount, currency and PaymentIntent; observed provider IDs are retained while unverified evidence remains processing without ticket or inventory completion effects. Legacy Stripe inventory completion requires a positive order quantity and one atomic event/tier-bound decrement guarded by sufficient current sold stock; an unsuccessful release rolls back completion while retaining processing and observed evidence. Legacy refund request creation must serialize the absence check and insertion with current event/order authority and paid amount, preserving one-request rejection on the legacy route and canonical successive allocations. New direct, legacy Stripe and public canonical ticket reservations must validate current sale and promotion windows against the same fresh database wall-time sample after their final admission locks, retaining inclusive endpoints, stored orders and existing reuse behavior.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state. Legacy Stripe completion additionally requires a succeeded refund object with exact requested amount, currency and PaymentIntent; observed provider IDs are retained while unverified evidence remains processing without ticket or inventory completion effects. Legacy Stripe inventory completion requires a positive order quantity and one atomic event/tier-bound decrement guarded by sufficient current sold stock; an unsuccessful release rolls back completion while retaining processing and observed evidence. Legacy refund request creation must serialize the absence check and insertion with current event/order authority and paid amount, preserving one-request rejection on the legacy route and canonical successive allocations. New direct, legacy Stripe and public canonical ticket reservations must validate current sale and promotion windows against the same fresh database wall-time sample after their final admission locks, retaining inclusive endpoints, stored orders and existing reuse behavior. An event whose end time has passed sells no more tickets whatever workflow state it was left in: the storefront lists no tiers, no order is created and no payment is started; an event without an end time is governed by its workflow state alone.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4917,7 +4917,9 @@
         "tdf-hq-ui/src/i18n/locales/fr.ts",
         "tdf-hq-ui/src/i18n/locales/pt.ts",
         "tdf-hq-ui/src/utils/checkoutStripe.ts",
-        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx"
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq/src/TDF/Server/TicketSalesWindow.hs",
+        "tdf-hq/tdf-hq.cabal"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",
@@ -5693,7 +5695,7 @@
       "id": "NOTIF-TICKET-001",
       "title": "Durable ticket purchase confirmation with fenced delivery attempts",
       "domain": "NOTIF",
-      "statement": "Canonical paid ticket issuance must atomically enqueue at most one retained confirmation intent per order. Opt-in workers claim with bounded leases, resolve currently eligible buyer-held credentials, bound SMTP work, fence acknowledgements and retain exhausted failures. SMTP acceptance is not inbox delivery and duplicate email after ambiguous acceptance remains possible.",
+      "statement": "Canonical paid ticket issuance must atomically enqueue at most one retained confirmation intent per order. Opt-in workers claim with bounded leases, resolve currently eligible buyer-held credentials, bound SMTP work, fence acknowledgements and retain exhausted failures. SMTP acceptance is not inbox delivery and duplicate email after ambiguous acceptance remains possible. When the server can derive the order's access key and its hash opens the order, the receipt links the buyer's order page with that key after '#acceso='; the order page keeps the key on that device and removes it from the address. Without the secret, or after it rotates, the receipt carries no order link.",
       "actors": [
         "Public ticket buyer",
         "Payment finalizer",
@@ -5767,7 +5769,9 @@
         "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index_rollback.sql",
         "tdf-hq/config/default.env.example",
         "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql",
-        "tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql"
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql",
+        "tdf-hq/src/TDF/Ticketing/LookupToken.hs",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx"
       ],
       "tests": [
         "scripts/test-ticket-confirmation.sh",
@@ -5781,7 +5785,8 @@
         "scripts/test-ticket-confirmation-lease.py",
         "tdf-hq/test/TDF/DisposableTicketDatabase.hs",
         "tdf-hq/test/TicketDatabaseRoutingMain.hs",
-        "scripts/__tests__/disposable-postgres-url.test.mjs"
+        "scripts/__tests__/disposable-postgres-url.test.mjs",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx"
       ],
       "formalModels": [
         "formal/event-operations/NotificationLease.tla"
@@ -9389,14 +9394,14 @@
       "observability": "Existing marketplace analytics; jest and browser evidence.",
       "source": "Android Chrome (Redmi) user test 2026-10-07: four screenshots and tester report; PR #512 reproduction under 360px emulation",
       "implementation": [
-        "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
+        "tdf-hq-ui/src/services/cartSummary.ts",
         "tdf-hq-ui/src/components/MarketplaceCartButton.tsx",
         "tdf-hq-ui/src/components/PublicBranding.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/DatafastReturnPage.tsx"
       ],
       "tests": [
-        "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts",
+        "tdf-hq-ui/src/services/cartSummary.test.ts",
         "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
         "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "e2e/web/marketplace-cart.spec.mjs"
@@ -9740,8 +9745,8 @@
       "id": "EVT-DISCOVERY-001",
       "title": "One events entry in navigation and an upcoming-events carousel after login",
       "domain": "EVT",
-      "statement": "The public header offers exactly one visible navigation item for events at any width (the main navigation from md up, the overflow menu on phones), pointing to /social/eventos (the public upcoming agenda for visitors, the events workspace for signed-in users), and the staff sidebar labels the same route simply \"Eventos\". Every signed-in user sees, at the top of the public and authenticated shells, a dismissible carousel of up to eight upcoming public events with their own RSVP status for each, and can RSVP \"accepted\" with one tap using their profile-visibility preference. On /artista/:slugOrId and /a/:slugOrId, show every future publicly listable event belonging to the resolved artist first, in chronological order, followed by the general upcoming selection without duplicate events. The artist group is not subject to the eight-event general limit. Resolve the profile Party ID to social Artist relationships; never infer identity from a matching name or equal numeric IDs. If no artist dates exist or that read fails, retain the general agenda.",
-      "authority": "User request 2026-10-08: one menu item for events and a small carousel of events and RSVPs displayed as soon as any user logs in. User request 2026-10-28: prioritize all future events of the corresponding artist on every artist profile.",
+      "statement": "The public header offers exactly one visible navigation item for events at any width (the main navigation from md up, the overflow menu on phones), pointing to /social/eventos (the public upcoming agenda for visitors, the events workspace for signed-in users), and the staff sidebar labels the same route simply \"Eventos\". Every signed-in user sees, at the top of the public and authenticated shells, a dismissible carousel of up to eight upcoming public events with their own RSVP status for each, and can RSVP \"accepted\" with one tap using their profile-visibility preference. On /artista/:slugOrId and /a/:slugOrId, show every future publicly listable event belonging to the resolved artist first, in chronological order, followed by the general upcoming selection without duplicate events. The artist group is not subject to the eight-event general limit. Resolve the profile Party ID to social Artist relationships; never infer identity from a matching name or equal numeric IDs. If no artist dates exist or that read fails, retain the general agenda. On event RSVP controls, each attendance count opens the corresponding paginated list of visible account names and profile pictures.",
+      "authority": "User request 2026-11-20: open paginated attendee profiles from each RSVP count. User request 2026-10-08: one menu item for events and a small carousel of events and RSVPs displayed as soon as any user logs in. User request 2026-10-28: prioritize all future events of the corresponding artist on every artist profile.",
       "source": "tdf-hq-ui navigation and shells",
       "contract": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
       "actors": [
@@ -9753,6 +9758,7 @@
       ],
       "inputs": [
         "GET /social-events/upcoming",
+        "GET /social-events/events/{eventId}/attendees",
         "GET /social-events/events/{id}/rsvp",
         "PUT /social-events/events/{id}/rsvp"
       ],
@@ -9778,7 +9784,7 @@
       "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference. Artist priority admits only events with public-listable capability and public metadata, including for administrative viewers; management-only event fields are excluded from the card projection.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
       "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
-      "failure": "A failed or malformed general agenda read leaves any available artist dates visible. Failed or absent artist dates retain the general agenda. If neither group has available events, hide the carousel. An RSVP read failure leaves the card as a plain link. The surrounding page and navigation are unaffected.",
+      "failure": "A failed or malformed general agenda read leaves any available artist dates visible. Failed or absent artist dates retain the general agenda. On event RSVP controls, each attendance count opens the corresponding paginated list of visible account names and profile pictures. If neither group has available events, hide the carousel. An RSVP read failure leaves the card as a plain link. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",
       "property": "Navigation exposes a single events entry; the carousel renders only for authenticated viewers, never on the events page itself, and stays hidden for the browser session after dismissal.",
@@ -9792,11 +9798,14 @@
         "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "tdf-hq-ui/src/api/artistUpcomingEvents.ts",
+        "tdf-hq-ui/src/api/eventAttendees.ts",
+        "tdf-hq/src/TDF/Server/EventAttendees.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
       "tests": [
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/components/MarketplaceCartButton.test.tsx",
@@ -15309,13 +15318,15 @@
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/reviews.yaml",
         "tdf-hq/src/TDF/Server/MerchReputation.hs",
-        "tdf-hq/src/TDF/Server/Reviews.hs"
+        "tdf-hq/src/TDF/Server/Reviews.hs",
+        "tdf-hq-ui/src/features/records/RecordDescription.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/api/reviews.test.ts",
         "tdf-hq-ui/src/components/ArtistFansList.test.tsx",
         "tdf-hq-ui/src/components/MarkdownText.test.tsx",
-        "tdf-hq-ui/src/components/UserProfileLink.test.tsx"
+        "tdf-hq-ui/src/components/UserProfileLink.test.tsx",
+        "tdf-hq-ui/src/features/records/RecordDescription.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -16794,7 +16805,8 @@
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/SocialArtistOwnership.hs"
       ],
       "tests": [
         "tdf-hq/test/Spec.hs"
@@ -24148,6 +24160,89 @@
       "historicalStatus": null
     },
     {
+      "id": "PAY-PAYPHONE-CARD-001",
+      "title": "PayPhone card checkout through the hosted Button, confirmed only by the server",
+      "statement": "A buyer can pay a direct checkout by card through PayPhone's hosted payment Button (route label payphone_card) without a PayPhone account and without giving TDF a phone number. The browser is sent only to a PayPhone-hosted page. The charge counts as paid only after the query worker reads the Button status by its TDFC- reference (a JSON list holding exactly one transaction for that reference) and PayPhone's Confirm answer matches transaction, reference, amount and currency. A split is optional and needs the store coding password.",
+      "domain": "PAY",
+      "authority": "Owner request 2026-11-17 (PayPhone card payments without the app); PayPhone sandbox evidence 2026-11-17/18; ADR 0136 for the Button confirmation design.",
+      "source": "docs/adr/0136-marketplace-agreement-payments.md",
+      "contract": "docs/adr/0136-marketplace-agreement-payments.md",
+      "property": "route label (payphone, card) = payphone_card; card offered iff PayPhone runtime configured and the query worker ready (coding password not required); status list with exactly one entry for the reference is read, otherwise rejected; approved -> Confirm follow-up; Succeeded only from a matching Confirm; hosted redirect host is PayPhone over HTTPS without credentials or port; a card request carries no buyer phone.",
+      "actors": [
+        "Anonymous buyer",
+        "PayPhone",
+        "Query worker"
+      ],
+      "preconditions": [
+        "Checkout lookup token; PayPhone runtime configured; COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED and checkout.provider_query_recovery ready; verified one_time and server_verification capabilities for payphone/card."
+      ],
+      "inputs": [
+        "POST /commerce/checkouts/{checkoutId}/payment-sessions with provider payphone and paymentMethod card"
+      ],
+      "state": {
+        "attempt": [
+          "requires_customer_action",
+          "processing",
+          "succeeded",
+          "confirmed_no_charge",
+          "ambiguous"
+        ]
+      },
+      "allowedTransitions": [
+        "requires_customer_action -> succeeded only from a matching Confirm answer",
+        "requires_customer_action -> confirmed_no_charge from a canceled status"
+      ],
+      "forbiddenTransitions": [
+        "succeeded from a status read alone",
+        "succeeded from browser return parameters",
+        "redirect outside PayPhone hosted pages",
+        "buyer phone sent for a card payment"
+      ],
+      "effects": [
+        "provider Prepare and Confirm calls",
+        "reconciled payment attempt"
+      ],
+      "authorization": "Checkout lookup token (capability-header).",
+      "privacy": "No buyer phone is collected for card payments; the PayPhone token is never logged.",
+      "concurrency": "Shared provider query worker lease and reconciliation path.",
+      "idempotency": "Session creation by idempotency key (PAY-RETRY-001); Confirm is idempotent at PayPhone.",
+      "failure": "Unpaid prepared payments query as HTTP 404 and are retried; unconfirmed approvals are reversed by PayPhone.",
+      "recovery": "The query worker confirms every minute for 24 attempts; an unpaid attempt ends in review.",
+      "observability": "Stored provider operation, query job and reconciliation rows.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs",
+        "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
+        "tdf-hq-ui/src/api/providerPaymentSessions.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
+        "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Unit tests for the status list, follow-up confirmation, route label and card readiness without the coding password; UI tests for the card button without phone fields and the PayPhone redirect allowlist; PayPhone sandbox runs of Prepare, list-shaped status, Confirm and Reverse.",
+      "evidence": "docs/adr/0136-marketplace-agreement-payments.md",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for parsing and routing; end-to-end worker confirmation against the sandbox pending a buyer payment run.",
+      "ambiguity": [
+        "A Button status list with several transactions for one reference is rejected and ends in review.",
+        "Abandoned prepared payments query as HTTP 404 until the job dead-letters."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented and unit-tested; worker confirmation against the live sandbox awaits a recorded run."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-HOSTED-NOTIFICATIONS-001",
       "title": "PlaceToPay and PayPhone notifications",
       "statement": "Provider notifications are authenticated or classified as untrusted, stored once in the provider inbox and applied by the worker after a server-to-server query; the handlers move no money. Routes: POST /commerce/provider-notifications/placetopay; POST /commerce/provider-notifications/payphone; POST /NotificacionPago.",
@@ -24433,13 +24528,13 @@
     },
     {
       "id": "MEDIA-STORAGE-WRITES-001",
-      "title": "Drive token exchange, uploads, file deletion and storage destination",
-      "statement": "A signed-in party exchanges or refreshes its own Google Drive tokens, uploads to TDF storage or Drive, deletes its TDF files and chooses its storage destination. Routes: POST /drive/token; POST /drive/token/refresh; POST /drive/upload; DELETE /storage/files/{fileId}; PUT /storage/me/destination.",
+      "title": "Account-scoped Drive connection, uploads, file deletion and storage destination",
+      "statement": "A signed-in party exchanges or refreshes its own Google Drive connection and disconnects its stored delegated credential, uploads to TDF storage or Drive, deletes its TDF files and chooses its storage destination. Routes: POST /drive/token; DELETE /drive/token; POST /drive/token/refresh; POST /drive/upload; DELETE /storage/files/{fileId}; PUT /storage/me/destination.",
       "domain": "MEDIA",
-      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md. Storage reconciliation 2026-11-19 updates the descriptive token behavior from the reviewed #705 handlers; this remains author code reading rather than owner acceptance.",
       "source": "formal/system/commerce-integration-routes.md",
       "contract": "formal/system/commerce-integration-routes.md",
-      "property": "Token routes need a coherent scope (403), validate the PKCE request (400), call Google and return the tokens without storing them (Google errors map to 409 reconnect, 403, 429 or 503). TDF uploads need server auth mode, a 64-hex idempotency key, up to 50 MiB, a visibility and recognized media for public files (400/413), reserve through content_storage_reserve, stage the file and complete under a lease (409 while in progress, 503 on integrity failure). Drive uploads need ops, admin or Artist access or a personal token (403), bind a drive attempt per owner and request key, and reuse an entry only on a matching fingerprint (MEDIA-DRIVE-001). Delete is owner-scoped (404), fences the row cancelled under FOR UPDATE, removes the file and marks it deleted. Destination needs tdf or google_drive and a revision (400) and is a conditional update (409).",
+      "property": "Token routes need a current authenticated session and coherent scope, validate PKCE, store delegated credentials encrypted in the owner-bound server vault and return only an opaque TDFConnection handle. Refresh resolves that owner-bound handle server-side; raw provider credentials are rejected. DELETE /drive/token erases the current account connection and fences stale refresh resurrection, returning 204; it does not delete provider files or claim provider-wide OAuth revocation. Google errors map to reconnect or bounded refusal. TDF uploads need server auth mode, a 64-hex idempotency key, up to 50 MiB, a visibility and recognized media for public files (400/413), reserve through content_storage_reserve, stage the file and complete under a lease (409 while in progress, 503 on integrity failure). Drive uploads need ops, admin or Artist access or a personal token (403), bind a drive attempt per owner and request key, and reuse an entry only on a matching fingerprint (MEDIA-DRIVE-001). Delete is owner-scoped (404), fences the row cancelled under FOR UPDATE, removes the file and marks it deleted. Destination needs tdf or google_drive and a revision (400) and is a conditional update (409).",
       "actors": [
         "Account holder",
         "Operations staff",
@@ -24450,6 +24545,7 @@
       ],
       "inputs": [
         "POST /drive/token",
+        "DELETE /drive/token",
         "POST /drive/token/refresh",
         "POST /drive/upload",
         "DELETE /storage/files/{fileId}",
@@ -24476,7 +24572,7 @@
         "Google Drive calls"
       ],
       "authorization": "Own tokens and files; Drive server credential needs ops access.",
-      "privacy": "Unchanged; see the route table.",
+      "privacy": "Delegated provider credentials remain encrypted server-side; responses expose only an owner-bound handle. Private object access and deployment reader qualification remain separate obligations.",
       "concurrency": "Leases and FOR UPDATE on storage rows; optimistic revision on the destination.",
       "idempotency": "TDF uploads replay by key with on-disk hash verification; Drive uploads reuse by fingerprint; delete and destination are idempotent or 409.",
       "failure": "400/413 invalid; 403 scope; 404 file; 409 lease, reconnect or revision; 503 provider or integrity.",
@@ -24484,10 +24580,16 @@
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/ContentStorage.hs"
+        "tdf-hq/src/TDF/ContentStorage.hs",
+        "tdf-hq/src/TDF/StorageVault.hs",
+        "tdf-hq/src/TDF/DriveOAuthClient.hs"
       ],
       "tests": [
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/StorageSecuritySpec.hs",
+        "scripts/test-content-storage-security-runtime.sh",
+        "tdf-hq/test/integration/content_storage_security_fixture.sql",
+        "tdf-hq/test/integration/content_storage_full_security_fixture.sql"
       ],
       "formalModels": [],
       "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
@@ -25609,10 +25711,10 @@
     {
       "id": "MEDIA-STORAGE-001",
       "title": "Explicit account storage and safe upload recovery",
-      "statement": "Account uploads preserve chosen authority, enforce the approved decimal five-GB allowance with concurrent reservations and retain retry identity without exposing provider internals.",
-      "property": "No personal-to-service fallback; admitted managed occupancy does not exceed entitlement; replay cannot change owner or fingerprint; unconfirmed deletion retains occupied capacity.",
+      "statement": "Account uploads preserve chosen authority, enforce the approved decimal five-GB allowance with concurrent reservations and retain retry identity without exposing provider internals. Delegated credentials remain server-side with authenticated owner-bound encryption; private readers require current ownership or a live authorized domain reference.",
+      "property": "No personal-to-service fallback or implicit public permission; admitted managed occupancy does not exceed entitlement; replay cannot change owner or fingerprint; private bytes require current session and resource authority; public static reads require a completed public registry entry; unconfirmed or uncertain deletion retains occupied capacity.",
       "domain": "MEDIA",
-      "authority": "User-approved November 4 storage and shared upload recovery prompt.",
+      "authority": "User-approved November 4 storage prompt and November 6 security completion request.",
       "source": "User-approved November 4 storage prompt; formal/system/content-storage.md",
       "contract": "formal/system/content-storage.md",
       "actors": [
@@ -25706,7 +25808,18 @@
         "tdf-hq-ui/src/session/useSessionOwner.ts",
         "tdf-hq-ui/src/api/uploadQueue.ts",
         "tdf-hq-ui/src/session/recoverableDraft.ts",
-        "tdf-hq-ui/src/session/useOwnedTabDraft.ts"
+        "tdf-hq-ui/src/session/useOwnedTabDraft.ts",
+        "tdf-hq/src/TDF/StorageVault.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/sql/2026-11-06_content_storage_security.sql",
+        "tdf-hq-ui/src/components/PrivateAttachmentLink.tsx",
+        "tdf-hq-ui/src/services/storageCredentials.ts",
+        "docs/catalog-persistence/storage-security-successor-20261106.json",
+        "tdf-hq/sql/2026-11-07_content_storage_identity_guards.sql",
+        "tdf-hq/sql/2026-11-07_content_storage_identity_guards_rollback.sql",
+        "tdf-mobile/src/api/accountStorage.ts",
+        "tdf-hq-ui/src/utils/env.ts",
+        "tdf-hq/src/TDF/DriveOAuthClient.hs"
       ],
       "tests": [
         "scripts/__tests__/content-storage-model.test.mjs",
@@ -25728,28 +25841,38 @@
         "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
-        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx"
+        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx",
+        "tdf-hq/test/TDF/StorageSecuritySpec.hs",
+        "tdf-hq/test/integration/content_storage_security_fixture.sql",
+        "scripts/test-content-storage-security-runtime.sh",
+        "tdf-hq-ui/src/api/contentStorage.security.test.ts",
+        "tdf-hq-ui/src/services/storageCredentials.test.ts",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "tdf-hq-ui/src/services/googleDrive.compatibility.test.ts",
+        "tdf-hq/test/sql/content_storage_archived_identity.sql",
+        "tdf-mobile/src/api/accountStorage.test.ts",
+        "tdf-mobile/src/api/upload.compatibility.test.ts"
       ],
       "formalModels": [
         "scripts/content-storage-model.mjs"
       ],
-      "verification": "Finite policy model with negative controls; PostgreSQL concurrency and migration tests; owner/reload/transport client tests; canonical hosted backend and synthetic browser receipts, each with its stated limits.",
+      "verification": "Finite policy model with negative controls; PostgreSQL concurrency and migration tests; owner/reload/transport client tests; canonical hosted backend and synthetic browser receipts, each with its stated limits. Refresh-request controls inspect the actual production request builder against the canonical exchange resolver, including whitespace normalization, complete-pair selection, all-four-value validation and generic vault configuration 503. They construct requests without invoking Google or a database.",
       "evidence": "docs/content-storage/rollout.md; scripts/test-content-storage-postgres.mjs; exact-candidate hosted CI logs",
       "status": "specified but missing",
       "critical": true,
-      "confidence": "Partial implementation with bounded executable evidence; no production, real-provider, native-device or system-wide conformance claim.",
+      "confidence": "PARTIAL staged rollout: new backend always encrypts and returns opaque handles. Legacy owner-scoped provider descriptors remain supported only while VITE_DRIVE_VAULT_REQUIRED is not literal true, for old-backend compatibility; this historical mode is not vault-retirement clearance. Strict mode retires raw credentials. Actual local directed SQL/client controls are not production/provider/restore or full implementation refinement evidence.",
       "ambiguity": [
         "See the scoped contract for unimplemented acceptance criteria and evidence limits."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Private attachment readers, encrypted delegated credentials, canonical body/manifest accounting, native destination UI and exact-image release/restore/provider execution remain open. Tab-scoped metadata and original-file reselect now cover the shared web consumers, subject to hosted browser evidence."
+        "reason": "Production activation remains blocked: exact-image HTTP/compiled storage follow-up, actual provider ACL/consent, historical inventory and coordinated key/database/files restore, native destination/consent UI. New server vault remains encrypted in every mode. Default-off frontend strict-vault enforcement preserves existing old-backend proxy behavior; completed strict rollout must separately prove retirement of all owner-scoped provider descriptors. No fallback from denied opaque identity or personal storage to corporate storage."
       },
       "authorization": "Existing server origin, session, role, ownership and provider checks remain authoritative. Cookie inclusion grants no role.",
       "privacy": "Do not extract or log HttpOnly cookies or provider tokens.",
-      "concurrency": "Managed reservation uses account locking and lease identity. A browser-wide queue bounds active transfers to three; queued cancellation removes its waiter.",
+      "concurrency": "Managed reservation uses account locking and lease identity. A browser-wide queue bounds active transfers to three; queued cancellation removes its waiter. Exchange and vault refresh share one canonical OAuth client resolver. Every configured value is validated before selecting a complete Drive pair or complete Google fallback; partial pairs never mix and unused fallback values are not ignored.",
       "idempotency": "Managed and explicit personal Drive attempts retain one owner-bound identity and byte fingerprint. Corporate inventory uploads retain their existing server semantics and are not covered by the new deduplication protocol.",
-      "failure": "Errors preserve drafts and retry metadata; unknown transfer or deletion outcome retains accounting until reconciliation. Provider errors do not invalidate unrelated TDF login.",
+      "failure": "Errors preserve drafts and retry metadata; unknown transfer or deletion outcome retains accounting until reconciliation. Provider errors do not invalidate unrelated TDF login. Vault refresh configuration failures retain 503 storage_vault_unavailable; actual provider invalid_client retains503 storage_service_unavailable, and revoked personal grants retain 409 storage_reconnect_required.",
       "recovery": "Same-tab metadata expires after eight hours and is purged by account/session cleanup. Browser reload requires reselecting the original binary; successful matching uploads reconcile the original key. Storage denial warns the user to keep the tab open.",
       "observability": "No tokens or private bodies in diagnostics; compiler observations, synthetic test receipts and production version reads identify their evidence boundary."
     },
@@ -26020,8 +26143,8 @@
         "tdf-hq/sql/2026-10-20_video_campaigns.sql",
         "tdf-hq-ui/src/api/videoCampaigns.ts",
         "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
-        "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
-        "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
+        "tdf-hq-ui/src/utils/videoCampaign.ts",
+        "tdf-hq-ui/src/services/videoAttribution.ts",
         "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
@@ -26041,8 +26164,8 @@
       "tests": [
         "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
         "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
-        "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
-        "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
+        "tdf-hq-ui/src/utils/videoCampaign.test.ts",
+        "tdf-hq-ui/src/services/videoAttribution.test.ts",
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
         "e2e/web/video-campaigns.spec.mjs",
@@ -27706,7 +27829,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "The ratchet is enforced; 8 backend imports, 10 web imports and 16 oversized files remain listed debt."
+        "reason": "The ratchet is enforced; 8 backend imports, 7 web imports and 16 oversized files remain listed debt."
       },
       "authority": "User request 2026-11-10; layer definitions and limits are an engineering decision recorded in ADR 0133, owner confirmation pending.",
       "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",

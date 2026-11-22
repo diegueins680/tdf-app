@@ -28,6 +28,7 @@ export interface EventCollaboratorDraft {
 export interface CollaborativeEventDraft {
   title: string;
   description: string;
+  publicAddress?: string;
   startAt: string;
   timezone: string;
   durationMinutes: number | null;
@@ -207,7 +208,10 @@ export function buildCollaborativeEventPayload(
 
   return {
     eventTitle: title,
-    eventDescription: draft.description.trim() || null,
+    eventDescription: [
+      draft.publicAddress?.trim() ? `Dirección del evento: ${draft.publicAddress.trim()}` : '',
+      draft.description.trim(),
+    ].filter(Boolean).join('\n\n') || null,
     eventStart: startIso,
     eventTimezone: timezone,
     eventEnd: endIso,
