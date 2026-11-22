@@ -28912,12 +28912,90 @@
       }
     },
     {
+      "id": "EVT-CARD-TICKETS-001",
+      "title": "Public event cards state ticket price and sold-out status from ticket tiers",
+      "statement": "Each row of the public upcoming-events list carries the lowest price among the event's ticket tiers that are active, priced above zero, inside their sale window and still in stock (capped by the event capacity), together with its currency, and a sold-out flag that is true only when such tiers are on sale and none has stock. An event that has ended, or whose in-stock tiers use more than one currency, reports no price. The public agenda card shows the venue with the city, and one ticket line: the starting price or the sold-out notice. With no tier data the card shows no ticket line; it never derives a price, a free label or a sold-out label from the event's reference price.",
+      "domain": "EVT",
+      "critical": false,
+      "actors": [
+        "Visitor",
+        "Signed-in user"
+      ],
+      "preconditions": [
+        "The event is publicly listable under the existing visibility rules.",
+        "Ticket tiers and event capacity remain the inventory authority."
+      ],
+      "inputs": [
+        "GET /social-events/upcoming",
+        "Event ticket tiers, event capacity and event end time",
+        "Current instant"
+      ],
+      "state": {
+        "boundary": "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs"
+      },
+      "allowedTransitions": [
+        "No ticket line to starting price when a tier goes on sale with stock",
+        "Starting price to sold out when the last on-sale stock is taken",
+        "Any ticket line to none when the event ends or sales close"
+      ],
+      "forbiddenTransitions": [
+        "Show a price, free label or sold-out label inferred from the event reference price",
+        "Report sold out for an event that has no tier on sale",
+        "Compare prices across different currencies",
+        "Expose tier quantities, sold counts or organizer data in the public list"
+      ],
+      "effects": [
+        "Three additive fields on the public upcoming-event row",
+        "One read of the event's ticket tiers per listed event",
+        "Venue and ticket line on the public agenda card"
+      ],
+      "authorization": "Unchanged: the list stays public and limited to publicly listable events. The new fields disclose only what the public ticket storefront of the same event already shows.",
+      "privacy": "No buyer, organizer, inventory count or finance data is added; only a lowest price, its currency and a boolean.",
+      "concurrency": "Read-only summary computed at request time; the checkout re-validates price and stock, so a stale card cannot sell an unavailable ticket.",
+      "idempotency": "Read-only; repeated requests have no effect.",
+      "failure": "A client that receives no ticket fields, an unsafe amount or an unknown currency renders no ticket line.",
+      "recovery": "Reload the agenda; the event page and checkout remain the authority for price and availability.",
+      "observability": "Visible ticket line on each card; existing event_impression funnel event unchanged.",
+      "source": "Cognitive-load audit of 2026-11-10, plan item 26; user instruction of 2026-11-14 to implement the audit's fixes.",
+      "contract": "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
+        "scripts/test-public-event-card-tickets-http.py",
+        ".github/workflows/ci.yml",
+        "e2e/web/public-event-ticket-cards.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Local verification passes 12 ticket-summary Hspec cases, the 2 canonical event-end cases and pagination case, 32 focused web cases, 7 configured browser profiles, and 13 actual HTTP assertions against the compiled backend and the full 262-entry schema. The HTTP fixture checks compiled commit identity and rejects a backend without the additive fields. Existing public metadata and workflow admission remain unchanged.",
+      "ambiguity": [
+        "Free events have no tier-based signal because the public storefront sells only priced tiers; the card stays silent for them.",
+        "The summary does not check the payment policy or checkout environment, so a card can show a price for an event whose checkout is not yet enabled."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Verified public-card projection and rendering only; this is not checkout-provider eligibility, payment activation, inventory reservation, production observation or system-wide conformance."
+      },
+      "authority": "approved by user",
+      "property": "fromPrice = min price over tiers that are active, priced, in window, in stock and single-currency, for an event that has not ended; soldOut = on-sale tiers exist and none is in stock; the card renders only these.",
+      "verification": "Hspec summary and boundary cases, focused React suites, seven configured browser projects, and the compiled-server HTTP fixture in the backend CI lane.",
+      "evidence": "tdf-hq/test/Spec.hs; tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx"
+    },
+    {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "title": "Advisory loudness check of delivered masters, bound to one file",
       "domain": "MEDIA",
       "critical": true,
       "statement": "Behind music_releases.loudness_check (disabled by default), the music worker measures the integrated loudness and maximum true peak of every inspected master with FFmpeg's ebur128 filter through a total wrapper, and records the outcome in music_audio_measurement against the asset and its SHA-256. GET /music/releases/{releaseId}/versions/{versionId}/loudness reports, per track, a pass or warning against -14.0 LUFS +/- 2.0 LU and -1.0 dBTP, computed on read. A track is shown as checked only from a measurement of its newest master file. The result is advisory: it never blocks inspection, validation, approval or publication.",
-      "authority": "Owner request of 2026-11-21 (FFT audio features, phase 1) and owner answers of the same day: run inside inspect_audio, current inputs with a 900 s limit, -14.0 LUFS and -1.0 dBTP, warn only. The +/- 2.0 LU band, the silent-file rule and the newest-master rule were proposed by the implementer and continued by the owner without a stated choice. AUTHORITY-099. formal/system/music-loudness-check.md.",
+      "authority": "Owner request of 2026-11-21 (FFT audio features, phase 1) and owner answers of the same day: run inside inspect_audio, current inputs with a 900 s limit, -14.0 LUFS and -1.0 dBTP, warn only. The +/- 2.0 LU two-sided band, the silent-file rule, the newest-master rule and the accepted measured range were proposed by the implementer and accepted by the owner on 2026-11-22 (\"Continue with recommended defaults\"). AUTHORITY-099. formal/system/music-loudness-check.md.",
       "source": "formal/system/music-loudness-check.md",
       "contract": "formal/system/music-loudness-check.md",
       "property": "L1: checked(track) => exists a measured row r with r.asset = newestMaster(track) /\\ r.sha256 = newestMaster(track).sha256 /\\ usable(newestMaster(track)). L2: measured and failed rows change only to superseded. L3: the wrapper prints exactly one result within limit + grace and leaves no child. L4: each flag is monotone in its value. L5: with the flag off no row is written and the route answers 404.",
@@ -29027,7 +29105,6 @@
       "status": "specified and implemented",
       "confidence": "High for the decision rule and the lifecycle (proved on models, tested on PostgreSQL). Medium for accuracy: the conformance signals pass on FFmpeg 7.0.1 locally and were not run on the worker image's FFmpeg. The handler is covered by compilation, the extracted query and review, not by an HTTP test.",
       "ambiguity": [
-        "The +/- 2.0 LU band, failed: silent and the newest-master rule were proposed by the implementer; the owner continued without choosing explicitly.",
         "Pass/warn is not monotone across the whole loudness axis because the band is two-sided; each flag is.",
         "EBU Tech 3341 cases 7-8 (programme material) and 20-23 (filtered impulses) are not tested; they exist only as EBU downloads.",
         "A version may hold several master files for one recording and nothing else in the platform names a current one; this requirement uses the newest undeleted master.",
@@ -29039,7 +29116,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Critical properties proved on models and tested on PostgreSQL and the real FFmpeg; accuracy on the worker image, the untested EBU cases, an HTTP-level route test and explicit owner confirmation of the proposed constants remain."
+        "reason": "Critical properties proved on models and tested on PostgreSQL and the real FFmpeg; accuracy on the worker image, the untested EBU cases, and an HTTP-level route test remain."
       },
       "historicalStatus": null
     }
