@@ -18,6 +18,7 @@ REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 MODEL_DIR="${REPO_DIR}/formal/payments"
 AUTH_MODEL_DIR="${REPO_DIR}/formal/auth"
 FANS_MODEL_DIR="${REPO_DIR}/formal/fans"
+PLAYER_MODEL_DIR="${REPO_DIR}/formal/player"
 JAVA_BIN="${JAVA_BIN:-java}"
 APALACHE_TGZ="${APALACHE_TGZ:-}"
 TLA2TOOLS_JAR="${TLA2TOOLS_JAR:-}"
@@ -220,6 +221,21 @@ apalache_expect "${E}" CInitImplementation Init IndInv 0 NoError "EventAffinity-
 apalache_expect "${E}" CInitImplementation IndInv IndInv 1 NoError "EventAffinity-consecution"
 apalache_expect "${E}" CInitImplementation IndInv Safe 0 NoError "EventAffinity-implication"
 apalache_expect "${E}" CInitStaleListing Init NoHiddenEvidence 3 Error "EventAffinityStaleListing-reachable-violation"
+unset CURRENT_MODEL_DIR
+
+Q=QueueContinuation.tla
+CURRENT_MODEL_DIR="${PLAYER_MODEL_DIR}"
+
+# MEDIA-MUSIC-CONTINUATION-001: the continuation appended to an ended queue
+# holds only recordings of served artists, in the served order, none of them
+# queued or repeated, within the limit. Control: no check against the queue.
+tlc_expect "${Q}" QueueContinuation.cfg pass
+tlc_expect "${Q}" QueueContinuationFullLimit.cfg pass
+tlc_expect "${Q}" QueueContinuationNoQueueFilter.cfg violation
+apalache_expect "${Q}" CInitImplementation Init IndInv 0 NoError "QueueContinuation-initiation"
+apalache_expect "${Q}" CInitImplementation IndInv IndInv 1 NoError "QueueContinuation-consecution"
+apalache_expect "${Q}" CInitImplementation IndInv Safe 0 NoError "QueueContinuation-implication"
+apalache_expect "${Q}" CInitNoQueueFilter Init NoRepeat 3 Error "QueueContinuationNoQueueFilter-reachable-violation"
 unset CURRENT_MODEL_DIR
 
 echo "Inductive proofs and controls passed."
