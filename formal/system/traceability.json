@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "a35aa28c0a51799a18888ae36e01e051de19460f",
+  "mobileRevision": "2bace0c86b83fbece06a339fe4c8bf91e6b6db31",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -22003,7 +22003,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/bookings-routes.md.",
       "source": "formal/system/bookings-routes.md",
       "contract": "formal/system/bookings-routes.md",
-      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); an engineer email is sent only for a newly created booking.",
+      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); only a newly created legacy tentative booking notifies: the assigned engineer by email, every active Admin, Manager and StudioManager by an in-app notification (public_booking_request, target booking) plus email and WhatsApp, and the customer by a receipt email stating the request is unconfirmed and records no payment, and that it holds its slot tentatively until staff confirm or release it only when the created booking was allocated rooms or resources; without allocations it says no slot is held (the staff email and the Domo request page make the same distinction). The in-app rows are written before the response; emails and WhatsApp are sent on a background thread after it, so provider latency never delays or fails the accepted request. Each delivery is best-effort and logged.",
       "actors": [
         "Anonymous customer"
       ],
@@ -22037,7 +22037,9 @@
         "service_booking_checkout_runtime",
         "service_booking_tentative_request",
         "service_booking_event",
-        "engineer email"
+        "engineer, staff and customer email",
+        "staff notification rows",
+        "staff WhatsApp alert"
       ],
       "authorization": "None beyond the key (public-intake).",
       "privacy": "Stores customer contact details from anonymous input.",
@@ -22048,13 +22050,21 @@
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs",
         "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
-        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql"
+        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
+        "tdf-hq/src/TDF/Email.hs",
+        "tdf-hq/src/TDF/Email/Service.hs",
+        "tdf-hq-ui/src/components/notificationTarget.ts",
+        "tdf-mobile/src/navigation/notificationTarget.ts",
+        "tdf-hq-ui/src/pages/DomoVenuePage.tsx"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "scripts/test-public-booking-http-concurrency.sh",
-        "scripts/test-public-booking-tentative-idempotency-migration.sh"
+        "scripts/test-public-booking-tentative-idempotency-migration.sh",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx"
       ],
       "formalModels": [],
       "verification": "publicBookingSqlConflict is tested in tdf-hq/test/TDF/ServerSpec.hs; the HTTP concurrency script drives concurrent public checkouts; the rest is read from the handlers.",
@@ -29280,7 +29290,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "9fb1a6a3ba5d9901ab7d8dee2634f53af022f07e8b270dc4d6b6afe150d203bb",
+    "docs/catalog-persistence/catalog-list-decisions.json": "25956c597800dbaf3ee4926a4c1104d1648f7f1afee183f891d7a838f353c5d8",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -29346,7 +29356,7 @@
     "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
     "e2e/web/payment-choices-contact.spec.mjs": "6ba982189ab6eb888ab98f2abf76918e27c9a62635d7276275a8cf3573bcf234",
     "e2e/web/payment-field-errors.spec.mjs": "0116b1c7bdbef1d0d296a888ea72de15a5feb944d1c45a903dd8156be4055d67",
-    "e2e/web/persona-public.spec.mjs": "dcc349c4129339aaf19b0d80a8a32c35acc83781e331eb3080c44e359c163d73",
+    "e2e/web/persona-public.spec.mjs": "ba0d087b84e330d0d3bcf0642bcba17470121672047d8fd57f14b6cade433c50",
     "e2e/web/public-event-ticket-cards.spec.mjs": "89313c86af9093c9e204f3a934003b0e90229e9d6d2dbab8d0fcac68b4566c0a",
     "e2e/web/public-welcome.spec.mjs": "d130bcf12fa24c19e0017fa14806c15f97c414550ab9402b7ccb51b89b1e2b6d",
     "e2e/web/radio-navigation.spec.mjs": "ebb525a994536606532fd81c20f2cd773cf616a556dca6b2aef2739cb747d1ea",
@@ -29695,7 +29705,7 @@
     "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "67f739e4b9fee99185172f2e4070b694f95a937398420e5358b760898bce5b59",
+    "formal/system/recovery-expiry-arithmetic.json": "f510d740978e061aa9c9fa0afb75cbb18a8820c1b8b049d4dedfb981f3f142a7",
     "formal/system/route-requirements.json": "df5ba57041c1061ce8c325253fc66e48dd5558680f6fcf279ef7403be63355fb",
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -30435,8 +30445,8 @@
     "tdf-hq-ui/src/components/merch/VariantStockEditor.test.tsx": "d34b8f1df685b8abffaf36d0656488f0b8fa50d3faaf6a8413b7a39c39e3eb7d",
     "tdf-hq-ui/src/components/merch/VariantStockEditor.tsx": "2698aaf710c68c1e83879e3e64f913afce2856900d112f666b33b13ff73cd1e5",
     "tdf-hq-ui/src/components/navigationLabels.test.ts": "01028083246407c2dffe74f833aa4b263db10f2ad3ed99621e8fc9c478af90fb",
-    "tdf-hq-ui/src/components/notificationTarget.test.ts": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
-    "tdf-hq-ui/src/components/notificationTarget.ts": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
+    "tdf-hq-ui/src/components/notificationTarget.test.ts": "b4724a34b12b95b40ec3620bd73d132b39bf59b84bee2319d82167ad33fc3e53",
+    "tdf-hq-ui/src/components/notificationTarget.ts": "e21bceb245d6114eebee2644cb683e33549b3b3eb8a48c97cca2e89795053f0d",
     "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "96285dd9f104f929731e47d6dee97f21834dddf9e01f79da642c3b2ec3350f85",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "a454d3ef63cbd0e5ff763ee4accc326af004b95f28888193ce18515d16a59e8d",
@@ -30583,6 +30593,8 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "69d2e5c5578e6a197df30ed9a19b82e36fd3a207c26bf6d2358b922a94c673a1",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "8291bfa98091297a5b96ca67cf1f2b822bd8a4470d83a19fae59ff99a7682074",
     "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "cf84798fc9aa8afdad0af5272c6d1b4ba84f892325d35be8d7fc509ac174c1ab",
+    "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx": "ff462bdf6febe3b83a73935009e770fbb1b9bafe5497749b7eef73bcf382e4ab",
+    "tdf-hq-ui/src/pages/DomoVenuePage.tsx": "8ca17a3b14e7dc4b0a389cda819d2d7deb22cbee3d23dceb22350453874b9401",
     "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx": "c0d2368f5146b8e0ed3552c6e8b98ce50be7ed215a88cc10092f7034843dc913",
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": "ef0bc404a0629dd450f959bfc86230b0d3c7bf08f6de74adb3e73a40b49cd4d9",
     "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx": "3b706df13cadd3dfa75ca932202c6dbc44f87c2146df911918c44e2d4c4adcfd",
@@ -31153,7 +31165,8 @@
     "tdf-hq/src/TDF/Directory/SemanticIndex.hs": "6b5f5b37bd59756a393e72aa2bb8084dad24202a4bb6c18480890557acda0aed",
     "tdf-hq/src/TDF/Directory/SemanticSearch.hs": "61736ca270a639877377167a4aaa55fdec82f72b1cf7cb737c504da2aea35709",
     "tdf-hq/src/TDF/DriveOAuthClient.hs": "3d5bb29922ad21c6bf618af565fba70cfe29b5c6fcca2272c8c61e3ee370c3ac",
-    "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
+    "tdf-hq/src/TDF/Email.hs": "facc9c82964701339f17b288e10e7e531c05ae101bf8ba83f4cd1dfd16b89196",
+    "tdf-hq/src/TDF/Email/Service.hs": "3c127c8506531eed57c738e5beb7708b6f19aafb906c215a6867b5ef3c689059",
     "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs": "1b3937abe97b188d3dcd1f330485332651295a5e75e65d14702091c193245d27",
     "tdf-hq/src/TDF/EventOperations/Server.hs": "52efa5b303a134cf22fdbe5df9240b6c53620664b9283982e4e29c4ee7cfeed6",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
@@ -31193,7 +31206,7 @@
     "tdf-hq/src/TDF/Routes/DomoRefunds.hs": "b30e9a615d9ea754e2ffe29a257e272d4fc7342d17ec919e1235a199aeff34fd",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "c5b5eac3f58fbb0a24651c2bb2e57664720a6526ac25a69d2bf9f49acfdcc438",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "10cfaf282a49b1b78b23d820b65339cb2cbe5dd0ed5152688362e0ac034b1aa1",
+    "tdf-hq/src/TDF/Server.hs": "74be6a7279ca75cc8e24231e6723c461acc8956d6f4e4f5f497597c0df3cd521",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
@@ -31219,6 +31232,7 @@
     "tdf-hq/src/TDF/Server/PaymentAvailability.hs": "b5c07724c67c4f02591abd0bec054547c47f45795f269b804318b7e85f062fae",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "d5129a96d1450d4c428ff8d6886abb1311116c24c43f40b8ae3e01327dfd3116",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "f42c6b0bf7913cf6f0a0deeae6aa6c14785644edf2d50d97dd840d1202080cae",
+    "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs": "e0716a47f555d27e774694ebe97ca81593b4a1b4a9f12f6e3b86adf257f246b9",
     "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs": "9ec708b9886bc37b131a48003a35a2ae4ca97f1b09a2b78bd9d52587f5b10a6f",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
@@ -31271,7 +31285,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "a6791a7004ef23a83a5130265ace7566dd893fab4ced5a352ebe1a643ce53a34",
+    "tdf-hq/tdf-hq.cabal": "c4cf2a12edccf2649957d6bd6e2d0bacfc2ffd1732b49e1444218bfef2b9442e",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -31521,7 +31535,7 @@
     "tdf-mobile/src/localization/onboardingCopy.ts": "58e4e181760d5850403bb9e01980e09ee21caddb46e4c82f6207d01abfc0c949",
     "tdf-mobile/src/navigation/deepLinks.ts": "6d1185dd9e204bd685da9fe358de42c7254f27eacd80b8f59fdd43d6fb1baebf",
     "tdf-mobile/src/navigation/notificationResponses.test.ts": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
-    "tdf-mobile/src/navigation/notificationTarget.ts": "635b13a8a72aeed82cf22482e8213ddc7df33c54a95f6b9b655b5ddd53e2b33c",
+    "tdf-mobile/src/navigation/notificationTarget.ts": "475dbc77248442868e88b9d91a68fc47f7975b7c08f5c6825f406a0832e16f1b",
     "tdf-mobile/src/notifications/NotificationScreen.test.tsx": "8309c2ee6791950ecfc31aa48f43156876156099c87ebe701f291e079aad2c05",
     "tdf-mobile/src/providers/AppProviders.tsx": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
     "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
@@ -38932,6 +38946,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "BOOK-PUBLIC-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "CONTRACT-STORE-001",
         "relationship": "implementation"
       },
@@ -42722,6 +42740,10 @@
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-PUBLIC-INTAKE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": [
@@ -42902,6 +42924,10 @@
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-PUBLIC-INTAKE-001",
+        "relationship": "implementation"
       }
     ],
     "playwright.music-native.config.mjs": [
@@ -42977,6 +43003,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-INVITATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "BOOK-PUBLIC-INTAKE-001",
         "relationship": "tests"
       }
     ],
@@ -48970,6 +49000,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs": [
+      {
+        "requirement": "BOOK-PUBLIC-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql": [
       {
         "requirement": "BOOK-PUBLIC-INTAKE-001",
@@ -48980,6 +49016,18 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Email/Service.hs": [
+      {
+        "requirement": "BOOK-PUBLIC-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/DomoVenuePage.tsx": [
+      {
+        "requirement": "BOOK-PUBLIC-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-public-booking-http-concurrency.sh": [
       {
         "requirement": "BOOK-PUBLIC-INTAKE-001",
@@ -48987,6 +49035,12 @@
       }
     ],
     "scripts/test-public-booking-tentative-idempotency-migration.sh": [
+      {
+        "requirement": "BOOK-PUBLIC-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx": [
       {
         "requirement": "BOOK-PUBLIC-INTAKE-001",
         "relationship": "tests"
@@ -53466,7 +53520,7 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "dcc349c4129339aaf19b0d80a8a32c35acc83781e331eb3080c44e359c163d73",
+      "sha256": "ba0d087b84e330d0d3bcf0642bcba17470121672047d8fd57f14b6cade433c50",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66680,7 +66734,7 @@
     {
       "id": "SURFACE-5a528805907175e9",
       "path": "tdf-hq-ui/src/components/notificationTarget.test.ts",
-      "sha256": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
+      "sha256": "b4724a34b12b95b40ec3620bd73d132b39bf59b84bee2319d82167ad33fc3e53",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66693,6 +66747,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-INVITATION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "BOOK-PUBLIC-INTAKE-001",
           "relationship": "tests"
         }
       ]
@@ -66700,7 +66758,7 @@
     {
       "id": "SURFACE-45942cefd314d415",
       "path": "tdf-hq-ui/src/components/notificationTarget.ts",
-      "sha256": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
+      "sha256": "e21bceb245d6114eebee2644cb683e33549b3b3eb8a48c97cca2e89795053f0d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66713,6 +66771,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-INVITATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "BOOK-PUBLIC-INTAKE-001",
           "relationship": "implementation"
         }
       ]
@@ -69635,16 +69697,26 @@
     {
       "id": "SURFACE-a7de3e18000e0445",
       "path": "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx",
-      "sha256": "ecca330dd538d32f47bcc65cbef24063549d7ae9e89c6716504653e86b4945c9",
+      "sha256": "ff462bdf6febe3b83a73935009e770fbb1b9bafe5497749b7eef73bcf382e4ab",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "BOOK-PUBLIC-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b81f0abcff43675c",
       "path": "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
-      "sha256": "612c53c07b538d3a47aaa7e94da22e68c0da2926c6de7d18fac5dec33d1e1686",
+      "sha256": "8ca17a3b14e7dc4b0a389cda819d2d7deb22cbee3d23dceb22350453874b9401",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "BOOK-PUBLIC-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-069f0007a6d5497d",
@@ -82008,11 +82080,15 @@
     {
       "id": "SURFACE-d333d9e42e7c8cfc",
       "path": "tdf-hq/src/TDF/Email.hs",
-      "sha256": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
+      "sha256": "facc9c82964701339f17b288e10e7e531c05ae101bf8ba83f4cd1dfd16b89196",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "NOTIF-TICKET-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "BOOK-PUBLIC-INTAKE-001",
           "relationship": "implementation"
         },
         {
@@ -82035,9 +82111,14 @@
     {
       "id": "SURFACE-f6ca65c5d4df5331",
       "path": "tdf-hq/src/TDF/Email/Service.hs",
-      "sha256": "00629adbf48158e45d178c28a614a4a66dd241d6cfda3ddbc5a4c742b330a762",
+      "sha256": "3c127c8506531eed57c738e5beb7708b6f19aafb906c215a6867b5ef3c689059",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "BOOK-PUBLIC-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-95c5350853ebb8e9",
@@ -82782,7 +82863,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "10cfaf282a49b1b78b23d820b65339cb2cbe5dd0ed5152688362e0ac034b1aa1",
+      "sha256": "74be6a7279ca75cc8e24231e6723c461acc8956d6f4e4f5f497597c0df3cd521",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83654,6 +83735,18 @@
       "requirements": [
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e6a81cd4686d612d",
+      "path": "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs",
+      "sha256": "e0716a47f555d27e774694ebe97ca81593b4a1b4a9f12f6e3b86adf257f246b9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "BOOK-PUBLIC-INTAKE-001",
           "relationship": "implementation"
         }
       ]
@@ -84923,7 +85016,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "a6791a7004ef23a83a5130265ace7566dd893fab4ced5a352ebe1a643ce53a34",
+      "sha256": "c4cf2a12edccf2649957d6bd6e2d0bacfc2ffd1732b49e1444218bfef2b9442e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -91250,7 +91343,7 @@
     {
       "id": "SURFACE-1b440686d0fdbde2",
       "path": "tdf-mobile/src/navigation/notificationTarget.ts",
-      "sha256": "635b13a8a72aeed82cf22482e8213ddc7df33c54a95f6b9b655b5ddd53e2b33c",
+      "sha256": "475dbc77248442868e88b9d91a68fc47f7975b7c08f5c6825f406a0832e16f1b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -91263,6 +91356,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-INVITATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "BOOK-PUBLIC-INTAKE-001",
           "relationship": "implementation"
         }
       ]
@@ -92020,8 +92117,6 @@
     "SURFACE-857a51643aefc9ce",
     "SURFACE-cc7e604a9ece48cd",
     "SURFACE-09fec2498cbd88bf",
-    "SURFACE-a7de3e18000e0445",
-    "SURFACE-b81f0abcff43675c",
     "SURFACE-069f0007a6d5497d",
     "SURFACE-29fec1655a519178",
     "SURFACE-378a6bc30de606b4",
@@ -92564,7 +92659,6 @@
     "SURFACE-d8b4f1e2ff66bf87",
     "SURFACE-5a5861ba5432460f",
     "SURFACE-185047159b48a7cf",
-    "SURFACE-f6ca65c5d4df5331",
     "SURFACE-95c5350853ebb8e9",
     "SURFACE-4b41640bebd528e2",
     "SURFACE-5dc54f64fc1fc3e9",
@@ -94243,7 +94337,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3de4621093522dae9dc547d10a743ffd7fb4c60eb7b8e50bcbf31c511ffed675",
+      "sourceSha256": "45587ab182ccd8ee4b353569cc8b254b9d97650f7060fab0bf6ab8cc845caa25",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -94271,7 +94365,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3de4621093522dae9dc547d10a743ffd7fb4c60eb7b8e50bcbf31c511ffed675",
+      "sourceSha256": "45587ab182ccd8ee4b353569cc8b254b9d97650f7060fab0bf6ab8cc845caa25",
       "definition": {
         "states": [
           "absent",
@@ -94301,7 +94395,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3de4621093522dae9dc547d10a743ffd7fb4c60eb7b8e50bcbf31c511ffed675",
+      "sourceSha256": "45587ab182ccd8ee4b353569cc8b254b9d97650f7060fab0bf6ab8cc845caa25",
       "definition": {
         "export": [
           "queued",
