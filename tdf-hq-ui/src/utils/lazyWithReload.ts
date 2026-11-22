@@ -4,7 +4,6 @@ import { lazy, type ComponentType } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type LazyComponent = ComponentType<any>;
 
-const LEGACY_CHUNK_RELOAD_KEY = 'chunk_reload_attempted';
 const CHUNK_RELOAD_KEY = 'tdf-hq-ui/chunk-reload-attempted';
 const CHUNK_ERROR_PATTERNS = [
   /Failed to fetch dynamically imported module/i,
@@ -23,16 +22,6 @@ export function isChunkLoadError(error: unknown): boolean {
   );
 }
 
-const clearChunkReloadMarker = () => {
-  if (typeof window === 'undefined') return;
-  try {
-    window.sessionStorage.removeItem(CHUNK_RELOAD_KEY);
-    window.sessionStorage.removeItem(LEGACY_CHUNK_RELOAD_KEY);
-  } catch {
-    // Session storage can be unavailable in private or restricted browser modes.
-  }
-};
-
 const shouldReloadForChunkError = () => {
   if (typeof window === 'undefined') return false;
   try {
@@ -43,7 +32,9 @@ const shouldReloadForChunkError = () => {
     window.sessionStorage.setItem(CHUNK_RELOAD_KEY, reloadMarker);
     return true;
   } catch {
-    return true;
+    // Without storage there is no durable reload budget. Keep the manual
+    // recovery screen instead of repeatedly discarding the current document.
+    return false;
   }
 };
 
@@ -63,13 +54,8 @@ export function lazyWithReload<T extends LazyComponent>(
 ) {
   return lazy(() =>
     factory()
-      .then((module) => {
-        clearChunkReloadMarker();
-        return module;
-      })
       .catch((error) => {
-        if (isChunkLoadError(error) && shouldReloadForChunkError()) {
-          window.location.reload();
+        if (isChunkLoadError(error) && reloadOnceForChunkError()) {
           // Keep React quiet while the browser swaps in the fresh asset graph.
           return new Promise<{ default: T }>(() => {
             // Intentionally unresolved.

@@ -109,7 +109,15 @@ imports, 17 oversized files. Suggested order, each as its own small change:
    from `features/` to `utils/`, its lowest consumer's layer. The four imports
    of it from `utils` and `components` are gone, and its eleven value lists keep
    their catalog reviews as successors under the new path.
-6. Split the oversized files along the seams their own section comments mark,
+6. Done: the three `components -> features` imports are gone. The video
+   campaign model (`videoCampaign.ts`: types, a zod schema and pure helpers,
+   whose types `api/videoCampaigns.ts` also uses) moved to `utils/`. Campaign
+   attribution (`videoAttribution.ts`, which records conversions through the
+   api) and the marketplace cart summary store (`cartSummary.ts`, browser
+   storage plus a React subscription) moved to `services/`, the app-services
+   layer between `api` and `components`. The three value lists in the campaign
+   model keep their catalog reviews as successors under the new path.
+7. Split the oversized files along the seams their own section comments mark,
    lowering each ceiling in the same change.
 
 ## Consequences

@@ -59,6 +59,35 @@ test('opaque Raw mounts and capture-all remain explicit rather than invented GET
   assert.equal(surface.rawMounts[0].parameters[0].repeated, true);
 });
 
+test('Dataweb network context is an internal input, without a browser field or authentication grant', () => {
+  const surface = describe(sub(node('TDF.Commerce.DatafastClientIP', 'DatafastClientRequest'), verb('POST')));
+  assert.deepEqual(surface.operations[0].internalInputs, ['datafast-client-request']);
+  assert.deepEqual(surface.operations[0].parameters, []);
+  assert.deepEqual(surface.operations[0].bodies, []);
+  assert.deepEqual(surface.operations[0].authCombinators, []);
+  assert.throws(() => describe(sub(node('TDF.Commerce.DatafastClientIP', 'DatafastClientRequest', textType), verb())));
+});
+
+test('all seven declared Dataweb creation routes carry transport context without a public IP field', () => {
+  const snapshot = JSON.parse(readFileSync(new URL('../../formal/system/compiled-api-surface.json', import.meta.url), 'utf8'));
+  const paths = [
+    '/public/courses/{slug}/registrations/{registrationId}/datafast/checkout',
+    '/public/domo/quotes/{quoteId}/datafast/checkout',
+    '/public/events/{eventId}/ticket-orders/{orderId}/datafast/checkout',
+    '/music/purchases/{purchaseId}/datafast/checkout',
+    '/marketplace/cart/{cartId}/datafast/checkout',
+    '/services/storefront/order/{orderId}/datafast/checkout',
+    '/bookings/public/orders/{bookingId}/datafast/checkout',
+  ];
+  const routes = snapshot.surface.operations.filter(operation => operation.internalInputs.includes('datafast-client-request'));
+  assert.deepEqual(routes.map(operation => operation.path), paths);
+  for (const route of routes) {
+    assert.equal(route.method, 'POST');
+    assert.deepEqual(route.internalInputs, ['datafast-client-request']);
+    assert.ok(!route.parameters.some(parameter => /client.ip|forwarded/i.test(parameter.name)));
+  }
+});
+
 test('unknown or corrupted compiled branches cannot disappear silently', () => {
   for (const broken of [
     alternative(verb(), node('Unknown', 'API')),

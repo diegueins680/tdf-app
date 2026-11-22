@@ -32,6 +32,7 @@ module TDF.API.SocialEventsAPI (
     validateEventImageUploadForm,
 ) where
 
+import Data.Int (Int64)
 import Data.Aeson (FromJSON, ToJSON, Value)
 import Data.Char (
     GeneralCategory (Format, LineSeparator, ParagraphSeparator, Space),
@@ -489,6 +490,7 @@ type RsvpRoutes =
         :<|> "events" :> Capture "eventId" Text :> "rsvp" :> ReqBody '[JSON] RsvpCreateDTO :> Put '[JSON] RsvpDTO
         :<|> "events" :> Capture "eventId" Text :> "rsvp" :> DeleteNoContent
         :<|> "events" :> Capture "eventId" Text :> "rsvp-summary" :> Get '[JSON] RsvpSummaryDTO
+        :<|> "events" :> Capture "eventId" Text :> "attendees" :> QueryParam' '[Required, Strict] "status" Text :> QueryParam "after" Int64 :> Get '[JSON] Value
         :<|> "events" :> Capture "eventId" Text :> "rsvps" :> QueryParam "cursor" Text :> QueryParam "limit" Int :> Get '[JSON] RsvpAdminPageDTO
         :<|> "profiles" :> Capture "partyId" Text :> "rsvp-feed" :> QueryParam "cursor" Text :> QueryParam "limit" Int :> Get '[JSON] RsvpFeedPageDTO
         :<|> "directory-profiles" :> Capture "slug" Text :> "rsvp-feed" :> QueryParam "cursor" Text :> QueryParam "limit" Int :> Get '[JSON] RsvpFeedPageDTO

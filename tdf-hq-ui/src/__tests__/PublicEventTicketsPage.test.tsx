@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { fireEvent } from '@testing-library/react';
 
 const getStorefrontMock = jest.fn<(eventId: number) => Promise<unknown>>();
@@ -63,6 +63,13 @@ jest.unstable_mockModule('../api/providerPaymentSessions', () => ({
   ...hostedApi,
   createProviderPaymentSession: hostedCreateMock,
   getProviderPaymentSession: hostedGetMock,
+}));
+
+let sessionMock: { username: string; displayName: string } | null = null;
+const sessionApi = await import('../session/SessionContext');
+jest.unstable_mockModule('../session/SessionContext', () => ({
+  ...sessionApi,
+  useSession: () => ({ session: sessionMock }),
 }));
 
 const { default: PublicEventTicketsPage } = await import('../pages/PublicEventTicketsPage');
@@ -179,6 +186,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
   });
 
   beforeEach(() => {
+    sessionMock = null;
     window.localStorage.clear();
     window.sessionStorage.clear();
     window.localStorage.setItem('tdf:event-ticket-checkout:41:92', 'secure-lookup-token');
@@ -254,7 +262,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     getStorefrontMock.mockImplementation(() => new Promise(() => {}));
     getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'issued' }));
     await renderTracking('/eventos/41/orden/92');
-    await waitForExpectation(() => expect(container.textContent).toContain('El servidor verificó el pago'));
+    await waitForExpectation(() => expect(container.textContent).toContain('Pago confirmado'));
   });
 
   it('retries a failed order lookup without creating a second purchase', async () => {
@@ -265,7 +273,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.textContent).not.toContain('Elige tus entradas');
     const retry = Array.from(container.querySelectorAll('button')).find((button) => button.textContent === 'Intentar de nuevo')!;
     await act(async () => { fireEvent.click(retry); });
-    await waitForExpectation(() => expect(container.textContent).toContain('El servidor verificó el pago'));
+    await waitForExpectation(() => expect(container.textContent).toContain('Pago confirmado'));
     expect(getCheckoutMock).toHaveBeenCalledTimes(2);
     expect(createCheckoutMock).not.toHaveBeenCalled();
   });
@@ -279,14 +287,14 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     const labels = () => Array.from(container.querySelectorAll('button')).map((button) => button.textContent ?? '');
     const refresh = () => Array.from(container.querySelectorAll('button'))
       .find((button) => button.textContent === 'Actualizar estado de la orden')!;
-    await waitForExpectation(() => expect(labels()).toContain('Datafast'));
+    await waitForExpectation(() => expect(labels()).toContain('Tarjeta · Datafast'));
     await act(async () => { fireEvent.click(refresh()); });
     await waitForExpectation(() => expect(container.textContent).toContain('No vuelvas a comprar ni a pagar'));
-    expect(labels()).not.toContain('Datafast');
+    expect(labels()).not.toContain('Tarjeta · Datafast');
     expect(labels().some((label) => /paypal/i.test(label))).toBe(false);
-    expect(container.textContent).not.toContain('No hay un proveedor real habilitado');
+    expect(container.textContent).not.toContain('no hay un método de pago en línea');
     await act(async () => { fireEvent.click(refresh()); });
-    await waitForExpectation(() => expect(labels()).toContain('Datafast'));
+    await waitForExpectation(() => expect(labels()).toContain('Tarjeta · Datafast'));
   });
 
   it('keeps an issued ticket on screen when refreshing the order fails', async () => {
@@ -304,6 +312,39 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.textContent).toContain('TICKET-VERIFIED');
     expect(container.textContent).toContain('Entradas emitidas');
     expect(createCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it('opens an order from the confirmation email link on a new device and clears the key from the address', async () => {
+    window.localStorage.clear();
+    const emailedKey = 'ab'.repeat(32);
+    getCheckoutMock.mockResolvedValue(checkoutFixture({
+      paymentStatus: 'paid', fulfillmentStatus: 'issued', paymentMethods: [],
+      tickets: [{ ticketId: 501, ticketCode: 'TICKET-EMAILED', status: 'issued', holderName: 'Comprador' }],
+    }));
+    const LocationProbe = () => {
+      const location = useLocation();
+      return <output data-testid="address">{`${location.pathname}${location.search}${location.hash}`}</output>;
+    };
+    await act(async () => {
+      root.render(<MemoryRouter initialEntries={[`/eventos/41/orden/92#acceso=${emailedKey}`]}>
+        <QueryClientProvider client={queryClient}>
+          <LocationProbe />
+          <Routes><Route path="/eventos/:eventId/orden/:orderId" element={<PublicEventTicketsPage />} /></Routes>
+        </QueryClientProvider>
+      </MemoryRouter>);
+    });
+    await waitForExpectation(() => expect(container.textContent).toContain('TICKET-EMAILED'));
+    expect(getCheckoutMock).toHaveBeenCalledWith(41, 92, emailedKey);
+    expect(getCheckoutMock.mock.calls.every(([, , token]) => token === emailedKey)).toBe(true);
+    expect(container.querySelector('[data-testid="address"]')?.textContent).toBe('/eventos/41/orden/92');
+    expect(window.localStorage.getItem('tdf:event-ticket-checkout:41:92')).toBe(emailedKey);
+  });
+
+  it('ignores a malformed key in the address', async () => {
+    window.localStorage.clear();
+    await renderTracking('/eventos/41/orden/92#acceso=not-a-key');
+    await waitForExpectation(() => expect(container.textContent).toContain('enlace de tu correo de confirmación'));
+    expect(getCheckoutMock).not.toHaveBeenCalled();
   });
 
   it('explains missing order access without offering another purchase', async () => {
@@ -356,9 +397,50 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.querySelector(`#${refundButton.getAttribute('aria-controls')}`)?.textContent).toBe('Reembolso total.');
     expect(container.textContent).toContain('Tarifa al comprador: 2%');
     expect(container.textContent).toContain('Tarifa al organizador (descontada del pago): 2%');
-    expect(container.textContent).toContain('Retención temporal de inventario: 15 minutos');
+    expect(container.textContent).toContain('Reserva temporal de entradas: 15 minutos');
     expect(container.textContent).toContain('Transferencias: permitidas');
     expect(container.textContent).toContain('Versión de términos: event-ticket-terms-v1');
+  });
+
+  it('shows a one-line summary with a live subtotal instead of repeating the event description', async () => {
+    await renderTracking('/eventos/41/entradas?tierId=8&quantity=2');
+    await waitForExpectation(() => expect(container.querySelector('[data-testid="ticket-subtotal"]')).toBeTruthy());
+    const subtotal = container.querySelector('[data-testid="ticket-subtotal"]')!.textContent ?? '';
+    expect(subtotal).toMatch(/2 × .*20[,.]00 = .*40[,.]00/);
+    expect(subtotal).toContain('tarifa al comprador 2');
+    expect(container.textContent).not.toContain('Evento público');
+    // One ticket type is stated, not offered as a one-option menu.
+    expect(container.querySelector('[role="combobox"]')).toBeNull();
+    expect(container.textContent).toContain('General');
+    await act(async () => {
+      fireEvent.click(container.querySelector<HTMLButtonElement>('button[aria-label="Una entrada más"]')!);
+    });
+    expect(container.querySelector('[data-testid="ticket-subtotal"]')!.textContent).toMatch(/3 × .*= .*60[,.]00/);
+  });
+
+  it('keeps phone and promo code folded until the buyer asks for them', async () => {
+    await renderTracking('/eventos/41/entradas');
+    await waitForExpectation(() => expect(container.textContent).toContain('Agregar teléfono o código promocional'));
+    expect(container.querySelector('input[maxlength="50"]')).toBeNull();
+    const toggle = [...container.querySelectorAll('button')].find((button) => button.textContent === 'Agregar teléfono o código promocional')!;
+    await act(async () => { fireEvent.click(toggle); });
+    expect(container.querySelector('input[maxlength="50"]')).toBeTruthy();
+    expect(container.querySelector('input[maxlength="24"]')).toBeTruthy();
+  });
+
+  it('prefills the buyer from the session and leaves a guest form empty', async () => {
+    sessionMock = { username: 'ana@example.invalid', displayName: 'Ana Fan' };
+    await renderTracking('/eventos/41/entradas');
+    await waitForExpectation(() => expect(container.querySelector('input[maxlength="160"]')).toBeTruthy());
+    expect(container.querySelector<HTMLInputElement>('input[maxlength="160"]')!.value).toBe('Ana Fan');
+    expect(container.querySelector<HTMLInputElement>('input[type="email"]')!.value).toBe('ana@example.invalid');
+  });
+
+  it('does not treat a plain username as an email address', async () => {
+    sessionMock = { username: 'ana-fan', displayName: 'Ana Fan' };
+    await renderTracking('/eventos/41/entradas');
+    await waitForExpectation(() => expect(container.querySelector('input[type="email"]')).toBeTruthy());
+    expect(container.querySelector<HTMLInputElement>('input[type="email"]')!.value).toBe('');
   });
 
   it('shows the event artwork above the checkout', async () => {
@@ -445,7 +527,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await act(async () => { fireEvent.click(submit); });
     await waitForExpectation(() => expect(container.textContent).toContain('Estamos verificando el depósito'));
     expect(submitBankTransferEvidenceMock).toHaveBeenCalledWith(41, 92, 'COMP-55', 'secure-lookup-token');
-    expect(container.textContent).not.toContain('El servidor verificó el pago');
+    expect(container.textContent).not.toContain('Pago confirmado');
     const providers = funnelCaptureMock.mock.calls.map((call) => call[1]);
     expect(providers).toEqual(expect.arrayContaining([expect.objectContaining({ provider: 'bank_transfer' })]));
     providers.forEach(expectNoPrivateTicketData);
@@ -515,13 +597,13 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     const paypalButton = () => Array.from(container.querySelectorAll('button'))
       .find((button) => button.textContent === 'PayPal')!;
     await waitForExpectation(() => expect(paypalButton()?.disabled).toBe(false));
-    expect(labels()).toContain('Datafast');
+    expect(labels()).toContain('Tarjeta · Datafast');
     await act(async () => fireEvent.click(paypalButton()));
     await waitForExpectation(() => expect(render).toHaveBeenCalledTimes(1));
     const options = buttons.mock.calls[0]![0];
     await act(async () => options.onApprove?.({ orderID: 'BOUND-PAYPAL-ORDER' }));
     await waitForExpectation(() => expect(container.textContent).toContain('El servidor no pudo verificar PayPal'));
-    expect(labels()).not.toContain('Datafast');
+    expect(labels()).not.toContain('Tarjeta · Datafast');
     // Reading the order again does not ask PayPal: an unpaid answer must not
     // bring the other rails back.
     const refresh = () => Array.from(container.querySelectorAll('button'))
@@ -530,12 +612,12 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await act(async () => { fireEvent.click(refresh()); });
     await waitForExpectation(() => expect(getCheckoutMock.mock.calls.length).toBeGreaterThan(lookups));
     await waitForExpectation(() => expect(refresh().disabled).toBe(false));
-    expect(labels()).not.toContain('Datafast');
+    expect(labels()).not.toContain('Tarjeta · Datafast');
     expect(container.textContent).toContain('No vuelvas a pagar');
     // Only a paid order settles it.
     getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'issued' }));
     await act(async () => { fireEvent.click(refresh()); });
-    await waitForExpectation(() => expect(container.textContent).toContain('El servidor verificó el pago'));
+    await waitForExpectation(() => expect(container.textContent).toContain('Pago confirmado'));
     expect(container.textContent).not.toContain('No vuelvas a pagar');
   });
 
@@ -556,6 +638,71 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.textContent).toContain('Puedes comprar hasta 4 entradas por orden.');
     expect(createCheckoutMock).not.toHaveBeenCalled();
     expect(funnelCaptureMock).not.toHaveBeenCalled();
+  });
+
+  it('names invalid contact fields, focuses the first and preserves edits without starting checkout', async () => {
+    await renderTracking('/eventos/41/entradas');
+    await waitForExpectation(() => expect(container.querySelector('form')).toBeTruthy());
+    const name = container.querySelector<HTMLInputElement>('input[maxlength="160"]')!;
+    const email = container.querySelector<HTMLInputElement>('input[type="email"]')!;
+    await act(async () => {
+      fireEvent.change(name, { target: { value: '   ' } });
+      fireEvent.change(email, { target: { value: 'sin-correo' } });
+      fireEvent.click(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
+    });
+    await act(async () => { fireEvent.submit(container.querySelector('form')!); });
+    expect(name.getAttribute('aria-invalid')).toBe('true');
+    expect(email.getAttribute('aria-invalid')).toBe('true');
+    expect(document.activeElement).toBe(name);
+    expect(container.textContent).toContain('Ingresa un correo válido para recibir tus entradas.');
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+    expect(funnelCaptureMock.mock.calls.some(([event]) => event === 'ticketing_checkout_started')).toBe(false);
+    await act(async () => { fireEvent.change(name, { target: { value: 'Compradora' } }); });
+    // Clearing one error must not steal focus while a person is typing.
+    expect(document.activeElement).toBe(name);
+    expect(email.value).toBe('sin-correo');
+    await act(async () => { fireEvent.submit(container.querySelector('form')!); });
+    expect(document.activeElement).toBe(email);
+    await act(async () => { fireEvent.change(email, { target: { value: 'buyer@example.invalid' } }); });
+    await act(async () => { fireEvent.submit(container.querySelector('form')!); });
+    expect(createCheckoutMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps invoice errors next to their fields and sends no order until they are complete', async () => {
+    sessionMock = { username: 'buyer@example.invalid', displayName: 'Compradora' };
+    getStorefrontMock.mockResolvedValue({ ...storefrontFixture,
+      policy: { ...storefrontFixture.policy, taxInvoiceIssued: true } });
+    await renderTracking('/eventos/41/entradas');
+    await waitForExpectation(() => expect(container.querySelector('[role="combobox"]')).toBeTruthy());
+    await act(async () => { fireEvent.mouseDown(container.querySelector('[role="combobox"]')!); });
+    const idOption = [...document.querySelectorAll('[role="option"]')].find((row) => row.textContent === 'Cédula')!;
+    await act(async () => { fireEvent.click(idOption); });
+    await act(async () => { fireEvent.click(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!); });
+    await act(async () => { fireEvent.submit(container.querySelector('form')!); });
+    expect(container.textContent).toContain('Ingresa la identificación para tu factura.');
+    expect(container.textContent).toContain('Ingresa el nombre o razón social para tu factura.');
+    expect(document.activeElement).toBe(container.querySelector('input[maxlength="20"]'));
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.change(container.querySelector('input[maxlength="20"]')!, { target: { value: '1710034065' } });
+      fireEvent.change(container.querySelector('input[maxlength="300"]')!, { target: { value: 'Compradora' } });
+    });
+    await act(async () => { fireEvent.submit(container.querySelector('form')!); });
+    expect(createCheckoutMock).toHaveBeenCalledWith(41, expect.objectContaining({
+      billingIdType: 'cedula', billingIdNumber: '1710034065', billingName: 'Compradora',
+    }), expect.any(String));
+  });
+
+  it('rejects a quantity beyond remaining stock without sending a checkout request', async () => {
+    getStorefrontMock.mockResolvedValue({ ...storefrontFixture,
+      tiers: [{ ...storefrontFixture.tiers[0], remaining: 2 }] });
+    await renderTracking('/eventos/41/entradas?quantity=3');
+    await waitForExpectation(() => expect(container.querySelector('form')).toBeTruthy());
+    await act(async () => { fireEvent.click(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!); });
+    await act(async () => { fireEvent.submit(container.querySelector('form')!); });
+    expect(container.textContent).toContain('No quedan suficientes entradas.');
+    expect(document.activeElement).toBe(container.querySelector('input[type="number"]'));
+    expect(createCheckoutMock).not.toHaveBeenCalled();
   });
 
   it('permits the exact policy boundary and retains the actual remaining stock display', async () => {
@@ -640,7 +787,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await waitForExpectation(() => expect(container.textContent).toContain(
       'No pudimos cargar tu orden. Revisa tu conexión e inténtalo de nuevo. No vuelvas a comprar ni a pagar.',
     ));
-    expect(container.textContent).not.toContain('El servidor verificó el pago');
+    expect(container.textContent).not.toContain('Pago confirmado');
     expect(container.textContent).not.toContain('TICKET-');
     expect(funnelCaptureMock).not.toHaveBeenCalled();
   });
@@ -752,7 +899,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
       92,
       'secure-lookup-token',
     ));
-    expect(container.textContent).toContain('El servidor verificó el pago y emitió las entradas.');
+    expect(container.textContent).toContain('Pago confirmado. Tus entradas ya fueron emitidas.');
     expect(container.textContent).toContain('TICKET-VERIFIED-501');
     expect(container.textContent).toContain('Entradas emitidas');
     expect(container.querySelector('canvas')).not.toBeNull();

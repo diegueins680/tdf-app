@@ -16,6 +16,8 @@ module TDF.Routes.DomoQuotes
   , PublicDomoQuotesAPI
   ) where
 
+import TDF.Commerce.DatafastClientIP (DatafastClientRequest)
+
 import           Data.Aeson
   ( FromJSON(..), Options(..), ToJSON, defaultOptions, genericParseJSON )
 import           Data.Int (Int64)
@@ -109,6 +111,7 @@ data PublicDomoQuoteDTO = PublicDomoQuoteDTO
   , holdExpiresAt     :: UTCTime
   , termsAcceptedAt   :: Maybe UTCTime
   , depositPaidAt     :: Maybe UTCTime
+  , cancellation      :: Maybe PublicDomoCancellationDTO
   , paymentMethods    :: [Text]
   } deriving (Eq, Show, Generic)
 
@@ -172,7 +175,7 @@ type PublicDomoQuotesAPI =
   :<|> "public" :> "domo" :> "quotes" :> Capture "quoteId" Text
          :> "datafast" :> "checkout"
          :> Header "X-Order-Lookup-Token" Text
-         :> Post '[JSON] APITypes.DatafastCheckoutDTO
+         :> DatafastClientRequest :> Post '[JSON] APITypes.DatafastCheckoutDTO
   :<|> "public" :> "domo" :> "quotes" :> Capture "quoteId" Text
          :> "datafast" :> "status"
          :> Header "X-Order-Lookup-Token" Text

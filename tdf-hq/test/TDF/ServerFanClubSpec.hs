@@ -2,20 +2,26 @@
 
 module TDF.ServerFanClubSpec (spec) where
 
+import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Trans.Reader (runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Int (Int64)
 import qualified Data.Text as T
-import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
-import Database.Persist (Entity (..), Key)
-import Database.Persist.Sql (fromSqlKey, toSqlKey)
+import Data.Time (UTCTime (..), addUTCTime, fromGregorian, secondsToDiffTime)
+import Database.Persist (Entity (..), Key, insertKey)
+import Database.Persist.Sqlite (createSqlitePool)
+import System.IO.Temp (withSystemTempDirectory)
+import System.FilePath ((</>))
+import Database.Persist.Sql (Single(..), rawSql, rawExecute, runSqlPool, fromSqlKey, toSqlKey)
 import Servant (ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Servant.Server.Internal.Handler (runHandler)
 import Test.Hspec
 
+import TDF.DB (Env(..))
+import TDF.DTO (FanClubVoteReq(..))
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.Models
-  ( ElectionStatus (Upcoming, CandidacyOpen, Closed)
+  ( ElectionStatus (..)
   , FanClubCandidacy (..)
   , FanClubElection (..)
   , FanFollow (..)
@@ -26,7 +32,8 @@ import TDF.Models
   , RoleEnum (Customer, Fan)
   )
 import TDF.ServerFanClub
-  ( fanClubSecureArtistHandlers
+  ( electionPhaseAt
+  , fanClubSecureArtistHandlers
   , validateFanClubArtistPathId
   , validateFanClubCandidacyPathId
   , validateFanClubElectionMutationTarget
@@ -169,6 +176,22 @@ spec = do
       assertRejected 400 "hidden formatting" $
         validateFanClubMemoryDescriptionInput (Just ("Hola" <> "\x202E" <> "club"))
 
+  describe "electionPhaseAt" $ do
+    let at seconds = addUTCTime seconds testTime
+        election = (mkElection 10)
+          { fanClubElectionCandidacyStartsAt = Just (at 0)
+          , fanClubElectionCandidacyEndsAt = Just (at 10)
+          , fanClubElectionVotingStartsAt = Just (at 20)
+          , fanClubElectionVotingEndsAt = Just (at 30)
+          }
+    it "opens on the scheduled start and closes at the end, including the gap" $
+      map (\seconds -> electionPhaseAt (at seconds) election) [-1,0,9,10,19,20,29,30]
+        `shouldBe` [Upcoming,CandidacyOpen,CandidacyOpen,Upcoming,Upcoming,VotingOpen,VotingOpen,Closed]
+    it "respects closure and supports explicitly opened elections without dates" $ do
+      electionPhaseAt (at 25) (election {fanClubElectionStatus = Closed}) `shouldBe` Closed
+      electionPhaseAt testTime (mkElection 10) `shouldBe` Upcoming
+      electionPhaseAt testTime ((mkElection 10) {fanClubElectionStatus = VotingOpen}) `shouldBe` VotingOpen
+
   describe "validateFanClubElectionMutationTarget" $ do
     it "requires URL artist-club ownership before mutating an election" $ do
       case validateFanClubElectionMutationTarget
@@ -187,10 +210,10 @@ spec = do
         windowed = (mkElection 10)
           { fanClubElectionCandidacyStartsAt = Just (hour 1), fanClubElectionCandidacyEndsAt = Just (hour 3)
           , fanClubElectionVotingStartsAt = Just (hour 5), fanClubElectionVotingEndsAt = Just (hour 7)
-          , fanClubElectionStatus = CandidacyOpen }
-    it "accepts candidacy and votes for an election without windows" $ do
-      validateFanClubElectionPhase ElectionCandidacy testTime (mkElection 10) `shouldBe` Right ()
-      validateFanClubElectionPhase ElectionVoting testTime (mkElection 10) `shouldBe` Right ()
+          , fanClubElectionStatus = Upcoming }
+    it "requires the corresponding open phase for an election without windows" $ do
+      validateFanClubElectionPhase ElectionCandidacy testTime ((mkElection 10) {fanClubElectionStatus = CandidacyOpen}) `shouldBe` Right ()
+      validateFanClubElectionPhase ElectionVoting testTime ((mkElection 10) {fanClubElectionStatus = VotingOpen}) `shouldBe` Right ()
     it "refuses both once the election is closed" $ do
       assertRejected 409 "election is closed" $
         validateFanClubElectionPhase ElectionCandidacy testTime (mkElection 10) { fanClubElectionStatus = Closed }
@@ -204,6 +227,35 @@ spec = do
       assertRejected 409 "voting period has not started" $ validateFanClubElectionPhase ElectionVoting (hour 2) windowed
       validateFanClubElectionPhase ElectionVoting (hour 6) windowed `shouldBe` Right ()
       assertRejected 409 "voting period has ended" $ validateFanClubElectionPhase ElectionVoting (hour 7) windowed
+
+  describe "ballot persistence" $
+    it "replays identical selections and rolls back the entire conflicting ballot" $
+      withSystemTempDirectory "tdf-ballot" $ \dir -> do
+        pool <- runNoLoggingT $ createSqlitePool (T.pack (dir </> "votes.sqlite")) 1
+        runSqlPool (do
+          rawExecute "CREATE TABLE fan_club(id INTEGER PRIMARY KEY, artist_party_id INTEGER UNIQUE, name TEXT, description TEXT, created_at TIMESTAMP)" []
+          rawExecute "INSERT INTO fan_club VALUES(10,1,'Club',NULL,CURRENT_TIMESTAMP)" []
+          rawExecute "CREATE TABLE fan_club_election(id INTEGER PRIMARY KEY,club_id INTEGER,year INTEGER,candidacy_starts_at TIMESTAMP,candidacy_ends_at TIMESTAMP,voting_starts_at TIMESTAMP,voting_ends_at TIMESTAMP,status TEXT,created_at TIMESTAMP)" []
+          rawExecute "CREATE TABLE fan_club_candidacy(id INTEGER PRIMARY KEY,election_id INTEGER,fan_party_id INTEGER,role TEXT,manifesto TEXT,created_at TIMESTAMP)" []
+          rawExecute "CREATE TABLE fan_club_vote(id INTEGER PRIMARY KEY,election_id INTEGER,fan_party_id INTEGER,candidacy_id INTEGER,role TEXT,created_at TIMESTAMP,UNIQUE(election_id,fan_party_id,role))" []
+          insertKey (toSqlKey 20) ((mkElection 10) {fanClubElectionStatus = VotingOpen})
+          insertKey (toSqlKey 30) (mkCandidacy 20)
+          insertKey (toSqlKey 31) (mkCandidacy 20)
+          insertKey (toSqlKey 32) (mkCandidacyWithRole 20 Secretary)) pool
+        let env = Env pool (error "ballots only use the database")
+            _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
+              :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> vote :<|> _ =
+                fanClubSecureArtistHandlers fanClubUser 1
+            submit ids = either errHTTPCode (const 204) <$>
+              runHandler (runReaderT (vote 20 (FanClubVoteReq ids)) env)
+        submit [30] `shouldReturn` 204
+        submit [30] `shouldReturn` 204
+        submit [32,31] `shouldReturn` 409
+        runSqlPool (rawExecute "UPDATE fan_club_election SET status='Closed'" []) pool
+        submit [32] `shouldReturn` 409
+        submit [30] `shouldReturn` 204
+        runSqlPool (rawSql "SELECT candidacy_id FROM fan_club_vote" []) pool
+          `shouldReturn` [Single (30 :: Int64)]
 
   describe "validateFanClubVoteCandidacyTarget" $ do
     it "requires vote candidates to belong to the targeted election" $ do

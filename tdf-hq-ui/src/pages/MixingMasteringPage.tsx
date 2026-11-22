@@ -1,3 +1,4 @@
+import { PaymentMethodButton } from '../components/payments/PaymentMethodChoices';
 import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -56,6 +57,8 @@ import {
   type ServiceStorefrontPackageDTO,
 } from '../api/serviceStorefront';
 import { loadAvailableCheckoutMethods } from '../api/paymentCapabilities';
+import { useSession } from '../session/SessionContext';
+import { sessionContactDefaults } from '../session/sessionContactDefaults';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
 import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 
@@ -159,7 +162,12 @@ export default function MixingMasteringPage() {
   const [serviceFilter, setServiceFilter] = useState<ServiceFilter>('all');
   const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
   const [currentStep, setCurrentStep] = useState<OrderStep>('select');
-  const [formData, setFormData] = useState<OrderFormData>(initialFormData);
+  // A signed-in visitor does not retype what the account already knows.
+  const { session } = useSession();
+  const [formData, setFormData] = useState<OrderFormData>(() => {
+    const known = sessionContactDefaults(session);
+    return { ...initialFormData, buyerName: known.name, buyerEmail: known.email };
+  });
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [lookupToken, setLookupToken] = useState<string | null>(null);
   const [confirmedOrder, setConfirmedOrder] = useState<ServiceStorefrontOrderDTO | null>(null);
@@ -211,6 +219,7 @@ export default function MixingMasteringPage() {
     ...(availablePaymentMethods?.placeToPayCard ? ['placetopay_card'] : []),
     ...(availablePaymentMethods?.placeToPayBankRedirect ? ['placetopay_bank_redirect'] : []),
     ...(availablePaymentMethods?.placeToPayDeunaQr ? ['placetopay_deuna_qr'] : []),
+    ...(availablePaymentMethods?.payPhoneCard ? ['payphone_card'] : []),
     ...(availablePaymentMethods?.payPhoneWallet ? ['payphone_wallet'] : []),
   ], [availablePaymentMethods]);
 
@@ -428,6 +437,36 @@ export default function MixingMasteringPage() {
 
   const steps = ['Seleccionar Servicio', 'Detalles del Proyecto', 'Pago', 'Confirmación'];
   const stepIndex = currentStep === 'select' ? 0 : currentStep === 'details' ? 1 : currentStep === 'payment' ? 2 : 3;
+
+  const legacyPaymentMethods = (availablePaymentMethods?.datafast || availablePaymentMethods?.paypal || availablePaymentMethods?.bankTransfer) ? (<>
+            {availablePaymentMethods?.datafast && <PaymentMethodButton
+              size="large"
+              fullWidth
+              sx={{ justifyContent: 'flex-start', py: 2 }}
+              onClick={() => { void handleDatafastPayment(); }}
+              disabled={paymentBusy || hostedPaymentLocked}
+            >
+              Tarjeta · Datafast
+            </PaymentMethodButton>}
+            {availablePaymentMethods?.paypal && <PaymentMethodButton
+              size="large"
+              fullWidth
+              sx={{ justifyContent: 'flex-start', py: 2 }}
+              onClick={() => { void handlePaypalPayment(); }}
+              disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady}
+            >
+              PayPal
+            </PaymentMethodButton>}
+            {availablePaymentMethods?.bankTransfer && <PaymentMethodButton
+              size="large"
+              fullWidth
+              sx={{ justifyContent: 'flex-start', py: 2 }}
+              onClick={() => { void handleManualPayment(); }}
+              disabled={paymentBusy || hostedPaymentLocked}
+            >
+              Transferencia bancaria
+            </PaymentMethodButton>}
+</>) : null;
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -763,40 +802,10 @@ export default function MixingMasteringPage() {
           </Box>
 
           {/* Payment Methods */}
-          <Typography variant="subtitle2" gutterBottom>Método de pago</Typography>
           {paymentMethodsQuery.isLoading && <CircularProgress size={24} aria-label="Verificando métodos de pago" />}
           <Stack spacing={2} sx={{ my: 3 }}>
-            {availablePaymentMethods?.datafast && <Button
-              variant="outlined"
-              size="large"
-              fullWidth
-              sx={{ justifyContent: 'flex-start', py: 2 }}
-              onClick={() => { void handleDatafastPayment(); }}
-              disabled={paymentBusy || hostedPaymentLocked}
-            >
-              💳 Tarjeta de crédito/débito (Datafast)
-            </Button>}
-            {availablePaymentMethods?.paypal && <Button
-              variant="outlined"
-              size="large"
-              fullWidth
-              sx={{ justifyContent: 'flex-start', py: 2 }}
-              onClick={() => { void handlePaypalPayment(); }}
-              disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady}
-            >
-              🅿️ PayPal
-            </Button>}
-            {availablePaymentMethods?.bankTransfer && <Button
-              variant="outlined"
-              size="large"
-              fullWidth
-              sx={{ justifyContent: 'flex-start', py: 2 }}
-              onClick={() => { void handleManualPayment(); }}
-              disabled={paymentBusy || hostedPaymentLocked}
-            >
-              🏦 Transferencia bancaria
-            </Button>}
             <HostedProviderCheckout
+              additionalMethods={legacyPaymentMethods}
               offeredMethods={hostedPaymentMethods}
               availabilityUnknown={!paymentMethodsQuery.isSuccess}
               alternativeMethods={[

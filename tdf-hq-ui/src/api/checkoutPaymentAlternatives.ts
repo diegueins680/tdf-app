@@ -55,6 +55,7 @@ export async function loadCheckoutPaymentAlternatives(reference: CheckoutReferen
       ...(available.placeToPayCard ? ['placetopay_card'] : []),
       ...(available.placeToPayBankRedirect ? ['placetopay_bank_redirect'] : []),
       ...(available.placeToPayDeunaQr ? ['placetopay_deuna_qr'] : []),
+      ...(available.payPhoneCard ? ['payphone_card'] : []),
       ...(available.payPhoneWallet ? ['payphone_wallet'] : []),
     ];
   }
