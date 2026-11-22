@@ -251,6 +251,7 @@ library
     TDF.ServerFeedback
     TDF.ServerRadio
     TDF.ServerFanClub
+    TDF.Fans.FeedAffinity
     TDF.ServerFuture
     TDF.Routes.Courses
     TDF.Routes.DomoQuotes
@@ -471,6 +472,7 @@ test-suite tdf-hq-test
     TDF.AppleSignInSpec
     TDF.ServerExtraSpec
     TDF.ServerFanClubSpec
+    TDF.Fans.FeedAffinitySpec
     TDF.ServerSpec
     TDF.StartupResponseSpec
     TDF.ServerAdminSpec

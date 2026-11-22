@@ -16334,6 +16334,7 @@ marketplaceTestConfig seedFlag =
         , contextualReputationEnabled = False
         , publicReputationProjectionEnabled = False
         , singleFeatureOnboardingExperimentEnabled = False
+        , fanFeedAffinityEnabled = False
         , eventDiscoveryEnabled = False
         , eventDiscoveryAutoPublish = False
         , eventDiscoveryPilotLimit = 20
