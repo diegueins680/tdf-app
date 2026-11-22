@@ -26123,7 +26123,7 @@
     },
     {
       "path": "docs/social/relationship-read-boundary.md",
-      "sha256": "11aaceaaa320fa891f155713bd808768120fdb113d322db79693012e2f1ff748",
+      "sha256": "6224f9adb90f52b624d1ca44342760fa20c6cd69609a618fb576d6b219d505cc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31800,7 +31800,7 @@
     },
     {
       "path": "formal/system/friend-suggestions-pagerank.md",
-      "sha256": "77ee954209860248f6b9edfd726d4ba42c6a040cf5db9fcac385f9e341d7aae8",
+      "sha256": "ecd25e45a02dae476fc7dc6ff24b6cbabc5a5cfdcc337c27cbc5006994bb2042",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -38198,8 +38198,8 @@
       "declaredId": "RELREAD-01",
       "statement": "Denied identities expose no row fields",
       "source": "docs/social/relationship-read-boundary.md",
-      "line": 103,
-      "sourceSha256": "11aaceaaa320fa891f155713bd808768120fdb113d322db79693012e2f1ff748",
+      "line": 112,
+      "sourceSha256": "6224f9adb90f52b624d1ca44342760fa20c6cd69609a618fb576d6b219d505cc",
       "status": "inferred",
       "declarationColumns": {
         "Requirement": "RELREAD-01 Denied identities expose no row fields",
@@ -38212,7 +38212,7 @@
       "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
       "occurrences": [
         {
-          "line": 103,
+          "line": 112,
           "statement": "Denied identities expose no row fields",
           "columns": {
             "Requirement": "RELREAD-01 Denied identities expose no row fields",
@@ -38229,8 +38229,8 @@
       "declaredId": "RELREAD-02",
       "statement": "Old inferred counts stop at enforcement",
       "source": "docs/social/relationship-read-boundary.md",
-      "line": 104,
-      "sourceSha256": "11aaceaaa320fa891f155713bd808768120fdb113d322db79693012e2f1ff748",
+      "line": 113,
+      "sourceSha256": "6224f9adb90f52b624d1ca44342760fa20c6cd69609a618fb576d6b219d505cc",
       "status": "inferred",
       "declarationColumns": {
         "Requirement": "RELREAD-02 Old inferred counts stop at enforcement",
@@ -38243,7 +38243,7 @@
       "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
       "occurrences": [
         {
-          "line": 104,
+          "line": 113,
           "statement": "Old inferred counts stop at enforcement",
           "columns": {
             "Requirement": "RELREAD-02 Old inferred counts stop at enforcement",
@@ -38260,8 +38260,8 @@
       "declaredId": "RELREAD-03",
       "statement": "Deletion cannot be undone by stale reads",
       "source": "docs/social/relationship-read-boundary.md",
-      "line": 105,
-      "sourceSha256": "11aaceaaa320fa891f155713bd808768120fdb113d322db79693012e2f1ff748",
+      "line": 114,
+      "sourceSha256": "6224f9adb90f52b624d1ca44342760fa20c6cd69609a618fb576d6b219d505cc",
       "status": "inferred",
       "declarationColumns": {
         "Requirement": "RELREAD-03 Deletion cannot be undone by stale reads",
@@ -38274,7 +38274,7 @@
       "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
       "occurrences": [
         {
-          "line": 105,
+          "line": 114,
           "statement": "Deletion cannot be undone by stale reads",
           "columns": {
             "Requirement": "RELREAD-03 Deletion cannot be undone by stale reads",
@@ -38291,8 +38291,8 @@
       "declaredId": "RELREAD-04",
       "statement": "Direction/reciprocity/order are preserved",
       "source": "docs/social/relationship-read-boundary.md",
-      "line": 106,
-      "sourceSha256": "11aaceaaa320fa891f155713bd808768120fdb113d322db79693012e2f1ff748",
+      "line": 115,
+      "sourceSha256": "6224f9adb90f52b624d1ca44342760fa20c6cd69609a618fb576d6b219d505cc",
       "status": "inferred",
       "declarationColumns": {
         "Requirement": "RELREAD-04 Direction/reciprocity/order are preserved",
@@ -38305,7 +38305,7 @@
       "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
       "occurrences": [
         {
-          "line": 106,
+          "line": 115,
           "statement": "Direction/reciprocity/order are preserved",
           "columns": {
             "Requirement": "RELREAD-04 Direction/reciprocity/order are preserved",
@@ -38322,8 +38322,8 @@
       "declaredId": "RELREAD-05",
       "statement": "Current authenticated principal",
       "source": "docs/social/relationship-read-boundary.md",
-      "line": 107,
-      "sourceSha256": "11aaceaaa320fa891f155713bd808768120fdb113d322db79693012e2f1ff748",
+      "line": 116,
+      "sourceSha256": "6224f9adb90f52b624d1ca44342760fa20c6cd69609a618fb576d6b219d505cc",
       "status": "inferred",
       "declarationColumns": {
         "Requirement": "RELREAD-05 Current authenticated principal",
@@ -38336,7 +38336,7 @@
       "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
       "occurrences": [
         {
-          "line": 107,
+          "line": 116,
           "statement": "Current authenticated principal",
           "columns": {
             "Requirement": "RELREAD-05 Current authenticated principal",
@@ -38353,8 +38353,8 @@
       "declaredId": "RELREAD-06",
       "statement": "Read eventually terminates",
       "source": "docs/social/relationship-read-boundary.md",
-      "line": 108,
-      "sourceSha256": "11aaceaaa320fa891f155713bd808768120fdb113d322db79693012e2f1ff748",
+      "line": 117,
+      "sourceSha256": "6224f9adb90f52b624d1ca44342760fa20c6cd69609a618fb576d6b219d505cc",
       "status": "inferred",
       "declarationColumns": {
         "Requirement": "RELREAD-06 Read eventually terminates",
@@ -38367,7 +38367,7 @@
       "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
       "occurrences": [
         {
-          "line": 108,
+          "line": 117,
           "statement": "Read eventually terminates",
           "columns": {
             "Requirement": "RELREAD-06 Read eventually terminates",
