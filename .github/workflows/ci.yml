@@ -386,6 +386,12 @@ jobs:
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
 
+      - name: Verify public event card tickets through the actual API and full schema
+        run: >-
+          python3 scripts/test-public-event-card-tickets-http.py
+          --binary "$BACKEND_BINARY_OUT"
+          --output tmp/specification/public-event-card-tickets
+
       - name: Verify authorized music catalog recording search
         env:
           TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_search_test
@@ -1094,6 +1100,15 @@ jobs:
         run: |
           psql "$PGURL" -v ON_ERROR_STOP=1 -c 'CREATE DATABASE tdf_public_ticket_checkout_test'
           npm run test:public-ticket-checkout-migration
+
+      - name: Verify studio gallery seed and editorial changes survive migration retries
+        env:
+          TDF_GALLERY_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/tdf_studio_gallery_test
+        run: |
+          python3 scripts/test-studio-gallery-runner-safety.py
+          bash scripts/test-studio-gallery-migration.sh --check-routing-only
+          psql "${TDF_GALLERY_TEST_DATABASE_URL%/tdf_studio_gallery_test}/postgres" -X -v ON_ERROR_STOP=1 -c 'CREATE DATABASE tdf_studio_gallery_test'
+          bash scripts/test-studio-gallery-migration.sh
 
       - name: Create production baseline fixture
         run: |
