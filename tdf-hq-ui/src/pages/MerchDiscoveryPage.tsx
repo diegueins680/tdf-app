@@ -8,7 +8,7 @@ import { Merch } from '../api/merch';
 import { MerchReputation } from '../api/merchReputation';
 import { MerchReputationSummary } from '../components/merch/MerchReputationSummary';
 import { useMetaTags } from '../hooks/useMetaTags';
-import { formatMerchMoney, merchLanguage, resolveMerchImageUrl } from '../utils/merch';
+import { merchCategoryLabel, formatMerchMoney, merchLanguage, resolveMerchImageUrl } from '../utils/merch';
 
 const categories = ['', 'apparel', 'vinyl', 'cd', 'cassette', 'poster', 'accessory', 'limited_edition', 'bundle'] as const;
 
@@ -55,7 +55,7 @@ export default function MerchDiscoveryPage() {
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} component="form" role="search" onSubmit={(event) => event.preventDefault()}>
           <TextField fullWidth label={language === 'en' ? 'Search stores or products' : 'Buscar tiendas o productos'} value={query} onChange={(event) => setQuery(event.target.value)} />
           <TextField select label={language === 'en' ? 'Category' : 'Categoría'} value={category} onChange={(event) => setCategory(event.target.value)} sx={{ minWidth: 200 }}>
-            {categories.map((value) => <MenuItem key={value || 'all'} value={value}>{value ? value.replace(/_/g, ' ') : language === 'en' ? 'All' : 'Todas'}</MenuItem>)}
+            {categories.map((value) => <MenuItem key={value || 'all'} value={value}>{value ? merchCategoryLabel(value, language) : language === 'en' ? 'All' : 'Todas'}</MenuItem>)}
           </TextField>
         </Stack>
         {storefronts.isLoading && <Box textAlign="center"><CircularProgress /></Box>}

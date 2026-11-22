@@ -44,10 +44,14 @@ library
     TDF.Social.API
     TDF.Social.Server
     TDF.API.Chat
+    TDF.API.NotificationDelivery
+    TDF.Chat.Delivery
+    TDF.Server.NotificationDelivery
     TDF.API.SocialProfiles
     TDF.Social.Profiles
     TDF.API.SocialRelationships
     TDF.Social.FanEffects
+    TDF.Fans.ArtistRecommendations
     TDF.API.FanFollowing
     TDF.Social.RelationshipWrites
     TDF.Social.RelationshipReads
@@ -227,6 +231,7 @@ library
     TDF.ServerInternships
     TDF.ServerInternAudit
     TDF.Server.EventAdminDelegation
+    TDF.Server.PublicEventTicketSummary
     TDF.Server.EventTicketSale
     TDF.Server.EventAttendees
     TDF.Server.TicketSalesWindow
@@ -247,6 +252,7 @@ library
     TDF.Server.TicketManualPayments
     TDF.Server.TicketPaymentReceipt
     TDF.Server.TicketTaxDocuments
+    TDF.Server.PublicBookingNotifications
     TDF.Server.TicketRefunds
     TDF.ServerLiveSessions
     TDF.ServerFeedback
@@ -416,6 +422,7 @@ test-suite tdf-hq-test
     TDF.LedgerPostingSpec
     TDF.MusicPublicationSpec
     TDF.InteractionWriteBudgetSpec
+    TDF.ChatDeliverySpec
     TDF.MusicPurchaseSpec
     TDF.StorageSecuritySpec
     TDF.MusicCredentialCacheSpec
@@ -472,6 +479,7 @@ test-suite tdf-hq-test
     TDF.AppleSignInSpec
     TDF.ServerExtraSpec
     TDF.ServerFanClubSpec
+    TDF.Fans.ArtistRecommendationsSpec
     TDF.ServerSpec
     TDF.StartupResponseSpec
     TDF.ServerAdminSpec

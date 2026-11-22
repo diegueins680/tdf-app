@@ -34,6 +34,7 @@ import type { PartySelectorOption } from '../api/partySelector';
 import { firstNonEmptyString } from '../utils/stringValues';
 
 import PageShell from '../components/PageShell';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { GOOGLE_MAPS_BROWSER_API_KEY } from '../config/appConfig';
 import { formatInEventTimeZone } from '../utils/dateTime';
 import {
@@ -416,7 +417,9 @@ export default function EventLogisticsPage() {
       SocialEventsAPI.updateLogisticsActivity(eventId, String(activity.eacId), { ...activity, eacStatus: status }),
     onSuccess: refresh,
   });
-  const deleteActivityMutation = useMutation({ mutationFn: (activityId: string) => SocialEventsAPI.deleteLogisticsActivity(eventId, activityId), onSuccess: refresh });
+  // Deleting an activity cannot be undone, so it is confirmed by name first.
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; title: string } | null>(null);
+  const deleteActivityMutation = useMutation({ mutationFn: (activityId: string) => SocialEventsAPI.deleteLogisticsActivity(eventId, activityId), onSuccess: refresh, onSettled: () => setPendingDelete(null) });
   const verifyMutation = useMutation({ mutationFn: () => SocialEventsAPI.verifyAllLogisticsRoutes(eventId), onSuccess: refresh });
   const verifyActivityMutation = useMutation({ mutationFn: (activityId: string) => SocialEventsAPI.verifyLogisticsRoute(eventId, activityId), onSuccess: refresh });
 
@@ -663,12 +666,22 @@ export default function EventLogisticsPage() {
                 <TextField select size="small" label="Estado" value={activity.eacStatus} onChange={(event) => updateActivityMutation.mutate({ activity, status: event.target.value as EventLogisticsActivityDTO['eacStatus'] })}><MenuItem value="planned">Planificado</MenuItem><MenuItem value="confirmed">Confirmado</MenuItem><MenuItem value="in_progress">En curso</MenuItem><MenuItem value="completed">Completado</MenuItem><MenuItem value="cancelled">Cancelado</MenuItem></TextField>
                 <Button size="small" startIcon={<EditOutlinedIcon />} onClick={() => startEditingActivity(activity)}>Editar</Button>
                 {activity.eacType === 'travel' && <Button size="small" startIcon={<RefreshIcon />} onClick={() => verifyActivityMutation.mutate(String(activity.eacId))} disabled={verifyActivityMutation.isPending}>Recalcular</Button>}
-                <Button size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={() => deleteActivityMutation.mutate(String(activity.eacId))}>Eliminar</Button>
+                <Button size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={() => setPendingDelete({ id: String(activity.eacId), title: activity.eacTitle })}>Eliminar</Button>
               </Stack>}
             </Stack></CardContent></Card>;
           }) : <Alert severity="info">No hay actividades que coincidan con los filtros.</Alert>}
         </Stack>
       </Stack>
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => { if (pendingDelete) deleteActivityMutation.mutate(pendingDelete.id); }}
+        title="¿Eliminar esta actividad?"
+        description={`Se eliminará «${pendingDelete?.title ?? ''}» del plan. No se puede deshacer.`}
+        confirmLabel="Eliminar actividad"
+        severity="danger"
+        confirming={deleteActivityMutation.isPending}
+      />
     </PageShell>
   );
 }

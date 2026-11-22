@@ -1,3 +1,4 @@
+import PaymentMethodChoices, { PaymentMethodButton } from '../components/payments/PaymentMethodChoices';
 import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import MarkdownText from '../components/MarkdownText';
 import {
@@ -1266,6 +1267,18 @@ function CourseCheckoutCard({
   const paid = checkout.paymentStatus === 'paid';
   const held = checkout.fulfillmentStatus === 'seat_held';
   const quote = checkout.quote;
+  const legacyPaymentMethods = checkout.checkoutAvailable && !paid && (checkout.paymentMethods.includes('datafast') || (checkout.paymentMethods.includes('paypal') && paypalAvailable)) ? (<>
+                {checkout.paymentMethods.includes('datafast') && (
+                  <PaymentMethodButton disabled={availabilityUnknown || paymentBusy || hostedPaymentLocked} onClick={onDatafast}>
+                    Tarjeta · Datafast
+                  </PaymentMethodButton>
+                )}
+                {checkout.paymentMethods.includes('paypal') && paypalAvailable && (
+                  <PaymentMethodButton disabled={availabilityUnknown || paymentBusy || hostedPaymentLocked} onClick={onPaypal}>
+                    Pagar con PayPal
+                  </PaymentMethodButton>
+                )}
+            </>) : null;
   return (
     <Card
       sx={{
@@ -1327,24 +1340,14 @@ function CourseCheckoutCard({
 
           {checkout.checkoutAvailable && !paid && !availabilityUnknown && checkout.paymentMethods.length === 0 && (
             <Alert severity="info" variant="outlined">
-              No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.
+              Todavía no hay un método de pago en línea para esta orden. La reserva no equivale a pago.
             </Alert>
           )}
           <Stack spacing={1.5}>
-            {checkout.checkoutAvailable && !paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                {checkout.paymentMethods.includes('datafast') && (
-                  <Button variant="contained" disabled={availabilityUnknown || paymentBusy || hostedPaymentLocked} onClick={onDatafast}>
-                    Pagar con Datafast
-                  </Button>
-                )}
-                {checkout.paymentMethods.includes('paypal') && paypalAvailable && (
-                  <Button variant="outlined" disabled={availabilityUnknown || paymentBusy || hostedPaymentLocked} onClick={onPaypal}>
-                    Pagar con PayPal
-                  </Button>
-                )}
-            </Stack>}
+            {(!checkout.checkoutId || !checkoutLookupToken) && legacyPaymentMethods && <PaymentMethodChoices methods={legacyPaymentMethods} />}
             {checkout.checkoutId && checkoutLookupToken && (
                 <HostedProviderCheckout
+                  additionalMethods={legacyPaymentMethods}
                   checkout={{
                     checkoutId: checkout.checkoutId,
                     lookupToken: checkoutLookupToken,
