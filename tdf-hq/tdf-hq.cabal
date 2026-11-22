@@ -229,6 +229,7 @@ library
     TDF.ServerInternships
     TDF.ServerInternAudit
     TDF.Server.EventAdminDelegation
+    TDF.Server.PublicEventTicketSummary
     TDF.Server.EventTicketSale
     TDF.Server.EventAttendees
     TDF.Server.TicketSalesWindow
