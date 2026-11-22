@@ -6555,11 +6555,14 @@ async function integrationSource(ref, file) {
 // Retain both original published parents and additionally guard latest published main.
 const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1", "5a81672285dc9c03130fc9fd8355e2b4c58e9e12"];
 
+// The artist similarity entry (COMMUNITY-ARTIST-SIMILARITY-001) appends after the studio gallery and has its own test below.
+const withoutArtistSimilarity = manifest => ({ ...manifest, migrations: manifest.migrations.filter(row => row.id !== '2026-11-21_artist_similarity') });
+
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const withSimilarity = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
-  // The artist similarity entry (COMMUNITY-ARTIST-SIMILARITY-001) appends after this composition and has its own test below.
-  const actual = { ...withSimilarity, migrations: withSimilarity.migrations.filter(row => row.id !== '2026-11-21_artist_similarity') };
+  const combined = withoutArtistSimilarity(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
+  assert.equal(combined.migrations.at(-1).id, '2026-11-07_studio_gallery');
+  const actual = { ...combined, migrations: combined.migrations.slice(0, -1) };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
   assert.deepEqual(actual, main);
   assert.deepEqual(actual.migrations.slice(0, ux.migrations.length), ux.migrations);
@@ -6585,13 +6588,34 @@ test('actual UX/storage composition preserves current main, immutable SQL and bo
   }
 });
 
-test('artist similarity appends exactly one migration to the reviewed 261-entry manifest', async () => {
+test('studio gallery appends its original migration and preserves both complete manifest reviews', async () => {
   const file = 'scripts/production-migrations.json';
-  const base = '008fd1ca9da4a48ba4a6472e5172f907d32ceb32';
+  const base = '985117b3d9e23b1a84837040d39784e3debcb48e';
+  const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
+  const before = await integrationParent(base, file);
+  const original = (await integrationParent(gallery, file)).migrations.at(-1);
+  const current = withoutArtistSimilarity(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
+  assert.equal(original.id, '2026-11-07_studio_gallery');
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, original] });
+  const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, original.path), 'utf8'), stdout);
+  for (const [reviewFile, key] of integrationFiles) {
+    const currentReview = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8'));
+    for (const parent of [base, gallery]) {
+      const old = await integrationParent(parent, reviewFile);
+      const row = old[key].find(r => r.evidence?.file === file || r.name === 'migrations' || r.source?.name === 'migrations');
+      if (row) assert.ok(integrationFind(currentReview, row), 'Missing reviewed migration history for ' + parent);
+    }
+  }
+});
+
+test('artist similarity appends exactly one migration to the reviewed 262-entry manifest', async () => {
+  const file = 'scripts/production-migrations.json';
+  const base = '682c027b223be09156f84154e422ddd58d933799';
   const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')).migrations;
   const prior = JSON.parse((await integrationExec('git', ['show', `${base}:${file}`],
     { cwd: integrationRoot, maxBuffer: 64 * 1024 * 1024 })).stdout).migrations;
-  assert.equal(prior.length, 261);
+  assert.equal(prior.length, 262);
   const entry = { id: '2026-11-21_artist_similarity', path: 'tdf-hq/sql/2026-11-21_artist_similarity.sql', introducedBy: '89d467302501d47ce53c1551b031c46cb7bb1162' };
   assert.deepEqual(current, [...prior, entry]);
   assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'),
@@ -6599,7 +6623,7 @@ test('artist similarity appends exactly one migration to the reviewed 261-entry 
   await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
   const decisions = JSON.parse(await fs.readFile(path.join(integrationRoot, 'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8')).decisions;
   const decision = decisions.find(row => row.evidence?.file === file);
-  assert.equal(decision.id, 'aefaf106951c3d3c6c66');
-  assert.equal(decision.evidence.valueCount, 262);
-  assert.equal(decision.previousDecision.id, '7362b266dc1dd2eaabfb');
+  assert.equal(decision.id, 'd075b98ed15903d5e47e');
+  assert.equal(decision.evidence.valueCount, 263);
+  assert.equal(decision.previousDecision.id, '59a6c2f1ad6d61a54f96');
 });
