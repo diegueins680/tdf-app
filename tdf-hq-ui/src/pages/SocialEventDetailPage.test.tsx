@@ -177,7 +177,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
     getEventAdminAccessMock.mockResolvedValue({ eaaEventId: '121', eaaAccess: 'owner' });
     listTicketTiersMock.mockResolvedValue([]);
     getTicketSaleMock.mockImplementation(async () => saleEligibility(false));
-    createTicketTierMock.mockResolvedValue({ ...tierFixture, ticketTierRegistersParticipant: true });
+    createTicketTierMock.mockResolvedValue({ ...tierFixture, ticketTierCode: 'MUSICO' });
     const view = renderPage();
     await screen.findByRole('button', { name: 'Crear tickets' });
 
@@ -186,7 +186,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Crear tickets' }));
 
     await waitFor(() => expect(createTicketTierMock).toHaveBeenCalledWith('121', expect.objectContaining({
-      ticketTierPriceCents: 500, ticketTierRegistersParticipant: true,
+      ticketTierPriceCents: 500, ticketTierCode: 'MUSICO',
     })));
     view.unmount();
   });
@@ -212,7 +212,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
 
     await waitFor(() => expect(request.hasAttribute('disabled')).toBe(true));
     expect(updateTicketTierMock).toHaveBeenCalledWith('121', 'tier-general', {
-      ...originalTier, ticketTierActive: false, ticketTierRegistersParticipant: false,
+      ...originalTier, ticketTierActive: false,
     });
     expect(getTicketSaleMock).toHaveBeenCalledTimes(2);
     view.unmount();

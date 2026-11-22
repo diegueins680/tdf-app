@@ -4409,7 +4409,7 @@ ticketPriceSnapshotSpec = describe "legacy-ticket-price-snapshot" $ do
           newName = if unchanged then "Synthetic renamed free ticket" else "Synthetic free ticket"
           newPosition = if unchanged then Just 1 else Nothing
           tier = TD.TicketTierDTO Nothing Nothing "test" newName Nothing newPrice newCurrency
-            20 0 Nothing Nothing True newPosition Nothing
+            20 0 Nothing Nothing True newPosition
           purchase = if viaCheckout then fmap (fmap (const ())) $ runHandler (runReaderT
             (checkout (TD.TicketPurchaseWithPromoDTO request Nothing Nothing Nothing Nothing)) env)
             else fmap (fmap (const ())) $ runHandler (runReaderT
@@ -4468,7 +4468,7 @@ ticketPriceSnapshotSpec = describe "legacy-ticket-price-snapshot" $ do
           (_,buy,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
           request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 3 Nothing Nothing Nothing
           nextTier = TD.TicketTierDTO Nothing Nothing "test" "Synthetic free ticket" Nothing 1 "EUR"
-            20 0 Nothing Nothing True Nothing Nothing
+            20 0 Nothing Nothing True Nothing
           purchase = if viaCheckout then fmap (fmap (const ())) $ runHandler (runReaderT
             (checkout (TD.TicketPurchaseWithPromoDTO request Nothing Nothing Nothing Nothing)) env)
             else fmap (fmap (const ())) $ runHandler (runReaderT
@@ -4490,7 +4490,7 @@ ticketPriceSnapshotSpec = describe "legacy-ticket-price-snapshot" $ do
         action = runHandler (runReaderT (checkout
           (TD.TicketPurchaseWithPromoDTO request Nothing Nothing (Just replayKey) Nothing)) env)
         nextTier = TD.TicketTierDTO Nothing Nothing "test" "Synthetic free ticket" Nothing 1 "EUR"
-          20 0 Nothing Nothing True Nothing Nothing
+          20 0 Nothing Nothing True Nothing
     first <- action >>= requireRight
     edited <- runHandler (runReaderT
       (edit (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey tierKey)) nextTier) env) >>= requireRight
@@ -4510,7 +4510,7 @@ ticketPriceSnapshotSpec = describe "legacy-ticket-price-snapshot" $ do
           (_,buy,checkout) = ticketInventoryHandlers (AuthedUser (toSqlKey 2) [] mempty Nothing Nothing)
           request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 3 Nothing Nothing Nothing
           nextTier = TD.TicketTierDTO Nothing Nothing "test" "Synthetic free ticket" Nothing 1 "USD"
-            20 0 Nothing Nothing True Nothing Nothing
+            20 0 Nothing Nothing True Nothing
           changePrice = runHandler (runReaderT
             (edit (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey tierKey)) nextTier) env)
           purchase = if viaCheckout then fmap (fmap (const ())) $ runHandler (runReaderT
@@ -4840,7 +4840,7 @@ ticketReservationClockSpec = describe "ticket-reservation-clock" $ do
         Nothing -> do
           _ <- runHandler (runReaderT (editTier eventId (keyText (fromSqlKey tierKey))
             (TD.TicketTierDTO Nothing Nothing "test" "Synthetic free ticket" Nothing 0 "USD"
-              20 0 Nothing (if eventEndCutoff then Nothing else Just deadline) True Nothing Nothing)) env) >>= requireRight
+              20 0 Nothing (if eventEndCutoff then Nothing else Just deadline) True Nothing)) env) >>= requireRight
           pure ()
       locked <- newEmptyMVar
       release <- newEmptyMVar
@@ -5059,7 +5059,7 @@ ticketPromoLimitFixture pool initialLimit = do
         initialLimit 0 Nothing Nothing Nothing Nothing True Nothing Nothing
   _ <- runHandler (runReaderT (editTier eventId (keyText (fromSqlKey tierKey))
     (TD.TicketTierDTO Nothing Nothing "test" "Synthetic paid tier" Nothing 100 "USD"
-      20 0 Nothing Nothing True Nothing Nothing)) env) >>= requireRight
+      20 0 Nothing Nothing True Nothing)) env) >>= requireRight
   created <- runHandler (runReaderT (createPromo eventId promo) env) >>= requireRight
   pure (eventKey,tierKey,env,created)
 
@@ -5213,7 +5213,7 @@ ticketTierCapacitySpec = describe "legacy ticket inventory mutation concurrency"
           (_,buy,checkout) = ticketInventoryHandlers (user 2)
           request = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey)) 3 Nothing Nothing Nothing
           tier = TD.TicketTierDTO Nothing Nothing "test" "Synthetic free ticket" Nothing 0 "USD"
-            1 0 Nothing Nothing True Nothing Nothing
+            1 0 Nothing Nothing True Nothing
           editAction = fmap (fmap (const ())) $ runHandler (runReaderT
             (edit (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey tierKey)) tier) env)
           buyAction = if viaCheckout then fmap (fmap (const ())) $ runHandler (runReaderT
@@ -5277,7 +5277,7 @@ ticketTierCapacitySpec = describe "legacy ticket inventory mutation concurrency"
           editTotal total = runHandler (runReaderT
             (edit (keyText (fromSqlKey eventKey)) (keyText (fromSqlKey tierKey))
               (TD.TicketTierDTO Nothing Nothing "test" "Synthetic free ticket" Nothing 0 "USD"
-                total 0 Nothing Nothing True Nothing Nothing)) env)
+                total 0 Nothing Nothing True Nothing)) env)
           request quantity = TD.TicketPurchaseRequestDTO (keyText (fromSqlKey tierKey))
             quantity Nothing Nothing Nothing
           purchase quantity = if viaCheckout then fmap (fmap (const ())) $ runHandler (runReaderT

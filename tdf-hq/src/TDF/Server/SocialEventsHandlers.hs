@@ -231,7 +231,6 @@ import Data.Time.Clock (addUTCTime)
 import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
 import TDF.Ticketing.Issuance (finalizePaidTicketOrder, issueMissingTicketsForOrder)
-import TDF.Ticketing.TierView (ticketTierEntityToDTO)
 import qualified TDF.Server.EventAdminDelegation as EventAdmin
 import qualified TDF.Server.EventTicketSale as EventTicketSale
 import TDF.Server.EventAdminDelegation (eventNotOrganizerError, eventWithoutOrganizerError, isEventManager, isTicketTierSaleOpen, requireEventManager)
@@ -4551,7 +4550,6 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                             , eventTicketTierAllowTransfers = True
                             , eventTicketTierRefundPolicy = "full"
                             , eventTicketTierRefundDeadline = Nothing
-                            , eventTicketTierRegistersParticipant = fromMaybe False (ticketTierRegistersParticipant dto)
                             , eventTicketTierCreatedAt = now
                             , eventTicketTierUpdatedAt = now
                             }
@@ -4609,7 +4607,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                     , EventTicketTierEventId ==. eventKey
                     , EventTicketTierQuantitySold <=. ticketTierQuantityTotal dto
                     ]
-                    ( [ EventTicketTierCode =. tierCode
+                    [ EventTicketTierCode =. tierCode
                     , EventTicketTierName =. tierName
                     , EventTicketTierDescription =. cleanMaybeText (ticketTierDescription dto)
                     , EventTicketTierPriceCents =. ticketTierPriceCents dto
@@ -4621,10 +4619,6 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                     , EventTicketTierPosition =. ticketTierPosition dto
                     , EventTicketTierUpdatedAt =. now
                     ]
-                      ++ [ EventTicketTierRegistersParticipant =. flag
-                         | Just flag <- [ticketTierRegistersParticipant dto]
-                         ]
-                    )
                   if changed == 1 then getEntity tierKey else pure Nothing
                 )
                 envPool
@@ -10592,6 +10586,24 @@ eventEntityToDTOWithWorkflow configuredDefault eid eventRow artists workflow = d
             , eventUpdatedAt = Just (socialEventUpdatedAt eventRow)
             , eventArtists = artists
             }
+
+ticketTierEntityToDTO :: SocialEventId -> Entity EventTicketTier -> TicketTierDTO
+ticketTierEntityToDTO eventKey (Entity tierKey tier) =
+    TicketTierDTO
+        { ticketTierId = Just (renderKeyText tierKey)
+        , ticketTierEventId = Just (renderKeyText eventKey)
+        , ticketTierCode = eventTicketTierCode tier
+        , ticketTierName = eventTicketTierName tier
+        , ticketTierDescription = eventTicketTierDescription tier
+        , ticketTierPriceCents = eventTicketTierPriceCents tier
+        , ticketTierCurrency = eventTicketTierCurrency tier
+        , ticketTierQuantityTotal = eventTicketTierQuantityTotal tier
+        , ticketTierQuantitySold = eventTicketTierQuantitySold tier
+        , ticketTierSalesStart = eventTicketTierSalesStart tier
+        , ticketTierSalesEnd = eventTicketTierSalesEnd tier
+        , ticketTierActive = eventTicketTierIsActive tier
+        , ticketTierPosition = eventTicketTierPosition tier
+        }
 
 ticketEntityToDTO :: Entity EventTicket -> TicketDTO
 ticketEntityToDTO (Entity ticketKey ticketRow) =

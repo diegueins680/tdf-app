@@ -106,7 +106,6 @@ library
     TDF.Ticketing.Confirmation
     TDF.Ticketing.LookupToken
     TDF.Ticketing.Inventory
-    TDF.Ticketing.TierView
     TDF.Ticketing.Transfer
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals

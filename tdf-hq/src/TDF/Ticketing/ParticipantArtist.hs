@@ -1,13 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Musician (participant) ticket tiers. When tickets from such a tier are
--- issued for a paid order, the buyer is listed among the event's artists,
--- with a basic artist profile created for them if they have none.
+-- | Musician (participant) ticket tiers: a tier whose code is 'MUSICO'. When
+-- tickets from such a tier are issued for a paid order, the buyer is listed
+-- among the event's artists, with a basic artist profile created for them if
+-- they have none. The tier code is the marker, so no schema change is needed.
 --
 -- Runs inside the issuance transaction, so the listing commits or rolls back
 -- with the tickets themselves. Guest buyers (no party) are left unlisted.
 module TDF.Ticketing.ParticipantArtist
     ( registerParticipantArtistForOrder
+    , isParticipantTierCode
+    , participantTierCode
     , participantArtistName
     , maxListedEventArtists
     ) where
@@ -25,6 +28,13 @@ import Text.Read (readMaybe)
 
 import TDF.Models.SocialEventsModels
 
+-- | Code that marks a ticket tier as the musician tier of its event.
+participantTierCode :: T.Text
+participantTierCode = "MUSICO"
+
+isParticipantTierCode :: T.Text -> Bool
+isParticipantTierCode code = T.toUpper (T.strip code) == participantTierCode
+
 -- | Same ceiling the event editor enforces for an event's artist list.
 maxListedEventArtists :: Int
 maxListedEventArtists = 50
@@ -32,7 +42,7 @@ maxListedEventArtists = 50
 registerParticipantArtistForOrder :: UTCTime -> EventTicketOrder -> SqlPersistT IO ()
 registerParticipantArtistForOrder now order = do
     mTier <- get (eventTicketOrderTierId order)
-    let participantTier = maybe False eventTicketTierRegistersParticipant mTier
+    let participantTier = maybe False (isParticipantTierCode . eventTicketTierCode) mTier
     case (participantTier, eventTicketOrderBuyerPartyId order >>= parsePartyId) of
         (True, Just partyIdValue) -> do
             mArtist <- participantArtistFor now order partyIdValue

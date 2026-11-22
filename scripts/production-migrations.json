@@ -1328,11 +1328,6 @@
       "id": "2026-11-07_content_storage_identity_guards",
       "path": "tdf-hq/sql/2026-11-07_content_storage_identity_guards.sql",
       "introducedBy": "a8b31cefcf5c6ce45a3fc38406f23f11a3616b56"
-    },
-    {
-      "id": "2026-11-21_event_ticket_tier_participant",
-      "path": "tdf-hq/sql/2026-11-21_event_ticket_tier_participant.sql",
-      "introducedBy": "5e434aedc5f4fe48f855f032c8dc8b2b18cf82bd"
     }
   ]
 }
