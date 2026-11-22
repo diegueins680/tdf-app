@@ -51336,6 +51336,51 @@
       },
       {
         "ordinal": 866,
+        "path": "/music/releases/{releaseId}/versions/{versionId}/loudness",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "releaseId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.UUID.Types.Internal",
+              "name": "UUID"
+            }
+          },
+          {
+            "in": "path",
+            "name": "versionId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.UUID.Types.Internal",
+              "name": "UUID"
+            }
+          }
+        ],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "GET",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [],
+          "module": "Data.Aeson.Types.Internal",
+          "name": "Value"
+        }
+      },
+      {
+        "ordinal": 867,
         "path": "/music/releases/{releaseId}/versions/{versionId}/corrections",
         "parameters": [
           {
@@ -51401,7 +51446,7 @@
         }
       },
       {
-        "ordinal": 867,
+        "ordinal": 868,
         "path": "/music/releases/{releaseId}/versions/{versionId}/draft",
         "parameters": [
           {
@@ -51473,7 +51518,7 @@
         }
       },
       {
-        "ordinal": 868,
+        "ordinal": 869,
         "path": "/music/releases/{releaseId}/versions/{versionId}/content",
         "parameters": [
           {
@@ -51545,7 +51590,7 @@
         }
       },
       {
-        "ordinal": 869,
+        "ordinal": 870,
         "path": "/music/releases/{releaseId}/versions/{versionId}/terms",
         "parameters": [
           {
@@ -51617,7 +51662,7 @@
         }
       },
       {
-        "ordinal": 870,
+        "ordinal": 871,
         "path": "/music/releases/{releaseId}/versions/{versionId}/validate",
         "parameters": [
           {
@@ -51662,7 +51707,7 @@
         }
       },
       {
-        "ordinal": 871,
+        "ordinal": 872,
         "path": "/music/releases/{releaseId}/versions/{versionId}/transition",
         "parameters": [
           {
@@ -51755,7 +51800,7 @@
         }
       },
       {
-        "ordinal": 872,
+        "ordinal": 873,
         "path": "/music/releases/{releaseId}/versions/{versionId}/comments",
         "parameters": [
           {
@@ -51827,7 +51872,7 @@
         }
       },
       {
-        "ordinal": 873,
+        "ordinal": 874,
         "path": "/music/releases/{releaseId}/versions/{versionId}/comments/{commentId}/resolve",
         "parameters": [
           {
@@ -51882,7 +51927,7 @@
         }
       },
       {
-        "ordinal": 874,
+        "ordinal": 875,
         "path": "/music/releases/{releaseId}/versions/{versionId}/uploads",
         "parameters": [
           {
@@ -51975,7 +52020,7 @@
         }
       },
       {
-        "ordinal": 875,
+        "ordinal": 876,
         "path": "/music/uploads/{uploadId}/provider",
         "parameters": [
           {
@@ -52037,7 +52082,7 @@
         }
       },
       {
-        "ordinal": 876,
+        "ordinal": 877,
         "path": "/music/uploads/{uploadId}/parts/{partNumber}",
         "parameters": [
           {
@@ -52082,7 +52127,7 @@
         }
       },
       {
-        "ordinal": 877,
+        "ordinal": 878,
         "path": "/music/uploads/{uploadId}/parts/{partNumber}",
         "parameters": [
           {
@@ -52154,7 +52199,7 @@
         }
       },
       {
-        "ordinal": 878,
+        "ordinal": 879,
         "path": "/music/uploads/{uploadId}/completion",
         "parameters": [
           {
@@ -52189,7 +52234,7 @@
         }
       },
       {
-        "ordinal": 879,
+        "ordinal": 880,
         "path": "/music/uploads/{uploadId}/confirm",
         "parameters": [
           {
@@ -52251,7 +52296,7 @@
         }
       },
       {
-        "ordinal": 880,
+        "ordinal": 881,
         "path": "/music/uploads/{uploadId}",
         "parameters": [
           {
@@ -52286,7 +52331,7 @@
         }
       },
       {
-        "ordinal": 881,
+        "ordinal": 882,
         "path": "/music/me/featured-track",
         "parameters": [
           {
@@ -52392,7 +52437,7 @@
         }
       },
       {
-        "ordinal": 882,
+        "ordinal": 883,
         "path": "/music/me/featured-track",
         "parameters": [
           {
@@ -52525,7 +52570,7 @@
         }
       },
       {
-        "ordinal": 883,
+        "ordinal": 884,
         "path": "/music/favorites",
         "parameters": [
           {
@@ -52577,7 +52622,7 @@
         }
       },
       {
-        "ordinal": 884,
+        "ordinal": 885,
         "path": "/music/favorites",
         "parameters": [
           {
@@ -52650,7 +52695,7 @@
         }
       },
       {
-        "ordinal": 885,
+        "ordinal": 886,
         "path": "/music/favorites/{recordingId}",
         "parameters": [
           {
@@ -52685,7 +52730,7 @@
         }
       },
       {
-        "ordinal": 886,
+        "ordinal": 887,
         "path": "/music/playlists",
         "parameters": [
           {
@@ -52737,7 +52782,7 @@
         }
       },
       {
-        "ordinal": 887,
+        "ordinal": 888,
         "path": "/music/playlists",
         "parameters": [],
         "bodies": [
@@ -52788,7 +52833,7 @@
         }
       },
       {
-        "ordinal": 888,
+        "ordinal": 889,
         "path": "/music/playlists/{playlistId}",
         "parameters": [
           {
@@ -52850,7 +52895,7 @@
         }
       },
       {
-        "ordinal": 889,
+        "ordinal": 890,
         "path": "/music/playlists/{playlistId}",
         "parameters": [
           {
@@ -52885,7 +52930,7 @@
         }
       },
       {
-        "ordinal": 890,
+        "ordinal": 891,
         "path": "/music/playlists/{playlistId}/items",
         "parameters": [
           {
@@ -52968,7 +53013,7 @@
         }
       },
       {
-        "ordinal": 891,
+        "ordinal": 892,
         "path": "/music/playlists/{playlistId}/items/{itemId}",
         "parameters": [
           {
@@ -53040,7 +53085,7 @@
         }
       },
       {
-        "ordinal": 892,
+        "ordinal": 893,
         "path": "/music/playlists/{playlistId}/items/{itemId}",
         "parameters": [
           {
@@ -53085,7 +53130,7 @@
         }
       },
       {
-        "ordinal": 893,
+        "ordinal": 894,
         "path": "/music/me/playback-events",
         "parameters": [
           {
@@ -53158,7 +53203,7 @@
         }
       },
       {
-        "ordinal": 894,
+        "ordinal": 895,
         "path": "/music/history",
         "parameters": [
           {
@@ -53210,7 +53255,7 @@
         }
       },
       {
-        "ordinal": 895,
+        "ordinal": 896,
         "path": "/music/infringement-reports",
         "parameters": [
           {
@@ -53283,7 +53328,7 @@
         }
       },
       {
-        "ordinal": 896,
+        "ordinal": 897,
         "path": "/music/infringement-reports",
         "parameters": [
           {
@@ -53335,7 +53380,7 @@
         }
       },
       {
-        "ordinal": 897,
+        "ordinal": 898,
         "path": "/music/infringement-reports/{reportId}",
         "parameters": [
           {
@@ -53397,7 +53442,7 @@
         }
       },
       {
-        "ordinal": 898,
+        "ordinal": 899,
         "path": "/music/analytics/releases/{releaseId}",
         "parameters": [
           {
@@ -53474,7 +53519,7 @@
         }
       },
       {
-        "ordinal": 899,
+        "ordinal": 900,
         "path": "/music/purchases",
         "parameters": [
           {
@@ -53568,7 +53613,7 @@
         }
       },
       {
-        "ordinal": 900,
+        "ordinal": 901,
         "path": "/music/purchases",
         "parameters": [],
         "bodies": [],
@@ -53598,7 +53643,7 @@
         }
       },
       {
-        "ordinal": 901,
+        "ordinal": 902,
         "path": "/music/purchases/{purchaseId}/datafast/checkout",
         "parameters": [
           {
@@ -53656,7 +53701,7 @@
         }
       },
       {
-        "ordinal": 902,
+        "ordinal": 903,
         "path": "/music/purchases/{purchaseId}/datafast/status",
         "parameters": [
           {
@@ -53739,7 +53784,7 @@
         }
       },
       {
-        "ordinal": 903,
+        "ordinal": 904,
         "path": "/music/purchases/{purchaseId}/paypal/create",
         "parameters": [
           {
@@ -53795,7 +53840,7 @@
         }
       },
       {
-        "ordinal": 904,
+        "ordinal": 905,
         "path": "/music/purchases/{purchaseId}/paypal/capture",
         "parameters": [
           {
@@ -53878,7 +53923,7 @@
         }
       },
       {
-        "ordinal": 905,
+        "ordinal": 906,
         "path": "/music/entitlements",
         "parameters": [],
         "bodies": [],
@@ -53908,7 +53953,7 @@
         }
       },
       {
-        "ordinal": 906,
+        "ordinal": 907,
         "path": "/music/entitlements/{entitlementId}/download",
         "parameters": [
           {
@@ -53970,7 +54015,7 @@
         }
       },
       {
-        "ordinal": 907,
+        "ordinal": 908,
         "path": "/music/downloads/free",
         "parameters": [
           {
@@ -54043,7 +54088,7 @@
         }
       },
       {
-        "ordinal": 908,
+        "ordinal": 909,
         "path": "/music/ddex/parties",
         "parameters": [],
         "bodies": [],
@@ -54073,7 +54118,7 @@
         }
       },
       {
-        "ordinal": 909,
+        "ordinal": 910,
         "path": "/music/ddex/parties",
         "parameters": [],
         "bodies": [
@@ -54124,7 +54169,7 @@
         }
       },
       {
-        "ordinal": 910,
+        "ordinal": 911,
         "path": "/music/releases/{releaseId}/versions/{versionId}/ddex-exports",
         "parameters": [
           {
@@ -54175,7 +54220,7 @@
         }
       },
       {
-        "ordinal": 911,
+        "ordinal": 912,
         "path": "/music/releases/{releaseId}/versions/{versionId}/ddex-exports",
         "parameters": [
           {
@@ -54268,7 +54313,7 @@
         }
       },
       {
-        "ordinal": 912,
+        "ordinal": 913,
         "path": "/music/ddex/exports/{exportId}/download",
         "parameters": [
           {
@@ -54303,7 +54348,7 @@
         }
       },
       {
-        "ordinal": 913,
+        "ordinal": 914,
         "path": "/interactions/targets/{kind}/{entityKey}",
         "parameters": [
           {
@@ -54408,7 +54453,7 @@
         }
       },
       {
-        "ordinal": 914,
+        "ordinal": 915,
         "path": "/interactions/targets/{kind}/{entityKey}/comments",
         "parameters": [
           {
@@ -54597,7 +54642,7 @@
         }
       },
       {
-        "ordinal": 915,
+        "ordinal": 916,
         "path": "/interactions/targets/{kind}/{entityKey}/comments/{commentId}",
         "parameters": [
           {
@@ -54712,7 +54757,7 @@
         }
       },
       {
-        "ordinal": 916,
+        "ordinal": 917,
         "path": "/interactions/targets/{kind}/{entityKey}/reactors",
         "parameters": [
           {
@@ -54859,7 +54904,7 @@
         }
       },
       {
-        "ordinal": 917,
+        "ordinal": 918,
         "path": "/interactions/targets/{targetId}/commands",
         "parameters": [
           {
@@ -54981,7 +55026,7 @@
         }
       },
       {
-        "ordinal": 918,
+        "ordinal": 919,
         "path": "/interactions/resolve/{destinationKind}/{destinationId}",
         "parameters": [
           {
@@ -55086,7 +55131,7 @@
         }
       },
       {
-        "ordinal": 919,
+        "ordinal": 920,
         "path": "/interactions/blocks/{partyId}",
         "parameters": [
           {
@@ -55181,7 +55226,7 @@
         }
       },
       {
-        "ordinal": 920,
+        "ordinal": 921,
         "path": "/interactions/blocks/{partyId}",
         "parameters": [
           {
@@ -55303,7 +55348,7 @@
         }
       },
       {
-        "ordinal": 921,
+        "ordinal": 922,
         "path": "/interactions/blocked-accounts",
         "parameters": [
           {
@@ -55430,7 +55475,7 @@
         }
       },
       {
-        "ordinal": 922,
+        "ordinal": 923,
         "path": "/interactions/reports",
         "parameters": [
           {
@@ -55578,7 +55623,7 @@
         }
       },
       {
-        "ordinal": 923,
+        "ordinal": 924,
         "path": "/interactions/preferences",
         "parameters": [],
         "bodies": [],
@@ -55662,7 +55707,7 @@
         }
       },
       {
-        "ordinal": 924,
+        "ordinal": 925,
         "path": "/interactions/preferences",
         "parameters": [],
         "bodies": [
@@ -55773,7 +55818,7 @@
         }
       },
       {
-        "ordinal": 925,
+        "ordinal": 926,
         "path": "/interactions/moderation/{targetId}",
         "parameters": [
           {
@@ -55910,7 +55955,7 @@
         }
       },
       {
-        "ordinal": 926,
+        "ordinal": 927,
         "path": "/marketplace",
         "parameters": [],
         "bodies": [],
@@ -55938,7 +55983,7 @@
         }
       },
       {
-        "ordinal": 927,
+        "ordinal": 928,
         "path": "/marketplace/{id}",
         "parameters": [
           {
@@ -55971,7 +56016,7 @@
         }
       },
       {
-        "ordinal": 928,
+        "ordinal": 929,
         "path": "/marketplace/cart",
         "parameters": [],
         "bodies": [],
@@ -55993,7 +56038,7 @@
         }
       },
       {
-        "ordinal": 929,
+        "ordinal": 930,
         "path": "/marketplace/cart/{cartId}",
         "parameters": [
           {
@@ -56026,7 +56071,7 @@
         }
       },
       {
-        "ordinal": 930,
+        "ordinal": 931,
         "path": "/marketplace/cart/{cartId}/items",
         "parameters": [
           {
@@ -56086,7 +56131,7 @@
         }
       },
       {
-        "ordinal": 931,
+        "ordinal": 932,
         "path": "/marketplace/cart/{cartId}/checkout",
         "parameters": [
           {
@@ -56167,7 +56212,7 @@
         }
       },
       {
-        "ordinal": 932,
+        "ordinal": 933,
         "path": "/marketplace/cart/{cartId}/stripe/payment-intent",
         "parameters": [
           {
@@ -56248,7 +56293,7 @@
         }
       },
       {
-        "ordinal": 933,
+        "ordinal": 934,
         "path": "/marketplace/cart/{cartId}/datafast/checkout",
         "parameters": [
           {
@@ -56331,7 +56376,7 @@
         }
       },
       {
-        "ordinal": 934,
+        "ordinal": 935,
         "path": "/marketplace/datafast/status",
         "parameters": [
           {
@@ -56417,7 +56462,7 @@
         }
       },
       {
-        "ordinal": 935,
+        "ordinal": 936,
         "path": "/marketplace/cart/{cartId}/paypal/create",
         "parameters": [
           {
@@ -56498,7 +56543,7 @@
         }
       },
       {
-        "ordinal": 936,
+        "ordinal": 937,
         "path": "/marketplace/paypal/capture",
         "parameters": [
           {
@@ -56569,7 +56614,7 @@
         }
       },
       {
-        "ordinal": 937,
+        "ordinal": 938,
         "path": "/marketplace/orders/{orderId}",
         "parameters": [
           {
@@ -56623,7 +56668,7 @@
         }
       },
       {
-        "ordinal": 938,
+        "ordinal": 939,
         "path": "/marketplace/orders/{orderId}/manual-payment/evidence",
         "parameters": [
           {
@@ -56704,7 +56749,7 @@
         }
       },
       {
-        "ordinal": 939,
+        "ordinal": 940,
         "path": "/marketplace/orders/{orderId}/requests",
         "parameters": [
           {
@@ -56764,7 +56809,7 @@
         }
       },
       {
-        "ordinal": 940,
+        "ordinal": 941,
         "path": "/marketplace/orders/{orderId}/requests",
         "parameters": [
           {
@@ -56866,7 +56911,7 @@
         }
       },
       {
-        "ordinal": 941,
+        "ordinal": 942,
         "path": "/rooms/public",
         "parameters": [],
         "bodies": [],
@@ -56894,7 +56939,7 @@
         }
       },
       {
-        "ordinal": 942,
+        "ordinal": 943,
         "path": "/services/catalog/public",
         "parameters": [
           {
@@ -57019,7 +57064,7 @@
         }
       },
       {
-        "ordinal": 943,
+        "ordinal": 944,
         "path": "/services/storefront",
         "parameters": [],
         "bodies": [],
@@ -57047,7 +57092,7 @@
         }
       },
       {
-        "ordinal": 944,
+        "ordinal": 945,
         "path": "/services/storefront/{packageId}",
         "parameters": [
           {
@@ -57080,7 +57125,7 @@
         }
       },
       {
-        "ordinal": 945,
+        "ordinal": 946,
         "path": "/services/storefront/order",
         "parameters": [
           {
@@ -57151,7 +57196,7 @@
         }
       },
       {
-        "ordinal": 946,
+        "ordinal": 947,
         "path": "/services/storefront/order/{orderId}",
         "parameters": [
           {
@@ -57205,7 +57250,7 @@
         }
       },
       {
-        "ordinal": 947,
+        "ordinal": 948,
         "path": "/services/storefront/order/{orderId}/stripe/payment-intent",
         "parameters": [
           {
@@ -57259,7 +57304,7 @@
         }
       },
       {
-        "ordinal": 948,
+        "ordinal": 949,
         "path": "/services/storefront/order/{orderId}/datafast/checkout",
         "parameters": [
           {
@@ -57315,7 +57360,7 @@
         }
       },
       {
-        "ordinal": 949,
+        "ordinal": 950,
         "path": "/services/storefront/datafast/status",
         "parameters": [
           {
@@ -57401,7 +57446,7 @@
         }
       },
       {
-        "ordinal": 950,
+        "ordinal": 951,
         "path": "/services/storefront/order/{orderId}/paypal/create",
         "parameters": [
           {
@@ -57455,7 +57500,7 @@
         }
       },
       {
-        "ordinal": 951,
+        "ordinal": 952,
         "path": "/services/storefront/paypal/capture",
         "parameters": [
           {
@@ -57526,7 +57571,7 @@
         }
       },
       {
-        "ordinal": 952,
+        "ordinal": 953,
         "path": "/services/storefront/paypal/webhook",
         "parameters": [
           {
@@ -57681,7 +57726,7 @@
         }
       },
       {
-        "ordinal": 953,
+        "ordinal": 954,
         "path": "/services/storefront/order/{orderId}/manual-payment",
         "parameters": [
           {
@@ -57762,7 +57807,7 @@
         }
       },
       {
-        "ordinal": 954,
+        "ordinal": 955,
         "path": "/services/storefront/order/{orderId}/revision",
         "parameters": [
           {
@@ -57843,7 +57888,7 @@
         }
       },
       {
-        "ordinal": 955,
+        "ordinal": 956,
         "path": "/engineers",
         "parameters": [],
         "bodies": [],
@@ -57871,7 +57916,7 @@
         }
       },
       {
-        "ordinal": 956,
+        "ordinal": 957,
         "path": "/bookings/public/availability",
         "parameters": [
           {
@@ -57942,7 +57987,7 @@
         }
       },
       {
-        "ordinal": 957,
+        "ordinal": 958,
         "path": "/bookings/public",
         "parameters": [
           {
@@ -58013,7 +58058,7 @@
         }
       },
       {
-        "ordinal": 958,
+        "ordinal": 959,
         "path": "/bookings/public/checkout",
         "parameters": [
           {
@@ -58084,7 +58129,7 @@
         }
       },
       {
-        "ordinal": 959,
+        "ordinal": 960,
         "path": "/bookings/public/orders/{bookingId}",
         "parameters": [
           {
@@ -58138,7 +58183,7 @@
         }
       },
       {
-        "ordinal": 960,
+        "ordinal": 961,
         "path": "/bookings/public/orders/{bookingId}/datafast/checkout",
         "parameters": [
           {
@@ -58194,7 +58239,7 @@
         }
       },
       {
-        "ordinal": 961,
+        "ordinal": 962,
         "path": "/bookings/public/orders/{bookingId}/datafast/status",
         "parameters": [
           {
@@ -58264,7 +58309,7 @@
         }
       },
       {
-        "ordinal": 962,
+        "ordinal": 963,
         "path": "/bookings/public/orders/{bookingId}/paypal/create",
         "parameters": [
           {
@@ -58318,7 +58363,7 @@
         }
       },
       {
-        "ordinal": 963,
+        "ordinal": 964,
         "path": "/bookings/public/orders/{bookingId}/paypal/capture",
         "parameters": [
           {
@@ -58399,7 +58444,7 @@
         }
       },
       {
-        "ordinal": 964,
+        "ordinal": 965,
         "path": "/bookings/public/orders/{bookingId}/manual-payment",
         "parameters": [
           {
@@ -58480,7 +58525,7 @@
         }
       },
       {
-        "ordinal": 965,
+        "ordinal": 966,
         "path": "/bookings/public/orders/{bookingId}/manual-payment/evidence",
         "parameters": [
           {
@@ -58561,7 +58606,7 @@
         }
       },
       {
-        "ordinal": 968,
+        "ordinal": 969,
         "path": "/social-events/stripe/webhook",
         "parameters": [
           {
@@ -58634,7 +58679,7 @@
     ],
     "rawMounts": [
       {
-        "ordinal": 966,
+        "ordinal": 967,
         "path": "/inventory",
         "parameters": [],
         "bodies": [],
@@ -58642,7 +58687,7 @@
         "internalInputs": []
       },
       {
-        "ordinal": 967,
+        "ordinal": 968,
         "path": "/assets/serve",
         "parameters": [],
         "bodies": [],
