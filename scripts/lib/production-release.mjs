@@ -633,6 +633,19 @@ BEGIN
       END IF;
     END IF;
   END IF;
+  -- A recorded course reminder migration requires its claim table and the
+  -- unique claim constraint (COURSE-FOLLOWUP-REMINDER-001).
+  IF to_regclass('public.tdf_schema_migration') IS NOT NULL THEN
+    IF EXISTS (SELECT 1 FROM public.tdf_schema_migration
+      WHERE migration_id='2026-11-20_course_follow_up_reminder_delivery') THEN
+      IF to_regclass('public.course_follow_up_reminder_delivery') IS NULL
+        OR NOT EXISTS (SELECT 1 FROM pg_constraint
+          WHERE conrelid=to_regclass('public.course_follow_up_reminder_delivery')
+            AND conname='unique_course_follow_up_reminder_delivery' AND contype='u') THEN
+        RAISE EXCEPTION 'Course follow-up reminder delivery claims are missing';
+      END IF;
+    END IF;
+  END IF;
   IF to_regclass('public.receipt_number_counter') IS NULL THEN
     RAISE EXCEPTION 'Receipt number allocation counter is missing';
   END IF;
