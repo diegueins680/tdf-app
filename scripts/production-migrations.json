@@ -1330,6 +1330,11 @@
       "introducedBy": "a8b31cefcf5c6ce45a3fc38406f23f11a3616b56"
     },
     {
+      "id": "2026-11-07_studio_gallery",
+      "path": "tdf-hq/sql/2026-11-07_studio_gallery.sql",
+      "introducedBy": "d77cd1319a67e89675e12e9e9082641bdf9fcc66"
+    },
+    {
       "id": "2026-11-20_chat_external_delivery",
       "path": "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
       "introducedBy": "239fc3974a114d08d3d27d6f4899f9cfcf4fd81e"
