@@ -6557,22 +6557,21 @@ const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26
 
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const combined = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const rawCombined = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  // MSG-DELIVERY-001 (2026-11-20) appends one reviewed migration after the
+  // gallery seed; strip it explicitly so the composition below stays exact.
+  const chatAppend = rawCombined.migrations.at(-1);
+  assert.equal(chatAppend.id, '2026-11-20_chat_external_delivery');
+  await integrationExec('git', ['merge-base', '--is-ancestor', chatAppend.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const combined = { ...rawCombined, migrations: rawCombined.migrations.slice(0, -1) };
   assert.equal(combined.migrations.at(-1).id, '2026-11-07_studio_gallery');
   const actual = { ...combined, migrations: combined.migrations.slice(0, -1) };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
-  // The 261 parent migrations stay an exact, unmodified prefix. Later reviewed
-  // appends are listed explicitly; MSG-DELIVERY-001 added one on 2026-11-20.
-  assert.deepEqual({ ...actual, migrations: actual.migrations.slice(0, main.migrations.length) }, main);
+  assert.deepEqual(actual, main);
   assert.deepEqual(actual.migrations.slice(0, ux.migrations.length), ux.migrations);
-  assert.equal(main.migrations.length, 261);
-  const appended = actual.migrations.slice(main.migrations.length);
-  assert.deepEqual(appended.map(row => row.id), ['2026-11-20_chat_external_delivery']);
-  assert.equal(new Set(actual.migrations.map(row => row.id)).size, actual.migrations.length);
-  for (const row of appended) {
-    await integrationExec('git', ['merge-base', '--is-ancestor', row.introducedBy, 'HEAD'], { cwd: integrationRoot });
-  }
-  for (const row of actual.migrations.slice(0, main.migrations.length)) {
+  assert.equal(actual.migrations.length, 261);
+  assert.equal(new Set(actual.migrations.map(row => row.id)).size, 261);
+  for (const row of actual.migrations) {
     assert.equal(await fs.readFile(path.join(integrationRoot, row.path), 'utf8'),
       await integrationSource(INTEGRATION_PARENTS[1], row.path), `Immutable SQL changed: ${row.id}`);
     await integrationExec('git', ['merge-base', '--is-ancestor', row.introducedBy, 'HEAD'], { cwd: integrationRoot });
@@ -6598,7 +6597,13 @@ test('studio gallery appends its original migration and preserves both complete 
   const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
   const before = await integrationParent(base, file);
   const original = (await integrationParent(gallery, file)).migrations.at(-1);
-  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const rawCombined = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  // MSG-DELIVERY-001 (2026-11-20) appends one reviewed migration after the
+  // gallery seed; strip it explicitly so the composition below stays exact.
+  const chatAppend = rawCombined.migrations.at(-1);
+  assert.equal(chatAppend.id, '2026-11-20_chat_external_delivery');
+  await integrationExec('git', ['merge-base', '--is-ancestor', chatAppend.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const current = { ...rawCombined, migrations: rawCombined.migrations.slice(0, -1) };
   assert.equal(original.id, '2026-11-07_studio_gallery');
   assert.deepEqual(current, { ...before, migrations: [...before.migrations, original] });
   const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
