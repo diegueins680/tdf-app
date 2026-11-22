@@ -1328,6 +1328,11 @@
       "id": "2026-11-07_content_storage_identity_guards",
       "path": "tdf-hq/sql/2026-11-07_content_storage_identity_guards.sql",
       "introducedBy": "a8b31cefcf5c6ce45a3fc38406f23f11a3616b56"
+    },
+    {
+      "id": "2026-11-21_music_audio_measurement",
+      "path": "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
+      "introducedBy": "6ab7ca2abd473e901c619f2fc9488dbf5a5dab2b"
     }
   ]
 }
