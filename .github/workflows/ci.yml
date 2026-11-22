@@ -386,6 +386,12 @@ jobs:
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
 
+      - name: Verify public event card tickets through the actual API and full schema
+        run: >-
+          python3 scripts/test-public-event-card-tickets-http.py
+          --binary "$BACKEND_BINARY_OUT"
+          --output tmp/specification/public-event-card-tickets
+
       - name: Verify authorized music catalog recording search
         env:
           TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_search_test
