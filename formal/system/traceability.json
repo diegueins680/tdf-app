@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "c0be94265c8d241c7690e9dddccb00647917e6b4",
+  "mobileRevision": "a35aa28c0a51799a18888ae36e01e051de19460f",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -21587,6 +21587,84 @@
       "historicalStatus": null
     },
     {
+      "id": "EVT-MY-TICKETS-001",
+      "title": "Mis entradas on the web lists the buyer's ticket orders without new access",
+      "domain": "EVT",
+      "statement": "/mis-entradas lists, newest first, the ticket orders whose private lookup key this browser saved during guest checkout (at most 30 per visit, each read with its own key through the existing public order endpoint) and, when signed in, the orders returned by GET /social-events/ticket-orders for the account. Each order shows event title, date, venue, ticket count, total and one of four states (paid, payment pending, no valid tickets, status unconfirmed). A guest order opens its private order page, with 'Completar pago' only for a known holding/awaiting-payment order with an unexpired seat hold; processing orders link to payment status; an account order opens its event and lists only its issued ticket codes once paid or partially refunded. An order present in both sources is shown once. A paid guest order page links to /mis-entradas. The registry lists social.tickets at /mis-entradas with optional authentication.",
+      "authority": "Owner request 2026-11-10/11: implement the fixes and improvements from the cognitive-load audit (plan item 27, Mis entradas on the web), within its guardrails; owner said 'Continue' on 2026-11-19.",
+      "source": "Cognitive-load audit 2026-11-10, plan item 27.",
+      "contract": "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
+      "actors": [
+        "Visitor with guest purchases in this browser",
+        "Signed-in buyer"
+      ],
+      "preconditions": [
+        "Guest orders: a lookup key saved by PublicEventTicketsPage in this browser",
+        "Account orders: a signed-in session"
+      ],
+      "inputs": [
+        "GET /public/events/{eventId}/ticket-orders/{orderId} with X-Order-Lookup-Token",
+        "GET /public/events/{eventId}/tickets",
+        "GET /social-events/ticket-orders"
+      ],
+      "state": {
+        "order": [
+          "paid",
+          "payment pending",
+          "no valid tickets",
+          "status unconfirmed",
+          "unreadable"
+        ]
+      },
+      "allowedTransitions": [
+        "payment pending -> paid when the server reports a paid order"
+      ],
+      "forbiddenTransitions": [
+        "An order shown as paid without a server-reported paid status",
+        "An unreadable saved order shown with a guessed status"
+      ],
+      "effects": [
+        "None: the page only reads"
+      ],
+      "authorization": "No new access. Guest orders are readable only with the key this browser already holds; account orders come from the existing authenticated endpoint scoped to the caller.",
+      "privacy": "Lookup keys never appear in visible text or URLs; the order page reads its key from browser storage. The page is noindex,nofollow.",
+      "concurrency": "Each mounted view and current account/session epoch owns its query results. Reads completing after an ownership or auth-epoch change are rejected. Query keys contain no lookup credentials.",
+      "idempotency": "Read-only.",
+      "failure": "An order whose key no longer reads is counted in a notice pointing to its confirmation email and is not listed with a status. A failed account read shows a retry and keeps browser orders. A missing event title falls back to the event number. Failed rereads hide cached private data; guest responses with different order/event identities are rejected. Unknown server statuses remain unconfirmed, and failed reads never produce the empty-purchases state.",
+      "recovery": "Retry for account orders; a reload re-reads browser orders.",
+      "observability": "None beyond existing API telemetry.",
+      "property": "Listed orders are exactly the readable saved-key orders plus the account's orders, each once, with a state derived only from the server status.",
+      "implementation": [
+        "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
+        "tdf-hq-ui/src/utils/deviceTicketOrders.ts",
+        "tdf-hq-ui/src/api/myTicketOrders.ts",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq/assets/feature-registry.json"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx",
+        "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "e2e/web/my-tickets.spec.mjs"
+      ],
+      "formalModels": [],
+      "verification": "16 focused unit cases and 14 browser journeys across all seven configured profiles; full UI TypeScript and focused lint.",
+      "evidence": "Local unit/browser execution with synthetic API fixtures and screenshots; no provider or production evidence.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Focused unit and seven-profile browser evidence cover guest keys, account tickets, session changes, cached read failures, mismatched order identities, processing and unknown statuses, and partial refunds. No production observation.",
+      "ambiguity": [
+        "Guest web orders are not linked to an account, so a purchase made in another browser appears only through its confirmation email link."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Verified read-only UI boundary with synthetic APIs; deployment, provider payments and production use remain unverified."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "QA-REPORT-AUTHORING-001",
       "title": "Internal testing report drafting, editing and submission",
       "statement": "A tester drafts an internal report linked to their active audit task, edits it while it is a draft or needs information, and submits it; administrators triage it through its state machine. Routes: POST /feedback/internal; PATCH /feedback/internal/{reportId}; POST /feedback/internal/{reportId}/submit.",
@@ -28677,6 +28755,89 @@
       "historicalStatus": null
     },
     {
+      "id": "COURSE-FOLLOWUP-REMINDER-001",
+      "title": "Course registration follow-ups can schedule bell reminders and calendar entries",
+      "statement": "An admin can schedule a reminder on a course registration follow-up. When it is due the author receives one in-app notification, and the follow-up offers Google Calendar and .ics calendar entries with an alarm that link back to the registration dossier.",
+      "domain": "Courses",
+      "authority": "Product owner request on 2026-11-20 from the registration dossier screen.",
+      "source": "User request: add reminder alarms and calendar entries to follow up course registrations.",
+      "property": "Each (follow-up, scheduled time, author) produces at most one bell reminder, never for times older than two days or for cancelled registrations.",
+      "contract": "formal/system/course-follow-up-reminders.md",
+      "actors": [
+        "Course registration admin"
+      ],
+      "preconditions": [
+        "The admin can open the course registration dossier under existing permissions."
+      ],
+      "inputs": [
+        "Follow-up note, subject and nextFollowUpAt",
+        "Programar recordatorio action",
+        "Calendar export actions"
+      ],
+      "state": {
+        "boundary": "Follow-up reminder delivery",
+        "states": [
+          "unscheduled",
+          "scheduled",
+          "due",
+          "delivered",
+          "stale"
+        ]
+      },
+      "allowedTransitions": [
+        "unscheduled -> scheduled when nextFollowUpAt is saved",
+        "scheduled -> due when nextFollowUpAt passes",
+        "due -> delivered when the delivery claim succeeds",
+        "delivered -> scheduled when nextFollowUpAt changes"
+      ],
+      "forbiddenTransitions": [
+        "A delivered reminder is sent again for the same scheduled time and author.",
+        "A reminder older than two days or on a cancelled registration is delivered."
+      ],
+      "effects": [
+        "One Notification row per delivered reminder.",
+        "Browser-built calendar link or .ics file."
+      ],
+      "authorization": "Existing course registration admin permissions govern scheduling; the reminder goes only to the follow-up author.",
+      "privacy": "The bell shows the registration name and follow-up text only to its author; calendar exports stay on the admin's device until the admin saves them.",
+      "concurrency": "An advisory lock and a unique delivery claim prevent duplicate reminders across replicas.",
+      "idempotency": "The unique (followUpId, dueAt, recipientPartyId) delivery row makes repeated ticks harmless.",
+      "failure": "A failed tick is logged and retried on the next five-minute tick.",
+      "recovery": "Due reminders within two days are delivered after a restart.",
+      "observability": "[Cron][CourseFollowUp] log lines and the notification row.",
+      "implementation": [
+        "tdf-hq/src/TDF/Cron.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
+        "tdf-hq-ui/src/utils/followUpCalendar.ts",
+        "tdf-hq-ui/src/components/FollowUpCalendarActions.tsx",
+        "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql",
+        "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "Unit tests for the calendar builders, the notification route and the reminder text; backend build; page test suite.",
+      "evidence": "Branch feat/course-registration-reminders.",
+      "confidence": "Builders and routing have unit tests; the delivery job has no database test yet.",
+      "ambiguity": [
+        "Email or push delivery of reminders is not included.",
+        "The bell notification opens the generic notification page; a direct dossier destination needs the shared Mobile notification registry to be synchronized first."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The scheduled job has no PostgreSQL integration test."
+      },
+      "critical": false
+    },
+    {
       "id": "UX-COGLOAD-001",
       "title": "Purchase, sign-in, booking and navigation screens ask for less reading and fewer decisions",
       "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The healthy booking introduction keeps its short instruction and native practical-details disclosure within three visible text lines in the tested viewports. Studio hours, physical Quito timezone, visitor timezone and currency context remain available by keyboard in the disclosure; schedule-field guidance remains visible at the scheduling step. Price estimates, readiness warnings and catalog retry controls remain outside the collapsed details. Opening/closing details does not change contact, service, availability, quote, consent or idempotency and never starts a write. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell. Checkout contact and required invoice errors appear beside their fields; focus moves to the first invalid field only on submission, and invalid input or quantities exceeding remaining stock never start checkout. Booking combines schedule and confirmation in one second step, retaining the current quote, deposit, terms acceptance, schedule validation and idempotency. Submission cannot bypass an in-flight availability/price check. Optional analytics failures do not reload forms; required route failures recover with at most one automatic reload per deployed commit in the browser session and retain manual recovery when storage is unavailable. Optional suggested booking times are initially collapsed behind a native keyboard-accessible disclosure; opening it and choosing a suggestion preserves the chosen physical Quito date. Transfer reference errors and receipt validation messages are associated with their respective fields; invalid transfer input never submits evidence. PayPhone country/number errors appear beside the invalid fields and focus the first invalid one without starting a payment or altering exact-recovery data. Service prices are entered in currency units with at most two decimals (dot or comma) and converted exactly to the unchanged integer rateCents wire field; empty means price on request, zero remains explicit and invalid/unsafe amounts cannot silently disappear from a draft. Event ticket-tier prices, budgets, contract commitments and finance-entry amounts use the same exact currency-unit conversion; quantity remains a count. Free tickets and zero budgets remain valid, while contracts and accounting entries require a positive amount. Invalid, fractional-cent and unsafe amounts produce field errors and never reach a mutation API. Rental deposit deductions, merchandise refund requests, variant prices and delivery fees also accept exact currency amounts with inline errors. Refund blank means the server-resolved remaining balance; deductions preserve blank/no-change versus explicit zero; delivery can be free, merchandise prices must be positive. Amounts exceeding verified balances or unsafe stored values cannot authorize financial mutations. Display retains exact safe cents. Existing refund review/execution boundaries, retry keys, custody transitions, stock units and publication rules remain unchanged. While correcting refund or deduction errors, the verified balance or maximum remains beside the input. Music release authoring accepts USD decimal units while preserving the full existing positive signed-64-bit minor-unit text range; no whole-price Number conversion occurs. Malformed price text stays local and pauses autosave before metadata/content writes; blank and zero purchase prices remain saveable in progressive drafts but cannot proceed to offer validation or review, and publication authority and transitions remain enforced. Operations amount filters retain signed exact safe integers, explicit zero, typed comma/dot text, the last valid applied range during correction and cleared/loaded-view distinctions. Invalid or inverted bounds never reach a query or saved view; unsafe saved amounts are rejected rather than silently omitted. Temporary operations drawers sit above the radio bar so actions remain reachable without bypassing pointer or keyboard behavior. Merchandise support, order, refund and settlement states use plain Spanish/English labels for existing server values, keeping requested, approved, paid, partial refund and completed refund distinct; unknown values and CSV machine codes retain their existing behavior. Refund preparation and empty-state text avoid canonical-system jargon while retaining request-only warnings, independent review and execution boundaries. The public Live Session form starts with the email-shaped username returned by its own successful access-code validation, never the ambient staff session. Owned draft values, including intentionally empty email, and subsequent edits take precedence; another verified owner remounts the form. Consent and musician identity are never inferred from that contact default. Leaving an already verified access-code field does not redundantly revalidate and disable the intake form, so the next contact edit is preserved; changed codes still require successful validation. Payment choices for tickets, studio deposits, courses, mixing and Domo quote deposits share one visual and accessible group, with the payment type prominent and its processor shown as secondary text. Only existing server-offered methods and existing local eligibility checks supply choices; all retain their original handlers and disabled conditions. The client does not invent a recommended provider from list order. Unknown outcomes continue to lock local and hosted alternatives, retain exact retry keys and permit original-attempt recovery even when new payment is disabled or no method is offered. PayPhone still requests its number only after selection and does not send a request on that first selection. For signed-in booking visitors, a complete valid contact is summarized with an explicit edit control; guests, incomplete contacts and in-progress edits remain expanded. Editing and returning to the summary move keyboard focus to the appropriate control without advancing a step, overwriting manual input or accepting terms. Course authoring preserves decimal currency prices as exact safe integer cents when loading legacy cent drafts, editing with dot/comma and writing CourseUpsert.priceCents. Its public major-unit numeric metadata is accepted only when a cent can be recovered unambiguously; invalid, fractional-cent, missing and unsafe prices cannot become a free course or reach publication. Zero remains an explicit valid free price. Drafts preserve raw invalid/blank price text separately from the API payload, retain explicit empty lists/descriptive fields, and are restored before local writes. A successful save clears the draft only if its edit revision still matches; newer edits remain local and do not show an outdated published status. Booking bank-transfer reference errors appear beside the bounded3–120-character field with an accessible helper and focus in the opened dialog. Invalid input never submits evidence; a failed request retains the reference, and the field is disabled while evidence is in flight. Submission remains review-only and never confirms payment. Before clearing a saved course draft, cleanup compares the stored snapshot with the one observed when saving; a replacement observed at response time is preserved. Marketplace rental terms show daily/optional weekly rates, refundable deposit and late fee in USD units with exact dot/comma conversion to their existing 32-bit cent fields. Daily and present weekly rates must be positive; deposit and late fee require explicit nonnegative amounts. Blank weekly rate remains null. Field-associated errors block malformed or out-of-range prices before the existing authorized version update; failed updates preserve entered prices for deliberate retry. Duration, cancellation, version, summary, activation and timezone retain the server contract. Browser contrast checks wait for the field floating-label/color transitions to finish while retaining every WCAG rule. Manual staff payments parse the entire decimal amount as positive safe integer cents, reject trailing text/exponents/excess decimals instead of rounding or truncating, show an accessible field error, retain raw owned drafts and preserve exact copied amounts. Existing owner/revision recovery guards and payment recording authority remain unchanged. Work-account report hourly prices also parse exact nonnegative cents with explicit zero distinct from blank. Invalid rate text stays visible and labels the preview as retaining the last valid rate; it cannot generate a PDF or save a template. Legacy cent templates load without a floating-point round trip. Unsafe or fractional derived cent totals block template/PDF export without changing the existing hours or discount calculation policy. The shared work-report currency formatter preserves the final cent of safe integer amounts by formatting integer major units and exact fractional cents, retaining the same locale/sign presentation for ordinary amounts. The work-report cutoff and new block dates default to the browser local calendar day rather than the UTC day, including evenings when UTC has already advanced. Loaded explicit template dates remain unchanged. Merchandise draft weights and stock, and existing variant stock/alert quantities, retain raw text and require whole integers rather than coercing blank to zero. Weights follow the existing 1–100000 gram contract; stock/threshold quantities follow nonnegative database INTEGER limits with explicit zero. Local invalid values cannot reach authoring or stock update APIs. Rejection and newer background snapshots preserve a mounted stock editor's raw draft, active state and original version. A newer snapshot blocks saving until the operator explicitly keeps the draft against the displayed current values or uses those values instead; neither review action writes stock. Invalid drafts remain blocked after review, and a separate save sends the reviewed version. Clean editors follow newer snapshots without remounting. Pending fields and review choices are disabled; accepted responses cannot be rolled back by older query data. Errors refresh the current snapshot without automatically retrying a write. Store/variant changes reset the draft and session scope retains principal isolation. This is mounted-editor recovery, not reload or disk persistence. Stock permissions, reserved/sold constraints, active state, optimistic version guards and product idempotency keys remain authoritative. Existing merch categories have shared Spanish/English display labels in seller, discovery filters, product badges and admin review; selections and requests keep canonical category codes, and unknown categories have a neutral display fallback. Merchandise delivery contact starts from the mounted signed-in account and remains editable, including deliberate clears. Required name/email/city/address and optional recipient text have localized field errors after blur or submit; focus moves only on submit to the first invalid field. Text stays raw until the unchanged trimmed request is built, with existing recipient bounds and control-character restrictions. A direct form submit cannot bypass local validation, unavailable stock or delivery, disabled checkout capability, in-flight reads, removal or checkout. Pending checkout locks recipient, delivery, reminder and removal controls; unchanged retries retain payload, private cart capability and idempotency key. The preview total is labelled estimated; final total, availability, order creation and payment status remain server authoritative. The reminder never becomes account-creation consent. Merchandise order cancellation and support-report forms retain raw text and show associated localized bounds/control-character errors after blur or submit, focusing the field only on submit. The existing client ten-character minimum, cancellation2000/report5000 API limits and selected request codes remain. Invalid or overlapping direct submissions never start a write. Unpaid cancellation first shows a dialog naming the order and captured reason, with an explicit keep-order action; review/dismissal does not cancel. Confirmation rechecks current eligibility, read freshness and pending writes. Refreshed paid state disables confirmation, while server checkout/payment guards remain authoritative for races. Pending operations lock message/type/reason and competing actions. Rejection retains text and unchanged retries retain the same key/private access; a support request never implies cancellation, refund or confirmed payment. Accepted cancellation keeps visible confirmation after its form disappears. Background read failure retains drafts and last loaded data with a stale warning, blocks writes and offers read-only retry. Changing order resets drafts/confirmation; a response for a previous order cannot clear a new order draft. Tracking/recovery copy uses ordinary words and localized Updates; private access stays out of visible text. Long order messages retain their full text in bounded, scrollable textareas so the input remains reachable. Danger confirmation buttons retain the theme's red palette with a contrasting label in normal/hover states and distinct disabled styling. Booking service selection displays the complete catalog name inside its column, with wrapping menu names and separate rate labels. Spanish display translations of seeded billing units preserve original catalog units, unknown text, service IDs, order and existing estimate/quote/deposit/consent behavior. Zero and missing rates remain distinct. Selected menu rate labels meet text contrast requirements, and nested spacing keeps the form inside its column. Marketplace bank-transfer references show associated field errors for the existing 3–120 Unicode-character bounds and unsupported characters, retain complete invalid/rejected text, and focus only on invalid submission. Pending sends capture and lock the reference with a synchronous duplicate-submit guard. Unchanged explicit retry preserves the same trimmed reference and private order access; evidence receipt is never payment confirmation. A new order owns a fresh mounted view and drafts; late reads or evidence responses from the previous order cannot replace them. Full order identifiers wrap inside the phone card. Marketplace customer requests associate type/reason/date errors with their fields and focus the first invalid control. Existing 3–1000 Unicode-character/control bounds and extension dates strictly later than the persisted return date are validated without truncation. Pending request data is captured and locked, with immediate duplicate guards. An uncertain attempt retains its original key and payload; edited drafts cannot post until the original attempt is explicitly restored, which sends no request. A separate explicit submit retries the same attempt under the existing server eligibility and idempotency guards. Request receipt does not change payment, delivery or rental dates. Matching artist option nodes remain mounted across the empty-data gap of same-principal search refreshes so a still-matching pointer target survives between down/up; previous-principal options are never used as placeholders. Marketplace order fulfillment and deposit labels are display-only: sale and rental states share the existing localized labels across staff and customer views. Pending/partial deposit returns remain distinct from verified terminal settlement, missing data is not inferred as payment pending, and unknown codes remain visible unchanged. History labels wrap within the narrow card; no state, permission, key, request or server guard changes. Staff marketplace order details use the shared deposit display labels and localize the existing settlement evidence statuses and methods. Evidence under review is distinct from verified evidence and never implies an automatic provider refund. Missing and unknown data retain the same explicit fallback. Record labels wrap within the dialog. Existing method codes/order, submitted-only review controls, note requirements, action payloads, independent server review, idempotency and settlement guards remain unchanged. Customer-request type/status display wording is shared across customer and staff views, preserving every existing selection code, option order and eligibility rule. Manual-evidence statuses and the existing bank-transfer/cash/POS payment methods have Spanish display labels; evidence approval never substitutes for canonical paid status. Staff declared amounts use the existing exact cents/currency formatter: missing is distinct from zero, and unsafe/noninteger/negative amounts or absent/invalid currency are not shown as a precise amount or free. Pending/quote-only review controls, notes, action codes, permissions, idempotency and server payment/fulfillment authority remain unchanged. Unknown codes remain complete and record labels wrap.",
@@ -28989,137 +29150,6 @@
       "property": "fromPrice = min price over tiers that are active, priced, in window, in stock and single-currency, for an event that has not ended; soldOut = on-sale tiers exist and none is in stock; the card renders only these.",
       "verification": "Hspec summary and boundary cases, focused React suites, seven configured browser projects, and the compiled-server HTTP fixture in the backend CI lane.",
       "evidence": "tdf-hq/test/Spec.hs; tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx"
-    },
-    {
-      "id": "MEDIA-MUSIC-LOUDNESS-001",
-      "title": "Advisory loudness check of delivered masters, bound to one file",
-      "domain": "MEDIA",
-      "critical": true,
-      "statement": "Behind music_releases.loudness_check (disabled by default), the music worker measures the integrated loudness and maximum true peak of every inspected master with FFmpeg's ebur128 filter through a total wrapper, and records the outcome in music_audio_measurement against the asset and its SHA-256. GET /music/releases/{releaseId}/versions/{versionId}/loudness reports, per track, a pass or warning against -14.0 LUFS +/- 2.0 LU and -1.0 dBTP, computed on read. A track is shown as checked only from a measurement of its newest master file. The result is advisory: it never blocks inspection, validation, approval or publication.",
-      "authority": "Owner request of 2026-11-21 (FFT audio features, phase 1) and owner answers of the same day: run inside inspect_audio, current inputs with a 900 s limit, -14.0 LUFS and -1.0 dBTP, warn only. The +/- 2.0 LU two-sided band, the silent-file rule, the newest-master rule and the accepted measured range were proposed by the implementer and accepted by the owner on 2026-11-22 (\"Continue with recommended defaults\"). AUTHORITY-099. formal/system/music-loudness-check.md.",
-      "source": "formal/system/music-loudness-check.md",
-      "contract": "formal/system/music-loudness-check.md",
-      "property": "L1: checked(track) => exists a measured row r with r.asset = newestMaster(track) /\\ r.sha256 = newestMaster(track).sha256 /\\ usable(newestMaster(track)). L2: measured and failed rows change only to superseded. L3: the wrapper prints exactly one result within limit + grace and leaves no child. L4: each flag is monotone in its value. L5: with the flag off no row is written and the route answers 404.",
-      "actors": [
-        "Music worker",
-        "Verified artist or team member with release.read",
-        "Strict administrator"
-      ],
-      "preconditions": [
-        "music_releases.loudness_check enabled for the environment (revenue_feature_flag); seeded disabled",
-        "music_releases.authoring enabled for the read route",
-        "An inspect_audio job whose master passed the checksum and the audio pipeline"
-      ],
-      "inputs": [
-        "The verified master file of an inspect_audio job",
-        "GET /music/releases/{releaseId}/versions/{versionId}/loudness"
-      ],
-      "state": {
-        "states": [
-          "pending",
-          "measured",
-          "failed",
-          "superseded"
-        ],
-        "initial": "pending",
-        "terminal": [
-          "superseded"
-        ],
-        "transitions": {
-          "pending": [
-            "measured",
-            "failed",
-            "superseded"
-          ],
-          "measured": [
-            "superseded"
-          ],
-          "failed": [
-            "superseded"
-          ],
-          "superseded": []
-        },
-        "authority": "music_audio_measurement.state; transitions are enforced by the trigger function music_audio_measurement_guard and mirrored by TDF.MusicRelease.Loudness.stepMeasurement"
-      },
-      "allowedTransitions": [
-        "(none) -> pending when the worker opens an attempt for a master and its SHA-256 (music_begin_audio_measurement)",
-        "pending -> measured with two in-range integers in tenths, by the attempt that opened the row",
-        "pending -> failed with one reason (timeout, decode_error, no_summary, unparseable, out_of_range, silent, tool_unavailable, interrupted)",
-        "pending | measured | failed -> superseded when a later attempt opens for the same asset, or the asset is re-pointed before promotion"
-      ],
-      "forbiddenTransitions": [
-        "Showing a track as checked from a measurement of another asset or another SHA-256",
-        "Storing a checked mark on a track or version",
-        "Rewriting or deleting a measured or failed row",
-        "Closing a pending row from another job attempt",
-        "A measurement outcome failing inspect_audio or changing assets_valid",
-        "Any measurement write while the flag is off"
-      ],
-      "effects": [
-        "One music_audio_measurement row per attempt",
-        "An advisory line per track in the web release editor"
-      ],
-      "authorization": "The route requires a bearer session and release.read on the release (owner, team or strict administrator), as GET /music/releases/{releaseId}/versions/{versionId}. Worker writes run under the job's lease guard.",
-      "privacy": "No personal data and no per-user behaviour: the result is a function of the file bytes and the constants, so there is nothing to personalise or opt out of. Measurements are returned only to parties who can read the draft version; nothing is added to public responses.",
-      "concurrency": "Rows are keyed by asset and SHA-256; at most one row per asset and kind is not superseded (partial unique index). music_begin_audio_measurement locks the asset row; music_finish_audio_measurement closes only a pending row of the same job and attempt; both run after the worker's lease guard. Checked is derived on every read from the newest master's open row, so a concurrent re-upload cannot leave a stale mark.",
-      "idempotency": "A later attempt supersedes the earlier row and measures again; identical bytes give identical values with the same FFmpeg build.",
-      "failure": "Any input ends in one recorded reason within the time limit plus the kill grace; the inspection continues. 404 when the flag is off or the version is missing, 403 without release.read, 503 when authoring is disabled.",
-      "recovery": "A new upload or a re-queued inspection measures again. A pending row left by a killed worker stays pending until the next attempt supersedes it.",
-      "observability": "music_audio_measurement rows (tool, FFmpeg version, job and attempt); worker timing stage loudness_measurement.",
-      "implementation": [
-        "scripts/measure-music-loudness.pl",
-        "scripts/run-music-release-worker-once.sh",
-        "tdf-hq/Dockerfile.music-worker",
-        "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
-        "tdf-hq/sql/2026-11-21_music_audio_measurement_rollback.sql",
-        "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
-        "tdf-hq/src/TDF/Server/MusicRelease.hs",
-        "tdf-hq/src/TDF/API/MusicRelease.hs",
-        "tdf-hq-ui/src/api/musicLoudness.ts",
-        "tdf-hq-ui/src/api/musicReleases.ts",
-        "tdf-hq-ui/src/features/releases/TrackLoudnessCheck.tsx",
-        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx"
-      ],
-      "tests": [
-        "tdf-hq/test/TDF/MusicRelease/LoudnessSpec.hs",
-        "scripts/test-music-loudness-wrapper.mjs",
-        "scripts/test-music-loudness-query.mjs",
-        "scripts/test-music-release-worker-runtime.mjs",
-        "tdf-hq-ui/src/api/musicLoudness.test.ts",
-        "tdf-hq-ui/src/features/releases/TrackLoudnessCheck.test.tsx"
-      ],
-      "formalModels": [
-        "formal/music/MusicLoudnessBinding.tla",
-        "formal/music/MusicLoudnessBinding.cfg",
-        "formal/music/MusicLoudnessBindingUnbound.cfg",
-        "formal/music/MusicLoudnessBindingStoredMark.cfg",
-        "formal/music/MusicLoudnessBindingUnfenced.cfg",
-        "formal/music/MusicLoudnessSupervision.tla",
-        "formal/music/MusicLoudnessSupervision.cfg",
-        "formal/music/MusicLoudnessSupervisionNoKill.cfg",
-        "formal/music/MusicLoudnessSupervisionNoReap.cfg",
-        "formal/music/MusicLoudnessSupervisionTrusting.cfg",
-        "formal/music/loudness_decision.py"
-      ],
-      "verification": "Proved (Apalache inductive invariants, unbounded in steps, parameters up to 4 files, 3 workers, 6 attempts; and limit 1..900 s, grace 1..60 s): L1 and L2 on formal/music/MusicLoudnessBinding.tla, L3 on formal/music/MusicLoudnessSupervision.tla. Proved (Z3, all integers): L4 flag monotonicity and the exact pass set, formal/music/loudness_decision.py, pinned to the source region. These proofs are about the models and a hand translation, not about the SQL, the Perl wrapper or FFmpeg. Bounded (TLC): both models with three negative configurations each. Tested: QuickCheck properties of the pure core; the wrapper on EBU Tech 3341 cases 1-6 and 15-19 and on malformed, truncated, silent and never-ending input; the worker, trigger, functions and flag on PostgreSQL 16; the handler query extracted from the Haskell source; web parsing and rendering by Jest.",
-      "evidence": "scripts/verify-inductive-proofs.sh (music block); formal/music/loudness_decision.py; LoudnessSpec in tdf-hq-test; node scripts/test-music-loudness-wrapper.mjs; node scripts/test-music-loudness-query.mjs; node scripts/test-music-release-worker-runtime.mjs; Jest musicLoudness and TrackLoudnessCheck.",
-      "status": "specified and implemented",
-      "confidence": "High for the decision rule and the lifecycle (proved on models, tested on PostgreSQL). Medium for accuracy: the conformance signals pass on FFmpeg 7.0.1 locally and were not run on the worker image's FFmpeg. The handler is covered by compilation, the extracted query and review, not by an HTTP test.",
-      "ambiguity": [
-        "Pass/warn is not monotone across the whole loudness axis because the band is two-sided; each flag is.",
-        "EBU Tech 3341 cases 7-8 (programme material) and 20-23 (filtered impulses) are not tested; they exist only as EBU downloads.",
-        "A version may hold several master files for one recording and nothing else in the platform names a current one; this requirement uses the newest undeleted master.",
-        "A pending row left by a killed worker is shown as pending until another attempt runs.",
-        "A 192 kHz multichannel master of several hours exceeds the 900 s limit and is recorded as failed: timeout.",
-        "The proofs cover TLA+ models and a hand-translated decision; correspondence to the SQL and the wrapper is by tests.",
-        "Production has no music worker, so the check cannot run there yet.",
-        "No HTTP-level test calls the route on a migrated database."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Critical properties proved on models and tested on PostgreSQL and the real FFmpeg; accuracy on the worker image, the untested EBU cases, and an HTTP-level route test remain."
-      },
-      "historicalStatus": null
     }
   ],
   "sourceFingerprints": {
@@ -29134,7 +29164,7 @@
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/domo-refund-validation.yml": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
-    ".github/workflows/event-operations-formal.yml": "bf71291bd71d10614e6a47d36c2427525087c27e1cdd2cc38e7caf4e862c7be5",
+    ".github/workflows/event-operations-formal.yml": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -29142,7 +29172,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "ed8c7ad1b237108ffe6676104511495366bd686ee3705a5a6543f72c9e0dfa63",
+    "docs/catalog-persistence/catalog-list-decisions.json": "98a643b2acd8d93a07f96bc7c283178aaae5fcddf1b81b821a1370def26e9190",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -29204,6 +29234,7 @@
     "e2e/web/music-player-native.spec.mjs": "56c9594a65f72264034209158aa9076a4578d44be41750771c7b448ba63a187b",
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
     "e2e/web/music-search-native.spec.mjs": "6cebd8f6c76d01e42a3eb6690ba71b16a7d24762361068ec16044729fa2fccfa",
+    "e2e/web/my-tickets.spec.mjs": "c6e0fc72bebd284e8619af7c08091c98b4d5eaa14fe8c6a28a928facda3c37cf",
     "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
     "e2e/web/payment-choices-contact.spec.mjs": "6ba982189ab6eb888ab98f2abf76918e27c9a62635d7276275a8cf3573bcf234",
     "e2e/web/payment-field-errors.spec.mjs": "0116b1c7bdbef1d0d296a888ea72de15a5feb944d1c45a903dd8156be4055d67",
@@ -29514,17 +29545,6 @@
     "formal/event-operations/WorkerCompletionEvidence.tla": "34025827b6f01adad2d3972c282deb2c4eac2e1ab9ff57795c9ed6011568f205",
     "formal/event-operations/WorkerCompletionEvidenceFailed.cfg": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e",
     "formal/event-operations/WorkerCompletionEvidenceUnacknowledged.cfg": "ba3fc2fb73be56b89e38433e40dc8fac8689b85330203528ff8b50c9b0575860",
-    "formal/music/MusicLoudnessBinding.cfg": "19ea840b31851ce7df505d4a6ad580835464a31133cd5d6a510205a9b7e8baba",
-    "formal/music/MusicLoudnessBinding.tla": "277dd0eb625e06ca27260da40bac2ebc318439b3bd2ad33290da0b325646d384",
-    "formal/music/MusicLoudnessBindingStoredMark.cfg": "420439a854303cc8651f0e809020445425296d9a3b8a02f0babacb5a3c89d2a9",
-    "formal/music/MusicLoudnessBindingUnbound.cfg": "16f15d3bd9ec7a267f0ef52ceb5fd8af28b84dc94e32f61219586d232d50e850",
-    "formal/music/MusicLoudnessBindingUnfenced.cfg": "c6eb7a17ecaff989edc56b419158df76c4f9e78990e9d886c0537a67f3f39ca2",
-    "formal/music/MusicLoudnessSupervision.cfg": "83e46d90a9136a825db85abf576b52423ddc2c61ab340b194e1871cac8bbe62d",
-    "formal/music/MusicLoudnessSupervision.tla": "d7b43b3bf70288e307324c3fef937ad37773081bfbbfd112e4a560639c6447ea",
-    "formal/music/MusicLoudnessSupervisionNoKill.cfg": "c261b3268725337251a8939884ddf128f1381d490f64dbaa7d368333deaafbc2",
-    "formal/music/MusicLoudnessSupervisionNoReap.cfg": "d95106f9817767fff1cd3273ed1edce2a5bafa8a3240e27c8f54cd40b2dfe9df",
-    "formal/music/MusicLoudnessSupervisionTrusting.cfg": "5f2b87213ea54da8f4d92cfb6dc527c70e156ad7e0609d4c404a2feeb7e12e6e",
-    "formal/music/loudness_decision.py": "5239454e04cd4e13562844b4b2877311b731278e4aa639760cc1a993c7894c0a",
     "formal/payments/CaptureAccounting.cfg": "1c3cfc664c1a702b0f7db89a5aa631f94670e5297fd3ce38b1329f7f2aad743c",
     "formal/payments/CaptureAccounting.tla": "78c86aa59ebfd73c24fda852348978875a5f60f8925d5f4fbc8e0e7ebb104172",
     "formal/payments/CaptureAccountingLegacy.cfg": "eaba43f7267541499daabeb5e4e512679b2ab36b34154c28dbfaaa1b1f078c30",
@@ -29554,15 +29574,15 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
-    "formal/system/compiled-api-surface.json": "5fb5b0eb3f05d7de1d1acd05aea3886977249a0db6c26ab9e463a86c54a66709",
+    "formal/system/compiled-api-surface.json": "e227c6afb82883509fc0cb9937fd4518e5b7661c3c849ae0198b6669b0bdcf16",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
     "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "f1ac7252f93a21e7b8ce99fa5bfa9d5df0200defff1030193a14f7db26985c3f",
+    "formal/system/recovery-expiry-arithmetic.json": "6db2e0d6a7325ff99d7d04359e89c6167cda1f9e37a5d4c010182b04f94fdcd9",
     "formal/system/route-requirements.json": "df5ba57041c1061ce8c325253fc66e48dd5558680f6fcf279ef7403be63355fb",
-    "formal/system/state-machine-bindings.json": "6af96259b546588349a4cbc421d22a749ec4bb5faa5997f2ca7926d4fadc602c",
+    "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
     "functions/_shared/event-preview.mjs": "8c45a8fef1e5740623c33173b5ea0924f5b8f8b6d832f3fef666d1cda595e381",
@@ -29612,7 +29632,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "fd37a7f7b8bb1cc46b4f72ef6561da581e6b000876ede471f70a6ff33bd4edbe",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "8d9431da2d3ac258c069dc12a28be58903231367e8756df354ee0b5059809825",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -29721,7 +29741,7 @@
     "scripts/check-route-requirements.py": "75aadc52982aba64747288b42a3e3574260a3cc75dd4b97243f4974bdcb758fe",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
     "scripts/check-webhook-signatures.py": "d19a35c65b5827cba3947286778cfa0bfa18dcf230b5d3539df8cff28920e4d5",
-    "scripts/ci-change-scope.mjs": "7bc96cc8b5f2fd8d52fc5083cf71bef415bc7edbc774865e3e109f2f8ab99d72",
+    "scripts/ci-change-scope.mjs": "47b7dd05d77ffc41c579262355871bd3d7c429f6315cb4df6a090cbb2078ea51",
     "scripts/ci-job-admission.mjs": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
     "scripts/codex-loop-worker.sh": "467cb345b75f0afa7d96e98be460d4225374f3dec1c203c0984f62aef16cc282",
     "scripts/content-storage-model.mjs": "cae41e9ce3b6cf072d9255e94932a237a52c3f5193e6b8def8d97447bc9240d1",
@@ -29778,7 +29798,7 @@
     "scripts/lib/music_payment_conformance.py": "2d06c9081c0386dcde94a0f39c381baf2c4e33cc8ae59b34d5a4192163588b49",
     "scripts/lib/operations_conformance.py": "1978873ba86472cc29198bf14fcc428102d69db29e6816a197a1140118ef2654",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "2fe06b4dbc5f9fcdcfec8abe868d3d0d2c9fc1afb805430d0f2cf4cc2d60006b",
+    "scripts/lib/production-release.mjs": "b2581954bf71df4691d0a1829a5350e5271c7cc575896a3381266e9496580ab9",
     "scripts/lib/public_routes_conformance.py": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
     "scripts/lib/readiness_conformance.py": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
@@ -29789,7 +29809,6 @@
     "scripts/lib/whatsapp_consent_conformance.py": "e7e6f0221bb7bcf5ef631827e2dfa6c329d5b4c16733fa5bca6e61bdb748c4a8",
     "scripts/load-payment-test-schema.sh": "8f8e8385a59b6b118c049ab7ac5f48e5525152c45fc8a15d882c37f78b0330d7",
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
-    "scripts/measure-music-loudness.pl": "94f57c6b855e22f26112f760864e040a6bfe0cae4ac423f2f031234a9e529d06",
     "scripts/merge-admission.py": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
     "scripts/mobile-publishing-admin-audit.sh": "6443db3bbfc3a044fc95206b5742aa4800137af1dbe1e94656818f275bacd3ad",
     "scripts/music-media-health.py": "2b80bf8d0f812abea2057b364f6384dffcb7d2a4c7275509c02fd7a8d2a0e5c8",
@@ -29802,7 +29821,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "98e99f826252d40e3361cdd5af6f77f6dc86365bf5249ac48e1b3101fed1c9a0",
+    "scripts/production-migrations.json": "c5876e58c70088b1357996aabe1df90938e7404095099107a837bb25942140d7",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "e497d1ce41e8b1bdc3ae776a164b0cb3c6317b5c799ecce85205ef9c79602729",
@@ -29814,7 +29833,7 @@
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
     "scripts/render-production-schema-verification.mjs": "999aa696aed32f988f4ef80460506bd063ae5bc52d405eaeb056f143aa680874",
-    "scripts/run-music-release-worker-once.sh": "7236b2dc8bc67e882d4fb18f85f714865138f039d99d999326453a22fdf3a932",
+    "scripts/run-music-release-worker-once.sh": "d4821f53b421624ad192b3880fdba0fe91e3e876fd258e0c4b431dd5ca6df60d",
     "scripts/run-music-release-worker.sh": "b3f2366bd78765667b467db22b9a4226a6a3c53b417f9057ee4efcc174d29046",
     "scripts/run-native-audio-tests.sh": "89be3522a4c6fb7e4352bc8799edb2aee64de19dac7a95d67efe144395ed48aa",
     "scripts/scan-music-legacy-releases.sh": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
@@ -29867,7 +29886,7 @@
     "scripts/test-event-memory-recovery-browser.mjs": "1a5c39899720aaaf94277504ba848a10fdce790cf00ce037ef49359e2be54938",
     "scripts/test-event-memory-signup-browser.mjs": "53325a4eec001efb223ce5a3913518b7a8dd658dea6ea8f2d19f46df0fca2a86",
     "scripts/test-event-memory-source-browser.mjs": "436e140c965e7ff327aa501c4777270c43b7218b92e94696ad61e9549990ce4a",
-    "scripts/test-event-memory-source-moderation.sh": "6f58839bcde85a8ec1a78c9f876a035f8afd6ad7d7dc59d760ad9218788521c3",
+    "scripts/test-event-memory-source-moderation.sh": "3d1604376f2006562d752e079cdc98840be50ed7dfb17d57043f4ea8c9c56a27",
     "scripts/test-event-memory-source-permissions.py": "97d8944b7f043879ca56fa4503027195ed99fbf2482ea874634bbbdcdb67d30c",
     "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
@@ -29895,8 +29914,6 @@
     "scripts/test-music-directory-migration.sh": "54c4c6e82e08b10460fba9fca2e0b8ef5cd7e5e11ab991960443c2e11089de59",
     "scripts/test-music-download-predicate.mjs": "bca6f459131b70b0ac181a6b24b68fb7a853ee9c06121b604f2e3581f9c59bc4",
     "scripts/test-music-integration-rehearsal.mjs": "c1976955269babf795b4588aa4b1f9f7dd6b1cd09b9ac86f69f053953b0cab4b",
-    "scripts/test-music-loudness-query.mjs": "47e309112373dfd831d563429069da5acf5ba904820d3d9a92098c7fe6e89ed0",
-    "scripts/test-music-loudness-wrapper.mjs": "9da882bc4920809d0ae082c3c1036ef6c378a8fc1c9f43f6139a3080ee788d7f",
     "scripts/test-music-media-health.mjs": "383825c93a9090858d72ae401cbcad93358cf4e540949c45ed0097b7d90b4efe",
     "scripts/test-music-media-health.py": "899711c458eecca463df2e31938552e505e3ed408fe400fcff17d3923964adda",
     "scripts/test-music-money-wire-verifier.py": "bc1c7cce17011641bbf01ff4ac5382c4d101526bbd3e913fa0c0ae436e915eb5",
@@ -29910,11 +29927,11 @@
     "scripts/test-music-release-artwork-pipeline.sh": "5bebd08d1b8863c166080ecd5e56437a9d957306f87c08c007c1dbc2ff68c73f",
     "scripts/test-music-release-audio-pipeline.sh": "872c969557cc8cde9e5e135d768cfa5da60937beacb954de5ad1301c5331b8de",
     "scripts/test-music-release-platform-migration.sh": "ff447aefbf0c12ceb562ae5e528678343e89b425c029a83562254265156bdbe4",
-    "scripts/test-music-release-worker-runtime.mjs": "47b8aa0d4f7254c949a10207c36719a55b752013b6b9dfbadde1951736e541b7",
+    "scripts/test-music-release-worker-runtime.mjs": "9dab132988cd53ea2f568bc0822fad5db32fc14934f6b164d530c47d40d56994",
     "scripts/test-music-s3-local.mjs": "882173441c83b1eaa823bcdad88f54a37573de2fdae3375302523b7f2dc43d61",
     "scripts/test-music-source-projection.mjs": "1efdc0a81e8ae85e78f56814057d2636ebc20c2470c7621a24876696982b6416",
     "scripts/test-music-track-search.mjs": "dfdbe15b58975255caa4d60b6d653c0e8414cfd5657968be776053c8c254e64e",
-    "scripts/test-music-worker-image.mjs": "03570ae64c663589f69c8722495a403a6b9e63ac91222c842664d1b13337d3b8",
+    "scripts/test-music-worker-image.mjs": "c9d5916e2d46847fa1a8dc945f4949bd9278ea70f342bf9728092c63f752b3d9",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-operations-inbound-capture.sh": "e0a761477525c8c8422e98ad9931c3b7ab7ef7cdf7f0f64fe1c349d62c707e89",
     "scripts/test-payment-arithmetic-verifier.py": "2fe82782ea7667eca90e4b7178e4bd95def247a120ad92aece333e4c75f96b68",
@@ -29931,7 +29948,7 @@
     "scripts/test-provider-retry-runtime.sh": "1a0c7d6c1df4bed918bfff6c91a81add3275e2bcf003c82fd2748d93a12c7e38",
     "scripts/test-public-booking-http-concurrency.sh": "6bcbfa2634384f4288b10b140c9e1aa0a518c5ffa7beb0347bac988d9b92fb60",
     "scripts/test-public-booking-tentative-idempotency-migration.sh": "38afada9051290eabf477e2558badbcf0a5c6a0207761f82a7a364db4018030b",
-    "scripts/test-public-event-card-tickets-http.py": "32d44391832275eafe1fd9db7b8e425909f61aeab4c2233e7bbe67889073cdc8",
+    "scripts/test-public-event-card-tickets-http.py": "584927f18ada55422d284dad0104bd765d82d34d4c20e5511e05e839129ac341",
     "scripts/test-public-route-denial.py": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
     "scripts/test-public-routes.py": "fc959608bfb70097b378625bbc914645db7f87237fa7df536b851a967607f4fb",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
@@ -29984,7 +30001,7 @@
     "scripts/verify-event-operations-formal.sh": "a17b08e8c4d12ee0537ed8707d8675e8fa60fe7a1b2aa985391c204cf6d0351b",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
     "scripts/verify-google-account-name.py": "db797f61655c32d3df0c6737a18514ea8d49312bfa245253e7c45e521d9ce4e9",
-    "scripts/verify-inductive-proofs.sh": "190bc6b7528a38992c2a9531b3048f13692987d587707823a07e190a117f8d76",
+    "scripts/verify-inductive-proofs.sh": "690c47575dc80407e8fbc43a5680f9addc5f92adb415eff9f7629ba9fd9d1bdc",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
@@ -30101,7 +30118,7 @@
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "ae2ad3f7be703b347c428926fce27a779f7da84e99fdac8b45637950667edf57",
     "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx": "205cd4ebacf67f48da978914e77c6ca5c5a0dac6a24b26c557865df5dc587bb1",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "ebe885636c5118082f1b3d87416290e5fab11e1ebe933ef93a8bf8d9a63ead01",
-    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "c93f5c6a815ae9b57a19eca3aa12759c65cc8aa1f4341bfecc6fdffcf4a0ff28",
+    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "b0441cbcba602a812c779515fbdf6b7d7c9238374780d2a8b31a7bbbec695ff1",
     "tdf-hq-ui/src/__tests__/TrialsPage.test.tsx": "b27a208c02d62cc6013968ee4971b7729c46e6300aae35fad89576b6371b906b",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "747fc315cb53391ce599f6e9fafa5f230114af4e6dab86db1de479c62560b0f9",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "4bb56f2d7f3e557fd60d61e74fad694ab93ca3848fe3b5aceebb3e458d54d59e",
@@ -30151,7 +30168,7 @@
     "tdf-hq-ui/src/api/fans.ts": "75f0d175c04cd78845fb2fb305577eb00db074d30f2cc693a70d4d3a023a7046",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "e14b897ef11255d4cb2d0ae9b324410680e2e1abd4503dfe746600d07e8be99d",
+    "tdf-hq-ui/src/api/generated/types.ts": "4d69c011a18e29d7d141d37f27046b912a04d2e1c56267961e95b404e2922dc3",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "579339fc25f2a17e8d34cfd23b25562a6242cca6df291887f904bac5483acc02",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "da727168f7e65d08d52a371cbe8ccfe0d0b1c91d4de940b827f7c37fdac72f85",
@@ -30160,15 +30177,14 @@
     "tdf-hq-ui/src/api/logoutIntent.test.ts": "24354ac1497779a12eba6b88bedb4f472636924f3aa508b7b1d95456589b7e33",
     "tdf-hq-ui/src/api/marketplace.test.ts": "dbd4f9f1c2b7037070e56a4107a8a3bd89cdceae1e8cd708756df66caf28c702",
     "tdf-hq-ui/src/api/merchReputation.ts": "bfffe41b92b69806b4721ff6148e3b5d1427e8b695751552734bf9eb7355b9d5",
-    "tdf-hq-ui/src/api/musicLoudness.test.ts": "bffcf41f8e9963081c9c6c050913543a851142c91ba3e646a142c4ca838d1e3b",
-    "tdf-hq-ui/src/api/musicLoudness.ts": "36c66678d847a8aba687332eaf1ae862abf00377b5e0889a9fc068d742e9962c",
     "tdf-hq-ui/src/api/musicReleases.money.test.ts": "dd10351e9e57dd83732f10c0b53d02c15dcef75f5b90afccda8235d65ccf75fe",
     "tdf-hq-ui/src/api/musicReleases.pagination.test.ts": "e1b83d693a268efebd2121a899cf6fa422d39994895425abddb68054056b652e",
     "tdf-hq-ui/src/api/musicReleases.search.test.ts": "669c73a1f2882d218c8b1054f19512fbc1c9dd1aaed3cd9568b20597db2c9eda",
-    "tdf-hq-ui/src/api/musicReleases.ts": "b5aa58bd1909d738567a303585112be55b32f147643c91d03d540d904f8b656a",
+    "tdf-hq-ui/src/api/musicReleases.ts": "47713758df818e726e15f375146be25fa33a235d8885076821c8ca653dfd03ef",
     "tdf-hq-ui/src/api/musicReleases.upload.test.ts": "8f3721fed84de4ad71f0f087f1f5dc25de44c6c170ad17a091915486d7deab40",
     "tdf-hq-ui/src/api/musicStorageResponse.test.ts": "4d173a68d03907dd1106b079b472a92d6212b2938e8421b360cb78a315797b8f",
     "tdf-hq-ui/src/api/musicStorageResponse.ts": "8f48adb2834adc89083f4ef643dde01dcfae051815f42121ac21bb1e6e233e78",
+    "tdf-hq-ui/src/api/myTicketOrders.ts": "b4f29af5c73605e37fa38f81bc2b44601fd11f8d92f9bcf90cf993845cb0cc14",
     "tdf-hq-ui/src/api/operations.test.ts": "8e4919a4cc55e9282a04005651c9a287d02240598ee349b038af88d6d06d3ace",
     "tdf-hq-ui/src/api/parties.test.ts": "89c70a9266f7700570eda82141accf25ed07b92c7336c4420191868d2bcfb171",
     "tdf-hq-ui/src/api/parties.ts": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
@@ -30211,6 +30227,7 @@
     "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx": "12b5c7fbb55aaaa9df265c3feb6832c61d75bfe45050f1459304f73f3b21cbcc",
     "tdf-hq-ui/src/components/BasicFeaturePage.tsx": "46faa93a4c4da7ee9ccab7d14cd8dbf07e7da57f4cee7425583ae6a2f482bc5e",
     "tdf-hq-ui/src/components/ConfirmDialog.tsx": "8581a25cd9959f56ba12a84066c5c87259dadd5da3d00ec56f4148efdeb554a6",
+    "tdf-hq-ui/src/components/FollowUpCalendarActions.tsx": "35a10159b6ba74b4c3f30b85b0f64ddaa52c6579e284bec71a263ecfb83d5ee7",
     "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx": "1faa71b1331653c4bf9fb12a32726732d94b63d1929b336f79bd7b11da3c0d94",
     "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx": "755ccd66be9250f7da44ee8d03aca541dc5583ae156841dcb88dfe21ca25ef3f",
     "tdf-hq-ui/src/components/InAppBrowserNotice.tsx": "ee2e97283f584ae5028f15da77b1b9783b8dcc7c03a4b6678feeede6a887775b",
@@ -30379,8 +30396,6 @@
     "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx": "cdcc27ddb569946f134242dc233823e788adb3e946d0b906d930680b9df38e84",
     "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts": "c5ad21fcffed6f6d4096788ddfafef44cbdcf3b693dc6c9c37b1012e871c0faf",
     "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "67c0980c3268cc54bda54b7ee871d8345a79d754b1e100e6c98f18340b1f1b68",
-    "tdf-hq-ui/src/features/releases/TrackLoudnessCheck.test.tsx": "70bb34eaa97c61c2b727a460bdfad87a947e54de6d4b6dbc53c4663366b61ce3",
-    "tdf-hq-ui/src/features/releases/TrackLoudnessCheck.tsx": "70da9fc2133dd4b44ebc2e3dd7b8b989d98c4b38f8c459a6f3f83cbbd930f192",
     "tdf-hq-ui/src/features/releases/catalogQueries.test.ts": "0abd74326e5225fed06e81cf01921d6247cb41b23b0c1f33932c43b8a513a2d2",
     "tdf-hq-ui/src/features/releases/catalogQueries.ts": "ab1ac999aeac0c22d337184124e83e5d4f3817d4ba6a242445a877b68ee0113d",
     "tdf-hq-ui/src/features/releases/useReleaseFeed.ts": "d14328c34a608a3748610ffb35448acf5beed529601883f3f5077b70d445ff49",
@@ -30439,8 +30454,8 @@
     "tdf-hq-ui/src/pages/CourseBuilderPage.tsx": "8becae891de1375f77aee74823def67a63453f1fb89f9d116c59c9bbead1d986",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "c1e638d0ff65572119237c8c4112d832fe1bdef8e41b1c93824a07b1b95c7122",
-    "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx": "769a23d6403d4c2cd9d9e31c676e4d9a4174c3057b381f4ca374ceb0d78f0e59",
-    "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx": "6c9bc2d583f30483444f06277351d1324cf49e1a22b10780a4f7b025796a74d4",
+    "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx": "d747f4d2c7cf597114f167fcdeb01fdd6f5315ce40ca6e5c426b5bcd1ce17c08",
+    "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx": "b10a52c61bd8e5aee2c80629d3726153be387f93ef174766dbcb30621daf87a1",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "7502f83d2089e7f09827d17c4cd6f37d2e82bec39ed5c827b540de18c32bc3be",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "6346f5a36530f69a754f6f3d3988b95a5fd5ad3a7422d1797d1a2801a933c095",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "351c03a7f95ddf473ef8d86e01c0e5be7b4e2a0fbd2d842209b09feec1731fcd",
@@ -30516,8 +30531,10 @@
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "02b7dc725ef0650d7eea8e4de55a144fc9252c0ad841297a8359b7120fc0503f",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx": "7eeacf7144a54d0cb7f2f08de7ced1b1acfb4fe53a53017e73562d24c2790c48",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts": "26ae645bd78e98a19c1659bfad09c7a953aa8ae16bcc95632258380882285dde",
-    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "d9c44a133ff55318851cb77da09aa985b23e8293c2461d72c94b1febc133ebf6",
+    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "f613299023445960d574250d79f4fcfa408e5939869f8cca06c24a8d2d5f0f99",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx": "d5b2555b6b1e5a0bf27f0a124f3fb57019397d06a9695dbf9e8a417ceb72309c",
+    "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx": "90b633d62953bbdaf64d3a662c365b7777d3e66cc7c5317a13c174a642388fb8",
+    "tdf-hq-ui/src/pages/MyTicketsPage.tsx": "10a77b9b7e6559c909bac78a28b7325f0c08cd6153378e1f69b2220e296c4270",
     "tdf-hq-ui/src/pages/NotFoundPage.test.tsx": "0bb182ef3da26e32894ee7ca9093cf1691afb78b7e6a3ec9129d4dc3f0fa97bc",
     "tdf-hq-ui/src/pages/NotFoundPage.tsx": "1bfa74b3ea1565ef9e00e494bd10ce3154c88ccbfe9508a2e9f77e016e34b7c7",
     "tdf-hq-ui/src/pages/NotificationPage.tsx": "238197064a2439a50fc9cd7d075e511147d7852f46bc116e9ca82922b230d520",
@@ -30534,7 +30551,7 @@
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "feedf51eab249474ab6e971bd6a9aef7c72d3be117f2b01f7cfe3aea19ca32e5",
     "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": "9e3a1a9e16505da719971a9eb12fbe79a6436f3bb01317b5994b78e87f134b5a",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "d09b16d162a3ff525890d254da20b878e79b92d971011b8ca49cacce9293faaf",
-    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "e4c50481e70a35467653b40caf08b42ad964ab6b9731a2ccd46c50dd425e4702",
+    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "7544cf376e7c4721e85ae84341a98014cf0909cc8c8301ee2ec0c01b3beac179",
     "tdf-hq-ui/src/pages/PublicProfilePage.tsx": "231a90d2da08b7eb5049818d418372a6c05d9069b9b874e8cf37c28824e17164",
     "tdf-hq-ui/src/pages/PublicReputationRightsPage.tsx": "f6de05dae2322ea92e05066bf94073a68dcaa1c437c10b1e9524dfb98867268f",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
@@ -30602,7 +30619,7 @@
     "tdf-hq-ui/src/routes/RouteLoadingFallback.tsx": "d6d3fe537c86d2159ded28cdc4f56543137a55fe1002acc8eb8381bf73b5b4ef",
     "tdf-hq-ui/src/routes/protectedRoutes.tsx": "bd49b500f0243ae6413203205466d5a1a2220c9cd5a10de3e41a3420275cffb3",
     "tdf-hq-ui/src/routes/publicRoutes.test.tsx": "b1d51f44ec9320845ae9fe0027eec9f45e088ae3b3d15b991f986e31448bbb5c",
-    "tdf-hq-ui/src/routes/publicRoutes.tsx": "d257098c3338360560f5382908e43fc0ab08c5eefb631ed3393a66a02db109ae",
+    "tdf-hq-ui/src/routes/publicRoutes.tsx": "a88a66d8753db1d483d1d3d59cf8a197250ee371c90b3e7064cd08ef07abcd48",
     "tdf-hq-ui/src/services/cartSummary.test.ts": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
     "tdf-hq-ui/src/services/cartSummary.ts": "5a5aa5124166fcd225a1119be605a698f5790037a5c7158cd0fbf66092eee069",
     "tdf-hq-ui/src/services/googleDrive.compatibility.test.ts": "8d274a9ae9ecfd3fb82a697f471120ecd7886a05c75cb0d9cba1c1ff8ff2591d",
@@ -30661,6 +30678,8 @@
     "tdf-hq-ui/src/utils/dateOnly.test.ts": "e5285b0f551aefa67661f1c7754b7240c52bd875c17fd556c0b97fc3a5a42772",
     "tdf-hq-ui/src/utils/dateTime.test.ts": "5e479a281af5c04429783198977cc0592c08639d49d023b5227c6e13e6c6c855",
     "tdf-hq-ui/src/utils/dateTime.ts": "a75595587356dd2dd3561264d04ea323aa2589f1e739645b103b5799a6ce9677",
+    "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts": "ddfa70031a56b6ce8abfcfef343440929dc930c5e518c30a83f3dfec6b43c55f",
+    "tdf-hq-ui/src/utils/deviceTicketOrders.ts": "189e5275fe6f99f1e63d63fbe229a71184b138530fb734a76fe2c48b07f10997",
     "tdf-hq-ui/src/utils/directoryPreviewImage.ts": "4b8021888eb9b3d4af5bc955cd613641bc8668e9ddb99eaa819b3583ff395605",
     "tdf-hq-ui/src/utils/directoryStatusLabel.test.ts": "5ffc406922e53a57548efc3d63d7a967bbe02601be7464c8e8402fb425bc7172",
     "tdf-hq-ui/src/utils/directoryStatusLabel.ts": "a08fe5fdccf25d06198c8a138e796d154bafc17a708d7aa86f2b90f91ea1927f",
@@ -30677,6 +30696,8 @@
     "tdf-hq-ui/src/utils/externalTicketing.ts": "1224ccc2f203440828c55c99dc50b60f02b3a36747c2fa63826c73fde51ed8d5",
     "tdf-hq-ui/src/utils/featureRegistry.test.ts": "3e8ea3f9a0fdd8e13cfb846d7259dd7b4ad723b0154eddd187d99ae1cdb4d368",
     "tdf-hq-ui/src/utils/featureRegistry.ts": "59783b97f00c4d2e07261116d9ee813aea4049c33ed8606660b4ff8f4eeb1c70",
+    "tdf-hq-ui/src/utils/followUpCalendar.test.ts": "8d8c16ae0f5b7cfffc000551cd669a31600e27f6e341722cbbc2209bc411d20f",
+    "tdf-hq-ui/src/utils/followUpCalendar.ts": "3418d5213a8320c8929c0becb73f091ea97cd5e1afb7c9050b9a3aee8c385f9a",
     "tdf-hq-ui/src/utils/inAppBrowser.test.ts": "1bc37ad8648797a57854e8c8e7d1ddb65e071c483b28aead5b2571545b24dcd2",
     "tdf-hq-ui/src/utils/inAppBrowser.ts": "e8cf3a4277519ec11f07f2533ff28a113595a2156406bd95d08162edbc793924",
     "tdf-hq-ui/src/utils/incrementalSha256.test.ts": "dfc75d64b7e8ea09c1606d830cb3f9a00c06c7e857e13640eb0e842d15d5184d",
@@ -30723,13 +30744,13 @@
     "tdf-hq-ui/src/vite-env.d.ts": "2eb98da8bd78747ab777539da674451856912393c423323e7d30832ce489826b",
     "tdf-hq/.env.example": "52c6e873ba21c44a10f7fd7fb1bdb44c0234a806dde3b019cf383a850b06b77a",
     "tdf-hq/Dockerfile": "505fa666dbdcc1247d871369bc84557d79dc0fca947897d6ab7f3d4aa807af5e",
-    "tdf-hq/Dockerfile.music-worker": "b83f69866518d84af03d96948996c821ec4ffdf5f00d60009ac7454ed79b28a2",
+    "tdf-hq/Dockerfile.music-worker": "c6921beae4fddef66fcf4d6135f2fb94b39ccb548e19dc2101dff69735d624a6",
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
-    "tdf-hq/assets/feature-registry.json": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
+    "tdf-hq/assets/feature-registry.json": "11392498d31056c0a3eef9ff2dab3813848b5fa44e8d55176adb57133f7142ca",
     "tdf-hq/config/default.env.example": "b0754a5fe5aa2ae3635b6bdaf6dfed9211466bf077f73fc430d9ab0207379494",
-    "tdf-hq/docs/openapi/api.yaml": "a7c23a56268ad595a60889125e3f5eed9d24539a5165fc40faf51bbb22950e7b",
+    "tdf-hq/docs/openapi/api.yaml": "fe5cd443b400722be794c27aa7d29696696f0328fbb8beb408ddc6fc7f9c892d",
     "tdf-hq/docs/openapi/artist-playback.yaml": "16c71adea21002fb54ecff645bba84be251a8537828d38342b1fb67a78acabcf",
     "tdf-hq/docs/openapi/directory.yaml": "796a92d53f69e5be446ac9de7f18da1916c151de4b0ead2f95d1d2751813e7e3",
     "tdf-hq/docs/openapi/interactions.yaml": "8d3ca2368a0ef1ea36a6c8f996b00d9a404c102fca1b44bf47eef8532a1fe598",
@@ -30920,8 +30941,8 @@
     "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql": "86483222ece86b79a88a693a2cd403cdf3d9b3fd183ef1182df4bf447c873f95",
     "tdf-hq/sql/2026-11-12_marketplace_agreements.sql": "cba023d9107d987ce7f336181505334538bd0a0a00782e596fab1faf4a14fdbf",
     "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql": "47a811221f03817022572f6bee479567c08f714897b56706cea4f75c8b39ac8f",
-    "tdf-hq/sql/2026-11-21_music_audio_measurement.sql": "504e94c2cb73ee03e3c9aa2dd98ad536d33de2b2d9e5001383293316c9a1888a",
-    "tdf-hq/sql/2026-11-21_music_audio_measurement_rollback.sql": "5b2ea6d7ce1ad395773f06b955721531c5ce4d7640432ac02389dcd55a2aec25",
+    "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql": "09dec141f5de428cb9bda712bf2aa9b4ec4f75ee13a16bc511c6e16a34031edd",
+    "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql": "510f4ab65e13fd0faf203afd83a68e8c2df817723452b98603580b27f9586219",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
     "tdf-hq/src/TDF/API.hs": "ef1ed6b71b5bc4a490c9074808094513c7c6396dbefd58606ae30f954d59ea4e",
@@ -30938,12 +30959,12 @@
     "tdf-hq/src/TDF/API/Label.hs": "aafbbcdcd0ed820ead7095073d9fd570c60c3f3e425669e89a32c135bf233f40",
     "tdf-hq/src/TDF/API/Marketplace.hs": "c3337b0e63f94327f1e01558e5be96fabecdd72290095309f426c5ca3e77b4e0",
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
-    "tdf-hq/src/TDF/API/MusicRelease.hs": "0a55fb52b50ccb3f1e97a329e3f4fb4c9e9c167c0977ab2c9e4d9bef00579acc",
+    "tdf-hq/src/TDF/API/MusicRelease.hs": "23598e8eb3e1bded8e4405ddb8f09feef85c5996d727a7929e6d28062864f1d8",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
     "tdf-hq/src/TDF/API/ServiceStorefront.hs": "9695a49d51f2b9c62f4c9703f09266daa50698dfab767dc473e6e2e7186d8d25",
     "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "b89de6214d43abcd667be184d8b7e4b3ed1dadbad7699c2e88b913b3b84a5769",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
-    "tdf-hq/src/TDF/App/Boot.hs": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
+    "tdf-hq/src/TDF/App/Boot.hs": "24dd49cd023be713846d7f8629fd253a519e7847e9664a893b350a03cb987bb0",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "158b961935c20e95aa6a43637e1ede2f078bb8ecb594de1d5f8abbf91764004f",
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
@@ -31004,7 +31025,7 @@
     "tdf-hq/src/TDF/Courses/Metadata.hs": "ba3efe18dff11d3f36413640d7d3c2b58222a445dd2240509ef2b1378b5fe661",
     "tdf-hq/src/TDF/Courses/Production.hs": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
     "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "f1b7d5faa26ac03e6217695f5b1dbf11ba31108bd1d3967969f62efe33b04376",
-    "tdf-hq/src/TDF/Cron.hs": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
+    "tdf-hq/src/TDF/Cron.hs": "84817904ba8fbfe8b9c077715e79795a6b63ac0f4cbd2e753f2389ad85a17fbb",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
@@ -31029,12 +31050,11 @@
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Models.hs": "0ba4227346e64f32a08e46bc3ad1b03eb5d739e4d7df65bf4ec0279af58b8a4a",
     "tdf-hq/src/TDF/Models/SocialEventsModels.hs": "c6f0a707566cf96e63d59890c04b499a67362d99d6f9c625380dc36f770473c9",
-    "tdf-hq/src/TDF/ModelsExtra.hs": "d3e32f2ed9802c6b967729235fb4a5ebb9a21541afa73325e0950231539a12dc",
+    "tdf-hq/src/TDF/ModelsExtra.hs": "08d7358681bb8d4df7fb1c6aad4ad6c93d2f4add460c92a90cdcf5ef2dcf91f0",
     "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs": "1c3b5fae0cc4e5f4605aea8a1a0118badcafb8d83dbef671fce27f6cbf3d65d2",
     "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs": "91a8b3c360e9175f819599f55f2421f76502e908d76719ff2306c23d2614c329",
     "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs": "4dec7b8d3065fb925231203efe76181a645eb3701b3560b635eb364ece867677",
     "tdf-hq/src/TDF/MusicRelease/Domain.hs": "0f22bc111131e3a52d3d68bd6d9614c4b1005dd51dae59ac9fea1b92f0b7a193",
-    "tdf-hq/src/TDF/MusicRelease/Loudness.hs": "86bb53c87c5aa7236895034aa3fc88b11f90a75d90e461c5b70a7c5ff5d12467",
     "tdf-hq/src/TDF/MusicRelease/Money.hs": "009e99d0b79677e2eb8c3c8753db3f5842b142adcebef509e1093aee27abec49",
     "tdf-hq/src/TDF/MusicRelease/Storage/S3.hs": "09335044ca513a60132b452ea6dd5cf65f6d62523236ab809099158be1f2eb5b",
     "tdf-hq/src/TDF/Operations/API.hs": "747cadac15423971a9516d9d30f542d2c7124213debbefb0c09d9ca196dd1bdb",
@@ -31070,7 +31090,7 @@
     "tdf-hq/src/TDF/Server/EventTicketSale.hs": "add3221a1221ad632c6587688312757d525615adbd239e7eb7ed9d1d21cb3323",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "7e350af012396bb5a846a13f29c91cf2a2f6b8a0d3498f73a050aa2d1d401fd9",
-    "tdf-hq/src/TDF/Server/MusicRelease.hs": "0ba7b5232228c05775b70e5fa2679bb0f73efa6fabb0a1d85351f7b237df5361",
+    "tdf-hq/src/TDF/Server/MusicRelease.hs": "c93b83a1f46c10e28865f9f2205d8e7851ac5dcbc072bae5e63645164f63bbd1",
     "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs": "b8a242ab8938a53cefac018e4b8c5b0c529b3fbeb7752876549ebd1078cdc8d0",
     "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs": "2c848527dfcff004e724d1c32ce61ecc1b7279a996de43195b348de088e324f2",
     "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "603e2bc8e39a6fac1f8814fc7c5ce3e9440e47b76ce033bbe68fa9875fdbed8d",
@@ -31131,7 +31151,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "a6184c04a194e4b2cb9109bc173b1df73d67e514dc32d6915daf039e315495e1",
+    "tdf-hq/tdf-hq.cabal": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -31139,7 +31159,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "650065c2b2ee4e2e7d7c52d90e43cdc4e5e15d6e9bf6390bb7e8fa336432a9da",
+    "tdf-hq/test/Spec.hs": "115ae71490900a022ac559368575add15083f7b2a280ccf9519a919883f2c629",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -31196,7 +31216,6 @@
     "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs": "8229ba3570ed3d0935709634d59a05279cbb25189497587d6e6bdf7f832c5c3e",
     "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs": "ee4a8d3cf9ad83a44752aa9e90021a981941bc48cf7842aa62cc50ec9615d3e3",
     "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs": "87adc6974c0b77da9983747c5900ec34687cd4c790084db30fcb521750daedb8",
-    "tdf-hq/test/TDF/MusicRelease/LoudnessSpec.hs": "ae4b92c50c63bcbd583c1b44c072d0e4367711641896e90469022a49aeb3a3cd",
     "tdf-hq/test/TDF/MusicRelease/Storage/S3Spec.hs": "fef56adf244a0b899797b6b6f465233f135259cd52a762185611c5ba08c0d735",
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
     "tdf-hq/test/TDF/OperationsInboundCaptureSpec.hs": "3a3aeb59ce2c378361aa9a9ff9787deb3eb51ce164643b61ae37b2c575b3ea39",
@@ -31346,7 +31365,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
-    "tdf-mobile/src/api/generated/types.ts": "e14b897ef11255d4cb2d0ae9b324410680e2e1abd4503dfe746600d07e8be99d",
+    "tdf-mobile/src/api/generated/types.ts": "4d69c011a18e29d7d141d37f27046b912a04d2e1c56267961e95b404e2922dc3",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/api/upload.compatibility.test.ts": "21e4e097cea0449549484f2ba0ba09726585c58a5aa9c4cccbdddba8b00600ba",
@@ -31358,7 +31377,7 @@
     "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
     "tdf-mobile/src/features/directory/previewImage.ts": "c29605bbb2d8a794106068ab2dc1d3e0d568797403168a3e7fee0d7059c37674",
     "tdf-mobile/src/features/featureRegistry.ts": "1e4c7047aaaaf481b1dbeb0c5f07652eb0672bd382926a6863c82042f51f2864",
-    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "0c72bbca5adfe3a8a357123c0111d0a7ff552d02af8c34f2788ff739fac59774",
+    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "ae4d7ffc3dee6dcd46d9f3cd0a2841973ea1ffcf643b30f189eb6487a6269dcf",
     "tdf-mobile/src/feedback/FeedbackEntry.tsx": "7964eaf7976c58daf264bacf94ea4854af265f0146cfbd16a1429e385bc46e7b",
     "tdf-mobile/src/feedback/metadata.ts": "62336d3a2cf7f055624bdb4f4bd20aedbfd47afc3fbddb2cefaa2d4ce1e26861",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
@@ -32044,6 +32063,10 @@
       },
       {
         "requirement": "MEDIA-ARTIST-FEATURED-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
         "relationship": "implementation"
       }
     ],
@@ -33261,6 +33284,10 @@
         "relationship": "tests"
       },
       {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "tests"
+      },
+      {
         "requirement": "MEDIA-STORAGE-001",
         "relationship": "tests"
       },
@@ -33630,6 +33657,10 @@
       },
       {
         "requirement": "EVT-VENUE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-MY-TICKETS-001",
         "relationship": "implementation"
       },
       {
@@ -34359,6 +34390,10 @@
       {
         "requirement": "MEDIA-ARTIST-FEATURED-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/verify-recovery-expiry.py": [
@@ -34598,6 +34633,10 @@
       },
       {
         "requirement": "EVT-TICKET-SALE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
         "relationship": "tests"
       },
       {
@@ -37899,6 +37938,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "SYS-PAYMENT-ALTERNATIVES-001",
         "relationship": "implementation"
       },
@@ -38210,6 +38253,10 @@
       },
       {
         "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-MY-TICKETS-001",
         "relationship": "tests"
       },
       {
@@ -38706,6 +38753,10 @@
       },
       {
         "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
         "relationship": "implementation"
       }
     ],
@@ -40251,6 +40302,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
         "relationship": "implementation"
       },
@@ -41073,6 +41128,10 @@
       {
         "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/CampaignAutomation.hs": [
@@ -41263,10 +41322,6 @@
       {
         "requirement": "MEDIA-SOURCE-HEALTH-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Server/MusicRelease.hs": [
@@ -41313,10 +41368,6 @@
       {
         "requirement": "MEDIA-SOURCE-HEALTH-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs": [
@@ -41349,10 +41400,6 @@
       {
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": [
@@ -41374,10 +41421,6 @@
       },
       {
         "requirement": "UX-COGLOAD-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
         "relationship": "implementation"
       }
     ],
@@ -41787,10 +41830,6 @@
       {
         "requirement": "MEDIA-SOURCE-HEALTH-001",
         "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "implementation"
       }
     ],
     "tdf-hq/music-worker/stack.yaml": [
@@ -41840,10 +41879,6 @@
       },
       {
         "requirement": "MEDIA-MUSIC-DDEX-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
         "relationship": "implementation"
       }
     ],
@@ -41928,10 +41963,6 @@
       },
       {
         "requirement": "SYS-WORKER-COMPLETION-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
         "relationship": "tests"
       }
     ],
@@ -47203,6 +47234,10 @@
       {
         "requirement": "AUTH-SOCIAL-OAUTH-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/ServerInstagramOAuth.hs": [
@@ -47654,6 +47689,10 @@
       },
       {
         "requirement": "UX-FORM-ACTIONS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
         "relationship": "implementation"
       }
     ],
@@ -48628,6 +48667,42 @@
     "scripts/test-course-identity.sh": [
       {
         "requirement": "COURSE-PUBLIC-CHECKOUT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/MyTicketsPage.tsx": [
+      {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/deviceTicketOrders.ts": [
+      {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/myTicketOrders.ts": [
+      {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx": [
+      {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts": [
+      {
+        "requirement": "EVT-MY-TICKETS-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/my-tickets.spec.mjs": [
+      {
+        "requirement": "EVT-MY-TICKETS-001",
         "relationship": "tests"
       }
     ],
@@ -50985,6 +51060,10 @@
       {
         "requirement": "UX-FORM-ACTIONS-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": [
@@ -51473,6 +51552,36 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq-ui/src/utils/followUpCalendar.ts": [
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/FollowUpCalendarActions.tsx": [
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql": [
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql": [
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/followUpCalendar.test.ts": [
+      {
+        "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq-ui/src/components/ConfirmDialog.tsx": [
       {
         "requirement": "UX-COGLOAD-001",
@@ -51928,138 +52037,6 @@
         "requirement": "EVT-CARD-TICKETS-001",
         "relationship": "tests"
       }
-    ],
-    "scripts/measure-music-loudness.pl": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/sql/2026-11-21_music_audio_measurement.sql": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/sql/2026-11-21_music_audio_measurement_rollback.sql": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/src/TDF/MusicRelease/Loudness.hs": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/api/musicLoudness.ts": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/features/releases/TrackLoudnessCheck.tsx": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/test/TDF/MusicRelease/LoudnessSpec.hs": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/test-music-loudness-wrapper.mjs": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/test-music-loudness-query.mjs": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq-ui/src/api/musicLoudness.test.ts": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq-ui/src/features/releases/TrackLoudnessCheck.test.tsx": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "tests"
-      }
-    ],
-    "formal/music/MusicLoudnessBinding.tla": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/music/MusicLoudnessBinding.cfg": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/music/MusicLoudnessBindingUnbound.cfg": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/music/MusicLoudnessBindingStoredMark.cfg": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/music/MusicLoudnessBindingUnfenced.cfg": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/music/MusicLoudnessSupervision.tla": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/music/MusicLoudnessSupervision.cfg": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/music/MusicLoudnessSupervisionNoKill.cfg": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/music/MusicLoudnessSupervisionNoReap.cfg": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/music/MusicLoudnessSupervisionTrusting.cfg": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "formalModels"
-      }
-    ],
-    "formal/music/loudness_decision.py": [
-      {
-        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-        "relationship": "formalModels"
-      }
     ]
   },
   "surfaces": [
@@ -52306,7 +52283,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "bf71291bd71d10614e6a47d36c2427525087c27e1cdd2cc38e7caf4e862c7be5",
+      "sha256": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53185,6 +53162,18 @@
       ]
     },
     {
+      "id": "SURFACE-01ed15676afd6c39",
+      "path": "e2e/web/my-tickets.spec.mjs",
+      "sha256": "c6e0fc72bebd284e8619af7c08091c98b4d5eaa14fe8c6a28a928facda3c37cf",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-MY-TICKETS-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-1650513d8810b7f7",
       "path": "e2e/web/notification-navigation.spec.mjs",
       "sha256": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
@@ -54045,7 +54034,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "fd37a7f7b8bb1cc46b4f72ef6561da581e6b000876ede471f70a6ff33bd4edbe",
+      "sha256": "8d9431da2d3ac258c069dc12a28be58903231367e8756df354ee0b5059809825",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54062,6 +54051,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-PAYMENT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "tests"
         },
         {
@@ -55935,7 +55928,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "7bc96cc8b5f2fd8d52fc5083cf71bef415bc7edbc774865e3e109f2f8ab99d72",
+      "sha256": "47b7dd05d77ffc41c579262355871bd3d7c429f6315cb4df6a090cbb2078ea51",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56879,7 +56872,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "2fe06b4dbc5f9fcdcfec8abe868d3d0d2c9fc1afb805430d0f2cf4cc2d60006b",
+      "sha256": "b2581954bf71df4691d0a1829a5350e5271c7cc575896a3381266e9496580ab9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56948,6 +56941,10 @@
         },
         {
           "requirement": "MEDIA-ARTIST-FEATURED-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -57308,7 +57305,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "98e99f826252d40e3361cdd5af6f77f6dc86365bf5249ac48e1b3101fed1c9a0",
+      "sha256": "c5876e58c70088b1357996aabe1df90938e7404095099107a837bb25942140d7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57385,6 +57382,10 @@
         },
         {
           "requirement": "MEDIA-ARTIST-FEATURED-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -57717,7 +57718,7 @@
     {
       "id": "SURFACE-2c2cc5981a27ed0f",
       "path": "scripts/run-music-release-worker-once.sh",
-      "sha256": "7236b2dc8bc67e882d4fb18f85f714865138f039d99d999326453a22fdf3a932",
+      "sha256": "d4821f53b421624ad192b3880fdba0fe91e3e876fd258e0c4b431dd5ca6df60d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57726,10 +57727,6 @@
         },
         {
           "requirement": "MEDIA-MUSIC-DDEX-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
           "relationship": "implementation"
         }
       ]
@@ -59051,7 +59048,7 @@
     {
       "id": "SURFACE-19da4c176d106585",
       "path": "scripts/test-event-memory-source-moderation.sh",
-      "sha256": "6f58839bcde85a8ec1a78c9f876a035f8afd6ad7d7dc59d760ad9218788521c3",
+      "sha256": "3d1604376f2006562d752e079cdc98840be50ed7dfb17d57043f4ea8c9c56a27",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59604,30 +59601,6 @@
       ]
     },
     {
-      "id": "SURFACE-8701b54f6535184a",
-      "path": "scripts/test-music-loudness-query.mjs",
-      "sha256": "47e309112373dfd831d563429069da5acf5ba904820d3d9a92098c7fe6e89ed0",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-9f6fa8b83cf782e6",
-      "path": "scripts/test-music-loudness-wrapper.mjs",
-      "sha256": "9da882bc4920809d0ae082c3c1036ef6c378a8fc1c9f43f6139a3080ee788d7f",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-ca0ea4f1586ce79c",
       "path": "scripts/test-music-media-health.mjs",
       "sha256": "383825c93a9090858d72ae401cbcad93358cf4e540949c45ed0097b7d90b4efe",
@@ -59810,7 +59783,7 @@
     {
       "id": "SURFACE-7b23765c1577d37b",
       "path": "scripts/test-music-release-worker-runtime.mjs",
-      "sha256": "47b8aa0d4f7254c949a10207c36719a55b752013b6b9dfbadde1951736e541b7",
+      "sha256": "9dab132988cd53ea2f568bc0822fad5db32fc14934f6b164d530c47d40d56994",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59827,10 +59800,6 @@
         },
         {
           "requirement": "SYS-WORKER-COMPLETION-001",
-          "relationship": "tests"
-        },
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
           "relationship": "tests"
         }
       ]
@@ -59874,7 +59843,7 @@
     {
       "id": "SURFACE-de9702047ae5b45f",
       "path": "scripts/test-music-worker-image.mjs",
-      "sha256": "03570ae64c663589f69c8722495a403a6b9e63ac91222c842664d1b13337d3b8",
+      "sha256": "c9d5916e2d46847fa1a8dc945f4949bd9278ea70f342bf9728092c63f752b3d9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60160,7 +60129,7 @@
     {
       "id": "SURFACE-3644e59046fed6e3",
       "path": "scripts/test-public-event-card-tickets-http.py",
-      "sha256": "32d44391832275eafe1fd9db7b8e425909f61aeab4c2233e7bbe67889073cdc8",
+      "sha256": "584927f18ada55422d284dad0104bd765d82d34d4c20e5511e05e839129ac341",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61052,7 +61021,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "190bc6b7528a38992c2a9531b3048f13692987d587707823a07e190a117f8d76",
+      "sha256": "690c47575dc80407e8fbc43a5680f9addc5f92adb415eff9f7629ba9fd9d1bdc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62591,7 +62560,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "c93f5c6a815ae9b57a19eca3aa12759c65cc8aa1f4341bfecc6fdffcf4a0ff28",
+      "sha256": "b0441cbcba602a812c779515fbdf6b7d7c9238374780d2a8b31a7bbbec695ff1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62620,6 +62589,10 @@
         },
         {
           "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "tests"
         },
         {
@@ -63579,7 +63552,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "e14b897ef11255d4cb2d0ae9b324410680e2e1abd4503dfe746600d07e8be99d",
+      "sha256": "4d69c011a18e29d7d141d37f27046b912a04d2e1c56267961e95b404e2922dc3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63837,30 +63810,6 @@
       "requirements": []
     },
     {
-      "id": "SURFACE-104df448e1a5d3e8",
-      "path": "tdf-hq-ui/src/api/musicLoudness.test.ts",
-      "sha256": "bffcf41f8e9963081c9c6c050913543a851142c91ba3e646a142c4ca838d1e3b",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-af5553e89e0732d4",
-      "path": "tdf-hq-ui/src/api/musicLoudness.ts",
-      "sha256": "36c66678d847a8aba687332eaf1ae862abf00377b5e0889a9fc068d742e9962c",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-65b42af0b8c3c072",
       "path": "tdf-hq-ui/src/api/musicReleases.money.test.ts",
       "sha256": "dd10351e9e57dd83732f10c0b53d02c15dcef75f5b90afccda8235d65ccf75fe",
@@ -63903,7 +63852,7 @@
     {
       "id": "SURFACE-111a69931c7b0da3",
       "path": "tdf-hq-ui/src/api/musicReleases.ts",
-      "sha256": "b5aa58bd1909d738567a303585112be55b32f147643c91d03d540d904f8b656a",
+      "sha256": "47713758df818e726e15f375146be25fa33a235d8885076821c8ca653dfd03ef",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63920,10 +63869,6 @@
         },
         {
           "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
           "relationship": "implementation"
         }
       ]
@@ -63960,6 +63905,18 @@
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-ASSET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-39de0d450389c157",
+      "path": "tdf-hq-ui/src/api/myTicketOrders.ts",
+      "sha256": "b4f29af5c73605e37fa38f81bc2b44601fd11f8d92f9bcf90cf993845cb0cc14",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "implementation"
         }
       ]
@@ -64862,6 +64819,18 @@
       "sha256": "8326617e71fdcca20f793c2fa31f99eb30f89db1b6e0515bee675b7d7f964d5b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-8513fe43d104b125",
+      "path": "tdf-hq-ui/src/components/FollowUpCalendarActions.tsx",
+      "sha256": "35a10159b6ba74b4c3f30b85b0f64ddaa52c6579e284bec71a263ecfb83d5ee7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e0b55665797583ff",
@@ -67731,30 +67700,6 @@
       ]
     },
     {
-      "id": "SURFACE-591be1186cb4db3f",
-      "path": "tdf-hq-ui/src/features/releases/TrackLoudnessCheck.test.tsx",
-      "sha256": "70bb34eaa97c61c2b727a460bdfad87a947e54de6d4b6dbc53c4663366b61ce3",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-c5c78067a2726051",
-      "path": "tdf-hq-ui/src/features/releases/TrackLoudnessCheck.tsx",
-      "sha256": "70da9fc2133dd4b44ebc2e3dd7b8b989d98c4b38f8c459a6f3f83cbbd930f192",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-f635f419eb39afda",
       "path": "tdf-hq-ui/src/features/releases/catalogQueries.test.ts",
       "sha256": "0abd74326e5225fed06e81cf01921d6247cb41b23b0c1f33932c43b8a513a2d2",
@@ -69064,11 +69009,15 @@
     {
       "id": "SURFACE-b584e0770511a16a",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
-      "sha256": "769a23d6403d4c2cd9d9e31c676e4d9a4174c3057b381f4ca374ceb0d78f0e59",
+      "sha256": "d747f4d2c7cf597114f167fcdeb01fdd6f5315ce40ca6e5c426b5bcd1ce17c08",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "UX-FORM-ACTIONS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "tests"
         }
       ]
@@ -69076,7 +69025,7 @@
     {
       "id": "SURFACE-bf79c7904e71c2d9",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-      "sha256": "6c9bc2d583f30483444f06277351d1324cf49e1a22b10780a4f7b025796a74d4",
+      "sha256": "b10a52c61bd8e5aee2c80629d3726153be387f93ef174766dbcb30621daf87a1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -69089,6 +69038,10 @@
         },
         {
           "requirement": "UX-FORM-ACTIONS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -70724,7 +70677,7 @@
     {
       "id": "SURFACE-eb5c18c24c04950e",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
-      "sha256": "d9c44a133ff55318851cb77da09aa985b23e8293c2461d72c94b1febc133ebf6",
+      "sha256": "f613299023445960d574250d79f4fcfa408e5939869f8cca06c24a8d2d5f0f99",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -70746,10 +70699,6 @@
         {
           "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
-        },
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
-          "relationship": "implementation"
         }
       ]
     },
@@ -70766,6 +70715,30 @@
         {
           "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2868173b55cf6317",
+      "path": "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx",
+      "sha256": "90b633d62953bbdaf64d3a662c365b7777d3e66cc7c5317a13c174a642388fb8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-MY-TICKETS-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f2b81d101086b2ae",
+      "path": "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
+      "sha256": "10a77b9b7e6559c909bac78a28b7325f0c08cd6153378e1f69b2220e296c4270",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-MY-TICKETS-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -71045,7 +71018,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "e4c50481e70a35467653b40caf08b42ad964ab6b9731a2ccd46c50dd425e4702",
+      "sha256": "7544cf376e7c4721e85ae84341a98014cf0909cc8c8301ee2ec0c01b3beac179",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71078,6 +71051,10 @@
         },
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "implementation"
         },
         {
@@ -72489,7 +72466,7 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "d257098c3338360560f5382908e43fc0ab08c5eefb631ed3393a66a02db109ae",
+      "sha256": "a88a66d8753db1d483d1d3d59cf8a197250ee371c90b3e7064cd08ef07abcd48",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72506,6 +72483,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "implementation"
         },
         {
@@ -73377,6 +73358,30 @@
       ]
     },
     {
+      "id": "SURFACE-85c269ba1c50835e",
+      "path": "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts",
+      "sha256": "ddfa70031a56b6ce8abfcfef343440929dc930c5e518c30a83f3dfec6b43c55f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-MY-TICKETS-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-192a29fafc828f47",
+      "path": "tdf-hq-ui/src/utils/deviceTicketOrders.ts",
+      "sha256": "189e5275fe6f99f1e63d63fbe229a71184b138530fb734a76fe2c48b07f10997",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-MY-TICKETS-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-43cc7d8b69431d7e",
       "path": "tdf-hq-ui/src/utils/directoryContactRouting.test.ts",
       "sha256": "4cef9b1cf424d5a0b33c55a02b45d54bd9e818fef50830071636431ec5e94478",
@@ -73686,6 +73691,30 @@
         },
         {
           "requirement": "EVT-LOGISTICS-ACCESS-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-0d41a7fe9efbf447",
+      "path": "tdf-hq-ui/src/utils/followUpCalendar.test.ts",
+      "sha256": "8d8c16ae0f5b7cfffc000551cd669a31600e27f6e341722cbbc2209bc411d20f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6b381b93f828b6d1",
+      "path": "tdf-hq-ui/src/utils/followUpCalendar.ts",
+      "sha256": "3418d5213a8320c8929c0becb73f091ea97cd5e1afb7c9050b9a3aee8c385f9a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -74567,7 +74596,7 @@
     {
       "id": "SURFACE-908be427a8962c04",
       "path": "tdf-hq/Dockerfile.music-worker",
-      "sha256": "b83f69866518d84af03d96948996c821ec4ffdf5f00d60009ac7454ed79b28a2",
+      "sha256": "c6921beae4fddef66fcf4d6135f2fb94b39ccb548e19dc2101dff69735d624a6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74576,10 +74605,6 @@
         },
         {
           "requirement": "MEDIA-SOURCE-HEALTH-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
           "relationship": "implementation"
         }
       ]
@@ -74669,7 +74694,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
+      "sha256": "11392498d31056c0a3eef9ff2dab3813848b5fa44e8d55176adb57133f7142ca",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74698,6 +74723,10 @@
         },
         {
           "requirement": "EVT-VENUE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-MY-TICKETS-001",
           "relationship": "implementation"
         },
         {
@@ -74780,7 +74809,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "a7c23a56268ad595a60889125e3f5eed9d24539a5165fc40faf51bbb22950e7b",
+      "sha256": "fe5cd443b400722be794c27aa7d29696696f0328fbb8beb408ddc6fc7f9c892d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79547,25 +79576,25 @@
       ]
     },
     {
-      "id": "SURFACE-ad05e12352310156",
-      "path": "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
-      "sha256": "504e94c2cb73ee03e3c9aa2dd98ad536d33de2b2d9e5001383293316c9a1888a",
+      "id": "SURFACE-6a369025a50bc49c",
+      "path": "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql",
+      "sha256": "09dec141f5de428cb9bda712bf2aa9b4ec4f75ee13a16bc511c6e16a34031edd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
     },
     {
-      "id": "SURFACE-e768e4ba02fb7385",
-      "path": "tdf-hq/sql/2026-11-21_music_audio_measurement_rollback.sql",
-      "sha256": "5b2ea6d7ce1ad395773f06b955721531c5ce4d7640432ac02389dcd55a2aec25",
+      "id": "SURFACE-94aab7e703fbb551",
+      "path": "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql",
+      "sha256": "510f4ab65e13fd0faf203afd83a68e8c2df817723452b98603580b27f9586219",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -79966,7 +79995,7 @@
     {
       "id": "SURFACE-a9f24603e446fa85",
       "path": "tdf-hq/src/TDF/API/MusicRelease.hs",
-      "sha256": "0a55fb52b50ccb3f1e97a329e3f4fb4c9e9c167c0977ab2c9e4d9bef00579acc",
+      "sha256": "23598e8eb3e1bded8e4405ddb8f09feef85c5996d727a7929e6d28062864f1d8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79991,10 +80020,6 @@
         },
         {
           "requirement": "MEDIA-SOURCE-HEALTH-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
           "relationship": "implementation"
         }
       ]
@@ -80186,7 +80211,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
+      "sha256": "24dd49cd023be713846d7f8629fd253a519e7847e9664a893b350a03cb987bb0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -80211,6 +80236,10 @@
         },
         {
           "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -81301,11 +81330,15 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
+      "sha256": "84817904ba8fbfe8b9c077715e79795a6b63ac0f4cbd2e753f2389ad85a17fbb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -81944,7 +81977,7 @@
     {
       "id": "SURFACE-de59a337fc1e94a1",
       "path": "tdf-hq/src/TDF/ModelsExtra.hs",
-      "sha256": "d3e32f2ed9802c6b967729235fb4a5ebb9a21541afa73325e0950231539a12dc",
+      "sha256": "08d7358681bb8d4df7fb1c6aad4ad6c93d2f4add460c92a90cdcf5ef2dcf91f0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81973,6 +82006,10 @@
         },
         {
           "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "implementation"
         }
       ]
@@ -82029,18 +82066,6 @@
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-RELEASE-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-6ad0fd7f128edc7a",
-      "path": "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
-      "sha256": "86bb53c87c5aa7236895034aa3fc88b11f90a75d90e461c5b70a7c5ff5d12467",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
           "relationship": "implementation"
         }
       ]
@@ -83067,7 +83092,7 @@
     {
       "id": "SURFACE-83d8f1c82facfb02",
       "path": "tdf-hq/src/TDF/Server/MusicRelease.hs",
-      "sha256": "0ba7b5232228c05775b70e5fa2679bb0f73efa6fabb0a1d85351f7b237df5361",
+      "sha256": "c93b83a1f46c10e28865f9f2205d8e7851ac5dcbc072bae5e63645164f63bbd1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83112,10 +83137,6 @@
         },
         {
           "requirement": "MEDIA-SOURCE-HEALTH-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
           "relationship": "implementation"
         }
       ]
@@ -84548,7 +84569,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "a6184c04a194e4b2cb9109bc173b1df73d67e514dc32d6915daf039e315495e1",
+      "sha256": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84743,7 +84764,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "650065c2b2ee4e2e7d7c52d90e43cdc4e5e15d6e9bf6390bb7e8fa336432a9da",
+      "sha256": "115ae71490900a022ac559368575add15083f7b2a280ccf9519a919883f2c629",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84892,6 +84913,10 @@
         },
         {
           "requirement": "EVT-TICKET-SALE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COURSE-FOLLOWUP-REMINDER-001",
           "relationship": "tests"
         },
         {
@@ -85891,18 +85916,6 @@
         },
         {
           "requirement": "MEDIA-MUSIC-INFRINGEMENT-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-922237140cfed986",
-      "path": "tdf-hq/test/TDF/MusicRelease/LoudnessSpec.hs",
-      "sha256": "ae4b92c50c63bcbd583c1b44c072d0e4367711641896e90469022a49aeb3a3cd",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "MEDIA-MUSIC-LOUDNESS-001",
           "relationship": "tests"
         }
       ]
@@ -89719,7 +89732,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "e14b897ef11255d4cb2d0ae9b324410680e2e1abd4503dfe746600d07e8be99d",
+      "sha256": "4d69c011a18e29d7d141d37f27046b912a04d2e1c56267961e95b404e2922dc3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -90228,7 +90241,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "0c72bbca5adfe3a8a357123c0111d0a7ff552d02af8c34f2788ff739fac59774",
+      "sha256": "ae4d7ffc3dee6dcd46d9f3cd0a2841973ea1ffcf643b30f189eb6487a6269dcf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -93848,7 +93861,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "13488a080695f4f58876d7e1021ad254d6856bd6edac7b63a703c3e7fa5c2c1a",
+      "sourceSha256": "6aa73431750e9fad5c9bd4d5710816970014a4a9a0e17b371e38cbf1005780bb",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -93876,7 +93889,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "13488a080695f4f58876d7e1021ad254d6856bd6edac7b63a703c3e7fa5c2c1a",
+      "sourceSha256": "6aa73431750e9fad5c9bd4d5710816970014a4a9a0e17b371e38cbf1005780bb",
       "definition": {
         "states": [
           "absent",
@@ -93906,7 +93919,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "13488a080695f4f58876d7e1021ad254d6856bd6edac7b63a703c3e7fa5c2c1a",
+      "sourceSha256": "6aa73431750e9fad5c9bd4d5710816970014a4a9a0e17b371e38cbf1005780bb",
       "definition": {
         "export": [
           "queued",
@@ -93957,39 +93970,6 @@
           "failed": []
         },
         "authority": "music_ddex_export.status and music_processing_job.status; transitions are enforced by the worker's conditional UPDATEs under the lease guard, not by a trigger"
-      },
-      "correspondence": "Mapped requirement evidence required; enumeration alone is not conformance"
-    },
-    {
-      "id": "MEDIA-MUSIC-LOUDNESS-001",
-      "source": "formal/system/requirements.json",
-      "sourceSha256": "13488a080695f4f58876d7e1021ad254d6856bd6edac7b63a703c3e7fa5c2c1a",
-      "definition": {
-        "states": [
-          "pending",
-          "measured",
-          "failed",
-          "superseded"
-        ],
-        "initial": "pending",
-        "terminal": [
-          "superseded"
-        ],
-        "transitions": {
-          "pending": [
-            "measured",
-            "failed",
-            "superseded"
-          ],
-          "measured": [
-            "superseded"
-          ],
-          "failed": [
-            "superseded"
-          ],
-          "superseded": []
-        },
-        "authority": "music_audio_measurement.state; transitions are enforced by the trigger function music_audio_measurement_guard and mirrored by TDF.MusicRelease.Loudness.stepMeasurement"
       },
       "correspondence": "Mapped requirement evidence required; enumeration alone is not conformance"
     }
@@ -102794,24 +102774,6 @@
         "400",
         "404",
         "500"
-      ],
-      "conformance": "not-established-by-client-generation"
-    },
-    {
-      "id": "GET /music/releases/{releaseId}/versions/{versionId}/loudness",
-      "operationId": "getMusicReleaseVersionLoudness",
-      "source": "tdf-hq/docs/openapi/api.yaml",
-      "security": [
-        {
-          "bearerAuth": []
-        }
-      ],
-      "responses": [
-        "200",
-        "401",
-        "403",
-        "404",
-        "503"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -115164,9 +115126,9 @@
     },
     {
       "feature": "social.tickets",
-      "resource": null,
+      "resource": "/mis-entradas",
       "action": "discover",
-      "authentication": "authenticated",
+      "authentication": "optional",
       "rolesAny": [],
       "rolesAll": [],
       "modulesAll": [],
@@ -115186,9 +115148,9 @@
     },
     {
       "feature": "social.tickets",
-      "resource": null,
+      "resource": "/mis-entradas",
       "action": "view",
-      "authentication": "authenticated",
+      "authentication": "optional",
       "rolesAny": [],
       "rolesAll": [],
       "modulesAll": [],
@@ -117348,7 +117310,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 230,
+    "PARTIAL": 231,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
