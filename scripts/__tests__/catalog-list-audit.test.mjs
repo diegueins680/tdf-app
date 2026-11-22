@@ -1601,14 +1601,16 @@ test('dated-UX-parent: main-parent: actual Mobile mirror matches its generator a
     await execFileAsync('git', ['add', '--', mobileFile], { cwd: repo });
     const report = JSON.parse(await readPreservedParentFile('2c6dd64b9bd28d3fec6ac8d961eddea338d448d5', 'docs/catalog-persistence/reports/static-list-inventory.json', 'utf8'));
     const ids = new Set(report.candidates.filter(row => row.file === mobileFile).map(row => row.id));
-    const selected = register.decisions.filter(row => ids.has(row.id));
+    // The event agreement registry review succeeds this dated review and nests it whole.
+    const agreement = await agreementRegistrySuccessor(current);
+    const selected = [...register.decisions.filter(row => ids.has(row.id)), agreement];
     assert.equal(selected.length, ids.size);
-    assert.ok(ids.has(current.id));
+    assert.ok(ids.has(agreement.id) && !ids.has(current.id));
     const decisions = path.join(temporary, 'decisions.json');
     await fs.writeFile(decisions, JSON.stringify(selected));
     const args = [auditScriptPath, '--root', repo, '--decisions', decisions, '--fail-on-unreviewed'];
     await execFileAsync(process.execPath, args, { cwd: repo });
-    await fs.writeFile(decisions, JSON.stringify(selected.map(row => row.id === current.id ? current.previousDecision : row)));
+    await fs.writeFile(decisions, JSON.stringify(selected.map(row => row.id === agreement.id ? current : row)));
     await assert.rejects(execFileAsync(process.execPath, args, { cwd: repo }),
       error => error.code === 1 && error.stderr.includes('1 unreviewed candidate(s), 1 stale decision(s)'));
   } finally {
@@ -4847,14 +4849,16 @@ test('dated-storage-parent: refund-parent: actual Mobile mirror matches its gene
     await execFileAsync('git', ['add', '--', mobileFile], { cwd: repo });
     const report = JSON.parse(await readPreservedParentFile('d65017d10f16e8089c43b82bdbcacf3177d206f5', 'docs/catalog-persistence/reports/static-list-inventory.json', 'utf8'));
     const ids = new Set(report.candidates.filter(row => row.file === mobileFile).map(row => row.id));
-    const selected = register.decisions.filter(row => ids.has(row.id));
+    // The event agreement registry review succeeds this dated review and nests it whole.
+    const agreement = await agreementRegistrySuccessor(current);
+    const selected = [...register.decisions.filter(row => ids.has(row.id)), agreement];
     assert.equal(selected.length, ids.size);
-    assert.ok(ids.has(current.id));
+    assert.ok(ids.has(agreement.id) && !ids.has(current.id));
     const decisions = path.join(temporary, 'decisions.json');
     await fs.writeFile(decisions, JSON.stringify(selected));
     const args = [auditScriptPath, '--root', repo, '--decisions', decisions, '--fail-on-unreviewed'];
     await execFileAsync(process.execPath, args, { cwd: repo });
-    await fs.writeFile(decisions, JSON.stringify(selected.map(row => row.id === current.id ? current.previousDecision : row)));
+    await fs.writeFile(decisions, JSON.stringify(selected.map(row => row.id === agreement.id ? current : row)));
     await assert.rejects(execFileAsync(process.execPath, args, { cwd: repo }),
       error => error.code === 1 && error.stderr.includes('1 unreviewed candidate(s), 1 stale decision(s)'));
   } finally {
@@ -6383,14 +6387,16 @@ test('dated-storage-parent: storage-parent: actual Mobile mirror matches its gen
     await execFileAsync('git', ['add', '--', mobileFile], { cwd: repo });
     const report = JSON.parse(await readPreservedParentFile('cdf57961e4058f403ee4dd903bacfced2a5ee258', 'docs/catalog-persistence/reports/static-list-inventory.json', 'utf8'));
     const ids = new Set(report.candidates.filter(row => row.file === mobileFile).map(row => row.id));
-    const selected = register.decisions.filter(row => ids.has(row.id));
+    // The event agreement registry review succeeds this dated review and nests it whole.
+    const agreement = await agreementRegistrySuccessor(current);
+    const selected = [...register.decisions.filter(row => ids.has(row.id)), agreement];
     assert.equal(selected.length, ids.size);
-    assert.ok(ids.has(current.id));
+    assert.ok(ids.has(agreement.id) && !ids.has(current.id));
     const decisions = path.join(temporary, 'decisions.json');
     await fs.writeFile(decisions, JSON.stringify(selected));
     const args = [auditScriptPath, '--root', repo, '--decisions', decisions, '--fail-on-unreviewed'];
     await execFileAsync(process.execPath, args, { cwd: repo });
-    await fs.writeFile(decisions, JSON.stringify(selected.map(row => row.id === current.id ? current.previousDecision : row)));
+    await fs.writeFile(decisions, JSON.stringify(selected.map(row => row.id === agreement.id ? current : row)));
     await assert.rejects(execFileAsync(process.execPath, args, { cwd: repo }),
       error => error.code === 1 && error.stderr.includes('1 unreviewed candidate(s), 1 stale decision(s)'));
   } finally {
@@ -6557,7 +6563,8 @@ const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26
 
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const actual = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  // The event agreement migrations append afterwards and have their own review below.
+  const actual = withoutAgreementMigrations(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
   assert.deepEqual(actual, main);
   assert.deepEqual(actual.migrations.slice(0, ux.migrations.length), ux.migrations);
@@ -6582,3 +6589,99 @@ test('actual UX/storage composition preserves current main, immutable SQL and bo
     }
   }
 });
+
+// Event agreements (PR #700), resynced onto protected main.
+const AGREEMENT_PROTECTED_MAIN = '985117b3d9e23b1a84837040d39784e3debcb48e';
+// Head of the branch before it was resynced onto main; its SQL is the reviewed SQL.
+const AGREEMENT_REVIEW_HEAD = '4d879f48033ee41095ce293ec168ff2713a03b13';
+const AGREEMENT_MIGRATIONS = ['2026-11-03_event_agreements', '2026-11-07_event_agreement_identity_guards'];
+const AGREEMENT_MANIFEST_REVIEW = '21eb9ca646404de87826';
+const AGREEMENT_REGISTRY_REVIEW = 'ec2d69fb10a7f2751902';
+const agreementRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const agreementFiles = [
+  ['docs/catalog-persistence/catalog-list-decisions.json', 'decisions'],
+  ['docs/catalog-persistence/event-catalog-current-successors.json', 'successors'],
+  ['docs/catalog-persistence/event-integration-retirements.json', 'retirements'],
+];
+const agreementJson = async file => JSON.parse(await fs.readFile(path.join(agreementRoot, file), 'utf8'));
+const agreementGit = async (...args) => (await promisify(execFile)('git', args,
+  { cwd: agreementRoot, maxBuffer: 64 * 1024 * 1024 })).stdout;
+const agreementParent = async file => JSON.parse(await agreementGit('show', `${AGREEMENT_PROTECTED_MAIN}:${file}`));
+
+function withoutAgreementMigrations(manifest) {
+  return { ...manifest, migrations: manifest.migrations.filter(row => !AGREEMENT_MIGRATIONS.includes(row.id)) };
+}
+
+async function agreementRegistrySuccessor(mainReview) {
+  const successor = (await agreementJson(agreementFiles[0][0])).decisions.find(row => row.id === AGREEMENT_REGISTRY_REVIEW);
+  assert.equal(successor?.evidence.valueCount, 166);
+  // The dated review may be an earlier version of main's review; it must survive whole inside the successor.
+  const wanted = canonicalAgreement(mainReview);
+  const holds = node => Boolean(node) && typeof node === 'object'
+    && (canonicalAgreement(node) === wanted || Object.values(node).some(holds));
+  assert.ok(holds(successor.previousDecision), 'Registry successor lost the dated main review');
+  return successor;
+}
+
+test('event agreement migrations append after every migration of protected main and nest both review graphs', async () => {
+  const file = 'scripts/production-migrations.json';
+  const [actual, main] = await Promise.all([agreementJson(file), agreementParent(file)]);
+  assert.equal(main.migrations.length, 261);
+  assert.deepEqual(withoutAgreementMigrations(actual), main);
+  assert.deepEqual(actual.migrations.slice(261).map(row => row.id), AGREEMENT_MIGRATIONS);
+  for (const row of actual.migrations.slice(261)) {
+    assert.equal(await fs.readFile(path.join(agreementRoot, row.path), 'utf8'),
+      await agreementGit('show', `${AGREEMENT_REVIEW_HEAD}:${row.path}`), `Reviewed SQL changed: ${row.id}`);
+    await agreementGit('merge-base', '--is-ancestor', row.introducedBy, 'HEAD');
+  }
+  await agreementGit('merge-base', '--is-ancestor', AGREEMENT_PROTECTED_MAIN, 'HEAD');
+
+  const [register, pointers, retirements] = await Promise.all(agreementFiles.map(([name]) => agreementJson(name)));
+  const [mainRegister, mainPointers, mainRetirements] = await Promise.all(agreementFiles.map(([name]) => agreementParent(name)));
+  const mainIds = new Set(mainRegister.decisions.map(row => row.id));
+  const byId = new Map(register.decisions.map(row => [row.id, row]));
+
+  // Every review of protected main is either still active, unchanged, or nested whole in its one successor.
+  const replaced = new Map([
+    ['7362b266dc1dd2eaabfb', AGREEMENT_MANIFEST_REVIEW],
+    ['ea29c6e8a6cd165802a8', AGREEMENT_REGISTRY_REVIEW],
+    ['da4f880a8da74120e456', 'ba6bb68ad52cd91babeb'],
+    ['92f5d2006375f7fb9757', 'a5df3b08d4f1d5495b10'],
+  ]);
+  for (const row of mainRegister.decisions) {
+    const successor = replaced.get(row.id);
+    if (successor) {
+      assert.equal(byId.has(row.id), false, `Replaced review still active: ${row.id}`);
+      assert.deepEqual(byId.get(successor)?.previousDecision, row, `Successor lost main review: ${row.id}`);
+    } else assert.deepEqual(byId.get(row.id), row, `Main review changed: ${row.id}`);
+  }
+  assert.equal(register.decisions.length, mainRegister.decisions.length + 7);
+  for (const row of register.decisions.filter(item => !mainIds.has(item.id) && ![...replaced.values()].includes(item.id))) {
+    assert.equal(row.reviewBatch, 'event-agreements-2026-11-03');
+  }
+
+  const manifestReview = byId.get(AGREEMENT_MANIFEST_REVIEW);
+  assert.equal(manifestReview.evidence.valueCount, 263);
+  assert.equal(manifestReview.concurrentReviewHistory.length, 1);
+  assert.equal(manifestReview.concurrentReviewHistory[0].id, 'a8f9141a64c6bef1232b');
+  assert.equal(manifestReview.concurrentReviewHistory[0].concurrentReviewHistory[0].id, '739640d4416fd7a9ffaa');
+  assert.equal(byId.get(AGREEMENT_REGISTRY_REVIEW).concurrentReviewHistory[0].previousDecision.id, 'fd606f7d00f82c78cb20');
+
+  // Pointers and retirements: only the manifest and registry entries change, and each nests main's entry whole.
+  const changed = (rows, mainRows, idKey) => rows.flatMap((row, index) => {
+    if (canonicalAgreement(row) === canonicalAgreement(mainRows[index])) return [];
+    assert.deepEqual(row.previousResolution, mainRows[index]);
+    return [row[idKey]];
+  });
+  assert.equal(pointers.successors.length, mainPointers.successors.length);
+  assert.equal(retirements.retirements.length, mainRetirements.retirements.length);
+  assert.deepEqual(changed(pointers.successors, mainPointers.successors, 'currentId').sort(),
+    [AGREEMENT_MANIFEST_REVIEW, AGREEMENT_REGISTRY_REVIEW].sort());
+  assert.deepEqual(changed(retirements.retirements, mainRetirements.retirements, 'replacementId').sort(),
+    [AGREEMENT_MANIFEST_REVIEW, AGREEMENT_REGISTRY_REVIEW].sort());
+});
+
+function canonicalAgreement(value) {
+  return JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
+    ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
+}

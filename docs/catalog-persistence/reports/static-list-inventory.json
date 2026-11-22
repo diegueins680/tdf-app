@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-22T02:29:43.543Z",
+  "generatedAt": "2026-11-22T03:15:42.716Z",
   "repositoryRoot": ".",
   "filesScanned": 2861,
   "candidateCount": 1498,
@@ -4906,7 +4906,7 @@
       "domain": "music-catalog-cms",
       "kind": "array",
       "name": "INTEGRATION_EXTRA_IDS",
-      "line": 6201,
+      "line": 6205,
       "values": [
         "2026-11-06_content_storage_security",
         "2026-11-07_content_storage_identity_guards"
@@ -4914,7 +4914,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        6201
+        6205
       ],
       "consumerCount": 2,
       "backendConsumers": [],
@@ -4942,7 +4942,7 @@
       "domain": "music-catalog-cms",
       "kind": "array",
       "name": "integrationFiles",
-      "line": 6494,
+      "line": 6500,
       "values": [
         "docs/catalog-persistence/catalog-list-decisions.json",
         "decisions"
@@ -4950,7 +4950,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        6494
+        6500
       ],
       "consumerCount": 6,
       "backendConsumers": [
@@ -4986,7 +4986,7 @@
       "domain": "music-catalog-cms",
       "kind": "array",
       "name": "integrationFiles",
-      "line": 6495,
+      "line": 6501,
       "values": [
         "docs/catalog-persistence/event-catalog-current-successors.json",
         "successors"
@@ -4994,7 +4994,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        6495
+        6501
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -5019,7 +5019,7 @@
       "domain": "music-catalog-cms",
       "kind": "array",
       "name": "integrationFiles",
-      "line": 6496,
+      "line": 6502,
       "values": [
         "docs/catalog-persistence/event-integration-retirements.json",
         "retirements"
@@ -5027,7 +5027,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        6496
+        6502
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -5052,7 +5052,7 @@
       "domain": "music-catalog-cms",
       "kind": "array",
       "name": "INTEGRATION_PARENTS",
-      "line": 6556,
+      "line": 6562,
       "values": [
         "b99ce783caa8446920c5950f5111865e7f05cfa3",
         "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1",
@@ -5061,7 +5061,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        6556
+        6562
       ],
       "consumerCount": 0,
       "backendConsumers": [],
