@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "reviewedSources": {
-    "tdf-hq/src/TDF/ServerAuth.hs": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
+    "tdf-hq/src/TDF/ServerAuth.hs": "2215624a3c8dc69a0ab7bc24d176cf93a6b3af33e3340916ebfda012fc4552e2",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+    "tdf-hq/tdf-hq.cabal": "c943105f4f1b10d7553dcec7bab679244787d43a370ad1645ab98049d0ddaeba",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -933,6 +933,24 @@
       "currentSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
       "change": "Register the new TDF.Server.EventAttendees module in the library's other-modules on current protected main.",
       "semanticReview": "The merged Cabal file differs from protected main's by exactly one added line, the TDF.Server.EventAttendees module entry. That module holds one read query for the attendee roster and is imported only by the social events server; it adds no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "a4851729d1ca6816edb3fa535e4b65b7ea5b32dd",
+      "previousSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "currentSha256": "c943105f4f1b10d7553dcec7bab679244787d43a370ad1645ab98049d0ddaeba",
+      "change": "Register the TDF.Trials.SlotSuggestions library module, its TDF.Trials.SlotSuggestionsSpec test module and the tdf-slot-suggestions-oracle verification executable on current protected main.",
+      "semanticReview": "The Cabal file differs from protected main's by exactly fifteen added lines: the TDF.Trials.SlotSuggestions entry in the library's other-modules, the TDF.Trials.SlotSuggestionsSpec entry in the test suite's other-modules, and one new executable stanza, tdf-slot-suggestions-oracle (app/SlotSuggestionsOracle.hs), which depends only on base, tdf-hq, aeson, bytestring, text and time, all already dependencies of the package. The library module holds a pure slot search and one read-only query, imports nothing from this package and is imported only by TDF.Trials.Server and the oracle; the test module imports only that module. No dependency, flag or build option of an existing component changes, and none of the controlled authentication sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/src/TDF/ServerAuth.hs",
+      "reviewedAgainst": "a4851729d1ca6816edb3fa535e4b65b7ea5b32dd",
+      "previousSha256": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
+      "currentSha256": "2215624a3c8dc69a0ab7bc24d176cf93a6b3af33e3340916ebfda012fc4552e2",
+      "change": "Report the LESSON_SLOT_SUGGESTIONS_ENABLED rollout flag in the session's feature flags on current protected main.",
+      "semanticReview": "TDF/ServerAuth.hs differs from protected main's by exactly one added line in buildSessionResponse, appending the literal \"LESSON_SLOT_SUGGESTIONS_ENABLED\" to sessionFeatureFlags when lessonSlotSuggestionsEnabled cfg holds. recoveryWindowValid, createPasswordResetToken, createReusableSessionToken and every expression the recovery-time obligations extract are byte-identical; no import, binding or type they use changes.",
       "qualification": "This review covers the conditional solver source context."
     }
   ]

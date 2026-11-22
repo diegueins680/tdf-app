@@ -109,6 +109,7 @@ data AppConfig = AppConfig
   , stripePublishableKey :: Maybe Text
   , stripeWebhookSecret :: Maybe Text
   , contextualReputationEnabled :: Bool
+  , lessonSlotSuggestionsEnabled :: Bool
   , publicReputationProjectionEnabled :: Bool
   , singleFeatureOnboardingExperimentEnabled :: Bool
   , eventDiscoveryEnabled :: Bool
@@ -807,6 +808,7 @@ loadConfig = do
   stripePublishableKeyEnv <- lookupEnv "STRIPE_PUBLISHABLE_KEY"
   stripeWebhookSecretEnv <- lookupEnv "STRIPE_WEBHOOK_SECRET"
   contextualReputationEnabledEnv <- lookupEnv "CONTEXTUAL_REPUTATION_ENABLED"
+  lessonSlotSuggestionsEnabledEnv <- lookupEnv "LESSON_SLOT_SUGGESTIONS_ENABLED"
   publicReputationProjectionEnabledEnv <- lookupEnv "PUBLIC_REPUTATION_PROJECTION_ENABLED"
   singleFeatureOnboardingExperimentEnabledEnv <- lookupEnv "SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED"
   eventDiscoveryEnabledEnv <- lookupEnv "EVENT_DISCOVERY_ENABLED"
@@ -881,6 +883,11 @@ loadConfig = do
       "CONTEXTUAL_REPUTATION_ENABLED"
       False
       contextualReputationEnabledEnv
+  lessonSlotSuggestionsEnabledVal <-
+    validateStartupBooleanFlag
+      "LESSON_SLOT_SUGGESTIONS_ENABLED"
+      False
+      lessonSlotSuggestionsEnabledEnv
   publicReputationProjectionEnabledVal <-
     validateStartupBooleanFlag
       "PUBLIC_REPUTATION_PROJECTION_ENABLED"
@@ -1100,6 +1107,7 @@ loadConfig = do
     , stripePublishableKey = fmap T.pack stripePublishableKeyEnv
     , stripeWebhookSecret = fmap T.pack stripeWebhookSecretEnv
     , contextualReputationEnabled = contextualReputationEnabledVal
+    , lessonSlotSuggestionsEnabled = lessonSlotSuggestionsEnabledVal
     , publicReputationProjectionEnabled = publicReputationProjectionEnabledVal
     , singleFeatureOnboardingExperimentEnabled = singleFeatureOnboardingExperimentEnabledVal
     , eventDiscoveryEnabled = eventDiscoveryEnabledVal

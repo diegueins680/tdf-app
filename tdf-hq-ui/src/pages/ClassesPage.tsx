@@ -37,6 +37,9 @@ import { Trials } from '../api/trials';
 import { Rooms } from '../api/rooms';
 import { useLocation } from 'react-router-dom';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { LessonSlotSuggestions } from '../features/school/LessonSlotSuggestions';
+import { lessonDurationMinutes, lessonSlotSuggestionsEnabled } from '../features/school/slotSuggestionHelpers';
+import { useSession } from '../session/SessionContext';
 import { formatDateForUser } from '../utils/formatters';
 
 type StatusKey = 'programada' | 'por-confirmar' | 'cancelada' | 'realizada' | 'reprogramada';
@@ -237,6 +240,8 @@ export default function ClassesPage() {
     applyQueryHandled.current = true;
   }, [queryStudentId, queryTeacherId]);
 
+  const { session } = useSession();
+  const slotSuggestionsEnabled = lessonSlotSuggestionsEnabled(session?.featureFlags);
   const [formError, setFormError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [studentDialogOpen, setStudentDialogOpen] = useState(false);
@@ -638,6 +643,24 @@ export default function ClassesPage() {
                 </MenuItem>
               ))}
             </TextField>
+            {!editing && (
+              <LessonSlotSuggestions
+                enabled={slotSuggestionsEnabled}
+                teacherId={form.teacherId ?? null}
+                studentId={form.studentId ?? null}
+                subjectId={form.subjectId ?? null}
+                roomId={parsePositiveInt(form.roomId)}
+                durationMinutes={lessonDurationMinutes(form.startAt, form.endAt)}
+                onSelect={(suggestion) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    roomId: String(suggestion.roomId),
+                    startAt: toLocalInput(suggestion.startAt),
+                    endAt: toLocalInput(suggestion.endAt),
+                  }))
+                }
+              />
+            )}
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <TextField

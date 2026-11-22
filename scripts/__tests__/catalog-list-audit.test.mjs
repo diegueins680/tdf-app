@@ -6559,13 +6559,19 @@ test('actual UX/storage composition preserves current main, immutable SQL and bo
   const file = 'scripts/production-migrations.json';
   const actual = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
-  assert.deepEqual(actual, main);
+  // SCHOOL-SLOT-SUGGESTION-001 appends one migration after the composed 261;
+  // the composed prefix stays exactly what that main held.
+  assert.equal(actual.schemaVersion, main.schemaVersion);
+  assert.deepEqual(actual.migrations.slice(0, main.migrations.length), main.migrations);
   assert.deepEqual(actual.migrations.slice(0, ux.migrations.length), ux.migrations);
-  assert.equal(actual.migrations.length, 261);
-  assert.equal(new Set(actual.migrations.map(row => row.id)).size, 261);
+  assert.equal(main.migrations.length, 261);
+  assert.deepEqual(actual.migrations.slice(261).map(row => row.id), ['2026-11-21_school_schedule_occupancy']);
+  assert.equal(new Set(actual.migrations.map(row => row.id)).size, 262);
   for (const row of actual.migrations) {
-    assert.equal(await fs.readFile(path.join(integrationRoot, row.path), 'utf8'),
-      await integrationSource(INTEGRATION_PARENTS[1], row.path), `Immutable SQL changed: ${row.id}`);
+    if (main.migrations.some(prior => prior.id === row.id)) {
+      assert.equal(await fs.readFile(path.join(integrationRoot, row.path), 'utf8'),
+        await integrationSource(INTEGRATION_PARENTS[1], row.path), `Immutable SQL changed: ${row.id}`);
+    }
     await integrationExec('git', ['merge-base', '--is-ancestor', row.introducedBy, 'HEAD'], { cwd: integrationRoot });
   }
   for (const [reviewFile, key] of integrationFiles) {

@@ -19852,7 +19852,7 @@
       ],
       "authorization": "ensureSchoolAccess: ModuleScheduling plus Teacher or school staff (Admin, Manager, StudioManager, Reception); staff-only routes add isSchoolStaff.",
       "privacy": "Unchanged; see the route table.",
-      "concurrency": "Conflict checks are unlocked.",
+      "concurrency": "Conflict checks are unlocked. Where tdf-hq/sql/2026-11-21_school_schedule_occupancy.sql is applied, the schedule exclusion constraint rejects an overlapping teacher, student or room at the write and the handler answers 409 (SCHOOL-SLOT-SUGGESTION-001).",
       "idempotency": "None: retries create duplicate sessions and purchases.",
       "failure": "400 invalid; 403 access; 404 missing; 409 conflict; 422 role or room.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
@@ -19871,7 +19871,7 @@
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "Double booking is possible between the conflict check and the write.",
+        "Before the schedule occupancy migration, double booking is possible between the conflict check and the write; after it the database rejects the second write (SCHOOL-SLOT-SUGGESTION-001).",
         "Purchases take the price from the client, accept inactive packages and have no idempotency key.",
         "A session's bookingId is not validated against its room, time or student; attended sessions stay editable.",
         "Attendance does not consume purchased minutes or create a commission."
@@ -28907,6 +28907,107 @@
         "classification": "PARTIAL",
         "reason": "Focused web implementation of the audit's quick wins; mobile, backend-dependent and structural plan items remain separate obligations."
       }
+    },
+    {
+      "id": "SCHOOL-SLOT-SUGGESTION-001",
+      "title": "Slot suggestions for one lesson booking and the schedule exclusion calendar",
+      "statement": "A teacher or school staff member reads the best feasible slots for one new lesson of a teacher, a student and a subject (room given or chosen) in a bounded horizon; the service only suggests and never writes. Lessons, trial lessons and active studio allocations occupy one calendar whose exclusion constraint rejects any overlapping teacher, student or resource. Route: GET /trials/v1/class-sessions/suggestions.",
+      "domain": "SCHOOL",
+      "authority": "Owner request of 2026-11-21; the product owner approved the schema route (one occupancy table), the objective order (preferred windows, teacher gaps, room priority, earliest), the hard constraints (opening hours 08:00-22:00 America/Guayaquil, 12-hour notice, teacher availability, valid package) and the constants on 2026-11-21 before implementation. formal/system/lesson-slot-suggestions.md.",
+      "source": "formal/system/lesson-slot-suggestions.md",
+      "contract": "tdf-hq/src/TDF/Trials/SlotSuggestions.hs",
+      "property": "For every returned slot s with room r: onGrid30(s) /\\ duration(s) = requested /\\ start(s) >= max(from, now) /\\ start(s) >= now + 12h /\\ end(s) <= max(from, now) + days /\\ 08:00 <= studioLocal(s) <= 22:00 on one day /\\ teaches(teacher, subject) /\\ activeRoomAllowed(r, subject) /\\ no teacher, student or resource(r) row of school_schedule_occupancy overlaps s (half-open) /\\ no non-cancelled booking on r overlaps s /\\ s inside the union of the teacher's availability windows for (subject, r) /\\ end(s) <= latest expiry of the student's open packages of the subject. Returned slots are ordered by (outsidePreferred, teacherGapMinutes or 840, roomPriority, start, roomId), one per start, at most limit; the list is empty iff no candidate is feasible. Database: no two rows of school_schedule_occupancy with equal (subject_kind, subject_id) overlap.",
+      "actors": [
+        "Teacher",
+        "School staff"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect)",
+        "LESSON_SLOT_SUGGESTIONS_ENABLED=true",
+        "tdf-hq/sql/2026-11-21_school_schedule_occupancy.sql applied"
+      ],
+      "inputs": [
+        "GET /trials/v1/class-sessions/suggestions",
+        "teacherId, studentId, subjectId (required)",
+        "roomId (optional)",
+        "durationMinutes (default 60; 30..180 step 30)",
+        "from (default now)",
+        "days (default 14; 1..28)",
+        "limit (default 5; 1..20)",
+        "preferredStart/preferredEnd pairs (at most 5)"
+      ],
+      "state": {
+        "initial": "Stored calendar, availability, room and package rows",
+        "terminal": [
+          "Ranked list",
+          "Refusal without suggestion"
+        ]
+      },
+      "allowedTransitions": [
+        "None for the route; it reads and never writes.",
+        "Calendar projection by triggers inside the transaction that writes a lesson, a trial assignment or a resource allocation."
+      ],
+      "forbiddenTransitions": [
+        "Any write by the suggestion route",
+        "Returning a slot that violates a hard constraint on the snapshot",
+        "Two overlapping calendar rows for the same teacher, student or resource",
+        "Naming who occupies a busy slot",
+        "Treating a suggestion as a reservation"
+      ],
+      "effects": [
+        "None for the route; read-only.",
+        "school_schedule_occupancy rows follow class_session, trial_assignment and service_booking_resource_allocation writes."
+      ],
+      "authorization": "ensureSchoolAccess (ModuleScheduling plus Teacher or school staff); a non-staff caller must be the teacher, be linked to the subject and own the student, as createClassH requires for creating a lesson.",
+      "privacy": "The answer holds free slots only; it never names the occupant of a busy slot nor which of teacher, student or room was busy. No behavioural history is used: preferred windows come from the request and are not stored. Preferred windows never change feasibility, and a request without them is ranked by the non-personalised criteria alone.",
+      "concurrency": "The snapshot is one SELECT, read at one instant; existence and authorization reads precede it in the same transaction. A suggestion is advice: lesson creation re-validates and the exclusion constraint rejects a slot taken meanwhile (SQLSTATE 23P01, answered 409).",
+      "idempotency": "Read-only.",
+      "failure": "400 missing, malformed or out-of-range parameter (never clamped); 401 without a session; 403 access; 404 unknown teacher, student, subject or room, or flag off; 422 room type or room not allowed; 500 undecodable snapshot. The migration aborts on a pre-existing future overlap or empty interval.",
+      "recovery": "Ask again; a 409 on creation means the advice went stale. Migration rollback: tdf-hq/sql/2026-11-21_school_schedule_occupancy_rollback.sql.",
+      "observability": "HTTP status and computedAt only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Trials/SlotSuggestions.hs",
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Trials/API.hs",
+        "tdf-hq/src/TDF/Trials/DTO.hs",
+        "tdf-hq/app/SlotSuggestionsOracle.hs",
+        "tdf-hq/sql/2026-11-21_school_schedule_occupancy.sql",
+        "tdf-hq/sql/2026-11-21_school_schedule_occupancy_rollback.sql",
+        "tdf-hq-ui/src/features/school/LessonSlotSuggestions.tsx",
+        "tdf-hq-ui/src/features/school/slotSuggestionHelpers.ts",
+        "tdf-hq-ui/src/pages/ClassesPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Trials/SlotSuggestionsSpec.hs",
+        "scripts/test-lesson-slot-suggestions-sql.py",
+        "scripts/test-lesson-slot-suggestions-postgres.sh",
+        "scripts/verify-lesson-slot-suggestions.py",
+        "tdf-hq-ui/src/features/school/LessonSlotSuggestions.test.tsx",
+        "tdf-hq-ui/src/features/school/slotSuggestionHelpers.test.ts"
+      ],
+      "formalModels": [
+        "formal/school/LessonSlotAdvice.tla"
+      ],
+      "verification": "PROVED (Z3, all integer instants): the Haskell overlap predicate, read from source, is equivalent to two non-empty half-open ranges sharing an instant. PROVED FOR THE MODEL (Apalache inductive invariant, every set of up to 4 clients and 3 slots, unbounded steps; TLC bounded run; negative controls without exclusion and for stale advice): a stale suggestion is rejected and no slot is booked twice. PROVED PER INSTANCE (Z3 against the compiled core, every one of 48384 instances of the family stated in scripts/verify-lesson-slot-suggestions.py; runner-up refuted as negative control): the first suggestion is feasible and optimal, or nothing is feasible. TESTED: soundness of feasible candidates against the exclusion constraint on PostgreSQL 16 for one fixture day via the compiled oracle; migration backfill, abort, triggers and rollback; completeness, order, determinism, fallback invariant and request validation by Hspec and QuickCheck against a brute-force reference; no writes (single SELECT, keyword check, READ ONLY transaction); web panel by Jest.",
+      "evidence": "scripts/verify-lesson-slot-suggestions.py output; scripts/verify-inductive-proofs.sh LessonSlotAdvice results; scripts/test-lesson-slot-suggestions-sql.py output; tdf-hq-test SlotSuggestionsSpec run; Jest runs.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the overlap predicate (proof) and for the pure search on small calendars (proof per instance plus properties). Medium for the database correspondence: tested on a fixture, with the model proof covering an abstraction of PostgreSQL, not PostgreSQL. The handler wiring is covered by compilation and review only.",
+      "ambiguity": [
+        "The TLA+ result is about the model (one cell per slot, no interval geometry, no cancellation), not about PostgreSQL; that triggers run in the writer's transaction is tested, not proved.",
+        "Optimality is proved only for the enumerated family (one day, two rooms); larger calendars are covered by QuickCheck tests.",
+        "Soundness against the exclusion constraint is tested on one fixture, not proved over all database states; the reading of tstzrange && as instant sharing is trusted.",
+        "A legacy booking without an allocation row and a trial student's overlap are not enforced by the database.",
+        "Availability is read as teacher, subject and room; whether a window should allow any permitted room is open.",
+        "A valid package means open and unexpired; remaining hours are not tracked.",
+        "Lesson creation itself does not enforce opening hours, notice, availability or package validity.",
+        "No HTTP-level test runs the route against a fully migrated database, and the migration has not been run against production data."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Pure core proved on a bounded family and tested beyond it; predicate proved; concurrency proved for a model; database correspondence and migration tested on fixtures. HTTP-level checks on the migrated schema and a production overlap check remain."
+      },
+      "historicalStatus": null
     }
   ]
 }

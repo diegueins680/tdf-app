@@ -1299,6 +1299,7 @@ buildSessionResponse cfg mResolvedUsername AuthedUser{..} = do
     , sessionFeatureFlags =
         [ "CONTEXTUAL_REPUTATION_ENABLED" | contextualReputationEnabled cfg ]
           <> ["EVENT_DISCOVERY_ENABLED" | eventDiscoveryEnabled cfg]
+          <> ["LESSON_SLOT_SUGGESTIONS_ENABLED" | lessonSlotSuggestionsEnabled cfg]
     , sessionPreferences = preferences
     }
 

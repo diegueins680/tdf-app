@@ -3592,7 +3592,7 @@ privateStudentCreateHandler =
 
 privateStudentUpdateHandler :: Int -> StudentUpdate -> SqlPersistT IO StudentDTO
 privateStudentUpdateHandler =
-  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> studentsH :<|> _ :<|> updateH =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> studentsH :<|> _ :<|> updateH :<|> _ =
         privateTrialsServer adminUser
   in studentsH `seq` updateH
 
