@@ -158,7 +158,7 @@ import TDF.CampaignAutomation
       validateCampaignAutomationActivation,
       validateCampaignAutomationDailyLimit,
       validateCampaignAutomationStatus )
-import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
+import TDF.Cron (Directive (..), courseFollowUpReminderBody, parseDirective, selectInstagramSyncAccessToken)
 import qualified TDF.Commerce.CheckoutStore as CheckoutStore
 import qualified TDF.Commerce.CourseCheckout as CourseCheckout
 import qualified TDF.Commerce.DomoQuotes as DomoQuotes
@@ -16395,6 +16395,30 @@ main = hspec $ do
                         Right value ->
                             expectationFailure
                                 ("Expected redacted request exception, got " <> show value)
+
+    describe "courseFollowUpReminderBody" $ do
+        let reminderAt = UTCTime (fromGregorian 2026 12 20) 0
+            followUp subject notes = ME.CourseRegistrationFollowUp
+                { ME.courseRegistrationFollowUpRegistrationId = toSqlKey 1
+                , ME.courseRegistrationFollowUpPartyId = Nothing
+                , ME.courseRegistrationFollowUpEntryType = "note"
+                , ME.courseRegistrationFollowUpSubject = subject
+                , ME.courseRegistrationFollowUpNotes = notes
+                , ME.courseRegistrationFollowUpAttachmentUrl = Nothing
+                , ME.courseRegistrationFollowUpAttachmentName = Nothing
+                , ME.courseRegistrationFollowUpNextFollowUpAt = Just reminderAt
+                , ME.courseRegistrationFollowUpCreatedBy = Just (toSqlKey 2)
+                , ME.courseRegistrationFollowUpCreatedAt = reminderAt
+                , ME.courseRegistrationFollowUpUpdatedAt = reminderAt
+                }
+        it "puts the subject before the note" $
+            courseFollowUpReminderBody (followUp (Just " Recordatorio ") " Llamar en un mes ")
+                `shouldBe` "Recordatorio · Llamar en un mes"
+        it "falls back to a generic line and caps long notes" $ do
+            courseFollowUpReminderBody (followUp Nothing "  ")
+                `shouldBe` "Es momento de retomar esta inscripción."
+            Data.Text.length (courseFollowUpReminderBody (followUp Nothing (Data.Text.replicate 400 "a")))
+                `shouldBe` 280
 
     describe "parseDirective" $ do
         it "parses SEND/HOLD directives regardless of casing" $ do
