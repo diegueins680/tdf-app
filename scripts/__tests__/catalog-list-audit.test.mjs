@@ -6558,8 +6558,11 @@ const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
   const combined = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
-  assert.equal(combined.migrations.at(-1).id, '2026-11-07_studio_gallery');
-  const actual = { ...combined, migrations: combined.migrations.slice(0, -1) };
+  // Two reviewed appends follow that composition: the studio gallery seed and
+  // the directory semantic search migration (DIR-SEMANTIC-SEARCH-001).
+  assert.deepEqual(combined.migrations.slice(-2).map(row => row.id),
+    ['2026-11-07_studio_gallery', '2026-11-21_directory_semantic_search']);
+  const actual = { ...combined, migrations: combined.migrations.slice(0, -2) };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
   assert.deepEqual(actual, main);
   assert.deepEqual(actual.migrations.slice(0, ux.migrations.length), ux.migrations);
@@ -6593,7 +6596,10 @@ test('studio gallery appends its original migration and preserves both complete 
   const original = (await integrationParent(gallery, file)).migrations.at(-1);
   const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
   assert.equal(original.id, '2026-11-07_studio_gallery');
-  assert.deepEqual(current, { ...before, migrations: [...before.migrations, original] });
+  // The directory semantic search migration is appended after it (next test).
+  assert.equal(current.migrations.at(-1).id, '2026-11-21_directory_semantic_search');
+  assert.deepEqual({ ...current, migrations: current.migrations.slice(0, -1) },
+    { ...before, migrations: [...before.migrations, original] });
   const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
   assert.equal(await fs.readFile(path.join(integrationRoot, original.path), 'utf8'), stdout);
   for (const [reviewFile, key] of integrationFiles) {
@@ -6604,4 +6610,27 @@ test('studio gallery appends its original migration and preserves both complete 
       if (row) assert.ok(integrationFind(currentReview, row), 'Missing reviewed migration history for ' + parent);
     }
   }
+});
+
+test('directory semantic search appends its migration after the gallery seed and keeps the reviewed manifest decision', async () => {
+  const file = 'scripts/production-migrations.json';
+  const main = 'a4851729d1ca6816edb3fa535e4b65b7ea5b32dd';
+  const before = await integrationParent(main, file);
+  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const added = current.migrations.at(-1);
+  assert.deepEqual(added, {
+    id: '2026-11-21_directory_semantic_search',
+    path: 'tdf-hq/sql/2026-11-21_directory_semantic_search.sql',
+    introducedBy: '7dd229965b98cdcd7609c1ca18f37891f8edc296',
+  });
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, added] });
+  const { stdout } = await integrationExec('git', ['show', added.introducedBy + ':' + added.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, added.path), 'utf8'), stdout);
+  const reviewFile = 'docs/catalog-persistence/catalog-list-decisions.json';
+  const decisions = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8')).decisions;
+  const previous = (await integrationParent(main, reviewFile)).decisions
+    .find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
+  const successor = decisions.find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
+  assert.equal(successor.evidence.valueCount, before.migrations.length + 1);
+  assert.deepEqual(successor.previousDecision, previous);
 });

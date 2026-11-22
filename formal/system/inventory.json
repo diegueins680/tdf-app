@@ -4168,7 +4168,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "c42453218ea4e89aae9b5da80d93cc413adc4196522073c91ef278e4a1decad3",
+      "sha256": "71814cfcc29adb0bb5b531f4ef3a2729b3261f877ccef805305b608e3c6e4957",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31331,7 +31331,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "f174eaed80fbeab91e55ead50dccaeff4662f45c2fa6883a4368d7672d4745ac",
+      "sha256": "b0e0389b00f8af2f0e37004f25c3092a327b78cd2b4dfc1ca10df9fbc06a50bc",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -32430,7 +32430,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "3fcbdb4f13c1c206cb58a6ab0162e6936ccacf1857a5877233e99d1f543ad45f",
+      "sha256": "a1c37567334c36ceed7fb693415fe1fb31730b1b8a338813722d7382f1153ad1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

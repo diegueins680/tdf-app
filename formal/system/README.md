@@ -141,6 +141,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [operations-failure-replay.md](operations-failure-replay.md): a manager's retry of a dead-lettered Operations projection re-queues it; the failure follows the projection to resolved or back to dead letter.
 - [ticket-manual-review.md](ticket-manual-review.md): staff review of a ticket bank transfer keeps its row locks to commit; bounded model, three negative controls and PostgreSQL race tests.
 - [index-declarations.md](index-declarations.md): nine uniqueness constraints created from index declarations become plain indexes; bounded model, three negative controls and PostgreSQL tests.
+- [directory-semantic-search.md](directory-semantic-search.md): embedding similarity in the semantic term of directory search behind a default-off flag; ranking envelope proved with Z3, index interleavings with an Apalache inductive invariant, bounded model with four negative controls and PostgreSQL tests.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)
 - [ledger-posting.md](ledger-posting.md): commerce ledger posting rules in PostgreSQL (SYS-MONEY-003)
 - [ledger-header.md](ledger-header.md): immutable posted source/audit headers,
