@@ -29,12 +29,12 @@ export const alloyControls = [
     ['foreign-candidate', 'CandidateIsTaskScoped', 'pred editorCandidate', ' and canRead[candidate, e, t]', ''],
   ] },
   { model: 'FriendSuggestionGraph.als', controls: [
+    ['blocked-by-viewer', 'AccountsTheViewerBlockedCarryNoScore', 'pred node', 'a not in v.blocks', 'no none'],
+    ['blocking-viewer', 'AccountsBlockingTheViewerCarryNoScore', 'pred node', 'v not in a.blocks', 'no none'],
     ['no-age-filter', 'FakeFollowsLeaveEveryWalkUnchanged', 'pred eligible', 'a in Policy.aged', 'no none'],
     ['no-email-filter', 'FakeFollowsLeaveEveryWalkUnchanged', 'pred eligible', 'a in Policy.verified', 'no none'],
     ['dead-account', 'OnlyLiveAgedVerifiedAccountsCarryScore', 'pred eligible', 'a in Policy.live', 'no none'],
     ['open-edge', 'OnlyLiveAgedVerifiedAccountsCarryScore', 'pred edge', 'node[v, b]', 'no none'],
-    ['blocked-by-viewer', 'BlockedAccountsCarryNoScore', 'pred node', 'a not in v.blocks', 'no none'],
-    ['blocking-viewer', 'BlockedAccountsCarryNoScore', 'pred node', 'v not in a.blocks', 'no none'],
   ] },
 ];
 

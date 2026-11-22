@@ -55,8 +55,12 @@ assert OnlyLiveAgedVerifiedAccountsCarryScore {
   all v: Account | node[v, v] implies
     support[v, follows + injected] in Policy.live & Policy.aged & Policy.verified
 }
-assert BlockedAccountsCarryNoScore {
-  all v, a: Account | node[v, v] and (a in v.blocks or v in a.blocks) implies
+assert AccountsTheViewerBlockedCarryNoScore {
+  all v, a: Account | node[v, v] and a in v.blocks implies
+    a not in support[v, follows + injected]
+}
+assert AccountsBlockingTheViewerCarryNoScore {
+  all v, a: Account | node[v, v] and v in a.blocks implies
     a not in support[v, follows + injected]
 }
 pred secondDegreeScenario {
@@ -72,4 +76,5 @@ pred secondDegreeScenario {
 run secondDegreeScenario for 4
 check FakeFollowsLeaveEveryWalkUnchanged for 5
 check OnlyLiveAgedVerifiedAccountsCarryScore for 5
-check BlockedAccountsCarryNoScore for 5
+check AccountsTheViewerBlockedCarryNoScore for 5
+check AccountsBlockingTheViewerCarryNoScore for 5

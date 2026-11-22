@@ -29172,7 +29172,7 @@
     "formal/event-operations/EventOrganizerTrustEarlierRead.cfg": "55781bffd01b28268c218fe896d026901db6ad84803b38c89359a5e290f2b430",
     "formal/event-operations/EventOrganizerUnconditionalWrite.cfg": "f735a2ec461f4995718cd73d66940e3e81e74cb166498b239100051de506e479",
     "formal/event-operations/FanHubOnboarding.tla": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
-    "formal/event-operations/FriendSuggestionGraph.als": "87c56e84eef9fb4d86abe2f89fe5665ba4e524eab1c340d175a2147c0c681323",
+    "formal/event-operations/FriendSuggestionGraph.als": "0a6e2144f1ecda7b587a05db77922c6a1238bdef7bf6bb91c6d6940f0396fc78",
     "formal/event-operations/HostedServicePayment.cfg": "29663fa3078459cb0abf5de479b7206aa840c6779fc9522f2eefa9d1592d2227",
     "formal/event-operations/HostedServicePayment.tla": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
     "formal/event-operations/HostedServicePaymentAtomic.cfg": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
@@ -29484,7 +29484,7 @@
     "playwright.torrent-audio.config.mjs": "1ee4d97fa640cc439eedd07660dd242774c9adad9de8ac614d40a26ea63f202b",
     "screencast/meta-app-review/review.env.example": "6103b9dd02e37ab7539735007924ca02f31b67e40d2d8efbdf88a69abcd91100",
     "screencast/meta-app-review/run.mjs": "0b93f134c01aca678981255a0a6e25bb139c183361bb621c67a95f255e1dbaaa",
-    "scripts/__tests__/alloy-controls.test.mjs": "1f1b6904444f5c7e47a71c00f37d332da956b885d2746b2a1dcc2b342742c873",
+    "scripts/__tests__/alloy-controls.test.mjs": "402f6bd9d15a8250845cb0294c05772f2da4f5225ee58b3cebb8006ac2595f11",
     "scripts/__tests__/app-smart-link.test.mjs": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
     "scripts/__tests__/architecture-boundaries.test.mjs": "536a8b583458acc1dcf511caf2ca9ea307eaea3d58ef39a5235f7cd61ab62cb6",
     "scripts/__tests__/artist-enrichment.test.mjs": "045b26e1fbb6697cf16314850fd71df4896aa647f5b90036ddc8f908929c303f",
@@ -29632,7 +29632,7 @@
     "scripts/install-recovery-tools.py": "87e21bcbbf08076148d6b5d0aca5464afedad77ec209a5cf95439ab440e286a0",
     "scripts/interactions/test-api.py": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
     "scripts/interactions/test-http.sh": "087ac80166a5381eff9e60417685428c462721533324a7dd7c96cf6b7968a41a",
-    "scripts/lib/alloy-controls.mjs": "365e27d342ff335f000bf81887f8546cf5ecd9e9cbc7424c857f0ecc0402efa7",
+    "scripts/lib/alloy-controls.mjs": "3ad4f0250f2b7f5a20ce66ecf3af55c40f9eace18e5d816d9a061be75eeb10b0",
     "scripts/lib/auth_throttle_http.py": "c30b34ba0e5057b013ffd601421ed462c61a71e61e51e25f233e130d3c915989",
     "scripts/lib/compiled-api-surface.mjs": "71831644e36c3e2d5e2a51309d701aab8b08f5b3a43ca9ff4ea085b30aef1437",
     "scripts/lib/continuous-improvement-loop-verify.mjs": "3db41dd0683f33d1a03d46f402e6cd9c25a4e07cd2b690a179ba8e6744fc9f97",
@@ -53671,7 +53671,7 @@
     {
       "id": "SURFACE-92421f4c198ed166",
       "path": "scripts/__tests__/alloy-controls.test.mjs",
-      "sha256": "1f1b6904444f5c7e47a71c00f37d332da956b885d2746b2a1dcc2b342742c873",
+      "sha256": "402f6bd9d15a8250845cb0294c05772f2da4f5225ee58b3cebb8006ac2595f11",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56220,7 +56220,7 @@
     {
       "id": "SURFACE-348e3d2bac6fc15e",
       "path": "scripts/lib/alloy-controls.mjs",
-      "sha256": "365e27d342ff335f000bf81887f8546cf5ecd9e9cbc7424c857f0ecc0402efa7",
+      "sha256": "3ad4f0250f2b7f5a20ce66ecf3af55c40f9eace18e5d816d9a061be75eeb10b0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

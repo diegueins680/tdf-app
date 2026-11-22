@@ -4101,7 +4101,7 @@
     {
       "id": "SURFACE-92421f4c198ed166",
       "path": "scripts/__tests__/alloy-controls.test.mjs",
-      "sha256": "1f1b6904444f5c7e47a71c00f37d332da956b885d2746b2a1dcc2b342742c873",
+      "sha256": "402f6bd9d15a8250845cb0294c05772f2da4f5225ee58b3cebb8006ac2595f11",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5367,7 +5367,7 @@
     {
       "id": "SURFACE-348e3d2bac6fc15e",
       "path": "scripts/lib/alloy-controls.mjs",
-      "sha256": "365e27d342ff335f000bf81887f8546cf5ecd9e9cbc7424c857f0ecc0402efa7",
+      "sha256": "3ad4f0250f2b7f5a20ce66ecf3af55c40f9eace18e5d816d9a061be75eeb10b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -27614,7 +27614,7 @@
     },
     {
       "path": "formal/event-operations/FriendSuggestionGraph.als",
-      "sha256": "87c56e84eef9fb4d86abe2f89fe5665ba4e524eab1c340d175a2147c0c681323",
+      "sha256": "0a6e2144f1ecda7b587a05db77922c6a1238bdef7bf6bb91c6d6940f0396fc78",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
@@ -29336,7 +29336,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "f0b54254a3252352a524a5b2f0451889a8735547a01fc089765967cef0e1d850",
+      "sha256": "0d49fc5482bbe259c2c6b7a0917da57c77dc631aa2004fb991f6db7ed771995b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
