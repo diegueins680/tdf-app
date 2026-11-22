@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "86f6b48ef15f964bb180c3bb8f70d26608a26d25",
+  "mobileRevision": "8577d7718d3ff336db7b689ed98e8168d0dc94f5",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -53772,7 +53772,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "746e33e43fbfacd3ba5b5f072e5e43717a55b99142a1d3db4c86d406d576ba01",
+      "sha256": "0f0ded993ea5261302f4e1e197648573d8e48c521bd10a4b7c33b785ccc8b526",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83990,7 +83990,7 @@
     {
       "id": "SURFACE-4d1393b620b6aed0",
       "path": "tdf-hq/src/TDF/Trials/API.hs",
-      "sha256": "b44760b2698827a36aa99f35328f5e0c070dcac3ab42fc41434d2cf2542d657d",
+      "sha256": "e6a73b9a2999e95f713b34620fefb9217027c505acbe6f2dab6703f359c4f0ec",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84057,7 +84057,7 @@
     {
       "id": "SURFACE-f9d35ff622573006",
       "path": "tdf-hq/src/TDF/Trials/Server.hs",
-      "sha256": "2250c11e593c8b610e42c2e84df48f976059c2aac842392beab07b509cc4ea8c",
+      "sha256": "63fb60b4ade0b1638b9e327f381fca1bcc25b00f074ab7959f37e70f4865af52",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86368,7 +86368,7 @@
     {
       "id": "SURFACE-6a608596a0a41e90",
       "path": "tdf-hq/test/TDF/TrialIdentitySpec.hs",
-      "sha256": "b0aedc327dffadf0a90fa678a2a1baa4a5a619175585c0a8ad469c37fa4a2f63",
+      "sha256": "0396689e05f550caa0dd75909cf0536bca39bc3ed64f0c50ff780750b530511b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86384,7 +86384,7 @@
     {
       "id": "SURFACE-15bc343962df8561",
       "path": "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
-      "sha256": "eebde69c59c367555188cf00435c64dadb9b0c0c99fa724f58cade0c427b2242",
+      "sha256": "f74f8ac1026283bf624373db16161741794f20a0e8305328709e7dd6ff55fb3a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
