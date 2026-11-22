@@ -156,8 +156,19 @@ later changes its address.
   receive.
 - The filters stop only accounts that fail them. An account that waits seven days and
   signs in with Google, or resets its password, is a normal node; it gains score only if a node follows it.
-  Whether the legacy "add friend" writer still lets one side create both directions was
-  not checked.
+- **The follow rows are not all consented, and this blocks turning the flag on.**
+  `TDF.Social.RelationshipWrites.addFriend` (`POST /social/friends/:id`) writes both
+  `actor -> peer` and `peer -> actor` in one call, without the peer's agreement, unless
+  the pair already has canonical social-v2 state (`social_v2_lock_legacy_write`).
+  `TDF.Social.FanEffects.populateClub` does the same between fan-club members in the
+  never-activated stage. An account that passes both filters can therefore make any
+  node "follow" it and receive part of that node's score in every walk that reaches
+  the node. `party_follow` does not record who wrote a row, so the walk cannot tell
+  such rows apart. None of the evidence above covers this: the Alloy model and the
+  tests take the follow rows of eligible accounts as given. The writer is listed as an
+  incomplete follow-up in `docs/social/relationship-read-boundary.md` and is not
+  changed here. The flag should stay off until the writer stops creating the reverse
+  row, or the walk reads a relation that only the follower can write.
 - Whether social-v2 is activated in production, and the size of `party_follow`, were
   not checked (the production read was denied). If activated, the fallback is `[]`.
   One run costs about `100 * follows` map updates per viewer, in memory.

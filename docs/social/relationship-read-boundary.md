@@ -46,6 +46,15 @@ Admin role or purchase grants canonical communication rights.
 - Do not substitute zero "mutual" counts on unrelated Discover candidates: that
   would misuse the old UI's reason label. No new source signals or audience consent
   are invented. Discover remains the recommendation product, behind existing gates.
+- **Proposed exception, off by default (2026-11-21, COMMUNITY-FRIEND-SUGGESTION-001).**
+  With `FRIEND_SUGGESTIONS_PAGERANK_ENABLED=true`, a viewer who has not opted out of
+  personalization and has a fresh stored result receives entries ranked from legacy
+  follow rows, marked `sfReason = "network"` with `sfMutualCount = 0` and no score.
+  That departs from the two points above: it serves suggestions after activation, and
+  it puts a zero in the old count field, which a client that ignores `sfReason` (Mobile
+  today) would show as "0 mutual". Every other case is the behaviour described here.
+  The exception needs the owner's decision before the flag is turned on; see
+  `formal/system/friend-suggestions-pagerank.md`, "Open for the owner".
 
 ## Research to decision
 
