@@ -18,6 +18,7 @@ import qualified TDF.ContentStorage as ContentStorage
 import qualified TDF.StorageVault as StorageVault
 import qualified TDF.Calendar.TokenCipher as CalendarTokenCipher
 import qualified TDF.Social.Chat as SocialChat
+import           TDF.Server.NotificationDelivery (notificationDeliveryServer)
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
 import qualified TDF.Social.RelationshipReads as SocialReads
@@ -182,6 +183,7 @@ import           TDF.Auth
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
+import qualified TDF.Server.PublicBookingNotifications as PublicBookingNotifications
 import           TDF.Server.SocialEventsHandlers
   ( publicUpcomingEventsServer
   , socialEventsServer
@@ -3970,6 +3972,7 @@ protectedServer user =
   :<|> whatsappConsentServer user
   :<|> socialServer user
   :<|> chatServer user
+  :<|> notificationDeliveryServer user
   :<|> chatkitSessionServer user
   :<|> tidalAgentServer user
   :<|> socialSyncServer user
@@ -11542,7 +11545,10 @@ createPublicBooking mIdempotency PublicBookingReq{..} = do
     dtos <- buildBookingDTOs [created]
     pure (requirePersistedBookingDTO dtos)
   dto <- either throwError pure dtoResult
-  when createdNow (notifyEngineerIfNeeded dto)
+  when createdNow $ do
+    notifyEngineerIfNeeded dto
+    env <- ask
+    liftIO (PublicBookingNotifications.notifyPublicBookingRequest env dto fullNameClean emailClean phoneClean)
   pure dto
 
 -- | SQL failures a public booking transaction turns into 409 instead of a

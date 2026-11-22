@@ -13432,22 +13432,22 @@
       }
     },
     {
-      "id": "da4f880a8da74120e456",
+      "id": "ec80c5298d7de324e1b2",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Existing generated notification destination registry adds event_memories with positive event ID and invitation UUID only. No arbitrary URL, permission or recipient entitlement is inferred; current server policy remains authoritative.",
+      "justification": "Existing generated notification destination registry adds booking: a positive booking ID opens the fixed staff route /estudio/calendario (public_booking_request staff alerts). No ID, arbitrary URL, permission or recipient entitlement is placed in the path; the calendar keeps its own Scheduling authorization.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/components/notificationTarget.ts",
         "line": 14
       },
-      "reviewBatch": "event-memories-2026-10-25",
+      "reviewBatch": "public-booking-notifications-2026-11-21",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
-        "$historyRef": "sha256:9854d5595597c4a5df58635c4e130c440ac65dc5b53bc369e0307063c18ff93b"
+        "$historyRef": "sha256:33331555fa1d4d311f66c55c18b222c12770fb167e03671e9ce770937f87715f"
       },
       "mergedSourceDecision": {
         "$historyRef": "sha256:a4c944041c168eb9276c2b88b11f7904e080a95d67321f537f1ce5832edee2d2"
@@ -30492,22 +30492,22 @@
       "reviewed": true
     },
     {
-      "id": "92f5d2006375f7fb9757",
+      "id": "a84c7c55f0b3ab1c2c11",
       "classification": "security-system-registry",
       "disposition": "canonical-contract",
       "specializedModel": "notification_destination_registry",
       "priority": "P1-integrity",
       "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
-      "justification": "Existing generated notification destination registry adds event_memories with positive event ID and invitation UUID only. No arbitrary URL, permission or recipient entitlement is inferred; current server policy remains authoritative.",
+      "justification": "Generated Mobile notification destination registry adds booking with the same positive-ID guard and fixed /estudio/calendario route as the web resolver; arbitrary URL navigation remains rejected.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-mobile/src/navigation/notificationTarget.ts",
         "line": 15
       },
-      "reviewBatch": "event-memories-2026-10-25",
+      "reviewBatch": "public-booking-notifications-2026-11-21",
       "reviewMethod": "successor-of-reviewed-decision",
       "previousDecision": {
-        "$historyRef": "sha256:7a86b4561859fdb640efaab2b3cf2c2374edebadfbebb4ccce1760d123b709e2"
+        "$historyRef": "sha256:a0bbc8138285a034234fbc56260bc9da9765b58f139893bba5815b2da7ffe86a"
       },
       "supersededReviews": [
         {
@@ -31411,21 +31411,26 @@
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "555cf6fbf926c0b2ceab",
+      "id": "7671a3e996c85f7aa51d",
       "reviewed": true,
-      "justification": "Preserve all 262 migration objects of the previously reviewed manifest in exact order and append only 2026-11-20_course_follow_up_reminder_delivery, an additive table for course follow-up reminder claims, introduced by 7da005edcdcce714343d3bbf7273fc31dd0743f4. No applied SQL is rewritten. This is an author review of the deployment registry composition; it does not authorize applying migrations or release and supplies no independent approval.",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "course-follow-up-reminders-2026-11-20",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "chat-external-delivery-course-reminders-integration",
+      "justification": "Compose the two reviewed successors of 59a6c2f1ad6d61a54f96: keep main's manifest exactly, including 2026-11-20_course_follow_up_reminder_delivery appended after the studio gallery seed, then append only 2026-11-20_chat_external_delivery (introduced by 8da140ae64c51b8ef006e7678589c8bcf5ef38f3, the commit holding its final SQL), an additive, repeatable migration. Every earlier migration object, its order and its SQL stay unchanged, and both complete parent review graphs are retained. This author review does not authorize deployment or provider activation and is not independent approval.",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 263
+        "valueCount": 264
       },
       "previousDecision": {
-        "$historyRef": "sha256:57e201c3d6db92f10f8d1a76a26b960d319cab441cd42fb0cc0d58eca3d2525c"
-      }
+        "$historyRef": "sha256:1f17ed37626d6687e6ee973d9d71bc1227822b72c6114852f09076821f80d16a"
+      },
+      "concurrentReviewHistory": [
+        {
+          "$historyRef": "sha256:1901764dca4d19919b2b65954414c771a5adf173859da163b3379dee6e6e6e3f"
+        }
+      ]
     },
     {
       "id": "9256b774f7f853c0a060",
@@ -31552,6 +31557,82 @@
       },
       "previousDecision": {
         "$historyRef": "sha256:ec72ff1dedc2fad58b89bf570b2d26fa3fb854beee1af4057f95a5a8f6ced017"
+      }
+    },
+    {
+      "id": "7bb8d76c84af1653c926",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Adding a channel without a dispatcher would accept preferences or intents that are never delivered.",
+      "justification": "Closed SQL discriminant of MSG-DELIVERY-001 channel preferences and delivery intents. Each value has a dedicated dispatcher in TDF.Chat.Delivery (SMTP, Expo) and an environment gate; these are not user-managed labels.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "chat-external-delivery-20261120",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
+        "line": 25,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "73bd1b74fabe2ac324ca",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Accepting an unsupported platform would store device tokens the Expo dispatcher cannot target.",
+      "justification": "Closed SQL discriminant for Expo push subscriptions: the mobile app registers only iOS and Android tokens; browser Web Push is explicitly out of scope. Not a business catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "chat-external-delivery-20261120",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
+        "line": 37,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "83a0a47ebcc226db8b4c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing outbox states independently of the lease/decision/complete functions could double-send or lose reminders.",
+      "justification": "Closed state machine of chat_delivery_outbox, enforced by chat_delivery_lease, chat_delivery_decision and chat_delivery_complete with lease fencing. Technical lifecycle keys, not user-managed values.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "chat-external-delivery-20261120",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
+        "line": 60,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 5
+      }
+    },
+    {
+      "id": "388d4a6891123eeeab78",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Misclassifying a provider ticket could retry forever or drop a reachable device.",
+      "justification": "Internal classification of Expo push ticket responses (ok, DeviceNotRegistered, other error) used only to decide accept/deactivate/retry. Mirrors the provider wire contract; covered by ChatDeliverySpec.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "chat-external-delivery-20261120",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Chat/Delivery.hs",
+        "line": 234,
+        "kind": "haskell-sum-type",
+        "name": "ExpoTicket",
+        "valueCount": 3
       }
     }
   ],
