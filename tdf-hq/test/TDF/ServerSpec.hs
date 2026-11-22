@@ -16348,6 +16348,7 @@ marketplaceTestConfig seedFlag =
         , eventLogisticsRecheckEnabled = False
         , artistEnrichmentEnabled = False
         , fanMultiSignalRecommendationsEnabled = False
+        , eventAffinityOrderEnabled = False
         , artistEnrichmentAutoPublish = False
         , artistEnrichmentHourLocal = 4
         , artistEnrichmentBatchSize = 500

@@ -10,6 +10,7 @@ Historical green results are not current-candidate evidence.
 - [desktop-shell.md](desktop-shell.md): Electron shell boundary over the hosted TDF origin, one system playback session shared by release player and radio, reproducible installers with a fail-closed shell update channel (SYS-DESKTOP-001..003); Linux Electron and unit evidence, installed macOS/Windows acceptance pending.
 
 - [artist-similarity.md](artist-similarity.md): multi-signal artist similarity for fan recommendations (follows, favourites, RSVPs, plays), a nightly stored relation and its per-request reference behind a flag that is off by default (COMMUNITY-ARTIST-SIMILARITY-001); Z3 proofs of exclusions and order on a pinned translation, Apalache inductive proof and TLC controls for the job model, PostgreSQL probe; refinement of the code to the model by review.
+- [event-affinity.md](event-affinity.md): `GET /social-events/events?scope=for_you` returns the page of `all` ordered by the caller's affinity to the lineups, from own signals and the stored artist similarity, behind a flag that is off by default (EVT-AFFINITY-ORDER-001); Z3 proofs of evidence and order on a pinned translation, Apalache inductive proof and TLC control for hidden artists, QuickCheck of the pure core.
 
 - [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
 

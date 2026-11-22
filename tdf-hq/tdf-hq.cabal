@@ -50,6 +50,7 @@ library
     TDF.Social.FanEffects
     TDF.Fans.ArtistRecommendations
     TDF.Fans.ArtistSimilarity
+    TDF.Fans.EventAffinity
     TDF.API.FanFollowing
     TDF.Social.RelationshipWrites
     TDF.Social.RelationshipReads
@@ -476,6 +477,7 @@ test-suite tdf-hq-test
     TDF.ServerFanClubSpec
     TDF.Fans.ArtistRecommendationsSpec
     TDF.Fans.ArtistSimilaritySpec
+    TDF.Fans.EventAffinitySpec
     TDF.ServerSpec
     TDF.StartupResponseSpec
     TDF.ServerAdminSpec

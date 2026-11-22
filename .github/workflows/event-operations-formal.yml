@@ -106,6 +106,9 @@ jobs:
         run: python formal/payments/hosted_dead_letter_review.py
       - name: Prove artist similarity ranking exclusions and total order
         run: python formal/fans/artist_similarity_ranking.py
+
+      - name: Prove event affinity evidence and page order
+        run: python formal/fans/event_affinity_order.py
       - name: Generate formal assurance and release decision
         if: ${{ !cancelled() }}
         timeout-minutes: 15

@@ -56,6 +56,8 @@ module TDF.Fans.ArtistSimilarity
   , loadSignalSimilarity
   , runSimilarityGeneration
   , loadSimilarityRecommendations
+  , loadFanSimilarity
+  , arrayParameter
   ) where
 
 import           Control.Exception             (throwIO)
@@ -534,12 +536,25 @@ loadSimilarityRecommendations
   -> SqlPersistT m [ArtistRecommendation]
 loadSimilarityRecommendations source fan limit = do
   frame <- loadRecommendationFrame fan
+  personal <- loadFanSimilarity source fan frame
+  let rank = rankBySimilarity limit (rfListed frame) (rfExcluded frame) (rfFollowers frame)
+  pure $ case personal of
+    Nothing -> rank Map.empty (Similarity Map.empty Map.empty)
+    Just (seedWeights, similarity) -> rank seedWeights similarity
+
+-- | The fan's own weights on listed artists and the similarity rows that
+-- touch them, or 'Nothing' for a fan who switched personalisation off (then
+-- none of the fan's favourites, RSVPs or plays is read).
+loadFanSimilarity
+  :: MonadIO m
+  => SimilaritySource
+  -> PartyId
+  -> RecommendationFrame
+  -> SqlPersistT m (Maybe (Map.Map Int64 Int, Similarity))
+loadFanSimilarity source fan frame = do
   personalisedRows <- rawSql fanPersonalisedSql [fanValue]
-  let listed = rfListed frame
-      rank = rankBySimilarity limit listed (rfExcluded frame) (rfFollowers frame)
-      fallback = rank Map.empty (Similarity Map.empty Map.empty)
   if personalisedRows == [Single False]
-    then pure fallback
+    then pure Nothing
     else do
       now <- loadSnapshotClock
       favouriteRows <- rawSql favouriteArtistsForFanSql [fanValue]
@@ -559,12 +574,12 @@ loadSimilarityRecommendations source fan limit = do
           seedWeights =
             Map.fromList
               [ (artist, weight)
-              | ((_, artist), weight) <- Map.toList (signalWeights listed Set.empty inputs)
+              | ((_, artist), weight) <- Map.toList (signalWeights (rfListed frame) Set.empty inputs)
               ]
       similarity <- case source of
         LiveSignals -> loadSignalSimilarity now
         StoredGeneration -> loadStoredSimilarity (Map.keysSet seedWeights)
-      pure (rank seedWeights similarity)
+      pure (Just (seedWeights, similarity))
   where
     fanId = fromSqlKey fan
     fanValue = toPersistValue fan

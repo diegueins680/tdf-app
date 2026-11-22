@@ -680,6 +680,7 @@ import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
 import qualified TDF.Fans.ArtistRecommendationsSpec as ArtistRecommendationsSpec
 import qualified TDF.Fans.ArtistSimilaritySpec as ArtistSimilaritySpec
+import qualified TDF.Fans.EventAffinitySpec as EventAffinitySpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
 import qualified TDF.Server.EventRelationsSpec as EventRelationsSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
@@ -18559,6 +18560,7 @@ main = hspec $ do
     ServerFanClubSpec.spec
     ArtistRecommendationsSpec.spec
     ArtistSimilaritySpec.spec
+    EventAffinitySpec.spec
     FollowSpec.spec
     FollowHandlerSpec.spec
     EventRelationsSpec.spec

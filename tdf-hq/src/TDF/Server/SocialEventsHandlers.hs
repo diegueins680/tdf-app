@@ -344,6 +344,8 @@ import TDF.Server.SocialArtistOwnership (duplicateArtistOwner, ensureAvailableAr
 import qualified TDF.Profiles.Artist as ArtistProfiles
 import qualified TDF.ModelsExtra as ME
 import TDF.Server.TicketSalesWindow (eventTicketPurchaseEnabledFor)
+import qualified TDF.Fans.ArtistSimilarity as ArtistSimilarity
+import qualified TDF.Fans.EventAffinity as EventAffinity
 import qualified TDF.SocialEventLifecycle as EventLifecycle
 import TDF.ServerRadio (nativeBroadcastUnavailable)
 import TDF.Server.StripeTicketCapture (StripeTicketCapture (..), parseStripeTicketCapture, recordStripeTicketCapture, stripeTicketClosedOrderNeedsReview)
@@ -2002,7 +2004,9 @@ validateEventListScope (Just rawScope) =
         "" -> Right "all"
         "all" -> Right "all"
         "subscribed" -> Right "subscribed"
-        _ -> Left err400{errBody = "scope must be one of: all, subscribed"}
+        -- EVT-AFFINITY-ORDER-001: the page of "all", reordered for the caller.
+        "for_you" -> Right "for_you"
+        _ -> Left err400{errBody = "scope must be one of: all, subscribed, for_you"}
 
 validateEventCountryCode :: T.Text -> Either ServerError T.Text
 validateEventCountryCode rawCountry =
@@ -2415,7 +2419,25 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                         else selectVisibleSocialEvents filters discoveryFilter dateOrder limit offset
                     )
                     envPool
-        loadSocialEventListDTOs (defaultCurrency envConfig) envPool rows
+        -- EVT-AFFINITY-ORDER-001: the same page, permuted by the caller's
+        -- affinity to the lineups. Off, or without any affinity, it is the
+        -- date order of "all".
+        orderedRows <-
+            if scope == "for_you" && eventAffinityOrderEnabled envConfig
+                then liftIO $ flip runSqlPool envPool $ do
+                    affinities <-
+                        EventAffinity.loadFanArtistAffinities ArtistSimilarity.StoredGeneration (auPartyId user)
+                    if Map.null affinities
+                        then pure rows
+                        else do
+                            lineups <- EventAffinity.loadEventLineupParties (map (fromSqlKey . entityKey) rows)
+                            pure $
+                                EventAffinity.orderByAffinity
+                                    affinities
+                                    (\row -> Map.findWithDefault [] (fromSqlKey (entityKey row)) lineups)
+                                    rows
+                else pure rows
+        loadSocialEventListDTOs (defaultCurrency envConfig) envPool orderedRows
 
     resolveSubscribedEventIds ::
         [Entity EventCity] ->
