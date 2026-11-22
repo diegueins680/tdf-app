@@ -53,6 +53,9 @@ These checks make drift fail CI; run them before changing a mapped surface.
   after checkout locking, actual PostgreSQL lock-wait counterexamples, three
   compiled source controls and a bounded model with four negative configurations.
 
+- [music-loudness-check.md](music-loudness-check.md): advisory loudness and
+  true-peak check of delivered masters, bound to one file; two inductive
+  proofs on models, a solver obligation for the decision and their limits.
 - [music-money-wire.md](music-money-wire.md): exact Int64 transport, confirmed
   purchase price, source-bound numeric SMT obligation and compatible clients.
 - [music-test-entrypoint.md](music-test-entrypoint.md): canonical execution of

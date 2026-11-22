@@ -670,6 +670,7 @@ import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
 import qualified TDF.MusicCredentialCacheSpec as MusicCredentialCacheSpec
 import qualified TDF.MusicRelease.DomainSpec as MusicDomainSpec
 import qualified TDF.MusicRelease.ContentSpec as MusicContentSpec
+import qualified TDF.MusicRelease.LoudnessSpec as MusicLoudnessSpec
 import qualified TDF.MusicRelease.DDEX.ERN432Spec as MusicErn432Spec
 import qualified TDF.MusicRelease.Storage.S3Spec as MusicS3Spec
 import qualified TDF.DriveReplaySpec as DriveReplaySpec
@@ -18465,6 +18466,7 @@ main = hspec $ do
       describe "music-unit-ddex" MusicErn432Spec.spec
       describe "music-unit-storage" MusicS3Spec.spec
       describe "music-unit-credential-cache" MusicCredentialCacheSpec.spec
+      describe "music-unit-loudness" MusicLoudnessSpec.spec
     StorageSecuritySpec.spec
     DriveReplaySpec.spec
     WhatsAppRedeliverySpec.spec

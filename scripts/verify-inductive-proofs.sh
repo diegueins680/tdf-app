@@ -191,4 +191,39 @@ apalache_expect "${E}" CInitCurrent Init NoMintedSessionUsed 3 Error "SessionExp
 apalache_expect "${E}" CInitNotFailClosed Init Safe 4 Error "SessionExpiryNotFailClosed-reachable-violation"
 unset CURRENT_MODEL_DIR
 
+CURRENT_MODEL_DIR="${REPO_DIR}/formal/music"
+B=MusicLoudnessBinding.tla
+
+# MEDIA-MUSIC-LOUDNESS-001 L1/L2: a track is checked only from a measurement of
+# its newest usable file, and a recorded result is never overwritten, for every
+# subset of up to four files and three workers with concurrent re-uploads.
+tlc_expect "${B}" MusicLoudnessBinding.cfg pass
+tlc_expect "${B}" MusicLoudnessBindingUnbound.cfg violation
+tlc_expect "${B}" MusicLoudnessBindingStoredMark.cfg violation
+tlc_expect "${B}" MusicLoudnessBindingUnfenced.cfg violation
+apalache_expect "${B}" CInitGuarded Init IndInv 0 NoError "MusicLoudnessBinding-initiation"
+apalache_expect "${B}" CInitGuarded IndInv IndInv 1 NoError "MusicLoudnessBinding-consecution"
+apalache_expect "${B}" CInitGuarded IndInv Safe 0 NoError "MusicLoudnessBinding-implication"
+apalache_expect "${B}" CInitUnbound Init Safe 6 Error "MusicLoudnessBindingUnbound-reachable-violation"
+apalache_expect "${B}" CInitStoredMark Init Safe 5 Error "MusicLoudnessBindingStoredMark-reachable-violation"
+apalache_expect "${B}" CInitUnfenced Init Safe 6 Error "MusicLoudnessBindingUnfenced-reachable-violation"
+
+V=MusicLoudnessSupervision.tla
+
+# MEDIA-MUSIC-LOUDNESS-001 L3: the supervised run is bounded by the limit plus
+# the kill grace, prints one honest result after reaping the child and cannot
+# stall, for every limit up to 900 s and grace up to 60 s. The model covers the
+# supervision, not FFmpeg.
+tlc_expect "${V}" MusicLoudnessSupervision.cfg pass
+tlc_expect "${V}" MusicLoudnessSupervisionNoKill.cfg violation
+tlc_expect "${V}" MusicLoudnessSupervisionNoReap.cfg violation
+tlc_expect "${V}" MusicLoudnessSupervisionTrusting.cfg violation
+apalache_expect "${V}" CInitGuarded Init IndInv 0 NoError "MusicLoudnessSupervision-initiation"
+apalache_expect "${V}" CInitGuarded IndInv IndInv 1 NoError "MusicLoudnessSupervision-consecution"
+apalache_expect "${V}" CInitGuarded IndInv Safe 0 NoError "MusicLoudnessSupervision-implication"
+apalache_expect "${V}" CInitNoKill Init Safe 6 Error "MusicLoudnessSupervisionNoKill-reachable-violation"
+apalache_expect "${V}" CInitNoReap Init Safe 3 Error "MusicLoudnessSupervisionNoReap-reachable-violation"
+apalache_expect "${V}" CInitTrusting Init Safe 3 Error "MusicLoudnessSupervisionTrusting-reachable-violation"
+unset CURRENT_MODEL_DIR
+
 echo "Inductive proofs and controls passed."

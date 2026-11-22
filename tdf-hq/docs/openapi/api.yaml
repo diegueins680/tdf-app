@@ -10486,6 +10486,30 @@ paths:
         '503': { description: Music commerce is disabled in the applicable environment }
   /music/search:
     $ref: './music-search.yaml#/paths/~1music~1search'
+  /music/releases/{releaseId}/versions/{versionId}/loudness:
+    get:
+      tags: [Music releases]
+      summary: Loudness check of each track's newest master file
+      operationId: getMusicReleaseVersionLoudness
+      description: >-
+        Read-only, requires release.read. For every track, reports the loudness measurement of its
+        newest master file against the approved limits. A track is checked only when the measurement
+        was taken from that exact file (same asset and SHA-256). The result is advisory and never
+        blocks validation, approval or publication (MEDIA-MUSIC-LOUDNESS-001).
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: releaseId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: versionId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Limits and one entry per track, in track order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MusicLoudnessCheck' }
+        '401': { description: Authentication required }
+        '403': { description: Verified artist ownership or team permission required }
+        '404': { description: Release version not found, or the loudness check is disabled in this environment }
+        '503': { description: Authoring disabled }
   /music/releases/{releaseId}/versions/{versionId}/validate:
     post:
       tags: [Music releases]
@@ -19235,6 +19259,48 @@ components:
         territoryCode: { type: string, nullable: true, description: Not trusted for access or stored territory; the server uses the configured edge. }
         occurredAt: { type: string, format: date-time }
         metadata: { description: JSON metadata limited to 16 KiB when encoded. }
+    MusicLoudnessCheck:
+      type: object
+      required: [limits, tracks]
+      properties:
+        limits:
+          type: object
+          description: Approved limits in tenths (-140 is -14.0 LUFS).
+          required: [integratedLufsTenths, toleranceTenths, truePeakCeilingDbtpTenths]
+          properties:
+            integratedLufsTenths: { type: integer }
+            toleranceTenths: { type: integer, minimum: 0 }
+            truePeakCeilingDbtpTenths: { type: integer }
+        tracks:
+          type: array
+          items: { $ref: '#/components/schemas/MusicLoudnessTrack' }
+    MusicLoudnessTrack:
+      type: object
+      required: [recordingId, masterAssetId, status, checked, flags, integratedLufsTenths, truePeakDbtpTenths, failureReason]
+      properties:
+        recordingId: { type: string, format: uuid }
+        masterAssetId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Newest master file of the track that was not deleted.
+        status:
+          type: string
+          enum: [pass, warn, failed, pending, not_measured]
+        checked:
+          type: boolean
+          description: True only for pass and warn, from a measurement of exactly this master file.
+        flags:
+          type: array
+          items:
+            type: string
+            enum: [too_loud, too_quiet, true_peak_over]
+        integratedLufsTenths: { type: integer, nullable: true }
+        truePeakDbtpTenths: { type: integer, nullable: true }
+        failureReason:
+          type: string
+          nullable: true
+          enum: [timeout, decode_error, no_summary, unparseable, out_of_range, silent, tool_unavailable, interrupted, null]
     MusicValidationIssue:
       type: object
       required: [fieldPath, code, message]

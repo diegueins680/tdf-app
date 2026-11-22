@@ -1,4 +1,5 @@
 import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
+import TrackLoudnessCheck, { newestMasterAssetId } from '../features/releases/TrackLoudnessCheck';
 import MarkdownText from '../components/MarkdownText';
 import { formatMusicPriceInput, parseMusicPriceInput } from '../utils/musicMoney';
 import AddIcon from '@mui/icons-material/Add';
@@ -367,6 +368,14 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
     : session?.partyId ?? 0;
   const version = useQuery({
     queryKey: ['music-release-version', releaseId, versionId], queryFn: () => musicReleases.getVersion(releaseId, versionId),
+    retry: false, refetchOnWindowFocus: false,
+  });
+  // Advisory only (MEDIA-MUSIC-LOUDNESS-001). A disabled feature answers 404
+  // and the editor then shows nothing about loudness.
+  const masterFiles = (version.data?.assets ?? []).filter((asset) => asset.role === 'master_audio')
+    .map((asset) => `${asset.id}:${asset.processingState}`).sort().join(',');
+  const loudness = useQuery({
+    queryKey: ['music-release-loudness', releaseId, versionId, masterFiles], queryFn: () => musicReleases.getLoudness(releaseId, versionId),
     retry: false, refetchOnWindowFocus: false,
   });
   const genres = useQuery({
@@ -879,6 +888,9 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
           <UploadProgress state={uploads[track.clientRef]} label={`pista ${index + 1}`}
             onCancel={() => cancelUpload(track.clientRef)} onRetry={() => retryUpload(track.clientRef)} />
         </UploadDropZone>
+          <TrackLoudnessCheck label={`la pista ${index + 1}`} limits={loudness.data?.limits}
+            currentMasterAssetId={newestMasterAssetId(currentVersion.assets, track.recordingId)}
+            track={loudness.data?.tracks.find((item) => item.recordingId === track.recordingId)} />
       </Stack>)}
       <UploadDropZone kind="cover_original" disabled={!editable}
         hint="Arrastra aquí la portada original (JPEG, PNG o TIFF) o elígela con el botón."
