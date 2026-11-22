@@ -94,6 +94,7 @@
       "e2e/web/payment-choices-contact.spec.mjs",
       "e2e/web/payment-field-errors.spec.mjs",
       "e2e/web/persona-public.spec.mjs",
+      "e2e/web/public-event-ticket-cards.spec.mjs",
       "e2e/web/public-text-reflow.spec.mjs",
       "e2e/web/public-welcome.spec.mjs",
       "e2e/web/radio-navigation.spec.mjs",
@@ -664,6 +665,7 @@
       "scripts/test-provider-retry-runtime.sh",
       "scripts/test-public-booking-http-concurrency.sh",
       "scripts/test-public-booking-tentative-idempotency-migration.sh",
+      "scripts/test-public-event-card-tickets-http.py",
       "scripts/test-public-route-denial.py",
       "scripts/test-public-routes.py",
       "scripts/test-public-ticket-checkout-runtime-migration.sh",
@@ -2604,6 +2606,7 @@
       "tdf-hq/src/TDF/Server/PaymentCapabilities.hs",
       "tdf-hq/src/TDF/Server/ProviderExecution.hs",
       "tdf-hq/src/TDF/Server/ProviderTransport.hs",
+      "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
       "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
       "tdf-hq/src/TDF/Server/Reviews.hs",
       "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
@@ -3325,7 +3328,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "7881225540928b2134b6aaf82a3f7d77570dd99b6ca1e36c69678065ee38f086",
+      "sha256": "df61981b457df2d5f221d20819451734938c7e851af760a3720113debdbf4ead",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3794,6 +3797,12 @@
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
       "sha256": "dcc349c4129339aaf19b0d80a8a32c35acc83781e331eb3080c44e359c163d73",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-756cf21bbc77e83f",
+      "path": "e2e/web/public-event-ticket-cards.spec.mjs",
+      "sha256": "89313c86af9093c9e204f3a934003b0e90229e9d6d2dbab8d0fcac68b4566c0a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7157,6 +7166,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-3644e59046fed6e3",
+      "path": "scripts/test-public-event-card-tickets-http.py",
+      "sha256": "32d44391832275eafe1fd9db7b8e425909f61aeab4c2233e7bbe67889073cdc8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-46813d40317234ae",
       "path": "scripts/test-public-route-denial.py",
       "sha256": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
@@ -9223,7 +9238,7 @@
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "61c417f97c4915a2a3a09cc59cf731fef5a451cce1e59bc2304a8a0498dbbc8d",
+      "sha256": "25e32c48510e880ef653fcdae775faa63d77ba8ccb1775612191c0d116c71efc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12715,13 +12730,13 @@
     {
       "id": "SURFACE-d4bbd15313dd4547",
       "path": "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
-      "sha256": "c6cedd57956d15064bd06ef0ef34446c7b23649b97b4bab8e395ec23d55e5f5c",
+      "sha256": "4bee42296f99eb3ec62c521b1100e697015da025862383e1320f4db68af50b5f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-d8426c3557e41bc4",
       "path": "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
-      "sha256": "bb3924027457e03a3fc80a02db6471d91c337c06ac0e257af71093bf499347ed",
+      "sha256": "0804ec845122bebf1c656def01be46e236cc7b755c2d3146094375c9021a4cbd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18235,7 +18250,7 @@
     {
       "id": "SURFACE-3ff9ad29b119eeb6",
       "path": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
-      "sha256": "6a299ff4d440fd6abc65602f88049606e79becc9b749db8871f7e5625b567062",
+      "sha256": "2e0495d75a099784e39a7cc793d57b3e90183c7892ff475de6cf22b16da81a92",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18737,6 +18752,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-47563c71827743f5",
+      "path": "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
+      "sha256": "9ec708b9886bc37b131a48003a35a2ae4ca97f1b09a2b78bd9d52587f5b10a6f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f67b06f0b5eec0fc",
       "path": "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
       "sha256": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
@@ -18769,7 +18790,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "cb35d49f3edb69bac4d2adc09ce09bc93d8bcb54f16f2cbdb2e0d8b8795f4a5d",
+      "sha256": "0ba938a52a4073212ea97db71ba9f2433c98ff41b783fd7217f111de5681d506",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19153,7 +19174,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "a04204129ff694d76c373d06451646761bf098809915bbef497b52ace94c3625",
+      "sha256": "190441502c05a726bfe460acdd032d22503936e58528271e087730399ba0b27d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19231,7 +19252,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "fcc18a82825a29907dc3719cf64f350f3144bf1612ded4cfccb9b00bab620dac",
+      "sha256": "f6f74c324ac3579ba2764c2da4083e49d8ea811b6fef73a1ecd581eb87b49176",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32409,7 +32430,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "64d2307afef931ce114ef8de72b3c7937f3f8d960c60d28a1e7395f9388569fe",
+      "sha256": "2f0cdb62847ceb273cb9053a73c065858b5338c695d98924ba28491757ad81b2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
