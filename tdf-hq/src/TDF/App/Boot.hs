@@ -83,6 +83,7 @@ import TDF.Cron (
   )
 import TDF.Services.RecordsIngestion (startRecordsIngestionJob)
 import TDF.Interactions.Notifications (startInteractionNotifications)
+import TDF.Chat.Delivery (startChatDeliveryWorker)
 import TDF.DB (ConnectionPool, Env (..), makePool)
 import TDF.Models (
     PartyId,
@@ -156,6 +157,7 @@ runBootServer = do
         startAgreementDepositExpiryJob env
         startRecordsIngestionJob (envPool env)
         startInteractionNotifications (envPool env)
+        startChatDeliveryWorker env
         startEventDiscoveryJob env
         startEventLogisticsRecheckJob env
         startArtistEnrichmentJob env

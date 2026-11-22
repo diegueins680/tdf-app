@@ -1340,6 +1340,11 @@
       "introducedBy": "7da005edcdcce714343d3bbf7273fc31dd0743f4"
     },
     {
+      "id": "2026-11-20_chat_external_delivery",
+      "path": "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
+      "introducedBy": "8da140ae64c51b8ef006e7678589c8bcf5ef38f3"
+    },
+    {
       "id": "2026-11-21_directory_semantic_search",
       "path": "tdf-hq/sql/2026-11-21_directory_semantic_search.sql",
       "introducedBy": "7dd229965b98cdcd7609c1ca18f37891f8edc296"
