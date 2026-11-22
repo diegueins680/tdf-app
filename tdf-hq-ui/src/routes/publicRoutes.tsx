@@ -8,6 +8,7 @@ import { COMMUNITY_LANDING_PATH } from '../utils/loginRouting';
 import RouteLoadingFallback from './RouteLoadingFallback';
 
 const MobileAppPage = lazy(() => import('../pages/MobileAppPage'));
+const MyTicketsPage = lazy(() => import('../pages/MyTicketsPage'));
 const AccountDeletionPage = lazy(() => import('../pages/AccountDeletionPage'));
 const VideoCampaignsPage = lazy(() => import('../pages/VideoCampaignsPage'));
 const ArtistOnboardingPage = lazy(() => import('../pages/ArtistOnboardingPage'));
@@ -116,6 +117,7 @@ export function renderPublicRoutes() {
       </Route>
       <Route path="/eventos/:eventId/entradas" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
       <Route path="/eventos/:eventId/orden/:orderId" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
+      <Route path="/mis-entradas" element={<PublicBranding><MyTicketsPage /></PublicBranding>} />
       <Route path="/pagos/retorno" element={<PublicBranding><ProviderPaymentReturnPage /></PublicBranding>} />
       <Route path="/venues/:venueId" element={<PublicBranding><DirectoryPublicDetailPage kind="venue" /></PublicBranding>} />
       <Route path="/conversacion/:destinationKind/:destinationId" element={<PublicBranding><InteractionPage /></PublicBranding>} />
