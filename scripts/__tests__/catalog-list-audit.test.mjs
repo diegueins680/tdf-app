@@ -6557,23 +6557,27 @@ const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26
 
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const actual = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const combined = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  // Reviewed appends after protected main's 261 entries, in order: the studio
+  // gallery seed, then the music audio measurement (MEDIA-MUSIC-LOUDNESS-001).
+  const appended = combined.migrations.slice(261);
+  assert.deepEqual(appended.map(row => row.id), ['2026-11-07_studio_gallery', '2026-11-21_music_audio_measurement']);
+  const actual = { ...combined, migrations: combined.migrations.slice(0, 261) };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
-  // MEDIA-MUSIC-LOUDNESS-001 appends exactly one migration to protected main's
-  // 261 entries; every earlier entry and its SQL stay byte-identical.
-  const appended = actual.migrations.slice(main.migrations.length);
-  assert.deepEqual({ ...actual, migrations: actual.migrations.slice(0, main.migrations.length) }, main);
+  assert.deepEqual(actual, main);
   assert.deepEqual(actual.migrations.slice(0, ux.migrations.length), ux.migrations);
-  assert.equal(main.migrations.length, 261);
-  assert.deepEqual(appended.map(row => row.id), ['2026-11-21_music_audio_measurement']);
-  assert.equal(new Set(actual.migrations.map(row => row.id)).size, 262);
+  assert.equal(actual.migrations.length, 261);
+  assert.equal(new Set(actual.migrations.map(row => row.id)).size, 261);
   for (const row of actual.migrations) {
-    // An appended migration is immutable from the commit that introduced it.
-    const reviewedAt = appended.includes(row) ? row.introducedBy : INTEGRATION_PARENTS[1];
     assert.equal(await fs.readFile(path.join(integrationRoot, row.path), 'utf8'),
-      await integrationSource(reviewedAt, row.path), `Immutable SQL changed: ${row.id}`);
+      await integrationSource(INTEGRATION_PARENTS[1], row.path), `Immutable SQL changed: ${row.id}`);
     await integrationExec('git', ['merge-base', '--is-ancestor', row.introducedBy, 'HEAD'], { cwd: integrationRoot });
   }
+  // The newest append is immutable from the commit that introduced it.
+  const newest = appended.at(-1);
+  assert.equal(await fs.readFile(path.join(integrationRoot, newest.path), 'utf8'),
+    await integrationSource(newest.introducedBy, newest.path), `Immutable SQL changed: ${newest.id}`);
+  await integrationExec('git', ['merge-base', '--is-ancestor', newest.introducedBy, 'HEAD'], { cwd: integrationRoot });
   for (const [reviewFile, key] of integrationFiles) {
     const current = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8'));
     for (const ref of INTEGRATION_PARENTS) {
@@ -6585,6 +6589,27 @@ test('actual UX/storage composition preserves current main, immutable SQL and bo
         else assert.ok(current[field] === value || current.sourceContextHistory?.some(entry => entry.metadata?.[field] === value),
           `Lost parent metadata: ${ref}:${reviewFile}:${field}`);
       }
+    }
+  }
+});
+
+test('studio gallery appends its original migration and preserves both complete manifest reviews', async () => {
+  const file = 'scripts/production-migrations.json';
+  const base = '985117b3d9e23b1a84837040d39784e3debcb48e';
+  const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
+  const before = await integrationParent(base, file);
+  const original = (await integrationParent(gallery, file)).migrations.at(-1);
+  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  assert.equal(original.id, '2026-11-07_studio_gallery');
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, original] });
+  const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, original.path), 'utf8'), stdout);
+  for (const [reviewFile, key] of integrationFiles) {
+    const currentReview = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8'));
+    for (const parent of [base, gallery]) {
+      const old = await integrationParent(parent, reviewFile);
+      const row = old[key].find(r => r.evidence?.file === file || r.name === 'migrations' || r.source?.name === 'migrations');
+      if (row) assert.ok(integrationFind(currentReview, row), 'Missing reviewed migration history for ' + parent);
     }
   }
 });
