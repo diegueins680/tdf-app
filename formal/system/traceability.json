@@ -994,20 +994,23 @@
       "observability": "Exact source fingerprint, Mobile pin, command, result and negative-control log.",
       "authority": "approved",
       "source": "User specification-conformance instruction 2026-10-04, sections 3, 9, 10, 19 and 24",
-      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions. Catalog refresh preserves historical review provenance while recomputing discovery counters.",
+      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions. Catalog refresh preserves historical review provenance while recomputing discovery counters. Nested review history is stored once per object under docs/catalog-persistence/catalog-decision-history, addressed by the SHA-256 of its exact bytes, and expands to the original nested document byte for byte; edited, missing, orphaned or inline history fails verification.",
       "contract": "formal/system/README.md",
       "implementation": [
         "scripts/specification-conformance.py",
         "scripts/check-new-specification-surfaces.py",
         ".github/workflows/ci.yml",
         "docs/catalog-persistence/catalog-list-decisions.json",
-        "scripts/build-catalog-decisions.mjs"
+        "scripts/build-catalog-decisions.mjs",
+        "scripts/catalog-decision-history.mjs",
+        "scripts/lib/catalog-decision-history.mjs"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",
         "scripts/test-new-specification-surfaces.py",
         "scripts/__tests__/ci-pipeline.test.mjs",
-        "scripts/__tests__/catalog-list-audit.test.mjs"
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/__tests__/catalog-decision-history.test.mjs"
       ],
       "formalModels": [],
       "verification": "Executable conformance and mutation tests; not a whole-program proof. Catalog reconciliation retains historical retirement/provenance sections while recalculating current counters; an original-generator negative control demonstrates the regression.",
@@ -29172,7 +29175,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "98a643b2acd8d93a07f96bc7c283178aaae5fcddf1b81b821a1370def26e9190",
+    "docs/catalog-persistence/catalog-list-decisions.json": "2c0e73c4cd924c619f24a25c82d84e6d081dc7e2781d268e4b8d05e9a24a398f",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -29614,7 +29617,7 @@
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "4f2f99e39788cd1f67da2623474d725e06e51757b409474118f82d3c9a43aa1d",
-    "package.json": "3b75451201352914e57227c19008fee7c8e8747ff00bf81ae3a43a7a3512fa6b",
+    "package.json": "5fe81add4eef1c0bfddb256fa9425ec65865e2e9ae8025950879f49c60f814a6",
     "playwright.config.mjs": "37eb4ab6c22dc0a3f2e575361426a045ad760a32920fe4a3b36a1f50e660e71b",
     "playwright.desktop.config.mjs": "74292833e979da0f81610adcedcddcfe6a7053cd5dfa6a34b36b2f1ddbddeb92",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
@@ -29632,7 +29635,8 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "8d9431da2d3ac258c069dc12a28be58903231367e8756df354ee0b5059809825",
+    "scripts/__tests__/catalog-decision-history.test.mjs": "9ad3bbd3935b32fe1c9ebd8dc9c3a69ac14087b4476c1ef710af6b1ddbfa2bcd",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "d2c385fbe26d7124f3430585ee65a87a38a262c56dfb75e9bb86aa84d94da561",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -29725,6 +29729,7 @@
     "scripts/build-catalog-decisions.mjs": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
     "scripts/build-ddex-ern432-package.sh": "8cd6f2ccc3881d3715499144e1513dfe2fd61ac9f1577b53d18eda9c5c5c26bc",
     "scripts/build-torrent-audio-fixture.mjs": "cdd56ca13a42d0c1a35b9a6e5db53e93ac7de5093385b8cccbcd3629e19aa104",
+    "scripts/catalog-decision-history.mjs": "5582b801a0cbbbb9bd754dc9a7a89a10340ea768083157e0ec136fbbcef7fb9a",
     "scripts/check-admin-guards.py": "6b44713f4518a4bee3cb8c6aa8b309cc2b66e71dc3716b0facc5cb0bdfeacf8b",
     "scripts/check-api-availability.mjs": "eee5b9b81d3c26786fdb850534e5e274ab0074f3af9b7a70d6df1101b9e42c9d",
     "scripts/check-architecture-boundaries.mjs": "df09ec947a2854c0c1dd97f9f41e60a6da7373551453d461fae9c4def69056fd",
@@ -29746,7 +29751,7 @@
     "scripts/codex-loop-worker.sh": "467cb345b75f0afa7d96e98be460d4225374f3dec1c203c0984f62aef16cc282",
     "scripts/content-storage-model.mjs": "cae41e9ce3b6cf072d9255e94932a237a52c3f5193e6b8def8d97447bc9240d1",
     "scripts/continuous-improvement-loop-supervisor.sh": "5f7ad2ee6a6070463e7fb8e5da4eeda56afc66c00015dc4eb6935b4a0ca4d7b4",
-    "scripts/continuous-improvement-loop-verify.mjs": "2c25693b5cc8608695c2353f3a7e31f5ec918e02fbd670bb6f0bfaa2f2e7d96c",
+    "scripts/continuous-improvement-loop-verify.mjs": "cda066e5c99afe1f8d2018e559813afaf8814216c23ad7df7cb2b6d67a46be76",
     "scripts/continuous-improvement-loop.codex.json": "bb03117ee8f488069cca81703f8e70f96fb7412902f9bfb78b7f1363ed9a1af2",
     "scripts/continuous-improvement-loop.example.json": "6f0a787a68041a7413c53b447854f77ce09accaf37efb14aee92bc90334a2a3d",
     "scripts/continuous-improvement-loop.mjs": "f2618194f28d356e0d5d9c856bf92397f7b69b7b6e2bbde1a2745ea58cbc79c6",
@@ -29773,6 +29778,7 @@
     "scripts/interactions/test-http.sh": "087ac80166a5381eff9e60417685428c462721533324a7dd7c96cf6b7968a41a",
     "scripts/lib/alloy-controls.mjs": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
     "scripts/lib/auth_throttle_http.py": "c30b34ba0e5057b013ffd601421ed462c61a71e61e51e25f233e130d3c915989",
+    "scripts/lib/catalog-decision-history.mjs": "57c2b822b62515f22aaf324db783d46a0a83229b5ec3c32fe403da7444f383f7",
     "scripts/lib/compiled-api-surface.mjs": "71831644e36c3e2d5e2a51309d701aab8b08f5b3a43ca9ff4ea085b30aef1437",
     "scripts/lib/continuous-improvement-loop-verify.mjs": "3db41dd0683f33d1a03d46f402e6cd9c25a4e07cd2b690a179ba8e6744fc9f97",
     "scripts/lib/continuous-improvement-loop.mjs": "658148df4d0bf1c8df6e19da2d1266673158ba934f2191186b3b57b5e2e36fae",
@@ -33250,6 +33256,18 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/catalog-decision-history.mjs": [
+      {
+        "requirement": "SYS-TRACE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/lib/catalog-decision-history.mjs": [
+      {
+        "requirement": "SYS-TRACE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-specification-conformance.py": [
       {
         "requirement": "SYS-TRACE-001",
@@ -33305,6 +33323,12 @@
       },
       {
         "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/catalog-decision-history.test.mjs": [
+      {
+        "requirement": "SYS-TRACE-001",
         "relationship": "tests"
       }
     ],
@@ -53865,7 +53889,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "3b75451201352914e57227c19008fee7c8e8747ff00bf81ae3a43a7a3512fa6b",
+      "sha256": "5fe81add4eef1c0bfddb256fa9425ec65865e2e9ae8025950879f49c60f814a6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54032,9 +54056,21 @@
       ]
     },
     {
+      "id": "SURFACE-06d2d6277df17fbc",
+      "path": "scripts/__tests__/catalog-decision-history.test.mjs",
+      "sha256": "9ad3bbd3935b32fe1c9ebd8dc9c3a69ac14087b4476c1ef710af6b1ddbfa2bcd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-TRACE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "8d9431da2d3ac258c069dc12a28be58903231367e8756df354ee0b5059809825",
+      "sha256": "d2c385fbe26d7124f3430585ee65a87a38a262c56dfb75e9bb86aa84d94da561",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55715,6 +55751,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-ca761aa510f5ae58",
+      "path": "scripts/catalog-decision-history.mjs",
+      "sha256": "5582b801a0cbbbb9bd754dc9a7a89a10340ea768083157e0ec136fbbcef7fb9a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-TRACE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-74289e89f4a7d171",
       "path": "scripts/catalog-list-audit.mjs",
       "sha256": "0fe478a23657510ee4b447c089b1db245b055075e2fbe3e7802bdf4c418e66c1",
@@ -56023,7 +56071,7 @@
     {
       "id": "SURFACE-dcc180d2a4916e98",
       "path": "scripts/continuous-improvement-loop-verify.mjs",
-      "sha256": "2c25693b5cc8608695c2353f3a7e31f5ec918e02fbd670bb6f0bfaa2f2e7d96c",
+      "sha256": "cda066e5c99afe1f8d2018e559813afaf8814216c23ad7df7cb2b6d67a46be76",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56464,6 +56512,18 @@
         {
           "requirement": "AUTH-CREDENTIAL-INTAKE-001",
           "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-87f61f7e51faf3c1",
+      "path": "scripts/lib/catalog-decision-history.mjs",
+      "sha256": "57c2b822b62515f22aaf324db783d46a0a83229b5ec3c32fe403da7444f383f7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-TRACE-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -93861,7 +93921,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6aa73431750e9fad5c9bd4d5710816970014a4a9a0e17b371e38cbf1005780bb",
+      "sourceSha256": "13286e61f6aa9b8c18b652b9b9576a55ce717b4c778fc8980a1ed73525254ee3",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -93889,7 +93949,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6aa73431750e9fad5c9bd4d5710816970014a4a9a0e17b371e38cbf1005780bb",
+      "sourceSha256": "13286e61f6aa9b8c18b652b9b9576a55ce717b4c778fc8980a1ed73525254ee3",
       "definition": {
         "states": [
           "absent",
@@ -93919,7 +93979,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6aa73431750e9fad5c9bd4d5710816970014a4a9a0e17b371e38cbf1005780bb",
+      "sourceSha256": "13286e61f6aa9b8c18b652b9b9576a55ce717b4c778fc8980a1ed73525254ee3",
       "definition": {
         "export": [
           "queued",
