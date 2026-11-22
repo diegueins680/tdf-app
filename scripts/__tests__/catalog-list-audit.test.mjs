@@ -6558,7 +6558,7 @@ async function integrationSource(ref, file) {
 // Retain both original published parents and additionally guard latest published main.
 const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1", "5a81672285dc9c03130fc9fd8355e2b4c58e9e12"];
 
-// The artist similarity entry (COMMUNITY-ARTIST-SIMILARITY-001) appends after the course reminder and has its own test at the end of this file.
+// The artist similarity entry (COMMUNITY-ARTIST-SIMILARITY-001) appends after the chat delivery entry and has its own test at the end of this file.
 const withoutArtistSimilarity = manifest => ({ ...manifest, migrations: manifest.migrations.filter(row => row.id !== '2026-11-21_artist_similarity') });
 
 // Course follow-up reminders append one migration after the studio gallery.
@@ -6573,9 +6573,20 @@ async function withoutCourseReminder(manifest) {
   return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
 }
 
+// MSG-DELIVERY-001 (2026-11-20) appends one reviewed migration after the
+// course reminder; strip it explicitly so the compositions below stay exact.
+async function withoutChatDelivery(manifest) {
+  const appended = manifest.migrations.at(-1);
+  if (appended?.id !== '2026-11-20_chat_external_delivery') return manifest;
+  await integrationExec('git', ['merge-base', '--is-ancestor', appended.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const { stdout } = await integrationExec('git', ['show', appended.introducedBy + ':' + appended.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, appended.path), 'utf8'), stdout);
+  return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
+}
+
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const combined = await withoutCourseReminder(withoutArtistSimilarity(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'))));
+  const combined = await withoutCourseReminder(await withoutChatDelivery(withoutArtistSimilarity(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')))));
   assert.equal(combined.migrations.at(-1).id, '2026-11-07_studio_gallery');
   const actual = { ...combined, migrations: combined.migrations.slice(0, -1) };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
@@ -6609,7 +6620,7 @@ test('studio gallery appends its original migration and preserves both complete 
   const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
   const before = await integrationParent(base, file);
   const original = (await integrationParent(gallery, file)).migrations.at(-1);
-  const current = await withoutCourseReminder(withoutArtistSimilarity(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'))));
+  const current = await withoutCourseReminder(await withoutChatDelivery(withoutArtistSimilarity(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')))));
   assert.equal(original.id, '2026-11-07_studio_gallery');
   assert.deepEqual(current, { ...before, migrations: [...before.migrations, original] });
   const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
@@ -6710,13 +6721,13 @@ test('current My tickets mirror matches its generator and rejects the prior main
   }
 });
 
-test('artist similarity appends exactly one migration to the reviewed 263-entry manifest', async () => {
+test('artist similarity appends exactly one migration to the reviewed 264-entry manifest', async () => {
   const file = 'scripts/production-migrations.json';
-  const base = 'b44ab7bd0c67e82d7deb7a508784021390aad5b4';
+  const base = '6cd7b2d2d4183bb6c4e3dc3fe2ab1f3b9869593c';
   const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')).migrations;
   const prior = JSON.parse((await integrationExec('git', ['show', `${base}:${file}`],
     { cwd: integrationRoot, maxBuffer: 64 * 1024 * 1024 })).stdout).migrations;
-  assert.equal(prior.length, 263);
+  assert.equal(prior.length, 264);
   const entry = { id: '2026-11-21_artist_similarity', path: 'tdf-hq/sql/2026-11-21_artist_similarity.sql', introducedBy: '89d467302501d47ce53c1551b031c46cb7bb1162' };
   assert.deepEqual(current, [...prior, entry]);
   assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'),
@@ -6724,7 +6735,7 @@ test('artist similarity appends exactly one migration to the reviewed 263-entry 
   await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
   const decisions = JSON.parse(await fs.readFile(path.join(integrationRoot, 'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8')).decisions;
   const decision = decisions.find(row => row.evidence?.file === file);
-  assert.equal(decision.id, 'ef8e9471b44e8b891fcd');
-  assert.equal(decision.evidence.valueCount, 264);
-  assert.equal(decision.previousDecision.id, '555cf6fbf926c0b2ceab');
+  assert.equal(decision.id, '16b87944dd9837b06322');
+  assert.equal(decision.evidence.valueCount, 265);
+  assert.equal(decision.previousDecision.id, '7671a3e996c85f7aa51d');
 });
