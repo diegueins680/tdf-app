@@ -93,10 +93,10 @@ sendEngineerBooking :: EmailService -> Text -> Text -> Text -> Text -> Maybe Tex
 sendEngineerBooking svc name email serviceLabel startsAtLabel mCustomer mNotes =
   Email.sendEngineerBookingEmail (esConfig svc) (esAppBase svc) name email serviceLabel startsAtLabel mCustomer mNotes
 
-sendPublicBookingRequestReceived :: EmailService -> Text -> Text -> Text -> Text -> Maybe Text -> IO ()
-sendPublicBookingRequestReceived svc name email serviceLabel startsAtLabel mDetails =
-  Email.sendPublicBookingRequestReceivedEmail (esConfig svc) name email serviceLabel startsAtLabel mDetails
+sendPublicBookingRequestReceived :: EmailService -> Text -> Text -> Text -> Text -> Bool -> Maybe Text -> IO ()
+sendPublicBookingRequestReceived svc name email serviceLabel startsAtLabel holdsSlot mDetails =
+  Email.sendPublicBookingRequestReceivedEmail (esConfig svc) name email serviceLabel startsAtLabel holdsSlot mDetails
 
-sendPublicBookingRequestStaff :: EmailService -> Text -> Text -> Text -> Text -> Text -> Text -> Maybe Text -> IO ()
-sendPublicBookingRequestStaff svc name email serviceLabel startsAtLabel customer contact mDetails =
-  Email.sendPublicBookingRequestStaffEmail (esConfig svc) (esAppBase svc) name email serviceLabel startsAtLabel customer contact mDetails
+sendPublicBookingRequestStaff :: EmailService -> Text -> Text -> Text -> Text -> Text -> Text -> Bool -> Maybe Text -> IO ()
+sendPublicBookingRequestStaff svc name email serviceLabel startsAtLabel customer contact holdsSlot mDetails =
+  Email.sendPublicBookingRequestStaffEmail (esConfig svc) (esAppBase svc) name email serviceLabel startsAtLabel customer contact holdsSlot mDetails

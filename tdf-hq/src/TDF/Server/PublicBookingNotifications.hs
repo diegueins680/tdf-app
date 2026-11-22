@@ -53,7 +53,10 @@ notifyPublicBookingRequest Env{envPool = pool, envConfig = cfg} booking customer
         , DTO.serviceType = mServiceType
         , DTO.startsAt = bookingStart
         , DTO.notes = details
+        , DTO.resources = bookingResources
         } = booking
+      -- Only a request that was allocated rooms or resources occupies its slot.
+      holdsSlot = not (null bookingResources)
       emailSvc = EmailSvc.mkEmailService cfg
       serviceLabel = fromMaybe bookingTitle mServiceType
       ecuadorTime = utcToLocalTime (hoursToTimeZone (-5)) bookingStart
@@ -107,10 +110,10 @@ notifyPublicBookingRequest Env{envPool = pool, envConfig = cfg} booking customer
   void $ forkIO $ (>>= logFailure "deliver external alerts") $ try $ do
     forM_ (nubOrdOn (T.toLower . snd) staffEmails) $ \(staffName, staffEmail) ->
       try (EmailSvc.sendPublicBookingRequestStaff emailSvc staffName staffEmail
-             serviceLabel startLabel customerName contact details)
+             serviceLabel startLabel customerName contact holdsSlot details)
         >>= logFailure ("email staff " <> staffEmail)
     try (EmailSvc.sendPublicBookingRequestReceived emailSvc customerName customerEmail
-           serviceLabel startLabel details)
+           serviceLabel startLabel holdsSlot details)
       >>= logFailure "email customer"
     unless (null staffPhones) $ do
       envResult <- try loadWhatsAppEnv :: IO (Either SomeException WhatsAppEnv)

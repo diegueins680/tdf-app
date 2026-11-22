@@ -107,7 +107,7 @@ describe('DomoVenuePage pricing truthfulness', () => {
     }]);
     createPublicMock
       .mockRejectedValueOnce(new Error('No pudimos confirmar la solicitud. Intenta nuevamente.'))
-      .mockResolvedValueOnce({ bookingId: 321 });
+      .mockResolvedValueOnce({ bookingId: 321, resources: [{ brRoomId: 'synthetic-room' }] });
     const { container } = renderPage();
 
     await waitFor(() => expect(listPublicMock).toHaveBeenCalledTimes(1));
