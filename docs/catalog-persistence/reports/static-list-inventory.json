@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-22T23:07:24.630Z",
+  "generatedAt": "2026-11-22T23:22:12.040Z",
   "repositoryRoot": ".",
   "filesScanned": 2875,
   "candidateCount": 1498,
@@ -74670,7 +74670,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "eventArtists",
-      "line": 356,
+      "line": 375,
       "values": [
         "{artistId=999, artistPartyId=55, artistName=Synthetic Artist}",
         "{artistId=1000, artistName=Unlinked Artist}"
@@ -74678,7 +74678,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        356
+        375
       ],
       "consumerCount": 39,
       "backendConsumers": [
@@ -74752,7 +74752,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 340,
+      "line": 342,
       "values": [
         "media",
         "audio",
@@ -74761,7 +74761,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        340
+        342
       ],
       "consumerCount": 36,
       "backendConsumers": [
@@ -95857,7 +95857,7 @@
       "lines": [
         11703
       ],
-      "consumerCount": 1099,
+      "consumerCount": 1100,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -104490,7 +104490,7 @@
       "lines": [
         19454
       ],
-      "consumerCount": 1092,
+      "consumerCount": 1093,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -174289,7 +174289,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "storedEventMetadataAllowedKeys",
-      "line": 1705,
+      "line": 1706,
       "values": [
         "ticketUrl",
         "imageUrl",
@@ -174300,7 +174300,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        1705
+        1706
       ],
       "consumerCount": 100,
       "backendConsumers": [

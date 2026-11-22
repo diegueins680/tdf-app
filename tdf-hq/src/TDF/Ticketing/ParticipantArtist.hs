@@ -45,16 +45,32 @@ registerParticipantArtistForOrder now order = do
     let participantTier = maybe False (isParticipantTierCode . eventTicketTierCode) mTier
     case (participantTier, eventTicketOrderBuyerPartyId order >>= parsePartyId) of
         (True, Just partyIdValue) -> do
+            let eventKey = eventTicketOrderEventId order
+            -- Lock the event before the buyer, the order the event editor uses
+            -- (event row, then artist owners). Two musician orders for one
+            -- event, or an order and an edit, then check and change the lineup
+            -- one at a time, so the artist ceiling cannot be passed.
+            lockEventLineup eventKey
             mArtist <- participantArtistFor now order partyIdValue
             case mArtist of
                 Nothing -> pure ()
                 Just artistKey -> do
-                    let eventKey = eventTicketOrderEventId order
                     linked <- get (EventArtistKey eventKey artistKey)
                     listed <- count [EventArtistEventId ==. eventKey]
                     when (isNothing linked && listed < maxListedEventArtists) $
                         void (insertUnique (EventArtist eventKey artistKey (Just "participant")))
         _ -> pure ()
+
+lockEventLineup :: SocialEventId -> SqlPersistT IO ()
+lockEventLineup eventKey = do
+    backend <- T.toCaseFold <$> getRDBMS
+    when (backend == "postgresql") $
+        void
+            ( rawSql
+                "SELECT id FROM social_event WHERE id = ? FOR UPDATE"
+                (keyToValues eventKey)
+                :: SqlPersistT IO [Single PersistValue]
+            )
 
 participantArtistFor :: UTCTime -> EventTicketOrder -> Int64 -> SqlPersistT IO (Maybe ArtistProfileId)
 participantArtistFor now order partyIdValue = do

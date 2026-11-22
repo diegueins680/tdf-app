@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "1958140b10c2e13a43dc83f4d0aaf38fc8be222bba91d3446fc29eb7252c86b4",
+    "tdf-hq/tdf-hq.cabal": "3e628618241b9852ad32d35e4807e82fd585c0a6637ec648cbd7131747f1f425",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -1023,6 +1023,15 @@
       "currentSha256": "1958140b10c2e13a43dc83f4d0aaf38fc8be222bba91d3446fc29eb7252c86b4",
       "change": "Reconcile protected main 6142acf4c with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
       "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "0d9f2aaed81c5919b558c16a7a38f6050faa6039",
+      "previousSha256": "1958140b10c2e13a43dc83f4d0aaf38fc8be222bba91d3446fc29eb7252c86b4",
+      "currentSha256": "3e628618241b9852ad32d35e4807e82fd585c0a6637ec648cbd7131747f1f425",
+      "change": "Register the new TDF.Ticketing.ParticipantArtist module in the library's other-modules on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly one added line, the TDF.Ticketing.ParticipantArtist module entry. That module lists the buyer of a musician ticket tier among the event's artists during ticket issuance and is imported only by ticket issuance and the social events server; it adds no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
       "qualification": "This review covers the conditional solver source context."
     }
   ]

@@ -191,6 +191,25 @@ describe('SocialEventDetailPage ticket sharing', () => {
     view.unmount();
   });
 
+  it('does not give the musician code to a tier that is only named Musico', async () => {
+    activeSession = { partyId: 7 };
+    getEventAdminAccessMock.mockResolvedValue({ eaaEventId: '121', eaaAccess: 'owner' });
+    listTicketTiersMock.mockResolvedValue([]);
+    getTicketSaleMock.mockImplementation(async () => saleEligibility(false));
+    createTicketTierMock.mockResolvedValue({ ...tierFixture, ticketTierCode: 'MUSICO-GENERAL' });
+    const view = renderPage();
+    await screen.findByRole('button', { name: 'Crear tickets' });
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Nombre' }), { target: { value: 'Musico' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Precio' }), { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Crear tickets' }));
+
+    await waitFor(() => expect(createTicketTierMock).toHaveBeenCalledWith('121', expect.objectContaining({
+      ticketTierPriceCents: 500, ticketTierCode: 'MUSICO-GENERAL',
+    })));
+    view.unmount();
+  });
+
   it('disables the sale request after deactivating the last paid tier', async () => {
     activeSession = { partyId: 7 };
     getEventAdminAccessMock.mockResolvedValue({ eaaEventId: '121', eaaAccess: 'owner' });

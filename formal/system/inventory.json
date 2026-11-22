@@ -12689,13 +12689,13 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "a9898a5e0756a03238615073ce5c8059046f25dcf14e5631a21433943a94cb32",
+      "sha256": "9af282763f7ca9e0fc181dade27d63ba4c4b273440a945b1b40f551180d15202",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "1b0f097f290d5c119123103b8b33cd4a0a732fd85bfc8aac123becec919599ff",
+      "sha256": "8388567db1778d859225b4bdf6fbbe1c56240d4bd78248188525f5d217dd9c0c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18953,7 +18953,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "0ba938a52a4073212ea97db71ba9f2433c98ff41b783fd7217f111de5681d506",
+      "sha256": "4fac2628acb63e9c96785a3a6db004ec61a637e99abc45429102a157a6508f69",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19235,7 +19235,7 @@
     {
       "id": "SURFACE-9af30fe53768298b",
       "path": "tdf-hq/src/TDF/Ticketing/ParticipantArtist.hs",
-      "sha256": "d24e4a10ac6b2d7939e7db189479c5e70e19150038e54ba5dee0ff2c44c463b3",
+      "sha256": "5b81b4162c558ef08f6cffa2be04a1860ce8e7041f144be372650f96f807d654",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19421,7 +19421,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "ccd0341e34a01fe98bbf4936eb171de3f167105619237aec509862ee0f96dbbb",
+      "sha256": "17a2f6cfe0051fc2f6565bfcccb4d0a096647083b955f3774ba79e957adc834e",
       "semanticConformance": "not-established-by-discovery"
     },
     {

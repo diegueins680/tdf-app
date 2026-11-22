@@ -223,12 +223,14 @@ export default function SocialEventDetailPage() {
       if (!Number.isSafeInteger(quantity) || quantity <= 0) throw new Error('Ingresa una cantidad válida.');
       const name = ticketName.trim();
       if (!name) throw new Error('El nombre del ticket es obligatorio.');
+      const nameCode = name.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '') || 'GENERAL';
       return {
         ...original,
         // The backend lists buyers of the MUSICO tier as event artists.
         ticketTierCode: original?.ticketTierCode
           ?? (ticketDraft.participant === true ? MUSICIAN_TIER_CODE : undefined)
-          ?? (name.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '') || 'GENERAL'),
+          // With the switch off, a tier that is merely named "Musico" must not take the reserved code.
+          ?? (isMusicianTierCode(nameCode) ? `${nameCode}-GENERAL` : nameCode),
         ticketTierName: name,
         ticketTierPriceCents: priceCents,
         ticketTierCurrency: original?.ticketTierCurrency ?? event?.eventCurrency ?? preferredCurrency,

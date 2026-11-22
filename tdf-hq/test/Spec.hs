@@ -16057,6 +16057,10 @@ main = hspec $ do
                 `shouldBe` Right "VIP-PASS"
             validateTicketTierCodeInput "General Admission" "   "
                 `shouldBe` Right "GENERAL-ADMISSION"
+            -- The musician code lists buyers as event artists, so only an
+            -- explicit code may select it; a tier named Musico does not.
+            validateTicketTierCodeInput "Musico" "   " `shouldBe` Right "MUSICO-GENERAL"
+            validateTicketTierCodeInput "Musico" "musico" `shouldBe` Right "MUSICO"
 
             let assertInvalid rawName rawCode expected =
                     case validateTicketTierCodeInput rawName rawCode of
