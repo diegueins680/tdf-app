@@ -11,6 +11,8 @@ import           Control.Monad.Logger           (runNoLoggingT)
 import qualified Data.ByteString.Char8          as BS
 import           Data.Int                       (Int64)
 import           Data.List                      (sort)
+import qualified Data.Map.Strict                as Map
+import qualified Data.Set                       as Set
 import qualified Data.Text                      as T
 import           Database.Persist               (PersistValue, toPersistValue)
 import           Database.Persist.Postgresql
@@ -18,6 +20,7 @@ import           System.Environment             (getEnv)
 
 import           TDF.Fans.ArtistRecommendations
 import           TDF.Fans.ArtistSimilarity
+import           TDF.Fans.EventAffinity
 
 main :: IO ()
 main = do
@@ -85,6 +88,36 @@ main = do
     optedOutLive <- live 106
     check "opt-out must give exactly the popularity fallback"
       (ids optedOut == [2, 4] && all ((== Popular) . recReason) optedOut && optedOut == optedOutLive)
+
+    -- EVT-AFFINITY-ORDER-001: lineups through the profile's party (profiles
+    -- without a canonical party id are not evidence), and the caller's
+    -- affinities from the stored relation and from the reference.
+    lineups <- run (loadEventLineupParties [1, 2, 3])
+    check "event lineups" (lineups == Map.fromList [(1, [5]), (2, [5])])
+    noLineups <- run (loadEventLineupParties [])
+    check "no events, no lineups" (Map.null noLineups)
+    forM_ fans $ \fan -> do
+      frame <- run (loadRecommendationFrame (toSqlKey fan))
+      storedAffinity <- run (loadFanArtistAffinities StoredGeneration (toSqlKey fan))
+      liveAffinity <- run (loadFanArtistAffinities LiveSignals (toSqlKey fan))
+      check ("stored affinities differ from the reference for fan " <> show fan)
+        (Map.keys storedAffinity == Map.keys liveAffinity
+          && and (zipWith close (Map.elems storedAffinity) (Map.elems liveAffinity)))
+      check ("an unlisted artist or the caller has an affinity for fan " <> show fan)
+        (Map.keysSet storedAffinity `Set.isSubsetOf` Set.delete fan (rfListed frame))
+      check ("an affinity out of range for fan " <> show fan)
+        (all (\value -> value > 0 && value <= 2) (Map.elems storedAffinity))
+      check ("a followed listed artist must have an own-signal affinity for fan " <> show fan)
+        (fan == 106 || all (\artist -> maybe False (> 1) (Map.lookup artist storedAffinity))
+          (Set.toList (Set.delete fan (rfFollowed frame `Set.intersection` rfListed frame))))
+    optedOutAffinity <- run (loadFanArtistAffinities StoredGeneration (toSqlKey 106))
+    check "opt-out must give no affinity" (Map.null optedOutAffinity)
+    hundredAffinity <- run (loadFanArtistAffinities StoredGeneration (toSqlKey 100))
+    check "fan 100 has own and inferred affinities"
+      (any (> 1) (Map.elems hundredAffinity) && any (<= 1) (Map.elems hundredAffinity))
+    check "the page of fan 100 is permuted by affinity and keeps the date order otherwise"
+      (orderByAffinity hundredAffinity (\event -> Map.findWithDefault [] event lineups) [3, 2, 1 :: Int64]
+        == (if Map.member 5 hundredAffinity then [2, 1, 3] else [3, 2, 1]))
 
     -- The per-fan signal queries are the global ones restricted to the fan.
     favourites :: [(Single Int64, Single Int64)] <- run (rawSql favouriteSignalsSql [])

@@ -18,6 +18,7 @@ module TDF.Fans.EventAffinity
     -- * Loaders
   , loadFanArtistAffinities
   , loadEventLineupParties
+  , orderEventPageForFan
   ) where
 
 import           Control.Monad.IO.Class        (MonadIO)
@@ -109,6 +110,24 @@ loadEventLineupParties [] = pure Map.empty
 loadEventLineupParties eventIds = do
   rows <- rawSql eventLineupPartiesSql [arrayParameter eventIds]
   pure (Map.fromListWith (flip (++)) [(event, [artist]) | (Single event, Single artist) <- rows])
+
+-- | Order one page for @fan@: 'orderByAffinity' with the fan's affinities and
+-- the lineups of the page. Without any affinity the page is returned as given
+-- and the lineups are not read.
+orderEventPageForFan
+  :: MonadIO m
+  => SimilaritySource
+  -> PartyId
+  -> (a -> Int64)
+  -> [a]
+  -> SqlPersistT m [a]
+orderEventPageForFan source fan eventIdOf page = do
+  affinities <- loadFanArtistAffinities source fan
+  if Map.null affinities
+    then pure page
+    else do
+      lineups <- loadEventLineupParties (map eventIdOf page)
+      pure (orderByAffinity affinities (\item -> Map.findWithDefault [] (eventIdOf item) lineups) page)
 
 -- | The caller's affinities, read live except for the stored similarity.
 --

@@ -1229,6 +1229,7 @@
       "tdf-hq-ui/src/config/apiBase.test.ts",
       "tdf-hq-ui/src/config/apiBase.ts",
       "tdf-hq-ui/src/config/appConfig.ts",
+      "tdf-hq-ui/src/config/eventAffinityRollout.ts",
       "tdf-hq-ui/src/config/queueContinuationRollout.ts",
       "tdf-hq-ui/src/contexts/CurrencyContext.test.ts",
       "tdf-hq-ui/src/contexts/CurrencyContext.tsx",
@@ -2548,6 +2549,7 @@
       "tdf-hq/src/TDF/EventOperations/Types.hs",
       "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
       "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
+      "tdf-hq/src/TDF/Fans/EventAffinity.hs",
       "tdf-hq/src/TDF/FeatureRegistry.hs",
       "tdf-hq/src/TDF/Handlers/InputList.hs",
       "tdf-hq/src/TDF/Interactions/API.hs",
@@ -2749,6 +2751,7 @@
       "tdf-hq/test/TDF/FailureBoundarySpec.hs",
       "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs",
       "tdf-hq/test/TDF/Fans/ArtistSimilaritySpec.hs",
+      "tdf-hq/test/TDF/Fans/EventAffinitySpec.hs",
       "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
       "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
       "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs",
@@ -3366,7 +3369,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "b483f626ccb3fe53372b56959c9cf1499ad633f13d63527d3310f8bb2e975551",
+      "sha256": "9af01c2f33b2adea2cbd4db50ec5bebf503292fed9cff1a2a99e22e2f56677cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4032,7 +4035,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "4bc032c4ae2db30711ea18727b1868f15167ffe8f27a70733d28b23c76def004",
+      "sha256": "26b2d88fe5761bfdadfd289de15f52123259788ee36a143f4ae5e480fbcd2bd4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7584,7 +7587,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "57c4277418c5945301752faa7953004e9f85e7ab0f3e8fdd980ad644ee79916d",
+      "sha256": "fae713f464ce67e1f54e9f83e4b4a644f8135faf6037a2cd3a736a2088a418b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9264,7 +9267,7 @@
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "25e32c48510e880ef653fcdae775faa63d77ba8ccb1775612191c0d116c71efc",
+      "sha256": "05f201704f4056e6d7cfbc3302f5113e56d970db602f648b61d206ee3467a84c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10513,6 +10516,12 @@
       "id": "SURFACE-2a696a014a007a73",
       "path": "tdf-hq-ui/src/config/appConfig.ts",
       "sha256": "29f5c5e8d461756baa2d66118623a4b7841affeb08ce5f38d0a07a62b664213e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a00145896370f04b",
+      "path": "tdf-hq-ui/src/config/eventAffinityRollout.ts",
+      "sha256": "4d6dbb1df1072d059ed60817912fe59a1a56ef76c60c08e0ea660e722268a791",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12690,7 +12699,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "2c91783b2a6018cc74a5222e910925b8ff23cf4809a23565aa696ce910d94eb2",
+      "sha256": "fc65bd89daed76758fe65475412c4f3afb5c0ecbf271f38bafb96f0cc835b226",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12912,13 +12921,13 @@
     {
       "id": "SURFACE-6cbe7c311d07b3f3",
       "path": "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts",
-      "sha256": "12d0b8e2c66e11b30784646892d3d97f9d6762032243c2f97819b292630b4c7a",
+      "sha256": "69fa315b9b052118f56ace97aee84a3e9d615003da1bc87c6bcb3e0e8dbbeb97",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a310967cb09cdd87",
       "path": "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts",
-      "sha256": "7e4b0da542f427fb13d49fa972d760d093096e1077c19cfbaa6f9a7fa0b9d251",
+      "sha256": "2238077e25bf2dafea607c0dcbc740fac66475579b73bc47fefadcdbd3d68abc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14226,7 +14235,7 @@
     {
       "id": "SURFACE-2f83dbcb131f448c",
       "path": "tdf-hq-ui/src/vite-env.d.ts",
-      "sha256": "bdcf33c62f1bba0ff2fbfefdbb277caa0aac378e636068de90065b5ad6d3786d",
+      "sha256": "3b9627cd4112fe1afe32c0677dc67c322794c789b369bc2739373be63b37e76f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18138,7 +18147,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "4a1a2e8711da3233dcfc657f450a58345ef82721c3cb770447747bb4367f7691",
+      "sha256": "fc70e63be8078633a3d0a11ccf1d85b1677bc71b8821a020187a83412210e3e4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18414,7 +18423,13 @@
     {
       "id": "SURFACE-a4bb3744c2240160",
       "path": "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
-      "sha256": "b48a4e87ede4989d0e2a9a9473836f320c204c6b829fbfafa8132f2a047614ff",
+      "sha256": "015123d789a789ec19afef9b1712be2c21366c21435797154e4ab3e4cd36f760",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8c54b046912b7ed4",
+      "path": "tdf-hq/src/TDF/Fans/EventAffinity.hs",
+      "sha256": "f3fce134bccd5fa9f2280b74568265f3006a4861085889530027ed41b127312d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18876,7 +18891,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "0ba938a52a4073212ea97db71ba9f2433c98ff41b783fd7217f111de5681d506",
+      "sha256": "4c268db2c4709276366ea6d847976a14e8a5ac18ef33ac2eec8f241f6398ccc0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19260,13 +19275,13 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "3398c0b018599b4e7372234bab7fb94c167a063d720dcf3dcc8a988ae22a1655",
+      "sha256": "8d75f96f6ea1d34d5224b5a980c93cc86b8d4a72af53f8958eae4f8a1e17ea63",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2358d533521ebfa4",
       "path": "tdf-hq/test/ArtistSimilarityProbe.hs",
-      "sha256": "f3e99df11b3f056136bc505c3e0b4a036782150d80d0b575e2b30fc5aafe9361",
+      "sha256": "26967be7c4033616f380b00b62b78d0e62c19d43670b949826dba9ab82ab1f19",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19344,7 +19359,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "1f238734dd418c9b1a9b92d34768a7e18855fdb7b8e73826146c18e8abce33e7",
+      "sha256": "35fe108966f5e769de505f210c8bf665b70e4356342f343172ff1be9180e62b1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19578,7 +19593,7 @@
     {
       "id": "SURFACE-6a2ebecd249230c2",
       "path": "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
-      "sha256": "a055bef50c77ca2c049fb5e0b0078df4e12db04ddd921c997cee6610cc39b58e",
+      "sha256": "2935f074e81a97889487eac75a80a477b982f9b3f37404cd587ee6474a78a12b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19621,6 +19636,12 @@
       "id": "SURFACE-a443763e07064804",
       "path": "tdf-hq/test/TDF/Fans/ArtistSimilaritySpec.hs",
       "sha256": "0bd821a3b9c2d4302848346f20cb0c6f63eb65cd21b4f52a0342b3d12955fb8a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-134b8aa44cccb09a",
+      "path": "tdf-hq/test/TDF/Fans/EventAffinitySpec.hs",
+      "sha256": "f643e7321948d47018b0110e9cc4c062ea205c19796c34fa388f44ffd15e527b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19830,7 +19851,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "8709e6a1127ed0dd5e6ee2210d6fda6e5884567026464beb82bb4f7fad7c1889",
+      "sha256": "dbadaa42f3562e11877ab266db72f89c3bf773d1c0a0004ddc5b83c4677c6eea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30868,8 +30889,29 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/fans/EventAffinity.cfg",
+      "sha256": "685c488f0f7ff83b8da0898fab81c6d639b7fcba27e6928c8b877c5a8bcff4e9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/fans/EventAffinity.tla",
+      "sha256": "ae4de7deb4f1668aa6535e375fdd40dde7824406d90352bf473af88890431a27",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/fans/EventAffinityStaleListing.cfg",
+      "sha256": "7ff8f481362fe0fc62c086d67c725d12f469103d495c6adcf284bd7e929f65d2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/fans/README.md",
-      "sha256": "08c87ab02a90902cc7433b0281c31d5233708e5a630f8415b367fbd7f482679b",
+      "sha256": "b30e1298329b681454af8d7be1c585e1340b960f201300828f0179b9c237b376",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31457,7 +31499,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "8f35a95a25afa5368122229e26e98c09e0688d85a7c96ca66292b7153956e824",
+      "sha256": "5f2ed21dda601a3411011714a0070fc2827e5e5c76d69c5ea2126308b0d39f19",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -31782,6 +31824,13 @@
       "sha256": "10d3944f33287a06ddbb172f9cd8bd81469f74d6bc5c27840169f19e193f0a97",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/event-affinity.md",
+      "sha256": "b80ba210475e140632e1426270e900b9e015ba76e47553405c59cbae93865232",
+      "authority": "inferred",
+      "authorityBasis": "Status: third of the three changes that reuse the artist similarity",
       "kind": "requirement-candidate"
     },
     {
@@ -32570,7 +32619,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "3dbc41d59f629d2d9d9a43dab50388a619b5bcd4ca06d5425703a29ca78f0a5b",
+      "sha256": "33168be95f151ccd9e9ccdd7f737938941b06fd02898b6e5db5fa7576d79f483",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -48663,6 +48712,36 @@
         "INIT Init",
         "NEXT Next",
         "INVARIANTS TableRefinesReference",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/fans/EventAffinity.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Artists = {1, 2}",
+        "  Events = {1, 2}",
+        "  LiveListing = TRUE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/fans/EventAffinityStaleListing.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Artists = {1, 2}",
+        "  Events = {1, 2}",
+        "  LiveListing = FALSE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS NoHiddenEvidence",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",

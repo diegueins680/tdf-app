@@ -52,11 +52,11 @@ ROOT = Path(__file__).resolve().parents[2]
 SOURCE = 'tdf-hq/src/TDF/Fans/EventAffinity.hs'
 REGIONS = (
     ('artistAffinities\n  :: Set.Set Int64', '-- | The affinity of an event',
-     'PIN_AFFINITIES'),
+     'd5e468c484ac2d8481ac4a7eb7a6cf03e8b00a5978a210a47307c4b433ef694d'),
     ('eventAffinity :: Map.Map Int64 Double', '-- | @(event, artist party)@',
-     'PIN_ORDER'),
+     '4ab0321ccbccf86d1d4dcacd226fe6ff9f3511120133bcfe4faf967dfd502067'),
     ('loadFanArtistAffinities\n  :: MonadIO m', None,
-     'PIN_LOADER'),
+     'f7e3c347779fdad227bb8a84d8b4b7e7d90e2c545be9d95a9209325108a744ea'),
 )
 GUARDS = ('candidate-usable', 'seed-usable', 'loader-listed', 'loader-not-own',
           'loader-policy', 'position-tie-break')

@@ -2004,7 +2004,6 @@ validateEventListScope (Just rawScope) =
         "" -> Right "all"
         "all" -> Right "all"
         "subscribed" -> Right "subscribed"
-        -- EVT-AFFINITY-ORDER-001: the page of "all", reordered for the caller.
         "for_you" -> Right "for_you"
         _ -> Left err400{errBody = "scope must be one of: all, subscribed, for_you"}
 
@@ -2419,24 +2418,11 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                         else selectVisibleSocialEvents filters discoveryFilter dateOrder limit offset
                     )
                     envPool
-        -- EVT-AFFINITY-ORDER-001: the same page, permuted by the caller's
-        -- affinity to the lineups. Off, or without any affinity, it is the
-        -- date order of "all".
-        orderedRows <-
-            if scope == "for_you" && eventAffinityOrderEnabled envConfig
-                then liftIO $ flip runSqlPool envPool $ do
-                    affinities <-
-                        EventAffinity.loadFanArtistAffinities ArtistSimilarity.StoredGeneration (auPartyId user)
-                    if Map.null affinities
-                        then pure rows
-                        else do
-                            lineups <- EventAffinity.loadEventLineupParties (map (fromSqlKey . entityKey) rows)
-                            pure $
-                                EventAffinity.orderByAffinity
-                                    affinities
-                                    (\row -> Map.findWithDefault [] (fromSqlKey (entityKey row)) lineups)
-                                    rows
-                else pure rows
+        -- EVT-AFFINITY-ORDER-001: the same page, permuted for the caller.
+        orderedRows <- if scope == "for_you" && eventAffinityOrderEnabled envConfig
+            then liftIO $ runSqlPool (EventAffinity.orderEventPageForFan
+                ArtistSimilarity.StoredGeneration (auPartyId user) (fromSqlKey . entityKey) rows) envPool
+            else pure rows
         loadSocialEventListDTOs (defaultCurrency envConfig) envPool orderedRows
 
     resolveSubscribedEventIds ::

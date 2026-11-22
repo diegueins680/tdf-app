@@ -116,9 +116,9 @@ spec = describe "event order by artist affinity (EVT-AFFINITY-ORDER-001)" $ do
     it "is idempotent and does not depend on the order of a lineup" $
       property $ \c (Page page) ->
         let affinities = affinitiesOf c
-            once = orderByAffinity affinities snd page
-        in orderByAffinity affinities snd once === once
-             .&&. map fst (orderByAffinity affinities (reverse . snd) page) === map fst once
+            ordered = orderByAffinity affinities snd page
+        in orderByAffinity affinities snd ordered === ordered
+             .&&. map fst (orderByAffinity affinities (reverse . snd) page) === map fst ordered
 
     it "the affinity of an event is the largest of its lineup, and 0 for none" $
       property $ \c (lineup :: [Int64]) ->

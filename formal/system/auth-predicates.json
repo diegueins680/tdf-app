@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "3398c0b018599b4e7372234bab7fb94c167a063d720dcf3dcc8a988ae22a1655"
+    "tdf-hq/tdf-hq.cabal": "8d75f96f6ea1d34d5224b5a980c93cc86b8d4a72af53f8958eae4f8a1e17ea63"
   },
   "obligations": [
     {
@@ -928,6 +928,15 @@
       "currentSha256": "3398c0b018599b4e7372234bab7fb94c167a063d720dcf3dcc8a988ae22a1655",
       "change": "Register the new TDF.Fans.ArtistSimilarity library module and its TDF.Fans.ArtistSimilaritySpec test module on top of the fan recommendations change.",
       "semanticReview": "The Cabal file differs from the reviewed one by exactly two added lines: the TDF.Fans.ArtistSimilarity entry in the library's other-modules and the TDF.Fans.ArtistSimilaritySpec entry in the test suite's other-modules. The library module holds a pure similarity and ranking core, read-only signal queries and the statements that store one similarity generation in its own three tables; it imports only TDF.Fans.ArtistRecommendations, TDF.Models and TDF.Profiles.ArtistVisibility from this package and is imported only by TDF.Server and TDF.Cron. The test module imports only the two TDF.Fans modules. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "f3f9142ac43c087190af610e8c39540b2a590826",
+      "previousSha256": "3398c0b018599b4e7372234bab7fb94c167a063d720dcf3dcc8a988ae22a1655",
+      "currentSha256": "8d75f96f6ea1d34d5224b5a980c93cc86b8d4a72af53f8958eae4f8a1e17ea63",
+      "change": "Register the new TDF.Fans.EventAffinity library module and its TDF.Fans.EventAffinitySpec test module on top of the artist similarity change.",
+      "semanticReview": "The Cabal file differs from the reviewed one by exactly two added lines: the TDF.Fans.EventAffinity entry in the library's other-modules and the TDF.Fans.EventAffinitySpec entry in the test suite's other-modules. The library module holds a pure affinity and page-order core and two read-only loaders (event lineups, and the caller's affinities through the existing recommendation frame and similarity loaders); it imports only TDF.Fans.ArtistRecommendations, TDF.Fans.ArtistSimilarity and TDF.Models from this package and is imported only by TDF.Server.SocialEventsHandlers. The test module imports only the two TDF.Fans modules. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
       "qualification": "This review covers the conditional solver source context."
     }
   ]
