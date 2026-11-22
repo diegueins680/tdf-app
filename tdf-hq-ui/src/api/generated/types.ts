@@ -3246,6 +3246,91 @@ export interface paths {
         patch: operations["updateLabelProjectNote"];
         trace?: never;
     };
+    "/studio-submissions/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start or resume a batch using the unlisted invitation */
+        post: operations["createStudioPhotoBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/studio-submissions/upload/{position}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit one photo using the invitation as a bearer token */
+        post: operations["uploadStudioSubmissionPhoto"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/studio-submissions/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read status using one private batch receipt */
+        post: operations["getStudioPhotoBatchStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/studio-submissions/images/{id}/{size}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read an approved JPEG currently visible in the published gallery */
+        get: operations["getPublishedStudioPhoto"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/admin/studio-submissions/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manage invitations and review private photos as an administrator or webmaster */
+        post: operations["manageStudioSubmissions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/cms/content": {
         parameters: {
             query?: never;
@@ -26875,6 +26960,246 @@ export interface operations {
             };
             /** @description The note was already deactivated. */
             410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createStudioPhotoBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    token: string;
+                    /** Format: uuid */
+                    receipt: string;
+                    credit?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Batch is ready */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invitation disabled or replaced */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hourly batch quota reached */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    uploadStudioSubmissionPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                position: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: uuid */
+                    receipt: string;
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Received or matched to an existing photo in this batch */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        duplicate?: boolean;
+                    };
+                };
+            };
+            /** @description Invitation disabled or replaced */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Position conflict or storage quota reached */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description File too large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid image */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry later */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getStudioPhotoBatchStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    receipt: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Status rows for this receipt in contributor order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        position?: number;
+                        name?: string;
+                        /** @enum {string} */
+                        state?: "pending" | "accepted" | "rejected" | "expired";
+                    }[];
+                };
+            };
+        };
+    };
+    getPublishedStudioPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                size: "small" | "large";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Optimized, correctly oriented image */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                };
+            };
+            /** @description Photo is unavailable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    manageStudioSubmissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action: "link" | "replace" | "disable" | "queue" | "preview" | "review";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * Format: uuid
+                     * @description Photo to preview
+                     */
+                    id?: string;
+                    ids?: string[];
+                    /** @enum {string} */
+                    state?: "accepted" | "rejected";
+                };
+            };
+        };
+        responses: {
+            /** @description Invitation, queue, private JPEG preview, or review confirmation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        token?: string | null;
+                        /** Format: byte */
+                        jpeg?: string;
+                    } | {
+                        /** Format: uuid */
+                        id?: string;
+                        batch?: number;
+                        position?: number;
+                        name?: string;
+                        credit?: string;
+                        /** @enum {string} */
+                        state?: "pending" | "accepted";
+                    }[];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Staff role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Review decision conflicts with an existing decision */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

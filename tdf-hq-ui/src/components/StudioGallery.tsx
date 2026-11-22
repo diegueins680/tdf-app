@@ -1,3 +1,4 @@
+import { studioImageSrc } from '../api/studioSubmissions';
 import { useState } from 'react';
 import { Alert, Box, Button, ButtonBase, Dialog, DialogActions, DialogContent, DialogTitle, Pagination, Typography } from '@mui/material';
 import { useCmsContent } from '../hooks/useCmsContent';
@@ -52,7 +53,7 @@ export function StudioGalleryPhotos({ photos }: { photos: StudioPhoto[] }) {
                 {failedThumbnails.has(photo.id) ? (
                   <Typography sx={{ p: 2 }}>Foto no disponible. Abre para reintentar.</Typography>
                 ) : (
-                  <Box component="img" src={photo.thumbnailUrl?.length ? photo.thumbnailUrl : photo.imageUrl} alt={photo.alt} width={640} height={480} loading="lazy" decoding="async" referrerPolicy="no-referrer"
+                  <Box component="img" src={studioImageSrc(photo.thumbnailUrl?.length ? photo.thumbnailUrl : photo.imageUrl)} alt={photo.alt} width={640} height={480} loading="lazy" decoding="async" referrerPolicy="no-referrer"
                     onError={() => setFailedThumbnails(previous => new Set(previous).add(photo.id))}
                     sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                 )}
@@ -98,7 +99,7 @@ export function StudioGalleryPhotos({ photos }: { photos: StudioPhoto[] }) {
             ) : (
               <Box sx={{ position: 'relative', height: 'min(70vh, 800px)', bgcolor: '#111b24' }}>
                 {loadingPreview && <Typography role="status" sx={{ position: 'absolute', top: '45%', width: '100%', textAlign: 'center', color: '#f8fafc' }}>Cargando foto…</Typography>}
-                <Box component="img" key={`${selected.id}-${attempt}`} src={`${selected.imageUrl}${attempt ? `${selected.imageUrl.includes('?') ? '&' : '?'}retry=${attempt}` : ''}`} alt={selected.alt}
+                <Box component="img" key={`${selected.id}-${attempt}`} src={`${studioImageSrc(selected.imageUrl)}${attempt ? `${selected.imageUrl.includes('?') ? '&' : '?'}retry=${attempt}` : ''}`} alt={selected.alt}
                   decoding="async" referrerPolicy="no-referrer" onLoad={() => setLoadingPreview(false)} onError={() => setFailedPreview(true)}
                   sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain' }} />
               </Box>

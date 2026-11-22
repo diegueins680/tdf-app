@@ -105,7 +105,16 @@ def main():
     entry(register, "GET", "/version")["boundary"] = "public-static-files"
     expect_rejected("typed route under raw boundary", SURFACE, register, "raw-capable boundary")
 
-    print("Public route admission controls passed (1 positive, 14 negative)")
+    register = copy.deepcopy(REGISTER)
+    del entry(register, "POST", "/studio-submissions/status")["field"]
+    expect_rejected("missing receipt field", SURFACE, register, "requires a named field")
+
+    surface = copy.deepcopy(SURFACE)
+    status = next(r for r in surface["operations"] if r["path"] == "/studio-submissions/status")
+    status["bodies"] = []
+    expect_rejected("receipt body removed", surface, REGISTER, "requires a named field")
+
+    print("Public route admission controls passed (1 positive, 16 negative)")
     return 0
 
 

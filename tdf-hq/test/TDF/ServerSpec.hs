@@ -4632,7 +4632,7 @@ spec = describe "TDF.Server helpers" $ do
                     , CMS.cmsContentPublishedAt = Nothing
                     }
             targetDraftId <- runSqlPool (insert cmsContent) pool
-            let _listContent :<|> _createContent :<|> publishContent :<|> _deleteContent =
+            let (_listContent :<|> _createContent :<|> publishContent :<|> _deleteContent) :<|> _studioAdmin =
                     cmsAdminServer (mkUser [Webmaster])
                 env =
                     Env
@@ -4656,7 +4656,7 @@ spec = describe "TDF.Server helpers" $ do
         it "returns 404 for valid ids that do not map to CMS content rows" $ do
             pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
             runSqlPool (runMigration CMS.migrateCMS) pool
-            let _listContent :<|> _createContent :<|> _publishContent :<|> deleteContent =
+            let (_listContent :<|> _createContent :<|> _publishContent :<|> deleteContent) :<|> _studioAdmin =
                     cmsAdminServer (mkUser [Webmaster])
                 env =
                     Env

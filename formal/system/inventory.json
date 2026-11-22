@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "1c374cb54cc0daf9ddc71319c3daa9cf8d1a3dd1",
+  "mobileRevision": "3b9002428d294f99e26aa414d3fc88d00ed3a7ad",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -998,6 +998,7 @@
       "tdf-hq-ui/src/api/socialV2.test.ts",
       "tdf-hq-ui/src/api/socialV2.ts",
       "tdf-hq-ui/src/api/studioAudit.test.ts",
+      "tdf-hq-ui/src/api/studioSubmissions.ts",
       "tdf-hq-ui/src/api/trials.ts",
       "tdf-hq-ui/src/api/types.ts",
       "tdf-hq-ui/src/api/uploadFailure.test.ts",
@@ -1099,6 +1100,8 @@
       "tdf-hq-ui/src/components/StudioGallery.tsx",
       "tdf-hq-ui/src/components/StudioGalleryEditor.tsx",
       "tdf-hq-ui/src/components/StudioGalleryManagement.test.tsx",
+      "tdf-hq-ui/src/components/StudioSubmissionReview.test.tsx",
+      "tdf-hq-ui/src/components/StudioSubmissionReview.tsx",
       "tdf-hq-ui/src/components/TicketCredentialQR.tsx",
       "tdf-hq-ui/src/components/TicketQRDisplay.tsx",
       "tdf-hq-ui/src/components/TicketTransferDialog.tsx",
@@ -1558,6 +1561,7 @@
       "tdf-hq-ui/src/pages/SocialInboxPage.tsx",
       "tdf-hq-ui/src/pages/SocialPage.tsx",
       "tdf-hq-ui/src/pages/StudentCreationDialogs.test.tsx",
+      "tdf-hq-ui/src/pages/StudioSubmissionPage.tsx",
       "tdf-hq-ui/src/pages/SystemPage.tsx",
       "tdf-hq-ui/src/pages/SystemStatusPage.tsx",
       "tdf-hq-ui/src/pages/TdfDomoCampaignPage.tsx",
@@ -2593,6 +2597,7 @@
       "tdf-hq/src/TDF/Social/Session.hs",
       "tdf-hq/src/TDF/SocialEventLifecycle.hs",
       "tdf-hq/src/TDF/Studio/Gallery.hs",
+      "tdf-hq/src/TDF/Studio/Submissions.hs",
       "tdf-hq/src/TDF/Ticketing/Admission.hs",
       "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
       "tdf-hq/src/TDF/Ticketing/Inventory.hs",
@@ -2614,6 +2619,8 @@
       "tdf-hq/src/TDF/WhatsApp/Transport.hs",
       "tdf-hq/src/TDF/WhatsApp/Types.hs",
       "tdf-hq/stack.yaml",
+      "tdf-hq/studio/submissions.py",
+      "tdf-hq/studio/test_submissions.py",
       "tdf-hq/tdf-hq.cabal",
       "tdf-hq/test/EventOperationsBoundaryMain.hs",
       "tdf-hq/test/EventOperationsHttpMain.hs",
@@ -3258,7 +3265,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "7881225540928b2134b6aaf82a3f7d77570dd99b6ca1e36c69678065ee38f086",
+      "sha256": "7913503b17cb314d2e04ebf33cdf0f57bf450561dbb6625845d7ff7d7626153d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4866,7 +4873,7 @@
     {
       "id": "SURFACE-4c692dca29529ca7",
       "path": "scripts/check-public-routes.py",
-      "sha256": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
+      "sha256": "77ebcbceb033e561ed87bd203759f4a88955ee85a0caa2fe31cf6e59e442e296",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6966,7 +6973,7 @@
     {
       "id": "SURFACE-e6df847c7de6b4ac",
       "path": "scripts/test-public-routes.py",
-      "sha256": "fc959608bfb70097b378625bbc914645db7f87237fa7df536b851a967607f4fb",
+      "sha256": "a94898714b86aac070d02ec1f94e070563088261652f1c2c9faf435885a03eae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8616,7 +8623,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "876ecab7412f5a01a1ccf6451496f10277fc492d2dafb8f9c5239577495f3ea7",
+      "sha256": "05c8e5d14b610192a8f95c953a050cef253e5be796faa52aeb25d146870a2a32",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9043,6 +9050,12 @@
       "id": "SURFACE-4db04fec7552683c",
       "path": "tdf-hq-ui/src/api/studioAudit.test.ts",
       "sha256": "b951cdcf1f87ed21340a473f56c6f52d5375a3160d913372fc350c3c1cc09641",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8079ce8f717c5a7a",
+      "path": "tdf-hq-ui/src/api/studioSubmissions.ts",
+      "sha256": "67ca20c7574a2c0b901689d58b4ff45391eebd1202e3ce65a5f96d358441667d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9636,19 +9649,31 @@
     {
       "id": "SURFACE-cf86306debf08604",
       "path": "tdf-hq-ui/src/components/StudioGallery.tsx",
-      "sha256": "e32e4567ed798f570bc040ef189aa9dff8d7dd03e064195af7b060de82a8fd26",
+      "sha256": "a78c9a163b7d2c65d4c4a64d8b17e5cc57b949b6f7fb0ddbd6a9996e72dfef69",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b9a81b0af6c907f7",
       "path": "tdf-hq-ui/src/components/StudioGalleryEditor.tsx",
-      "sha256": "cee4736a1bc141d0dc7b3aa8ab20703a0590b3e9904ab7057c8fac4eb4fe75d3",
+      "sha256": "1b42e335d4d75a7ebedc22b9ae164e83baa2134c4648c22757a723618e25f731",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3f41bba71c906727",
       "path": "tdf-hq-ui/src/components/StudioGalleryManagement.test.tsx",
       "sha256": "ecc2a2d6b44349447a7b2d59a7d5bf6637b7bea4186d57156934b12598188ce0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5fbafc176ae2a4ce",
+      "path": "tdf-hq-ui/src/components/StudioSubmissionReview.test.tsx",
+      "sha256": "2c6e97fdaf5b8fdce110450df5a48d3bceac6d867bee7bb4c38cee746044c0c1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e386d51a88ad440a",
+      "path": "tdf-hq-ui/src/components/StudioSubmissionReview.tsx",
+      "sha256": "2941bffcb86a89017b68d7b444e952f4a6d00ecb920631d1baa5896bba2ca0b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11028,7 +11053,7 @@
     {
       "id": "SURFACE-dfd1359e6fe03cbc",
       "path": "tdf-hq-ui/src/main.tsx",
-      "sha256": "6d158f404416b20333c7b4780127978e21c8eeb3ea66ae45b0169c2db3fc14fa",
+      "sha256": "720a2ea2dc0badc4eb575b064a889656385e4b1b2d7d644ced1cd1bf581213d7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12406,6 +12431,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-55c06d3abb7f9866",
+      "path": "tdf-hq-ui/src/pages/StudioSubmissionPage.tsx",
+      "sha256": "5ee060aea4cec9a71d59d2875a3862bf024dd9e1ea21b9c20524fa4c5ffebc8a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-0b8cce65eccd05df",
       "path": "tdf-hq-ui/src/pages/SystemPage.tsx",
       "sha256": "926df45c3bea19eee4643d50d98286182da8a72547c534bbfdcbc1dbf03cccd9",
@@ -13686,7 +13717,7 @@
     {
       "id": "SURFACE-2bcac04e555d45b3",
       "path": "tdf-hq-ui/src/utils/studioGallery.ts",
-      "sha256": "bb811f20ee26490604c6db8c11e88a220d07e4b5d334e1d2e31e901acdee13b1",
+      "sha256": "c179f4996371393c527081560cc3952157a9858853cecf364933cc3b7a1f6d4c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13818,7 +13849,7 @@
     {
       "id": "SURFACE-349b3c6baf0c525b",
       "path": "tdf-hq/Dockerfile",
-      "sha256": "505fa666dbdcc1247d871369bc84557d79dc0fca947897d6ab7f3d4aa807af5e",
+      "sha256": "4d1b744ac30b8a7562e81de681cc704d42db7118a8af37e53d81af5eabceff7f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13830,7 +13861,7 @@
     {
       "id": "SURFACE-355fc91289eee809",
       "path": "tdf-hq/Dockerfile.runtime",
-      "sha256": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
+      "sha256": "46500a099931a295873edb4b77b8016e9dff5be44dcd7265901cc73ea521c4c5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13944,7 +13975,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "aa81a26a74007e75960cbf4c6b67b6c8f37d4aa6e6fe63364fb41541fc8484e9",
+      "sha256": "c147f2367c3c0b1069396b3ca74a10282376f96346ce919aa6b588280f4cee85",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14034,7 +14065,7 @@
     {
       "id": "SURFACE-5b0f4c12394c077d",
       "path": "tdf-hq/production-entrypoint.sh",
-      "sha256": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
+      "sha256": "156d3ce64ed8ac3d912c2ed379acf95f482aba26b5f23f44d5c141f884b74c20",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17016,7 +17047,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "ef1ed6b71b5bc4a490c9074808094513c7c6396dbefd58606ae30f954d59ea4e",
+      "sha256": "68887a3d362100108d58611dd9bc84aece874c56c94b14c2859d3483ea20509f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18180,7 +18211,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "11b9d98b6e779a7702073d78de3c7815faaca48b2e414e209581089669c4573b",
+      "sha256": "f81e255bebc9d6a1ca9ad5cc38933c89b1013e6b416e17068cd982702b3ac9a8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18600,7 +18631,13 @@
     {
       "id": "SURFACE-52fbce57aa68de29",
       "path": "tdf-hq/src/TDF/Studio/Gallery.hs",
-      "sha256": "cff513c8345fdbe6d45c607a7f75fc5c2292ad58e7387706baa7c342a240f209",
+      "sha256": "0c48d868e0a256009d2f9297f8d3e517b792ca740fa6ff6c2247adce5d076526",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0e52f43d05c50a7b",
+      "path": "tdf-hq/src/TDF/Studio/Submissions.hs",
+      "sha256": "608f5804c0c63c44aec3951a7a7b190a775c4260110f200f2f63685b1737f4a9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18730,9 +18767,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-4a07821d2bfefd09",
+      "path": "tdf-hq/studio/submissions.py",
+      "sha256": "485b649326cd0f4857ab080dd10ab5262399b5ae83bcc11fff56680d279751cc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-cee901608a22fc03",
+      "path": "tdf-hq/studio/test_submissions.py",
+      "sha256": "3a1cdf78b0b66d3ce2f21248cda78d52062d86f1fca95de26f6b80dc2cfb7df9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "92f9927c95a0c23fb18134665352a190dce88bbc7dc83f16d5e05d57a940902e",
+      "sha256": "3e8c1128cd34d5968dd45312e70bf4b621aff92da0d9a49113ab05af52ea6652",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19284,7 +19333,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "19fb2c55cf3a119f5720c960bde04c3fb5826915718492dbaecba917135f0f7a",
+      "sha256": "19e13c08eec2c5a218a05373c3b47a209f63eaecfcecd85719d23935a42aa5c4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21282,7 +21331,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "876ecab7412f5a01a1ccf6451496f10277fc492d2dafb8f9c5239577495f3ea7",
+      "sha256": "05c8e5d14b610192a8f95c953a050cef253e5be796faa52aeb25d146870a2a32",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31828,7 +31877,7 @@
     },
     {
       "path": "formal/system/public-route-admission.md",
-      "sha256": "f64ee2536182bd39cc80878ee92d5e7a5275e8051177127e47e398639ef8e438",
+      "sha256": "c2876a70f3205972e7a605e33252c77c9ba0b326acfa65eaaf161f906606e95f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31884,7 +31933,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "85bfa246d4f1c0b7ad7ff68caa27bb5684f54b7818946c587541e56fde84e946",
+      "sha256": "8f767fb2d67549b2f362302d49f69e4ca3222f6d1eb855afaeacb443c94d2c08",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32318,7 +32367,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "aa81a26a74007e75960cbf4c6b67b6c8f37d4aa6e6fe63364fb41541fc8484e9",
+      "sha256": "c147f2367c3c0b1069396b3ca74a10282376f96346ce919aa6b588280f4cee85",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -32396,6 +32445,13 @@
     {
       "path": "tdf-hq/docs/service_marketplace_formal_spec.md",
       "sha256": "4556c612b267c47402d374190112be743f02167bfcf0130850c3a14bc81f7761",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "tdf-hq/studio/README.md",
+      "sha256": "ea83f4345160202ead7a7ec88c8ba743759441bf17e6acdfd7dbc7fa02359430",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

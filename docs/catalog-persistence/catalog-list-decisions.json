@@ -163502,6 +163502,22 @@
           }
         }
       ]
+    },
+    {
+      "id": "f90af6e5ad030d4a2ed6",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A missing label could hide the outcome of a contributor submission.",
+      "justification": "This read-only map translates the four private intake receipt states returned by the API into Spanish. It cannot add an intake state or authorize a review transition.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/StudioSubmissionPage.tsx",
+        "line": 23
+      },
+      "reviewBatch": "studio-submissions-2026-11-19",
+      "reviewMethod": "manual-source-review"
     }
   ]
 }

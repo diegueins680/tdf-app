@@ -1,3 +1,5 @@
+export const submittedImage = /^\/studio-submissions\/images\/[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}\/(?:large|small)$/;
+
 export const STUDIO_GALLERY_SLUG = 'studio-gallery';
 export const STUDIO_GALLERY_LIMIT = 200;
 
@@ -22,6 +24,7 @@ const record = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 export function isStudioImageUrl(value: string): boolean {
+  if (submittedImage.test(value)) return true;
   if (/^\/assets\/tdf-studio\/[a-z0-9-]+-(640|1280)\.webp$/.test(value)) return true;
   try {
     const url = new URL(value);

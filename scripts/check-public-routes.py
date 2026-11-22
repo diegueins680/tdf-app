@@ -70,6 +70,14 @@ def check(surface, register):
                 errors.append(f"boundary {name} requires a declared header: {label}")
             elif header not in headers:
                 errors.append(f"declared header {header} is not an input of {label}")
+        if name == "capability-body":
+            bodies = op.get("bodies", [])
+            body = bodies[0] if len(bodies) == 1 else {}
+            modifiers = {item["name"] for item in body.get("modifiers", [])}
+            types = {item["name"] for item in body.get("contentTypes", [])}
+            if (method != "POST" or types != {"JSON"} or not {"Required", "Strict"} <= modifiers
+                    or not entry.get("field")):
+                errors.append(f"capability-body requires a named field and strict JSON POST: {label}")
         if name == "signed-provider-callback":
             header = entry.get("header")
             if header and header not in headers:
