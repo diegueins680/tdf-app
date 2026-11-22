@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "3398c0b018599b4e7372234bab7fb94c167a063d720dcf3dcc8a988ae22a1655"
+    "tdf-hq/tdf-hq.cabal": "30e6f885b75d8c9742ef970856985269b74244c807dc0ff9f364e2b11673ede0"
   },
   "obligations": [
     {
@@ -907,6 +907,51 @@
       "source": "tdf-hq/tdf-hq.cabal",
       "reviewedAgainst": "403ba9acc943b62c6d9658bfbc38e16c742f9c30",
       "previousSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "currentSha256": "3572a1afd73c7ec2b40da2d9b281cb1ea34a718217e7a30c5000af695288022f",
+      "change": "Register the new TDF.Server.PublicBookingNotifications module in the library's other-modules on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly one added line, the TDF.Server.PublicBookingNotifications module entry. That module sends the staff and customer notices for a public booking request and is imported only by the server; it adds no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "a63ab09f54ff0828e5e33c61a5152de9ba6b0922",
+      "previousSha256": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
+      "currentSha256": "745c0c005b545f1d8c6d08d568271336e5213a7ffa21d76ba45bb9f49592ce27",
+      "change": "Reconcile protected main a63ab09f5 with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "403ba9acc943b62c6d9658bfbc38e16c742f9c30",
+      "previousSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "currentSha256": "1c6c0c24e27cdfe42c0dd9c3bddc73e731a4f96400ef9bc919fb462296b37438",
+      "change": "Register the chat delivery modules (TDF.API.NotificationDelivery, TDF.Chat.Delivery, TDF.Server.NotificationDelivery) and the TDF.ChatDeliverySpec test module on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly four added lines: three library module entries for the chat notification delivery API, worker and handlers, and one test module entry. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "0e05c05762d661e18f9636d121c10c7c8e8e7389",
+      "previousSha256": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
+      "currentSha256": "69ec9047cb87c9e74bc0535d2a9be5980da68ade6f1892d3539441c980b247f3",
+      "change": "Integrate the chat delivery module registrations (TDF.API.NotificationDelivery, TDF.Chat.Delivery, TDF.Server.NotificationDelivery, TDF.ChatDeliverySpec) with current main, which now registers TDF.Server.PublicEventTicketSummary.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly the four added module lines already reviewed for the chat delivery branch. No dependency, flag, extension or source directory changes, and every other controlled source is byte-identical to current main, so the conditional authentication and recovery context is unchanged. Both parent review histories are preserved.",
+      "qualification": "Conditional source-context correspondence only. Fresh solver execution, replay, negative controls, current hosted checks and independent review remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "d722edb044b6dd57a4110198815b5c2cbe3bec6d",
+      "previousSha256": "745c0c005b545f1d8c6d08d568271336e5213a7ffa21d76ba45bb9f49592ce27",
+      "currentSha256": "0b89be834848ce754673da5f456c73092effd2b7dcf6f8558c42b08c97c171de",
+      "change": "Reconcile protected main d722edb04 with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "Conditional source-context correspondence only. Fresh solver execution, replay, negative controls, current hosted checks and independent review remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "403ba9acc943b62c6d9658bfbc38e16c742f9c30",
+      "previousSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
       "currentSha256": "ac2c532ac44d40fa90deccf0617c0d3f8663993541b17a02fa81f322352cd155",
       "change": "Register the new TDF.Fans.ArtistRecommendations library module and its TDF.Fans.ArtistRecommendationsSpec test module on current protected main.",
       "semanticReview": "The merged Cabal file differs from protected main's by exactly two added lines: the TDF.Fans.ArtistRecommendations entry in the library's other-modules and the TDF.Fans.ArtistRecommendationsSpec entry in the test suite's other-modules. The library module holds a pure ranking function and three read-only aggregate queries over fan_follow, imports only TDF.Models and TDF.Profiles.ArtistVisibility from this package, and is imported only by TDF.Server; the test module imports only that module. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
@@ -923,11 +968,20 @@
     },
     {
       "source": "tdf-hq/tdf-hq.cabal",
-      "reviewedAgainst": "682c027b223be09156f84154e422ddd58d933799",
-      "previousSha256": "b2699bc782904be3a871579f71a9928443135ca4d347d6d5769f23254d345f95",
-      "currentSha256": "3398c0b018599b4e7372234bab7fb94c167a063d720dcf3dcc8a988ae22a1655",
-      "change": "Register the new TDF.Fans.ArtistSimilarity library module and its TDF.Fans.ArtistSimilaritySpec test module on top of the fan recommendations change.",
-      "semanticReview": "The Cabal file differs from the reviewed one by exactly two added lines: the TDF.Fans.ArtistSimilarity entry in the library's other-modules and the TDF.Fans.ArtistSimilaritySpec entry in the test suite's other-modules. The library module holds a pure similarity and ranking core, read-only signal queries and the statements that store one similarity generation in its own three tables; it imports only TDF.Fans.ArtistRecommendations, TDF.Models and TDF.Profiles.ArtistVisibility from this package and is imported only by TDF.Server and TDF.Cron. The test module imports only the two TDF.Fans modules. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "reviewedAgainst": "6142acf4cb33bee1aff32daf4c283210344feb4b",
+      "previousSha256": "0b89be834848ce754673da5f456c73092effd2b7dcf6f8558c42b08c97c171de",
+      "currentSha256": "1958140b10c2e13a43dc83f4d0aaf38fc8be222bba91d3446fc29eb7252c86b4",
+      "change": "Reconcile protected main 6142acf4c with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "6cd7b2d2d4183bb6c4e3dc3fe2ab1f3b9869593c",
+      "previousSha256": "1958140b10c2e13a43dc83f4d0aaf38fc8be222bba91d3446fc29eb7252c86b4",
+      "currentSha256": "30e6f885b75d8c9742ef970856985269b74244c807dc0ff9f364e2b11673ede0",
+      "change": "Register the TDF.Fans.ArtistSimilarity library module and its TDF.Fans.ArtistSimilaritySpec test module on top of the fan recommendations branch after it took protected main 6142acf4c.",
+      "semanticReview": "The merged Cabal file differs from the base branch's reviewed file by exactly two added lines: the TDF.Fans.ArtistSimilarity entry in the library's other-modules and the TDF.Fans.ArtistSimilaritySpec entry in the test suite's other-modules. git merged them without conflicts. They add no dependency, flag or build option, and no other controlled source changes, so the conditional authentication and recovery context is unchanged.",
       "qualification": "This review covers the conditional solver source context."
     }
   ]
