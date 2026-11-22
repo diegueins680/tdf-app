@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-22T07:29:15.739Z",
+  "generatedAt": "2026-11-22T11:50:34.828Z",
   "repositoryRoot": ".",
   "filesScanned": 2852,
   "candidateCount": 1492,
@@ -56277,7 +56277,7 @@
       "domain": "academy-courses",
       "kind": "switch-cases",
       "name": "sortKey",
-      "line": 4448,
+      "line": 4478,
       "values": [
         "name",
         "createdAt",
@@ -56290,7 +56290,7 @@
       "valueCount": 7,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        4448
+        4478
       ],
       "consumerCount": 376,
       "backendConsumers": [
