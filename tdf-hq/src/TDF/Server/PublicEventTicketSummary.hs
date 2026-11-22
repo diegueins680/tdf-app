@@ -4,7 +4,9 @@
 -- something is on sale, or that the event sold out. Uses the public ticket
 -- storefront's tier rules so the card and the checkout agree.
 module TDF.Server.PublicEventTicketSummary (
+    PublicEventCardMetadata (..),
     PublicTicketCardSummary (..),
+    loadPublicEventCard,
     summarizePublicTicketTiers,
     loadPublicTicketCardSummary,
 ) where
@@ -13,12 +15,59 @@ import Control.Monad.IO.Class (liftIO)
 import Data.List (nub)
 import qualified Data.Text as T
 import Data.Time (UTCTime, getCurrentTime)
-import Database.Persist (entityVal, selectList, (==.))
-import Database.Persist.Sql (SqlPersistT)
+import Database.Persist (Entity (..), entityVal, get, selectList, (==.))
+import Database.Persist.Sql (SqlPersistT, fromSqlKey)
 
+import TDF.DTO.SocialEventsDTO (PublicUpcomingEventDTO (..))
 import TDF.Models.SocialEventsModels
+import qualified TDF.Models.SocialEventsModels as SM
 import TDF.Server.EventAdminDelegation (isTicketTierSaleOpen)
 import TDF.Server.TicketSalesWindow (ticketSalesOpenBeforeEventEnd)
+import qualified TDF.SocialEventLifecycle as EventLifecycle
+
+-- The existing strict event-metadata decoder remains the only parser. This
+-- projection receives only the four public fields it needs, avoiding a cycle
+-- with the larger event handlers and retaining their failure semantics.
+data PublicEventCardMetadata = PublicEventCardMetadata
+    { pecmIsPublic :: Maybe Bool
+    , pecmCurrency :: Maybe T.Text
+    , pecmTicketUrl :: Maybe T.Text
+    , pecmImageUrl :: Maybe T.Text
+    }
+
+loadPublicEventCard :: Maybe T.Text -> Entity SocialEvent -> Either T.Text PublicEventCardMetadata
+    -> SqlPersistT IO (Maybe PublicUpcomingEventDTO)
+loadPublicEventCard canonicalCity (Entity eventKey eventRow) metadataResult = do
+    venue <- maybe (pure Nothing) get (socialEventVenueId eventRow)
+    case (metadataResult, socialEventWorkflowStateId eventRow) of
+        (Right metadata, Just workflowStateId) -> do
+            workflow <- EventLifecycle.loadActiveSocialEventState workflowStateId
+            publicListable <- EventLifecycle.socialEventStateHasCapability workflowStateId "public-listable"
+            ticketSummary <- loadPublicTicketCardSummary eventKey eventRow
+            pure $
+                if publicListable && pecmIsPublic metadata /= Just False
+                    then do
+                        (stateCode, _, _) <- workflow
+                        Just PublicUpcomingEventDTO
+                            { publicUpcomingEventId = T.pack (show (fromSqlKey eventKey))
+                            , publicUpcomingEventTitle = socialEventTitle eventRow
+                            , publicUpcomingEventDescription = socialEventDescription eventRow
+                            , publicUpcomingEventStart = socialEventStartTime eventRow
+                            , publicUpcomingEventEnd = socialEventEndTime eventRow
+                            , publicUpcomingEventTimezone = socialEventTimezone eventRow
+                            , publicUpcomingEventVenueName = SM.venueName <$> venue
+                            , publicUpcomingEventCity = canonicalCity
+                            , publicUpcomingEventPriceCents = socialEventPriceCents eventRow
+                            , publicUpcomingEventCurrency = pecmCurrency metadata
+                            , publicUpcomingEventTicketUrl = pecmTicketUrl metadata
+                            , publicUpcomingEventImageUrl = pecmImageUrl metadata
+                            , publicUpcomingEventWorkflowStateCode = stateCode
+                            , publicUpcomingEventTicketFromPriceCents = ptcsFromPriceCents ticketSummary
+                            , publicUpcomingEventTicketCurrency = ptcsCurrency ticketSummary
+                            , publicUpcomingEventTicketsSoldOut = ptcsSoldOut ticketSummary
+                            }
+                    else Nothing
+        _ -> pure Nothing
 
 data PublicTicketCardSummary = PublicTicketCardSummary
     { ptcsFromPriceCents :: Maybe Int

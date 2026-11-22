@@ -99,7 +99,7 @@ def main():
             metadata = json.dumps({'isPublic': number != 6, 'currency': 'USD'})
             workflow = planning if number == 7 else state
             capacity = '1' if number == 5 else 'NULL'
-            sql(f"INSERT INTO social_event(id,title,start_time,end_time,price_cents,capacity,workflow_state_id,metadata) VALUES(918758000+{number},'Synthetic ticket card {number}',now()+interval '1 day',now()+interval '2 days',0,{capacity},'{workflow}','{metadata}')")
+            sql(f"INSERT INTO social_event(id,title,start_time,end_time,price_cents,capacity,workflow_state_id,metadata,event_type_id) VALUES(918758000+{number},'Synthetic ticket card {number}',now()+interval '1 day',now()+interval '2 days',0,{capacity},'{workflow}','{metadata}',(SELECT id FROM event_type WHERE code='concert'))")
         sql("INSERT INTO event_ticket_tier(event_id,code,name,price_cents,currency,quantity_total,quantity_sold,is_active) VALUES (918758001,'STANDARD','Synthetic standard',2500,'USD',10,0,true),(918758001,'CHEAP','Synthetic cheaper sold out',1500,'USD',10,10,true),(918758002,'STANDARD','Synthetic sold out',1500,'USD',10,10,true),(918758004,'USD','Synthetic USD',1500,'USD',10,0,true),(918758004,'EUR','Synthetic EUR',1200,'EUR',10,0,true),(918758005,'SOLD','Synthetic capacity consumed',1500,'USD',1,1,true),(918758005,'REMAINING','Synthetic tier stock',2000,'USD',10,0,true),(918758006,'PRIVATE','Synthetic private',900,'USD',10,0,true),(918758007,'PLANNING','Synthetic planning',900,'USD',10,0,true)")
         with socket.socket() as probe:
             probe.bind(('127.0.0.1', 0))
