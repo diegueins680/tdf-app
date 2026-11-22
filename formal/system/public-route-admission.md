@@ -12,6 +12,7 @@ is proven to match the built executable by the compiled-API gate (SYS-API-003).
 |---|---|---|
 | `public-read` | Content intended for public display | Not allowed on POST/PUT/PATCH/DELETE |
 | `public-diagnostic` | Version, health, OpenAPI, docs, health-only `/mcp` | Mutation only for `/mcp` |
+| `capability-body` | Invitation or batch receipt supplied in a JSON body | Strict required JSON POST with a named capability field |
 | `capability-header` | Follow-up access with a server-issued lookup secret | Named header is a route input |
 | `capability-path` | Random UUIDv4 bearer identifier in the path | Reviewed; sequential IDs inadmissible |
 | `signed-provider-callback` | Provider webhooks and notifications | Mutations receive the exact raw body; declared signature header present |

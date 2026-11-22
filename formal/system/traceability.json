@@ -28984,7 +28984,7 @@
     "formal/system/compiled-api-surface.json": "685786a8b9b83171317f2b64b19f86f67e10f0dbfd913fcc14286838b6e41f62",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
-    "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
+    "formal/system/public-routes.json": "d71b8fdb5c1bb0040d5f3d8a385a11df9482465323985f03816cfe30e6c2b88b",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
     "formal/system/recovery-expiry-arithmetic.json": "6ecae367dbaec994669a5672050887968fcb48d7dad6146d5598c13a0b666ce9",
@@ -29144,7 +29144,7 @@
     "scripts/check-mobile-gitlink-ancestry.sh": "869c14c28762f93d572ea7dca182e43fe1fc860f1576cc833062ae6d52a715d1",
     "scripts/check-native-resolver-lock.mjs": "04e39a1b57373db9720bf6ea9e4453668202e689289cd2997b63daa07ee15529",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
-    "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
+    "scripts/check-public-routes.py": "77ebcbceb033e561ed87bd203759f4a88955ee85a0caa2fe31cf6e59e442e296",
     "scripts/check-route-requirements.py": "75aadc52982aba64747288b42a3e3574260a3cc75dd4b97243f4974bdcb758fe",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
     "scripts/check-webhook-signatures.py": "d19a35c65b5827cba3947286778cfa0bfa18dcf230b5d3539df8cff28920e4d5",
@@ -29355,7 +29355,7 @@
     "scripts/test-public-booking-http-concurrency.sh": "6bcbfa2634384f4288b10b140c9e1aa0a518c5ffa7beb0347bac988d9b92fb60",
     "scripts/test-public-booking-tentative-idempotency-migration.sh": "38afada9051290eabf477e2558badbcf0a5c6a0207761f82a7a364db4018030b",
     "scripts/test-public-route-denial.py": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
-    "scripts/test-public-routes.py": "fc959608bfb70097b378625bbc914645db7f87237fa7df536b851a967607f4fb",
+    "scripts/test-public-routes.py": "a94898714b86aac070d02ec1f94e070563088261652f1c2c9faf435885a03eae",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
     "scripts/test-rag-index-privacy.sh": "d7086eccde1db152d9a6b0df4d7f9c806157aed92f654b489d4e677fcfb00ce9",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
@@ -53803,7 +53803,7 @@
     {
       "id": "SURFACE-4c692dca29529ca7",
       "path": "scripts/check-public-routes.py",
-      "sha256": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
+      "sha256": "77ebcbceb033e561ed87bd203759f4a88955ee85a0caa2fe31cf6e59e442e296",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58040,7 +58040,7 @@
     {
       "id": "SURFACE-e6df847c7de6b4ac",
       "path": "scripts/test-public-routes.py",
-      "sha256": "fc959608bfb70097b378625bbc914645db7f87237fa7df536b851a967607f4fb",
+      "sha256": "a94898714b86aac070d02ec1f94e070563088261652f1c2c9faf435885a03eae",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
