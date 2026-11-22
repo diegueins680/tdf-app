@@ -73,6 +73,11 @@ export interface PublicUpcomingEventDTO {
   publicUpcomingEventTicketUrl?: string | null;
   publicUpcomingEventImageUrl?: string | null;
   publicUpcomingEventWorkflowStateCode: string;
+  /** Lowest price among ticket tiers on sale and in stock now; absent when nothing is on sale. */
+  publicUpcomingEventTicketFromPriceCents?: number | null;
+  publicUpcomingEventTicketCurrency?: string | null;
+  /** True only when tiers are on sale and none has inventory left. */
+  publicUpcomingEventTicketsSoldOut?: boolean;
 }
 
 export interface SocialEventImageUploadDTO {
