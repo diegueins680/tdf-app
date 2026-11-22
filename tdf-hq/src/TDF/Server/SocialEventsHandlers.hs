@@ -248,6 +248,7 @@ import TDF.Config (AppConfig (..), EmailConfig, assetsRootDir, resolveConfigured
 import TDF.Internationalization (normalizeCurrencyCode)
 import TDF.DB (Env (..))
 import TDF.FeatureRegistry (findRegistryFeature, registryFeatureAllows)
+import TDF.Venues.Search (VenueSearchFields (..), VenueSearchQuery (..), loadVenueSearch, venueSearchSpec, venueSqlSearchEnabled, venueSqlSearchEnvironment)
 import TDF.DTO.SocialEventsDTO (
     ArtistDTO (..),
     ArtistFollowRequest (..),
@@ -3327,30 +3328,35 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         let hasTextQuery = maybe False (not . T.null) searchNeedle
             hasNearQuery = isJust nearFilter
             needsInMemoryFilter = hasTextQuery || hasNearQuery
-        seeded <-
-            if needsInMemoryFilter
-                then liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo 2000]) envPool
-                else liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo limit, OffsetBy offset]) envPool
-        let matchesText q (Entity _ v) =
-                let nameVal = T.toCaseFold (SM.venueName v)
-                    cityVal = maybe "" T.toCaseFold (SM.venueCity v)
-                    addressVal = maybe "" T.toCaseFold (SM.venueAddress v)
-                 in T.isInfixOf q nameVal || T.isInfixOf q cityVal || T.isInfixOf q addressVal
-            matchesNear (lat, lng, radiusKm) (Entity _ v) =
-                case (venueLatitude v, venueLongitude v) of
-                    (Just venueLat, Just venueLng) ->
-                        haversineDistanceKm lat lng venueLat venueLng <= radiusKm
-                    _ -> False
-            rowsFilteredByText = case searchNeedle of
-                Just q | not (T.null q) -> filter (matchesText q) seeded
-                _ -> seeded
-            rowsFiltered = case nearFilter of
-                Just nearSpec -> filter (matchesNear nearSpec) rowsFilteredByText
-                Nothing -> rowsFilteredByText
-            rows =
-                if needsInMemoryFilter
-                    then take limit (drop offset rowsFiltered)
-                    else seeded
+            searchFields (Entity _ v) =
+                VenueSearchFields
+                    { vsfName = SM.venueName v
+                    , vsfCity = SM.venueCity v
+                    , vsfAddress = SM.venueAddress v
+                    , vsfLatitude = venueLatitude v
+                    , vsfLongitude = venueLongitude v
+                    }
+            searchQuery =
+                VenueSearchQuery
+                    { vsqCity = cityFilterText
+                    , vsqNeedle = searchNeedle
+                    , vsqNear = nearFilter
+                    , vsqLimit = limit
+                    , vsqOffset = offset
+                    }
+        -- EVT-VENUE-SEARCH-001: behind social_venues.sql_search the filter runs in
+        -- PostgreSQL without a row cap. Otherwise the in-memory path is unchanged.
+        flagEnvironment <- venueSqlSearchEnvironment <$> liftIO (lookupEnv "APP_ENV")
+        sqlSearch <- liftIO $ runSqlPool (venueSqlSearchEnabled flagEnvironment) envPool
+        rows <-
+            if sqlSearch
+                then liftIO $ runSqlPool (loadVenueSearch searchQuery) envPool
+                else
+                    if needsInMemoryFilter
+                        then do
+                            seeded <- liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo 2000]) envPool
+                            pure (venueSearchSpec searchFields searchQuery{vsqCity = Nothing} seeded)
+                        else liftIO $ runSqlPool (selectList filters [Asc VenueName, LimitTo limit, OffsetBy offset]) envPool
         pure $
             map
                 ( \(Entity vid v) ->
@@ -9126,22 +9132,6 @@ validateRadius radiusKm
     | radiusKm <= 0 = Left err400{errBody = "near radiusKm must be greater than 0"}
     | radiusKm > 1000 = Left err400{errBody = "near radiusKm exceeds allowed maximum"}
     | otherwise = Right ()
-
-haversineDistanceKm :: Double -> Double -> Double -> Double -> Double
-haversineDistanceKm lat1 lng1 lat2 lng2 =
-    let earthRadiusKm = 6371
-        dLat = degToRad (lat2 - lat1)
-        dLng = degToRad (lng2 - lng1)
-        lat1Rad = degToRad lat1
-        lat2Rad = degToRad lat2
-        a =
-            (sin (dLat / 2) * sin (dLat / 2))
-                + (cos lat1Rad * cos lat2Rad * sin (dLng / 2) * sin (dLng / 2))
-        c = 2 * atan2 (sqrt a) (sqrt (1 - a))
-     in earthRadiusKm * c
-
-degToRad :: Double -> Double
-degToRad deg = deg * pi / 180
 
 parseKeyOr400 :: (ToBackendKey SqlBackend record) => T.Text -> T.Text -> AppM (Key record)
 parseKeyOr400 label raw =

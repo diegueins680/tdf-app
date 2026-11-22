@@ -287,6 +287,8 @@ library
     TDF.DDEX.ERN.V432.Convert
     TDF.DDEX.Observability
     TDF.DDEX.TestFixtures
+    TDF.Venues.Search
+    TDF.Venues.SearchFold
     TDF.Version
     TDF.WhatsApp.Client
     TDF.WhatsApp.History
@@ -411,6 +413,7 @@ test-suite tdf-hq-test
     TDF.OperationsInboundCaptureSpec
     TDF.ProviderIdentitySpec
     TDF.CredentialLifecycleSpec
+    TDF.Venues.SearchSpec
     TDF.WhatsAppConsentSpec
     TDF.LedgerPostingSpec
     TDF.MusicPublicationSpec
