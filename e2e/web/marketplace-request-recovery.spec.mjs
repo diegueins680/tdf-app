@@ -87,6 +87,11 @@ async function inspect(page) {
 }
 
 test('rental requests preserve invalid text and recover the same uncertain attempt before changes @critical @mobile-flow', async ({ page, baseURL }, info) => {
+  // This one test walks the whole form three times, with three full WCAG scans
+  // and two screenshots. On a loaded runner the WebKit phone project spends the
+  // default 30 s before the last step, at a different line each time, so give
+  // the journey a budget that matches its length. Step timeouts are unchanged.
+  test.setTimeout(90_000);
   const state = await fixture(page, baseURL);
   const form = page.getByTestId('marketplace-request-form'), submit = form.getByRole('button', { name: 'Enviar solicitud', exact: true });
   const type = form.getByRole('combobox', { name: /^Tipo de solicitud/ });
