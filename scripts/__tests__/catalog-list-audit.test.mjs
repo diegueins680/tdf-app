@@ -6558,8 +6558,10 @@ const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
   const combined = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
-  assert.equal(combined.migrations.at(-1).id, '2026-11-07_studio_gallery');
-  const actual = { ...combined, migrations: combined.migrations.slice(0, -1) };
+  // The friend suggestion entry appends after the gallery entry and is verified by its own test below.
+  assert.equal(combined.migrations.at(-1).id, '2026-11-21_social_friend_suggestions');
+  assert.equal(combined.migrations.at(-2).id, '2026-11-07_studio_gallery');
+  const actual = { ...combined, migrations: combined.migrations.slice(0, -2) };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
   assert.deepEqual(actual, main);
   assert.deepEqual(actual.migrations.slice(0, ux.migrations.length), ux.migrations);
@@ -6591,7 +6593,9 @@ test('studio gallery appends its original migration and preserves both complete 
   const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
   const before = await integrationParent(base, file);
   const original = (await integrationParent(gallery, file)).migrations.at(-1);
-  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const withSuggestions = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  assert.equal(withSuggestions.migrations.at(-1).id, '2026-11-21_social_friend_suggestions');
+  const current = { ...withSuggestions, migrations: withSuggestions.migrations.slice(0, -1) };
   assert.equal(original.id, '2026-11-07_studio_gallery');
   assert.deepEqual(current, { ...before, migrations: [...before.migrations, original] });
   const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
@@ -6603,5 +6607,28 @@ test('studio gallery appends its original migration and preserves both complete 
       const row = old[key].find(r => r.evidence?.file === file || r.name === 'migrations' || r.source?.name === 'migrations');
       if (row) assert.ok(integrationFind(currentReview, row), 'Missing reviewed migration history for ' + parent);
     }
+  }
+});
+
+test('friend suggestions append one migration to protected main and preserve its complete manifest review', async () => {
+  const file = 'scripts/production-migrations.json';
+  const base = 'a4851729d1ca6816edb3fa535e4b65b7ea5b32dd';
+  const before = await integrationParent(base, file);
+  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const added = current.migrations.at(-1);
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, added] });
+  assert.equal(current.migrations.length, 263);
+  assert.equal(new Set(current.migrations.map(row => row.id)).size, 263);
+  assert.deepEqual(Object.keys(added).sort(), ['id', 'introducedBy', 'path']);
+  assert.equal(added.id, '2026-11-21_social_friend_suggestions');
+  assert.equal(added.path, 'tdf-hq/sql/2026-11-21_social_friend_suggestions.sql');
+  const { stdout } = await integrationExec('git', ['show', added.introducedBy + ':' + added.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, added.path), 'utf8'), stdout);
+  await integrationExec('git', ['merge-base', '--is-ancestor', added.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  for (const [reviewFile, key] of integrationFiles) {
+    const currentReview = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8'));
+    const old = await integrationParent(base, reviewFile);
+    const row = old[key].find(r => r.evidence?.file === file || r.name === 'migrations' || r.source?.name === 'migrations');
+    if (row) assert.ok(integrationFind(currentReview, row), 'Missing reviewed migration history of protected main');
   }
 });

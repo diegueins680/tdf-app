@@ -15,6 +15,7 @@ import           System.Environment        (setEnv, unsetEnv)
 import           Test.Hspec
 
 import           TDF.Auth                  (AuthedUser (..))
+import           TDF.Auth.EmailVerification (recordVerifiedEmail)
 import           TDF.DB                    (Env (..))
 import           TDF.DTO                   (SuggestedFriendDTO (..))
 import           TDF.Social.SuggestionRank (ViewerSuggestions (..))
@@ -74,6 +75,11 @@ spec = describe "TDF.Social.SuggestionStore (COMMUNITY-FRIEND-SUGGESTION-001)" $
     it "reads nothing on a database that is not PostgreSQL" $ do
       pool <- runNoLoggingT (createSqlitePool ":memory:" 1)
       runSqlPool (readStoredSuggestions 1) pool `shouldReturn` Nothing
+
+  describe "password-reset email verification" $
+    it "does nothing, and does not fail, on a database without the table" $ do
+      pool <- runNoLoggingT (createSqlitePool ":memory:" 1)
+      runSqlPool (recordVerifiedEmail 1) pool `shouldReturn` ()
 
   describe "response shape" $ do
     it "keeps the previous JSON for a fallback entry" $

@@ -51,6 +51,7 @@ library
     TDF.API.FanFollowing
     TDF.Social.RelationshipWrites
     TDF.Social.RelationshipReads
+    TDF.Auth.EmailVerification
     TDF.Social.SuggestionRank
     TDF.Social.SuggestionStore
     TDF.Social.Chat

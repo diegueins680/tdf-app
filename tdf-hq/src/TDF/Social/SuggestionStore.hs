@@ -88,19 +88,21 @@ suggestionSchemaInstalledSql =
   \AND to_regclass('social_suggestion_viewer') IS NOT NULL \
   \AND to_regclass('social_suggestion_score') IS NOT NULL \
   \AND to_regclass('auth_provider_identity') IS NOT NULL \
+  \AND to_regclass('party_email_verification') IS NOT NULL \
   \AND to_regclass('social_v2_pair') IS NOT NULL \
   \AND to_regclass('social_v2_preference') IS NOT NULL \
   \AND to_regprocedure('social_v2_profile_eligible(bigint,bigint[])') IS NOT NULL"
 
 -- | The conditions an account must meet now to be a node, apart from its age:
--- a person with an active credential that a sign-in provider bound after
--- verifying its email, and whose social profile is not closed. @p@ is the party alias.
+-- a person with an active credential whose email is verified (a sign-in
+-- provider bound the credential, or the party completed a password reset), and whose social profile is not closed. @p@ is the party alias.
 liveVerifiedAccount :: Text
 liveVerifiedAccount =
   "NOT p.is_org \
   \AND EXISTS (SELECT 1 FROM user_credential u \
-  \JOIN auth_provider_identity i ON i.credential_id = u.id \
-  \WHERE u.party_id = p.id AND u.active) \
+  \WHERE u.party_id = p.id AND u.active \
+  \AND (EXISTS (SELECT 1 FROM auth_provider_identity i WHERE i.credential_id = u.id) \
+  \OR EXISTS (SELECT 1 FROM party_email_verification v WHERE v.party_id = p.id))) \
   \AND NOT EXISTS (SELECT 1 FROM social_v2_preference s \
   \WHERE s.party_id = p.id AND s.closed)"
 

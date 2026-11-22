@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """COMMUNITY-FRIEND-SUGGESTION-001: run the friend-suggestion SQL from
-tdf-hq/src/TDF/Social/SuggestionStore.hs and the migration
+tdf-hq/src/TDF/Social/SuggestionStore.hs and
+tdf-hq/src/TDF/Auth/EmailVerification.hs and the migration
 tdf-hq/sql/2026-11-21_social_friend_suggestions.sql against PostgreSQL.
 
 The statements are extracted from the Haskell source, never copied, so the test
@@ -18,6 +19,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'tdf-hq/src/TDF/Social/SuggestionStore.hs'
+VERIFICATION_SOURCE = ROOT / 'tdf-hq/src/TDF/Auth/EmailVerification.hs'
 MIGRATION = ROOT / 'tdf-hq/sql/2026-11-21_social_friend_suggestions.sql'
 ROLLBACK = ROOT / 'tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql'
 
@@ -84,13 +86,15 @@ RETURNS TABLE(profile_id bigint, ordinal bigint) LANGUAGE sql STABLE AS $$
 -- 1 viewer, 2 friend, 3 and 11 candidates, 9 blocks the viewer, 10 opted out: all old,
 -- verified, live people. 4 is two days old. 5 has no provider identity. 6 is an
 -- organisation. 7 closed its profile. 8 has an inactive credential. 12 has no credential.
+-- 13 has no provider identity either; it becomes verified by a completed password reset.
 INSERT INTO party (id, is_org, created_at) VALUES
   (1,false,'2026-01-01'),(2,false,'2026-01-01'),(3,false,'2026-01-01'),(4,false,'2026-11-19'),
   (5,false,'2026-01-01'),(6,true,'2026-01-01'),(7,false,'2026-01-01'),(8,false,'2026-01-01'),
-  (9,false,'2026-01-01'),(10,false,'2026-01-01'),(11,false,'2026-11-14'),(12,false,'2026-01-01');
+  (9,false,'2026-01-01'),(10,false,'2026-01-01'),(11,false,'2026-11-14'),(12,false,'2026-01-01'),
+  (13,false,'2026-01-01');
 INSERT INTO user_credential (id, party_id, active) VALUES
   (1,1,true),(2,2,true),(3,3,true),(4,4,true),(5,5,true),(6,6,true),(7,7,true),(8,8,false),
-  (9,9,true),(10,10,true),(11,11,true);
+  (9,9,true),(10,10,true),(11,11,true),(13,13,true);
 INSERT INTO auth_provider_identity (issuer, subject, credential_id) VALUES
   ('g','1',1),('g','2',2),('g','3',3),('g','4',4),('g','6',6),('g','7',7),('g','8',8),
   ('g','9',9),('g','10',10),('g','11',11);
@@ -102,6 +106,7 @@ INSERT INTO party_follow VALUES (1,2),(2,3),(2,11),(2,4),(4,3),(9,3),(2,2);
 
 RUN_START = "'2026-11-21 08:00:00+00'"
 EXPECTED_ELIGIBLE = [1, 2, 3, 9, 10, 11]  # 11 is exactly seven days old at the run start
+EXPECTED_ELIGIBLE_AFTER_RESET = EXPECTED_ELIGIBLE + [13]
 SUPPORT = "'{1,2,3,11}'"
 SCENARIOS = (
     # name, statements applied after the stored result, usable, served
@@ -146,13 +151,24 @@ def main():
     usable = extract('storedSuggestionsUsableSql', 2)
     served = extract('servedSuggestionsSql', 6)
     probe = f"SELECT ({installed[len('SELECT '):]})::int;\n"
+    verification = VERIFICATION_SOURCE.read_text()
+    writable = extract('emailVerificationWritableSql', 0, verification)
+    record = extract('recordVerifiedEmailSql', 1, verification)
+    writable_probe = f"SELECT ({writable[len('SELECT '):]})::int;\n"
 
     script = "\\set ON_ERROR_STOP 1\nBEGIN;\n" + FIXTURE
-    script += f"\\echo BEFORE\n{probe}"
+    script += f"\\echo BEFORE\n{probe}\\echo UNWRITABLE\n{writable_probe}"
     script += transactionless(MIGRATION) + transactionless(MIGRATION)  # idempotent
     script += f"\\echo INSTALLED\n{probe}"
     script += f"\\echo ELIGIBLE\n{bind(eligible, RUN_START, 7)} ORDER BY 1;\n"
     script += f"\\echo OPTEDOUT\n{opted_out} ORDER BY 1;\n"
+    # A completed password reset verifies party 13; repeating it and naming a party
+    # that does not exist change nothing. Rolled back so the later scenarios are unaffected.
+    script += f"SAVEPOINT reset;\n\\echo WRITABLE\n{writable_probe}"
+    script += f"{bind(record, 13)};\n{bind(record, 13)};\n{bind(record, 999)};\n"
+    script += "\\echo VERIFIED\nSELECT party_id FROM party_email_verification ORDER BY 1;\n"
+    script += f"\\echo ELIGIBLERESET\n{bind(eligible, RUN_START, 7)} ORDER BY 1;\n"
+    script += "ROLLBACK TO SAVEPOINT reset;\n"
     script += f"\\echo BLOCKS\n{blocks} ORDER BY 1, 2;\n"
     script += f"\\echo FOLLOWS\n{follows} ORDER BY 1, 2;\n"
     # What a run stores for viewer 1: support {1,2,3,11}, candidates 3 then 11.
@@ -189,7 +205,9 @@ def main():
     expected = {
         'BEFORE': [(0,)], 'INSTALLED': [(1,)], 'ROLLEDBACK': [(0,)],
         'ELIGIBLE': [(party,) for party in EXPECTED_ELIGIBLE],
-        'OPTEDOUT': [(10,)], 'BLOCKS': [(1, 9)],
+        'OPTEDOUT': [(10,)], 'BLOCKS': [(1, 9)], 'UNWRITABLE': [(0,)], 'WRITABLE': [(1,)],
+        'VERIFIED': [(13,)],
+        'ELIGIBLERESET': [(party,) for party in sorted(EXPECTED_ELIGIBLE_AFTER_RESET)],
         'FOLLOWS': [(1, 2), (2, 2), (2, 3), (2, 4), (2, 11), (4, 3), (9, 3)],
         'RUN': [(1,)], 'RUN2': [(2,)], 'NOROW': [(0,)], 'LIMIT': [(3,)], 'LEFT': [(1, 0, 0)],
     }
@@ -208,7 +226,7 @@ def main():
         raise SystemExit('Friend suggestion SQL differs (expected, observed): '
                          + '; '.join(f'{key} [{names.get(key, "")}]: {value}' for key, value in differing.items()))
     print(f'Friend suggestion SQL checked: migration applied twice and rolled back, '
-          f'{len(EXPECTED_ELIGIBLE)} of 12 accounts eligible, {len(SCENARIOS)} read scenarios')
+          f'{len(EXPECTED_ELIGIBLE)} of 13 accounts eligible (7 after a password reset), {len(SCENARIOS)} read scenarios')
 
 
 if __name__ == '__main__':

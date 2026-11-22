@@ -6,16 +6,17 @@ personalized PageRank over `party_follow` computed by a nightly run, instead of 
 second-degree count. Directory ranking is not touched.
 
 The owner approved the rule, the constants and the nine decisions of the proposal on
-2026-11-21. Four points differ from the approved text; see "Departures
-from the approved proposal".
+2026-11-21. Two points differ from the approved text; see "Departures from the
+approved proposal".
 
 ## Rule
 
 For a viewer `v`:
 
 - **Eligible accounts `E`.** A party is in the graph only if it is a person
-  (`NOT is_org`), has an active credential that a sign-in provider bound after verifying
-  its email (`auth_provider_identity`), has not closed its social profile
+  (`NOT is_org`), has an active credential and a verified email (a sign-in provider
+  bound the credential after verifying it, `auth_provider_identity`, or the party
+  completed a password reset sent to it, `party_email_verification`), has not closed its social profile
   (`social_v2_preference.closed`), and was created at least `MIN_AGE = 7 days` before
   the run started (`party.created_at`).
 - **Viewer graph `G_v`.** Nodes: `E` minus every party with a block towards or from `v`
@@ -45,7 +46,8 @@ The route returns `fallback(v)`, with the same JSON as before, when any of these
 
 1. the flag is off;
 2. the viewer opted out of personalization (`social_v2_preference.personalized = false`);
-3. the score tables, `auth_provider_identity` or the social-v2 policy are not installed,
+3. the score tables, `auth_provider_identity`, `party_email_verification` or the
+   social-v2 policy are not installed,
    or the database is not PostgreSQL;
 4. no stored result exists for the viewer, or its run completed more than
    `MAX_AGE = 48 h` ago;
@@ -81,8 +83,8 @@ while the flag is off, response = `fallback(v)`.
   one transaction. Readers see the previous run or the new one, never a mixture. A
   failed run leaves the previous run in place; rule 4 retires it after 48 h.
 - Opted-out viewers are not computed, so the replacement removes their rows.
-- Tables (`tdf-hq/sql/2026-11-21_social_friend_suggestions.sql`, not yet in the
-  production manifest):
+- Tables (`tdf-hq/sql/2026-11-21_social_friend_suggestions.sql`, registered in
+  `scripts/production-migrations.json`):
   `social_suggestion_run`, `social_suggestion_viewer` (run and support per viewer) and
   `social_suggestion_score` (candidate, position, score). All three are derived data
   and are removed with the party they refer to.
@@ -110,7 +112,7 @@ reals, bounded graphs, one step), **bounded model** (Alloy, graph structure only
 | Property | Evidence | What it does not cover |
 |---|---|---|
 | Excluded parties never carry score: a non-node holds no score, and follow rows touching a non-node do not change a step | Proved by Z3 for every viewer, node set and follow relation up to 4 accounts (`scripts/verify-friend-suggestion-pagerank.py`), with a control that admits follows into excluded accounts. Bounded model in Alloy up to 5 accounts (`formal/event-operations/FriendSuggestionGraph.als`) for the graph structure, blocks included. Tested by QuickCheck on `TDF.Social.SuggestionRank` | Larger graphs; the Haskell and SQL text (the Z3 step is a hand translation of `walkStep`) |
-| Excluded parties never appear: which accounts are eligible, and which stored candidates are served | Tested on PostgreSQL with the statements extracted from the Haskell source (`scripts/test-friend-suggestions-sql.py`): 12 accounts, 15 read scenarios | Not proved. `social_v2_profile_eligible` is a stand-in with the migrated signature |
+| Excluded parties never appear: which accounts are eligible, and which stored candidates are served | Tested on PostgreSQL with the statements extracted from the Haskell source (`scripts/test-friend-suggestions-sql.py`): 13 accounts, 15 read scenarios and the password-reset write | Not proved. `social_v2_profile_eligible` is a stand-in with the migrated signature |
 | `p_t` is a probability distribution for every `t`, dead ends included | Proved by Z3 as a one-step inductive invariant up to 4 accounts, with a control that drops the dead-end return. Tested by QuickCheck: exact over `Rational` after every step; over `Double` within `1e-9` after 100 steps | The `Double` tolerance is tested, not proved. Induction over `t` is the hand argument above |
 | Convergence: `norm1(p_T - p*) <= 2e-7` | Hand proof above. Proved by Z3: the one-step contraction (symbolic up to 3 accounts; for 4 accounts every one of the 4096 follow relations with the viewer fixed and every account a node), and `2 * 0.85^100 < 2e-7`; a control with factor 0.84 is refuted. Tested by QuickCheck over `Rational` | General size and the induction rest on the hand proof. `Double` rounding is outside the proof |
 | Fake follows: accounts that are too new or unverified cannot change any viewer's graph, whatever they follow and whoever is made to follow them | Bounded model in Alloy up to 5 accounts; controls that remove the age filter or the email filter each produce a counterexample. Tested by QuickCheck | Bounded. Says nothing about accounts that pass both filters. "Same graph gives same order" is the function signature, not a model result |
@@ -118,26 +120,24 @@ reals, bounded graphs, one step), **bounded model** (Alloy, graph structure only
 
 ## Departures from the approved proposal
 
-1. **Verified email is narrower.** The approved text added a table written on verified
-   Google or Apple sign-in and on a completed password reset. The implementation reads
-   the existing `auth_provider_identity` binding instead and adds no table and no write
-   to the authentication code. A password-only account therefore never counts as
-   verified, is not in any graph, and receives the fallback. Counting completed
-   password resets needs a change to `TDF.ServerAuth`.
-2. **The migration is not registered for production.** The SQL and its rollback are in
-   the repository and are exercised by the PostgreSQL test, but
-   `scripts/production-migrations.json` is unchanged. Adding an entry requires the
-   manifest's successor review in three catalog registries and in
-   `scripts/__tests__/catalog-list-audit.test.mjs`, which pins the manifest to
-   protected main; that review was left to the owner. Until the tables exist the route
-   returns the fallback (rule 3) even with the flag on, and the run would fail and log.
-3. **No feature-registry entry.** The gate is the environment variable only. A registry
+1. **No feature-registry entry.** The gate is the environment variable only. A registry
    entry would change the generated Mobile registry, and the behaviour has no route or
    screen of its own.
-4. **The response field is optional and absent on fallback entries**, so the fallback
+2. **The response field is optional and absent on fallback entries**, so the fallback
    JSON is byte-for-byte what it was. `/social/suggestions` was never described in
    `tdf-hq/docs/openapi/api.yaml` and still is not, so the OpenAPI contract, the
    generated clients and the Mobile pin are unchanged.
+
+## Verified email
+
+`party_email_verification` holds one row per party that completed a password reset.
+`TDF.ServerAuth.runPasswordResetConfirm` writes it through
+`TDF.Auth.EmailVerification.recordVerifiedEmail`, in the reset's own transaction, after
+the token is consumed. The write is skipped outside PostgreSQL, before the table exists
+and when the role may not insert, so it cannot fail a password reset. It happens whether
+or not the flag is on. Google and Apple sign-ins already leave an
+`auth_provider_identity` row and need no write. Neither fact is withdrawn when the party
+later changes its address.
 
 ## Open for the owner
 
@@ -154,7 +154,7 @@ reals, bounded graphs, one step), **bounded model** (Alloy, graph structure only
 - Opted-out accounts stay in other viewers' graphs; opting out governs what they
   receive.
 - The filters stop only accounts that fail them. An account that waits seven days and
-  signs in with Google is a normal node; it gains score only if a node follows it.
+  signs in with Google, or resets its password, is a normal node; it gains score only if a node follows it.
   Whether the legacy "add friend" writer still lets one side create both directions was
   not checked.
 - Whether social-v2 is activated in production, and the size of `party_follow`, were
