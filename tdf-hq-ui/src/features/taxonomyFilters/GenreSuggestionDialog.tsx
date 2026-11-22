@@ -36,7 +36,7 @@ interface DialogProps {
 
 export function GenreSuggestionDialog({ open, onClose, onGenreReady }: DialogProps) {
   const { t, i18n } = useTranslation();
-  const language = resolveTaxonomyLanguage(i18n.resolvedLanguage ?? i18n.language);
+  const language = resolveTaxonomyLanguage(i18n?.resolvedLanguage ?? i18n?.language);
   const queryClient = useQueryClient();
   const options = useTaxonomyFilterOptions();
   const [nameEs, setNameEs] = useState('');
@@ -164,7 +164,7 @@ export function GenreSuggestionDialog({ open, onClose, onGenreReady }: DialogPro
 /** The artist's suggestions still under review (shown as pending) and recent rejections. */
 export function PendingGenreSuggestions({ enabled }: { enabled: boolean }) {
   const { t, i18n } = useTranslation();
-  const language = resolveTaxonomyLanguage(i18n.resolvedLanguage ?? i18n.language);
+  const language = resolveTaxonomyLanguage(i18n?.resolvedLanguage ?? i18n?.language);
   const mine = useQuery<GenreSuggestion[]>({
     queryKey: MY_GENRE_SUGGESTIONS_QUERY_KEY,
     queryFn: () => Taxonomy.myGenreSuggestions(),

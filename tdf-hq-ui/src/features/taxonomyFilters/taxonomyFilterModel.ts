@@ -34,6 +34,8 @@ export const TAXONOMY_LOCAL_SCOPE_VALUE = 'local';
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const MAX_VALUES_PER_DIMENSION = 50;
 
+const asArray = <T,>(value: readonly T[] | null | undefined): readonly T[] => (Array.isArray(value) ? (value as readonly T[]) : []);
+
 export const emptyTaxonomySelection = (): TaxonomySelection => ({ countryIds: [], regionIds: [], cityIds: [], genreIds: [] });
 
 const cleanIds = (values: readonly unknown[]): string[] => {
@@ -137,7 +139,7 @@ export interface TaxonomyOption {
 
 const facetCounts = (facets: TaxonomyFacets | null | undefined, key: keyof TaxonomyFacets) => {
   const counts = new Map<string, number>();
-  (facets?.[key] ?? []).forEach((item) => counts.set(item.id, item.count));
+  asArray(facets?.[key]).forEach((item) => counts.set(item.id, item.count));
   return counts;
 };
 
@@ -145,12 +147,13 @@ const collator = (language: TaxonomyLanguage) => new Intl.Collator(language, { s
 
 /** Genres as a depth-first tree: each parent is followed by its subgenres. */
 export const genreOptions = (
-  genres: readonly TaxonomyGenreOption[],
+  genreInput: readonly TaxonomyGenreOption[],
   language: TaxonomyLanguage,
   facets?: TaxonomyFacets | null,
 ): TaxonomyOption[] => {
   const counts = facetCounts(facets, 'genres');
   const compare = collator(language);
+  const genres = asArray(genreInput);
   const known = new Set(genres.map((genre) => genre.id));
   const children = new Map<string | null, TaxonomyGenreOption[]>();
   genres.forEach((genre) => {
@@ -182,19 +185,23 @@ export const locationOptions = (
   language: TaxonomyLanguage,
   facets?: TaxonomyFacets | null,
 ) => {
+  // A malformed or partial options payload degrades to empty lists.
+  const countriesIn = asArray(options.countries);
+  const regionsIn = asArray(options.regions);
+  const citiesIn = asArray(options.cities);
   const compare = collator(language);
   const countryCounts = facetCounts(facets, 'countries');
   const regionCounts = facetCounts(facets, 'regions');
   const cityCounts = facetCounts(facets, 'cities');
-  const countryNames = new Map(options.countries.map((country) => [country.id, taxonomyName(country, language)]));
-  const regionNames = new Map(options.regions.map((region) => [region.id, taxonomyName(region, language)]));
+  const countryNames = new Map(countriesIn.map((country) => [country.id, taxonomyName(country, language)]));
+  const regionNames = new Map(regionsIn.map((region) => [region.id, taxonomyName(region, language)]));
   const withCount = (counts: Map<string, number>, id: string) => (facets ? counts.get(id) ?? 0 : undefined);
   const byLabel = (a: TaxonomyOption, b: TaxonomyOption) => compare.compare(a.label, b.label);
   // Countries with matching items first, then the rest alphabetically.
-  const countries = options.countries
+  const countries = countriesIn
     .map((country) => ({ id: country.id, label: taxonomyName(country, language), depth: 0, count: withCount(countryCounts, country.id) }))
     .sort((a, b) => (b.count ?? 0) - (a.count ?? 0) || byLabel(a, b));
-  const regions = options.regions
+  const regions = regionsIn
     .filter((region) => selection.countryIds.length === 0 || selection.countryIds.includes(region.countryId) || selection.regionIds.includes(region.id))
     .map((region) => ({ id: region.id, label: taxonomyName(region, language), depth: 0, context: countryNames.get(region.countryId), count: withCount(regionCounts, region.id) }))
     .sort(byLabel);
@@ -202,7 +209,7 @@ export const locationOptions = (
     selection.cityIds.includes(city.id)
     || ((selection.countryIds.length === 0 || selection.countryIds.includes(city.countryId))
       && (selection.regionIds.length === 0 || (city.regionId != null && selection.regionIds.includes(city.regionId))));
-  const cities = options.cities
+  const cities = citiesIn
     .filter(cityInScope)
     .map((city) => ({
       id: city.id,
@@ -229,10 +236,10 @@ export const taxonomyChips = (
   unknownLabel: string,
 ): TaxonomyChip[] => {
   const lookup: Record<TaxonomyDimension, Map<string, string>> = {
-    countryIds: new Map((options?.countries ?? []).map((item) => [item.id, taxonomyName(item, language)])),
-    regionIds: new Map((options?.regions ?? []).map((item) => [item.id, taxonomyName(item, language)])),
-    cityIds: new Map((options?.cities ?? []).map((item) => [item.id, taxonomyName(item, language)])),
-    genreIds: new Map((options?.genres ?? []).map((item) => [item.id, taxonomyName(item, language)])),
+    countryIds: new Map(asArray(options?.countries).map((item) => [item.id, taxonomyName(item, language)])),
+    regionIds: new Map(asArray(options?.regions).map((item) => [item.id, taxonomyName(item, language)])),
+    cityIds: new Map(asArray(options?.cities).map((item) => [item.id, taxonomyName(item, language)])),
+    genreIds: new Map(asArray(options?.genres).map((item) => [item.id, taxonomyName(item, language)])),
   };
   return TAXONOMY_DIMENSIONS.flatMap((dimension) =>
     selection[dimension].map((id) => ({ dimension, id, label: lookup[dimension].get(id) ?? unknownLabel })));

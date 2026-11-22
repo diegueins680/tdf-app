@@ -58,7 +58,7 @@ export default function CommunityDiscovery() {
     }, { replace: true });
   }, [params, setParams]);
   const { i18n } = useTranslation();
-  const language = resolveTaxonomyLanguage(i18n.resolvedLanguage ?? i18n.language);
+  const language = resolveTaxonomyLanguage(i18n?.resolvedLanguage ?? i18n?.language);
   const taxonomyOptions = useTaxonomyFilterOptions();
   useProfileCityDefault(taxonomyOptions.data);
   const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true });

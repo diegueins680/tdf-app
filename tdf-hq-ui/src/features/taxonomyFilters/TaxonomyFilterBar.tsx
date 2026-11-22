@@ -62,7 +62,7 @@ export default function TaxonomyFilterBar({
   idPrefix,
 }: TaxonomyFilterBarProps) {
   const { t, i18n } = useTranslation();
-  const language = resolveTaxonomyLanguage(i18n.resolvedLanguage ?? i18n.language);
+  const language = resolveTaxonomyLanguage(i18n?.resolvedLanguage ?? i18n?.language);
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [onlyHere, setOnlyHere] = useState(false);
   const [nearMeMessage, setNearMeMessage] = useState<string | null>(null);
@@ -180,7 +180,7 @@ export default function TaxonomyFilterBar({
         </Alert>
       )}
 
-      <Collapse in={expanded} id={panelId}>
+      <Collapse in={expanded} id={panelId} unmountOnExit>
         <Stack spacing={1.5} sx={{ mt: 1.5 }}>
           {optionsError && <Alert severity="warning">{t('taxonomyFilters.loadError')}</Alert>}
           <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: `repeat(${dimensions.length}, minmax(0, 1fr))` } }}>

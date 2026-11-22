@@ -38,7 +38,7 @@ const STATUS_LABEL_KEYS: Record<GenreSuggestionQueueStatus, string> = {
 
 function SuggestionCard({ suggestion, genres }: { suggestion: GenreSuggestion; genres: TaxonomyOption[] }) {
   const { t, i18n } = useTranslation();
-  const language = resolveTaxonomyLanguage(i18n.resolvedLanguage ?? i18n.language);
+  const language = resolveTaxonomyLanguage(i18n?.resolvedLanguage ?? i18n?.language);
   const queryClient = useQueryClient();
   const [nameEs, setNameEs] = useState(suggestion.nameEs);
   const [nameEn, setNameEn] = useState(suggestion.nameEn);
@@ -147,7 +147,7 @@ function SuggestionCard({ suggestion, genres }: { suggestion: GenreSuggestion; g
 export default function GenreSuggestionsAdminPage() {
   const { t, i18n } = useTranslation();
   useDocumentTitle(t('taxonomyFilters.admin.title'));
-  const language = resolveTaxonomyLanguage(i18n.resolvedLanguage ?? i18n.language);
+  const language = resolveTaxonomyLanguage(i18n?.resolvedLanguage ?? i18n?.language);
   const [status, setStatus] = useState<GenreSuggestionQueueStatus>('pending');
   const options = useTaxonomyFilterOptions();
   const genres = useMemo(() => genreOptions(options.data?.genres ?? [], language), [language, options.data?.genres]);
