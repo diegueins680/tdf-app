@@ -1315,13 +1315,13 @@
       "tdf-hq-ui/src/features/releases/useReleaseFeed.ts",
       "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
       "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
-      "tdf-hq-ui/src/features/taxonomyFilters/GenreSuggestionDialog.tsx",
-      "tdf-hq-ui/src/features/taxonomyFilters/TaxonomyFilterBar.tsx",
-      "tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterModel.test.ts",
-      "tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterModel.ts",
-      "tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterStore.ts",
-      "tdf-hq-ui/src/features/taxonomyFilters/useProfileCityDefault.ts",
-      "tdf-hq-ui/src/features/taxonomyFilters/useTaxonomyFilters.ts",
+      "tdf-hq-ui/src/components/taxonomyFilters/GenreSuggestionDialog.tsx",
+      "tdf-hq-ui/src/components/taxonomyFilters/TaxonomyFilterBar.tsx",
+      "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts",
+      "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.ts",
+      "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterStore.ts",
+      "tdf-hq-ui/src/components/taxonomyFilters/useProfileCityDefault.ts",
+      "tdf-hq-ui/src/components/taxonomyFilters/useTaxonomyFilters.ts",
       "tdf-hq-ui/src/hooks/useAutoSave.test.ts",
       "tdf-hq-ui/src/hooks/useAutoSave.ts",
       "tdf-hq-ui/src/hooks/useBreakpoint.ts",
@@ -3200,12 +3200,12 @@
       "tdf-mobile/src/features/interactions/InteractionFlows.test.tsx",
       "tdf-mobile/src/features/interactions/ReactionPeople.tsx",
       "tdf-mobile/src/features/interactions/model.ts",
-      "tdf-mobile/src/features/taxonomyFilters/GenreSuggestionModal.tsx",
-      "tdf-mobile/src/features/taxonomyFilters/TaxonomyFilterBar.tsx",
-      "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterModel.ts",
-      "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterStore.ts",
-      "tdf-mobile/src/features/taxonomyFilters/useSharedCityDefault.ts",
-      "tdf-mobile/src/features/taxonomyFilters/useTaxonomyFilters.ts",
+      "tdf-mobile/src/components/taxonomyFilters/GenreSuggestionModal.tsx",
+      "tdf-mobile/src/components/taxonomyFilters/TaxonomyFilterBar.tsx",
+      "tdf-mobile/src/components/taxonomyFilters/taxonomyFilterModel.ts",
+      "tdf-mobile/src/components/taxonomyFilters/taxonomyFilterStore.ts",
+      "tdf-mobile/src/components/taxonomyFilters/useSharedCityDefault.ts",
+      "tdf-mobile/src/components/taxonomyFilters/useTaxonomyFilters.ts",
       "tdf-mobile/src/feedback/FeedbackEntry.tsx",
       "tdf-mobile/src/feedback/metadata.ts",
       "tdf-mobile/src/feedback/participation.ts",
@@ -11047,43 +11047,43 @@
     },
     {
       "id": "SURFACE-593c1421e7e46397",
-      "path": "tdf-hq-ui/src/features/taxonomyFilters/GenreSuggestionDialog.tsx",
+      "path": "tdf-hq-ui/src/components/taxonomyFilters/GenreSuggestionDialog.tsx",
       "sha256": "c589733008a94e426911c876b629ca55f4b3fd4143e6b4e7e3aa68ac1ff3b902",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-de5c7b9aa56287d0",
-      "path": "tdf-hq-ui/src/features/taxonomyFilters/TaxonomyFilterBar.tsx",
+      "path": "tdf-hq-ui/src/components/taxonomyFilters/TaxonomyFilterBar.tsx",
       "sha256": "4c4093c1483ce7f168f8115d398f7dbab7c59a289089bd49c88f45689dd71040",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3133685b7d0e4e33",
-      "path": "tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterModel.test.ts",
+      "path": "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts",
       "sha256": "ac694701ae931e9507bdb7e8ae47f39583110564f786b1a60cb45a5dd1f2ea21",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-30c51e8af79549ee",
-      "path": "tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterModel.ts",
+      "path": "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.ts",
       "sha256": "b59b3004399e500c5729ae35a5aab825a08e43ee4f07276d69b602f05d8ed401",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-67a8a8f8ddcfd0a9",
-      "path": "tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterStore.ts",
+      "path": "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterStore.ts",
       "sha256": "e4dfaac585e8fd764d5e02fbde4ad39c2e0ca5b2edbb6fa3da57eb6041e27a47",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-aa736b647c604b20",
-      "path": "tdf-hq-ui/src/features/taxonomyFilters/useProfileCityDefault.ts",
+      "path": "tdf-hq-ui/src/components/taxonomyFilters/useProfileCityDefault.ts",
       "sha256": "613f0ab68fd5e9bf895a55ca613d0f80396bbfae70b62c0f4fe400d86c763303",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-d5cdfad41fd7c811",
-      "path": "tdf-hq-ui/src/features/taxonomyFilters/useTaxonomyFilters.ts",
+      "path": "tdf-hq-ui/src/components/taxonomyFilters/useTaxonomyFilters.ts",
       "sha256": "d010fd84894695967433c25667bbd95b638bd2edb050126fe17108b8c6201bd3",
       "semanticConformance": "not-established-by-discovery"
     },
@@ -22333,37 +22333,37 @@
     },
     {
       "id": "SURFACE-10f7b0b88b708476",
-      "path": "tdf-mobile/src/features/taxonomyFilters/GenreSuggestionModal.tsx",
+      "path": "tdf-mobile/src/components/taxonomyFilters/GenreSuggestionModal.tsx",
       "sha256": "2b96023315920351f90b6d4bd16fe99800f3f8e7c36c23064e38f717da69a6c5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-d7347db6e57b7b33",
-      "path": "tdf-mobile/src/features/taxonomyFilters/TaxonomyFilterBar.tsx",
+      "path": "tdf-mobile/src/components/taxonomyFilters/TaxonomyFilterBar.tsx",
       "sha256": "8e2d749ccddc61dee448b898616bb8d494e3394df719808337057112d57c95de",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1e29e7350e64603d",
-      "path": "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterModel.ts",
+      "path": "tdf-mobile/src/components/taxonomyFilters/taxonomyFilterModel.ts",
       "sha256": "3c6082aa5f9f40b47fd8a8fd01998d1133bfd390714ba10d51e69007c37162e3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0f606b62875de4c4",
-      "path": "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterStore.ts",
+      "path": "tdf-mobile/src/components/taxonomyFilters/taxonomyFilterStore.ts",
       "sha256": "212626329c8bafe097314fe44dfc7f75c205b771ac382c7c56740a5c1a4434cc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-d90d8a3d348e85db",
-      "path": "tdf-mobile/src/features/taxonomyFilters/useSharedCityDefault.ts",
+      "path": "tdf-mobile/src/components/taxonomyFilters/useSharedCityDefault.ts",
       "sha256": "3a31cbd55a5e41455fc0885feaaa686612ccc415997578c3ee128fdac9ef72f1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f0e233926ef3acca",
-      "path": "tdf-mobile/src/features/taxonomyFilters/useTaxonomyFilters.ts",
+      "path": "tdf-mobile/src/components/taxonomyFilters/useTaxonomyFilters.ts",
       "sha256": "35910047d3bb7eba7038ad150fddf8897415e259ede071f70b43c3cd662eed7c",
       "semanticConformance": "not-established-by-discovery"
     },

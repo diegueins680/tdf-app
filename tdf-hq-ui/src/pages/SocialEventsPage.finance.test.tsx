@@ -50,7 +50,7 @@ jest.unstable_mockModule('../api/taxonomy', () => ({
     return params;
   },
 }));
-jest.unstable_mockModule('../features/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
+jest.unstable_mockModule('../components/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
 const { default: SocialEventsPage } = await import('./SocialEventsPage');
 
 const readCsvBlob = (blob: Blob) => new Promise<string>((resolve, reject) => {

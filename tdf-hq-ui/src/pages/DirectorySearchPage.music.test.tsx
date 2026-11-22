@@ -27,7 +27,7 @@ jest.unstable_mockModule('../api/taxonomy', () => ({
     return params;
   },
 }));
-jest.unstable_mockModule('../features/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
+jest.unstable_mockModule('../components/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
 const { musicReleases: actualMusicReleases } = await import('../api/musicReleases');
 const tracks = Array.from({ length: 13 }, (_, n): MusicPublicTrackSearchHit => ({ trackId: `track-${n}`, recordingId: `recording-${n}`,
   releaseId: 'release', releaseVersionId: 'version', releaseSlug: 'synthetic-release', releaseTitle: 'Lanzamiento', title: `Pista ${n}`,

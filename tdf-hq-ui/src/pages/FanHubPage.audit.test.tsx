@@ -149,7 +149,7 @@ jest.unstable_mockModule('../api/taxonomy', () => ({
     return params;
   },
 }));
-jest.unstable_mockModule('../features/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
+jest.unstable_mockModule('../components/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
 const { default: FanHubPage } = await import('./FanHubPage');
 
 const eligibleProgress: OnboardingProgressDTO = {

@@ -87,7 +87,7 @@ jest.unstable_mockModule('../api/taxonomy', () => ({
     return params;
   },
 }));
-jest.unstable_mockModule('../features/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
+jest.unstable_mockModule('../components/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
 const { default: DirectorySearchPage } = await import('./DirectorySearchPage');
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

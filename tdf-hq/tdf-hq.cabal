@@ -232,6 +232,7 @@ library
     TDF.Server.EventAttendees
     TDF.Server.TicketSalesWindow
     TDF.Server.SocialEventsHandlers
+    TDF.Server.SocialEventsTaxonomy
     TDF.Server.SocialArtistOwnership
     TDF.Server.StripeTicketCapture
     TDF.Server.EventResearch

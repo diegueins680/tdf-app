@@ -5,7 +5,7 @@ import { buildArtistPublicPath } from '../utils/artistIdentity';
 import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/artistAudience';
 import MarkdownText from '../components/MarkdownText';
 import CommunityDiscovery from '../features/discovery/CommunityDiscovery';
-import { GenreSuggestionDialog, PendingGenreSuggestions } from '../features/taxonomyFilters/GenreSuggestionDialog';
+import { GenreSuggestionDialog, PendingGenreSuggestions } from '../components/taxonomyFilters/GenreSuggestionDialog';
 import RecordThumbnail from '../features/records/RecordThumbnail';
 import { primaryRecordsResource } from '../features/records/resolveRecordThumbnail';
 import { buildArtistFollowAuthPath, safeArtistId } from '../utils/artistFollowIntent';

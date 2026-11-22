@@ -29064,6 +29064,7 @@
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsTaxonomy.hs",
         "tdf-hq/tdf-hq.cabal",
         "tdf-hq/docs/openapi/taxonomy.yaml",
         "tdf-hq/docs/openapi/api.yaml",
@@ -29075,11 +29076,11 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterModel.ts",
-        "tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterStore.ts",
-        "tdf-hq-ui/src/features/taxonomyFilters/useTaxonomyFilters.ts",
-        "tdf-hq-ui/src/features/taxonomyFilters/useProfileCityDefault.ts",
-        "tdf-hq-ui/src/features/taxonomyFilters/TaxonomyFilterBar.tsx",
+        "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterStore.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/useTaxonomyFilters.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/useProfileCityDefault.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/TaxonomyFilterBar.tsx",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
         "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
@@ -29094,17 +29095,18 @@
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "playwright.discovery.config.mjs",
         "tdf-mobile/src/api/taxonomy.ts",
-        "tdf-mobile/src/features/taxonomyFilters/TaxonomyFilterBar.tsx",
-        "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterModel.ts",
-        "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterStore.ts",
-        "tdf-mobile/src/features/taxonomyFilters/useSharedCityDefault.ts",
-        "tdf-mobile/src/features/taxonomyFilters/useTaxonomyFilters.ts"
+        "tdf-mobile/src/components/taxonomyFilters/TaxonomyFilterBar.tsx",
+        "tdf-mobile/src/components/taxonomyFilters/taxonomyFilterModel.ts",
+        "tdf-mobile/src/components/taxonomyFilters/taxonomyFilterStore.ts",
+        "tdf-mobile/src/components/taxonomyFilters/useSharedCityDefault.ts",
+        "tdf-mobile/src/components/taxonomyFilters/useTaxonomyFilters.ts"
       ],
       "tests": [
         "scripts/test-community-search.py",
+        "scripts/test-music-catalog-search.mjs",
         "tdf-hq/test/TDF/Taxonomy/FilterSpec.hs",
         "tdf-hq/test/Spec.hs",
-        "tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterModel.test.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
         "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
@@ -29130,7 +29132,7 @@
       "authority": "approved by user",
       "property": "Result = visible items AND each active dimension (OR of its values, genres expanded to descendants, location derived from city); counts per dimension omit only that dimension's own selection.",
       "verification": "scripts/test-community-search.py on migrated PostgreSQL; Hspec FilterSpec (including literal directory facet SQL equality); React model, discovery and radio tests; Playwright taxonomy-filters spec in Spanish and English.",
-      "evidence": "scripts/test-community-search.py; tdf-hq/test/TDF/Taxonomy/FilterSpec.hs; tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterModel.test.ts; e2e/web/taxonomy-filters.spec.mjs"
+      "evidence": "scripts/test-community-search.py; tdf-hq/test/TDF/Taxonomy/FilterSpec.hs; tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts; e2e/web/taxonomy-filters.spec.mjs"
     },
     {
       "id": "TAX-GENRE-SUGGESTION-001",
@@ -29197,12 +29199,12 @@
         "tdf-hq/src/TDF/API/Taxonomy.hs",
         "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
         "tdf-hq/assets/feature-registry.json",
-        "tdf-hq-ui/src/features/taxonomyFilters/GenreSuggestionDialog.tsx",
+        "tdf-hq-ui/src/components/taxonomyFilters/GenreSuggestionDialog.tsx",
         "tdf-hq-ui/src/pages/GenreSuggestionsAdminPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/routes/protectedRoutes.tsx",
         "tdf-mobile/app/editArtistProfile.tsx",
-        "tdf-mobile/src/features/taxonomyFilters/GenreSuggestionModal.tsx"
+        "tdf-mobile/src/components/taxonomyFilters/GenreSuggestionModal.tsx"
       ],
       "tests": [
         "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs",

@@ -188,8 +188,8 @@ import Data.Time.Format (defaultTimeLocale, formatTime)
 import Data.Time.Format.ISO8601 (iso8601ParseM)
 import qualified Data.UUID as UUID
 import Data.UUID (UUID)
-import qualified TDF.CMS.Models as CMS
-import TDF.Taxonomy.Filter (TaxonomyFilter, emptyTaxonomyFilter, mkTaxonomyFilter, taxonomyFacetsSql, taxonomyFilterIsEmpty, taxonomyInputColumnsSql, taxonomyInputParams, taxonomyMatchSql)
+import TDF.Server.SocialEventsTaxonomy (eventTaxonomyClause, eventTaxonomyFacets, taxonomyFilterError)
+import TDF.Taxonomy.Filter (TaxonomyFilter, emptyTaxonomyFilter, mkTaxonomyFilter)
 import qualified Data.UUID.V4 as UUIDV4
 import System.Directory (copyFile, createDirectoryIfMissing, doesDirectoryExist, getFileSize, removePathForcibly)
 import System.Environment (lookupEnv)
@@ -2337,29 +2337,13 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         rows <- selectListedEvents mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId taxonomy limit offset
         loadSocialEventListDTOs (defaultCurrency envConfig) envPool rows
 
-    taxonomyFilterError :: T.Text -> ServerError
-    taxonomyFilterError message = err400 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
-
-    -- TAX-FILTER-001 per-value counts over the first 500 events the list
-    -- would return without its own taxonomy selection, so the counts honour
-    -- the same visibility, scope, date and type rules as the list.
+    -- TAX-FILTER-001 counts over the first 500 events the list would return without its own selection.
     eventFacets :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> [UUID] -> [UUID] -> [UUID] -> [UUID] -> AppM Aeson.Value
     eventFacets mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId countryIds regionIds cityIds genreIds = do
         Env{..} <- ask
         taxonomy <- either (throwError . taxonomyFilterError) pure (mkTaxonomyFilter countryIds regionIds cityIds genreIds)
         rows <- selectListedEvents mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId emptyTaxonomyFilter 500 0
-        let eventIds = [fromSqlKey (entityKey row) | row <- rows]
-        facetRows <- liftIO $ flip runSqlPool envPool $ rawSql
-            ( "WITH tax_input AS (SELECT " <> taxonomyInputColumnsSql <> "), "
-                <> "event_base AS (SELECT social_event.id::text item_key," <> eventCitySql <> " city_id,"
-                <> eventCountrySql <> " country_id," <> eventGenresSql <> " genre_ids "
-                <> "FROM social_event WHERE social_event.id=ANY(?::bigint[])) "
-                <> "SELECT " <> taxonomyFacetsSql "event_base" "tax_input"
-            )
-            (taxonomyInputParams taxonomy <> [PersistText ("{" <> T.intercalate "," (map (T.pack . show) eventIds) <> "}")])
-        pure $ case facetRows of
-            Single (CMS.AesonValue value) : _ -> value
-            [] -> Aeson.object []
+        liftIO $ runSqlPool (eventTaxonomyFacets taxonomy [fromSqlKey (entityKey row) | row <- rows]) envPool
 
     selectListedEvents :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> TaxonomyFilter -> Int -> Int -> AppM [Entity SocialEvent]
     selectListedEvents mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId taxonomy limit offset = do
@@ -2428,12 +2412,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 "EXISTS (SELECT 1 FROM event_artist discovery_artist WHERE discovery_artist.event_id=social_event.id AND discovery_artist.artist_id IN ("
                     <> T.intercalate "," (replicate (length artistKeys) "?") <> "))"
             (cityClause, cityValues) = databaseCityFilter
-            taxonomyClause
-                | taxonomyFilterIsEmpty taxonomy = ""
-                | otherwise =
-                    "EXISTS (SELECT 1 FROM (SELECT " <> taxonomyInputColumnsSql <> ") tax_input WHERE "
-                        <> taxonomyMatchSql "tax_input" eventCitySql eventCountrySql eventGenresSql <> ")"
-            taxonomyValues = if taxonomyFilterIsEmpty taxonomy then [] else taxonomyInputParams taxonomy
+            (taxonomyClause, taxonomyValues) = eventTaxonomyClause taxonomy
             searchClauses = filter (not . T.null) [cityClause, artistClause, taxonomyClause]
             discoveryFilter =
                 (T.intercalate " AND " (map (\clause -> "(" <> clause <> ")") searchClauses),
@@ -2457,21 +2436,6 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                     )
                     envPool
         pure rows
-
-    -- An event's location is its venue's (the city id, or the venue's city
-    -- text resolved to exactly one reference); its genres are the canonical
-    -- genres of its lineup.
-    eventCitySql :: T.Text
-    eventCitySql =
-        "(SELECT coalesce(event_venue.city_id,taxonomy_city_from_text(event_venue.city,event_venue.country_id)) FROM venue event_venue WHERE event_venue.id=social_event.venue_id)"
-
-    eventCountrySql :: T.Text
-    eventCountrySql =
-        "(SELECT coalesce(event_venue.country_id,(SELECT country.id FROM country_reference country WHERE country.alpha2=upper(btrim(event_venue.country_code)))) FROM venue event_venue WHERE event_venue.id=social_event.venue_id)"
-
-    eventGenresSql :: T.Text
-    eventGenresSql =
-        "ARRAY(SELECT DISTINCT lineup_genre.genre_id FROM event_artist lineup JOIN artist_genre_membership lineup_genre ON lineup_genre.artist_id=lineup.artist_id WHERE lineup.event_id=social_event.id)"
 
     resolveSubscribedEventIds ::
         [Entity EventCity] ->

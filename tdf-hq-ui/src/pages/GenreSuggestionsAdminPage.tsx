@@ -23,8 +23,8 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Taxonomy, type GenreSuggestion, type GenreSuggestionQueueStatus } from '../api/taxonomy';
-import { genreOptions, resolveTaxonomyLanguage, taxonomyName, type TaxonomyOption } from '../features/taxonomyFilters/taxonomyFilterModel';
-import { TAXONOMY_OPTIONS_QUERY_KEY, useTaxonomyFilterOptions } from '../features/taxonomyFilters/useTaxonomyFilters';
+import { genreOptions, resolveTaxonomyLanguage, taxonomyName, type TaxonomyOption } from '../components/taxonomyFilters/taxonomyFilterModel';
+import { TAXONOMY_OPTIONS_QUERY_KEY, useTaxonomyFilterOptions } from '../components/taxonomyFilters/useTaxonomyFilters';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const STATUSES: GenreSuggestionQueueStatus[] = ['pending', 'approved', 'rejected', 'merged', 'all'];

@@ -1,8 +1,8 @@
 import { Taxonomy } from '../api/taxonomy';
-import TaxonomyFilterBar from '../features/taxonomyFilters/TaxonomyFilterBar';
-import { isTaxonomySelectionEmpty } from '../features/taxonomyFilters/taxonomyFilterModel';
-import { useProfileCityDefault } from '../features/taxonomyFilters/useProfileCityDefault';
-import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from '../features/taxonomyFilters/useTaxonomyFilters';
+import TaxonomyFilterBar from '../components/taxonomyFilters/TaxonomyFilterBar';
+import { isTaxonomySelectionEmpty } from '../components/taxonomyFilters/taxonomyFilterModel';
+import { useProfileCityDefault } from '../components/taxonomyFilters/useProfileCityDefault';
+import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from '../components/taxonomyFilters/useTaxonomyFilters';
 import ArtistProfileLink from '../components/ArtistProfileLink';
 import { formatEventMoney as formatMoney } from '../utils/eventFinanceMoney';
 import { parseOptionalPriceCents } from '../utils/priceInput';

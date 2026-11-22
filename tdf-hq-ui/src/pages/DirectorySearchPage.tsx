@@ -1,13 +1,13 @@
-import TaxonomyFilterBar from '../features/taxonomyFilters/TaxonomyFilterBar';
+import TaxonomyFilterBar from '../components/taxonomyFilters/TaxonomyFilterBar';
 import {
   hasTaxonomyUrlState,
   readTaxonomySelectionFromUrl,
   TAXONOMY_LOCAL_SCOPE_KEY,
   TAXONOMY_LOCAL_SCOPE_VALUE,
   writeTaxonomySelectionToUrl,
-} from '../features/taxonomyFilters/taxonomyFilterModel';
-import { useProfileCityDefault } from '../features/taxonomyFilters/useProfileCityDefault';
-import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from '../features/taxonomyFilters/useTaxonomyFilters';
+} from '../components/taxonomyFilters/taxonomyFilterModel';
+import { useProfileCityDefault } from '../components/taxonomyFilters/useProfileCityDefault';
+import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from '../components/taxonomyFilters/useTaxonomyFilters';
 import MarkdownText from '../components/MarkdownText';
 import { directoryResultPath, useDebouncedSearch, useDirectorySearch } from '../features/discovery/useDirectorySearch';
 import { useTranslation } from 'react-i18next';

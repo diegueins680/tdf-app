@@ -493420,7 +493420,7 @@
       "justification": "React Query cache key for the artist's own genre suggestions; a technical identifier.",
       "reviewed": true,
       "evidence": {
-        "file": "tdf-hq-ui/src/features/taxonomyFilters/GenreSuggestionDialog.tsx",
+        "file": "tdf-hq-ui/src/components/taxonomyFilters/GenreSuggestionDialog.tsx",
         "line": 28
       },
       "reviewBatch": "taxonomy-filters-2026-11-21"
@@ -493435,7 +493435,7 @@
       "justification": "React Query cache key for GET /taxonomy/filter-options; a technical identifier.",
       "reviewed": true,
       "evidence": {
-        "file": "tdf-hq-ui/src/features/taxonomyFilters/useTaxonomyFilters.ts",
+        "file": "tdf-hq-ui/src/components/taxonomyFilters/useTaxonomyFilters.ts",
         "line": 25
       },
       "reviewBatch": "taxonomy-filters-2026-11-21"
@@ -493450,7 +493450,7 @@
       "justification": "The two name columns (name_es, name_en) every taxonomy row carries; choosing which to show is a rendering switch, not a language catalog.",
       "reviewed": true,
       "evidence": {
-        "file": "tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterModel.ts",
+        "file": "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.ts",
         "line": 14
       },
       "reviewBatch": "taxonomy-filters-2026-11-21"
@@ -493480,7 +493480,7 @@
       "justification": "Mobile mirror of the two taxonomy name columns (name_es, name_en); a rendering switch, not a language catalog.",
       "reviewed": true,
       "evidence": {
-        "file": "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterModel.ts",
+        "file": "tdf-mobile/src/components/taxonomyFilters/taxonomyFilterModel.ts",
         "line": 15
       },
       "reviewBatch": "taxonomy-filters-2026-11-21"
@@ -493495,7 +493495,7 @@
       "justification": "Mobile React Query cache key for the artist's own genre suggestions; a technical identifier.",
       "reviewed": true,
       "evidence": {
-        "file": "tdf-mobile/src/features/taxonomyFilters/GenreSuggestionModal.tsx",
+        "file": "tdf-mobile/src/components/taxonomyFilters/GenreSuggestionModal.tsx",
         "line": 33
       },
       "reviewBatch": "taxonomy-filters-2026-11-21"
@@ -493510,7 +493510,7 @@
       "justification": "Mobile React Query cache key for GET /taxonomy/filter-options; a technical identifier.",
       "reviewed": true,
       "evidence": {
-        "file": "tdf-mobile/src/features/taxonomyFilters/useTaxonomyFilters.ts",
+        "file": "tdf-mobile/src/components/taxonomyFilters/useTaxonomyFilters.ts",
         "line": 24
       },
       "reviewBatch": "taxonomy-filters-2026-11-21"
@@ -493540,7 +493540,7 @@
       "justification": "Synthetic taxonomy fixture in a unit test mirroring the GET /taxonomy/filter-options or facet contract; the authoritative values are the persisted catalogs (TAX-FILTER-001).",
       "reviewed": true,
       "evidence": {
-        "file": "tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterModel.test.ts",
+        "file": "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts",
         "line": 32
       },
       "reviewBatch": "taxonomy-filters-2026-11-21"
@@ -493555,7 +493555,7 @@
       "justification": "Synthetic taxonomy fixture in a unit test mirroring the GET /taxonomy/filter-options or facet contract; the authoritative values are the persisted catalogs (TAX-FILTER-001).",
       "reviewed": true,
       "evidence": {
-        "file": "tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterModel.test.ts",
+        "file": "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts",
         "line": 33
       },
       "reviewBatch": "taxonomy-filters-2026-11-21"
@@ -493570,7 +493570,7 @@
       "justification": "Synthetic taxonomy fixture in a unit test mirroring the GET /taxonomy/filter-options or facet contract; the authoritative values are the persisted catalogs (TAX-FILTER-001).",
       "reviewed": true,
       "evidence": {
-        "file": "tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterModel.test.ts",
+        "file": "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts",
         "line": 46
       },
       "reviewBatch": "taxonomy-filters-2026-11-21"
@@ -493585,7 +493585,7 @@
       "justification": "Synthetic taxonomy fixture in a unit test mirroring the GET /taxonomy/filter-options or facet contract; the authoritative values are the persisted catalogs (TAX-FILTER-001).",
       "reviewed": true,
       "evidence": {
-        "file": "tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterModel.test.ts",
+        "file": "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts",
         "line": 99
       },
       "reviewBatch": "taxonomy-filters-2026-11-21"

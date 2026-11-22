@@ -18,9 +18,9 @@ import { useSearchParams } from 'react-router-dom';
 import { musicReleases } from '../api/musicReleases';
 import { Taxonomy } from '../api/taxonomy';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-import TaxonomyFilterBar from '../features/taxonomyFilters/TaxonomyFilterBar';
-import { useProfileCityDefault } from '../features/taxonomyFilters/useProfileCityDefault';
-import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from '../features/taxonomyFilters/useTaxonomyFilters';
+import TaxonomyFilterBar from '../components/taxonomyFilters/TaxonomyFilterBar';
+import { useProfileCityDefault } from '../components/taxonomyFilters/useProfileCityDefault';
+import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from '../components/taxonomyFilters/useTaxonomyFilters';
 
 const PAGE_SIZE = 24;
 const MAX_PAGE = Math.floor(Number.MAX_SAFE_INTEGER / PAGE_SIZE);

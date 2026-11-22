@@ -104,7 +104,7 @@ referenced rows); the previous code ignores them for filtering.
 * `scripts/test-community-search.py` — directory SQL on migrated PostgreSQL:
   closure, OR/AND, region from city, missing values hidden, facet counts.
 * `tdf-hq/test/TDF/Taxonomy/FilterSpec.hs`, `GenreSuggestionSpec.hs`.
-* `tdf-hq-ui/src/features/taxonomyFilters/taxonomyFilterModel.test.ts`,
+* `tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts`,
   `CommunityDiscovery.test.tsx`, radio widget tests.
 * `e2e/web/taxonomy-filters.spec.mjs` (Spanish and English); screenshots at
   desktop and 360 px phone width in

@@ -49,7 +49,7 @@ jest.unstable_mockModule('../api/taxonomy', () => ({
     return params;
   },
 }));
-jest.unstable_mockModule('../features/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
+jest.unstable_mockModule('../components/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
 const { default: SocialEventsPage } = await import('./SocialEventsPage');
 
 const future = (id: number, artist = artists[0]): SocialEventDTO => ({ eventId: String(id), eventTitle: `Evento ${id}`, eventStart: '2099-05-03T20:00:00Z', eventArtists: [artist] });
