@@ -1,8 +1,16 @@
 -- Friend suggestions by personalized PageRank (COMMUNITY-FRIEND-SUGGESTION-001,
 -- formal/system/friend-suggestions-pagerank.md). Additive: three derived tables
--- written by the nightly run.
--- Nothing reads them while FRIEND_SUGGESTIONS_PAGERANK_ENABLED is false.
+-- written by the nightly run and one fact table written on a completed password reset.
+-- Nothing reads them while FRIEND_SUGGESTIONS_PAGERANK_ENABLED is false; the fact table
+-- is written on every completed password reset once it exists.
 BEGIN;
+
+-- A party completed a password reset delivered to its email address. Read only
+-- by the friend-suggestion eligibility query; it grants nothing.
+CREATE TABLE IF NOT EXISTS party_email_verification (
+  party_id BIGINT PRIMARY KEY REFERENCES party(id) ON DELETE CASCADE,
+  verified_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp()
+);
 
 CREATE TABLE IF NOT EXISTS social_suggestion_run (
   id BIGSERIAL PRIMARY KEY,
