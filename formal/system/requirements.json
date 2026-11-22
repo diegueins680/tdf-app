@@ -19323,6 +19323,98 @@
       "historicalStatus": null
     },
     {
+      "id": "COMMUNITY-ARTIST-SIMILARITY-001",
+      "title": "Multi-signal artist similarity for fan recommendations, stored nightly",
+      "statement": "With FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED on, GET /fans/me/recommendations ranks the publicly listed artists a fan does not follow and may follow by the cosine similarity of weighted fan vectors built from follows (8), favourited recordings (8), accepted RSVPs to public events (4) and eligible plays of the last 180 days (1 to 3), for pairs supported by at least two distinct fans, completed with the follows-only popularity fallback. The similarity is stored by a nightly job and read by requests; the per-request computation from live signals is kept as the reference. A fan who switched personalisation off receives exactly the fallback. With the flag off the route behaves as COMMUNITY-FAN-RECOMMENDATION-001.",
+      "domain": "COMMUNITY",
+      "authority": "Owner approval of 2026-11-21 of the rule and constants proposed in formal/system/artist-similarity.md, including the restated monotonicity property. The opt-out reuses social_v2_preference.personalized by the implementer's default; its reachability is an open rollout precondition.",
+      "source": "formal/system/artist-similarity.md",
+      "contract": "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
+      "property": "w(f,a) = 8*follow + [f personalised](8*favourite + 4*rsvp + playPoints(plays)) for listed a # f; sim(a,b) = dot(a,b)/sqrt(norm2(a)*norm2(b)) if support(a,b) >= 2 else 0; score(c) = SUM over listed seeds s of min(w(fan,s),8)/8 * sim(s,c). For every returned artist a: listed(a) /\\ a \\notin followed(fan) /\\ a # fan /\\ (policyInstalled => followable(fan,a)); every named seed is listed. similar_fans entries are strictly ordered by (score desc, followers desc, id asc) and precede the fallback. For every stored generation g: table(g) = similarityFromWeights(weights at snapshot_at(g)); a request uses g only while now - snapshot_at(g) <= 48 h. personalised(fan) = false => result = fallback.",
+      "actors": [
+        "Fan",
+        "Scheduler"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect)",
+        "FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED=true",
+        "tdf-hq/sql/2026-11-21_artist_similarity.sql applied"
+      ],
+      "inputs": [
+        "GET /fans/me/recommendations",
+        "limit (optional; default 6, clamped to 1..24)",
+        "fan_follow, music_favorite, event_rsvp, music_playback_event and social_v2_preference rows"
+      ],
+      "state": {
+        "initial": "No generation",
+        "terminal": [
+          "Newest generation stored",
+          "Run failed, previous generation kept",
+          "Ranked list",
+          "Refusal without read"
+        ]
+      },
+      "allowedTransitions": [
+        "A run inserts one complete generation and deletes all but the two newest",
+        "A request reads; it never writes"
+      ],
+      "forbiddenTransitions": [
+        "Returning an artist that is not publicly listed, is already followed by the caller, is the caller, or may not be followed under the installed follow policy",
+        "Naming or using a hidden artist as evidence",
+        "Serving a generation whose snapshot is older than 48 hours",
+        "Publishing a generation computed from reads at different instants",
+        "A similar_fans entry for a fan who switched personalisation off",
+        "Any write by a request"
+      ],
+      "effects": [
+        "Rows in artist_similarity_generation, artist_similarity_norm and artist_similarity_pair, written by the job only"
+      ],
+      "authorization": "requireFanAccess for the route; the job runs inside the backend with no caller.",
+      "privacy": "The job reads signal rows and stores only per-pair and per-artist aggregates; a pair is stored only with at least two distinct fans. A request reads the caller's own signals and aggregates; no other fan's identity is read or returned. Favourites, RSVPs and plays of a fan who switched personalisation off are not evidence from the next run. Hidden artists are neither returned nor used as evidence, at request time on live data.",
+      "concurrency": "The job runs in one REPEATABLE READ transaction under a session advisory lock; generation and rows commit together. A request reads the table with one statement. Follows and unfollows committed after the snapshot change the caller's seeds and exclusions at once and the similarity at the next run.",
+      "idempotency": "Requests are read-only. A repeated run stores a new generation of the same content for unchanged signals.",
+      "failure": "401 without a session; 403 without Fan or Customer access. Without a usable generation the result is the popularity fallback. A failed run rolls back, is logged and leaves the previous generation.",
+      "recovery": "The next daily run or a restart stores a new generation.",
+      "observability": "[Cron][ArtistSimilarity] log lines with the generation id, artist count and pair count, or the failure; artist_similarity_generation rows.",
+      "implementation": [
+        "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
+        "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Cron.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/sql/2026-11-21_artist_similarity.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Fans/ArtistSimilaritySpec.hs",
+        "tdf-hq/test/ArtistSimilarityProbe.hs",
+        "scripts/test-artist-similarity-postgres.sh",
+        "scripts/artist-similarity-fixture.sql"
+      ],
+      "formalModels": [
+        "formal/fans/ArtistSimilarity.tla",
+        "formal/fans/artist_similarity_ranking.py"
+      ],
+      "verification": "PROVED (Z3, on a hand translation pinned by source hash, with witnesses and guard-necessity controls): exclusions of results and seeds; the sort keys are strict total orders on distinct ids over non-NaN doubles; contributions and their sums are not NaN. PROVED (Apalache inductive invariant, for the TLA+ model): the stored relation is the reference on its snapshot, a request uses it only within the age limit, and without failing runs it is at most one period and one run old. MODEL-CHECKED (TLC, bounded): the same invariants, with two negative controls that violate them. TESTED (Hspec and QuickCheck): weight bounds, similarity in 0..1 and symmetric, score bounds, exclusions, ordering, row-order independence, opt-out and missing similarity equal the fallback, stored subset ranks like the whole relation, restated monotonicity and its counterexample. TESTED (PostgreSQL fixture through the real loaders): stored rows, stored read equals reference for every fan after each run, opt-out, later follow and hiding, pruning, age limit, per-fan queries equal the global ones.",
+      "evidence": "formal/fans/artist_similarity_ranking.py output; scripts/verify-inductive-proofs.sh output; tdf-hq-test ArtistSimilaritySpec run; scripts/test-artist-similarity-postgres.sh output.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the pure core (tested) and for the model and translation properties (proved). Medium for the step from model and translation to the running code: by review, plus the PostgreSQL probe on a fixture. The handler and scheduler wiring is covered by compilation and review only.",
+      "ambiguity": [
+        "The proofs are about a TLA+ model with one abstract signal and about a hand translation; neither is mechanically refined to the Haskell and SQL.",
+        "No test runs a concurrent write during a real job run on PostgreSQL; the snapshot is PostgreSQL's documented REPEATABLE READ behaviour.",
+        "The fixture uses stand-ins for directory_public_rsvp_event and social_v2_preference with the migrated column types, not a fully migrated database; no HTTP-level test runs the route.",
+        "Opt-out reachability: the switch is writable only where social v2 is enabled; enabling the flag elsewhere needs a dedicated control.",
+        "Weighted cosine is not monotone in one weight; only the restated properties hold and are tested.",
+        "The staleness bound is one period plus one run duration while runs succeed, and 48 hours otherwise, not one period exactly."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Pure core, model and translation verified as stated; refinement of the running code to them is by review and a fixture probe; opt-out reachability and HTTP-level checks on the migrated schema remain."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "COMMUNITY-FAN-NOTIFICATION-001",
       "title": "Marking own notifications read",
       "statement": "A signed-in party marks one or all of their own notifications read. Routes: POST /fans/me/notifications/{notifId}/read; POST /fans/me/notifications/read-all.",

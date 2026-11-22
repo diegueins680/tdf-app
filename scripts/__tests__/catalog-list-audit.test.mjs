@@ -6557,7 +6557,9 @@ const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26
 
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const actual = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const withSimilarity = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  // The artist similarity entry (COMMUNITY-ARTIST-SIMILARITY-001) appends after this composition and has its own test below.
+  const actual = { ...withSimilarity, migrations: withSimilarity.migrations.filter(row => row.id !== '2026-11-21_artist_similarity') };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
   assert.deepEqual(actual, main);
   assert.deepEqual(actual.migrations.slice(0, ux.migrations.length), ux.migrations);
@@ -6581,4 +6583,23 @@ test('actual UX/storage composition preserves current main, immutable SQL and bo
       }
     }
   }
+});
+
+test('artist similarity appends exactly one migration to the reviewed 261-entry manifest', async () => {
+  const file = 'scripts/production-migrations.json';
+  const base = '008fd1ca9da4a48ba4a6472e5172f907d32ceb32';
+  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')).migrations;
+  const prior = JSON.parse((await integrationExec('git', ['show', `${base}:${file}`],
+    { cwd: integrationRoot, maxBuffer: 64 * 1024 * 1024 })).stdout).migrations;
+  assert.equal(prior.length, 261);
+  const entry = { id: '2026-11-21_artist_similarity', path: 'tdf-hq/sql/2026-11-21_artist_similarity.sql', introducedBy: '89d467302501d47ce53c1551b031c46cb7bb1162' };
+  assert.deepEqual(current, [...prior, entry]);
+  assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'),
+    (await integrationExec('git', ['show', `${entry.introducedBy}:${entry.path}`], { cwd: integrationRoot, maxBuffer: 64 * 1024 * 1024 })).stdout);
+  await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const decisions = JSON.parse(await fs.readFile(path.join(integrationRoot, 'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8')).decisions;
+  const decision = decisions.find(row => row.evidence?.file === file);
+  assert.equal(decision.id, 'aefaf106951c3d3c6c66');
+  assert.equal(decision.evidence.valueCount, 262);
+  assert.equal(decision.previousDecision.id, '7362b266dc1dd2eaabfb');
 });

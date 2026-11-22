@@ -21,6 +21,7 @@ import qualified TDF.Social.Chat as SocialChat
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
 import qualified TDF.Fans.ArtistRecommendations as ArtistRecommendations
+import qualified TDF.Fans.ArtistSimilarity as ArtistSimilarity
 import qualified TDF.Social.RelationshipReads as SocialReads
 import qualified TDF.Social.RelationshipWrites as SocialWrites
 import qualified TDF.Social.Profiles as SocialProfiles
@@ -7913,15 +7914,23 @@ fanListFollows user = do
     profileMap <- fetchArtistProfileMap artistIds
     pure (map (fanFollowEntityToDTO nameMap profileMap) follows)
 
--- | GET /fans/me/recommendations (COMMUNITY-FAN-RECOMMENDATION-001).
+-- | GET /fans/me/recommendations (COMMUNITY-FAN-RECOMMENDATION-001). With
+-- FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED the ranking reads the stored
+-- multi-signal similarity (COMMUNITY-ARTIST-SIMILARITY-001); otherwise it is
+-- the follows-only ranking.
 fanListRecommendations :: AuthedUser -> Maybe Int -> AppM [ArtistRecommendationDTO]
 fanListRecommendations user mLimit = do
   requireFanAccess user
-  Env pool _ <- ask
+  Env pool cfg <- ask
+  let limit = ArtistRecommendations.clampRecommendationLimit mLimit
   recommendations <- liftIO $ flip runSqlPool pool $
-    ArtistRecommendations.loadArtistRecommendations
-      (auPartyId user)
-      (ArtistRecommendations.clampRecommendationLimit mLimit)
+    if fanMultiSignalRecommendationsEnabled cfg
+      then
+        ArtistSimilarity.loadSimilarityRecommendations
+          ArtistSimilarity.StoredGeneration
+          (auPartyId user)
+          limit
+      else ArtistRecommendations.loadArtistRecommendations (auPartyId user) limit
   pure
     [ ArtistRecommendationDTO
         { arecArtistId = ArtistRecommendations.recArtistId item

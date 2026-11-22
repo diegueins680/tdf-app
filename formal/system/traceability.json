@@ -19324,6 +19324,98 @@
       "historicalStatus": null
     },
     {
+      "id": "COMMUNITY-ARTIST-SIMILARITY-001",
+      "title": "Multi-signal artist similarity for fan recommendations, stored nightly",
+      "statement": "With FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED on, GET /fans/me/recommendations ranks the publicly listed artists a fan does not follow and may follow by the cosine similarity of weighted fan vectors built from follows (8), favourited recordings (8), accepted RSVPs to public events (4) and eligible plays of the last 180 days (1 to 3), for pairs supported by at least two distinct fans, completed with the follows-only popularity fallback. The similarity is stored by a nightly job and read by requests; the per-request computation from live signals is kept as the reference. A fan who switched personalisation off receives exactly the fallback. With the flag off the route behaves as COMMUNITY-FAN-RECOMMENDATION-001.",
+      "domain": "COMMUNITY",
+      "authority": "Owner approval of 2026-11-21 of the rule and constants proposed in formal/system/artist-similarity.md, including the restated monotonicity property. The opt-out reuses social_v2_preference.personalized by the implementer's default; its reachability is an open rollout precondition.",
+      "source": "formal/system/artist-similarity.md",
+      "contract": "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
+      "property": "w(f,a) = 8*follow + [f personalised](8*favourite + 4*rsvp + playPoints(plays)) for listed a # f; sim(a,b) = dot(a,b)/sqrt(norm2(a)*norm2(b)) if support(a,b) >= 2 else 0; score(c) = SUM over listed seeds s of min(w(fan,s),8)/8 * sim(s,c). For every returned artist a: listed(a) /\\ a \\notin followed(fan) /\\ a # fan /\\ (policyInstalled => followable(fan,a)); every named seed is listed. similar_fans entries are strictly ordered by (score desc, followers desc, id asc) and precede the fallback. For every stored generation g: table(g) = similarityFromWeights(weights at snapshot_at(g)); a request uses g only while now - snapshot_at(g) <= 48 h. personalised(fan) = false => result = fallback.",
+      "actors": [
+        "Fan",
+        "Scheduler"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect)",
+        "FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED=true",
+        "tdf-hq/sql/2026-11-21_artist_similarity.sql applied"
+      ],
+      "inputs": [
+        "GET /fans/me/recommendations",
+        "limit (optional; default 6, clamped to 1..24)",
+        "fan_follow, music_favorite, event_rsvp, music_playback_event and social_v2_preference rows"
+      ],
+      "state": {
+        "initial": "No generation",
+        "terminal": [
+          "Newest generation stored",
+          "Run failed, previous generation kept",
+          "Ranked list",
+          "Refusal without read"
+        ]
+      },
+      "allowedTransitions": [
+        "A run inserts one complete generation and deletes all but the two newest",
+        "A request reads; it never writes"
+      ],
+      "forbiddenTransitions": [
+        "Returning an artist that is not publicly listed, is already followed by the caller, is the caller, or may not be followed under the installed follow policy",
+        "Naming or using a hidden artist as evidence",
+        "Serving a generation whose snapshot is older than 48 hours",
+        "Publishing a generation computed from reads at different instants",
+        "A similar_fans entry for a fan who switched personalisation off",
+        "Any write by a request"
+      ],
+      "effects": [
+        "Rows in artist_similarity_generation, artist_similarity_norm and artist_similarity_pair, written by the job only"
+      ],
+      "authorization": "requireFanAccess for the route; the job runs inside the backend with no caller.",
+      "privacy": "The job reads signal rows and stores only per-pair and per-artist aggregates; a pair is stored only with at least two distinct fans. A request reads the caller's own signals and aggregates; no other fan's identity is read or returned. Favourites, RSVPs and plays of a fan who switched personalisation off are not evidence from the next run. Hidden artists are neither returned nor used as evidence, at request time on live data.",
+      "concurrency": "The job runs in one REPEATABLE READ transaction under a session advisory lock; generation and rows commit together. A request reads the table with one statement. Follows and unfollows committed after the snapshot change the caller's seeds and exclusions at once and the similarity at the next run.",
+      "idempotency": "Requests are read-only. A repeated run stores a new generation of the same content for unchanged signals.",
+      "failure": "401 without a session; 403 without Fan or Customer access. Without a usable generation the result is the popularity fallback. A failed run rolls back, is logged and leaves the previous generation.",
+      "recovery": "The next daily run or a restart stores a new generation.",
+      "observability": "[Cron][ArtistSimilarity] log lines with the generation id, artist count and pair count, or the failure; artist_similarity_generation rows.",
+      "implementation": [
+        "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
+        "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Cron.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/sql/2026-11-21_artist_similarity.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Fans/ArtistSimilaritySpec.hs",
+        "tdf-hq/test/ArtistSimilarityProbe.hs",
+        "scripts/test-artist-similarity-postgres.sh",
+        "scripts/artist-similarity-fixture.sql"
+      ],
+      "formalModels": [
+        "formal/fans/ArtistSimilarity.tla",
+        "formal/fans/artist_similarity_ranking.py"
+      ],
+      "verification": "PROVED (Z3, on a hand translation pinned by source hash, with witnesses and guard-necessity controls): exclusions of results and seeds; the sort keys are strict total orders on distinct ids over non-NaN doubles; contributions and their sums are not NaN. PROVED (Apalache inductive invariant, for the TLA+ model): the stored relation is the reference on its snapshot, a request uses it only within the age limit, and without failing runs it is at most one period and one run old. MODEL-CHECKED (TLC, bounded): the same invariants, with two negative controls that violate them. TESTED (Hspec and QuickCheck): weight bounds, similarity in 0..1 and symmetric, score bounds, exclusions, ordering, row-order independence, opt-out and missing similarity equal the fallback, stored subset ranks like the whole relation, restated monotonicity and its counterexample. TESTED (PostgreSQL fixture through the real loaders): stored rows, stored read equals reference for every fan after each run, opt-out, later follow and hiding, pruning, age limit, per-fan queries equal the global ones.",
+      "evidence": "formal/fans/artist_similarity_ranking.py output; scripts/verify-inductive-proofs.sh output; tdf-hq-test ArtistSimilaritySpec run; scripts/test-artist-similarity-postgres.sh output.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the pure core (tested) and for the model and translation properties (proved). Medium for the step from model and translation to the running code: by review, plus the PostgreSQL probe on a fixture. The handler and scheduler wiring is covered by compilation and review only.",
+      "ambiguity": [
+        "The proofs are about a TLA+ model with one abstract signal and about a hand translation; neither is mechanically refined to the Haskell and SQL.",
+        "No test runs a concurrent write during a real job run on PostgreSQL; the snapshot is PostgreSQL's documented REPEATABLE READ behaviour.",
+        "The fixture uses stand-ins for directory_public_rsvp_event and social_v2_preference with the migrated column types, not a fully migrated database; no HTTP-level test runs the route.",
+        "Opt-out reachability: the switch is writable only where social v2 is enabled; enabling the flag elsewhere needs a dedicated control.",
+        "Weighted cosine is not monotone in one weight; only the restated properties hold and are tested.",
+        "The staleness bound is one period plus one run duration while runs succeed, and 48 hours otherwise, not one period exactly."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Pure core, model and translation verified as stated; refinement of the running code to them is by review and a fixture probe; opt-out reachability and HTTP-level checks on the migrated schema remain."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "COMMUNITY-FAN-NOTIFICATION-001",
       "title": "Marking own notifications read",
       "statement": "A signed-in party marks one or all of their own notifications read. Routes: POST /fans/me/notifications/{notifId}/read; POST /fans/me/notifications/read-all.",
@@ -28995,11 +29087,11 @@
     ".github/workflows/check-messaging-token.yml": "68ee6bacc89bb3d49176cd023a289b68c5fcaabf616fe599c645be7b34a20ddf",
     ".github/workflows/check-mobile-distribution.yml": "a02130cf5379c4a451ec8588b989a057a683dcf275fd3d6638b275aaec0ba599",
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
-    ".github/workflows/ci.yml": "813581940f8c9435bd0813e8cbd0ac517e65a414c874aac4533b1ad0261b36ef",
+    ".github/workflows/ci.yml": "1a3596b4525f5d235af35903d331df15fabd0f814c8b08cc262cd2d0c2433e00",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/domo-refund-validation.yml": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
-    ".github/workflows/event-operations-formal.yml": "178504a7ba104d480c8ee839b167ff3f3c6eaa9abf523e4358ef0877d9813014",
+    ".github/workflows/event-operations-formal.yml": "b483f626ccb3fe53372b56959c9cf1499ad633f13d63527d3310f8bb2e975551",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -29007,7 +29099,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "e797fecc0e4e53c7e4c56ace04dbf73914dc0a68513d8a75eb0c8c1f779f69a0",
+    "docs/catalog-persistence/catalog-list-decisions.json": "b0c6649b5c6bc2ea53f18e2110ce62a455c0e79d5ce85fb6875dc8a59e288161",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -29378,6 +29470,8 @@
     "formal/event-operations/WorkerCompletionEvidence.tla": "34025827b6f01adad2d3972c282deb2c4eac2e1ab9ff57795c9ed6011568f205",
     "formal/event-operations/WorkerCompletionEvidenceFailed.cfg": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e",
     "formal/event-operations/WorkerCompletionEvidenceUnacknowledged.cfg": "ba3fc2fb73be56b89e38433e40dc8fac8689b85330203528ff8b50c9b0575860",
+    "formal/fans/ArtistSimilarity.tla": "2e6cd2c074613097a15164d9d4ba8a53cdcf113e745ccb02ceffe72c2815340f",
+    "formal/fans/artist_similarity_ranking.py": "9d2697374fefe8fb5d7b98fd6725ce1ed4b8b688cc2d39960aa7f7635de1397f",
     "formal/payments/CaptureAccounting.cfg": "1c3cfc664c1a702b0f7db89a5aa631f94670e5297fd3ce38b1329f7f2aad743c",
     "formal/payments/CaptureAccounting.tla": "78c86aa59ebfd73c24fda852348978875a5f60f8925d5f4fbc8e0e7ebb104172",
     "formal/payments/CaptureAccountingLegacy.cfg": "eaba43f7267541499daabeb5e4e512679b2ab36b34154c28dbfaaa1b1f078c30",
@@ -29413,7 +29507,7 @@
     "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "7373af934af4204f9a8b0ea4ca5a4290339766512b7c2b5c101bb33a4cf4221e",
+    "formal/system/recovery-expiry-arithmetic.json": "bb4f95f9d99687c1987f5610030bd0f0a49b846e93712d86b7de7af65cde61b1",
     "formal/system/route-requirements.json": "df5ba57041c1061ce8c325253fc66e48dd5558680f6fcf279ef7403be63355fb",
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -29465,7 +29559,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "746e33e43fbfacd3ba5b5f072e5e43717a55b99142a1d3db4c86d406d576ba01",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "050b828a24b6e779c26cda18e40ab86a9f31deb6ea8bb63e5eeb43cc458690de",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -29553,6 +29647,7 @@
     "scripts/__tests__/video-campaign-postgres-runner.test.mjs": "72e9e3fe9f0dad70d85a921b9b479465dcc60ba09dd34c7c564eb56af054c0a3",
     "scripts/artist-enrichment.mjs": "7cae285c8ffd2373048ab4d3e4ea2838046b7c62571e795163de86f22516809e",
     "scripts/artist-image-download.mjs": "012978206590de16a22c53b98ed29e5245a586dd2928ad26be34981005e3c20c",
+    "scripts/artist-similarity-fixture.sql": "3a2bda3bb8c40e80ed8b3ec28906af1929810d7dee5007f803673b5736dd5df0",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
     "scripts/audit-formal-methods.mjs": "3a34763b5815dbd9fa02dc53e50ce019d5ac64646aeaeee2c515e435d9db85d1",
     "scripts/build-catalog-decisions.mjs": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
@@ -29654,7 +29749,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "892a12010cecf0235af44bc846a4d78eb9ca2133236b581d14adb6e4508fd77f",
+    "scripts/production-migrations.json": "b57e867ceaca429f838efb624a3bd9859877db69c69cee7f0f96aec597953f27",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "e497d1ce41e8b1bdc3ae776a164b0cb3c6317b5c799ecce85205ef9c79602729",
@@ -29687,6 +29782,7 @@
     "scripts/test-artist-invitation-auto-approval-migration.sh": "e3fb40179c83358082f9cb82afaa7950c6ceb019af862e7eea4e12ed09df83aa",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-artist-self-service.sh": "551e25d766e3703aab61713f34124c90b5b177ac976fd58cd3837db36fb4dd06",
+    "scripts/test-artist-similarity-postgres.sh": "838ec0b2f4c5ab98bcbfbea4b5ce590f8b28afb1e256ba1a9157ceb11b53ac7a",
     "scripts/test-artist-tip-idempotency-postgres.sh": "01f0c60d86bbbce313bdfd12214f20d5ce14af73ffca62920cc18d230f887c5c",
     "scripts/test-artist-visibility-postgres.sh": "c642a50af2d7593f73e2edbda8d03b177585a5cab052eea1368618e5a31bd3d0",
     "scripts/test-artist-visibility-sql.py": "7027d2fadfedcebc9d7b367c3f17c425191c4e3186f0178939b01f72453941c0",
@@ -29833,7 +29929,7 @@
     "scripts/verify-event-operations-formal.sh": "a17b08e8c4d12ee0537ed8707d8675e8fa60fe7a1b2aa985391c204cf6d0351b",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
     "scripts/verify-google-account-name.py": "db797f61655c32d3df0c6737a18514ea8d49312bfa245253e7c45e521d9ce4e9",
-    "scripts/verify-inductive-proofs.sh": "690c47575dc80407e8fbc43a5680f9addc5f92adb415eff9f7629ba9fd9d1bdc",
+    "scripts/verify-inductive-proofs.sh": "63ac474828a9b341140fdadd0fd78b2d817e14fa9218ed51544cbfc2a8fe0b96",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
@@ -30768,6 +30864,7 @@
     "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql": "86483222ece86b79a88a693a2cd403cdf3d9b3fd183ef1182df4bf447c873f95",
     "tdf-hq/sql/2026-11-12_marketplace_agreements.sql": "cba023d9107d987ce7f336181505334538bd0a0a00782e596fab1faf4a14fdbf",
     "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql": "47a811221f03817022572f6bee479567c08f714897b56706cea4f75c8b39ac8f",
+    "tdf-hq/sql/2026-11-21_artist_similarity.sql": "93df37bc310e3559d3127d7fc4c5c3229577139fc32d88e7780c18803f765da7",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
     "tdf-hq/src/TDF/API.hs": "89506b9a17e7b30c897d87e28e4258fef82db972aeaefa877cd48b68ceae7993",
@@ -30789,7 +30886,7 @@
     "tdf-hq/src/TDF/API/ServiceStorefront.hs": "9695a49d51f2b9c62f4c9703f09266daa50698dfab767dc473e6e2e7186d8d25",
     "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "b89de6214d43abcd667be184d8b7e4b3ed1dadbad7699c2e88b913b3b84a5769",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
-    "tdf-hq/src/TDF/App/Boot.hs": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
+    "tdf-hq/src/TDF/App/Boot.hs": "5a575bd4eedc44e82e27b21cda474938cc797984681e9a29be77552470fd4b39",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "158b961935c20e95aa6a43637e1ede2f078bb8ecb594de1d5f8abbf91764004f",
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
@@ -30840,7 +30937,7 @@
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "7b33d92413ab2ef23d3f4064257448e8ff87109da4098308b752828b679a6edc",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Commerce/TicketBuyerContact.hs": "f0ddbaf6649a0830f2743a520e5e7cd00e989a049e7d85eb65b08dd3fb3892ac",
-    "tdf-hq/src/TDF/Config.hs": "5c41c41baf78a5dc1d5b79fe2039dcb6004f41abf1fe58cb146d047d4e4115ee",
+    "tdf-hq/src/TDF/Config.hs": "4a1a2e8711da3233dcfc657f450a58345ef82721c3cb770447747bb4367f7691",
     "tdf-hq/src/TDF/ContentStorage.hs": "9b09965c48bd8fa4f240cb157fb24c76e073cd329741440c46c7adc267ee4cbb",
     "tdf-hq/src/TDF/Contracts/API.hs": "5030fec3414c8afbc5fb71895609ad035be9bdbd0fa95d448f788fc50ac82540",
     "tdf-hq/src/TDF/Contracts/Server.hs": "874d4fd54c05dc35103a2182a8793d3b8277f845803cc963e41582b5a403538d",
@@ -30850,7 +30947,7 @@
     "tdf-hq/src/TDF/Courses/Metadata.hs": "ba3efe18dff11d3f36413640d7d3c2b58222a445dd2240509ef2b1378b5fe661",
     "tdf-hq/src/TDF/Courses/Production.hs": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
     "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "f1b7d5faa26ac03e6217695f5b1dbf11ba31108bd1d3967969f62efe33b04376",
-    "tdf-hq/src/TDF/Cron.hs": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
+    "tdf-hq/src/TDF/Cron.hs": "137f667f820709887307a8ca52a359222baedc6b2607dd0f8a87c3aa3d5c979f",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "3887fd05051d11801dfde029a84502f51538e0562b43ba334f6b29f7a2cfadff",
@@ -30861,7 +30958,8 @@
     "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
     "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs": "1b3937abe97b188d3dcd1f330485332651295a5e75e65d14702091c193245d27",
     "tdf-hq/src/TDF/EventOperations/Server.hs": "52efa5b303a134cf22fdbe5df9240b6c53620664b9283982e4e29c4ee7cfeed6",
-    "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs": "5337ce7774dfe5e94936069062c4a9e5d657aebe2ccd829df87f832f49427c36",
+    "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs": "e6713f11b2332969c4808e196ba6b118b043674d1103a11deee0dfe45aa2edfc",
+    "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs": "b48a4e87ede4989d0e2a9a9473836f320c204c6b829fbfafa8132f2a047614ff",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
     "tdf-hq/src/TDF/Handlers/InputList.hs": "57565241bce5f077ef7703008e3dba09686952c804b5fee0910326f47cad42e3",
     "tdf-hq/src/TDF/Interactions/API.hs": "1c87397e99ddc44da1178cdb7e696a32966dc02760e58ea32863c162df88d58b",
@@ -30899,7 +30997,7 @@
     "tdf-hq/src/TDF/Routes/DomoRefunds.hs": "b30e9a615d9ea754e2ffe29a257e272d4fc7342d17ec919e1235a199aeff34fd",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "c5b5eac3f58fbb0a24651c2bb2e57664720a6526ac25a69d2bf9f49acfdcc438",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "21b9a57abbf1ed54ad20f37063fb2beecf36c1f5f35b7bfeafac795edc9e0ae1",
+    "tdf-hq/src/TDF/Server.hs": "efb6bd2f4b5afa267a80151f006599e803b402eaea3de4e813b8734577506ea0",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
@@ -30976,7 +31074,8 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "ac2c532ac44d40fa90deccf0617c0d3f8663993541b17a02fa81f322352cd155",
+    "tdf-hq/tdf-hq.cabal": "f8a37c43688294ca772f9922895d2c855df96a32b8f42cc8af5b31f533a3ebde",
+    "tdf-hq/test/ArtistSimilarityProbe.hs": "f3e99df11b3f056136bc505c3e0b4a036782150d80d0b575e2b30fc5aafe9361",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -30984,7 +31083,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "53379c4e0527282b7e6a5c8124e697374092766513d407402d0cb036a7ac2e04",
+    "tdf-hq/test/Spec.hs": "fccce8105741db15a7720bda4203e5314e5742e4b080b3862cbc6e3db8292106",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -31020,12 +31119,13 @@
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "3fac72c8e53e52a81933aeba58c908980c90b6db398eb17716dea7d70b0d3f7c",
     "tdf-hq/test/TDF/EventAdminDelegationSpec.hs": "73b13ff14472e7f3df54cbc44718263313bf255244a71bc9534326998ca63f20",
     "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs": "01a1bacba4c441d49e68162267f0e590b39e2db57f94a29818a7057423ff1065",
-    "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "bc4f5e6053643ddcbae742e1690e44f5698c6f527f86874723c3bf014ceda57a",
+    "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "a055bef50c77ca2c049fb5e0b0078df4e12db04ddd921c997cee6610cc39b58e",
     "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs": "65bdfb6d20e33eb7a062cebdeef4c1e3dbb48e83b10eda578a9dcdeddd9249dc",
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
     "tdf-hq/test/TDF/EventTicketSaleSpec.hs": "c0645218656951aee61012df54df63ec2f9128b8d787d6899fcd323bc90294dd",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
     "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs": "5d5b8fccdd5f61ce7fdd84f8f342cea0463752abb8e330708a9d212b7dae9cfd",
+    "tdf-hq/test/TDF/Fans/ArtistSimilaritySpec.hs": "0bd821a3b9c2d4302848346f20cb0c6f63eb65cd21b4f52a0342b3d12955fb8a",
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
@@ -31056,7 +31156,7 @@
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "4746db879d19f0d2387b5198f6d402b7262b7ed2f50b4ec7772b6585172ae474",
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "0cff8f4196afbd1c7247802a051a70a720eb53ef135d2bc5f5f789efd37f1162",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
-    "tdf-hq/test/TDF/ServerSpec.hs": "f1f75ad6c396357a04567b49f5150976942b20617a734b540e54aed7a3d250fc",
+    "tdf-hq/test/TDF/ServerSpec.hs": "8709e6a1127ed0dd5e6ee2210d6fda6e5884567026464beb82bb4f7fad7c1889",
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
@@ -32254,6 +32354,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "COMMUNITY-FAN-NOTIFICATION-001",
         "relationship": "implementation"
       },
@@ -33383,6 +33487,10 @@
       },
       {
         "requirement": "OPS-CLIENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
         "relationship": "implementation"
       },
       {
@@ -38531,6 +38639,10 @@
       },
       {
         "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
         "relationship": "implementation"
       },
       {
@@ -46974,6 +47086,10 @@
       {
         "requirement": "AUTH-SOCIAL-OAUTH-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/ServerInstagramOAuth.hs": [
@@ -48190,6 +48306,10 @@
       {
         "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/features/fans/RecommendedArtists.tsx": [
@@ -48232,6 +48352,54 @@
       {
         "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
         "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs": [
+      {
+        "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-21_artist_similarity.sql": [
+      {
+        "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Fans/ArtistSimilaritySpec.hs": [
+      {
+        "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/ArtistSimilarityProbe.hs": [
+      {
+        "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-artist-similarity-postgres.sh": [
+      {
+        "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/artist-similarity-fixture.sql": [
+      {
+        "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/fans/ArtistSimilarity.tla": [
+      {
+        "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/fans/artist_similarity_ranking.py": [
+      {
+        "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/sql/2026-09-28_interaction_compatibility.sql": [
@@ -51823,7 +51991,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "813581940f8c9435bd0813e8cbd0ac517e65a414c874aac4533b1ad0261b36ef",
+      "sha256": "1a3596b4525f5d235af35903d331df15fabd0f814c8b08cc262cd2d0c2433e00",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51971,7 +52139,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "178504a7ba104d480c8ee839b167ff3f3c6eaa9abf523e4358ef0877d9813014",
+      "sha256": "b483f626ccb3fe53372b56959c9cf1499ad633f13d63527d3310f8bb2e975551",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53698,7 +53866,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "746e33e43fbfacd3ba5b5f072e5e43717a55b99142a1d3db4c86d406d576ba01",
+      "sha256": "050b828a24b6e779c26cda18e40ab86a9f31deb6ea8bb63e5eeb43cc458690de",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55279,6 +55447,18 @@
         {
           "requirement": "ART-PROFILE-MEDIA-001",
           "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f54cda16b325ab10",
+      "path": "scripts/artist-similarity-fixture.sql",
+      "sha256": "3a2bda3bb8c40e80ed8b3ec28906af1929810d7dee5007f803673b5736dd5df0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -56961,7 +57141,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "892a12010cecf0235af44bc846a4d78eb9ca2133236b581d14adb6e4508fd77f",
+      "sha256": "b57e867ceaca429f838efb624a3bd9859877db69c69cee7f0f96aec597953f27",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58066,6 +58246,18 @@
       "requirements": [
         {
           "requirement": "AUTH-ACCESS-PROVISION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c2f42b9debc38870",
+      "path": "scripts/test-artist-similarity-postgres.sh",
+      "sha256": "838ec0b2f4c5ab98bcbfbea4b5ce590f8b28afb1e256ba1a9157ceb11b53ac7a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
           "relationship": "tests"
         }
       ]
@@ -60661,7 +60853,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "690c47575dc80407e8fbc43a5680f9addc5f92adb415eff9f7629ba9fd9d1bdc",
+      "sha256": "63ac474828a9b341140fdadd0fd78b2d817e14fa9218ed51544cbfc2a8fe0b96",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79120,6 +79312,18 @@
       ]
     },
     {
+      "id": "SURFACE-7f6d8ba1ea02a671",
+      "path": "tdf-hq/sql/2026-11-21_artist_similarity.sql",
+      "sha256": "93df37bc310e3559d3127d7fc4c5c3229577139fc32d88e7780c18803f765da7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -79731,7 +79935,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
+      "sha256": "5a575bd4eedc44e82e27b21cda474938cc797984681e9a29be77552470fd4b39",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79748,6 +79952,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-PAYMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
           "relationship": "implementation"
         },
         {
@@ -80678,7 +80886,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "5c41c41baf78a5dc1d5b79fe2039dcb6004f41abf1fe58cb146d047d4e4115ee",
+      "sha256": "4a1a2e8711da3233dcfc657f450a58345ef82721c3cb770447747bb4367f7691",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -80695,6 +80903,10 @@
         },
         {
           "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
           "relationship": "implementation"
         },
         {
@@ -80846,11 +81058,15 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
+      "sha256": "137f667f820709887307a8ca52a359222baedc6b2607dd0f8a87c3aa3d5c979f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
           "relationship": "implementation"
         }
       ]
@@ -81238,11 +81454,27 @@
     {
       "id": "SURFACE-a014c1742322a2bb",
       "path": "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
-      "sha256": "5337ce7774dfe5e94936069062c4a9e5d657aebe2ccd829df87f832f49427c36",
+      "sha256": "e6713f11b2332969c4808e196ba6b118b043674d1103a11deee0dfe45aa2edfc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-a4bb3744c2240160",
+      "path": "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
+      "sha256": "b48a4e87ede4989d0e2a9a9473836f320c204c6b829fbfafa8132f2a047614ff",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
           "relationship": "implementation"
         }
       ]
@@ -81948,7 +82180,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "21b9a57abbf1ed54ad20f37063fb2beecf36c1f5f35b7bfeafac795edc9e0ae1",
+      "sha256": "efb6bd2f4b5afa267a80151f006599e803b402eaea3de4e813b8734577506ea0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -82065,6 +82297,10 @@
         },
         {
           "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
           "relationship": "implementation"
         },
         {
@@ -84073,7 +84309,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "ac2c532ac44d40fa90deccf0617c0d3f8663993541b17a02fa81f322352cd155",
+      "sha256": "f8a37c43688294ca772f9922895d2c855df96a32b8f42cc8af5b31f533a3ebde",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84135,6 +84371,18 @@
         {
           "requirement": "EVT-TICKET-SALE-001",
           "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2358d533521ebfa4",
+      "path": "tdf-hq/test/ArtistSimilarityProbe.hs",
+      "sha256": "f3e99df11b3f056136bc505c3e0b4a036782150d80d0b575e2b30fc5aafe9361",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -84264,7 +84512,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "53379c4e0527282b7e6a5c8124e697374092766513d407402d0cb036a7ac2e04",
+      "sha256": "fccce8105741db15a7720bda4203e5314e5742e4b080b3862cbc6e3db8292106",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85069,7 +85317,7 @@
     {
       "id": "SURFACE-6a2ebecd249230c2",
       "path": "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
-      "sha256": "bc4f5e6053643ddcbae742e1690e44f5698c6f527f86874723c3bf014ceda57a",
+      "sha256": "a055bef50c77ca2c049fb5e0b0078df4e12db04ddd921c997cee6610cc39b58e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85145,6 +85393,18 @@
       "requirements": [
         {
           "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-a443763e07064804",
+      "path": "tdf-hq/test/TDF/Fans/ArtistSimilaritySpec.hs",
+      "sha256": "0bd821a3b9c2d4302848346f20cb0c6f63eb65cd21b4f52a0342b3d12955fb8a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
           "relationship": "tests"
         }
       ]
@@ -85784,7 +86044,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "f1f75ad6c396357a04567b49f5150976942b20617a734b540e54aed7a3d250fc",
+      "sha256": "8709e6a1127ed0dd5e6ee2210d6fda6e5884567026464beb82bb4f7fad7c1889",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -93365,7 +93625,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "786c2ce98e990cc8b8697ca2564f1692717c19688a472212dd43f2ba253c2169",
+      "sourceSha256": "39a49596cb065d942bb3d7553d2c38d7db98357473d8aabdd9fa394feb4224e2",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -93393,7 +93653,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "786c2ce98e990cc8b8697ca2564f1692717c19688a472212dd43f2ba253c2169",
+      "sourceSha256": "39a49596cb065d942bb3d7553d2c38d7db98357473d8aabdd9fa394feb4224e2",
       "definition": {
         "states": [
           "absent",
@@ -93423,7 +93683,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "786c2ce98e990cc8b8697ca2564f1692717c19688a472212dd43f2ba253c2169",
+      "sourceSha256": "39a49596cb065d942bb3d7553d2c38d7db98357473d8aabdd9fa394feb4224e2",
       "definition": {
         "export": [
           "queued",
@@ -116830,7 +117090,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 229,
+    "PARTIAL": 230,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

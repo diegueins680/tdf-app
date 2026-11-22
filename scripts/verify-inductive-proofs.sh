@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Unbounded safety proofs by inductive invariants (Apalache) plus bounded TLC
-# exploration and negative controls for formal/payments and formal/auth.
+# exploration and negative controls for formal/payments, formal/auth and
+# formal/fans.
 #
 # Requires the pinned official artifacts:
 #   APALACHE_TGZ   apalache.tgz from apalache-mc/apalache release v0.62.4
@@ -16,6 +17,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 MODEL_DIR="${REPO_DIR}/formal/payments"
 AUTH_MODEL_DIR="${REPO_DIR}/formal/auth"
+FANS_MODEL_DIR="${REPO_DIR}/formal/fans"
 JAVA_BIN="${JAVA_BIN:-java}"
 APALACHE_TGZ="${APALACHE_TGZ:-}"
 TLA2TOOLS_JAR="${TLA2TOOLS_JAR:-}"
@@ -189,6 +191,24 @@ apalache_expect "${E}" CInitCurrent IndInv IndInv 1 NoError "SessionExpiry-conse
 apalache_expect "${E}" CInitCurrent IndInv Safe 0 NoError "SessionExpiry-implication"
 apalache_expect "${E}" CInitCurrent Init NoMintedSessionUsed 3 Error "SessionExpiry-reachability-witness"
 apalache_expect "${E}" CInitNotFailClosed Init Safe 4 Error "SessionExpiryNotFailClosed-reachable-violation"
+unset CURRENT_MODEL_DIR
+
+A=ArtistSimilarity.tla
+CURRENT_MODEL_DIR="${FANS_MODEL_DIR}"
+
+# COMMUNITY-ARTIST-SIMILARITY-001: the stored similarity is the reference on
+# the rows committed at its snapshot, a request uses it only while that
+# snapshot is recent, and without failing runs it is at most one period and
+# one run old. Controls: reads at different instants, and no age guard.
+tlc_expect "${A}" ArtistSimilarity.cfg pass
+tlc_expect "${A}" ArtistSimilarityFailures.cfg pass
+tlc_expect "${A}" ArtistSimilarityNoSnapshot.cfg violation
+tlc_expect "${A}" ArtistSimilarityNoAgeGuard.cfg violation
+apalache_expect "${A}" CInitImplementation Init IndInv 0 NoError "ArtistSimilarity-initiation"
+apalache_expect "${A}" CInitImplementation IndInv IndInv 1 NoError "ArtistSimilarity-consecution"
+apalache_expect "${A}" CInitImplementation IndInv Safe 0 NoError "ArtistSimilarity-implication"
+apalache_expect "${A}" CInitNoSnapshot Init TableRefinesReference 6 Error "ArtistSimilarityNoSnapshot-reachable-violation"
+apalache_expect "${A}" CInitNoAgeGuard Init ServedRefinesReference 7 Error "ArtistSimilarityNoAgeGuard-reachable-violation"
 unset CURRENT_MODEL_DIR
 
 echo "Inductive proofs and controls passed."

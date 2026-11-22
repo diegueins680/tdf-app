@@ -35,6 +35,7 @@ httpTestConfig = AppConfig
   , eventDiscoveryLookaheadDays = 1, eventDiscoveryMaxPagesPerCity = 1, eventDiscoveryHourLocal = 0
   , eventDiscoveryCountryCode = Nothing, googleRoutesApiKey = Nothing, googleRoutesApiBase = disabledEndpoint
   , eventLogisticsRecheckEnabled = False, artistEnrichmentEnabled = False
+  , fanMultiSignalRecommendationsEnabled = False
   , artistEnrichmentAutoPublish = False, artistEnrichmentHourLocal = 0
   , artistEnrichmentBatchSize = 1, artistEnrichmentStaleDays = 1
   , defaultCurrency = "USD", supportedCurrencies = ["USD"], defaultTimezone = "America/Guayaquil"
