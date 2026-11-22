@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "439bc7589191c4ed4453844b80ed42727f7511de",
+  "mobileRevision": "a35aa28c0a51799a18888ae36e01e051de19460f",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -90,6 +90,7 @@
       "e2e/web/music-player-native.spec.mjs",
       "e2e/web/music-player.spec.mjs",
       "e2e/web/music-search-native.spec.mjs",
+      "e2e/web/my-tickets.spec.mjs",
       "e2e/web/notification-navigation.spec.mjs",
       "e2e/web/payment-choices-contact.spec.mjs",
       "e2e/web/payment-field-errors.spec.mjs",
@@ -594,8 +595,6 @@
       "scripts/test-event-task-revision-migration.sh",
       "scripts/test-event-task-revisioned-read-migration.sh",
       "scripts/test-event-ticket-sale.sh",
-      "scripts/test-fan-recommendations-postgres.sh",
-      "scripts/test-fan-recommendations-sql.py",
       "scripts/test-feature-migrations.sh",
       "scripts/test-google-account-name-verifier.py",
       "scripts/test-guarded-release.py",
@@ -980,6 +979,7 @@
       "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
       "tdf-hq-ui/src/api/musicStorageResponse.test.ts",
       "tdf-hq-ui/src/api/musicStorageResponse.ts",
+      "tdf-hq-ui/src/api/myTicketOrders.ts",
       "tdf-hq-ui/src/api/navigationPreferences.ts",
       "tdf-hq-ui/src/api/operations.test.ts",
       "tdf-hq-ui/src/api/operations.ts",
@@ -1255,12 +1255,8 @@
       "tdf-hq-ui/src/features/fans/FirstFollowStarter.tsx",
       "tdf-hq-ui/src/features/fans/FollowedArtists.tsx",
       "tdf-hq-ui/src/features/fans/ProfileSectionCard.tsx",
-      "tdf-hq-ui/src/features/fans/RecommendedArtists.test.tsx",
-      "tdf-hq-ui/src/features/fans/RecommendedArtists.tsx",
       "tdf-hq-ui/src/features/fans/artistAudience.test.ts",
       "tdf-hq-ui/src/features/fans/artistAudience.ts",
-      "tdf-hq-ui/src/features/fans/artistRecommendations.test.ts",
-      "tdf-hq-ui/src/features/fans/artistRecommendations.ts",
       "tdf-hq-ui/src/features/fans/reconcileFollowState.test.ts",
       "tdf-hq-ui/src/features/fans/reconcileFollowState.ts",
       "tdf-hq-ui/src/features/fans/useFanHubOnboarding.ts",
@@ -1530,6 +1526,8 @@
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts",
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx",
+      "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx",
+      "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
       "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
       "tdf-hq-ui/src/pages/NotFoundPage.tsx",
       "tdf-hq-ui/src/pages/NotificationPage.tsx",
@@ -1741,6 +1739,8 @@
       "tdf-hq-ui/src/utils/dateOnly.ts",
       "tdf-hq-ui/src/utils/dateTime.test.ts",
       "tdf-hq-ui/src/utils/dateTime.ts",
+      "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts",
+      "tdf-hq-ui/src/utils/deviceTicketOrders.ts",
       "tdf-hq-ui/src/utils/directoryContactRouting.test.ts",
       "tdf-hq-ui/src/utils/directoryContactRouting.ts",
       "tdf-hq-ui/src/utils/directoryPreviewImage.ts",
@@ -2539,7 +2539,6 @@
       "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs",
       "tdf-hq/src/TDF/EventOperations/Server.hs",
       "tdf-hq/src/TDF/EventOperations/Types.hs",
-      "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
       "tdf-hq/src/TDF/FeatureRegistry.hs",
       "tdf-hq/src/TDF/Handlers/InputList.hs",
       "tdf-hq/src/TDF/Interactions/API.hs",
@@ -2738,7 +2737,6 @@
       "tdf-hq/test/TDF/EventOrganizerSpec.hs",
       "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
       "tdf-hq/test/TDF/FailureBoundarySpec.hs",
-      "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs",
       "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
       "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
       "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs",
@@ -3356,7 +3354,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "178504a7ba104d480c8ee839b167ff3f3c6eaa9abf523e4358ef0877d9813014",
+      "sha256": "73e69d454faed64efbcd6801943bb7b0499ef01dcbe0adc6343ec54a7ca746b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3780,6 +3778,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-01ed15676afd6c39",
+      "path": "e2e/web/my-tickets.spec.mjs",
+      "sha256": "c6e0fc72bebd284e8619af7c08091c98b4d5eaa14fe8c6a28a928facda3c37cf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1650513d8810b7f7",
       "path": "e2e/web/notification-navigation.spec.mjs",
       "sha256": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
@@ -4178,7 +4182,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "c42453218ea4e89aae9b5da80d93cc413adc4196522073c91ef278e4a1decad3",
+      "sha256": "8ec900d4e9bb1d9e50f810173b58c54b16566de51aa399b200e359b9c1923fef",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6744,18 +6748,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-e1ca12144977d994",
-      "path": "scripts/test-fan-recommendations-postgres.sh",
-      "sha256": "e0499f45114c54a8cf3b46419b1b1c9f963a0799a27a7de46db5c0c94c07a38e",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-298bcd9bf352449e",
-      "path": "scripts/test-fan-recommendations-sql.py",
-      "sha256": "e8e7bac3b429385c1225d7aa8d9a9709031606b978380770e43c4403c02a2690",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-ec70a1725f0a44fe",
       "path": "scripts/test-feature-migrations.sh",
       "sha256": "b26598f05f4b69568e4f2d27167212cc644b045bdf8657348d0e8c961b04189f",
@@ -7172,7 +7164,7 @@
     {
       "id": "SURFACE-3644e59046fed6e3",
       "path": "scripts/test-public-event-card-tickets-http.py",
-      "sha256": "32d44391832275eafe1fd9db7b8e425909f61aeab4c2233e7bbe67889073cdc8",
+      "sha256": "584927f18ada55422d284dad0104bd765d82d34d4c20e5511e05e839129ac341",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8306,7 +8298,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "c93f5c6a815ae9b57a19eca3aa12759c65cc8aa1f4341bfecc6fdffcf4a0ff28",
+      "sha256": "b0441cbcba602a812c779515fbdf6b7d7c9238374780d2a8b31a7bbbec695ff1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8804,13 +8796,13 @@
     {
       "id": "SURFACE-743e4202864493ee",
       "path": "tdf-hq-ui/src/api/fans.test.ts",
-      "sha256": "c3db1d5ad738382a954094ff375a67ce23eb98dd3f2205ab74f9ed158a5ff1e7",
+      "sha256": "950ce9aa232eb1bc40b85f24b4ee05dc53599dff908edea22fd96d04f1c00c08",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-ffd1f7d4f06774cf",
       "path": "tdf-hq-ui/src/api/fans.ts",
-      "sha256": "0e444c2c417b6ff4fe25bdbf169437dfcc37a66e7bdeaa6521d4a5aeca91e5a3",
+      "sha256": "75f0d175c04cd78845fb2fb305577eb00db074d30f2cc693a70d4d3a023a7046",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8846,7 +8838,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "813f02eba3a197ce5fce470dcb1681fb5cafb265d9d00d40a685650a14f160d2",
+      "sha256": "4d69c011a18e29d7d141d37f27046b912a04d2e1c56267961e95b404e2922dc3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9009,6 +9001,12 @@
       "id": "SURFACE-a8caa690095942ac",
       "path": "tdf-hq-ui/src/api/musicStorageResponse.ts",
       "sha256": "8f48adb2834adc89083f4ef643dde01dcfae051815f42121ac21bb1e6e233e78",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-39de0d450389c157",
+      "path": "tdf-hq-ui/src/api/myTicketOrders.ts",
+      "sha256": "b4f29af5c73605e37fa38f81bc2b44601fd11f8d92f9bcf90cf993845cb0cc14",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9284,7 +9282,7 @@
     {
       "id": "SURFACE-9bac22f287db5deb",
       "path": "tdf-hq-ui/src/api/types.ts",
-      "sha256": "0879b24ae1ff60ef60de657be2ee774de2f4bcf89c804a251857e3bf14175114",
+      "sha256": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10662,18 +10660,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-ecc58d7cd6d94965",
-      "path": "tdf-hq-ui/src/features/fans/RecommendedArtists.test.tsx",
-      "sha256": "97997e998f670c3a6af22a87af2da657d2b1f336e1995ab02f99c9b2f1d1c309",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-9b6e93988a319b40",
-      "path": "tdf-hq-ui/src/features/fans/RecommendedArtists.tsx",
-      "sha256": "7fc79232feabda05b3ecf321864828c6f7003636f193fd1c26eb4f3abbf3e51f",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-f6a6f1b8864f9350",
       "path": "tdf-hq-ui/src/features/fans/artistAudience.test.ts",
       "sha256": "7a159ad02adc92895af13a68e7af525b61b90337d74a2dd3d43aa9c972cec6c2",
@@ -10683,18 +10669,6 @@
       "id": "SURFACE-efc4657533c32fa9",
       "path": "tdf-hq-ui/src/features/fans/artistAudience.ts",
       "sha256": "cfc29f38e81930764756ed66badd00da723f8b62b1ada9a46a04031f34207b95",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-d6eaccf61f8488b5",
-      "path": "tdf-hq-ui/src/features/fans/artistRecommendations.test.ts",
-      "sha256": "2cada24ae59e49b3c54e67b21fc7f50b2ffd0528c3629dc743c8b16fb9cd0470",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-baff66803823d83f",
-      "path": "tdf-hq-ui/src/features/fans/artistRecommendations.ts",
-      "sha256": "69b02c0dab8f6b42dc02ea24222b65543f7a9aa86e9e1c4854e2be7c99da7245",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11804,31 +11778,31 @@
     {
       "id": "SURFACE-843ecd90497b82eb",
       "path": "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-      "sha256": "087c18cc14e7c1fae2b04f4fc1f823540d80af489f42b0b71896fc8c04fb12ee",
+      "sha256": "6d1a4156273bc94c6fd44e89ba9c9cff52bb47e7b0f4d4af5fc45085e24feaa3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8e582de4b6234f44",
       "path": "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-      "sha256": "ba635a3cfde688206b980e65aeeb73ff6792b1c7274331e7ace7827270c3a1fc",
+      "sha256": "bc32c42d85f2702f331c7c170764546c3988000c23596cfd3d691e24b4e2c024",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3d536aa30411edce",
       "path": "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-      "sha256": "7126bd51b9588447787a899294f755d35e9efa2da8722943c472a3eaf98c8895",
+      "sha256": "b7c85fe3881529c7b6c6e601085352dfcd5550ae06509c922eefa0eb60575734",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2bbd93102a783ed1",
       "path": "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
-      "sha256": "289b46d5b875816cc0356f3fe9715389238a8f7ed57eb3d734784751f07b4f03",
+      "sha256": "70b02ed4fec675ddcbc2a53ad2c167498719c9e9b9363c2517c0b29a033e1fdb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "9632387392d17c6e5f208bf4a2e9cd9ca3a8974c4749b8fb685cc3c43a8046c8",
+      "sha256": "cd9eb15dbfda661f7672a549e21bd5ca61850b894d13ede798616930bb954b28",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12312,6 +12286,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-2868173b55cf6317",
+      "path": "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx",
+      "sha256": "90b633d62953bbdaf64d3a662c365b7777d3e66cc7c5317a13c174a642388fb8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f2b81d101086b2ae",
+      "path": "tdf-hq-ui/src/pages/MyTicketsPage.tsx",
+      "sha256": "10a77b9b7e6559c909bac78a28b7325f0c08cd6153378e1f69b2220e296c4270",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-35214bb78cbc255a",
       "path": "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
       "sha256": "0bb182ef3da26e32894ee7ca9093cf1691afb78b7e6a3ec9129d4dc3f0fa97bc",
@@ -12428,7 +12414,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "e4c50481e70a35467653b40caf08b42ad964ab6b9731a2ccd46c50dd425e4702",
+      "sha256": "7544cf376e7c4721e85ae84341a98014cf0909cc8c8301ee2ec0c01b3beac179",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13124,7 +13110,7 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "d257098c3338360560f5382908e43fc0ab08c5eefb631ed3393a66a02db109ae",
+      "sha256": "a88a66d8753db1d483d1d3d59cf8a197250ee371c90b3e7064cd08ef07abcd48",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13575,6 +13561,18 @@
       "id": "SURFACE-9267af1df09b8b64",
       "path": "tdf-hq-ui/src/utils/dateTime.ts",
       "sha256": "a75595587356dd2dd3561264d04ea323aa2589f1e739645b103b5799a6ce9677",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-85c269ba1c50835e",
+      "path": "tdf-hq-ui/src/utils/deviceTicketOrders.test.ts",
+      "sha256": "ddfa70031a56b6ce8abfcfef343440929dc930c5e518c30a83f3dfec6b43c55f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-192a29fafc828f47",
+      "path": "tdf-hq-ui/src/utils/deviceTicketOrders.ts",
+      "sha256": "189e5275fe6f99f1e63d63fbe229a71184b138530fb734a76fe2c48b07f10997",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14294,7 +14292,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
+      "sha256": "11392498d31056c0a3eef9ff2dab3813848b5fa44e8d55176adb57133f7142ca",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14354,7 +14352,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "93c52de817ad1df485f50ccd686cf0a1ba23fe57ce4fe8fdddf97361a06d678d",
+      "sha256": "fe5cd443b400722be794c27aa7d29696696f0328fbb8beb408ddc6fc7f9c892d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17444,7 +17442,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "89506b9a17e7b30c897d87e28e4258fef82db972aeaefa877cd48b68ceae7993",
+      "sha256": "ef1ed6b71b5bc4a490c9074808094513c7c6396dbefd58606ae30f954d59ea4e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18254,7 +18252,7 @@
     {
       "id": "SURFACE-70ca6d20ed6232ae",
       "path": "tdf-hq/src/TDF/DTO.hs",
-      "sha256": "3887fd05051d11801dfde029a84502f51538e0562b43ba334f6b29f7a2cfadff",
+      "sha256": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18351,12 +18349,6 @@
       "id": "SURFACE-4b41640bebd528e2",
       "path": "tdf-hq/src/TDF/EventOperations/Types.hs",
       "sha256": "04e18fa04d8876bad418393ac9b66912e43364d5fb62b18bd7448a785983b3d3",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-a014c1742322a2bb",
-      "path": "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
-      "sha256": "5337ce7774dfe5e94936069062c4a9e5d657aebe2ccd829df87f832f49427c36",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18620,7 +18612,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "21b9a57abbf1ed54ad20f37063fb2beecf36c1f5f35b7bfeafac795edc9e0ae1",
+      "sha256": "10cfaf282a49b1b78b23d820b65339cb2cbe5dd0ed5152688362e0ac034b1aa1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19202,7 +19194,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b2699bc782904be3a871579f71a9928443135ca4d347d6d5769f23254d345f95",
+      "sha256": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19280,7 +19272,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "965051733781f4d87348746669ae29b3537c4bdea1474de17749743d34053009",
+      "sha256": "3025b33657e3570185cc65d65def21673b7c513e63810d1a870d40a76a5d07c5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19545,12 +19537,6 @@
       "id": "SURFACE-d7524ac1e833fed0",
       "path": "tdf-hq/test/TDF/FailureBoundarySpec.hs",
       "sha256": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-590912916bfb765f",
-      "path": "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs",
-      "sha256": "5d5b8fccdd5f61ce7fdd84f8f342cea0463752abb8e330708a9d212b7dae9cfd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21794,7 +21780,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "813f02eba3a197ce5fce470dcb1681fb5cafb265d9d00d40a685650a14f160d2",
+      "sha256": "4d69c011a18e29d7d141d37f27046b912a04d2e1c56267961e95b404e2922dc3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22148,7 +22134,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "0c72bbca5adfe3a8a357123c0111d0a7ff552d02af8c34f2788ff739fac59774",
+      "sha256": "ae4d7ffc3dee6dcd46d9f3cd0a2841973ea1ffcf643b30f189eb6487a6269dcf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31729,13 +31715,6 @@
       "kind": "requirement-candidate"
     },
     {
-      "path": "formal/system/fan-recommendations.md",
-      "sha256": "06c7488bb7fe6d51ca08ae348682750516cba30d613ab9589651fa5e6c41aa14",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
       "path": "formal/system/fans-routes.md",
       "sha256": "2a08180ef0a7319766ce9e7754103cb1cce59e191789491755d6b2f1772881b2",
       "authority": "inferred",
@@ -32409,7 +32388,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4384784f5cc58780bc53b2a0d635cc8a21eb2ee473011499e69a2c2572032d1b",
+      "sha256": "56b933e4c0987cef8bc820f10bb781fdd0e1f5e59d28c26d07bf7a0efaaf821a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32843,7 +32822,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "93c52de817ad1df485f50ccd686cf0a1ba23fe57ce4fe8fdddf97361a06d678d",
+      "sha256": "fe5cd443b400722be794c27aa7d29696696f0328fbb8beb408ddc6fc7f9c892d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
