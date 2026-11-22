@@ -20,6 +20,7 @@ module TDF.Chat.Delivery
   , deliveryLeaseSeconds
   , emailSendTimeoutSeconds
   , pushResponseTimeoutSeconds
+  , pushExchangeTimeoutSeconds
   , validExpoPushToken
   , ExpoTicket(..)
   , ExpoOutcome(..)
@@ -117,6 +118,10 @@ emailSendTimeoutSeconds = 60
 
 pushResponseTimeoutSeconds :: Int
 pushResponseTimeoutSeconds = 15
+
+-- | Upper bound for the complete push exchange, response body included.
+pushExchangeTimeoutSeconds :: Int
+pushExchangeTimeoutSeconds = 30
 
 -- | Expo tokens look like @ExponentPushToken[...]@ (or the newer @ExpoPushToken[...]@).
 validExpoPushToken :: Text -> Bool
@@ -320,26 +325,32 @@ sendPush env settings outboxId = case dsPushTokenKey settings of
               , requestBody = RequestBodyLBS (Aeson.encode (expoPushMessages notificationId tokens))
               , responseTimeout = responseTimeoutMicro (pushResponseTimeoutSeconds * 1000000)
               }
-        response <- httpLbs request sharedTlsManager
-        let status = statusCode (responseStatus response)
-        if status /= 200
-          then pure ("retry", if status == 429 then "provider_rate_limited" else "provider_error")
-          else case parseExpoTickets (responseBody response) of
-            Just tickets | length tickets == length subscriptionIds -> do
-              forM_ (zip subscriptionIds tickets) $ \(sid, ticket) -> case ticket of
-                TicketOk -> runSqlPool (rawExecute
-                  "UPDATE notification_push_subscription SET last_success_at=now(), last_failure_code=NULL WHERE id=?"
-                  [PersistInt64 sid]) (envPool env)
-                TicketDeviceNotRegistered -> runSqlPool (rawExecute
-                  "UPDATE notification_push_subscription SET active=false, last_failure_code='device_not_registered', updated_at=now() WHERE id=?"
-                  [PersistInt64 sid]) (envPool env)
-                TicketError code -> runSqlPool (rawExecute
-                  "UPDATE notification_push_subscription SET last_failure_code=? WHERE id=?"
-                  [PersistText (T.take 64 (sanitizeCode code)), PersistInt64 sid]) (envPool env)
-              pure $ case classifyExpoTickets tickets of
-                ExpoAccepted -> ("accepted", "provider_accepted")
-                ExpoNoDevice -> ("skipped", "no_subscription")
-                ExpoRetry reason -> ("retry", reason)
-            _ -> pure ("retry", "provider_error")
+        -- The response timeout above covers the connection and headers only; the
+        -- body is read afterwards. Bound the whole exchange so a provider that
+        -- stalls mid-body cannot hold the delivery thread past the lease.
+        exchange <- timeout (pushExchangeTimeoutSeconds * 1000000) (httpLbs request sharedTlsManager)
+        case exchange of
+          Nothing -> pure ("retry", "provider_timeout")
+          Just response -> do
+            let status = statusCode (responseStatus response)
+            if status /= 200
+              then pure ("retry", if status == 429 then "provider_rate_limited" else "provider_error")
+              else case parseExpoTickets (responseBody response) of
+                Just tickets | length tickets == length subscriptionIds -> do
+                  forM_ (zip subscriptionIds tickets) $ \(sid, ticket) -> case ticket of
+                    TicketOk -> runSqlPool (rawExecute
+                      "UPDATE notification_push_subscription SET last_success_at=now(), last_failure_code=NULL WHERE id=?"
+                      [PersistInt64 sid]) (envPool env)
+                    TicketDeviceNotRegistered -> runSqlPool (rawExecute
+                      "UPDATE notification_push_subscription SET active=false, last_failure_code='device_not_registered', updated_at=now() WHERE id=?"
+                      [PersistInt64 sid]) (envPool env)
+                    TicketError code -> runSqlPool (rawExecute
+                      "UPDATE notification_push_subscription SET last_failure_code=? WHERE id=?"
+                      [PersistText (T.take 64 (sanitizeCode code)), PersistInt64 sid]) (envPool env)
+                  pure $ case classifyExpoTickets tickets of
+                    ExpoAccepted -> ("accepted", "provider_accepted")
+                    ExpoNoDevice -> ("skipped", "no_subscription")
+                    ExpoRetry reason -> ("retry", reason)
+                _ -> pure ("retry", "provider_error")
   where
     sanitizeCode = T.map (\c -> if isAlphaNum c then toLower c else '_')

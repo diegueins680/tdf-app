@@ -40,6 +40,8 @@ spec = describe "MSG-DELIVERY-001 chat email and push reminders" $ do
     it "bounds every provider call well inside the lease of the intent being sent" $ do
       emailSendTimeoutSeconds * 2 `shouldSatisfy` (<= deliveryLeaseSeconds)
       pushResponseTimeoutSeconds * 2 `shouldSatisfy` (<= deliveryLeaseSeconds)
+      pushExchangeTimeoutSeconds * 2 `shouldSatisfy` (<= deliveryLeaseSeconds)
+      pushResponseTimeoutSeconds `shouldSatisfy` (<= pushExchangeTimeoutSeconds)
       -- chat_delivery_lease accepts leases of 10..900 seconds.
       deliveryLeaseSeconds `shouldSatisfy` (\seconds -> seconds >= 10 && seconds <= 900)
 

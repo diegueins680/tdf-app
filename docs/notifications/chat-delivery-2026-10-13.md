@@ -165,7 +165,8 @@ in-app notice but nothing outside the web app.
   check), so replicas cannot both pass the coalescing check for one burst. It
   rechecks eligibility with `chat_delivery_decision`, which also rejects an
   expired lease (`lease_lost`), and completes with `chat_delivery_complete`,
-  fenced by the lease token. SMTP is bounded to 60 s and Expo to 15 s; an SMTP
+  fenced by the lease token. SMTP is bounded to 60 s and the whole Expo exchange to 30 s (15 s
+  for the response headers); an SMTP or Expo
   timeout is retried as `provider_timeout`. Skip reasons: `read`, `not_visible` (consent, block, deletion
   or closed account through `interaction_notification_visible`),
   `inactive_recipient`, `opted_out`, `expired` (>24 h), `no_address`,
