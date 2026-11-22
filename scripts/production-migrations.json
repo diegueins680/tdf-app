@@ -1333,6 +1333,16 @@
       "id": "2026-11-07_studio_gallery",
       "path": "tdf-hq/sql/2026-11-07_studio_gallery.sql",
       "introducedBy": "d77cd1319a67e89675e12e9e9082641bdf9fcc66"
+    },
+    {
+      "id": "2026-11-03_event_agreements",
+      "path": "tdf-hq/sql/2026-11-03_event_agreements.sql",
+      "introducedBy": "f226bd7b56abcc6a5c26b12f07d1bd3b54606e77"
+    },
+    {
+      "id": "2026-11-07_event_agreement_identity_guards",
+      "path": "tdf-hq/sql/2026-11-07_event_agreement_identity_guards.sql",
+      "introducedBy": "903c032752e3882add1cec353b4c6d90888cc362"
     }
   ]
 }

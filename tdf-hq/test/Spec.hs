@@ -47,6 +47,8 @@ import System.FilePath ((</>))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
+import qualified TDF.Contracts.DeliverySpec as ContractDeliverySpec
+import qualified TDF.Contracts.EventWorkspaceSpec as EventWorkspaceSpec
 import qualified TDF.StorageSecuritySpec as StorageSecuritySpec
 import qualified TDF.VideoCampaignsSpec as VideoCampaignsSpec
 import qualified TDF.Auth.AccountNameSpec as AccountNameSpec
@@ -916,6 +918,8 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    ContractDeliverySpec.spec
+    EventWorkspaceSpec.spec
     AccountNameSpec.spec
     GoogleProfileNameSpec.spec
     FailureBoundarySpec.spec

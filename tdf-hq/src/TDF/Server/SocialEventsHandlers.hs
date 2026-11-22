@@ -248,6 +248,7 @@ import qualified TDF.Catalog.Models as Catalog
 import TDF.Config (AppConfig (..), EmailConfig, assetsRootDir, resolveConfiguredAssetsBase)
 import TDF.Internationalization (normalizeCurrencyCode)
 import TDF.DB (Env (..))
+import TDF.Contracts.EventWorkspace (eventWorkspaceServer)
 import TDF.FeatureRegistry (findRegistryFeature, registryFeatureAllows)
 import TDF.DTO.SocialEventsDTO (
     ArtistDTO (..),
@@ -2251,9 +2252,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             ( EventAdmin.EventAdminDeps parseVisibleEventKey (parseKeyOr400 "administrator invitation") (parseKeyOr400 "ticket tier")
                 lockSocialEventForMutation isImportedEventHidden validateTicketPurchaseBuyerName validateTicketPurchaseBuyerEmail
                 issueMissingTicketsForOrder ticketOrderEntityToDTO sendTicketConfirmationForOrder )
-        :<|> memoryInvitationsServer
-        :<|> EventTicketSale.eventTicketSaleServer user currentPartyId
-            (EventTicketSale.EventTicketSaleDeps parseVisibleEventKey lockSocialEventForMutation)
+        :<|> memoryInvitationsServer :<|> eventWorkspaceServer user
+        :<|> EventTicketSale.eventTicketSaleServer user currentPartyId (EventTicketSale.EventTicketSaleDeps parseVisibleEventKey lockSocialEventForMutation)
   where
     currentPartyId :: T.Text
     currentPartyId = renderPartyId user
