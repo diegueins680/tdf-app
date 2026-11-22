@@ -164,7 +164,10 @@ later changes its address.
   never-activated stage. An account that passes both filters can therefore make any
   node "follow" it and receive part of that node's score in every walk that reaches
   the node. `party_follow` does not record who wrote a row, so the walk cannot tell
-  such rows apart. None of the evidence above covers this: the Alloy model and the
+  such rows apart. These two are the only writers of `party_follow` in the backend, so
+  every row has a reverse row written by the same caller: the relation is in effect
+  undirected, and for each pair one side did not choose it. No rule over these rows
+  alone can separate chosen follows from imposed ones. None of the evidence above covers this: the Alloy model and the
   tests take the follow rows of eligible accounts as given. The writer is listed as an
   incomplete follow-up in `docs/social/relationship-read-boundary.md` and is not
   changed here. The flag should stay off until the writer stops creating the reverse
