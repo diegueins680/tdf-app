@@ -44,10 +44,14 @@ def main():
     manifest = json.loads((root / 'scripts/production-migrations.json').read_text())
     expected_ids = sorted(entry['id'] for entry in manifest['migrations'])
     paths = subprocess.check_output(['git', 'ls-files', '--', 'tdf-hq/src', 'tdf-hq/app',
+                                     'tdf-hq/assets', 'tdf-hq/sql',
                                      'tdf-hq/tdf-hq.cabal', 'tdf-hq/stack.yaml',
                                      'tdf-hq/stack.yaml.lock'], cwd=root, text=True).splitlines()
     paths += [entry['path'] for entry in manifest['migrations']]
-    paths += ['scripts/production-migrations.json', 'scripts/test-public-event-card-tickets-http.py']
+    paths += ['scripts/production-migrations.json', 'scripts/test-public-event-card-tickets-http.py',
+              'scripts/render-production-migration-batch.mjs', 'scripts/lib/production-release.mjs',
+              'scripts/__tests__/fixtures/production-schema-20260814.sql',
+              'scripts/__tests__/fixtures/catalog-production-source-fixture.sql']
 
     def sources():
         return {path: hashlib.sha256((root / path).read_bytes()).hexdigest() for path in sorted(set(paths))}
