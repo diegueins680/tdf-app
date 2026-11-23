@@ -82,6 +82,8 @@ import qualified TDF.Config as Config
 import TDF.DB (Env (..))
 import TDF.Models (Party (..), RoleEnum (Admin, Fan))
 import TDF.Models.SocialEventsModels
+import TDF.Ticketing.Issuance (issueMissingTicketsForOrder)
+import TDF.Ticketing.ParticipantArtist (isParticipantTierCode, participantArtistName)
 import TDF.Server.SocialEventsHandlers
     ( assignMissingEventOrganizer
     , postgresVisibleImportedMetadataClause
@@ -164,6 +166,115 @@ spec = describe "social event handler helpers" $ do
                 BL8.unpack (errBody err) `shouldContain` "Multiple RSVP rows exist"
             Right value ->
                 expectationFailure ("Expected duplicate RSVP rows to be rejected, got: " <> show value)
+
+    it "lists paying buyers of musician tiers as event artists, once, and only for those tiers" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 91
+            musicianTier :: EventTicketTierId
+            musicianTier = toSqlKey 61
+            audienceTier :: EventTicketTierId
+            audienceTier = toSqlKey 62
+            tier code =
+                EventTicketTier
+                    { eventTicketTierEventId = eventKey
+                    , eventTicketTierCode = code
+                    , eventTicketTierName = code
+                    , eventTicketTierDescription = Nothing
+                    , eventTicketTierPriceCents = 500
+                    , eventTicketTierCurrency = "USD"
+                    , eventTicketTierCurrencyId = Nothing
+                    , eventTicketTierQuantityTotal = 12
+                    , eventTicketTierQuantitySold = 0
+                    , eventTicketTierSalesStart = Nothing
+                    , eventTicketTierSalesEnd = Nothing
+                    , eventTicketTierIsActive = True
+                    , eventTicketTierPosition = Nothing
+                    , eventTicketTierEnableWaitlist = False
+                    , eventTicketTierAllowTransfers = True
+                    , eventTicketTierRefundPolicy = "full"
+                    , eventTicketTierRefundDeadline = Nothing
+                    , eventTicketTierCreatedAt = now
+                    , eventTicketTierUpdatedAt = now
+                    }
+            paidOrder tierKey buyer name =
+                EventTicketOrder
+                    { eventTicketOrderEventId = eventKey
+                    , eventTicketOrderTierId = tierKey
+                    , eventTicketOrderBuyerPartyId = buyer
+                    , eventTicketOrderBuyerName = name
+                    , eventTicketOrderBuyerEmail = Just "musico@example.com"
+                    , eventTicketOrderQuantity = 1
+                    , eventTicketOrderAmountCents = 500
+                    , eventTicketOrderCurrency = "USD"
+                    , eventTicketOrderStatus = "paid"
+                    , eventTicketOrderMetadata = Nothing
+                    , eventTicketOrderCheckoutIdempotencyKey = Nothing
+                    , eventTicketOrderPurchasedAt = now
+                    , eventTicketOrderStripePaymentIntentId = Nothing
+                    , eventTicketOrderPromoCodeId = Nothing
+                    , eventTicketOrderOriginalAmountCents = Nothing
+                    , eventTicketOrderPaymentMethod = Nothing
+                    , eventTicketOrderCreatedAt = now
+                    , eventTicketOrderUpdatedAt = now
+                    }
+            issue order = do
+                orderKey <- insert order
+                void (issueMissingTicketsForOrder now orderKey order)
+            listedArtists =
+                map (eventArtistArtistId . entityVal)
+                    <$> selectList [EventArtistEventId ==. eventKey] []
+        runSqlPool
+            (do
+                rawExecute "INSERT INTO party (id,display_name,is_org,created_at) VALUES (501,'Cuenta Nueva',0,CURRENT_TIMESTAMP)" []
+                rawExecute "INSERT INTO party (id,display_name,is_org,created_at) VALUES (502,'Ana',0,CURRENT_TIMESTAMP)" []
+                rawExecute "INSERT INTO party (id,display_name,is_org,created_at) VALUES (503,'Solo Público',0,CURRENT_TIMESTAMP)" []
+                insertKey eventKey (seedSocialEvent "1" "Jueves de Jam" now)
+                insertKey musicianTier (tier "MUSICO")
+                insertKey audienceTier (tier "PUBLICO")
+            )
+            pool
+        existingKey <-
+            runSqlPool
+                (insert
+                    ArtistProfile
+                        { artistProfilePartyId = Just "502"
+                        , artistProfileName = "Ana Trío"
+                        , artistProfileBio = Nothing
+                        , artistProfileAvatarUrl = Nothing
+                        , artistProfileGenres = Nothing
+                        , artistProfileSocialLinks = Nothing
+                        , artistProfileCountryCode = Nothing
+                        , artistProfileCountryId = Nothing
+                        , artistProfileCreatedAt = now
+                        , artistProfileUpdatedAt = now
+                        })
+                pool
+        runSqlPool
+            (do
+                -- New buyer: a basic profile named from checkout is created and listed.
+                issue (paidOrder musicianTier (Just "501") (Just "  Luis Bajo  "))
+                -- Paying twice does not list the same artist twice.
+                issue (paidOrder musicianTier (Just "501") (Just "Luis Bajo"))
+                -- Buyer with a profile: the existing one is listed, none created.
+                issue (paidOrder musicianTier (Just "502") Nothing)
+                -- Audience tier and guest checkout list nobody.
+                issue (paidOrder audienceTier (Just "503") (Just "Solo Público"))
+                issue (paidOrder musicianTier Nothing (Just "Invitado"))
+            )
+            pool
+        created <- runSqlPool (selectList [ArtistProfilePartyId ==. Just "501"] []) pool
+        map (artistProfileName . entityVal) created `shouldBe` ["Luis Bajo"]
+        audienceProfiles <- runSqlPool (count [ArtistProfilePartyId ==. Just "503"]) pool
+        audienceProfiles `shouldBe` 0
+        listed <- runSqlPool listedArtists pool
+        sort (map fromSqlKey listed)
+            `shouldBe` sort (map (fromSqlKey . entityKey) created ++ [fromSqlKey existingKey])
+        participantNameExamples `shouldBe` [Just "Checkout", Just "Cuenta", Nothing]
+        map isParticipantTierCode ["MUSICO", " musico ", "MUSICO-2", "GENERAL"]
+            `shouldBe` [True, True, False, False]
 
     it "creates, updates, reads, summarizes, and idempotently deletes only the session Party RSVP" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
@@ -3307,3 +3418,10 @@ currencyReject (Left err) = do
     errHTTPCode err `shouldBe` 500
     BL8.unpack (errBody err) `shouldContain` "currency"
 currencyReject (Right value) = expectationFailure ("Expected currency refusal, got " <> show value)
+
+participantNameExamples :: [Maybe T.Text]
+participantNameExamples =
+    [ participantArtistName [Just " Checkout ", Just "Cuenta"]
+    , participantArtistName [Just "   ", Just "Cuenta"]
+    , participantArtistName [Just "Bad\tName", Nothing]
+    ]

@@ -105,6 +105,7 @@ library
     TDF.Commerce.EventTickets
     TDF.Ticketing.Admission
     TDF.Ticketing.Issuance
+    TDF.Ticketing.ParticipantArtist
     TDF.Ticketing.Refund
     TDF.Ticketing.Confirmation
     TDF.Ticketing.LookupToken

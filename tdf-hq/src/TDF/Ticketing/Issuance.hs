@@ -21,6 +21,7 @@ import Database.Persist.Sql
 
 import TDF.Models.SocialEventsModels
 import qualified TDF.Ticketing.Admission as Admission
+import qualified TDF.Ticketing.ParticipantArtist as Participant
 import qualified TDF.Ticketing.Transfer as Transfer
 
 issueMissingTicketsForOrder ::
@@ -53,6 +54,9 @@ issueMissingTicketsForOrder now orderKey order = do
                 , eventTicketCreatedAt = now
                 , eventTicketUpdatedAt = now
                 }
+    -- Musician tiers list the paying buyer among the event's artists in the
+    -- same transaction that issues the tickets.
+    Participant.registerParticipantArtistForOrder now order
     allTickets <- selectList [EventTicketOrderRefId ==. orderKey] [Asc EventTicketId]
     pure (map (eventTicketCode . entityVal) (filter (Transfer.retainedByBuyer . entityVal) allTickets))
 

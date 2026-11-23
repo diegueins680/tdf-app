@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-22T20:49:36.886Z",
+  "generatedAt": "2026-11-23T01:17:16.807Z",
   "repositoryRoot": ".",
-  "filesScanned": 2874,
+  "filesScanned": 2875,
   "candidateCount": 1498,
   "byClassification": {
     "dynamic-business-catalog": 983,
@@ -30190,7 +30190,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1136,
+      "consumerCount": 1137,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -30488,7 +30488,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 1136,
+      "consumerCount": 1137,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -31590,7 +31590,7 @@
       "lines": [
         14
       ],
-      "consumerCount": 1136,
+      "consumerCount": 1137,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -59246,7 +59246,7 @@
       "lines": [
         344
       ],
-      "consumerCount": 1183,
+      "consumerCount": 1184,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -69003,7 +69003,7 @@
       "lines": [
         124
       ],
-      "consumerCount": 118,
+      "consumerCount": 120,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -69037,6 +69037,8 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
         "tdf-hq/src/TDF/Ticketing/Inventory.hs",
+        "tdf-hq/src/TDF/Ticketing/Issuance.hs",
+        "tdf-hq/src/TDF/Ticketing/ParticipantArtist.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
         "tdf-hq/src/TDF/Ticketing/Transfer.hs",
         "tdf-hq/test/Spec.hs",
@@ -69052,9 +69054,7 @@
         "tdf-hq/test/TicketManualReviewMain.hs",
         "tdf-hq/test/integration/event_memory_invitations.sql",
         "tdf-hq/test/integration/ticket_admission_fixture.sql",
-        "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql",
-        "tdf-hq/test/integration/ticket_inclusive_tax.sql",
-        "tdf-hq/test/integration/ticket_manual_bank_transfer.sql"
+        "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
@@ -74670,7 +74670,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "eventArtists",
-      "line": 337,
+      "line": 375,
       "values": [
         "{artistId=999, artistPartyId=55, artistName=Synthetic Artist}",
         "{artistId=1000, artistName=Unlinked Artist}"
@@ -74678,7 +74678,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        337
+        375
       ],
       "consumerCount": 39,
       "backendConsumers": [
@@ -74752,7 +74752,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 333,
+      "line": 342,
       "values": [
         "media",
         "audio",
@@ -74761,7 +74761,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        333
+        342
       ],
       "consumerCount": 36,
       "backendConsumers": [
@@ -74848,7 +74848,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 1136,
+      "consumerCount": 1137,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -75148,7 +75148,7 @@
       "lines": [
         47
       ],
-      "consumerCount": 1136,
+      "consumerCount": 1137,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -76099,7 +76099,7 @@
       "lines": [
         100
       ],
-      "consumerCount": 579,
+      "consumerCount": 580,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -94490,7 +94490,7 @@
         3477,
         3579
       ],
-      "consumerCount": 393,
+      "consumerCount": 394,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -95010,7 +95010,7 @@
       "lines": [
         8391
       ],
-      "consumerCount": 504,
+      "consumerCount": 505,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -95857,7 +95857,7 @@
       "lines": [
         11703
       ],
-      "consumerCount": 1098,
+      "consumerCount": 1100,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -104490,7 +104490,7 @@
       "lines": [
         19454
       ],
-      "consumerCount": 1091,
+      "consumerCount": 1093,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -174289,7 +174289,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "storedEventMetadataAllowedKeys",
-      "line": 1705,
+      "line": 1706,
       "values": [
         "ticketUrl",
         "imageUrl",
@@ -174300,7 +174300,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        1705
+        1706
       ],
       "consumerCount": 100,
       "backendConsumers": [
@@ -180331,7 +180331,7 @@
       "lines": [
         436
       ],
-      "consumerCount": 296,
+      "consumerCount": 297,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",

@@ -2682,6 +2682,7 @@
       "tdf-hq/src/TDF/Ticketing/Inventory.hs",
       "tdf-hq/src/TDF/Ticketing/Issuance.hs",
       "tdf-hq/src/TDF/Ticketing/LookupToken.hs",
+      "tdf-hq/src/TDF/Ticketing/ParticipantArtist.hs",
       "tdf-hq/src/TDF/Ticketing/Refund.hs",
       "tdf-hq/src/TDF/Ticketing/Transfer.hs",
       "tdf-hq/src/TDF/Trials/API.hs",
@@ -12688,13 +12689,13 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "68f7a68e44a96a32446a50aad3e730170f8890e6423b8c8a9a73d6e30b09f6d6",
+      "sha256": "9af282763f7ca9e0fc181dade27d63ba4c4b273440a945b1b40f551180d15202",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "39d8d5afb9e62580964f7d301e37fdd14c608ba7987a76075b14ca5707492401",
+      "sha256": "8388567db1778d859225b4bdf6fbbe1c56240d4bd78248188525f5d217dd9c0c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18952,7 +18953,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "0ba938a52a4073212ea97db71ba9f2433c98ff41b783fd7217f111de5681d506",
+      "sha256": "4fac2628acb63e9c96785a3a6db004ec61a637e99abc45429102a157a6508f69",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19222,13 +19223,19 @@
     {
       "id": "SURFACE-43aa8fca8f095e2e",
       "path": "tdf-hq/src/TDF/Ticketing/Issuance.hs",
-      "sha256": "398c68514db13ca6c396a3b160cdf10d9b0524c48acb10e7c21032d15e5e25b7",
+      "sha256": "728c68222e6ce7f1af8a3019a6a1916fe9bc5d89a68dea361d752b95e2b43c4d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f90a4f0c795a833d",
       "path": "tdf-hq/src/TDF/Ticketing/LookupToken.hs",
       "sha256": "a3698541dc758077f54fe9027d9888a933be209d976bbcf381f49eda48639958",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9af30fe53768298b",
+      "path": "tdf-hq/src/TDF/Ticketing/ParticipantArtist.hs",
+      "sha256": "0bb4beb34b6c56459abe3376f0b0b28904dd238736ae7043df6d6226cd8b6831",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19336,7 +19343,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "1958140b10c2e13a43dc83f4d0aaf38fc8be222bba91d3446fc29eb7252c86b4",
+      "sha256": "3e628618241b9852ad32d35e4807e82fd585c0a6637ec648cbd7131747f1f425",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19414,7 +19421,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "ccd0341e34a01fe98bbf4936eb171de3f167105619237aec509862ee0f96dbbb",
+      "sha256": "17a2f6cfe0051fc2f6565bfcccb4d0a096647083b955f3774ba79e957adc834e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19936,7 +19943,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "8f2afb5dd7d0baa4e33c516b6f40ca6029783744e794a19ea3c832a628410109",
+      "sha256": "e1b480560af61f37677ebe5c6ea46ddbfd5275ad674bec346376eb37fe0e23a1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32556,7 +32563,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a1df035d5debe6146bffad57bec8da92f7665ae3a2143bfda1186b703976eca8",
+      "sha256": "f94b157f62186c4735d35d935c12f85b4983d8163c7f77008fb251ac34d25d5d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

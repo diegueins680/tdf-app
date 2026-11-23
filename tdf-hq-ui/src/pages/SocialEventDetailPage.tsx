@@ -49,8 +49,11 @@ const inferredMediaType = (url: string): 'image' | 'video' => /\.(mp4|mov|webm|m
 
 interface MomentDraft { caption: string; mediaKind: 'media' | 'audio' | 'text'; mediaUrl: string; file: File | null }
 const emptyMomentDraft: MomentDraft = { caption: '', mediaKind: 'media', mediaUrl: '', file: null };
+const MUSICIAN_TIER_CODE = 'MUSICO';
+const isMusicianTierCode = (code: string) => code.trim().toUpperCase() === MUSICIAN_TIER_CODE;
 const emptyTicketDraft = {
   name: 'General', price: '', quantity: '100', editing: null as SocialTicketTierDTO | null, active: true,
+  participant: false,
 };
 interface PublicationAttempt { eventId: string; scope: string; draft: MomentDraft; extended: boolean; ready: boolean; isCurrentOwner: () => boolean }
 interface OwnMomentAction { id: string; mode: 'edit' | 'delete'; caption: string; updatedAt: string }
@@ -206,6 +209,7 @@ export default function SocialEventDetailPage() {
       quantity: String(tier.ticketTierQuantityTotal),
       editing: tier,
       active: tier.ticketTierActive,
+      participant: isMusicianTierCode(tier.ticketTierCode),
     });
   };
   const ticketTierMutation = useSaveTicketTier(
@@ -219,9 +223,14 @@ export default function SocialEventDetailPage() {
       if (!Number.isSafeInteger(quantity) || quantity <= 0) throw new Error('Ingresa una cantidad válida.');
       const name = ticketName.trim();
       if (!name) throw new Error('El nombre del ticket es obligatorio.');
+      const nameCode = name.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '') || 'GENERAL';
       return {
         ...original,
-        ticketTierCode: original?.ticketTierCode ?? (name.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '') || 'GENERAL'),
+        // The backend lists buyers of the MUSICO tier as event artists.
+        ticketTierCode: original?.ticketTierCode
+          ?? (ticketDraft.participant === true ? MUSICIAN_TIER_CODE : undefined)
+          // With the switch off, a tier that is merely named "Musico" must not take the reserved code.
+          ?? (isMusicianTierCode(nameCode) ? `${nameCode}-GENERAL` : nameCode),
         ticketTierName: name,
         ticketTierPriceCents: priceCents,
         ticketTierCurrency: original?.ticketTierCurrency ?? event?.eventCurrency ?? preferredCurrency,
@@ -531,6 +540,14 @@ export default function SocialEventDetailPage() {
                     resetTicketForm();
                   }} disabled={!ticketFormReady || ticketTierMutation.isPending}>Cancelar edición</Button>}
                 </Stack>
+                <FormControlLabel
+                  label="Entrada de músico: quien la paga aparece como artista del evento"
+                  control={<Switch
+                    checked={ticketDraft.participant === true}
+                    disabled={Boolean(editing)}
+                    onChange={(_, participant) => setTicketDraft({ ...ticketDraft, participant })}
+                  />}
+                />
                 {editing && <FormControlLabel label="Categoría activa" control={<Switch
                   checked={ticketDraft.active}
                   onChange={(_, active) => setTicketDraft({ ...ticketDraft, active })}

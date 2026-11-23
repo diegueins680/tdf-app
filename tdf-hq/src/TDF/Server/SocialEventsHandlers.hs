@@ -231,6 +231,7 @@ import Data.Time.Clock (addUTCTime)
 import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
 import TDF.Ticketing.Issuance (finalizePaidTicketOrder, issueMissingTicketsForOrder)
+import TDF.Ticketing.ParticipantArtist (isParticipantTierCode)
 import qualified TDF.Server.EventAdminDelegation as EventAdmin
 import TDF.Server.PublicEventTicketSummary (PublicEventCardMetadata (..), loadPublicEventCard)
 import qualified TDF.Server.EventTicketSale as EventTicketSale
@@ -8810,8 +8811,11 @@ validateFinanceEntryCurrencyInput defaultCurrency rawCurrency =
 
 validateTicketTierCodeInput :: T.Text -> T.Text -> Either ServerError T.Text
 validateTicketTierCodeInput rawTierName rawCode =
-    let source = fromMaybe (T.strip rawTierName) (cleanMaybeText (Just rawCode))
-        normalized = normalizeTicketTierCode source
+    let explicit = cleanMaybeText (Just rawCode)
+        source = fromMaybe (T.strip rawTierName) explicit
+        derived = normalizeTicketTierCode source
+        -- The musician code is an explicit opt-in; a tier's name never takes it.
+        normalized = if isNothing explicit && isParticipantTierCode derived then derived <> "-GENERAL" else derived
      in if not (T.any isAlphaNum source)
             then Left err400{errBody = "ticket tier code must include at least one letter or digit"}
             else
