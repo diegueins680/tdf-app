@@ -599,6 +599,8 @@
       "scripts/test-fan-recommendations-postgres.sh",
       "scripts/test-fan-recommendations-sql.py",
       "scripts/test-feature-migrations.sh",
+      "scripts/test-feed-affinity-postgres.sh",
+      "scripts/test-feed-affinity-sql.py",
       "scripts/test-google-account-name-verifier.py",
       "scripts/test-guarded-release.py",
       "scripts/test-hetzner-backup.py",
@@ -2557,6 +2559,7 @@
       "tdf-hq/src/TDF/EventOperations/Server.hs",
       "tdf-hq/src/TDF/EventOperations/Types.hs",
       "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
+      "tdf-hq/src/TDF/Fans/FeedAffinity.hs",
       "tdf-hq/src/TDF/FeatureRegistry.hs",
       "tdf-hq/src/TDF/Handlers/InputList.hs",
       "tdf-hq/src/TDF/Interactions/API.hs",
@@ -2759,6 +2762,7 @@
       "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
       "tdf-hq/test/TDF/FailureBoundarySpec.hs",
       "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs",
+      "tdf-hq/test/TDF/Fans/FeedAffinitySpec.hs",
       "tdf-hq/test/TDF/IndexDeclarationSpec.hs",
       "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs",
       "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs",
@@ -3376,7 +3380,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "178504a7ba104d480c8ee839b167ff3f3c6eaa9abf523e4358ef0877d9813014",
+      "sha256": "25afad05dc98a5cb30eec27aef6726f002df43effd55608145c6965c5bcdcd4f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4048,7 +4052,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "ac9d2301115c8f86fcf339c1191f5937b9677312c16a4bcd582ef71779628611",
+      "sha256": "2491be7beb98b0b3be308ae3e9f79eea321c3b72e1980e162d796a6ff306bc41",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6794,6 +6798,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-faa0142cc95efa2f",
+      "path": "scripts/test-feed-affinity-postgres.sh",
+      "sha256": "70f9150eeb1bb45a6cb541fc383b5eefee1597eb19c0d3659addbea65cb3e1b0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e7c512e5baad0742",
+      "path": "scripts/test-feed-affinity-sql.py",
+      "sha256": "1a0f4449c9ab3e4650ab47879188559c59087389499ac1c0914e7a1ec9f3a63b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-25d21d29a24eded2",
       "path": "scripts/test-google-account-name-verifier.py",
       "sha256": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
@@ -7594,7 +7610,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "690c47575dc80407e8fbc43a5680f9addc5f92adb415eff9f7629ba9fd9d1bdc",
+      "sha256": "a26778308cc3757a2bb384d5910541be382453639526f3aa439273f57bd5fdeb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18208,7 +18224,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "5c41c41baf78a5dc1d5b79fe2039dcb6004f41abf1fe58cb146d047d4e4115ee",
+      "sha256": "b33b282a3e0a5d4a5d7e5a69c64f70c7f66408e498d0de70977a779d346dc46d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18479,6 +18495,12 @@
       "id": "SURFACE-a014c1742322a2bb",
       "path": "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
       "sha256": "5337ce7774dfe5e94936069062c4a9e5d657aebe2ccd829df87f832f49427c36",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-89e99db660cc8c98",
+      "path": "tdf-hq/src/TDF/Fans/FeedAffinity.hs",
+      "sha256": "e425e6a441bef168bbf96811276309fffaf5866ef89d8310ad36c90c5cd255af",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19018,7 +19040,7 @@
     {
       "id": "SURFACE-5cfb0ad2589bfb68",
       "path": "tdf-hq/src/TDF/ServerFanClub.hs",
-      "sha256": "6ea3bfe20754fa492c21c0044ff7caa0024784e90ce77f5c7d3247b5f709d07f",
+      "sha256": "33f33ace3dea49738921abd7dc4b09b84bca0d1b0d7556300d8050f5eb3a4300",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19336,7 +19358,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "1958140b10c2e13a43dc83f4d0aaf38fc8be222bba91d3446fc29eb7252c86b4",
+      "sha256": "463d29cae8a590b7c4cc9958fdb001fd4df0f434cd6c296a58cf734395d48507",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19414,7 +19436,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "ccd0341e34a01fe98bbf4936eb171de3f167105619237aec509862ee0f96dbbb",
+      "sha256": "ed5218631cf32a371b46324e7b3c0f4b5cdaf49487b183b414de15a5da04f5e0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19654,7 +19676,7 @@
     {
       "id": "SURFACE-6a2ebecd249230c2",
       "path": "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
-      "sha256": "bc4f5e6053643ddcbae742e1690e44f5698c6f527f86874723c3bf014ceda57a",
+      "sha256": "ca39c4b9466f9e7b4d5852b55b499c2c2985547e8c24cc9eb0d0f2c9990c24e1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19691,6 +19713,12 @@
       "id": "SURFACE-590912916bfb765f",
       "path": "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs",
       "sha256": "5d5b8fccdd5f61ce7fdd84f8f342cea0463752abb8e330708a9d212b7dae9cfd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6eac404d8a605732",
+      "path": "tdf-hq/test/TDF/Fans/FeedAffinitySpec.hs",
+      "sha256": "89825280858d72c075ef489fb90d96d4c7bcad69c137251595518a4b54876f2d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19900,7 +19928,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "f1f75ad6c396357a04567b49f5150976942b20617a734b540e54aed7a3d250fc",
+      "sha256": "bb4380f103c788af3627f015dbeaa87e587dd6961e22dc148e5de41173c4fa16",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31162,6 +31190,55 @@
       "kind": "formal-model"
     },
     {
+      "path": "formal/social/FeedAffinity.cfg",
+      "sha256": "c87cba1557029ffa8a4b76f5dd16524f227eca79e49d96652b4d07e2c0fabf00",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/social/FeedAffinity.tla",
+      "sha256": "5e912cc2fe8a316b4d49aa5f8f43afabaf1c5a2555c2e77aa4d95464623a9333",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/social/FeedAffinityFloorZero.cfg",
+      "sha256": "2f2b4c6c384f15dfcd216ffc7eb4ca58bf9845e3e2bde33cab9c4cf00cd57dda",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/social/FeedAffinityGateOff.cfg",
+      "sha256": "6563d362b12626df04619808728f4361ffc5d58abaa595f01440986f781f074a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/social/FeedAffinityNoTieBreak.cfg",
+      "sha256": "9291040d7b68b4ba31018a23a9b9fadf4e40989714ff99bc5bd526d0d4c5619c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/social/FeedAffinityOptOutIgnored.cfg",
+      "sha256": "5cd8d59e5707c9e5347fd90eccf1872e78fd7ba59910933a374b3c420a7cf70f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/social/FeedAffinityUnfilteredEvidence.cfg",
+      "sha256": "1f356c94c33af86262f0280fb3e3bfb4749059f5a03c3bb071af40b636ce05a1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/social/FeedSkipped.cfg",
       "sha256": "1250eff9bca79d13a6c8a4bbf6f67c4d495e30dbee974d397cef6ee7c09e42db",
       "authority": "inferred",
@@ -31450,7 +31527,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "f174eaed80fbeab91e55ead50dccaeff4662f45c2fa6883a4368d7672d4745ac",
+      "sha256": "bcad61e816092bd47fb40860a51fa9af706f4e19d6c06f6bfa8f1df8166947e0",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -31885,6 +31962,13 @@
     {
       "path": "formal/system/fans-routes.md",
       "sha256": "2a08180ef0a7319766ce9e7754103cb1cce59e191789491755d6b2f1772881b2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/feed-affinity-ranking.md",
+      "sha256": "87e2280869a8b82dedaf2a25bf08c24612c49830ae99398b29c51d9c37171c4d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32556,7 +32640,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a1df035d5debe6146bffad57bec8da92f7665ae3a2143bfda1186b703976eca8",
+      "sha256": "5588f1d10f6cc961a607f54a289ab769bf033a688cdc448c507b0e046da65d06",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -48930,6 +49014,138 @@
         "MaxPost = 5",
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK StablePagination CompleteAtEnd"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/social/FeedAffinity.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Items = {1, 2, 3}",
+        "  Viewer = 1",
+        "  Authors = {1, 2}",
+        "  HotValues = {0, 1}",
+        "  BaseValues = {1, 4}",
+        "  Gate = TRUE",
+        "  Floor = 1",
+        "  TieBreak = TRUE",
+        "  FilterEvidence = TRUE",
+        "  HonourOptOut = TRUE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/social/FeedAffinityFloorZero.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Items = {1, 2, 3}",
+        "  Viewer = 1",
+        "  Authors = {1, 2}",
+        "  HotValues = {0, 1}",
+        "  BaseValues = {1, 4}",
+        "  Gate = TRUE",
+        "  Floor = 0",
+        "  TieBreak = TRUE",
+        "  FilterEvidence = TRUE",
+        "  HonourOptOut = TRUE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS Displacement",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/social/FeedAffinityGateOff.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Items = {1, 2}",
+        "  Viewer = 1",
+        "  Authors = {1, 2}",
+        "  HotValues = {0, 1}",
+        "  BaseValues = {1, 4}",
+        "  Gate = FALSE",
+        "  Floor = 1",
+        "  TieBreak = TRUE",
+        "  FilterEvidence = TRUE",
+        "  HonourOptOut = TRUE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/social/FeedAffinityNoTieBreak.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Items = {1, 2, 3}",
+        "  Viewer = 1",
+        "  Authors = {1, 2}",
+        "  HotValues = {0, 1}",
+        "  BaseValues = {1, 4}",
+        "  Gate = TRUE",
+        "  Floor = 1",
+        "  TieBreak = FALSE",
+        "  FilterEvidence = TRUE",
+        "  HonourOptOut = TRUE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS Deterministic",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/social/FeedAffinityOptOutIgnored.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Items = {1, 2, 3}",
+        "  Viewer = 1",
+        "  Authors = {1, 2}",
+        "  HotValues = {0, 1}",
+        "  BaseValues = {1, 4}",
+        "  Gate = TRUE",
+        "  Floor = 1",
+        "  TieBreak = TRUE",
+        "  FilterEvidence = TRUE",
+        "  HonourOptOut = FALSE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS Refinement",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/social/FeedAffinityUnfilteredEvidence.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Items = {1, 2, 3}",
+        "  Viewer = 1",
+        "  Authors = {1, 2}",
+        "  HotValues = {0, 1}",
+        "  BaseValues = {1, 4}",
+        "  Gate = TRUE",
+        "  Floor = 1",
+        "  TieBreak = TRUE",
+        "  FilterEvidence = FALSE",
+        "  HonourOptOut = TRUE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS Exclusion",
+        "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
