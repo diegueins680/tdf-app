@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -118,4 +119,39 @@ test('a revision without references expands to itself; with references it reads 
 test('the committed decisions history is compact, complete and intact', () => {
   const { objects, decisions } = verifyHistory(repoRoot);
   assert.ok(decisions > 0 && objects > 0);
+});
+
+test('a refresh that drops a candidate keeps its review and history as retirement provenance', () => {
+  const root = tempRepo(sampleDocument());
+  try {
+    compactFile(root);
+    const before = verifyHistory(root).objects;
+    // The inventory no longer contains candidate "m", whose review references stored history.
+    const inventoryPath = path.join(root, 'inventory.json');
+    writeFileSync(inventoryPath, JSON.stringify({ candidates: [{ id: 'plain' }] }));
+    const decisionsPath = path.join(root, DECISIONS_FILE);
+    const refresh = () => execFileSync(process.execPath, [
+      path.join(repoRoot, 'scripts/build-catalog-decisions.mjs'),
+      '--input', inventoryPath, '--output', decisionsPath, '--existing', decisionsPath,
+    ]);
+    refresh();
+    compactFile(root);
+    // Nothing is orphaned: the removed review is stored once more, under the retirement record.
+    assert.equal(verifyHistory(root).objects, before + 1);
+    const refreshed = JSON.parse(readFileSync(decisionsPath, 'utf8'));
+    assert.deepEqual(refreshed.decisions.map((row) => row.id), ['plain']);
+    assert.equal(refreshed.reconciliation.removedStaleDecisions, 1);
+    const retirements = refreshed.reconciliation.sourceRemovalRetirements;
+    assert.equal(retirements.length, 1);
+    const retired = expandDocument(retirements[0].decisions, readHistory(root));
+    assert.deepEqual(retired.map((row) => row.id), ['m']);
+    assert.equal(retired[0].previousDecision.id, 'l');
+    // A second refresh has nothing left to retire and leaves the store verifiable.
+    refresh();
+    compactFile(root);
+    assert.equal(verifyHistory(root).objects, before + 1);
+    assert.equal(JSON.parse(readFileSync(decisionsPath, 'utf8')).reconciliation.sourceRemovalRetirements.length, 1);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
