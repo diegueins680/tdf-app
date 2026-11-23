@@ -19772,6 +19772,99 @@
       "historicalStatus": null
     },
     {
+      "id": "COMMUNITY-FEED-AFFINITY-001",
+      "title": "Personal hot order of a fan-club feed from the viewer's affinity to each author",
+      "statement": "With the runtime gate FAN_FEED_AFFINITY_ENABLED on, a viewer who has not switched personalisation off and who reacted or replied to items of the club feed in the last 90 days receives the hot sort ordered by affinity * (reactions + 1) / max(1, ageHours)^0.8, where the affinity to an author is 1 + min(reactions + 2 * replies, 20) / 10. In every other case the hot sort keeps the previous score reactions / max(1, ageHours)^0.8. Pinned items, the top and chronological sorts, the returned items and the response shape do not change. Route: GET /fan-clubs/{artistId}/feed.",
+      "property": "For every request: returned(mode) is a permutation of returned(fallback); gate off \\/ optedOut \\/ no usable evidence => order = previous hot order (wherever that was determined); the unpinned order is the strict total order (score desc, kind, created_at desc, id desc); personalised /\\ y precedes x => 3 * (reactions(y) + 1) / decay(y) >= (reactions(x) + 1) / decay(x); evidence \\subseteq items of the served feed that the viewer may read and that are not hidden; optedOut => no behaviour read.",
+      "domain": "COMMUNITY",
+      "authority": "Owner request of 2026-11-21 for affinity-based feed ranking; rule and constants approved by the owner on 2026-11-21 (club feed only, reactions + 1 in personalised mode, type weight 1, hidden items excluded from evidence only). formal/system/feed-affinity-ranking.md.",
+      "source": "formal/system/feed-affinity-ranking.md",
+      "contract": "tdf-hq/src/TDF/Fans/FeedAffinity.hs",
+      "actors": [
+        "Fan"
+      ],
+      "preconditions": [
+        "Authenticated bearer session and the existing guards of the club feed route",
+        "FAN_FEED_AFFINITY_ENABLED set at startup for any personalised order (default off)"
+      ],
+      "inputs": [
+        "GET /fan-clubs/{artistId}/feed?sort=hot",
+        "social_v2_preference.personalized of the viewer",
+        "The viewer's reactions and replies to items of the served feed in the last 90 days"
+      ],
+      "state": {
+        "initial": "Stored feed items, reactions, replies and the viewer's personalisation preference",
+        "terminal": [
+          "Ordered feed in personalised mode",
+          "Ordered feed in fallback mode"
+        ]
+      },
+      "allowedTransitions": [
+        "None; ranking reads and never writes."
+      ],
+      "forbiddenTransitions": [
+        "Adding or dropping a feed item because of ranking",
+        "A personalised order with the gate off, for a viewer who opted out, or where the preference table is not installed",
+        "Reading the behaviour of a viewer who opted out",
+        "Counting an interaction with a hidden item, an item the viewer may not read, an item outside the served feed, or the viewer's own item as evidence",
+        "Changing the top or chronological sort, or the position of pinned items",
+        "Returning a score, an affinity or the mode"
+      ],
+      "effects": [
+        "None; read-only."
+      ],
+      "implementation": [
+        "tdf-hq/src/TDF/Fans/FeedAffinity.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/config/default.env.example"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Fans/FeedAffinitySpec.hs",
+        "scripts/test-feed-affinity-sql.py",
+        "scripts/test-feed-affinity-postgres.sh",
+        "scripts/verify-inductive-proofs.sh",
+        "formal/social/feed_affinity_arithmetic.py"
+      ],
+      "formalModels": [
+        "formal/social/FeedAffinity.tla",
+        "formal/social/FeedAffinity.cfg",
+        "formal/social/FeedAffinityGateOff.cfg",
+        "formal/social/FeedAffinityFloorZero.cfg",
+        "formal/social/FeedAffinityNoTieBreak.cfg",
+        "formal/social/FeedAffinityUnfilteredEvidence.cfg",
+        "formal/social/FeedAffinityOptOutIgnored.cfg",
+        "formal/social/feed_affinity_arithmetic.py"
+      ],
+      "verification": "PROVED on the model (Apalache inductive invariant: initiation, consecution, implication; four candidate items of which any subset is visible, three authors, abstract scores 0..6 and 1..12, any affinity in 1..3): permutation, exclusion of non-visible items and of hidden or unreadable evidence, fallback order and no behaviour read when the gate is off or the viewer opted out or has no usable evidence, order fixed by the key, displacement bound. PROVED over exact real and integer arithmetic (Z3, unsat of the negation, any positive decay): affinity in [1, 3] and monotone, displacement bound 3 and its tightness, the key is a strict total order, the tie-break keeps the previous stable order, score monotone in reactions and affinity and anti-monotone in decay. BOUNDED (TLC, three items, two authors, two score values): the same invariants, plus four negative controls that must fail (floor 0, no tie-break, evidence read before the visibility filter, opt-out ignored) and three Z3 witnesses (zero floor, unequal type weights, key without id). TESTED (Hspec and QuickCheck on the Haskell code): permutation, pinned first, fallback equal to a copy of the previous sort, top and chronological sorts unchanged, input-order independence, displacement bound, monotonicity on Double, evidence tally and hidden-item exclusion, the loader on SQLite (gate off reads nothing, opt-out reads no behaviour, window, visibility and own-item filters). TESTED on PostgreSQL: the canonical-interaction and preference SQL extracted from the Haskell source against a fixture.",
+      "evidence": "scripts/verify-inductive-proofs.sh output; formal/social/feed_affinity_arithmetic.py output; tdf-hq-test FeedAffinitySpec run; scripts/test-feed-affinity-postgres.sh output.",
+      "historicalStatus": "new",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for the rule as modelled and for the pure ranking function. The step from the model to the Haskell sort, the Double arithmetic, the SQL against the migrated schema and the handler wiring rest on tests, compilation and review, not on proof.",
+      "ambiguity": [
+        "The models abstract the sort as emitting the item whose key precedes all waiting items; that Data.List.sortBy realises this is tested, not proved.",
+        "Double arithmetic, including the exponent 0.8, is tested only; the Z3 lemmas are over exact arithmetic with an arbitrary positive decay.",
+        "The Apalache proof is for at most four items and three affinity levels; larger feeds are covered by the Z3 pairwise lemmas and by tests.",
+        "The canonical-interaction SQL runs against a fixture with the columns it reads, not the migrated schema, and no HTTP-level test serves a personalised feed.",
+        "Which items a viewer may read is decided by Interactions.visible and is outside this requirement; hidden items are still returned flagged, as before.",
+        "The constants (90 days, reply weight 2, cap 20, affinity 1 to 3) were approved without usage data.",
+        "The discovery feed (GET /fans/discovery) is not personalised; the owner deferred it.",
+        "Before this change the order of two items of one kind with equal created_at was left to the database; it is now by id descending."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Rule proved on the model and over exact arithmetic and tested on the implementation; correspondence of the Haskell code to the model, the migrated-schema SQL and an HTTP-level personalised response are not established."
+      },
+      "authorization": "Unchanged: the existing guards of the club feed route; the viewer is taken from the session.",
+      "privacy": "Reads only the viewer's own reactions and replies, nothing with the gate off and no behaviour for a viewer whose social_v2_preference.personalized is false. Only the order of the response depends on them; no score, affinity or mode is returned. Hidden or unreadable items are never evidence.",
+      "concurrency": "Items and evidence are read in the handler's transaction at the pool's default isolation. The order properties hold for any evidence values, so a concurrent reaction can change one response's order and nothing else.",
+      "idempotency": "Read-only.",
+      "failure": "Where social_v2_preference is not installed the request is served in fallback mode. Any other database error fails the request as for the rest of the handler.",
+      "recovery": "Unset FAN_FEED_AFFINITY_ENABLED and restart: every viewer returns to the previous order.",
+      "observability": "HTTP status only; the mode is not logged or returned."
+    },
+    {
       "id": "SCHOOL-PUBLIC-INTAKE-001",
       "title": "Public school intake: signup, interests and trial requests",
       "statement": "Anyone signs up, registers an interest or requests a trial lesson; keyed requests replay instead of duplicating contacts. Routes: POST /trials/v1/signup; POST /trials/v1/interests; POST /trials/v1/trial-requests.",
@@ -29351,7 +29444,7 @@
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/domo-refund-validation.yml": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
-    ".github/workflows/event-operations-formal.yml": "178504a7ba104d480c8ee839b167ff3f3c6eaa9abf523e4358ef0877d9813014",
+    ".github/workflows/event-operations-formal.yml": "25afad05dc98a5cb30eec27aef6726f002df43effd55608145c6965c5bcdcd4f",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -29359,7 +29452,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "c911d2c1e645fa526509d4c8210e378b72fce6700aa7f96fab145e6bdeb777cc",
+    "docs/catalog-persistence/catalog-list-decisions.json": "ac9fb75aee1b4b0bade2ecf04a20c69a67303396fdaeeb4075b5f822f2d58d1a",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -29755,8 +29848,16 @@
     "formal/payments/provider_binding_admission.py": "dba36ddd9614166b7c5257399f755e71874ef86619c64b9ee1c308a7d74d350a",
     "formal/payments/stripe_ticket_capture.py": "0f2196fcad2327bb7f7889b1dabf7190f85637dacd6c860f20895fe7c1e78c5d",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
+    "formal/social/FeedAffinity.cfg": "c87cba1557029ffa8a4b76f5dd16524f227eca79e49d96652b4d07e2c0fabf00",
+    "formal/social/FeedAffinity.tla": "5e912cc2fe8a316b4d49aa5f8f43afabaf1c5a2555c2e77aa4d95464623a9333",
+    "formal/social/FeedAffinityFloorZero.cfg": "2f2b4c6c384f15dfcd216ffc7eb4ca58bf9845e3e2bde33cab9c4cf00cd57dda",
+    "formal/social/FeedAffinityGateOff.cfg": "6563d362b12626df04619808728f4361ffc5d58abaa595f01440986f781f074a",
+    "formal/social/FeedAffinityNoTieBreak.cfg": "9291040d7b68b4ba31018a23a9b9fadf4e40989714ff99bc5bd526d0d4c5619c",
+    "formal/social/FeedAffinityOptOutIgnored.cfg": "5cd8d59e5707c9e5347fd90eccf1872e78fd7ba59910933a374b3c420a7cf70f",
+    "formal/social/FeedAffinityUnfilteredEvidence.cfg": "1f356c94c33af86262f0280fb3e3bfb4749059f5a03c3bb071af40b636ce05a1",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
+    "formal/social/feed_affinity_arithmetic.py": "053de5d2f33947973a03d0734a649688590b0eadfc2204229f82b4f9072db83b",
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
@@ -29767,7 +29868,7 @@
     "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "3befbe3796da5f1f2d88cf0c1a2e423537741d0724ddea6659666401bac75453",
+    "formal/system/recovery-expiry-arithmetic.json": "2bceaacd7a00f66877be7774af718d714439d525f9bad08e6490668cff1bacf7",
     "formal/system/route-requirements.json": "d3193014401b00a6362b5e160968306ed2e22b1b9bb949b009115c27c0e1c58e",
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -29789,7 +29890,7 @@
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
     "ops/hetzner/guarded-release.py": "4551cec5f09215463ad98ea7a4dc3e3c47417b02fc5ccbd50fad63c20e15239b",
-    "ops/hetzner/inspect-runtime.py": "ac9d2301115c8f86fcf339c1191f5937b9677312c16a4bcd582ef71779628611",
+    "ops/hetzner/inspect-runtime.py": "2491be7beb98b0b3be308ae3e9f79eea321c3b72e1980e162d796a6ff306bc41",
     "ops/hetzner/isolated-application-canary.py": "a21c2ad244d0c2b5a340c6f51b867a3f5b4c1551340e0953836a1c46375ed83f",
     "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
@@ -30082,6 +30183,8 @@
     "scripts/test-event-ticket-sale.sh": "c0c48f9127eaad19269847d29dafb7b056ba433936e81e96a32f252dc60c5c64",
     "scripts/test-fan-recommendations-postgres.sh": "e0499f45114c54a8cf3b46419b1b1c9f963a0799a27a7de46db5c0c94c07a38e",
     "scripts/test-fan-recommendations-sql.py": "e8e7bac3b429385c1225d7aa8d9a9709031606b978380770e43c4403c02a2690",
+    "scripts/test-feed-affinity-postgres.sh": "70f9150eeb1bb45a6cb541fc383b5eefee1597eb19c0d3659addbea65cb3e1b0",
+    "scripts/test-feed-affinity-sql.py": "1a0f4449c9ab3e4650ab47879188559c59087389499ac1c0914e7a1ec9f3a63b",
     "scripts/test-google-account-name-verifier.py": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
     "scripts/test-guarded-release.py": "072a3aea42d088aac1cb00825bf34c7f3d08ff9fff21c630017f2ee5c9977a74",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -30191,7 +30294,7 @@
     "scripts/verify-event-operations-formal.sh": "a17b08e8c4d12ee0537ed8707d8675e8fa60fe7a1b2aa985391c204cf6d0351b",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
     "scripts/verify-google-account-name.py": "db797f61655c32d3df0c6737a18514ea8d49312bfa245253e7c45e521d9ce4e9",
-    "scripts/verify-inductive-proofs.sh": "690c47575dc80407e8fbc43a5680f9addc5f92adb415eff9f7629ba9fd9d1bdc",
+    "scripts/verify-inductive-proofs.sh": "a26778308cc3757a2bb384d5910541be382453639526f3aa439273f57bd5fdeb",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
@@ -30959,7 +31062,7 @@
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
     "tdf-hq/assets/feature-registry.json": "11392498d31056c0a3eef9ff2dab3813848b5fa44e8d55176adb57133f7142ca",
-    "tdf-hq/config/default.env.example": "b0754a5fe5aa2ae3635b6bdaf6dfed9211466bf077f73fc430d9ab0207379494",
+    "tdf-hq/config/default.env.example": "14fd08cd0352e52f367b09efc48649e8b10c1e5d90f7719be70708181504976d",
     "tdf-hq/docs/openapi/api.yaml": "5b6bcf80ebd3763fda74df480a3c0d63a4faa4c68282f177926a10feaa4207b2",
     "tdf-hq/docs/openapi/artist-playback.yaml": "16c71adea21002fb54ecff645bba84be251a8537828d38342b1fb67a78acabcf",
     "tdf-hq/docs/openapi/directory.yaml": "796a92d53f69e5be446ac9de7f18da1916c151de4b0ead2f95d1d2751813e7e3",
@@ -31228,7 +31331,7 @@
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "7b33d92413ab2ef23d3f4064257448e8ff87109da4098308b752828b679a6edc",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Commerce/TicketBuyerContact.hs": "f0ddbaf6649a0830f2743a520e5e7cd00e989a049e7d85eb65b08dd3fb3892ac",
-    "tdf-hq/src/TDF/Config.hs": "5c41c41baf78a5dc1d5b79fe2039dcb6004f41abf1fe58cb146d047d4e4115ee",
+    "tdf-hq/src/TDF/Config.hs": "b33b282a3e0a5d4a5d7e5a69c64f70c7f66408e498d0de70977a779d346dc46d",
     "tdf-hq/src/TDF/ContentStorage.hs": "9b09965c48bd8fa4f240cb157fb24c76e073cd329741440c46c7adc267ee4cbb",
     "tdf-hq/src/TDF/Contracts/API.hs": "5030fec3414c8afbc5fb71895609ad035be9bdbd0fa95d448f788fc50ac82540",
     "tdf-hq/src/TDF/Contracts/Server.hs": "874d4fd54c05dc35103a2182a8793d3b8277f845803cc963e41582b5a403538d",
@@ -31251,6 +31354,7 @@
     "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs": "1b3937abe97b188d3dcd1f330485332651295a5e75e65d14702091c193245d27",
     "tdf-hq/src/TDF/EventOperations/Server.hs": "52efa5b303a134cf22fdbe5df9240b6c53620664b9283982e4e29c4ee7cfeed6",
     "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs": "5337ce7774dfe5e94936069062c4a9e5d657aebe2ccd829df87f832f49427c36",
+    "tdf-hq/src/TDF/Fans/FeedAffinity.hs": "e425e6a441bef168bbf96811276309fffaf5866ef89d8310ad36c90c5cd255af",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
     "tdf-hq/src/TDF/Handlers/InputList.hs": "57565241bce5f077ef7703008e3dba09686952c804b5fee0910326f47cad42e3",
     "tdf-hq/src/TDF/Interactions/API.hs": "1c87397e99ddc44da1178cdb7e696a32966dc02760e58ea32863c162df88d58b",
@@ -31333,7 +31437,7 @@
     "tdf-hq/src/TDF/ServerAdmin.hs": "275d926b7861b10ac4022f8d6f3ddf7d1348fcce214ec9416938cf6e2c43f645",
     "tdf-hq/src/TDF/ServerAuth.hs": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
     "tdf-hq/src/TDF/ServerExtra.hs": "8d687b85c57102a16614ec245ba96c2d1d53f8a9ac2e63ac61d3a5ad1d5cd892",
-    "tdf-hq/src/TDF/ServerFanClub.hs": "6ea3bfe20754fa492c21c0044ff7caa0024784e90ce77f5c7d3247b5f709d07f",
+    "tdf-hq/src/TDF/ServerFanClub.hs": "33f33ace3dea49738921abd7dc4b09b84bca0d1b0d7556300d8050f5eb3a4300",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerInstagramOAuth.hs": "e663522c1efc4eae60d077274478c68b14e6edf779c7fe083692339323fb4355",
     "tdf-hq/src/TDF/ServerInternAudit.hs": "0b7acfef1366bac9dbc8942749cefd922f20d8039d772d5a5b0672719f6ec4a7",
@@ -31368,7 +31472,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "1958140b10c2e13a43dc83f4d0aaf38fc8be222bba91d3446fc29eb7252c86b4",
+    "tdf-hq/tdf-hq.cabal": "463d29cae8a590b7c4cc9958fdb001fd4df0f434cd6c296a58cf734395d48507",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -31376,7 +31480,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "ccd0341e34a01fe98bbf4936eb171de3f167105619237aec509862ee0f96dbbb",
+    "tdf-hq/test/Spec.hs": "ed5218631cf32a371b46324e7b3c0f4b5cdaf49487b183b414de15a5da04f5e0",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -31413,12 +31517,13 @@
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "3fac72c8e53e52a81933aeba58c908980c90b6db398eb17716dea7d70b0d3f7c",
     "tdf-hq/test/TDF/EventAdminDelegationSpec.hs": "73b13ff14472e7f3df54cbc44718263313bf255244a71bc9534326998ca63f20",
     "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs": "01a1bacba4c441d49e68162267f0e590b39e2db57f94a29818a7057423ff1065",
-    "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "bc4f5e6053643ddcbae742e1690e44f5698c6f527f86874723c3bf014ceda57a",
+    "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "ca39c4b9466f9e7b4d5852b55b499c2c2985547e8c24cc9eb0d0f2c9990c24e1",
     "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs": "65bdfb6d20e33eb7a062cebdeef4c1e3dbb48e83b10eda578a9dcdeddd9249dc",
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
     "tdf-hq/test/TDF/EventTicketSaleSpec.hs": "c0645218656951aee61012df54df63ec2f9128b8d787d6899fcd323bc90294dd",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
     "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs": "5d5b8fccdd5f61ce7fdd84f8f342cea0463752abb8e330708a9d212b7dae9cfd",
+    "tdf-hq/test/TDF/Fans/FeedAffinitySpec.hs": "89825280858d72c075ef489fb90d96d4c7bcad69c137251595518a4b54876f2d",
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
     "tdf-hq/test/TDF/Invoice/ReceiptSpec.hs": "45809e9e385f6c551b7b663245b55d539ed71c72541613a219077168c5fcfd95",
@@ -31449,7 +31554,7 @@
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "4746db879d19f0d2387b5198f6d402b7262b7ed2f50b4ec7772b6585172ae474",
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "0cff8f4196afbd1c7247802a051a70a720eb53ef135d2bc5f5f789efd37f1162",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
-    "tdf-hq/test/TDF/ServerSpec.hs": "f1f75ad6c396357a04567b49f5150976942b20617a734b540e54aed7a3d250fc",
+    "tdf-hq/test/TDF/ServerSpec.hs": "bb4380f103c788af3627f015dbeaa87e587dd6961e22dc148e5de41173c4fa16",
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
@@ -33788,6 +33893,10 @@
       },
       {
         "requirement": "OPS-CLIENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
         "relationship": "implementation"
       },
       {
@@ -39040,6 +39149,10 @@
     "tdf-hq/config/default.env.example": [
       {
         "requirement": "NOTIF-TICKET-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
         "relationship": "implementation"
       },
       {
@@ -46349,6 +46462,10 @@
       {
         "requirement": "PAY-PROVIDER-INBOX-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
+        "relationship": "tests"
       }
     ],
     "formal/auth/LogoutIntent.tla": [
@@ -47304,6 +47421,10 @@
       },
       {
         "requirement": "COMMUNITY-CLUB-ELECTION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
         "relationship": "implementation"
       }
     ],
@@ -48835,6 +48956,82 @@
       {
         "requirement": "COMMUNITY-CLUB-PARTICIPATION-001",
         "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Fans/FeedAffinity.hs": [
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Fans/FeedAffinitySpec.hs": [
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-feed-affinity-sql.py": [
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-feed-affinity-postgres.sh": [
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/social/feed_affinity_arithmetic.py": [
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/FeedAffinity.tla": [
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/FeedAffinity.cfg": [
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/FeedAffinityGateOff.cfg": [
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/FeedAffinityFloorZero.cfg": [
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/FeedAffinityNoTieBreak.cfg": [
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/FeedAffinityUnfilteredEvidence.cfg": [
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/FeedAffinityOptOutIgnored.cfg": [
+      {
+        "requirement": "COMMUNITY-FEED-AFFINITY-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/sql/2026-09-18_trial_identity_requests.sql": [
@@ -52738,7 +52935,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "178504a7ba104d480c8ee839b167ff3f3c6eaa9abf523e4358ef0877d9813014",
+      "sha256": "25afad05dc98a5cb30eec27aef6726f002df43effd55608145c6965c5bcdcd4f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54137,7 +54334,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "ac9d2301115c8f86fcf339c1191f5937b9677312c16a4bcd582ef71779628611",
+      "sha256": "2491be7beb98b0b3be308ae3e9f79eea321c3b72e1980e162d796a6ff306bc41",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59742,6 +59939,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-faa0142cc95efa2f",
+      "path": "scripts/test-feed-affinity-postgres.sh",
+      "sha256": "70f9150eeb1bb45a6cb541fc383b5eefee1597eb19c0d3659addbea65cb3e1b0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FEED-AFFINITY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e7c512e5baad0742",
+      "path": "scripts/test-feed-affinity-sql.py",
+      "sha256": "1a0f4449c9ab3e4650ab47879188559c59087389499ac1c0914e7a1ec9f3a63b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FEED-AFFINITY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-25d21d29a24eded2",
       "path": "scripts/test-google-account-name-verifier.py",
       "sha256": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
@@ -61520,7 +61741,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "690c47575dc80407e8fbc43a5680f9addc5f92adb415eff9f7629ba9fd9d1bdc",
+      "sha256": "a26778308cc3757a2bb384d5910541be382453639526f3aa439273f57bd5fdeb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61537,6 +61758,10 @@
         },
         {
           "requirement": "PAY-PROVIDER-INBOX-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COMMUNITY-FEED-AFFINITY-001",
           "relationship": "tests"
         }
       ]
@@ -81870,7 +82095,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "5c41c41baf78a5dc1d5b79fe2039dcb6004f41abf1fe58cb146d047d4e4115ee",
+      "sha256": "b33b282a3e0a5d4a5d7e5a69c64f70c7f66408e498d0de70977a779d346dc46d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81887,6 +82112,10 @@
         },
         {
           "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FEED-AFFINITY-001",
           "relationship": "implementation"
         },
         {
@@ -82452,6 +82681,18 @@
       "requirements": [
         {
           "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-89e99db660cc8c98",
+      "path": "tdf-hq/src/TDF/Fans/FeedAffinity.hs",
+      "sha256": "e425e6a441bef168bbf96811276309fffaf5866ef89d8310ad36c90c5cd255af",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FEED-AFFINITY-001",
           "relationship": "implementation"
         }
       ]
@@ -84636,7 +84877,7 @@
     {
       "id": "SURFACE-5cfb0ad2589bfb68",
       "path": "tdf-hq/src/TDF/ServerFanClub.hs",
-      "sha256": "6ea3bfe20754fa492c21c0044ff7caa0024784e90ce77f5c7d3247b5f709d07f",
+      "sha256": "33f33ace3dea49738921abd7dc4b09b84bca0d1b0d7556300d8050f5eb3a4300",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84657,6 +84898,10 @@
         },
         {
           "requirement": "COMMUNITY-CLUB-ELECTION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FEED-AFFINITY-001",
           "relationship": "implementation"
         }
       ]
@@ -85326,7 +85571,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "1958140b10c2e13a43dc83f4d0aaf38fc8be222bba91d3446fc29eb7252c86b4",
+      "sha256": "463d29cae8a590b7c4cc9958fdb001fd4df0f434cd6c296a58cf734395d48507",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85521,7 +85766,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "ccd0341e34a01fe98bbf4936eb171de3f167105619237aec509862ee0f96dbbb",
+      "sha256": "ed5218631cf32a371b46324e7b3c0f4b5cdaf49487b183b414de15a5da04f5e0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86346,7 +86591,7 @@
     {
       "id": "SURFACE-6a2ebecd249230c2",
       "path": "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
-      "sha256": "bc4f5e6053643ddcbae742e1690e44f5698c6f527f86874723c3bf014ceda57a",
+      "sha256": "ca39c4b9466f9e7b4d5852b55b499c2c2985547e8c24cc9eb0d0f2c9990c24e1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86422,6 +86667,18 @@
       "requirements": [
         {
           "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6eac404d8a605732",
+      "path": "tdf-hq/test/TDF/Fans/FeedAffinitySpec.hs",
+      "sha256": "89825280858d72c075ef489fb90d96d4c7bcad69c137251595518a4b54876f2d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FEED-AFFINITY-001",
           "relationship": "tests"
         }
       ]
@@ -87061,7 +87318,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "f1f75ad6c396357a04567b49f5150976942b20617a734b540e54aed7a3d250fc",
+      "sha256": "bb4380f103c788af3627f015dbeaa87e587dd6961e22dc148e5de41173c4fa16",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -94633,7 +94890,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "adb3cf49f4de53d7d3e1479f194eb68a6ff6a7e7d4dcaa9adc8bfc3ec224a369",
+      "sourceSha256": "c9cc5f566a92e034c771edd492285a74a521a3098d0e3977dbfe166e83c33fce",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -94661,7 +94918,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "adb3cf49f4de53d7d3e1479f194eb68a6ff6a7e7d4dcaa9adc8bfc3ec224a369",
+      "sourceSha256": "c9cc5f566a92e034c771edd492285a74a521a3098d0e3977dbfe166e83c33fce",
       "definition": {
         "states": [
           "absent",
@@ -94691,7 +94948,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "adb3cf49f4de53d7d3e1479f194eb68a6ff6a7e7d4dcaa9adc8bfc3ec224a369",
+      "sourceSha256": "c9cc5f566a92e034c771edd492285a74a521a3098d0e3977dbfe166e83c33fce",
       "definition": {
         "export": [
           "queued",
@@ -118173,7 +118430,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 233,
+    "PARTIAL": 234,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

@@ -967837,6 +967837,26 @@
         "name": "ExpoTicket",
         "valueCount": 3
       }
+    },
+    {
+      "id": "5b907ea63b695c5b878b",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "The constructor order is the tie-break of the hot feed order (a post precedes a memory with the same score); reordering or adding a constructor changes ranking code and its proofs, not business data.",
+      "justification": "FeedItemKind names the two kinds of item the club feed handler builds (post, memory) so the ranking of COMMUNITY-FEED-AFFINITY-001 can break ties and weight by kind. It mirrors the two source tables of listClubFeed and is not user-selectable, stored or sent on the wire.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "feed-affinity-ranking-20261121",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Fans/FeedAffinity.hs",
+        "line": 69,
+        "kind": "haskell-sum-type",
+        "name": "FeedItemKind",
+        "valueCount": 2,
+        "requirement": "COMMUNITY-FEED-AFFINITY-001"
+      }
     }
   ],
   "sourceContextHistory": [
