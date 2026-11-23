@@ -45,6 +45,7 @@ import {
 } from '../utils/directoryContactRouting';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventRsvpFeed from '../components/events/EventRsvpFeed';
+import { jamRegistrationPath, mentionsJamCircuit } from '../utils/jamCircuit';
 import { canonicalEventUrl } from '../utils/eventSharing';
 import { resolveDirectoryPreviewImage } from '../services/directoryPreviewImage';
 import ExpandablePreviewImage from '../components/directory/ExpandablePreviewImage';
@@ -412,6 +413,12 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
               )}
               <Divider />
               <MarkdownText sx={{ fontSize: '1.08rem', lineHeight: 1.75 }}>{detailDescription}</MarkdownText>
+              {kind === 'event' && mentionsJamCircuit(detailDescription) && (
+                <Button component={RouterLink} variant="outlined" sx={{ alignSelf: 'flex-start' }}
+                  to={session ? jamRegistrationPath : buildLoginRedirectPath(jamRegistrationPath)}>
+                  {english ? 'Register a jam' : 'Registrar una jam'}
+                </Button>
+              )}
 
               {kind === 'event' && (
                 <Stack spacing={2}>

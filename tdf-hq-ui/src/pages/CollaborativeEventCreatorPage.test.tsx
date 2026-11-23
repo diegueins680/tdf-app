@@ -51,10 +51,10 @@ jest.unstable_mockModule('../components/PageShell', () => ({
 
 const { default: CollaborativeEventCreatorPage } = await import('./CollaborativeEventCreatorPage');
 
-function renderPage() {
+function renderPage(entry = "/social/eventos/nuevo") {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[entry]}>
       <QueryClientProvider client={client}>
         <CollaborativeEventCreatorPage />
       </QueryClientProvider>
@@ -87,6 +87,20 @@ beforeEach(() => {
 afterEach(() => { cleanup(); });
 
 describe('CollaborativeEventCreatorPage', () => {
+  it('registers a circuit jam and preserves the ordinary event draft', async () => {
+    const key = 'tdf-event-creator:draft:v1';
+    const saved = JSON.stringify({ title: 'Otro evento' });
+    localStorage.setItem(key, saved);
+    renderPage('/social/eventos/nuevo?circuito=jams');
+    expect(screen.getByRole('heading', { name: 'Registrar una jam' })).toBeTruthy();
+    fireEvent.change(screen.getByRole('textbox', { name: /Nombre del evento/ }), { target: { value: 'Jam del café' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Concierto' }).getAttribute('aria-pressed')).toBe('true'));
+    fireEvent.click(screen.getByRole('button', { name: 'Crear evento' }));
+    await keepPlanning();
+    expect(createEvent.mock.calls[0]?.[0]).toMatchObject({ eventTitle: 'Jam del café', eventDescription: 'Circuito de Jams' });
+    expect(localStorage.getItem(key)).toBe(saved);
+  });
+
   it('opens on the event art picker, ahead of every other field', () => {
     renderPage();
     const picker = screen.getByRole('button', { name: 'Subir el arte del evento' });

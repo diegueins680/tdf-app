@@ -132,6 +132,15 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
     jest.restoreAllMocks();
   });
 
+  it.each([true, false])('keeps the circuit registration destination when signed in = %s', async (signedIn) => {
+    if (signedIn) sessionMock = { username: 'ana', displayName: 'Ana', roles: [], modules: [], partyId: 42 };
+    profileMock.mockResolvedValue({ id: '238', title: 'Jueves de Jam', description: 'Suma tu espacio al Circuito de Jams.' });
+    renderPage('/eventos/238');
+    const link = await screen.findByRole('link', { name: 'Registrar una jam' });
+    const target = '/social/eventos/nuevo?circuito=jams';
+    expect(link.getAttribute('href')).toBe(signedIn ? target : '/login?redirect=' + encodeURIComponent(target));
+  });
+
   it.each(['owner', 'admin'])('links an event %s to management even without ticket sales', async (access) => {
     adminAccessMock.mockResolvedValue({ eaaAccess: access });
     sessionMock = { username: 'ana', displayName: 'Ana', roles: [], modules: [], partyId: 42 };
