@@ -18620,7 +18620,7 @@
     {
       "id": "SURFACE-a4bb3744c2240160",
       "path": "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
-      "sha256": "b48a4e87ede4989d0e2a9a9473836f320c204c6b829fbfafa8132f2a047614ff",
+      "sha256": "ee3b22433ff275cecfc976765b3549a1175921337f7605cb9b50237b8e84e173",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19502,7 +19502,7 @@
     {
       "id": "SURFACE-2358d533521ebfa4",
       "path": "tdf-hq/test/ArtistSimilarityProbe.hs",
-      "sha256": "f3e99df11b3f056136bc505c3e0b4a036782150d80d0b575e2b30fc5aafe9361",
+      "sha256": "3ec4f5ba3547477e75ed6cff02b735cb3cb852720ffa20fcbdc5bec8f0352efe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19874,7 +19874,7 @@
     {
       "id": "SURFACE-a443763e07064804",
       "path": "tdf-hq/test/TDF/Fans/ArtistSimilaritySpec.hs",
-      "sha256": "0bd821a3b9c2d4302848346f20cb0c6f63eb65cd21b4f52a0342b3d12955fb8a",
+      "sha256": "8f66e214623969c9884ca71c920e406c4dd500d03a6bf758a660e1e781a98d96",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31863,7 +31863,7 @@
     },
     {
       "path": "formal/system/artist-similarity.md",
-      "sha256": "4586c58a964a9d8a031ebe5570ead892257d2dfd1e7400669fce479add41f153",
+      "sha256": "b3d13cb88950203c84b5a440ef0a7c602e4d4aa9d2fe668fb87583243d33e48d",
       "authority": "inferred",
       "authorityBasis": "Status: the rule and its constants were approved by the owner on 2026-11-21 as",
       "kind": "requirement-candidate"
@@ -32948,7 +32948,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "93919035f625e1bbfdf9f98e61870274d54d75fd018521baf33241273b89a78b",
+      "sha256": "10f7836cf9d884faa11062c76e3c9e6b3b73685b5d1dc51cd55a1fb0bfddfa1a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

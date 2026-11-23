@@ -58,8 +58,14 @@ Evaluated at request time on live data, never from the table:
 - already followed by the caller, or the caller's own party;
 - not followable under `social_v2_profile_eligible` where it is installed.
 
-An artist hidden after the job ran is therefore dropped at once, as result and as
-evidence. An artist the fan played or favourited but does not follow remains a
+A seed (named or contributing) must be listed, must not be the caller's own party, and
+must be followed by the caller or followable under that policy (`frameSeedEligible`).
+A block in either direction, a closed profile or an inactive account therefore removes
+an artist the fan favourited, played or RSVPed to from the evidence as well as from the
+results; an artist the fan still follows remains a seed.
+
+An artist hidden or blocked after the job ran is therefore dropped at once, as result
+and as evidence. An artist the fan played or favourited but does not follow remains a
 candidate.
 
 ## Precomputed table and reference
@@ -130,8 +136,8 @@ is listed.
 
 | Property | Evidence | Level |
 |---|---|---|
-| A result is listed, not followed, not the caller and followable under the policy; a named seed is listed and is the caller's (critical) | `formal/fans/artist_similarity_ranking.py`: Z3, hand translation of `rankBySimilarity`, the fallback and `loadRecommendationFrame`, pinned by source hash, with witnesses and guard-necessity controls | proved for the translation |
-| | QuickCheck properties in `ArtistSimilaritySpec`; hidden artist, later follow and later hiding on PostgreSQL (`ArtistSimilarityProbe`) | tested |
+| A result is listed, not followed, not the caller and followable under the policy; a named seed is listed, is the caller's, and is followed or followable under the policy (critical) | `formal/fans/artist_similarity_ranking.py`: Z3, hand translation of `rankBySimilarity`, `frameSeedEligible`, the seed restriction in `loadSimilarityRecommendations`, the fallback and `loadRecommendationFrame`, pinned by source hash, with witnesses and guard-necessity controls | proved for the translation |
+| | QuickCheck properties in `ArtistSimilaritySpec`; hidden artist, blocked favourited artist (stored and live), later follow and later hiding on PostgreSQL (`ArtistSimilarityProbe`) | tested |
 | The order is total and deterministic (critical) | Same script: the sort keys are strict total orders on distinct ids over IEEE doubles that are numbers; a contribution and a sum of contributions are numbers; allowing NaN breaks it | proved for the translation |
 | | QuickCheck: row-order independence of the weights, sorted and duplicate-free keys | tested |
 | The table equals the reference on the job's snapshot; a request uses it only while fresh; staleness bound (critical) | `formal/fans/ArtistSimilarity.tla`: Apalache inductive invariant (initiation, consecution, implication) for any subsets of three fans and three artists, any period, run duration below the period and age limit in the stated ranges, runs of any length, with and without failing runs | proved for the model |

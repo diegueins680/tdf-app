@@ -19536,7 +19536,7 @@
       "authority": "Owner approval of 2026-11-21 of the rule and constants proposed in formal/system/artist-similarity.md, including the restated monotonicity property. The opt-out reuses social_v2_preference.personalized by the implementer's default; its reachability is an open rollout precondition.",
       "source": "formal/system/artist-similarity.md",
       "contract": "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
-      "property": "w(f,a) = 8*follow + [f personalised](8*favourite + 4*rsvp + playPoints(plays)) for listed a # f; sim(a,b) = dot(a,b)/sqrt(norm2(a)*norm2(b)) if support(a,b) >= 2 else 0; score(c) = SUM over listed seeds s of min(w(fan,s),8)/8 * sim(s,c). For every returned artist a: listed(a) /\\ a \\notin followed(fan) /\\ a # fan /\\ (policyInstalled => followable(fan,a)); every named seed is listed. similar_fans entries are strictly ordered by (score desc, followers desc, id asc) and precede the fallback. For every stored generation g: table(g) = similarityFromWeights(weights at snapshot_at(g)); a request uses g only while now - snapshot_at(g) <= 48 h. personalised(fan) = false => result = fallback.",
+      "property": "w(f,a) = 8*follow + [f personalised](8*favourite + 4*rsvp + playPoints(plays)) for listed a # f; sim(a,b) = dot(a,b)/sqrt(norm2(a)*norm2(b)) if support(a,b) >= 2 else 0; score(c) = SUM over listed seeds s of min(w(fan,s),8)/8 * sim(s,c). For every returned artist a: listed(a) /\\ a \\notin followed(fan) /\\ a # fan /\\ (policyInstalled => followable(fan,a)); every named or contributing seed is listed, is not the fan, and is followed by the fan or (policyInstalled => followable(fan,s)). similar_fans entries are strictly ordered by (score desc, followers desc, id asc) and precede the fallback. For every stored generation g: table(g) = similarityFromWeights(weights at snapshot_at(g)); a request uses g only while now - snapshot_at(g) <= 48 h. personalised(fan) = false => result = fallback.",
       "actors": [
         "Fan",
         "Scheduler"
@@ -19601,7 +19601,7 @@
         "formal/fans/ArtistSimilarity.tla",
         "formal/fans/artist_similarity_ranking.py"
       ],
-      "verification": "PROVED (Z3, on a hand translation pinned by source hash, with witnesses and guard-necessity controls): exclusions of results and seeds; the sort keys are strict total orders on distinct ids over non-NaN doubles; contributions and their sums are not NaN. PROVED (Apalache inductive invariant, for the TLA+ model): the stored relation is the reference on its snapshot, a request uses it only within the age limit, and without failing runs it is at most one period and one run old. MODEL-CHECKED (TLC, bounded): the same invariants, with two negative controls that violate them. TESTED (Hspec and QuickCheck): weight bounds, similarity in 0..1 and symmetric, score bounds, exclusions, ordering, row-order independence, opt-out and missing similarity equal the fallback, stored subset ranks like the whole relation, restated monotonicity and its counterexample. TESTED (PostgreSQL fixture through the real loaders): stored rows, stored read equals reference for every fan after each run, opt-out, later follow and hiding, pruning, age limit, per-fan queries equal the global ones.",
+      "verification": "PROVED (Z3, on a hand translation pinned by source hash, with witnesses and guard-necessity controls): exclusions of results and seeds, including that a named seed is followed or followable under the policy; the sort keys are strict total orders on distinct ids over non-NaN doubles; contributions and their sums are not NaN. PROVED (Apalache inductive invariant, for the TLA+ model): the stored relation is the reference on its snapshot, a request uses it only within the age limit, and without failing runs it is at most one period and one run old. MODEL-CHECKED (TLC, bounded): the same invariants, with two negative controls that violate them. TESTED (Hspec and QuickCheck): weight bounds, similarity in 0..1 and symmetric, score bounds, exclusions, ordering, row-order independence, opt-out and missing similarity equal the fallback, stored subset ranks like the whole relation, restated monotonicity and its counterexample. TESTED (PostgreSQL fixture through the real loaders): stored rows, stored read equals reference for every fan after each run, opt-out, a blocked favourited artist neither returned nor named (stored and live), later follow and hiding, pruning, age limit, per-fan queries equal the global ones.",
       "evidence": "formal/fans/artist_similarity_ranking.py output; scripts/verify-inductive-proofs.sh output; tdf-hq-test ArtistSimilaritySpec run; scripts/test-artist-similarity-postgres.sh output.",
       "critical": true,
       "status": "specified and implemented",
@@ -30125,7 +30125,7 @@
     "formal/event-operations/WorkerCompletionEvidenceFailed.cfg": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e",
     "formal/event-operations/WorkerCompletionEvidenceUnacknowledged.cfg": "ba3fc2fb73be56b89e38433e40dc8fac8689b85330203528ff8b50c9b0575860",
     "formal/fans/ArtistSimilarity.tla": "2e6cd2c074613097a15164d9d4ba8a53cdcf113e745ccb02ceffe72c2815340f",
-    "formal/fans/artist_similarity_ranking.py": "9d2697374fefe8fb5d7b98fd6725ce1ed4b8b688cc2d39960aa7f7635de1397f",
+    "formal/fans/artist_similarity_ranking.py": "516c19158e76a6e0983787808c9cb57aeabd6e95f9c643c6c3946838aee34bc4",
     "formal/payments/CaptureAccounting.cfg": "1c3cfc664c1a702b0f7db89a5aa631f94670e5297fd3ce38b1329f7f2aad743c",
     "formal/payments/CaptureAccounting.tla": "78c86aa59ebfd73c24fda852348978875a5f60f8925d5f4fbc8e0e7ebb104172",
     "formal/payments/CaptureAccountingLegacy.cfg": "eaba43f7267541499daabeb5e4e512679b2ab36b34154c28dbfaaa1b1f078c30",
@@ -31671,7 +31671,7 @@
     "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs": "1b3937abe97b188d3dcd1f330485332651295a5e75e65d14702091c193245d27",
     "tdf-hq/src/TDF/EventOperations/Server.hs": "52efa5b303a134cf22fdbe5df9240b6c53620664b9283982e4e29c4ee7cfeed6",
     "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs": "e6713f11b2332969c4808e196ba6b118b043674d1103a11deee0dfe45aa2edfc",
-    "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs": "b48a4e87ede4989d0e2a9a9473836f320c204c6b829fbfafa8132f2a047614ff",
+    "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs": "ee3b22433ff275cecfc976765b3549a1175921337f7605cb9b50237b8e84e173",
     "tdf-hq/src/TDF/Fans/FeedAffinity.hs": "e425e6a441bef168bbf96811276309fffaf5866ef89d8310ad36c90c5cd255af",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
     "tdf-hq/src/TDF/Handlers/InputList.hs": "57565241bce5f077ef7703008e3dba09686952c804b5fee0910326f47cad42e3",
@@ -31793,7 +31793,7 @@
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "ad8464697185513d41a2b0f0342098e8bfc9f3091b779facf9e6a9151ecbabcd",
-    "tdf-hq/test/ArtistSimilarityProbe.hs": "f3e99df11b3f056136bc505c3e0b4a036782150d80d0b575e2b30fc5aafe9361",
+    "tdf-hq/test/ArtistSimilarityProbe.hs": "3ec4f5ba3547477e75ed6cff02b735cb3cb852720ffa20fcbdc5bec8f0352efe",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -31846,7 +31846,7 @@
     "tdf-hq/test/TDF/EventTicketSaleSpec.hs": "c0645218656951aee61012df54df63ec2f9128b8d787d6899fcd323bc90294dd",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
     "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs": "5d5b8fccdd5f61ce7fdd84f8f342cea0463752abb8e330708a9d212b7dae9cfd",
-    "tdf-hq/test/TDF/Fans/ArtistSimilaritySpec.hs": "0bd821a3b9c2d4302848346f20cb0c6f63eb65cd21b4f52a0342b3d12955fb8a",
+    "tdf-hq/test/TDF/Fans/ArtistSimilaritySpec.hs": "8f66e214623969c9884ca71c920e406c4dd500d03a6bf758a660e1e781a98d96",
     "tdf-hq/test/TDF/Fans/FeedAffinitySpec.hs": "89825280858d72c075ef489fb90d96d4c7bcad69c137251595518a4b54876f2d",
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
@@ -83545,7 +83545,7 @@
     {
       "id": "SURFACE-a4bb3744c2240160",
       "path": "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
-      "sha256": "b48a4e87ede4989d0e2a9a9473836f320c204c6b829fbfafa8132f2a047614ff",
+      "sha256": "ee3b22433ff275cecfc976765b3549a1175921337f7605cb9b50237b8e84e173",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86548,7 +86548,7 @@
     {
       "id": "SURFACE-2358d533521ebfa4",
       "path": "tdf-hq/test/ArtistSimilarityProbe.hs",
-      "sha256": "f3e99df11b3f056136bc505c3e0b4a036782150d80d0b575e2b30fc5aafe9361",
+      "sha256": "3ec4f5ba3547477e75ed6cff02b735cb3cb852720ffa20fcbdc5bec8f0352efe",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87619,7 +87619,7 @@
     {
       "id": "SURFACE-a443763e07064804",
       "path": "tdf-hq/test/TDF/Fans/ArtistSimilaritySpec.hs",
-      "sha256": "0bd821a3b9c2d4302848346f20cb0c6f63eb65cd21b4f52a0342b3d12955fb8a",
+      "sha256": "8f66e214623969c9884ca71c920e406c4dd500d03a6bf758a660e1e781a98d96",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -95859,7 +95859,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "93919035f625e1bbfdf9f98e61870274d54d75fd018521baf33241273b89a78b",
+      "sourceSha256": "10f7836cf9d884faa11062c76e3c9e6b3b73685b5d1dc51cd55a1fb0bfddfa1a",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -95887,7 +95887,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "93919035f625e1bbfdf9f98e61870274d54d75fd018521baf33241273b89a78b",
+      "sourceSha256": "10f7836cf9d884faa11062c76e3c9e6b3b73685b5d1dc51cd55a1fb0bfddfa1a",
       "definition": {
         "states": [
           "absent",
@@ -95917,7 +95917,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "93919035f625e1bbfdf9f98e61870274d54d75fd018521baf33241273b89a78b",
+      "sourceSha256": "10f7836cf9d884faa11062c76e3c9e6b3b73685b5d1dc51cd55a1fb0bfddfa1a",
       "definition": {
         "export": [
           "queued",

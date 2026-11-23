@@ -34,6 +34,7 @@ module TDF.Fans.ArtistSimilarity
   , similarityValue
   , restrictSimilarity
   , rankBySimilarity
+  , frameSeedEligible
     -- * SQL
   , followSignalsSql
   , favouriteSignalsSql
@@ -302,6 +303,15 @@ rankBySimilarity limit eligible excluded followers seedWeights similarity
         followers
         []
 
+-- | The artists whose signals may act as seeds for the frame's fan: listed,
+-- not the fan's own party, and followable under the follow policy where it
+-- is installed, unless the fan already follows them. An artist blocked in
+-- either direction, closed or inactive is therefore never evidence, while a
+-- follow the fan still holds remains a seed.
+frameSeedEligible :: RecommendationFrame -> Set.Set Int64
+frameSeedEligible frame =
+  rfListed frame `Set.difference` (rfExcluded frame `Set.difference` rfFollowed frame)
+
 -- | Every follow as @(fan, artist)@ (no parameters).
 followSignalsSql :: Text
 followSignalsSql =
@@ -523,7 +533,9 @@ runSimilarityGeneration = do
 -- | Recommendations for @fan@ from the multi-signal similarity.
 --
 -- Listing, follows, the follow policy, the fan's own signals and the fan's
--- personalisation switch are always read live. A fan who switched
+-- personalisation switch are always read live. Only 'frameSeedEligible'
+-- artists are seeds, so the live follow policy applies to evidence as it
+-- does to results. A fan who switched
 -- personalisation off, or a request without a usable stored generation, gets
 -- exactly the popularity fallback.
 loadSimilarityRecommendations
@@ -557,10 +569,12 @@ loadSimilarityRecommendations source fan limit = do
                   ]
               }
           seedWeights =
-            Map.fromList
-              [ (artist, weight)
-              | ((_, artist), weight) <- Map.toList (signalWeights listed Set.empty inputs)
-              ]
+            Map.restrictKeys
+              (Map.fromList
+                [ (artist, weight)
+                | ((_, artist), weight) <- Map.toList (signalWeights listed Set.empty inputs)
+                ])
+              (frameSeedEligible frame)
       similarity <- case source of
         LiveSignals -> loadSignalSimilarity now
         StoredGeneration -> loadStoredSimilarity (Map.keysSet seedWeights)
