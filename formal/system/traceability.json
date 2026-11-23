@@ -31466,8 +31466,8 @@
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "2e0495d75a099784e39a7cc793d57b3e90183c7892ff475de6cf22b16da81a92",
     "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs": "79047936e9a4fff6cbf15767563a68cba32c1d4eaff754a2e6f18046615d3a43",
     "tdf-hq/src/TDF/Directory/Policy.hs": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
-    "tdf-hq/src/TDF/Directory/SemanticIndex.hs": "6b5f5b37bd59756a393e72aa2bb8084dad24202a4bb6c18480890557acda0aed",
-    "tdf-hq/src/TDF/Directory/SemanticSearch.hs": "d01241f6b9421ab3311f483f944b20fb6806b9d59da3b034e2a7c4e6c62250fa",
+    "tdf-hq/src/TDF/Directory/SemanticIndex.hs": "02ece7e18c817111656b81df63f6c05b3b00237d9f5f779e0a03935328584633",
+    "tdf-hq/src/TDF/Directory/SemanticSearch.hs": "39e848d1fdf104f634b008ae9cd5bcb73f21bb2b071890fa5921d92c19e42c32",
     "tdf-hq/src/TDF/DriveOAuthClient.hs": "3d5bb29922ad21c6bf618af565fba70cfe29b5c6fcca2272c8c61e3ee370c3ac",
     "tdf-hq/src/TDF/Email.hs": "facc9c82964701339f17b288e10e7e531c05ae101bf8ba83f4cd1dfd16b89196",
     "tdf-hq/src/TDF/Email/Service.hs": "3c127c8506531eed57c738e5beb7708b6f19aafb906c215a6867b5ef3c689059",
@@ -31633,8 +31633,8 @@
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
     "tdf-hq/test/TDF/Directory/PolicySpec.hs": "dbdf1ba83c196b2fa26cdbe9af0348da88a562e4cc454cca7198daa590033884",
-    "tdf-hq/test/TDF/Directory/SemanticSearchPostgresSpec.hs": "e37bab713e75b59cbed51e876bc63e46b84636755733e18fccb8ce60877f4e5d",
-    "tdf-hq/test/TDF/Directory/SemanticSearchSpec.hs": "628d05dbc6faf814a6cf5c7187dada5aadffa56aa38fca2aa2ff5ba4c1d4f140",
+    "tdf-hq/test/TDF/Directory/SemanticSearchPostgresSpec.hs": "20a9de9a64ce86091315952c0297912d79a720e2972e5b840268d3fcb322f83e",
+    "tdf-hq/test/TDF/Directory/SemanticSearchSpec.hs": "45cc3b68d67b9e907c80088a044251abc8ffcac031d05eb7182c757ba0b0e8e4",
     "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "f1c1b9227060dab62db7b84721558d4294d3e5780cee71c0b7e52bd82fcde748",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "3fac72c8e53e52a81933aeba58c908980c90b6db398eb17716dea7d70b0d3f7c",
     "tdf-hq/test/TDF/EventAdminDelegationSpec.hs": "73b13ff14472e7f3df54cbc44718263313bf255244a71bc9534326998ca63f20",
@@ -82898,7 +82898,7 @@
     {
       "id": "SURFACE-3c0e2083ce2b6a1a",
       "path": "tdf-hq/src/TDF/Directory/SemanticIndex.hs",
-      "sha256": "6b5f5b37bd59756a393e72aa2bb8084dad24202a4bb6c18480890557acda0aed",
+      "sha256": "02ece7e18c817111656b81df63f6c05b3b00237d9f5f779e0a03935328584633",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -82910,7 +82910,7 @@
     {
       "id": "SURFACE-65fa05e273480c4e",
       "path": "tdf-hq/src/TDF/Directory/SemanticSearch.hs",
-      "sha256": "d01241f6b9421ab3311f483f944b20fb6806b9d59da3b034e2a7c4e6c62250fa",
+      "sha256": "39e848d1fdf104f634b008ae9cd5bcb73f21bb2b071890fa5921d92c19e42c32",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86882,7 +86882,7 @@
     {
       "id": "SURFACE-49f29c4216e62e48",
       "path": "tdf-hq/test/TDF/Directory/SemanticSearchPostgresSpec.hs",
-      "sha256": "e37bab713e75b59cbed51e876bc63e46b84636755733e18fccb8ce60877f4e5d",
+      "sha256": "20a9de9a64ce86091315952c0297912d79a720e2972e5b840268d3fcb322f83e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86894,7 +86894,7 @@
     {
       "id": "SURFACE-e2c81df0fb34bf74",
       "path": "tdf-hq/test/TDF/Directory/SemanticSearchSpec.hs",
-      "sha256": "628d05dbc6faf814a6cf5c7187dada5aadffa56aa38fca2aa2ff5ba4c1d4f140",
+      "sha256": "45cc3b68d67b9e907c80088a044251abc8ffcac031d05eb7182c757ba0b0e8e4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

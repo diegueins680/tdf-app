@@ -212,6 +212,8 @@ spec = describe "directory semantic search (DIR-SEMANTIC-SEARCH-001)" $ do
       searchSql False `shouldSatisfy` T.isInfixOf
         "(profile.profile_status='published' AND profile.visibility='public' AND profile.moderation_status='allowed' AND profile.canonical_profile_id IS NULL)"
       writeDocumentEmbeddingSql `shouldSatisfy` T.isInfixOf "FOR SHARE OF document"
+      -- The sweep pages through the claim so unsendable documents cannot hold it up.
+      claimDocumentsSql `shouldSatisfy` T.isSuffixOf "LIMIT ? OFFSET ?"
       writeDocumentEmbeddingSql `shouldSatisfy` T.isInfixOf (documentHashSql <> "=?")
 
   describe "text sent to the provider" $ do

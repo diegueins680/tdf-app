@@ -18472,13 +18472,13 @@
     {
       "id": "SURFACE-3c0e2083ce2b6a1a",
       "path": "tdf-hq/src/TDF/Directory/SemanticIndex.hs",
-      "sha256": "6b5f5b37bd59756a393e72aa2bb8084dad24202a4bb6c18480890557acda0aed",
+      "sha256": "02ece7e18c817111656b81df63f6c05b3b00237d9f5f779e0a03935328584633",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-65fa05e273480c4e",
       "path": "tdf-hq/src/TDF/Directory/SemanticSearch.hs",
-      "sha256": "d01241f6b9421ab3311f483f944b20fb6806b9d59da3b034e2a7c4e6c62250fa",
+      "sha256": "39e848d1fdf104f634b008ae9cd5bcb73f21bb2b071890fa5921d92c19e42c32",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19690,13 +19690,13 @@
     {
       "id": "SURFACE-49f29c4216e62e48",
       "path": "tdf-hq/test/TDF/Directory/SemanticSearchPostgresSpec.hs",
-      "sha256": "e37bab713e75b59cbed51e876bc63e46b84636755733e18fccb8ce60877f4e5d",
+      "sha256": "20a9de9a64ce86091315952c0297912d79a720e2972e5b840268d3fcb322f83e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-e2c81df0fb34bf74",
       "path": "tdf-hq/test/TDF/Directory/SemanticSearchSpec.hs",
-      "sha256": "628d05dbc6faf814a6cf5c7187dada5aadffa56aa38fca2aa2ff5ba4c1d4f140",
+      "sha256": "45cc3b68d67b9e907c80088a044251abc8ffcac031d05eb7182c757ba0b0e8e4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31940,7 +31940,7 @@
     },
     {
       "path": "formal/system/directory-semantic-search.md",
-      "sha256": "0dc79839a28c4f56d4065603038d6844b3f6ed3967902a00e4bc94468e637e9c",
+      "sha256": "6ebbe0ff6bf1b3fc04d115b2a6e3fefb3bd7ce69c0634c4d287f922e3b90ca8a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

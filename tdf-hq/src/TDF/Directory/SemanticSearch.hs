@@ -406,7 +406,9 @@ eligibleDocumentFromSql =
 
 -- | Eligible documents with no embedding of their current text in the
 -- current space, oldest change first. Returns kind, id, hash and the public
--- text. Parameters: provider, model, limit.
+-- text. Parameters: provider, model, limit, offset. The offset lets one sweep
+-- read past documents it cannot send (their text redacts to nothing), which
+-- have no embedding and would otherwise be claimed first on every sweep.
 claimDocumentsSql :: Text
 claimDocumentsSql =
   "SELECT document.entity_kind,document.entity_id,"
@@ -418,7 +420,7 @@ claimDocumentsSql =
     <> eligibleDocumentFromSql
     <> "AND NOT EXISTS (SELECT 1 FROM directory_search_embedding emb WHERE emb.entity_kind=document.entity_kind AND emb.entity_id=document.entity_id AND emb.provider=? AND emb.model=? AND emb.content_hash="
     <> documentHashSql
-    <> ") ORDER BY document.source_updated_at,document.entity_kind,document.entity_id LIMIT ?"
+    <> ") ORDER BY document.source_updated_at,document.entity_kind,document.entity_id LIMIT ? OFFSET ?"
 
 -- | Store one vector, but only if the document is still eligible and still
 -- has the claimed text. The document row is locked, so a concurrent

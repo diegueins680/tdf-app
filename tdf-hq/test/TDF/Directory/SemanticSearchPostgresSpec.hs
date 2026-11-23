@@ -245,6 +245,21 @@ spec = describe "directory-semantic-search-postgresql" $ do
         (after :: [Single Text]) `shouldBe` before
         mapM (embeddingCount fixture) ["summary", "version", "expire", "keep"] `shouldReturn` [0, 0, 0, 1]
 
+      it "reads past the oldest documents when their text redacts to nothing" $ \fixture -> do
+        -- Only contact details: nothing is left to send, so it never gets an embedding.
+        insertDocument fixture "blank" "ana@example.com" "+593 99 123 4567" "allowed"
+        insertDocument fixture "later" (queryText fixture <> " guitarrista") "clases de guitarra" "allowed"
+        withoutTriggers fixture "UPDATE directory_search_document SET source_updated_at='1990-01-01T00:00:00Z' WHERE entity_id=?"
+          [PersistText (docId fixture "blank")]
+        calls <- newIORef []
+        -- A batch of one used to claim the blank document on every sweep.
+        stats <- sweepDirectoryEmbeddingsWith (recording calls (Right . map (const (axis 0)))) model 1 (fxPool fixture)
+        sweepWritten stats `shouldBe` 1
+        sweepSkipped stats `shouldSatisfy` (>= 1)
+        sent <- concat <$> readIORef calls
+        length sent `shouldBe` 1
+        embeddingCount fixture "blank" `shouldReturn` 0
+
       it "neither embeds nor keeps a document that has expired or is not yet effective" $ \fixture -> do
         forM_ ["expired", "future", "live"] $ \name ->
           insertDocument fixture name (queryText fixture <> " " <> name) "sesiones de bajo" "allowed"

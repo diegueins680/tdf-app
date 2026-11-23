@@ -105,22 +105,13 @@ sweepDirectoryEmbeddingsWith embed model batch pool = do
   if not installed
     then pure emptySweepStats
     else do
-      (purged, claimed) <- flip runSqlPool pool $ do
-        purged <- rawExecuteCount purgeDocumentEmbeddingsSql []
+      purged <- flip runSqlPool pool $ do
+        removed <- rawExecuteCount purgeDocumentEmbeddingsSql []
         rawExecute pruneQueryCacheSql
           [PersistInt64 (fromIntegral queryCacheDays), PersistInt64 (fromIntegral queryCacheMaxRows)]
         rawExecute pruneQueryBudgetSql []
-        rows <- rawSql claimDocumentsSql
-          [PersistText embeddingProviderName, PersistText model, PersistInt64 (fromIntegral (max 1 batch))]
-        pure (purged, rows)
-      let prepared =
-            [ (kind, ident, digest, input)
-            | (Single kind, Single ident, Single digest, Single text) <-
-                claimed :: [(Single Text, Single Text, Single Text, Single (Maybe Text))]
-            , let input = embeddingInput (maybe "" id text)
-            , not (T.null input)
-            ]
-          unsendable = length claimed - length prepared
+        pure removed
+      (prepared, unsendable) <- claimSendable (max 1 batch) 0 0 [] 0
       written <-
         if null prepared
           then pure 0
@@ -144,6 +135,38 @@ sweepDirectoryEmbeddingsWith embed model batch pool = do
         , sweepWritten = written
         , sweepSkipped = unsendable + length prepared - written
         }
+  where
+    -- Claim pages, oldest change first, until the batch holds documents that
+    -- can be sent. A document whose public text redacts to nothing is never
+    -- embedded, so it stays first in the claim order; reading past it within
+    -- the sweep keeps it from holding up every later document. The page count
+    -- is bounded so one sweep stays a bounded amount of work.
+    claimSendable wanted pages offset kept skipped = do
+      rows <- runSqlPool
+        (rawSql claimDocumentsSql
+          [ PersistText embeddingProviderName, PersistText model
+          , PersistInt64 (fromIntegral pageSize), PersistInt64 (fromIntegral offset) ])
+        pool
+      let sendable =
+            [ (kind, ident, digest, input)
+            | (Single kind, Single ident, Single digest, Single text) <-
+                rows :: [(Single Text, Single Text, Single Text, Single (Maybe Text))]
+            , let input = embeddingInput (maybe "" id text)
+            , not (T.null input)
+            ]
+          kept' = kept <> take (wanted - length kept) sendable
+          skipped' = skipped + length rows - length sendable
+      if length kept' >= wanted || length rows < pageSize || pages + 1 >= claimPageLimit
+        then pure (kept', skipped')
+        else claimSendable wanted (pages + 1 :: Int) (offset + length rows) kept' skipped'
+      where
+        pageSize = max wanted claimPageSize
+
+-- | Rows read per claim page, and pages read per sweep, while looking for
+-- documents that can be sent.
+claimPageSize, claimPageLimit :: Int
+claimPageSize = 100
+claimPageLimit = 50
 
 -- | One iteration of the loop. The error line is fixed text: no exception,
 -- document or provider data reaches the log (OPS-WORKER-001).

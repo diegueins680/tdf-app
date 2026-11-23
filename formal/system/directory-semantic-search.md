@@ -115,6 +115,10 @@ A background sweep every 60 seconds, never in a request:
 2. prunes the query cache and the budget windows;
 3. claims eligible documents with no embedding of their current text in the current
    space, reading text and hash in one statement;
+   A document whose public text redacts to nothing is never sent or embedded, so it
+   stays first in the claim order; the sweep reads past such documents in pages of at
+   least 100 rows (at most 50 pages) until the batch is full, so they cannot hold up
+   the documents after them.
 4. calls the provider outside any transaction;
 5. writes each vector with one statement that locks the document row and inserts only
    if the document is still eligible and still has the claimed hash.
