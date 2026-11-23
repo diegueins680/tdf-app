@@ -44,10 +44,14 @@ library
     TDF.Social.API
     TDF.Social.Server
     TDF.API.Chat
+    TDF.API.NotificationDelivery
+    TDF.Chat.Delivery
+    TDF.Server.NotificationDelivery
     TDF.API.SocialProfiles
     TDF.Social.Profiles
     TDF.API.SocialRelationships
     TDF.Social.FanEffects
+    TDF.Fans.ArtistRecommendations
     TDF.API.FanFollowing
     TDF.Social.RelationshipWrites
     TDF.Social.RelationshipReads
@@ -247,11 +251,13 @@ library
     TDF.Server.TicketManualPayments
     TDF.Server.TicketPaymentReceipt
     TDF.Server.TicketTaxDocuments
+    TDF.Server.PublicBookingNotifications
     TDF.Server.TicketRefunds
     TDF.ServerLiveSessions
     TDF.ServerFeedback
     TDF.ServerRadio
     TDF.ServerFanClub
+    TDF.Fans.FeedAffinity
     TDF.ServerFuture
     TDF.Routes.Courses
     TDF.Routes.DomoQuotes
@@ -273,6 +279,8 @@ library
     TDF.Catalog.Seed
     TDF.Catalog.Types
     TDF.Directory.Policy
+    TDF.Directory.SemanticIndex
+    TDF.Directory.SemanticSearch
     TDF.DDEX.Types
     TDF.DDEX.Models
     TDF.DDEX.DB
@@ -419,6 +427,7 @@ test-suite tdf-hq-test
     TDF.LedgerPostingSpec
     TDF.MusicPublicationSpec
     TDF.InteractionWriteBudgetSpec
+    TDF.ChatDeliverySpec
     TDF.MusicPurchaseSpec
     TDF.StorageSecuritySpec
     TDF.MusicCredentialCacheSpec
@@ -464,6 +473,8 @@ test-suite tdf-hq-test
     TDF.Catalog.RecordsSpec
     TDF.Catalog.PipelineSpec
     TDF.Directory.PolicySpec
+    TDF.Directory.SemanticSearchPostgresSpec
+    TDF.Directory.SemanticSearchSpec
     TDF.Profiles.ArtistSpec
     TDF.Profiles.ArtistActivationSpec
     TDF.Server.MerchRuntimeSpec
@@ -475,6 +486,8 @@ test-suite tdf-hq-test
     TDF.AppleSignInSpec
     TDF.ServerExtraSpec
     TDF.ServerFanClubSpec
+    TDF.Fans.FeedAffinitySpec
+    TDF.Fans.ArtistRecommendationsSpec
     TDF.ServerSpec
     TDF.StartupResponseSpec
     TDF.ServerAdminSpec

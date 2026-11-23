@@ -1,0 +1,27 @@
+{
+  "id": "df4db7e4f0142896d690",
+  "classification": "dynamic-business-catalog",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+  "priority": "P1-cross-platform",
+  "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+  "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-hq/docs/openapi/api.yaml",
+    "line": 11236,
+    "kind": "openapi-enum",
+    "name": "MerchProductStatus",
+    "valueCount": 7,
+    "consumerCount": 168,
+    "exactDuplicateIds": [
+      "ab22a28a6c1f13d36e93"
+    ],
+    "similarCandidateIds": [
+      "ab22a28a6c1f13d36e93",
+      "792b81fa59eafa853254"
+    ]
+  }
+}

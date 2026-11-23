@@ -16,7 +16,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import StopIcon from '@mui/icons-material/Stop';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { generateTidalCode } from '../utils/tidalAgent';
+import { generateTidalCode } from '../services/tidalAgent';
 
 function freqFromMidi(midi: number): number {
   return 440 * Math.pow(2, (midi - 69) / 12);

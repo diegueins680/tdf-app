@@ -993,20 +993,23 @@
       "observability": "Exact source fingerprint, Mobile pin, command, result and negative-control log.",
       "authority": "approved",
       "source": "User specification-conformance instruction 2026-10-04, sections 3, 9, 10, 19 and 24",
-      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions. Catalog refresh preserves historical review provenance while recomputing discovery counters.",
+      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions. Catalog refresh preserves historical review provenance while recomputing discovery counters. Nested review history is stored once per object under docs/catalog-persistence/catalog-decision-history, addressed by the SHA-256 of its exact bytes, and expands to the original nested document byte for byte; edited, missing, orphaned or inline history fails verification.",
       "contract": "formal/system/README.md",
       "implementation": [
         "scripts/specification-conformance.py",
         "scripts/check-new-specification-surfaces.py",
         ".github/workflows/ci.yml",
         "docs/catalog-persistence/catalog-list-decisions.json",
-        "scripts/build-catalog-decisions.mjs"
+        "scripts/build-catalog-decisions.mjs",
+        "scripts/catalog-decision-history.mjs",
+        "scripts/lib/catalog-decision-history.mjs"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",
         "scripts/test-new-specification-surfaces.py",
         "scripts/__tests__/ci-pipeline.test.mjs",
-        "scripts/__tests__/catalog-list-audit.test.mjs"
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/__tests__/catalog-decision-history.test.mjs"
       ],
       "formalModels": [],
       "verification": "Executable conformance and mutation tests; not a whole-program proof. Catalog reconciliation retains historical retirement/provenance sections while recalculating current counters; an original-generator negative control demonstrates the regression.",
@@ -8930,7 +8933,8 @@
         "e2e/web/fixtures/native-music-setup.mjs",
         "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
         "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
-        "e2e/web/radio-navigation.spec.mjs"
+        "e2e/web/radio-navigation.spec.mjs",
+        "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx"
       ],
       "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness.",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
@@ -10164,7 +10168,7 @@
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/utils/directoryPreviewImage.ts",
+        "tdf-hq-ui/src/services/directoryPreviewImage.ts",
         "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
@@ -11496,6 +11500,95 @@
       ]
     },
     {
+      "domain": "MSG",
+      "actors": [
+        "Chat message recipient controlling their reminder channels and devices",
+        "Chat message sender",
+        "Delivery worker (API process) and external providers (SMTP, Expo push)"
+      ],
+      "authority": "explicit operator requirement",
+      "source": "Operator confirmation on 2026-10-13 (issue #577) and 2026-11-20 request: chat notices must reach the recipient by email and phone, not only in the web app.",
+      "contract": "docs/notifications/chat-delivery-2026-10-13.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "privacy": "Email and push carry no message text, sender name or address; push metadata is only the notice id. Device tokens are stored encrypted (pgp_sym_encrypt with NOTIFICATION_PUSH_TOKEN_KEY) and addressed by SHA-256 digest; outbox outcomes are minimized codes.",
+      "idempotency": "One delivery intent per notice and channel (UNIQUE notification_id, channel). Completion is fenced by a per-lease token, so a lost or duplicate worker cannot complete twice. Provider calls themselves are at-least-once on retry.",
+      "recovery": "Channels default off; disabling CHAT_EMAIL_DELIVERY_ENABLED/CHAT_PUSH_DELIVERY_ENABLED stops dispatch without losing intents. Intents older than 24 hours are skipped as expired, so re-enabling never sends retrospective reminders. Keep the additive schema on application rollback.",
+      "observability": "chat_delivery_outbox state/outcome/attempts per intent (no content); push subscription last_success_at/last_failure_code; API log lines tagged [ChatDelivery].",
+      "confidence": "Synthetic PostgreSQL assertions, Haskell unit tests and web tests; real SMTP mailbox delivery, Expo/FCM/APNs device delivery and production rollout remain unverified.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local SQL/unit/web evidence; provider credentials, mobile release, production migration and recipient-side device/mailbox evidence are pending."
+      },
+      "id": "MSG-DELIVERY-001",
+      "title": "Recipient-controlled email and phone reminders for chat notices",
+      "statement": "Every chat notice must create, in the message transaction, one email and one push delivery intent. A worker may send a reminder only when its channel is enabled and, at dispatch, the notice is still unread, the conversation has no newer read receipt, the current chat policy still shows the notice, the recipient account is active, the recipient has not opted out, the notice is under 24 hours old and coalescing allows it.",
+      "property": "Push is due immediately; email waits 10 minutes (offline window). At most one email per conversation per 6 hours and one push per conversation per minute. Reading the conversation records a monotonic receipt and marks its notices read. Retries back off exponentially and dead-letter after 5 attempts; expired leases are re-leased with the same budget. Each intent is leased immediately before its dispatch, at most one delivery is in flight per recipient, conversation and channel, an expired lease may not start a send, and provider calls are bounded (SMTP 60 s; Expo 15 s to the response headers and 30 s for the whole exchange) inside the 120 s lease. The web chat retries a failed read receipt up to 5 times with backoff. The authenticated routes are POST /chat/threads/{threadId}/read (read receipt, participants only), PUT /notifications/channels (the caller's email and push opt-out), POST /notifications/push-subscriptions (register the caller's device token) and POST /notifications/push-subscriptions/revoke (deactivate it).",
+      "preconditions": [
+        "Governed production migration 2026-11-20_chat_external_delivery installed after 2026-10-13_chat_message_notifications.",
+        "Provider configuration through the approved release process: SMTP, CHAT_*_DELIVERY_ENABLED, NOTIFICATION_PUSH_TOKEN_KEY (>=32 chars), optional EXPO_ACCESS_TOKEN; EAS FCM/APNs credentials for the mobile app."
+      ],
+      "inputs": [
+        "Committed chat message and its notice",
+        "Recipient read receipts, channel preferences and device push subscriptions"
+      ],
+      "state": {
+        "variables": [
+          "chat_delivery_outbox intents, leases and outcomes",
+          "chat_thread_read_receipt",
+          "notification_channel_preference",
+          "notification_push_subscription (encrypted tokens)"
+        ],
+        "bounds": "Synthetic PostgreSQL assertions over one conversation; no concurrency proof beyond FOR UPDATE SKIP LOCKED and lease fencing; no liveness claim for providers."
+      },
+      "allowedTransitions": [
+        "Send stores message, notice and two pending intents together.",
+        "Worker leases due intents for enabled channels only.",
+        "Dispatch recheck skips with a minimized reason (read, not_visible, inactive_recipient, opted_out, expired, no_address, no_subscription, coalesced).",
+        "Provider acceptance completes the lease as accepted; transient failure reschedules; budget exhaustion dead-letters.",
+        "A device token registered by another account moves to the newest registrant; Expo DeviceNotRegistered deactivates it."
+      ],
+      "forbiddenTransitions": [
+        "A reminder for a notice the recipient already read or can no longer see.",
+        "A reminder through a disabled or opted-out channel.",
+        "A reminder containing message text or sender identity.",
+        "A completion without the current lease token.",
+        "Enqueueing or sending reminders for historical messages."
+      ],
+      "effects": [
+        "External email via SMTP and push via Expo when enabled; durable minimized outcomes."
+      ],
+      "authorization": "Push subscription, preference and receipt endpoints act only on the authenticated party; a receipt requires conversation membership. Dispatch reuses interaction_notification_visible, so current consent, block and message deletion apply.",
+      "concurrency": "chat_delivery_lease uses FOR UPDATE SKIP LOCKED; chat_delivery_complete updates only the row holding the lease token. Receipts use GREATEST so they never move backwards.",
+      "failure": "Provider errors retry with 1,2,4,8-minute backoff then dead-letter; SMTP not configured or no push key skips with provider_unconfigured; missing migration leaves the worker idle.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
+        "tdf-hq/src/TDF/Chat/Delivery.hs",
+        "tdf-hq/src/TDF/Server/NotificationDelivery.hs",
+        "tdf-hq/src/TDF/API/NotificationDelivery.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/chat.ts",
+        "tdf-hq-ui/src/components/ChatNotificationChannels.tsx",
+        "tdf-hq-ui/src/pages/ChatPage.tsx",
+        "scripts/production-migrations.json"
+      ],
+      "tests": [
+        "scripts/social/chat-delivery.sql",
+        "scripts/test-chat-notifications.sh",
+        "tdf-hq/test/TDF/ChatDeliverySpec.hs",
+        "tdf-hq-ui/src/components/ChatNotificationChannels.test.tsx",
+        "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Fully migrated synthetic PostgreSQL: transactional intents, channel gating, dispatch rechecks (opt-out, block, inactive account, read receipt, freshness), lease fencing, retry/dead letter, coalescing; Haskell unit tests for environment defaults, backoff, token validation, payload minimization and Expo ticket classification; web tests for read receipts (including no receipt for unauthorized notification targets) and channel preferences.",
+      "evidence": "docs/notifications/chat-delivery-2026-10-13.md; current branch test receipts.",
+      "ambiguity": [
+        "Browser Web Push (VAPID) is not implemented; phone push covers the TDF mobile app only.",
+        "Expo push receipts (post-ticket device delivery) are not polled; acceptance is recorded as provider_accepted."
+      ]
+    },
+    {
       "id": "SYS-CI-DB-001",
       "title": "Event-operations API fixtures wait for final PostgreSQL readiness",
       "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
@@ -12599,6 +12692,114 @@
       },
       "verification": "Full-schema PostgreSQL trigger/notification tests, protected input validation, rollback/reapply, shipped query/plan comparison and real authenticated HTTP lane; no mathematical proof claimed.",
       "evidence": "Dated local reproduction and qualification receipts, final candidate source hashes and hosted checks."
+    },
+    {
+      "id": "DIR-SEMANTIC-SEARCH-001",
+      "title": "Embedding similarity in the semantic term of directory search",
+      "statement": "Behind DIRECTORY_SEMANTIC_SEARCH_ENABLED (off by default) the semantic term of GET /directory/search is max(alias match, cosine similarity of the query and document embeddings clamped to [0, 1]) for publicly listed directory profiles and classifieds; every other weight, the filter, the facets and the ordering are unchanged. With the flag off, or without a query embedding, the request executes the unmodified search statement.",
+      "domain": "DIR",
+      "authority": "Owner request of 2026-11-21 to replace the 0/1 alias semantic score with an embedding signal; the owner approved the rule, the embedded fields, sending public document text and search queries to the configured embedding provider, and the constants on 2026-11-21. On 2026-11-22 the owner kept the recommended defaults for the remaining decisions (rank only, constants and redaction as built, flag off in production). formal/system/directory-semantic-search.md.",
+      "source": "formal/system/directory-semantic-search.md",
+      "contract": "tdf-hq/src/TDF/Directory/SemanticSearch.hs",
+      "property": "semantic(q,d) = max(alias(q,d), sim(q,d)), sim = round4(clamp01(cosine)) for a usable embedding pair and 0 otherwise; P1: q # '' /\\ title(a) = q /\\ title(b) # q => rank(a) > rank(b) for all component values in range; P2: served(d) => public(d), embedded(d) => public(d) /\\ hash(embedding(d)) = hash(text(d)), ranked-with(e,d) => hash(e) = hash(text(d)), sent(text) => was-public(text); P3: ~flag \\/ no query embedding => statement = searchSql; P4: 0 <= score <= 1; P5: the page order is total.",
+      "actors": [
+        "Anonymous visitor",
+        "Background sweep",
+        "Embedding provider"
+      ],
+      "preconditions": [
+        "Migration tdf-hq/sql/2026-11-21_directory_semantic_search.sql applied on a database with the vector extension",
+        "DIRECTORY_SEMANTIC_SEARCH_ENABLED=true and an OPENAI_EMBED_MODEL of 1536 dimensions; otherwise the behaviour is DIR-SEARCH-SYNC-001 unchanged"
+      ],
+      "inputs": [
+        "GET /directory/search (existing parameters)",
+        "Stored document embeddings and the cached or freshly requested query embedding"
+      ],
+      "state": {
+        "initial": "No embedding",
+        "terminal": [
+          "Embedding of the current public text",
+          "No embedding"
+        ]
+      },
+      "allowedTransitions": [
+        "Sweep: claim an eligible document, send its redacted public text, store the vector if the document is still eligible with the claimed text",
+        "Hide or rewrite a search document: its embedding is deleted in the same transaction",
+        "Search request: read a cached query vector, or request one within the per-minute budget and 400 ms and cache it by hash"
+      ],
+      "forbiddenTransitions": [
+        "Returning a document because it has an embedding",
+        "Storing an embedding for a search document that is not published, public, allowed, effective and unexpired, or keeping one past the next sweep",
+        "Ranking with an embedding of other text, another provider or another model",
+        "Sending text of a document that was not eligible when claimed, private fields, or an identifier of the caller",
+        "Substituting a locally computed vector for a failed provider call",
+        "Any change of ranking with the flag off or without a query embedding"
+      ],
+      "effects": [
+        "Rows of directory_search_embedding, directory_query_embedding and directory_query_embedding_budget",
+        "Embedding requests to the configured provider"
+      ],
+      "authorization": "Public route, unchanged. The sweep runs in the API process with the application database role.",
+      "privacy": "Only text the public directory already shows is sent, after removing what looks like an e-mail address or telephone number; queries are sent as text and cached under a SHA-256 key without the text. Search is not personalised: no per-user signal is read, so every caller receives the non-personalised result. Hidden, private, blocked, unlisted and merged documents are neither embedded nor returned.",
+      "concurrency": "The provider is called outside any transaction; the write locks the document row and rechecks eligibility and the text hash; the hash covers the document's title, subtitle, summary, search text and source version; a trigger deletes the embedding when the document is hidden, expires by an update, or changes revision; the sweep purges what remains, including documents that expire with the clock. Several processes may sweep concurrently.",
+      "idempotency": "The write is an upsert by document; the migration and its rollback can be applied repeatedly.",
+      "failure": "Provider error, timeout, exhausted budget, unusable vector, missing tables or a failing semantic statement all yield today's statement and ranking.",
+      "recovery": "Set the flag to false; embeddings and cached query vectors are derived data and can be dropped (rollback file).",
+      "observability": "One fixed JSON line per failed sweep and one line with counts per sweep that did work; no document, query or provider text is logged.",
+      "implementation": [
+        "tdf-hq/src/TDF/Directory/SemanticSearch.hs",
+        "tdf-hq/src/TDF/Directory/SemanticIndex.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/sql/2026-11-21_directory_semantic_search.sql",
+        "tdf-hq/sql/2026-11-21_directory_semantic_search_rollback.sql",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs",
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "ops/hetzner/inspect-runtime.py"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/SemanticSearchSpec.hs",
+        "tdf-hq/test/TDF/Directory/SemanticSearchPostgresSpec.hs",
+        "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
+        "scripts/test-directory-semantic-search.sh",
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/test-hetzner-inspection.py"
+      ],
+      "formalModels": [
+        "formal/directory/semantic_rank.py",
+        "formal/directory/DirectoryEmbeddingIndex.tla",
+        "formal/directory/DirectoryEmbeddingIndex.cfg",
+        "formal/directory/DirectoryEmbeddingIndexUnguardedWrite.cfg",
+        "formal/directory/DirectoryEmbeddingIndexNoTrigger.cfg",
+        "formal/directory/DirectoryEmbeddingIndexEmbeddingAdmits.cfg",
+        "formal/directory/DirectoryEmbeddingIndexNoHashCheck.cfg",
+        "scripts/verify-inductive-proofs.sh"
+      ],
+      "verification": "Three strengths of evidence, kept apart. PROVED (Z3 4.13.3, formal/directory/semantic_rank.py, real-number model of the formula with six-decimal rounding, constants parsed from the pinned SQL text): P1 an exact title match outranks every other match for all components in range and any semantic term in [0, 1], likewise the prefix and contains tiers; the P3 formula part (similarity 0 leaves the weighted sum equal to the alias-only sum); P4 score in [0, 1]; monotonicity in the similarity; three necessity controls (unclamped similarity, doubled semantic weight, doubled image boost) each break P1. PROVED (Apalache 0.62.4 inductive invariant, formal/directory/DirectoryEmbeddingIndex.tla, any nonempty set of up to three documents and up to three edits each, executions of any length): P2 as NeverServed, NeverIndexed, NeverStale and SentOnlyPublic, with one reachable-violation control. BOUNDED (TLC 1.7.2): two documents and three versions without violation; four negative controls (unguarded write, no trigger, search driven from the embedding table, no hash check) each violate the named invariant. TESTED (Hspec and QuickCheck on the pure core): P1 and the tiers, P3 plan and statement identity for a lexical plan, P4, P5 comparator totality, redaction, vector admission, and that the semantic statement differs from today's in exactly the input row and the alias term. TESTED (PostgreSQL 16 with pgvector on the migrated production schema fixture, provider replaced by a recording function): sweep embeds public documents only and without e-mail or telephone patterns; provider failure and unusable vectors write nothing; the trigger deletes on hide and rewrite; the guarded write refuses after hide or rewrite; the purge removes what the trigger did not; rows of the semantic statement equal today's rows without a usable pair (no embedding, other provider, stale hash, zero vector); similarity reorders inside a tier and never passes an exact title; a hidden document with an embedding is not returned; paging neither repeats nor skips; query cache, budget and fallback; the migration applies twice, rolls back twice and applies again, and the 263-migration production batch with its schema verification passes.",
+      "evidence": "Runs of formal/directory/semantic_rank.py, scripts/verify-inductive-proofs.sh, the tdf-hq-test groups 'directory semantic search', 'directory semantic index' and 'directory-semantic-search-postgresql' (scripts/test-directory-semantic-search.sh), and scripts/test-automatic-migrations-production-schema.sh on the candidate; hosted CI receipts for the same commands are required and are not inherited from the author's local runs.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the ranking envelope and the index invariants within their stated models; medium for the correspondence between those models and PostgreSQL, which is by review and test; the usefulness of the ranking change is not assessed, and nothing here says an embedding is a good one.",
+      "ambiguity": [
+        "The Z3 model is over real numbers; agreement with PostgreSQL float8 and numeric evaluation is tested on examples, not proved.",
+        "The TLA+ model treats each statement as atomic; that FOR SHARE on the document row makes the guarded write atomic against a concurrent update is assumed PostgreSQL behaviour.",
+        "The model's public state is the search document's own columns; a profile hidden without a refresh of its search document, and a document whose expiry passes with the clock, are excluded by the read predicate at once and by the sweep within a minute, not by the trigger.",
+        "The range proofs assume quality, availability and reputation in [0, 1] (CHECK constraints) and source_updated_at not in the future; a future timestamp already takes the activity term out of range in the unmodified statement.",
+        "Similarity only reorders documents that pass the text filter; the owner decided on 2026-11-22 that it does not admit documents, so the visible effect is small by design.",
+        "If the query embedding is available for one page and not the next, an item can repeat or be skipped between pages; the cache makes this rare and does not exclude it.",
+        "The redaction of contact details is a pattern match on words containing @ and on runs with seven or more digits.",
+        "The profile branch of the claim statement is validated by PostgreSQL as part of the statement but no test claims a profile row; the fixtures are classified documents.",
+        "No HTTP-level test drives GET /directory/search with the flag on, and no test calls the real provider.",
+        "A model with another dimension than 1536 leaves the feature inert until a migration changes the columns."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Ranking envelope and index invariants proved for their models and exercised on PostgreSQL with a stand-in provider; HTTP-level checks with the flag on, a profile-row fixture and hosted CI receipts remain; the owner set the flag in the production environment file on 2026-11-23; it takes effect only once production runs a build with this change and the migration is applied."
+      },
+      "historicalStatus": null
     },
     {
       "id": "AUTH-LOGOUT-001",
@@ -15288,6 +15489,7 @@
         "tdf-hq-ui/src/pages/MerchProductPage.tsx",
         "tdf-hq-ui/src/pages/MerchReputationPage.tsx",
         "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
+        "tdf-hq-ui/src/services/merchImage.ts",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
         "tdf-hq-ui/src/pages/NotificationPage.tsx",
         "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
@@ -19249,6 +19451,83 @@
       "historicalStatus": null
     },
     {
+      "id": "COMMUNITY-FAN-RECOMMENDATION-001",
+      "title": "Artist recommendations for a fan from shared followers",
+      "statement": "A signed-in fan reads the publicly listed artists they do not follow yet and are allowed to follow, ordered by how strongly the followers of the artists they follow also follow each one (sum of cosine similarities of follower sets), completed with the most followed artists when the evidence gives fewer than the requested number. Route: GET /fans/me/recommendations.",
+      "domain": "COMMUNITY",
+      "authority": "Owner request of 2026-11-21 to build item-to-item recommendations for the Fan Hub; the similarity measure, fallback and limits were chosen by the implementer and await owner review. formal/system/fan-recommendations.md.",
+      "source": "formal/system/fan-recommendations.md",
+      "contract": "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
+      "property": "For every returned artist a: listed(a) /\\ a \\notin followed(fan) /\\ a # fan /\\ (policyInstalled => followable(fan, a)); similar_fans entries precede popular ones and are ordered by score descending; score(a) = SUM over listed s \\in followed(fan) of min(shared(s,a), followers(s), followers(a)) / sqrt(followers(s) * followers(a)); at most limit artists, each once.",
+      "actors": [
+        "Fan"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect)",
+        "fan_follow rows as created by tdf-hq/sql/init_schema.sql"
+      ],
+      "inputs": [
+        "GET /fans/me/recommendations",
+        "limit (optional; default 6, clamped to 1..24)"
+      ],
+      "state": {
+        "initial": "Stored fan_follow rows",
+        "terminal": [
+          "Ranked list",
+          "Refusal without read"
+        ]
+      },
+      "allowedTransitions": [
+        "None; the route reads and never writes."
+      ],
+      "forbiddenTransitions": [
+        "Returning an artist that is not publicly listed, is already followed by the caller, or is the caller",
+        "Returning an artist the caller may not follow under the installed social-v2 follow policy (block, closed profile, organisation or inactive account)",
+        "Naming a hidden artist as the reason for a recommendation",
+        "Any write"
+      ],
+      "effects": [
+        "None; read-only."
+      ],
+      "authorization": "requireFanAccess; the caller's own party only, taken from the session.",
+      "privacy": "Reads the caller's follows and aggregate counts; no other fan's identity is read or returned. Hidden artists are neither returned nor used as evidence. A block in either direction removes the artist from the caller's list where the follow policy is installed.",
+      "concurrency": "Three aggregate reads in one transaction at the pool's default isolation; a shared count exceeding a follower count read at another instant is clamped.",
+      "idempotency": "Read-only.",
+      "failure": "401 without a session; 403 without Fan or Customer access. An out-of-range limit is clamped, not refused.",
+      "recovery": "Not applicable.",
+      "observability": "HTTP status only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq-ui/src/features/fans/RecommendedArtists.tsx",
+        "tdf-hq-ui/src/features/fans/artistRecommendations.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs",
+        "scripts/test-fan-recommendations-sql.py",
+        "scripts/test-fan-recommendations-postgres.sh",
+        "tdf-hq-ui/src/features/fans/RecommendedArtists.test.tsx",
+        "tdf-hq-ui/src/features/fans/artistRecommendations.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Ranking by Hspec examples and QuickCheck properties (bounds, exclusions, visibility, ordering, input-order independence); the SQL extracted from the Haskell source runs on PostgreSQL against a fixture; web resolution and rendering by Jest.",
+      "evidence": "tdf-hq-test ArtistRecommendationsSpec run; scripts/test-fan-recommendations-postgres.sh output; Jest RecommendedArtists and artistRecommendations runs.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "High for the ranking function and the SQL on the fixture; the handler wiring is covered by compilation and review only.",
+      "ambiguity": [
+        "Only follows are evidence; plays, favourites and RSVPs are not used.",
+        "A single shared fan is enough to recommend; no minimum-support threshold is set.",
+        "No HTTP-level test runs the route against a fully migrated database.",
+        "The follow-policy filter is exercised against a stand-in function with the migrated signature, not the migrated social_v2_profile_eligible itself."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Ranking, SQL and web tested at unit and SQL level; HTTP-level checks on the migrated schema and owner confirmation of the ranking rule remain."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "COMMUNITY-FAN-NOTIFICATION-001",
       "title": "Marking own notifications read",
       "statement": "A signed-in party marks one or all of their own notifications read. Routes: POST /fans/me/notifications/{notifId}/read; POST /fans/me/notifications/read-all.",
@@ -19601,6 +19880,99 @@
         "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-FEED-AFFINITY-001",
+      "title": "Personal hot order of a fan-club feed from the viewer's affinity to each author",
+      "statement": "With the runtime gate FAN_FEED_AFFINITY_ENABLED on, a viewer who has not switched personalisation off and who reacted or replied to items of the club feed in the last 90 days receives the hot sort ordered by affinity * (reactions + 1) / max(1, ageHours)^0.8, where the affinity to an author is 1 + min(reactions + 2 * replies, 20) / 10. In every other case the hot sort keeps the previous score reactions / max(1, ageHours)^0.8. Pinned items, the top and chronological sorts, the returned items and the response shape do not change. Route: GET /fan-clubs/{artistId}/feed.",
+      "property": "For every request: returned(mode) is a permutation of returned(fallback); gate off \\/ optedOut \\/ no usable evidence => order = previous hot order (wherever that was determined); the unpinned order is the strict total order (score desc, kind, created_at desc, id desc); personalised /\\ y precedes x => 3 * (reactions(y) + 1) / decay(y) >= (reactions(x) + 1) / decay(x); evidence \\subseteq items of the served feed that the viewer may read and that are not hidden; optedOut => no behaviour read.",
+      "domain": "COMMUNITY",
+      "authority": "Owner request of 2026-11-21 for affinity-based feed ranking; rule and constants approved by the owner on 2026-11-21 (club feed only, reactions + 1 in personalised mode, type weight 1, hidden items excluded from evidence only). formal/system/feed-affinity-ranking.md.",
+      "source": "formal/system/feed-affinity-ranking.md",
+      "contract": "tdf-hq/src/TDF/Fans/FeedAffinity.hs",
+      "actors": [
+        "Fan"
+      ],
+      "preconditions": [
+        "Authenticated bearer session and the existing guards of the club feed route",
+        "FAN_FEED_AFFINITY_ENABLED set at startup for any personalised order (default off)"
+      ],
+      "inputs": [
+        "GET /fan-clubs/{artistId}/feed?sort=hot",
+        "social_v2_preference.personalized of the viewer",
+        "The viewer's reactions and replies to items of the served feed in the last 90 days"
+      ],
+      "state": {
+        "initial": "Stored feed items, reactions, replies and the viewer's personalisation preference",
+        "terminal": [
+          "Ordered feed in personalised mode",
+          "Ordered feed in fallback mode"
+        ]
+      },
+      "allowedTransitions": [
+        "None; ranking reads and never writes."
+      ],
+      "forbiddenTransitions": [
+        "Adding or dropping a feed item because of ranking",
+        "A personalised order with the gate off, for a viewer who opted out, or where the preference table is not installed",
+        "Reading the behaviour of a viewer who opted out",
+        "Counting an interaction with a hidden item, an item the viewer may not read, an item outside the served feed, or the viewer's own item as evidence",
+        "Changing the top or chronological sort, or the position of pinned items",
+        "Returning a score, an affinity or the mode"
+      ],
+      "effects": [
+        "None; read-only."
+      ],
+      "implementation": [
+        "tdf-hq/src/TDF/Fans/FeedAffinity.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/config/default.env.example"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Fans/FeedAffinitySpec.hs",
+        "scripts/test-feed-affinity-sql.py",
+        "scripts/test-feed-affinity-postgres.sh",
+        "scripts/verify-inductive-proofs.sh",
+        "formal/social/feed_affinity_arithmetic.py"
+      ],
+      "formalModels": [
+        "formal/social/FeedAffinity.tla",
+        "formal/social/FeedAffinity.cfg",
+        "formal/social/FeedAffinityGateOff.cfg",
+        "formal/social/FeedAffinityFloorZero.cfg",
+        "formal/social/FeedAffinityNoTieBreak.cfg",
+        "formal/social/FeedAffinityUnfilteredEvidence.cfg",
+        "formal/social/FeedAffinityOptOutIgnored.cfg",
+        "formal/social/feed_affinity_arithmetic.py"
+      ],
+      "verification": "PROVED on the model (Apalache inductive invariant: initiation, consecution, implication; four candidate items of which any subset is visible, three authors, abstract scores 0..6 and 1..12, any affinity in 1..3): permutation, exclusion of non-visible items and of hidden or unreadable evidence, fallback order and no behaviour read when the gate is off or the viewer opted out or has no usable evidence, order fixed by the key, displacement bound. PROVED over exact real and integer arithmetic (Z3, unsat of the negation, any positive decay): affinity in [1, 3] and monotone, displacement bound 3 and its tightness, the key is a strict total order, the tie-break keeps the previous stable order, score monotone in reactions and affinity and anti-monotone in decay. BOUNDED (TLC, three items, two authors, two score values): the same invariants, plus four negative controls that must fail (floor 0, no tie-break, evidence read before the visibility filter, opt-out ignored) and three Z3 witnesses (zero floor, unequal type weights, key without id). TESTED (Hspec and QuickCheck on the Haskell code): permutation, pinned first, fallback equal to a copy of the previous sort, top and chronological sorts unchanged, input-order independence, displacement bound, monotonicity on Double, evidence tally and hidden-item exclusion, the loader on SQLite (gate off reads nothing, opt-out reads no behaviour, window, visibility and own-item filters). TESTED on PostgreSQL: the canonical-interaction and preference SQL extracted from the Haskell source against a fixture.",
+      "evidence": "scripts/verify-inductive-proofs.sh output; formal/social/feed_affinity_arithmetic.py output; tdf-hq-test FeedAffinitySpec run; scripts/test-feed-affinity-postgres.sh output.",
+      "historicalStatus": "new",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for the rule as modelled and for the pure ranking function. The step from the model to the Haskell sort, the Double arithmetic, the SQL against the migrated schema and the handler wiring rest on tests, compilation and review, not on proof.",
+      "ambiguity": [
+        "The models abstract the sort as emitting the item whose key precedes all waiting items; that Data.List.sortBy realises this is tested, not proved.",
+        "Double arithmetic, including the exponent 0.8, is tested only; the Z3 lemmas are over exact arithmetic with an arbitrary positive decay.",
+        "The Apalache proof is for at most four items and three affinity levels; larger feeds are covered by the Z3 pairwise lemmas and by tests.",
+        "The canonical-interaction SQL runs against a fixture with the columns it reads, not the migrated schema, and no HTTP-level test serves a personalised feed.",
+        "Which items a viewer may read is decided by Interactions.visible and is outside this requirement; hidden items are still returned flagged, as before.",
+        "The constants (90 days, reply weight 2, cap 20, affinity 1 to 3) were approved without usage data.",
+        "The discovery feed (GET /fans/discovery) is not personalised; the owner deferred it.",
+        "Before this change the order of two items of one kind with equal created_at was left to the database; it is now by id descending."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Rule proved on the model and over exact arithmetic and tested on the implementation; correspondence of the Haskell code to the model, the migrated-schema SQL and an HTTP-level personalised response are not established."
+      },
+      "authorization": "Unchanged: the existing guards of the club feed route; the viewer is taken from the session.",
+      "privacy": "Reads only the viewer's own reactions and replies, nothing with the gate off and no behaviour for a viewer whose social_v2_preference.personalized is false. Only the order of the response depends on them; no score, affinity or mode is returned. Hidden or unreadable items are never evidence.",
+      "concurrency": "Items and evidence are read in the handler's transaction at the pool's default isolation. The order properties hold for any evidence values, so a concurrent reaction can change one response's order and nothing else.",
+      "idempotency": "Read-only.",
+      "failure": "Where social_v2_preference is not installed the request is served in fallback mode. Any other database error fails the request as for the rest of the handler.",
+      "recovery": "Unset FAN_FEED_AFFINITY_ENABLED and restart: every viewer returns to the previous order.",
+      "observability": "HTTP status only; the mode is not logged or returned."
     },
     {
       "id": "SCHOOL-PUBLIC-INTAKE-001",
@@ -21894,7 +22266,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/bookings-routes.md.",
       "source": "formal/system/bookings-routes.md",
       "contract": "formal/system/bookings-routes.md",
-      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); an engineer email is sent only for a newly created booking.",
+      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); only a newly created legacy tentative booking notifies: the assigned engineer by email, every active Admin, Manager and StudioManager by an in-app notification (public_booking_request, target booking) plus email and WhatsApp, and the customer by a receipt email stating the request is unconfirmed and records no payment, and that it holds its slot tentatively until staff confirm or release it only when the created booking was allocated rooms or resources; without allocations it says no slot is held (the staff email and the Domo request page make the same distinction). The in-app rows are written before the response; emails and WhatsApp are sent on a background thread after it, so provider latency never delays or fails the accepted request. Each delivery is best-effort and logged.",
       "actors": [
         "Anonymous customer"
       ],
@@ -21928,7 +22300,9 @@
         "service_booking_checkout_runtime",
         "service_booking_tentative_request",
         "service_booking_event",
-        "engineer email"
+        "engineer, staff and customer email",
+        "staff notification rows",
+        "staff WhatsApp alert"
       ],
       "authorization": "None beyond the key (public-intake).",
       "privacy": "Stores customer contact details from anonymous input.",
@@ -21939,13 +22313,21 @@
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs",
         "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
-        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql"
+        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
+        "tdf-hq/src/TDF/Email.hs",
+        "tdf-hq/src/TDF/Email/Service.hs",
+        "tdf-hq-ui/src/components/notificationTarget.ts",
+        "tdf-mobile/src/navigation/notificationTarget.ts",
+        "tdf-hq-ui/src/pages/DomoVenuePage.tsx"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "scripts/test-public-booking-http-concurrency.sh",
-        "scripts/test-public-booking-tentative-idempotency-migration.sh"
+        "scripts/test-public-booking-tentative-idempotency-migration.sh",
+        "tdf-hq-ui/src/components/notificationTarget.test.ts",
+        "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx"
       ],
       "formalModels": [],
       "verification": "publicBookingSqlConflict is tested in tdf-hq/test/TDF/ServerSpec.hs; the HTTP concurrency script drives concurrent public checkouts; the rest is read from the handlers.",
@@ -23731,10 +24113,15 @@
       "implementation": [
         "tdf-hq/src/TDF/Server/SocialDiscovery.hs",
         "tdf-hq/src/TDF/Server/SocialSync.hs",
-        "tdf-hq/src/TDF/Server.hs"
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
+        "tdf-hq-ui/src/hooks/useChatKitScript.ts",
+        "tdf-hq-ui/src/pages/ChatKitPage.tsx",
+        "tdf-hq-ui/src/services/chatkit.ts"
       ],
       "tests": [
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq-ui/src/services/chatkit.test.ts"
       ],
       "formalModels": [],
       "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
@@ -24720,10 +25107,14 @@
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
-        "tdf-hq/src/TDF/Server.hs"
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq-ui/src/services/tidalAgent.ts",
+        "tdf-hq-ui/src/pages/TidalAgentPage.tsx",
+        "tdf-hq-ui/src/pages/MusicMakerPage.tsx"
       ],
       "tests": [
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq-ui/src/services/tidalAgent.test.ts"
       ],
       "formalModels": [],
       "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
@@ -27897,7 +28288,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "The ratchet is enforced; 8 backend imports, 7 web imports and 16 oversized files remain listed debt."
+        "reason": "The ratchet is enforced; 8 backend imports, 2 web imports and 16 oversized files remain listed debt."
       },
       "authority": "User request 2026-11-10; layer definitions and limits are an engineering decision recorded in ADR 0133, owner confirmation pending.",
       "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",

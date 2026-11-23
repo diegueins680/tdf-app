@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 540,
-    "named": 458,
+    "total": 544,
+    "named": 462,
     "path-named": 0,
     "reviewed": 82,
     "unspecified": 0,
-    "covered": 540
+    "covered": 544
   },
   "routes": [
     {
@@ -977,6 +977,14 @@
       "basis": "named",
       "requirements": [
         "MSG-CHAT-WRITES-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/chat/threads/{threadId}/read",
+      "basis": "named",
+      "requirements": [
+        "MSG-DELIVERY-001"
       ]
     },
     {
@@ -2768,6 +2776,30 @@
       "basis": "named",
       "requirements": [
         "NAV-PREFERENCES-001"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/notifications/channels",
+      "basis": "named",
+      "requirements": [
+        "MSG-DELIVERY-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/notifications/push-subscriptions",
+      "basis": "named",
+      "requirements": [
+        "MSG-DELIVERY-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/notifications/push-subscriptions/revoke",
+      "basis": "named",
+      "requirements": [
+        "MSG-DELIVERY-001"
       ]
     },
     {

@@ -1,0 +1,19 @@
+{
+  "id": "d788513cb3b232039b94",
+  "classification": "dynamic-business-catalog",
+  "disposition": "retain-in-code",
+  "specializedModel": "navigation_item",
+  "priority": "P3-retain",
+  "risk": "Changing UI constants could break rendering or user experience.",
+  "justification": "Reviewed public header navigation drops the dedicated DJ Booth entry: DJ booth practice is an ordinary service offering chosen inside /reservar, so the header keeps one booking entry. It still holds client routes and localized labels only; service availability and pricing remain server-side catalog data.",
+  "reviewed": true,
+  "previousDecision": {
+    "$historyRef": "sha256:cba83bb7231a2ffd78278c5a8a22f22dc20b3d1de1f8f4bf481da08e91f8d4c2"
+  },
+  "evidence": {
+    "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
+    "line": 23
+  },
+  "reviewBatch": "public-booking-service-picker-2026-10-12",
+  "reviewMethod": "successor-of-reviewed-decision"
+}

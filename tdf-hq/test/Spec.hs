@@ -190,6 +190,8 @@ import qualified TDF.Catalog.RecordsSpec as CatalogRecordsSpec
 import qualified TDF.Catalog.SecuritySpec as CatalogSecuritySpec
 import qualified TDF.Catalog.PipelineSpec as CatalogPipelineSpec
 import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
+import qualified TDF.Directory.SemanticSearchPostgresSpec as DirectorySemanticSearchPostgresSpec
+import qualified TDF.Directory.SemanticSearchSpec as DirectorySemanticSearchSpec
 import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage, passwordResetLink, passwordResetLinkWithLocale, passwordResetEmailContent)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
@@ -668,6 +670,7 @@ import qualified TDF.WhatsAppConsentSpec as WhatsAppConsentSpec
 import qualified TDF.LedgerPostingSpec as LedgerPostingSpec
 import qualified TDF.MusicPublicationSpec as MusicPublicationSpec
 import qualified TDF.InteractionWriteBudgetSpec as InteractionWriteBudgetSpec
+import qualified TDF.ChatDeliverySpec as ChatDeliverySpec
 import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
 import qualified TDF.MusicCredentialCacheSpec as MusicCredentialCacheSpec
 import qualified TDF.MusicRelease.DomainSpec as MusicDomainSpec
@@ -679,6 +682,8 @@ import qualified TDF.WhatsAppRedeliverySpec as WhatsAppRedeliverySpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
+import qualified TDF.Fans.FeedAffinitySpec as FeedAffinitySpec
+import qualified TDF.Fans.ArtistRecommendationsSpec as ArtistRecommendationsSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
 import qualified TDF.Server.EventRelationsSpec as EventRelationsSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
@@ -18539,6 +18544,8 @@ main = hspec $ do
     DDEXParseSpec.spec
     DDEXBusinessRulesSpec.spec
     DirectoryPolicySpec.spec
+    DirectorySemanticSearchSpec.spec
+    DirectorySemanticSearchPostgresSpec.spec
     EventDiscoverySpec.spec
     RecordsIngestion.spec
     YouTubeSpec.spec
@@ -18558,6 +18565,7 @@ main = hspec $ do
     LedgerPostingSpec.spec
     MusicPublicationSpec.spec
     InteractionWriteBudgetSpec.spec
+    ChatDeliverySpec.spec
     MusicPurchaseSpec.spec
     describe "music release unit contracts" $ do
       describe "music-unit-domain" MusicDomainSpec.spec
@@ -18581,6 +18589,8 @@ main = hspec $ do
     ServerProposalsSpec.spec
     ServerExtraSpec.spec
     ServerFanClubSpec.spec
+    FeedAffinitySpec.spec
+    ArtistRecommendationsSpec.spec
     FollowSpec.spec
     FollowHandlerSpec.spec
     EventRelationsSpec.spec

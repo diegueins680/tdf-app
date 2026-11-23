@@ -1340,6 +1340,16 @@
       "introducedBy": "7da005edcdcce714343d3bbf7273fc31dd0743f4"
     },
     {
+      "id": "2026-11-20_chat_external_delivery",
+      "path": "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
+      "introducedBy": "8da140ae64c51b8ef006e7678589c8bcf5ef38f3"
+    },
+    {
+      "id": "2026-11-21_directory_semantic_search",
+      "path": "tdf-hq/sql/2026-11-21_directory_semantic_search.sql",
+      "introducedBy": "d48fd5f1117f6778759185ac2e6ba559937bc360"
+    },
+    {
       "id": "2026-11-21_venue_search_sql",
       "path": "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
       "introducedBy": "1c581e2e6016b76e04269a29b09d38665719559d"

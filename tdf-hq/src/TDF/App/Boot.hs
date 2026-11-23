@@ -83,6 +83,7 @@ import TDF.Cron (
   )
 import TDF.Services.RecordsIngestion (startRecordsIngestionJob)
 import TDF.Interactions.Notifications (startInteractionNotifications)
+import TDF.Chat.Delivery (startChatDeliveryWorker)
 import TDF.DB (ConnectionPool, Env (..), makePool)
 import TDF.Models (
     PartyId,
@@ -92,6 +93,7 @@ import TDF.Models (
   )
 import TDF.Models.SocialEventsModels (migrateSocialEvents)
 import TDF.ModelsExtra (migrateExtra)
+import TDF.Directory.SemanticIndex (startDirectorySemanticIndexWorker)
 import TDF.Operations.Worker (startOperationsWorker)
 import TDF.Reputation.Worker (startReputationWorker)
 import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
@@ -155,6 +157,7 @@ runBootServer = do
         startAgreementDepositExpiryJob env
         startRecordsIngestionJob (envPool env)
         startInteractionNotifications (envPool env)
+        startChatDeliveryWorker env
         startEventDiscoveryJob env
         startEventLogisticsRecheckJob env
         startArtistEnrichmentJob env
@@ -168,6 +171,7 @@ runBootServer = do
         startTicketConfirmationWorker env
         startTaxInvoiceWorker env
         startReputationWorker env
+        startDirectorySemanticIndexWorker env
 
   serverResult <- newEmptyMVar
   _ <-

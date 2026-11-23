@@ -1,0 +1,32 @@
+{
+  "id": "05cf100aa2fff2a7c8ad",
+  "classification": "dynamic-business-catalog",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "onboarding_intent, onboarding_first_value, user_onboarding_progress",
+  "priority": "P1-cross-platform",
+  "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+  "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-hq/docs/openapi/api.yaml",
+    "line": 14290,
+    "kind": "openapi-enum",
+    "name": "OnboardingIntent",
+    "valueCount": 6,
+    "consumerCount": 105,
+    "exactDuplicateIds": [
+      "dc2478eb86deaac6aed4",
+      "9ebf2e096eeddbecfa52",
+      "3022d9364dbbe18e8bbb",
+      "3b37706d3daff89e8890"
+    ],
+    "similarCandidateIds": [
+      "dc2478eb86deaac6aed4",
+      "9ebf2e096eeddbecfa52",
+      "3022d9364dbbe18e8bbb",
+      "3b37706d3daff89e8890"
+    ]
+  }
+}

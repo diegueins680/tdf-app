@@ -1,0 +1,19 @@
+{
+  "id": "ff4edc0f8d2debecf71c",
+  "classification": "security-system-registry",
+  "disposition": "persisted-registry-with-deny-by-default-code-mirror",
+  "specializedModel": "security_role, party_security_role, role_permission",
+  "priority": "P0-security",
+  "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+  "justification": "Only recognized technical policy bindings are retained in code. Adds artist.invitation.artist (artist-invitation-redeemed, no verified email required), persisted by 2026-09-14_artist_invitation_auto_approval.sql; grants only Artist to the redeeming party with an immutable audit.",
+  "reviewed": true,
+  "evidence": {
+    "file": "tdf-hq/src/TDF/Catalog/Security.hs",
+    "line": 90
+  },
+  "reviewBatch": "music-release-platform-sync-2026-10-07",
+  "reviewMethod": "successor-of-reviewed-decision",
+  "previousDecision": {
+    "$historyRef": "sha256:c1e35567a8e9198af152d8e6d7fb6184edec9773734515279137519d4784ce5c"
+  }
+}

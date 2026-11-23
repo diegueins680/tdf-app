@@ -34,7 +34,7 @@ import RadioIcon from '@mui/icons-material/Radio';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { generateTidalCode } from '../utils/tidalAgent';
+import { generateTidalCode } from '../services/tidalAgent';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { RadioAPI, type RadioStreamDTO, type RadioTransmissionInfo } from '../api/radio';

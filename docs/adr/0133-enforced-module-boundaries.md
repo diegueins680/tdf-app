@@ -117,7 +117,13 @@ imports, 17 oversized files. Suggested order, each as its own small change:
    storage plus a React subscription) moved to `services/`, the app-services
    layer between `api` and `components`. The three value lists in the campaign
    model keep their catalog reviews as successors under the new path.
-7. Split the oversized files along the seams their own section comments mark,
+7. Done: the four `utils -> api/client` imports are gone. `chatkit.ts` and
+   `tidalAgent.ts` call the api and `directoryPreviewImage.ts` resolves media
+   against the api base, so all three moved to `services/`. `merch.ts` stays in
+   `utils/`: only `resolveMerchImageUrl` read the api base, and it moved to
+   `services/merchImage.ts`. None of the moved code declares a reviewed value
+   list.
+8. Split the oversized files along the seams their own section comments mark,
    lowering each ceiling in the same change.
 
 ## Consequences

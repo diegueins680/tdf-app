@@ -1,0 +1,20 @@
+{
+  "id": "083bd1a66e9f23f02866",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Incorrect typed method dispatch can redirect authenticated writes or expose private transfer evidence; server scope and ownership remain authoritative.",
+  "justification": "Reviewed all 86 transport method keys: the eight additions (getEventAdminAccess, listEventAdmins, createEventAdminInvitation, revokeEventAdminInvitation, removeEventAdmin, previewEventAdminInvitation, acceptEventAdminInvitation, issueCourtesyTickets) call the eight authenticated delegated event-administration and courtesy-ticket routes of EVT-ADMIN-DELEGATION-001. The keys are typed HTTP dispatch, not a selectable or business catalog; persisted event_admin_invitation, event_admin_member and ticket order rows and the server checks remain authoritative. The prior 78-method review is retained as previousDecision.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "event-admin-delegation-20261111",
+  "evidence": {
+    "file": "tdf-hq-ui/src/api/socialEvents.ts",
+    "line": 651,
+    "valueCount": 86
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:8d8d51325fce517472265664ac54e4f436b04710b1cafbf3337c8b23de8a7b91"
+  }
+}

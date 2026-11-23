@@ -1,0 +1,10 @@
+{
+  "id": "ec1a316784aa9992384a",
+  "classification": "governed-reference-data",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
+  "priority": "P0-cutover",
+  "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+  "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+  "reviewed": true
+}
