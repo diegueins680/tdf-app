@@ -58,7 +58,10 @@ exactly as before this change.
   built from exactly that list. An anonymous listener gets no continuation.
 - **Latest intent.** If the queue changed while the candidates were loading (the
   listener chose something, cleared the queue, or the owner changed), the loaded
-  continuation is discarded.
+  continuation is discarded. An explicit playback intent given while it loads (pause,
+  play, selecting a track, previous, a newly loaded track, or starting the radio, which
+  only pauses the player and leaves the queue as it was) aborts it as well, so it never
+  selects or starts a track, and never stops a radio the listener just started.
 
 ## Privacy
 

@@ -29421,7 +29421,7 @@
     {
       "id": "MEDIA-MUSIC-CONTINUATION-001",
       "title": "Web player continues an ended queue with tracks of recommended artists",
-      "statement": "With VITE_PLAYER_SIMILAR_CONTINUATION_ENABLED set to true at build time, when playback reaches the end of a non-repeating queue of a signed-in listener the web player reads GET /fans/me/recommendations?limit=12 and, in the returned order, the newest public release of each artist, and appends at most five tracks: the first playable track of each artist whose recording is not already queued, one per artist. Playback moves to the first appended track. If nothing can be appended, a read fails, or the queue changed meanwhile, the player pauses at the end of the queue as before. With the flag off or for an anonymous listener the player is unchanged.",
+      "statement": "With VITE_PLAYER_SIMILAR_CONTINUATION_ENABLED set to true at build time, when playback reaches the end of a non-repeating queue of a signed-in listener the web player reads GET /fans/me/recommendations?limit=12 and, in the returned order, the newest public release of each artist, and appends at most five tracks: the first playable track of each artist whose recording is not already queued, one per artist. Playback moves to the first appended track. If nothing can be appended, a read fails, or the queue changed meanwhile, the player pauses at the end of the queue as before; if the listener paused, played, selected a track, went back, loaded a new track or started the radio while it loaded, the player stays as that intent left it. With the flag off or for an anonymous listener the player is unchanged.",
       "domain": "MEDIA",
       "authority": "Owner instruction of 2026-11-22 to continue with the recommended defaults. The target (the web player queue instead of TDF.ServerRadio, which has no artist to order by) and the constants 12 and 5 are the implementer's defaults and were not approved item by item.",
       "source": "formal/system/queue-continuation.md",
@@ -29451,7 +29451,8 @@
       },
       "allowedTransitions": [
         "Append the planned tracks to the queue that ended and select the first of them",
-        "Discard a loaded continuation when the queue is no longer the one that ended"
+        "Discard a loaded continuation when the queue is no longer the one that ended",
+        "Abort a pending continuation on an explicit pause, play, track selection, previous, newly loaded track or radio takeover"
       ],
       "forbiddenTransitions": [
         "Appending a track of an artist the recommendation response did not contain",
@@ -29459,14 +29460,15 @@
         "Appending more than five tracks or two tracks of one artist",
         "Changing the order the server returned",
         "Starting a continuation for an anonymous listener, with the flag off, or while a repeat mode is on",
-        "Applying a continuation loaded for an earlier queue or an earlier listener"
+        "Applying a continuation loaded for an earlier queue or an earlier listener",
+        "Selecting or starting a continuation after an explicit playback intent given while it loaded, in particular stopping a radio the listener just started"
       ],
       "effects": [
         "Up to five tracks appended to the local queue; no server write"
       ],
       "authorization": "The recommendation read requires fan access on the server (COMMUNITY-FAN-RECOMMENDATION-001); the release reads are public. The client adds no authorization decision.",
       "privacy": "The client reads no behaviour of its own and stores nothing new on the server. Appended tracks enter the locally persisted queue under the existing listener-ownership rule (MEDIA-MUSIC-PRIVACY-001). A listener who opted out of personalisation receives the server's popularity fallback and the continuation is built from that list.",
-      "concurrency": "One pending continuation per player session, bound to the queue object that ended; any later queue state, an abort or a listener change discards it.",
+      "concurrency": "One pending continuation per player session, bound to the queue object that ended; any later queue state, an abort, a listener change or an explicit playback intent (pause, play, select, previous, a newly loaded track, a radio takeover) discards it.",
       "idempotency": "Read-only towards the server. Reaching the end again plans against the then-current queue, so earlier appended recordings are not appended again.",
       "failure": "Recommendation read fails or is empty: no continuation. A release read fails, returns nothing or answers for another artist: that artist is skipped.",
       "recovery": "The next time the queue ends the continuation is loaded again.",
@@ -29478,7 +29480,8 @@
         "tdf-hq-ui/src/player/PlayerProvider.tsx"
       ],
       "tests": [
-        "tdf-hq-ui/src/player/queueContinuation.test.ts"
+        "tdf-hq-ui/src/player/queueContinuation.test.ts",
+        "tdf-hq-ui/src/player/PlayerProvider.continuation.test.tsx"
       ],
       "formalModels": [
         "formal/player/QueueContinuation.tla"
@@ -29487,7 +29490,7 @@
       "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-ui jest run of src/player/queueContinuation.test.ts.",
       "critical": true,
       "status": "specified and implemented",
-      "confidence": "High for the pure planning function (tested) and the model (proved). Medium for the correspondence between them: review plus random tests of the same invariants. Low for the PlayerProvider wiring: typecheck and review only.",
+      "confidence": "High for the pure planning function (tested) and the model (proved). Medium for the correspondence between them: review plus random tests of the same invariants. Medium for the PlayerProvider wiring: Jest tests of the provider that a continuation is applied when nothing intervenes and discarded after each explicit playback intent (each fails without the cancellation); no browser test.",
       "ambiguity": [
         "The task names TDF.ServerRadio for radio sequencing; radio streams have no artist, so the web player queue was chosen by the implementer. The owner has not confirmed this target.",
         "The exclusions of the server response hold as of that response; an artist hidden between the recommendation read and the release read is not re-checked by the client, and whether the release list route hides releases of an unlisted artist was not examined.",
@@ -29497,7 +29500,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Planning function tested and its model proved; the player wiring has no automated or browser test, and the release-route visibility between the two reads was not examined."
+        "reason": "Planning function tested and its model proved; the player wiring is tested in Jest (application, and cancellation by each explicit playback intent) but has no browser test, and the release-route visibility between the two reads was not examined."
       }
     }
   ]
