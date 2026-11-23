@@ -1343,6 +1343,11 @@
       "id": "2026-11-20_chat_external_delivery",
       "path": "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
       "introducedBy": "8da140ae64c51b8ef006e7678589c8bcf5ef38f3"
+    },
+    {
+      "id": "2026-11-21_directory_semantic_search",
+      "path": "tdf-hq/sql/2026-11-21_directory_semantic_search.sql",
+      "introducedBy": "d48fd5f1117f6778759185ac2e6ba559937bc360"
     }
   ]
 }

@@ -655,6 +655,7 @@ jobs:
           bash scripts/test-api-token-session-expiry-migration.sh
           sh scripts/test-meta-redelivery.sh
           sh scripts/test-rag-index-privacy.sh
+          sh scripts/test-directory-semantic-search.sh
           node scripts/__tests__/identity-http-runtime.mjs
           sh scripts/test-whatsapp-redelivery.sh
           sh scripts/test-credential-lifecycle.sh

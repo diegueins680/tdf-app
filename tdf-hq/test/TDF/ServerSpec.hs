@@ -16332,6 +16332,7 @@ marketplaceTestConfig seedFlag =
         , stripePublishableKey = Nothing
         , stripeWebhookSecret = Nothing
         , contextualReputationEnabled = False
+        , directorySemanticSearchEnabled = False
         , publicReputationProjectionEnabled = False
         , singleFeatureOnboardingExperimentEnabled = False
         , fanFeedAffinityEnabled = False

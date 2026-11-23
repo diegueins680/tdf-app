@@ -12691,6 +12691,114 @@
       "evidence": "Dated local reproduction and qualification receipts, final candidate source hashes and hosted checks."
     },
     {
+      "id": "DIR-SEMANTIC-SEARCH-001",
+      "title": "Embedding similarity in the semantic term of directory search",
+      "statement": "Behind DIRECTORY_SEMANTIC_SEARCH_ENABLED (off by default) the semantic term of GET /directory/search is max(alias match, cosine similarity of the query and document embeddings clamped to [0, 1]) for publicly listed directory profiles and classifieds; every other weight, the filter, the facets and the ordering are unchanged. With the flag off, or without a query embedding, the request executes the unmodified search statement.",
+      "domain": "DIR",
+      "authority": "Owner request of 2026-11-21 to replace the 0/1 alias semantic score with an embedding signal; the owner approved the rule, the embedded fields, sending public document text and search queries to the configured embedding provider, and the constants on 2026-11-21. On 2026-11-22 the owner kept the recommended defaults for the remaining decisions (rank only, constants and redaction as built, flag off in production). formal/system/directory-semantic-search.md.",
+      "source": "formal/system/directory-semantic-search.md",
+      "contract": "tdf-hq/src/TDF/Directory/SemanticSearch.hs",
+      "property": "semantic(q,d) = max(alias(q,d), sim(q,d)), sim = round4(clamp01(cosine)) for a usable embedding pair and 0 otherwise; P1: q # '' /\\ title(a) = q /\\ title(b) # q => rank(a) > rank(b) for all component values in range; P2: served(d) => public(d), embedded(d) => public(d) /\\ hash(embedding(d)) = hash(text(d)), ranked-with(e,d) => hash(e) = hash(text(d)), sent(text) => was-public(text); P3: ~flag \\/ no query embedding => statement = searchSql; P4: 0 <= score <= 1; P5: the page order is total.",
+      "actors": [
+        "Anonymous visitor",
+        "Background sweep",
+        "Embedding provider"
+      ],
+      "preconditions": [
+        "Migration tdf-hq/sql/2026-11-21_directory_semantic_search.sql applied on a database with the vector extension",
+        "DIRECTORY_SEMANTIC_SEARCH_ENABLED=true and an OPENAI_EMBED_MODEL of 1536 dimensions; otherwise the behaviour is DIR-SEARCH-SYNC-001 unchanged"
+      ],
+      "inputs": [
+        "GET /directory/search (existing parameters)",
+        "Stored document embeddings and the cached or freshly requested query embedding"
+      ],
+      "state": {
+        "initial": "No embedding",
+        "terminal": [
+          "Embedding of the current public text",
+          "No embedding"
+        ]
+      },
+      "allowedTransitions": [
+        "Sweep: claim an eligible document, send its redacted public text, store the vector if the document is still eligible with the claimed text",
+        "Hide or rewrite a search document: its embedding is deleted in the same transaction",
+        "Search request: read a cached query vector, or request one within the per-minute budget and 400 ms and cache it by hash"
+      ],
+      "forbiddenTransitions": [
+        "Returning a document because it has an embedding",
+        "Storing an embedding for a search document that is not published, public, allowed, effective and unexpired, or keeping one past the next sweep",
+        "Ranking with an embedding of other text, another provider or another model",
+        "Sending text of a document that was not eligible when claimed, private fields, or an identifier of the caller",
+        "Substituting a locally computed vector for a failed provider call",
+        "Any change of ranking with the flag off or without a query embedding"
+      ],
+      "effects": [
+        "Rows of directory_search_embedding, directory_query_embedding and directory_query_embedding_budget",
+        "Embedding requests to the configured provider"
+      ],
+      "authorization": "Public route, unchanged. The sweep runs in the API process with the application database role.",
+      "privacy": "Only text the public directory already shows is sent, after removing what looks like an e-mail address or telephone number; queries are sent as text and cached under a SHA-256 key without the text. Search is not personalised: no per-user signal is read, so every caller receives the non-personalised result. Hidden, private, blocked, unlisted and merged documents are neither embedded nor returned.",
+      "concurrency": "The provider is called outside any transaction; the write locks the document row and rechecks eligibility and the text hash; the hash covers the document's title, subtitle, summary, search text and source version; a trigger deletes the embedding when the document is hidden, expires by an update, or changes revision; the sweep purges what remains, including documents that expire with the clock. Several processes may sweep concurrently.",
+      "idempotency": "The write is an upsert by document; the migration and its rollback can be applied repeatedly.",
+      "failure": "Provider error, timeout, exhausted budget, unusable vector, missing tables or a failing semantic statement all yield today's statement and ranking.",
+      "recovery": "Set the flag to false; embeddings and cached query vectors are derived data and can be dropped (rollback file).",
+      "observability": "One fixed JSON line per failed sweep and one line with counts per sweep that did work; no document, query or provider text is logged.",
+      "implementation": [
+        "tdf-hq/src/TDF/Directory/SemanticSearch.hs",
+        "tdf-hq/src/TDF/Directory/SemanticIndex.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/sql/2026-11-21_directory_semantic_search.sql",
+        "tdf-hq/sql/2026-11-21_directory_semantic_search_rollback.sql",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs",
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "ops/hetzner/inspect-runtime.py"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/SemanticSearchSpec.hs",
+        "tdf-hq/test/TDF/Directory/SemanticSearchPostgresSpec.hs",
+        "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
+        "scripts/test-directory-semantic-search.sh",
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/test-hetzner-inspection.py"
+      ],
+      "formalModels": [
+        "formal/directory/semantic_rank.py",
+        "formal/directory/DirectoryEmbeddingIndex.tla",
+        "formal/directory/DirectoryEmbeddingIndex.cfg",
+        "formal/directory/DirectoryEmbeddingIndexUnguardedWrite.cfg",
+        "formal/directory/DirectoryEmbeddingIndexNoTrigger.cfg",
+        "formal/directory/DirectoryEmbeddingIndexEmbeddingAdmits.cfg",
+        "formal/directory/DirectoryEmbeddingIndexNoHashCheck.cfg",
+        "scripts/verify-inductive-proofs.sh"
+      ],
+      "verification": "Three strengths of evidence, kept apart. PROVED (Z3 4.13.3, formal/directory/semantic_rank.py, real-number model of the formula with six-decimal rounding, constants parsed from the pinned SQL text): P1 an exact title match outranks every other match for all components in range and any semantic term in [0, 1], likewise the prefix and contains tiers; the P3 formula part (similarity 0 leaves the weighted sum equal to the alias-only sum); P4 score in [0, 1]; monotonicity in the similarity; three necessity controls (unclamped similarity, doubled semantic weight, doubled image boost) each break P1. PROVED (Apalache 0.62.4 inductive invariant, formal/directory/DirectoryEmbeddingIndex.tla, any nonempty set of up to three documents and up to three edits each, executions of any length): P2 as NeverServed, NeverIndexed, NeverStale and SentOnlyPublic, with one reachable-violation control. BOUNDED (TLC 1.7.2): two documents and three versions without violation; four negative controls (unguarded write, no trigger, search driven from the embedding table, no hash check) each violate the named invariant. TESTED (Hspec and QuickCheck on the pure core): P1 and the tiers, P3 plan and statement identity for a lexical plan, P4, P5 comparator totality, redaction, vector admission, and that the semantic statement differs from today's in exactly the input row and the alias term. TESTED (PostgreSQL 16 with pgvector on the migrated production schema fixture, provider replaced by a recording function): sweep embeds public documents only and without e-mail or telephone patterns; provider failure and unusable vectors write nothing; the trigger deletes on hide and rewrite; the guarded write refuses after hide or rewrite; the purge removes what the trigger did not; rows of the semantic statement equal today's rows without a usable pair (no embedding, other provider, stale hash, zero vector); similarity reorders inside a tier and never passes an exact title; a hidden document with an embedding is not returned; paging neither repeats nor skips; query cache, budget and fallback; the migration applies twice, rolls back twice and applies again, and the 263-migration production batch with its schema verification passes.",
+      "evidence": "Runs of formal/directory/semantic_rank.py, scripts/verify-inductive-proofs.sh, the tdf-hq-test groups 'directory semantic search', 'directory semantic index' and 'directory-semantic-search-postgresql' (scripts/test-directory-semantic-search.sh), and scripts/test-automatic-migrations-production-schema.sh on the candidate; hosted CI receipts for the same commands are required and are not inherited from the author's local runs.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the ranking envelope and the index invariants within their stated models; medium for the correspondence between those models and PostgreSQL, which is by review and test; the usefulness of the ranking change is not assessed, and nothing here says an embedding is a good one.",
+      "ambiguity": [
+        "The Z3 model is over real numbers; agreement with PostgreSQL float8 and numeric evaluation is tested on examples, not proved.",
+        "The TLA+ model treats each statement as atomic; that FOR SHARE on the document row makes the guarded write atomic against a concurrent update is assumed PostgreSQL behaviour.",
+        "The model's public state is the search document's own columns; a profile hidden without a refresh of its search document, and a document whose expiry passes with the clock, are excluded by the read predicate at once and by the sweep within a minute, not by the trigger.",
+        "The range proofs assume quality, availability and reputation in [0, 1] (CHECK constraints) and source_updated_at not in the future; a future timestamp already takes the activity term out of range in the unmodified statement.",
+        "Similarity only reorders documents that pass the text filter; the owner decided on 2026-11-22 that it does not admit documents, so the visible effect is small by design.",
+        "If the query embedding is available for one page and not the next, an item can repeat or be skipped between pages; the cache makes this rare and does not exclude it.",
+        "The redaction of contact details is a pattern match on words containing @ and on runs with seven or more digits.",
+        "The profile branch of the claim statement is validated by PostgreSQL as part of the statement but no test claims a profile row; the fixtures are classified documents.",
+        "No HTTP-level test drives GET /directory/search with the flag on, and no test calls the real provider.",
+        "A model with another dimension than 1536 leaves the feature inert until a migration changes the columns."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Ranking envelope and index invariants proved for their models and exercised on PostgreSQL with a stand-in provider; HTTP-level checks with the flag on, a profile-row fixture and hosted CI receipts remain; the owner set the flag in the production environment file on 2026-11-23; it takes effect only once production runs a build with this change and the migration is applied."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "AUTH-LOGOUT-001",
       "title": "Retain explicit browser logout intent through network failure and reload",
       "statement": "Explicit browser logout must suppress automatic cookie and descriptor restoration until fresh interactive authentication, distinguish unconfirmed server revocation, and reject stale session adoption callbacks.",
