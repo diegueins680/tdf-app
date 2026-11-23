@@ -31411,20 +31411,20 @@
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "637d04560e76b4a6a5c4",
+      "id": "93f72d05db39393ac732",
       "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "directory-semantic-search-2026-11-21",
-      "justification": "Append the directory semantic search migration (DIR-SEMANTIC-SEARCH-001) after the reviewed chat external delivery migration. The 264 reviewed migration objects keep their order, paths and introduction commits; the new entry introduces tdf-hq/sql/2026-11-21_directory_semantic_search.sql at commit d48fd5f1117f6778759185ac2e6ba559937bc360.",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "reviewBatch": "artist-similarity-2026-11-21",
+      "justification": "Preserve all 265 reviewed migration objects in their exact order, paths and introduction commits, and append only 2026-11-21_artist_similarity (COMMUNITY-ARTIST-SIMILARITY-001: three additive similarity tables and two partial indexes), introduced by 89d467302501d47ce53c1551b031c46cb7bb1162. The complete parent review graph remains in previousDecision. This author review does not authorize deployment or feature activation and is not independent approval.",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 265
+        "valueCount": 266
       },
       "previousDecision": {
-        "$historyRef": "sha256:379128378cc4adc104c5c8043b8950624bcc0b4b471940d44da8e3838628805f"
+        "$historyRef": "sha256:2487b4654849b7248546ecec7a540262199aff16cc808742d8c4517da7b231ee"
       }
     },
     {

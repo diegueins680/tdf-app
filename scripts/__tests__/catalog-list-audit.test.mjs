@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFile } from 'node:child_process';
+import { execFile, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import os from 'node:os';
@@ -7,7 +7,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { DECISIONS_FILE, readExpandedDecisions } from '../lib/catalog-decision-history.mjs';
+import { DECISIONS_FILE, expandAtRevision, readExpandedDecisions } from '../lib/catalog-decision-history.mjs';
 
 // Complete retained parent assertions; dated inputs are explicitly projected.
 {
@@ -6615,9 +6615,16 @@ async function withoutChatDelivery(manifest) {
   return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
 }
 
+// COMMUNITY-ARTIST-SIMILARITY-001 (2026-11-21) appends one reviewed migration
+// after the directory semantic search migration; it has its own test below.
+const ARTIST_SIMILARITY_ENTRY = '2026-11-21_artist_similarity';
+const withoutArtistSimilarity = manifest => (manifest.migrations.at(-1)?.id === ARTIST_SIMILARITY_ENTRY
+  ? { ...manifest, migrations: manifest.migrations.slice(0, -1) }
+  : manifest);
+
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const raw = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const raw = withoutArtistSimilarity(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
   // The directory semantic search migration (DIR-SEMANTIC-SEARCH-001) is the
   // last reviewed append; it has its own test below.
   assert.equal(raw.migrations.at(-1).id, '2026-11-21_directory_semantic_search');
@@ -6655,7 +6662,7 @@ test('studio gallery appends its original migration and preserves both complete 
   const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
   const before = await integrationParent(base, file);
   const original = (await integrationParent(gallery, file)).migrations.at(-1);
-  const raw = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const raw = withoutArtistSimilarity(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
   assert.equal(original.id, '2026-11-07_studio_gallery');
   // The directory semantic search migration is appended last (next test).
   assert.equal(raw.migrations.at(-1).id, '2026-11-21_directory_semantic_search');
@@ -6677,7 +6684,7 @@ test('directory semantic search appends its migration after the chat delivery mi
   const file = 'scripts/production-migrations.json';
   const main = '6142acf4cb33bee1aff32daf4c283210344feb4b';
   const before = await integrationParent(main, file);
-  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const current = withoutArtistSimilarity(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
   const added = current.migrations.at(-1);
   assert.deepEqual(added, {
     id: '2026-11-21_directory_semantic_search',
@@ -6694,8 +6701,40 @@ test('directory semantic search appends its migration after the chat delivery mi
     { cwd: integrationRoot, maxBuffer: 512 * 1024 * 1024 });
   const previous = JSON.parse(published.stdout).decisions
     .find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
-  const successor = decisions.find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
+  const latest = decisions.find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
+  // The artist similarity successor nests this review unchanged (its own test below).
+  const successor = latest.reviewBatch === 'artist-similarity-2026-11-21' ? latest.previousDecision : latest;
   assert.equal(successor.evidence.valueCount, before.migrations.length + 1);
+  assert.deepEqual(successor.previousDecision, previous);
+});
+
+test('artist similarity appends exactly one migration after directory semantic search and nests the reviewed manifest decision', async () => {
+  const file = 'scripts/production-migrations.json';
+  const main = '129962b8903f127909c1eda0f22657ac67947075';
+  const before = await integrationParent(main, file);
+  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const added = current.migrations.at(-1);
+  assert.deepEqual(added, {
+    id: ARTIST_SIMILARITY_ENTRY,
+    path: 'tdf-hq/sql/2026-11-21_artist_similarity.sql',
+    introducedBy: '89d467302501d47ce53c1551b031c46cb7bb1162',
+  });
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, added] });
+  await integrationExec('git', ['merge-base', '--is-ancestor', added.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const { stdout } = await integrationExec('git', ['show', added.introducedBy + ':' + added.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, added.path), 'utf8'), stdout);
+  const reviewFile = 'docs/catalog-persistence/catalog-list-decisions.json';
+  const published = await integrationExec('git', ['show', main + ':' + reviewFile],
+    { cwd: integrationRoot, maxBuffer: 512 * 1024 * 1024 });
+  const readObject = (objectPath) => execFileSync('git', ['show', main + ':' + objectPath],
+    { cwd: integrationRoot, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const previous = expandAtRevision(JSON.parse(published.stdout), readObject).decisions
+    .find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
+  const successor = readExpandedDecisions(integrationRoot).decisions
+    .find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
+  assert.equal(previous.id, '637d04560e76b4a6a5c4');
+  assert.equal(successor.evidence.valueCount, before.migrations.length + 1);
+  assert.equal(successor.reviewBatch, 'artist-similarity-2026-11-21');
   assert.deepEqual(successor.previousDecision, previous);
 });
 
