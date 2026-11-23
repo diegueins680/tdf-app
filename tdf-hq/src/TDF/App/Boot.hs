@@ -74,6 +74,7 @@ import qualified TDF.DDEX.Models as Ddex
 import TDF.Server.Directory (startAgreementDepositExpiryJob)
 import TDF.Cron (
     startCoursePaymentReminderJob,
+    startCourseFollowUpReminderJob,
     startEventDiscoveryJob,
     startEventLogisticsRecheckJob,
     startArtistEnrichmentJob,
@@ -82,6 +83,7 @@ import TDF.Cron (
   )
 import TDF.Services.RecordsIngestion (startRecordsIngestionJob)
 import TDF.Interactions.Notifications (startInteractionNotifications)
+import TDF.Chat.Delivery (startChatDeliveryWorker)
 import TDF.DB (ConnectionPool, Env (..), makePool)
 import TDF.Models (
     PartyId,
@@ -150,9 +152,11 @@ runBootServer = do
         let env = Env{envPool = pool, envConfig = cfg}
         writeIORef appRef (wrapApp (mkApp env))
         startCoursePaymentReminderJob env
+        startCourseFollowUpReminderJob env
         startAgreementDepositExpiryJob env
         startRecordsIngestionJob (envPool env)
         startInteractionNotifications (envPool env)
+        startChatDeliveryWorker env
         startEventDiscoveryJob env
         startEventLogisticsRecheckJob env
         startArtistEnrichmentJob env

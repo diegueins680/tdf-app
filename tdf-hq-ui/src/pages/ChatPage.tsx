@@ -34,12 +34,18 @@ import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { EmptyState } from '../components/PageShell';
 import { ChatAPI } from '../api/chat';
+import ChatNotificationChannels from '../components/ChatNotificationChannels';
 import { Meta } from '../api/meta';
 import { SocialAPI } from '../api/social';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { ChatMessageDTO, ChatThreadDTO } from '../api/types';
 import { useSession } from '../session/SessionContext';
 import { countUnreadThreads, isThreadUnread, loadChatReadMap, markThreadSeen, subscribeToChatReadState } from '../utils/chatReadState';
+
+// Read receipts stop email/phone reminders, so a transient failure is retried
+// after 1, 2, 4, 8 and 16 seconds before waiting for the next new message.
+const READ_RECEIPT_RETRY_BASE_MS = 1_000;
+const READ_RECEIPT_MAX_RETRIES = 5;
 
 function formatTimestamp(value?: string | null) {
   if (!value) return '';
@@ -213,6 +219,15 @@ function ChatWorkspace() {
   const [selectionNavigation, setSelectionNavigation] = useState(0);
   const revealedNavigationRef = useRef(null as number | null);
   const requestParamConsumed = useRef<string | null>(null);
+  // Highest message id already reported read to the server, per account and conversation.
+  const serverReadRef = useRef(new Map<string, number>());
+  // A failed read receipt is retried on a timer: unchanged polls keep the same
+  // data references, so nothing else would run the receipt effect again.
+  const readRetryRef = useRef({ key: '', attempts: 0, timer: null as ReturnType<typeof setTimeout> | null });
+  const [readRetryVersion, setReadRetryVersion] = useState(0);
+  useEffect(() => () => {
+    if (readRetryRef.current.timer) clearTimeout(readRetryRef.current.timer);
+  }, []);
   const [readVersion, setReadVersion] = useState(0);
 
   useEffect(() => subscribeToChatReadState(() => setReadVersion((v) => v + 1), myPartyId ?? 0), [myPartyId]);
@@ -360,7 +375,37 @@ function ChatWorkspace() {
     const lastMessageAt = messages[messages.length - 1]?.cmCreatedAt ?? selectedThread?.ctLastMessageAt ?? selectedThread?.ctUpdatedAt;
     if (!lastMessageAt) return;
     markThreadSeen(selectedThreadId, lastMessageAt, myPartyId ?? 0);
-  }, [myPartyId, messages, messagesQuery.data, messagesQuery.isError, selectedThread, selectedThread?.ctLastMessageAt, selectedThread?.ctUpdatedAt, selectedThreadId]);
+    // Server-side receipt: stops email/phone reminders for what was already seen and
+    // clears this conversation's bell notices. Best effort; the local mark above stays.
+    const lastMessageId = messages[messages.length - 1]?.cmId;
+    const readKey = `${myPartyId ?? 0}:${selectedThreadId}`;
+    if (!lastMessageId || (serverReadRef.current.get(readKey) ?? 0) >= lastMessageId) return;
+    serverReadRef.current.set(readKey, lastMessageId);
+    const attemptKey = `${readKey}:${lastMessageId}`;
+    ChatAPI.markThreadRead(selectedThreadId, lastMessageId).then(
+      () => {
+        if (readRetryRef.current.key === attemptKey) {
+          if (readRetryRef.current.timer) clearTimeout(readRetryRef.current.timer);
+          readRetryRef.current = { key: '', attempts: 0, timer: null };
+        }
+        void qc.invalidateQueries({ queryKey: ['notification-count'] });
+        void qc.invalidateQueries({ queryKey: ['notifications'] });
+      },
+      () => {
+        serverReadRef.current.delete(readKey);
+        const previous = readRetryRef.current;
+        if (previous.timer) clearTimeout(previous.timer);
+        const attempts = previous.key === attemptKey ? previous.attempts + 1 : 1;
+        const timer = attempts <= READ_RECEIPT_MAX_RETRIES
+          ? setTimeout(
+            () => setReadRetryVersion((version) => version + 1),
+            Math.min(30_000, READ_RECEIPT_RETRY_BASE_MS * 2 ** (attempts - 1)),
+          )
+          : null;
+        readRetryRef.current = { key: attemptKey, attempts, timer };
+      },
+    );
+  }, [qc, myPartyId, readRetryVersion, messages, messagesQuery.data, messagesQuery.isError, selectedThread, selectedThread?.ctLastMessageAt, selectedThread?.ctUpdatedAt, selectedThreadId]);
 
   const createThreadMutation = useMutation({
     mutationFn: (otherPartyId: number) => ChatAPI.getOrCreateDmThread(otherPartyId),
@@ -533,6 +578,7 @@ function ChatWorkspace() {
           >
             Conexiones
           </Button>
+          <ChatNotificationChannels />
         </Stack>
       </Stack>
 

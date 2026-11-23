@@ -18,8 +18,10 @@ import qualified TDF.ContentStorage as ContentStorage
 import qualified TDF.StorageVault as StorageVault
 import qualified TDF.Calendar.TokenCipher as CalendarTokenCipher
 import qualified TDF.Social.Chat as SocialChat
+import           TDF.Server.NotificationDelivery (notificationDeliveryServer)
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
+import qualified TDF.Fans.ArtistRecommendations as ArtistRecommendations
 import qualified TDF.Social.RelationshipReads as SocialReads
 import qualified TDF.Social.RelationshipWrites as SocialWrites
 import qualified TDF.Social.Profiles as SocialProfiles
@@ -182,6 +184,7 @@ import           TDF.Auth
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
+import qualified TDF.Server.PublicBookingNotifications as PublicBookingNotifications
 import           TDF.Server.SocialEventsHandlers
   ( publicUpcomingEventsServer
   , socialEventsServer
@@ -3220,6 +3223,7 @@ fanSecureServer :: AuthedUser -> ServerT FanSecureAPI AppM
 fanSecureServer user =
        (fanGetProfile user :<|> fanUpdateProfile user)
   :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
+  :<|> fanListRecommendations user
   :<|> (artistGetOwnProfile user :<|> artistUpdateOwnProfile user)
   :<|> (notifList user :<|> notifCount user :<|> notifGet user :<|> notifMarkRead user :<|> notifMarkAllRead user)
   :<|> CatalogServer.createSelfFanRoleRequest user
@@ -3970,6 +3974,7 @@ protectedServer user =
   :<|> whatsappConsentServer user
   :<|> socialServer user
   :<|> chatServer user
+  :<|> notificationDeliveryServer user
   :<|> chatkitSessionServer user
   :<|> tidalAgentServer user
   :<|> socialSyncServer user
@@ -7911,6 +7916,27 @@ fanListFollows user = do
     profileMap <- fetchArtistProfileMap artistIds
     pure (map (fanFollowEntityToDTO nameMap profileMap) follows)
 
+-- | GET /fans/me/recommendations (COMMUNITY-FAN-RECOMMENDATION-001).
+fanListRecommendations :: AuthedUser -> Maybe Int -> AppM [ArtistRecommendationDTO]
+fanListRecommendations user mLimit = do
+  requireFanAccess user
+  Env pool _ <- ask
+  recommendations <- liftIO $ flip runSqlPool pool $
+    ArtistRecommendations.loadArtistRecommendations
+      (auPartyId user)
+      (ArtistRecommendations.clampRecommendationLimit mLimit)
+  pure
+    [ ArtistRecommendationDTO
+        { arecArtistId = ArtistRecommendations.recArtistId item
+        , arecReason =
+            ArtistRecommendations.recommendationReasonCode
+              (ArtistRecommendations.recReason item)
+        , arecScore = ArtistRecommendations.recScore item
+        , arecSeedArtistIds = ArtistRecommendations.recSeedArtistIds item
+        }
+    | item <- recommendations
+    ]
+
 fanFollowArtist :: AuthedUser -> Int64 -> AppM FanFollowDTO
 fanFollowArtist = FanEffects.followArtist
 
@@ -11542,7 +11568,10 @@ createPublicBooking mIdempotency PublicBookingReq{..} = do
     dtos <- buildBookingDTOs [created]
     pure (requirePersistedBookingDTO dtos)
   dto <- either throwError pure dtoResult
-  when createdNow (notifyEngineerIfNeeded dto)
+  when createdNow $ do
+    notifyEngineerIfNeeded dto
+    env <- ask
+    liftIO (PublicBookingNotifications.notifyPublicBookingRequest env dto fullNameClean emailClean phoneClean)
   pure dto
 
 -- | SQL failures a public booking transaction turns into 409 instead of a

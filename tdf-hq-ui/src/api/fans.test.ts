@@ -81,6 +81,16 @@ describe('Fans API optional query paths', () => {
     expect(getMock).toHaveBeenCalledWith(EXPECTED_LIMITED_DISCOVERY_FEED_PATH);
   });
 
+  it('reads artist recommendations with and without a limit', async () => {
+    getMock.mockResolvedValue([]);
+
+    await Fans.listRecommendations();
+    expect(getMock).toHaveBeenLastCalledWith('/fans/me/recommendations');
+
+    await Fans.listRecommendations(4);
+    expect(getMock).toHaveBeenLastCalledWith('/fans/me/recommendations?limit=4');
+  });
+
   it('uses positive integer fixtures for path and query contracts', () => {
     const numericPathFixtures = [
       FANS_API_PATH_FIXTURES.leaderboardClubId,
