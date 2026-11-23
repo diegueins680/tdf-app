@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { isChatKitScriptReady, loadChatKitScript } from '../utils/chatkit';
+import { isChatKitScriptReady, loadChatKitScript } from '../services/chatkit';
 
 export type ChatKitScriptStatus = 'idle' | 'loading' | 'ready' | 'error';
 

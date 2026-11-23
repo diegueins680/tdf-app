@@ -9,7 +9,7 @@ const search = jest.fn(async () => []);
 const clearPresence = jest.fn(async () => undefined);
 jest.unstable_mockModule('../api/radio', () => ({ RadioAPI: { search, clearPresence, listAutoStopOptions: jest.fn(async () => []) } }));
 jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: { listItems: jest.fn(async () => ({ items: [], total: 0 })) } }));
-jest.unstable_mockModule('../utils/tidalAgent', () => ({ generateTidalCode: jest.fn() }));
+jest.unstable_mockModule('../services/tidalAgent', () => ({ generateTidalCode: jest.fn() }));
 const { Slider } = await import('@mui/material');
 jest.unstable_mockModule('@mui/material/Slider', () => ({ default: Slider }));
 const { default: RadioWidget } = await import('./RadioWidget');

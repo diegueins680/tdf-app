@@ -1,4 +1,3 @@
-import { API_BASE_URL } from '../api/client';
 import { serializeCsvCell } from './csv';
 import { formatEventMoney } from './eventFinanceMoney';
 import { parseOptionalPriceCents } from './priceInput';
@@ -21,13 +20,6 @@ export const readMerchMoneyInput = (
       ? 'Use a non-negative amount with up to two decimals, within the supported range.'
       : 'Usa un monto no negativo con hasta dos decimales, dentro del rango admitido.' };
   }
-};
-
-export const resolveMerchImageUrl = (value?: string | null) => {
-  if (!value) return undefined;
-  if (/^https:\/\//i.test(value)) return value;
-  const base = API_BASE_URL.replace(/\/$/, '');
-  return `${base}/${value.replace(/^\//, '')}`;
 };
 
 // INTEGER columns in the merch schema; weights have the narrower server limit.
