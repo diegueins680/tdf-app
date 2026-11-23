@@ -320,6 +320,36 @@ describe('CourseProductionLandingPage', () => {
     }
   });
 
+  it('shows the session schedule from metadata and omits it when the start hour is unset', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    getMetadataMock.mockResolvedValue(buildMetadata({ sessionStartHour: 8, sessionDurationHours: 4 }));
+    const { cleanup } = await renderPage(container, '/curso/bateria-guillermo-diaz-abr-2026');
+
+    try {
+      await waitForExpectation(() => {
+        expect(text(container)).toContain('Horario: 08:00 a 12:00');
+        expect(text(container)).toContain('· 08:00 a 12:00');
+      });
+    } finally {
+      await cleanup();
+    }
+
+    const unsetContainer = document.createElement('div');
+    document.body.appendChild(unsetContainer);
+    getMetadataMock.mockResolvedValue(buildMetadata({ sessionStartHour: 0, sessionDurationHours: 4 }));
+    const unset = await renderPage(unsetContainer, '/curso/bateria-guillermo-diaz-abr-2026');
+
+    try {
+      await waitForExpectation(() => {
+        expect(text(unsetContainer)).toContain('Curso de Bateria con Guillermo Diaz');
+      });
+      expect(text(unsetContainer)).not.toContain('Horario:');
+    } finally {
+      await unset.cleanup();
+    }
+  });
+
   it('opens the enrollment dialog from the hero CTA with the first field focused and no scrolling', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
