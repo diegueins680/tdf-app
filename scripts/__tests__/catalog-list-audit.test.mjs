@@ -6617,7 +6617,11 @@ async function withoutChatDelivery(manifest) {
 
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const combined = await withoutCourseReminder(await withoutChatDelivery(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'))));
+  const raw = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  // The directory semantic search migration (DIR-SEMANTIC-SEARCH-001) is the
+  // last reviewed append; it has its own test below.
+  assert.equal(raw.migrations.at(-1).id, '2026-11-21_directory_semantic_search');
+  const combined = await withoutCourseReminder(await withoutChatDelivery({ ...raw, migrations: raw.migrations.slice(0, -1) }));
   assert.equal(combined.migrations.at(-1).id, '2026-11-07_studio_gallery');
   const actual = { ...combined, migrations: combined.migrations.slice(0, -1) };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
@@ -6651,8 +6655,11 @@ test('studio gallery appends its original migration and preserves both complete 
   const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
   const before = await integrationParent(base, file);
   const original = (await integrationParent(gallery, file)).migrations.at(-1);
-  const current = await withoutCourseReminder(await withoutChatDelivery(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'))));
+  const raw = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
   assert.equal(original.id, '2026-11-07_studio_gallery');
+  // The directory semantic search migration is appended last (next test).
+  assert.equal(raw.migrations.at(-1).id, '2026-11-21_directory_semantic_search');
+  const current = await withoutCourseReminder(await withoutChatDelivery({ ...raw, migrations: raw.migrations.slice(0, -1) }));
   assert.deepEqual(current, { ...before, migrations: [...before.migrations, original] });
   const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
   assert.equal(await fs.readFile(path.join(integrationRoot, original.path), 'utf8'), stdout);
@@ -6666,6 +6673,31 @@ test('studio gallery appends its original migration and preserves both complete 
   }
 });
 
+test('directory semantic search appends its migration after the chat delivery migration and keeps the reviewed manifest decision', async () => {
+  const file = 'scripts/production-migrations.json';
+  const main = '6142acf4cb33bee1aff32daf4c283210344feb4b';
+  const before = await integrationParent(main, file);
+  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const added = current.migrations.at(-1);
+  assert.deepEqual(added, {
+    id: '2026-11-21_directory_semantic_search',
+    path: 'tdf-hq/sql/2026-11-21_directory_semantic_search.sql',
+    introducedBy: 'd48fd5f1117f6778759185ac2e6ba559937bc360',
+  });
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, added] });
+  const { stdout } = await integrationExec('git', ['show', added.introducedBy + ':' + added.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, added.path), 'utf8'), stdout);
+  const reviewFile = 'docs/catalog-persistence/catalog-list-decisions.json';
+  const decisions = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8')).decisions;
+  // The register on main is larger than the shared helper's buffer.
+  const published = await integrationExec('git', ['show', main + ':' + reviewFile],
+    { cwd: integrationRoot, maxBuffer: 512 * 1024 * 1024 });
+  const previous = JSON.parse(published.stdout).decisions
+    .find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
+  const successor = decisions.find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
+  assert.equal(successor.evidence.valueCount, before.migrations.length + 1);
+  assert.deepEqual(successor.previousDecision, previous);
+});
 
 test('My tickets retains both complete published review graphs and immutable migrations', async () => {
   const assertParent = async (ref) => {

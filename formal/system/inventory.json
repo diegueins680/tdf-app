@@ -167,7 +167,6 @@
       "scripts/__tests__/build-trust.test.mjs",
       "scripts/__tests__/calendar-http-runtime.mjs",
       "scripts/__tests__/campaign-tiktok-ui.test.mjs",
-      "scripts/__tests__/catalog-decision-history.test.mjs",
       "scripts/__tests__/catalog-list-audit.test.mjs",
       "scripts/__tests__/checkout-amount-postgres.mjs",
       "scripts/__tests__/checkout-money-http.mjs",
@@ -302,7 +301,6 @@
       "scripts/build-ui-with-install.sh",
       "scripts/capture-feature-audit-visuals.mjs",
       "scripts/capture-music-directory-visuals.mjs",
-      "scripts/catalog-decision-history.mjs",
       "scripts/catalog-list-audit.mjs",
       "scripts/check-admin-guards.py",
       "scripts/check-api-availability.mjs",
@@ -370,7 +368,6 @@
       "scripts/interactions/test-schema.sh",
       "scripts/lib/alloy-controls.mjs",
       "scripts/lib/auth_throttle_http.py",
-      "scripts/lib/catalog-decision-history.mjs",
       "scripts/lib/compiled-api-surface.mjs",
       "scripts/lib/continuous-improvement-loop-verify.mjs",
       "scripts/lib/continuous-improvement-loop.mjs",
@@ -567,6 +564,7 @@
       "scripts/test-directory-artist-listings.sh",
       "scripts/test-directory-event-visibility-migration.sh",
       "scripts/test-directory-saved-search-parity.mjs",
+      "scripts/test-directory-semantic-search.sh",
       "scripts/test-distribution-accounting-migration.sh",
       "scripts/test-distribution-product-seeds-migration.sh",
       "scripts/test-domo-deposit-policy-validator.sh",
@@ -2403,6 +2401,8 @@
       "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
       "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql",
       "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql",
+      "tdf-hq/sql/2026-11-21_directory_semantic_search.sql",
+      "tdf-hq/sql/2026-11-21_directory_semantic_search_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2553,6 +2553,8 @@
       "tdf-hq/src/TDF/DTO/SocialSyncDTO.hs",
       "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs",
       "tdf-hq/src/TDF/Directory/Policy.hs",
+      "tdf-hq/src/TDF/Directory/SemanticIndex.hs",
+      "tdf-hq/src/TDF/Directory/SemanticSearch.hs",
       "tdf-hq/src/TDF/Distribution/StateMachine.hs",
       "tdf-hq/src/TDF/DriveOAuthClient.hs",
       "tdf-hq/src/TDF/Email.hs",
@@ -2754,6 +2756,8 @@
       "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs",
       "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs",
       "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+      "tdf-hq/test/TDF/Directory/SemanticSearchPostgresSpec.hs",
+      "tdf-hq/test/TDF/Directory/SemanticSearchSpec.hs",
       "tdf-hq/test/TDF/DisposableTicketDatabase.hs",
       "tdf-hq/test/TDF/DriveReplaySpec.hs",
       "tdf-hq/test/TDF/EmailHeadersSpec.hs",
@@ -3360,7 +3364,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "df61981b457df2d5f221d20819451734938c7e851af760a3720113debdbf4ead",
+      "sha256": "1e6e873c552571dffb26f64f8ceb753b8eefbcc2ad9b1f9b04421fbdd34cc6e8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3384,7 +3388,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "25afad05dc98a5cb30eec27aef6726f002df43effd55608145c6965c5bcdcd4f",
+      "sha256": "a8de4e8812e502598057d57ce86d056b9f384c7afce63a1e7db66d05c96a582f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4056,7 +4060,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "2491be7beb98b0b3be308ae3e9f79eea321c3b72e1980e162d796a6ff306bc41",
+      "sha256": "361c906f1b57adc44a1f938ace6c171dd3b6360f10f900af8d19f9ad28477e9c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4134,7 +4138,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "5fe81add4eef1c0bfddb256fa9425ec65865e2e9ae8025950879f49c60f814a6",
+      "sha256": "3b75451201352914e57227c19008fee7c8e8747ff00bf81ae3a43a7a3512fa6b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4210,15 +4214,9 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-06d2d6277df17fbc",
-      "path": "scripts/__tests__/catalog-decision-history.test.mjs",
-      "sha256": "90eb66416f6dd3a92c936aeced40dd23e0d8592026ecbd128430679a93e003b0",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "5aedfb789cb7e767fe6963c22b406ec6219eb55461b2c01d1e1357f02eac6878",
+      "sha256": "62a2b6070250e1e89f2690a283a15776beacc409da3e96133254bd371f8ca7ab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4764,7 +4762,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "a3f9e6057844ca35e81874ea9836969c641641ab6a54c40839c0b72087853ec2",
+      "sha256": "00910002cee4c2c5f80aba23b85ed89d9d5f4004ac26f5ae0d58a21abe73f03a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4986,7 +4984,7 @@
     {
       "id": "SURFACE-7bc6beda98cc6e72",
       "path": "scripts/build-catalog-decisions.mjs",
-      "sha256": "3e95fe69d9d119e94a3a007b298a70e3aa56c507a84ac8c5d372f9641cb70811",
+      "sha256": "ae8709ceedd141e71ad4de0d5d04e9d2e9dc6165752aa2de8ed19ec962313145",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5017,12 +5015,6 @@
       "id": "SURFACE-d79860272960ddbf",
       "path": "scripts/capture-music-directory-visuals.mjs",
       "sha256": "371302c18918065a971353451165f6ded5fc633262b6c6af82d16e874d81c3f1",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-ca761aa510f5ae58",
-      "path": "scripts/catalog-decision-history.mjs",
-      "sha256": "5582b801a0cbbbb9bd754dc9a7a89a10340ea768083157e0ec136fbbcef7fb9a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5166,7 +5158,7 @@
     {
       "id": "SURFACE-dcc180d2a4916e98",
       "path": "scripts/continuous-improvement-loop-verify.mjs",
-      "sha256": "cda066e5c99afe1f8d2018e559813afaf8814216c23ad7df7cb2b6d67a46be76",
+      "sha256": "2c25693b5cc8608695c2353f3a7e31f5ec918e02fbd670bb6f0bfaa2f2e7d96c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5428,12 +5420,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-87f61f7e51faf3c1",
-      "path": "scripts/lib/catalog-decision-history.mjs",
-      "sha256": "57c2b822b62515f22aaf324db783d46a0a83229b5ec3c32fe403da7444f383f7",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-33d3dc767fe336d3",
       "path": "scripts/lib/compiled-api-surface.mjs",
       "sha256": "71831644e36c3e2d5e2a51309d701aab8b08f5b3a43ca9ff4ea085b30aef1437",
@@ -5622,7 +5608,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "b2581954bf71df4691d0a1829a5350e5271c7cc575896a3381266e9496580ab9",
+      "sha256": "7badd90278355410440340a6bfdf271df4c51a9937706249946b9f4df659456a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5826,7 +5812,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "de30bfbb76120f2e8fb0b85b222e18e43c8dc2aa88edbd706dde7bec674e74c3",
+      "sha256": "a4b037a109a8c91d5dee562e106470c8215b579654d914a6f527fc0ca0997b00",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6610,6 +6596,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f2bead14270f06bb",
+      "path": "scripts/test-directory-semantic-search.sh",
+      "sha256": "8ab6fa23ed218b68204214e6274eab72d820ce0d3de49325936b571aaf73bccf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-b574af41738316b9",
       "path": "scripts/test-distribution-accounting-migration.sh",
       "sha256": "f3ed2557912e1f097892a0ea0c4f5fc6419f9c495c6101d6d43a9952dea16e6b",
@@ -6684,7 +6676,7 @@
     {
       "id": "SURFACE-19da4c176d106585",
       "path": "scripts/test-event-memory-source-moderation.sh",
-      "sha256": "3d1604376f2006562d752e079cdc98840be50ed7dfb17d57043f4ea8c9c56a27",
+      "sha256": "d35c4d0b008709de522b3e9bce806768f959928599dc2ba3186299b4297105d4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7632,7 +7624,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "a26778308cc3757a2bb384d5910541be382453639526f3aa439273f57bd5fdeb",
+      "sha256": "ad9b31bb537e169d214799a8f3490567ac03e2c68af9b52ea4fad57fa6e45af5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17566,6 +17558,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-0a4ad284b06105ba",
+      "path": "tdf-hq/sql/2026-11-21_directory_semantic_search.sql",
+      "sha256": "81f9103c5784b7b37a64ddf3bf8b6ba47a1cceef8e0abcbb70d02df21953d148",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a09ef38d05096193",
+      "path": "tdf-hq/sql/2026-11-21_directory_semantic_search_rollback.sql",
+      "sha256": "5315ffa9ab1537f23395649fec23ea8af1f7dc26e9d6923977353a0090a0136f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -17886,7 +17890,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "0e6b5fef0b1d23807ac23dea934aa4d4ad173c4e1c2252d25543dccccf2761a5",
+      "sha256": "a6494c29fd782bcde3addc0b25321e58d414baeceeff0a806051eac6c776e86f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18252,7 +18256,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "b33b282a3e0a5d4a5d7e5a69c64f70c7f66408e498d0de70977a779d346dc46d",
+      "sha256": "6ebfc3ba18a59c434724bf8fff76ca2701019d1a96aaa7ae81d422220ea243ae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18463,6 +18467,18 @@
       "id": "SURFACE-71ddbe63c1cda5e1",
       "path": "tdf-hq/src/TDF/Directory/Policy.hs",
       "sha256": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3c0e2083ce2b6a1a",
+      "path": "tdf-hq/src/TDF/Directory/SemanticIndex.hs",
+      "sha256": "02ece7e18c817111656b81df63f6c05b3b00237d9f5f779e0a03935328584633",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-65fa05e273480c4e",
+      "path": "tdf-hq/src/TDF/Directory/SemanticSearch.hs",
+      "sha256": "39e848d1fdf104f634b008ae9cd5bcb73f21bb2b071890fa5921d92c19e42c32",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18828,7 +18844,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "a1c9f48cdd53e5a387a2ee3625b73370edc7743352be79debcec3c79bb7a7cc4",
+      "sha256": "9a8da1235b4d71e841d821604f351f11ecf41a3f27ab7349a4356e7c2a9d02d3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19386,7 +19402,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "463d29cae8a590b7c4cc9958fdb001fd4df0f434cd6c296a58cf734395d48507",
+      "sha256": "3f719d332f1c5cee5585d53f4e2f78b059d5e260f3d1740133766befb79c3a66",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19464,7 +19480,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "ed5218631cf32a371b46324e7b3c0f4b5cdaf49487b183b414de15a5da04f5e0",
+      "sha256": "b856ae2d6e44facf69a7ae651afe8b9e22f4ace4e6ddbc1398351014bb036e3d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19614,7 +19630,7 @@
     {
       "id": "SURFACE-2c3fc05077df1f30",
       "path": "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
-      "sha256": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
+      "sha256": "135de88596c0230d902d294fcb47728f872f5a668d4bd51659c8f7b1e27ec425",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19672,6 +19688,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-49f29c4216e62e48",
+      "path": "tdf-hq/test/TDF/Directory/SemanticSearchPostgresSpec.hs",
+      "sha256": "20a9de9a64ce86091315952c0297912d79a720e2972e5b840268d3fcb322f83e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e2c81df0fb34bf74",
+      "path": "tdf-hq/test/TDF/Directory/SemanticSearchSpec.hs",
+      "sha256": "45cc3b68d67b9e907c80088a044251abc8ffcac031d05eb7182c757ba0b0e8e4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2109051a71e906d5",
       "path": "tdf-hq/test/TDF/DisposableTicketDatabase.hs",
       "sha256": "f1c1b9227060dab62db7b84721558d4294d3e5780cee71c0b7e52bd82fcde748",
@@ -19704,7 +19732,7 @@
     {
       "id": "SURFACE-6a2ebecd249230c2",
       "path": "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
-      "sha256": "ca39c4b9466f9e7b4d5852b55b499c2c2985547e8c24cc9eb0d0f2c9990c24e1",
+      "sha256": "7b5c5382b54dffd56b9b4eabc65efb70b75956ba7d0ba0c2666a1be07f421712",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19956,7 +19984,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "bb4380f103c788af3627f015dbeaa87e587dd6961e22dc148e5de41173c4fa16",
+      "sha256": "10329c44f5a7c0073062dd0e6cb5220746e4010eb7693ace7671f144f44e5704",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23750,7 +23778,7 @@
     },
     {
       "path": "docs/catalog-persistence/README.md",
-      "sha256": "808e0f0fa3f86525cfc7ef729e24ecf9850c6b58c88bb73b1c18b6ba1376b555",
+      "sha256": "a373acea2f4f04a453c52a38cd1c77383586c1c5f75ca8f8f008a0e7c774f604",
       "authority": "inferred",
       "authorityBasis": "Status: implementation in progress. This directory records the immutable baseline, architecture,",
       "kind": "requirement-candidate"
@@ -26736,6 +26764,55 @@
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
+    },
+    {
+      "path": "formal/directory/DirectoryEmbeddingIndex.cfg",
+      "sha256": "608705695c43198aa32855832210d8a44299e182a012d0aa654044175dfb1807",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/directory/DirectoryEmbeddingIndex.tla",
+      "sha256": "09a9e8c85ed17becf82457bb6c0f7ca8ac4365c8587d500306eb95b595bf4b6b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/directory/DirectoryEmbeddingIndexEmbeddingAdmits.cfg",
+      "sha256": "ba09c145fc0f28f46f7bb1d937878bd82d720ce47d928e6c3fbc43afbcceec59",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/directory/DirectoryEmbeddingIndexNoHashCheck.cfg",
+      "sha256": "e8dd09633beda17f03e05e19f809c64dced7a658742b94f725da0cbd5c7ea15b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/directory/DirectoryEmbeddingIndexNoTrigger.cfg",
+      "sha256": "cabc0138bf2be28cac04d6d76f889539b208e6131cf3c16dc10dae272fc549de",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/directory/DirectoryEmbeddingIndexUnguardedWrite.cfg",
+      "sha256": "dff924d9b593fdac1efe3b1135cf7e16ed8b79aac60409666c2a72ee5244a33d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/directory/README.md",
+      "sha256": "b12ba392d788ea88c51f97585f966c33ae8cdb0abc0ab078d7ce5a5c623d779f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
     },
     {
       "path": "formal/event-operations/AccessCodeValidation.cfg",
@@ -31555,7 +31632,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "bcad61e816092bd47fb40860a51fa9af706f4e19d6c06f6bfa8f1df8166947e0",
+      "sha256": "b36402fcffce7fde1b4faf7217e317b968adc2100866cf0181434698cc43c59d",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -31857,6 +31934,13 @@
     {
       "path": "formal/system/directory-routes.md",
       "sha256": "37e746ab1cba9581303866c7c4c461e1ee2dca998ea44c3e022312ae71997a9e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/directory-semantic-search.md",
+      "sha256": "6ebbe0ff6bf1b3fc04d115b2a6e3fefb3bd7ce69c0634c4d287f922e3b90ca8a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32668,7 +32752,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "33b8badb6b0759e71809538f910c2f8ea39de392fe8cd962d56c3e9e7a68bc1d",
+      "sha256": "a37711dffc409f26c067a8d08c1cc1e1198dfc5a9b738b2ed3c44ec8dbbd01a5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -40857,6 +40941,96 @@
         "INIT Init",
         "NEXT Next",
         "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/directory/DirectoryEmbeddingIndex.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  GuardedWrite = TRUE",
+        "  DeleteOnChange = TRUE",
+        "  JoinOnly = TRUE",
+        "  HashChecked = TRUE",
+        "  Docs = {1, 2}",
+        "  MaxVersion = 2",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK NeverServed NeverIndexed NeverStale SentOnlyPublic",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/directory/DirectoryEmbeddingIndexEmbeddingAdmits.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  GuardedWrite = TRUE",
+        "  DeleteOnChange = FALSE",
+        "  JoinOnly = FALSE",
+        "  HashChecked = TRUE",
+        "  Docs = {1}",
+        "  MaxVersion = 1",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK NeverServed",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/directory/DirectoryEmbeddingIndexNoHashCheck.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  GuardedWrite = TRUE",
+        "  DeleteOnChange = FALSE",
+        "  JoinOnly = TRUE",
+        "  HashChecked = FALSE",
+        "  Docs = {1}",
+        "  MaxVersion = 1",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK NeverStale",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/directory/DirectoryEmbeddingIndexNoTrigger.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  GuardedWrite = TRUE",
+        "  DeleteOnChange = FALSE",
+        "  JoinOnly = TRUE",
+        "  HashChecked = TRUE",
+        "  Docs = {1}",
+        "  MaxVersion = 1",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK NeverServed NeverIndexed NeverStale SentOnlyPublic",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/directory/DirectoryEmbeddingIndexUnguardedWrite.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  GuardedWrite = FALSE",
+        "  DeleteOnChange = TRUE",
+        "  JoinOnly = TRUE",
+        "  HashChecked = TRUE",
+        "  Docs = {1}",
+        "  MaxVersion = 1",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK NeverServed NeverIndexed NeverStale SentOnlyPublic",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",

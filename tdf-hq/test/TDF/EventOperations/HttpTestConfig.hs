@@ -29,6 +29,7 @@ httpTestConfig = AppConfig
   , sessionTokenTtlSeconds = 3600
   , stripeSecretKey = Nothing, stripePublishableKey = Nothing, stripeWebhookSecret = Nothing
   , contextualReputationEnabled = False, publicReputationProjectionEnabled = False
+  , directorySemanticSearchEnabled = False
   , singleFeatureOnboardingExperimentEnabled = False
   , fanFeedAffinityEnabled = False, eventDiscoveryEnabled = False, eventDiscoveryAutoPublish = False, eventDiscoveryPilotLimit = 1
   , ticketmasterApiKey = Nothing, ticketmasterApiBase = disabledEndpoint

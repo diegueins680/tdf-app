@@ -31411,26 +31411,21 @@
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "7671a3e996c85f7aa51d",
+      "id": "637d04560e76b4a6a5c4",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "chat-external-delivery-course-reminders-integration",
-      "justification": "Compose the two reviewed successors of 59a6c2f1ad6d61a54f96: keep main's manifest exactly, including 2026-11-20_course_follow_up_reminder_delivery appended after the studio gallery seed, then append only 2026-11-20_chat_external_delivery (introduced by 8da140ae64c51b8ef006e7678589c8bcf5ef38f3, the commit holding its final SQL), an additive, repeatable migration. Every earlier migration object, its order and its SQL stay unchanged, and both complete parent review graphs are retained. This author review does not authorize deployment or provider activation and is not independent approval.",
+      "reviewBatch": "directory-semantic-search-2026-11-21",
+      "justification": "Append the directory semantic search migration (DIR-SEMANTIC-SEARCH-001) after the reviewed chat external delivery migration. The 264 reviewed migration objects keep their order, paths and introduction commits; the new entry introduces tdf-hq/sql/2026-11-21_directory_semantic_search.sql at commit d48fd5f1117f6778759185ac2e6ba559937bc360.",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 264
+        "valueCount": 265
       },
       "previousDecision": {
-        "$historyRef": "sha256:1f17ed37626d6687e6ee973d9d71bc1227822b72c6114852f09076821f80d16a"
-      },
-      "concurrentReviewHistory": [
-        {
-          "$historyRef": "sha256:1901764dca4d19919b2b65954414c771a5adf173859da163b3379dee6e6e6e3f"
-        }
-      ]
+        "$historyRef": "sha256:379128378cc4adc104c5c8043b8950624bcc0b4b471940d44da8e3838628805f"
+      }
     },
     {
       "id": "9256b774f7f853c0a060",
@@ -31691,6 +31686,25 @@
         "name": "FeedItemKind",
         "valueCount": 2,
         "requirement": "COMMUNITY-FEED-AFFINITY-001"
+      }
+    },
+    {
+      "id": "d19af7c54634e05cf692",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Treating the two kinds as an editable catalog would let an embedding be stored for an event or venue document, which the search statement never reads and the sweep never maintains.",
+      "justification": "Individually reviewed storage guard of directory_search_embedding (DIR-SEMANTIC-SEARCH-001). The two values are the subset of the entity kinds of directory_search_document whose text the sweep in tdf-hq/src/TDF/Directory/SemanticSearch.hs embeds (eligibleDocumentFromSql); nobody selects, stores or edits them, and widening the scope is a code and contract change.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "directory-semantic-search-2026-11-21",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-21_directory_semantic_search.sql",
+        "line": 38,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 2
       }
     }
   ],
