@@ -667,6 +667,7 @@ import qualified TDF.WhatsAppConsentSpec as WhatsAppConsentSpec
 import qualified TDF.LedgerPostingSpec as LedgerPostingSpec
 import qualified TDF.MusicPublicationSpec as MusicPublicationSpec
 import qualified TDF.InteractionWriteBudgetSpec as InteractionWriteBudgetSpec
+import qualified TDF.ChatDeliverySpec as ChatDeliverySpec
 import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
 import qualified TDF.MusicCredentialCacheSpec as MusicCredentialCacheSpec
 import qualified TDF.MusicRelease.DomainSpec as MusicDomainSpec
@@ -679,6 +680,8 @@ import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
 import qualified TDF.Trials.SlotSuggestionsSpec as SlotSuggestionsSpec
+import qualified TDF.Fans.FeedAffinitySpec as FeedAffinitySpec
+import qualified TDF.Fans.ArtistRecommendationsSpec as ArtistRecommendationsSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
 import qualified TDF.Server.EventRelationsSpec as EventRelationsSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
@@ -18557,6 +18560,7 @@ main = hspec $ do
     LedgerPostingSpec.spec
     MusicPublicationSpec.spec
     InteractionWriteBudgetSpec.spec
+    ChatDeliverySpec.spec
     MusicPurchaseSpec.spec
     describe "music release unit contracts" $ do
       describe "music-unit-domain" MusicDomainSpec.spec
@@ -18581,6 +18585,8 @@ main = hspec $ do
     ServerExtraSpec.spec
     ServerFanClubSpec.spec
     SlotSuggestionsSpec.spec
+    FeedAffinitySpec.spec
+    ArtistRecommendationsSpec.spec
     FollowSpec.spec
     FollowHandlerSpec.spec
     EventRelationsSpec.spec

@@ -3071,6 +3071,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/fans/me/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recommend artists to follow
+         * @description Returns publicly listed artists the authenticated fan does not follow yet, best match first. Artists followed by the same fans as the artists the caller follows come first (`similar_fans`, cosine similarity of the follower sets); when those are fewer than `limit` the list is completed with the most followed artists (`popular`). Read-only.
+         */
+        get: operations["listFanArtistRecommendations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/fans/me/artist-profile": {
         parameters: {
             query?: never;
@@ -4200,6 +4220,86 @@ export interface paths {
          * @description Sends a message to the thread as the authenticated party.
          */
         post: operations["sendChatMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat/threads/{threadId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record that the caller read a conversation
+         * @description Stores a recipient read receipt up to a message and marks that conversation's chat notices read. External email/push reminders are not sent for messages already read.
+         */
+        post: operations["markChatThreadRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/channels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get chat reminder channels
+         * @description Email and phone reminder preferences for chat notices. The in-app notice is always on.
+         */
+        get: operations["getNotificationChannels"];
+        /** Update chat reminder channels */
+        put: operations["updateNotificationChannels"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/push-subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register this device for push notifications
+         * @description Registers an Expo push token for the caller. The token is stored encrypted; a token registered by another account moves to the caller.
+         */
+        post: operations["registerPushSubscription"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/push-subscriptions/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop push notifications on this device */
+        post: operations["revokePushSubscription"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9691,6 +9791,24 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ChatThreadReadRequest: {
+            /** Format: int64 */
+            lastMessageId: number;
+        };
+        NotificationChannels: {
+            email: boolean;
+            push: boolean;
+        };
+        PushSubscriptionRegister: {
+            /** @description Push provider; the backend accepts `expo`. */
+            provider: string;
+            token: string;
+            /** @description Device platform; the backend accepts `ios` or `android`. */
+            platform: string;
+        };
+        PushSubscriptionRevoke: {
+            token: string;
+        };
         VideoCampaignWrite: {
             /** Format: int64 */
             expectedRevision: number;
@@ -15024,6 +15142,19 @@ export interface components {
             ffYoutubeUrl?: string | null;
             /** Format: date */
             ffStartedAt?: string;
+        };
+        ArtistRecommendation: {
+            /** Format: int64 */
+            arecArtistId: number;
+            /** @enum {string} */
+            arecReason: "similar_fans" | "popular";
+            /**
+             * Format: double
+             * @description Sum of the cosine similarities to the followed artists; 0 for `popular`.
+             */
+            arecScore: number;
+            /** @description Followed artists behind a `similar_fans` entry, strongest first (at most 3). */
+            arecSeedArtistIds: number[];
         };
         CourseSession: {
             label?: string;
@@ -26573,6 +26704,43 @@ export interface operations {
             };
         };
     };
+    listFanArtistRecommendations: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of artists; values outside 1..24 are clamped. */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recommended artists */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistRecommendation"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fan access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getMyArtistProfile: {
         parameters: {
             query?: never;
@@ -28849,6 +29017,153 @@ export interface operations {
             };
             /** @description Not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    markChatThreadRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatThreadReadRequest"];
+            };
+        };
+        responses: {
+            /** @description Receipt stored */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid identifiers */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not a participant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getNotificationChannels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current channels */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationChannels"];
+                };
+            };
+        };
+    };
+    updateNotificationChannels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationChannels"];
+            };
+        };
+        responses: {
+            /** @description Saved channels */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationChannels"];
+                };
+            };
+        };
+    };
+    registerPushSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionRegister"];
+            };
+        };
+        responses: {
+            /** @description Registered */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported provider, platform or token */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Push notifications are not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    revokePushSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionRevoke"];
+            };
+        };
+        responses: {
+            /** @description Revoked (or already inactive) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid token */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

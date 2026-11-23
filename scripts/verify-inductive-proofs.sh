@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Unbounded safety proofs by inductive invariants (Apalache) plus bounded TLC
-# exploration and negative controls for formal/payments, formal/auth and
-# formal/school.
+# exploration and negative controls for formal/payments, formal/auth,
+# formal/school and formal/social/FeedAffinity.tla.
 #
 # Requires the pinned official artifacts:
 #   APALACHE_TGZ   apalache.tgz from apalache-mc/apalache release v0.62.4
@@ -18,6 +18,7 @@ REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 MODEL_DIR="${REPO_DIR}/formal/payments"
 AUTH_MODEL_DIR="${REPO_DIR}/formal/auth"
 SCHOOL_MODEL_DIR="${REPO_DIR}/formal/school"
+SOCIAL_MODEL_DIR="${REPO_DIR}/formal/social"
 JAVA_BIN="${JAVA_BIN:-java}"
 APALACHE_TGZ="${APALACHE_TGZ:-}"
 TLA2TOOLS_JAR="${TLA2TOOLS_JAR:-}"
@@ -206,6 +207,28 @@ apalache_expect "${A}" CInitExclusion Init IndInv 0 NoError "LessonSlotAdvice-in
 apalache_expect "${A}" CInitExclusion IndInv IndInv 1 NoError "LessonSlotAdvice-consecution"
 apalache_expect "${A}" CInitExclusion IndInv Safe 0 NoError "LessonSlotAdvice-implication"
 apalache_expect "${A}" CInitLegacy Init Safe 6 Error "LessonSlotAdviceLegacy-reachable-violation"
+unset CURRENT_MODEL_DIR
+
+F=FeedAffinity.tla
+CURRENT_MODEL_DIR="${SOCIAL_MODEL_DIR}"
+
+# COMMUNITY-FEED-AFFINITY-001: the hot order of a club feed returns exactly the
+# visible items, in an order fixed by the key, equal to the previous order when
+# the gate is off, the viewer opted out or has no usable evidence, and with a
+# bounded displacement when personal.
+tlc_expect "${F}" FeedAffinity.cfg pass
+tlc_expect "${F}" FeedAffinityGateOff.cfg pass
+tlc_expect "${F}" FeedAffinityFloorZero.cfg violation
+tlc_expect "${F}" FeedAffinityNoTieBreak.cfg violation
+tlc_expect "${F}" FeedAffinityUnfilteredEvidence.cfg violation
+tlc_expect "${F}" FeedAffinityOptOutIgnored.cfg violation
+apalache_expect "${F}" CInitProof Init IndInv 0 NoError "FeedAffinity-initiation"
+apalache_expect "${F}" CInitProof IndInv IndInv 1 NoError "FeedAffinity-consecution"
+apalache_expect "${F}" CInitProof IndInv Safe 0 NoError "FeedAffinity-implication"
+apalache_expect "${F}" CInitFloorZero Init Safe 5 Error "FeedAffinityFloorZero-reachable-violation"
+apalache_expect "${F}" CInitNoTieBreak Init Safe 5 Error "FeedAffinityNoTieBreak-reachable-violation"
+apalache_expect "${F}" CInitUnfilteredEvidence Init Safe 5 Error "FeedAffinityUnfilteredEvidence-reachable-violation"
+apalache_expect "${F}" CInitOptOutIgnored Init Safe 5 Error "FeedAffinityOptOutIgnored-reachable-violation"
 unset CURRENT_MODEL_DIR
 
 echo "Inductive proofs and controls passed."
