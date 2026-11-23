@@ -31337,7 +31337,7 @@
     "tdf-hq/src/TDF/Ticketing/Inventory.hs": "7debfcbb6f15e152edc32c62292093625ec358b107344a6c450dcdfdb4ffb6d2",
     "tdf-hq/src/TDF/Ticketing/Issuance.hs": "728c68222e6ce7f1af8a3019a6a1916fe9bc5d89a68dea361d752b95e2b43c4d",
     "tdf-hq/src/TDF/Ticketing/LookupToken.hs": "a3698541dc758077f54fe9027d9888a933be209d976bbcf381f49eda48639958",
-    "tdf-hq/src/TDF/Ticketing/ParticipantArtist.hs": "5b81b4162c558ef08f6cffa2be04a1860ce8e7041f144be372650f96f807d654",
+    "tdf-hq/src/TDF/Ticketing/ParticipantArtist.hs": "cf4d4780cdf1ebcb2e4aac57866b9df26eb65a3ad302ba269afd40a95accd70b",
     "tdf-hq/src/TDF/Ticketing/Refund.hs": "fffa6d4c96c372218fa827af114cacdcc43d6ac9aa2c84bfc5e1552a9e72dc29",
     "tdf-hq/src/TDF/Ticketing/Transfer.hs": "edfefec16e7943820a62c0f655677db2045a311ee6b324b63b7999b5501e8791",
     "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
@@ -84959,7 +84959,7 @@
     {
       "id": "SURFACE-9af30fe53768298b",
       "path": "tdf-hq/src/TDF/Ticketing/ParticipantArtist.hs",
-      "sha256": "5b81b4162c558ef08f6cffa2be04a1860ce8e7041f144be372650f96f807d654",
+      "sha256": "cf4d4780cdf1ebcb2e4aac57866b9df26eb65a3ad302ba269afd40a95accd70b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

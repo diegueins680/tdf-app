@@ -19235,7 +19235,7 @@
     {
       "id": "SURFACE-9af30fe53768298b",
       "path": "tdf-hq/src/TDF/Ticketing/ParticipantArtist.hs",
-      "sha256": "5b81b4162c558ef08f6cffa2be04a1860ce8e7041f144be372650f96f807d654",
+      "sha256": "cf4d4780cdf1ebcb2e4aac57866b9df26eb65a3ad302ba269afd40a95accd70b",
       "semanticConformance": "not-established-by-discovery"
     },
     {

@@ -61,13 +61,17 @@ registerParticipantArtistForOrder now order = do
                         void (insertUnique (EventArtist eventKey artistKey (Just "participant")))
         _ -> pure ()
 
+-- The tickets inserted just before this already hold the event's KEY SHARE
+-- lock through their foreign key. FOR NO KEY UPDATE is compatible with that
+-- lock, so two musician orders cannot deadlock upgrading it, while it still
+-- excludes other lineup locks and the editor's update of the event row.
 lockEventLineup :: SocialEventId -> SqlPersistT IO ()
 lockEventLineup eventKey = do
     backend <- T.toCaseFold <$> getRDBMS
     when (backend == "postgresql") $
         void
             ( rawSql
-                "SELECT id FROM social_event WHERE id = ? FOR UPDATE"
+                "SELECT id FROM social_event WHERE id = ? FOR NO KEY UPDATE"
                 (keyToValues eventKey)
                 :: SqlPersistT IO [Single PersistValue]
             )
