@@ -12726,7 +12726,7 @@
       ],
       "forbiddenTransitions": [
         "Returning a document because it has an embedding",
-        "Storing or keeping an embedding for a search document that is not published, public and allowed",
+        "Storing an embedding for a search document that is not published, public, allowed, effective and unexpired, or keeping one past the next sweep",
         "Ranking with an embedding of other text, another provider or another model",
         "Sending text of a document that was not eligible when claimed, private fields, or an identifier of the caller",
         "Substituting a locally computed vector for a failed provider call",
@@ -12738,7 +12738,7 @@
       ],
       "authorization": "Public route, unchanged. The sweep runs in the API process with the application database role.",
       "privacy": "Only text the public directory already shows is sent, after removing what looks like an e-mail address or telephone number; queries are sent as text and cached under a SHA-256 key without the text. Search is not personalised: no per-user signal is read, so every caller receives the non-personalised result. Hidden, private, blocked, unlisted and merged documents are neither embedded nor returned.",
-      "concurrency": "The provider is called outside any transaction; the write locks the document row and rechecks eligibility and the text hash; a trigger deletes the embedding when the document is hidden or rewritten; the sweep purges what remains. Several processes may sweep concurrently.",
+      "concurrency": "The provider is called outside any transaction; the write locks the document row and rechecks eligibility and the text hash; the hash covers the document's title, subtitle, summary, search text and source version; a trigger deletes the embedding when the document is hidden, expires by an update, or changes revision; the sweep purges what remains, including documents that expire with the clock. Several processes may sweep concurrently.",
       "idempotency": "The write is an upsert by document; the migration and its rollback can be applied repeatedly.",
       "failure": "Provider error, timeout, exhausted budget, unusable vector, missing tables or a failing semantic statement all yield today's statement and ranking.",
       "recovery": "Set the flag to false; embeddings and cached query vectors are derived data and can be dropped (rollback file).",
@@ -12783,7 +12783,7 @@
       "ambiguity": [
         "The Z3 model is over real numbers; agreement with PostgreSQL float8 and numeric evaluation is tested on examples, not proved.",
         "The TLA+ model treats each statement as atomic; that FOR SHARE on the document row makes the guarded write atomic against a concurrent update is assumed PostgreSQL behaviour.",
-        "The model's public state is the search document's own columns; a profile hidden without a refresh of its search document is excluded by the read predicate at once and by the sweep within a minute, not by the trigger.",
+        "The model's public state is the search document's own columns; a profile hidden without a refresh of its search document, and a document whose expiry passes with the clock, are excluded by the read predicate at once and by the sweep within a minute, not by the trigger.",
         "The range proofs assume quality, availability and reputation in [0, 1] (CHECK constraints) and source_updated_at not in the future; a future timestamp already takes the activity term out of range in the unmodified statement.",
         "Similarity only reorders documents that pass the text filter; the owner decided on 2026-11-22 that it does not admit documents, so the visible effect is small by design.",
         "If the query embedding is available for one page and not the next, an item can repeat or be skipped between pages; the cache makes this rare and does not exclude it.",

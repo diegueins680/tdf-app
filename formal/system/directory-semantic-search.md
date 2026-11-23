@@ -37,7 +37,8 @@ An embedding pair is *usable* only when all of these hold:
   characters after normalisation;
 - `d` is a `profile` or `classified` row of `directory_search_document` (events, venues
   and the legacy artist rows keep the alias term);
-- `d` has a stored embedding carrying the SHA-256 of `d`'s current `search_text`, and
+- `d` has a stored embedding carrying the SHA-256 of `d`'s current revision (title,
+  subtitle, summary, `search_text` and `source_version` of its search document), and
   the provider and model of the query embedding;
 - a query embedding is available for this request (see Failure).
 
@@ -74,7 +75,8 @@ digits), not a guarantee that free text holds no contact detail.
 
 - A document is eligible only while it satisfies the predicate search itself uses:
   `source_status='published' AND visibility='public' AND moderation_status='allowed'`,
-  and for profiles also the published, public, allowed and unmerged profile row.
+  `effective_at` not in the future and `expires_at` not passed, and for profiles also
+  the published, public, allowed and unmerged profile row.
 - Embeddings are joined by primary key onto rows the `documents` projection already
   returned. They cannot add a row.
 - Search is not personalised: no per-user signal is read, so every caller gets the
@@ -93,7 +95,14 @@ Migration `tdf-hq/sql/2026-11-21_directory_semantic_search.sql`:
 - `directory_query_embedding_budget(window_started_at, calls)`, provider calls made by
   search requests per minute;
 - trigger `directory_search_embedding_guard_trigger`: an update that hides a search
-  document or changes its `search_text` deletes its embedding in the same transaction.
+  document, leaves it expired or not yet effective, or changes its revision deletes
+  its embedding in the same transaction.
+
+The revision is hashed, not `search_text` alone: `search_text` is a lossy
+normalisation (it drops non-Latin text, for one), so an edit it does not show would
+otherwise keep a stale embedding. `source_version` changes with every edit of the
+profile or classified, which covers the profile fields that are sent but are not
+columns of the search document.
 
 The migration requires the `vector` extension and refuses without it. No approximate
 index is created: the join is by primary key, so the cosine is exact.
@@ -120,9 +129,11 @@ Invariants:
   eligible when claimed. A document hidden after the claim has already been sent; the
   guarded write discards the result.
 
-I2 is transactional for the columns of the search document. A profile hidden without
-its search document being refreshed is caught by the read predicate at once (I1) and by
-the sweep within a minute.
+I2 is transactional for the columns of the search document. Two changes reach no
+trigger: a profile hidden without its search document being refreshed, and a document
+whose `expires_at` passes with the clock. Both are caught by the read predicate at
+once (I1, I3: search reads `directory_public_search_document`) and by the sweep within
+a minute.
 
 Several API processes may sweep at once; they may embed the same document twice, and
 the guarded write makes the second a replacement by the same vector.

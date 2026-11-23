@@ -41,7 +41,7 @@ negative control.
 | `GuardedWrite` | `writeDocumentEmbeddingSql`: insert only if still eligible with the claimed hash, under a row lock |
 | `DeleteOnChange` | trigger `directory_search_embedding_guard_trigger` |
 | `JoinOnly` | `semanticSearchSql`: embeddings are joined onto the public projection |
-| `HashChecked` | `similaritySql`: the embedding must carry the hash of the current text |
+| `HashChecked` | `similaritySql`: the embedding must carry the hash of the current revision (title, subtitle, summary, search text, source version) |
 
 `Safe` = `NeverServed` (a hidden document is never returned), `NeverIndexed` (every
 stored embedding belongs to a public document and its current text), `NeverStale` (an
@@ -65,6 +65,7 @@ The inductive proof covers executions of any length within those bounds on docum
 and versions. Each action is one atomic step: that a PostgreSQL statement holding
 `FOR SHARE` on the document row is atomic with respect to a concurrent update of that
 row is assumed. The model's `public` is the search document's own publication state;
-a profile hidden without its search document being refreshed is outside the model and
-is covered by the read predicate and the purge. That the SQL implements the actions
+a profile hidden without its search document being refreshed, and a document that
+expires with the clock, are outside the model and are covered by the read predicate
+and the purge. That the SQL implements the actions
 is established by review and by `tdf-hq/test/TDF/Directory/SemanticSearchPostgresSpec.hs`.

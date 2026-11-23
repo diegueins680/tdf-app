@@ -6,8 +6,9 @@
 -- these tables unless DIRECTORY_SEMANTIC_SEARCH_ENABLED is set.
 --
 -- An embedding is deleted in the transaction that hides its document or
--- changes its public text. The application writes one only while the
--- document is public (formal/system/directory-semantic-search.md).
+-- changes its revision (title, subtitle, summary, search text or source
+-- version). The application writes one only while the document is public,
+-- effective and not expired (formal/system/directory-semantic-search.md).
 --
 -- Requires the pgvector extension already installed; this file does not
 -- create it. Safe to apply more than once.
@@ -59,9 +60,17 @@ CREATE TABLE IF NOT EXISTS public.directory_query_embedding_budget (
 CREATE OR REPLACE FUNCTION public.directory_search_embedding_guard()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
+  -- Not public any more (the predicate of directory_public_search_document
+  -- for profiles and classifieds), or another revision of the embedded text.
   IF NOT (NEW.source_status = 'published' AND NEW.visibility = 'public'
-          AND NEW.moderation_status = 'allowed')
-     OR NEW.search_text IS DISTINCT FROM OLD.search_text THEN
+          AND NEW.moderation_status = 'allowed'
+          AND (NEW.effective_at IS NULL OR NEW.effective_at <= now())
+          AND (NEW.expires_at IS NULL OR NEW.expires_at > now()))
+     OR NEW.title IS DISTINCT FROM OLD.title
+     OR NEW.subtitle IS DISTINCT FROM OLD.subtitle
+     OR NEW.summary IS DISTINCT FROM OLD.summary
+     OR NEW.search_text IS DISTINCT FROM OLD.search_text
+     OR NEW.source_version IS DISTINCT FROM OLD.source_version THEN
     DELETE FROM public.directory_search_embedding
     WHERE entity_kind = NEW.entity_kind AND entity_id = NEW.entity_id;
   END IF;
@@ -80,7 +89,11 @@ WHERE NOT EXISTS (
   WHERE document.entity_kind = stale.entity_kind AND document.entity_id = stale.entity_id
     AND document.source_status = 'published' AND document.visibility = 'public'
     AND document.moderation_status = 'allowed'
-    AND encode(sha256(convert_to(document.search_text, 'UTF8')), 'hex') = stale.content_hash);
+    AND (document.effective_at IS NULL OR document.effective_at <= now())
+    AND (document.expires_at IS NULL OR document.expires_at > now())
+    AND encode(sha256(convert_to(concat_ws(chr(31), document.title, coalesce(document.subtitle, ''),
+          coalesce(document.summary, ''), document.search_text, document.source_version::text), 'UTF8')), 'hex')
+        = stale.content_hash);
 
 DO $$
 BEGIN

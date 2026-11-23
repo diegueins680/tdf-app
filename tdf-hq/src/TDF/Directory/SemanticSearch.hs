@@ -346,10 +346,16 @@ semanticAliasOpenAnchor =
   "text_score,CASE WHEN input.q='' THEN 0 WHEN EXISTS (SELECT 1 FROM catalog_search_alias"
 semanticAliasCloseAnchor = "THEN 1 ELSE 0 END semantic_score "
 
--- | SHA-256 of the public search text of @document@; an embedding is used
--- only while it carries the hash of the current text.
+-- | SHA-256 of the revision of @document@: its displayed title, subtitle and
+-- summary as stored, its search text and its source version. An embedding is
+-- used only while it carries the hash of the current revision. The search
+-- text alone is not enough: it is a lossy normalisation, so an edit it
+-- discards (non-Latin text, for one) would keep a stale embedding. The source
+-- version changes with every edit of the profile or classified, which covers
+-- the profile fields that are sent but are not columns of the document.
 documentHashSql :: Text
-documentHashSql = "encode(sha256(convert_to(document.search_text,'UTF8')),'hex')"
+documentHashSql =
+  "encode(sha256(convert_to(concat_ws(chr(31),document.title,coalesce(document.subtitle,''),coalesce(document.summary,''),document.search_text,document.source_version::text),'UTF8')),'hex')"
 
 -- | Similarity of @document@ to the query vector of @input@: 0 without a
 -- usable pair, otherwise the cosine clamped to [0, 1] at four decimals.
@@ -386,14 +392,16 @@ replaceOnce needle replacement haystack =
 
 -- | The documents that may have an embedding: the profiles and classifieds
 -- directory search itself returns. The predicate on the document row repeats
--- @directory_public_search_document@ so the row can be locked; the profile
--- predicate is the one of @searchDocumentsSql@.
+-- @directory_public_search_document@, including its effective and expiry
+-- times, so the row can be locked; the profile predicate is the one of
+-- @searchDocumentsSql@.
 eligibleDocumentFromSql :: Text
 eligibleDocumentFromSql =
   "FROM directory_search_document document "
     <> "LEFT JOIN directory_profile profile ON document.entity_kind='profile' AND profile.id::text=document.entity_id "
     <> "WHERE document.entity_kind IN ('profile','classified') "
     <> "AND document.source_status='published' AND document.visibility='public' AND document.moderation_status='allowed' "
+    <> "AND (document.effective_at IS NULL OR document.effective_at<=now()) AND (document.expires_at IS NULL OR document.expires_at>now()) "
     <> "AND (document.entity_kind<>'profile' OR (profile.profile_status='published' AND profile.visibility='public' AND profile.moderation_status='allowed' AND profile.canonical_profile_id IS NULL)) "
 
 -- | Eligible documents with no embedding of their current text in the

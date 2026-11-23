@@ -224,6 +224,42 @@ spec = describe "directory-semantic-search-postgresql" $ do
             [PersistText (docId fixture "keep")]
         mapM (embeddingCount fixture) ["hide", "rewrite", "keep"] `shouldReturn` [0, 0, 1]
 
+      it "deletes the embedding on an edit the search text does not show, a new source version, and an expiry" $ \fixture -> do
+        forM_ ["summary", "version", "expire", "keep"] $ \name -> do
+          insertDocument fixture name (queryText fixture <> " " <> name) "\12462\12479\12540 sesiones" "allowed"
+          storeEmbedding fixture name (axis 0)
+        before <- run fixture $ rawSql
+          "SELECT search_text FROM directory_search_document WHERE entity_id=?" [PersistText (docId fixture "summary")]
+        run fixture $ do
+          -- Normalisation discards the non-Latin words, so search_text stays.
+          rawExecute "UPDATE directory_search_document SET summary=? WHERE entity_id=?"
+            [PersistText "\12500\12450\12494 sesiones", PersistText (docId fixture "summary")]
+          rawExecute "UPDATE directory_search_document SET source_version=source_version+1 WHERE entity_id=?"
+            [PersistText (docId fixture "version")]
+          rawExecute "UPDATE directory_search_document SET expires_at=now()-interval '1 minute' WHERE entity_id=?"
+            [PersistText (docId fixture "expire")]
+          rawExecute "UPDATE directory_search_document SET expires_at=now()+interval '1 day' WHERE entity_id=?"
+            [PersistText (docId fixture "keep")]
+        after <- run fixture $ rawSql
+          "SELECT search_text FROM directory_search_document WHERE entity_id=?" [PersistText (docId fixture "summary")]
+        (after :: [Single Text]) `shouldBe` before
+        mapM (embeddingCount fixture) ["summary", "version", "expire", "keep"] `shouldReturn` [0, 0, 0, 1]
+
+      it "neither embeds nor keeps a document that has expired or is not yet effective" $ \fixture -> do
+        forM_ ["expired", "future", "live"] $ \name ->
+          insertDocument fixture name (queryText fixture <> " " <> name) "sesiones de bajo" "allowed"
+        forM_ ["expired", "future"] $ \name -> storeEmbedding fixture name (axis 0)
+        withoutTriggers fixture "UPDATE directory_search_document SET expires_at=now()-interval '1 minute' WHERE entity_id=?"
+          [PersistText (docId fixture "expired")]
+        withoutTriggers fixture "UPDATE directory_search_document SET effective_at=now()+interval '1 day' WHERE entity_id=?"
+          [PersistText (docId fixture "future")]
+        calls <- newIORef []
+        stats <- sweep fixture (recording calls (\inputs -> Right (map (const (axis 0)) inputs)))
+        sweepPurged stats `shouldSatisfy` (>= 2)
+        sent <- concat <$> readIORef calls
+        filter (\text -> any (`T.isInfixOf` text) ["expired", "future"]) sent `shouldBe` []
+        mapM (embeddingCount fixture) ["expired", "future", "live"] `shouldReturn` [0, 0, 1]
+
       it "refuses a write for a document hidden or rewritten after the claim" $ \fixture -> do
         forM_ ["hide", "rewrite", "same"] $ \name ->
           insertDocument fixture name (queryText fixture <> " " <> name) "sesiones de bajo" "allowed"
