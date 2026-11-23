@@ -1,0 +1,10 @@
+{
+  "id": "30eacf4605aa4c213248",
+  "classification": "governed-reference-data",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "external_provider, external_provider_code",
+  "priority": "P2-domain",
+  "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+  "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+  "reviewed": true
+}

@@ -993,20 +993,23 @@
       "observability": "Exact source fingerprint, Mobile pin, command, result and negative-control log.",
       "authority": "approved",
       "source": "User specification-conformance instruction 2026-10-04, sections 3, 9, 10, 19 and 24",
-      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions. Catalog refresh preserves historical review provenance while recomputing discovery counters.",
+      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions. Catalog refresh preserves historical review provenance while recomputing discovery counters. Nested review history is stored once per object under docs/catalog-persistence/catalog-decision-history, addressed by the SHA-256 of its exact bytes, and expands to the original nested document byte for byte; edited, missing, orphaned or inline history fails verification.",
       "contract": "formal/system/README.md",
       "implementation": [
         "scripts/specification-conformance.py",
         "scripts/check-new-specification-surfaces.py",
         ".github/workflows/ci.yml",
         "docs/catalog-persistence/catalog-list-decisions.json",
-        "scripts/build-catalog-decisions.mjs"
+        "scripts/build-catalog-decisions.mjs",
+        "scripts/catalog-decision-history.mjs",
+        "scripts/lib/catalog-decision-history.mjs"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",
         "scripts/test-new-specification-surfaces.py",
         "scripts/__tests__/ci-pipeline.test.mjs",
-        "scripts/__tests__/catalog-list-audit.test.mjs"
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/__tests__/catalog-decision-history.test.mjs"
       ],
       "formalModels": [],
       "verification": "Executable conformance and mutation tests; not a whole-program proof. Catalog reconciliation retains historical retirement/provenance sections while recalculating current counters; an original-generator negative control demonstrates the regression.",

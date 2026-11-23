@@ -7,6 +7,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { DECISIONS_FILE, readExpandedDecisions } from '../lib/catalog-decision-history.mjs';
 
 // Complete retained parent assertions; dated inputs are explicitly projected.
 {
@@ -857,6 +858,12 @@ test('dated-UX-parent: main-parent: decision reconciliation preserves reviewed e
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,
       reviewBatch: 'unit-test-review',
+      // The removed review is kept as retirement provenance, so any history it
+      // references stays reachable in the content-addressed store.
+      sourceRemovalRetirements: [{
+        reason: 'Catalog refresh unit-test-review: these candidates are no longer in the static list inventory. Their full reviewed decisions are preserved here as history; no catalog values are affected.',
+        decisions: [{ ...preserved, id: 'stale-id' }],
+      }],
     });
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
@@ -2462,6 +2469,12 @@ test('dated-UX-parent: UX-parent: decision reconciliation preserves reviewed ent
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,
       reviewBatch: 'unit-test-review',
+      // The removed review is kept as retirement provenance, so any history it
+      // references stays reachable in the content-addressed store.
+      sourceRemovalRetirements: [{
+        reason: 'Catalog refresh unit-test-review: these candidates are no longer in the static list inventory. Their full reviewed decisions are preserved here as history; no catalog values are affected.',
+        decisions: [{ ...preserved, id: 'stale-id' }],
+      }],
     });
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
@@ -4102,6 +4115,12 @@ test('dated-storage-parent: refund-parent: decision reconciliation preserves rev
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,
       reviewBatch: 'unit-test-review',
+      // The removed review is kept as retirement provenance, so any history it
+      // references stays reachable in the content-addressed store.
+      sourceRemovalRetirements: [{
+        reason: 'Catalog refresh unit-test-review: these candidates are no longer in the static list inventory. Their full reviewed decisions are preserved here as history; no catalog values are affected.',
+        decisions: [{ ...preserved, id: 'stale-id' }],
+      }],
     });
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
@@ -5707,6 +5726,12 @@ test('dated-storage-parent: storage-parent: decision reconciliation preserves re
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,
       reviewBatch: 'unit-test-review',
+      // The removed review is kept as retirement provenance, so any history it
+      // references stays reachable in the content-addressed store.
+      sourceRemovalRetirements: [{
+        reason: 'Catalog refresh unit-test-review: these candidates are no longer in the static list inventory. Their full reviewed decisions are preserved here as history; no catalog values are affected.',
+        decisions: [{ ...preserved, id: 'stale-id' }],
+      }],
     });
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
@@ -6519,8 +6544,17 @@ async function integrationParent(ref, file) {
     { cwd: integrationRoot, maxBuffer: 64 * 1024 * 1024 }).then(({ stdout }) => JSON.parse(stdout)));
   return integrationCache.get(key);
 }
+// The decisions file stores its review history by reference
+// (scripts/lib/catalog-decision-history.mjs); read it fully expanded, exactly
+// as the nested document it represents.
+let expandedDecisionsText;
+async function integrationCurrentText(file, encoding) {
+  if (file !== DECISIONS_FILE) return fs.readFile(path.join(integrationRoot, file), encoding);
+  expandedDecisionsText ??= `${JSON.stringify(readExpandedDecisions(integrationRoot), null, 2)}\n`;
+  return expandedDecisionsText;
+}
 async function integrationRead(ref, file, encoding) {
-  const actualBytes = await fs.readFile(path.join(integrationRoot, file), encoding);
+  const actualBytes = await integrationCurrentText(file, encoding);
   if (file === 'scripts/production-migrations.json' || integrationFiles.has(file)) {
     if (!integrationCurrentFiles.has(file)) integrationCurrentFiles.set(file, { bytes: actualBytes, value: JSON.parse(actualBytes) });
     assert.equal(integrationCurrentFiles.get(file).bytes, actualBytes, `Composed source changed during parent assertions: ${file}`);
@@ -6601,7 +6635,7 @@ test('actual UX/storage composition preserves current main, immutable SQL and bo
     await integrationExec('git', ['merge-base', '--is-ancestor', row.introducedBy, 'HEAD'], { cwd: integrationRoot });
   }
   for (const [reviewFile, key] of integrationFiles) {
-    const current = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8'));
+    const current = JSON.parse(await integrationCurrentText(reviewFile, 'utf8'));
     for (const ref of INTEGRATION_PARENTS) {
       const prior = await integrationParent(ref, reviewFile);
       for (const row of prior[key]) assert.ok(integrationFind(current, row), `Lost whole parent object: ${ref}:${reviewFile}`);
@@ -6630,7 +6664,7 @@ test('studio gallery appends its original migration and preserves both complete 
   const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
   assert.equal(await fs.readFile(path.join(integrationRoot, original.path), 'utf8'), stdout);
   for (const [reviewFile, key] of integrationFiles) {
-    const currentReview = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8'));
+    const currentReview = JSON.parse(await integrationCurrentText(reviewFile, 'utf8'));
     for (const parent of [base, gallery]) {
       const old = await integrationParent(parent, reviewFile);
       const row = old[key].find(r => r.evidence?.file === file || r.name === 'migrations' || r.source?.name === 'migrations');
@@ -6654,7 +6688,7 @@ test('directory semantic search appends its migration after the chat delivery mi
   const { stdout } = await integrationExec('git', ['show', added.introducedBy + ':' + added.path], { cwd: integrationRoot });
   assert.equal(await fs.readFile(path.join(integrationRoot, added.path), 'utf8'), stdout);
   const reviewFile = 'docs/catalog-persistence/catalog-list-decisions.json';
-  const decisions = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8')).decisions;
+  const decisions = readExpandedDecisions(integrationRoot).decisions;
   // The register on main is larger than the shared helper's buffer.
   const published = await integrationExec('git', ['show', main + ':' + reviewFile],
     { cwd: integrationRoot, maxBuffer: 512 * 1024 * 1024 });
@@ -6669,7 +6703,7 @@ test('My tickets retains both complete published review graphs and immutable mig
   const assertParent = async (ref) => {
     for (const [file, key] of integrationFiles) {
       const current = integrationCurrentFiles.get(file)?.value
-        ?? JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+        ?? JSON.parse(await integrationCurrentText(file, 'utf8'));
       const before = await integrationParent(ref, file);
       for (const row of before[key]) {
         assert.ok(integrationFind(current, row), `Lost whole ticket parent object: ${ref}:${file}`);
@@ -6731,7 +6765,7 @@ test('current My tickets mirror matches its generator and rejects the prior main
     await integrationExec('git', ['add', '--', file], { cwd: repo });
     const report = JSON.parse(await fs.readFile(path.join(integrationRoot, 'docs/catalog-persistence/reports/static-list-inventory.json'), 'utf8'));
     const ids = new Set(report.candidates.filter(row => row.file === file).map(row => row.id));
-    const register = JSON.parse(await fs.readFile(path.join(integrationRoot, 'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
+    const register = readExpandedDecisions(integrationRoot);
     const selected = register.decisions.filter(row => ids.has(row.id));
     assert.equal(selected.length, ids.size);
     const current = selected.find(row => row.evidence?.name === 'mobileFeatureRegistry');

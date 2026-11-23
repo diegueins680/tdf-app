@@ -1,0 +1,16 @@
+{
+  "id": "dfec3f046ad1157e0f0c",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+  "justification": "Client-side audio player mechanics (queue reducer actions, playback status, repeat mode and stream quality selection); local view state, not governed business catalog data.",
+  "reviewed": true,
+  "evidence": {
+    "file": "tdf-hq-ui/src/player/queue.ts",
+    "line": 33
+  },
+  "reviewBatch": "music-release-platform-sync-2026-10-07",
+  "reviewMethod": "manual-source-review"
+}

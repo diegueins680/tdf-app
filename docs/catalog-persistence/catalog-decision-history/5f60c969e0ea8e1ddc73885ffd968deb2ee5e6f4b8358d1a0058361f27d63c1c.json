@@ -1,0 +1,22 @@
+{
+  "id": "b53cc0e14f15058ad16e",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+  "justification": "Decision-builder input, output, preservation, and review-batch fields are CLI execution mechanics; they are not selectable business data.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "scripts/build-catalog-decisions.mjs",
+    "line": 27,
+    "kind": "object-registry",
+    "name": "options",
+    "valueCount": 4,
+    "consumerCount": 239,
+    "exactDuplicateIds": [],
+    "similarCandidateIds": []
+  }
+}
