@@ -53240,7 +53240,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "1e6e873c552571dffb26f64f8ceb753b8eefbcc2ad9b1f9b04421fbdd34cc6e8",
+      "sha256": "dca3e140acb1da3d09f3822c44fb28c54396f69eb4e048392c6692b6fc18abae",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53392,7 +53392,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "a8de4e8812e502598057d57ce86d056b9f384c7afce63a1e7db66d05c96a582f",
+      "sha256": "d2f3a74a6a914465f251c86729bf1b37db621b2296c85e2c8eed8e1baea384dc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55159,7 +55159,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "cfbdb4e37e6fdbea27dbda327a1f748761f7fa0ae6ba64d76cf7553965b17cb1",
+      "sha256": "835c5991aa94b37b0849a1929b431a192660eb7be430e94e072fdae75c269f7a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58466,7 +58466,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "a4b037a109a8c91d5dee562e106470c8215b579654d914a6f527fc0ca0997b00",
+      "sha256": "6c0a03c67a25dc1050e9466d95e724e753b402d4d093bb684986f9d295164d05",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58852,6 +58852,18 @@
       "requirements": [
         {
           "requirement": "MEDIA-ARTIST-FEATURED-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6a8e7ea5027d20b1",
+      "path": "scripts/render-venue-search-fold.hs",
+      "sha256": "8f189a72416bc78da5e6fde1fa09388c9e8816d3515269f0c612d610efb0a27c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-SEARCH-001",
           "relationship": "implementation"
         }
       ]
@@ -61876,6 +61888,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-86a1f24a716c11ec",
+      "path": "scripts/test-venue-search.sh",
+      "sha256": "2d1f31d1f4f6ffdd6a8346f44ea6bf5f42684b3b9d49d0242b7af1e669bdf144",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-SEARCH-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
       "sha256": "c7135f7d76bdebc33b7493edd6284149a585c1b3220a3af61da03b3ddacb987f",
@@ -62127,7 +62151,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a17b08e8c4d12ee0537ed8707d8675e8fa60fe7a1b2aa985391c204cf6d0351b",
+      "sha256": "91570f8c9cafbbc39a6fec16d0d6537c2c0141b3bea70e575f1858a5ea889370",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81062,6 +81086,30 @@
       ]
     },
     {
+      "id": "SURFACE-f6e8cdde78c53f0d",
+      "path": "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
+      "sha256": "da5184b2f8a2ac0aa7f421e2e44882fa9e040143e1222f386dc4080035ef9450",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-SEARCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-cf70730ebe5edcb9",
+      "path": "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql",
+      "sha256": "a6b9391b61df6a98c08cb049be75aa4c1fe53dbad6acb2df1b57981f8b931e55",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-SEARCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -85030,7 +85078,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "0ba938a52a4073212ea97db71ba9f2433c98ff41b783fd7217f111de5681d506",
+      "sha256": "40ac9ec6e3112d2ae71be12a1d99812b6b1b04a9318a19b92b7d67caf3a620bc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86085,6 +86133,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-0233f07ad8ee305f",
+      "path": "tdf-hq/src/TDF/Venues/Search.hs",
+      "sha256": "c0352e27e14fdb7ec8fd49c83214053bc0c65853cc5183a0ee7ed11a384a2967",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-SEARCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c70afbfc23c0a6e2",
+      "path": "tdf-hq/src/TDF/Venues/SearchFold.hs",
+      "sha256": "8c63e3a0d1a0a4f33dc1cbe9bb54980b0ae40d1ee2b0628fbfdec30c9b8c1731",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-SEARCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-8e95ce26cbe1127d",
       "path": "tdf-hq/src/TDF/Version.hs",
       "sha256": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
@@ -86168,7 +86240,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "3f719d332f1c5cee5585d53f4e2f78b059d5e260f3d1740133766befb79c3a66",
+      "sha256": "06cf60d8ced75b4a71446afa35fa25c7cdfee57930be8096176dc49567c2f10c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86363,7 +86435,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "b856ae2d6e44facf69a7ae651afe8b9e22f4ace4e6ddbc1398351014bb036e3d",
+      "sha256": "ffad60bc34c084941c7c3ce9f3e010437ca9167266fe1937a1e5c27752e20660",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -88445,6 +88517,18 @@
         },
         {
           "requirement": "SCHOOL-TEACHER-STUDENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-4564ae309b51c027",
+      "path": "tdf-hq/test/TDF/Venues/SearchSpec.hs",
+      "sha256": "a31e06c160bb0aac3509150e0111e29e9fd94314d994ff11eeda885cb1a4afc9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-SEARCH-001",
           "relationship": "tests"
         }
       ]

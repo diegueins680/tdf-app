@@ -451,6 +451,7 @@
       "scripts/render-production-migration-batch.mjs",
       "scripts/render-production-schema-preflight.mjs",
       "scripts/render-production-schema-verification.mjs",
+      "scripts/render-venue-search-fold.hs",
       "scripts/run-event-operations-http-harness.sh",
       "scripts/run-event-raci-browser.mjs",
       "scripts/run-instagram-follower-invite-2026-09-08.sh",
@@ -714,6 +715,7 @@
       "scripts/test-unified-checkout-migration.sh",
       "scripts/test-user-experiment-assignment-migration.sh",
       "scripts/test-user-onboarding-progress-migration.sh",
+      "scripts/test-venue-search.sh",
       "scripts/test-verification-report.py",
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
@@ -2406,6 +2408,8 @@
       "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql",
       "tdf-hq/sql/2026-11-21_directory_semantic_search.sql",
       "tdf-hq/sql/2026-11-21_directory_semantic_search_rollback.sql",
+      "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
+      "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2703,6 +2707,8 @@
       "tdf-hq/src/TDF/Trials/Server.hs",
       "tdf-hq/src/TDF/UUIDInstances.hs",
       "tdf-hq/src/TDF/UserActivity.hs",
+      "tdf-hq/src/TDF/Venues/Search.hs",
+      "tdf-hq/src/TDF/Venues/SearchFold.hs",
       "tdf-hq/src/TDF/Version.hs",
       "tdf-hq/src/TDF/VideoCampaigns.hs",
       "tdf-hq/src/TDF/WhatsApp/Client.hs",
@@ -2825,6 +2831,7 @@
       "tdf-hq/test/TDF/TicketPaymentReceiptSpec.hs",
       "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
+      "tdf-hq/test/TDF/Venues/SearchSpec.hs",
       "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
       "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
       "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
@@ -3367,7 +3374,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "1e6e873c552571dffb26f64f8ceb753b8eefbcc2ad9b1f9b04421fbdd34cc6e8",
+      "sha256": "dca3e140acb1da3d09f3822c44fb28c54396f69eb4e048392c6692b6fc18abae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3391,7 +3398,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "a8de4e8812e502598057d57ce86d056b9f384c7afce63a1e7db66d05c96a582f",
+      "sha256": "d2f3a74a6a914465f251c86729bf1b37db621b2296c85e2c8eed8e1baea384dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4225,7 +4232,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "cfbdb4e37e6fdbea27dbda327a1f748761f7fa0ae6ba64d76cf7553965b17cb1",
+      "sha256": "835c5991aa94b37b0849a1929b431a192660eb7be430e94e072fdae75c269f7a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5833,7 +5840,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "a4b037a109a8c91d5dee562e106470c8215b579654d914a6f527fc0ca0997b00",
+      "sha256": "6c0a03c67a25dc1050e9466d95e724e753b402d4d093bb684986f9d295164d05",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5918,6 +5925,12 @@
       "id": "SURFACE-39275efbaea5cb7e",
       "path": "scripts/render-production-schema-verification.mjs",
       "sha256": "999aa696aed32f988f4ef80460506bd063ae5bc52d405eaeb056f143aa680874",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6a8e7ea5027d20b1",
+      "path": "scripts/render-venue-search-fold.hs",
+      "sha256": "8f189a72416bc78da5e6fde1fa09388c9e8816d3515269f0c612d610efb0a27c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7499,6 +7512,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-86a1f24a716c11ec",
+      "path": "scripts/test-venue-search.sh",
+      "sha256": "2d1f31d1f4f6ffdd6a8346f44ea6bf5f42684b3b9d49d0242b7af1e669bdf144",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
       "sha256": "c7135f7d76bdebc33b7493edd6284149a585c1b3220a3af61da03b3ddacb987f",
@@ -7621,7 +7640,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a17b08e8c4d12ee0537ed8707d8675e8fa60fe7a1b2aa985391c204cf6d0351b",
+      "sha256": "91570f8c9cafbbc39a6fec16d0d6537c2c0141b3bea70e575f1858a5ea889370",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17591,6 +17610,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f6e8cdde78c53f0d",
+      "path": "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
+      "sha256": "da5184b2f8a2ac0aa7f421e2e44882fa9e040143e1222f386dc4080035ef9450",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-cf70730ebe5edcb9",
+      "path": "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql",
+      "sha256": "a6b9391b61df6a98c08cb049be75aa4c1fe53dbad6acb2df1b57981f8b931e55",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -19039,7 +19070,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "0ba938a52a4073212ea97db71ba9f2433c98ff41b783fd7217f111de5681d506",
+      "sha256": "40ac9ec6e3112d2ae71be12a1d99812b6b1b04a9318a19b92b7d67caf3a620bc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19373,6 +19404,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-0233f07ad8ee305f",
+      "path": "tdf-hq/src/TDF/Venues/Search.hs",
+      "sha256": "c0352e27e14fdb7ec8fd49c83214053bc0c65853cc5183a0ee7ed11a384a2967",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c70afbfc23c0a6e2",
+      "path": "tdf-hq/src/TDF/Venues/SearchFold.hs",
+      "sha256": "8c63e3a0d1a0a4f33dc1cbe9bb54980b0ae40d1ee2b0628fbfdec30c9b8c1731",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8e95ce26cbe1127d",
       "path": "tdf-hq/src/TDF/Version.hs",
       "sha256": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
@@ -19423,7 +19466,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "3f719d332f1c5cee5585d53f4e2f78b059d5e260f3d1740133766befb79c3a66",
+      "sha256": "06cf60d8ced75b4a71446afa35fa25c7cdfee57930be8096176dc49567c2f10c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19501,7 +19544,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "b856ae2d6e44facf69a7ae651afe8b9e22f4ace4e6ddbc1398351014bb036e3d",
+      "sha256": "ffad60bc34c084941c7c3ce9f3e010437ca9167266fe1937a1e5c27752e20660",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20102,6 +20145,12 @@
       "id": "SURFACE-15bc343962df8561",
       "path": "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
       "sha256": "eebde69c59c367555188cf00435c64dadb9b0c0c99fa724f58cade0c427b2242",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4564ae309b51c027",
+      "path": "tdf-hq/test/TDF/Venues/SearchSpec.hs",
+      "sha256": "a31e06c160bb0aac3509150e0111e29e9fd94314d994ff11eeda885cb1a4afc9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30875,6 +30924,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/VenueSearch.cfg",
+      "sha256": "c29c92f428091f128f7de26bd179a7c6f4a7a749c18943400bbaa557611f1817",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/VenueSearch.tla",
+      "sha256": "1d1cec97224ecc0d6323b458a1e1e3f4c27ec70aa9b164f7590003ee9adf6ea3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/VenueSearchCapped.cfg",
+      "sha256": "71417d1d4a83270720ea97aaec70ab20219e444fea95d5c5506fbbf8c8e6379e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/VenueSearchNoPoleGuard.cfg",
+      "sha256": "d31cb430bcc37609f6de25aa5c63c4f7ffbb511c94548b12d3122693f11afce2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/VenueSearchNoWrap.cfg",
+      "sha256": "75e7bfdc3dc3fa2afa254fd83aea10c063ec38de1281264313385c37137a8889",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/WebOnboardingRecovery.cfg",
       "sha256": "ed92f2d992280f08b21a18cf2c26a63f32cde2e125e9b36a1843695a89d4f8ca",
       "authority": "inferred",
@@ -32773,7 +32857,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "49a9d525d0aee523168fb57368f90323430c3fe2e72496593af6f49ab7b6d377",
+      "sha256": "faf02760609e02259706597a6683b3f433e9f04c4a5010dbbd9ddeccdbfe83b0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32907,6 +32991,13 @@
     {
       "path": "formal/system/uri-decoder.md",
       "sha256": "76b05e52e50e782016c33dd0d0500b30f4d9b6555898fb7c3045865020e9cbbc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/venue-search.md",
+      "sha256": "8106a62e8657a5741f67190edd31e2b47e084e30f89b76de0f3c9a1a042b80f1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -48397,6 +48488,50 @@
         "  Consistent",
         "  NoSelfApproval",
         "  EveryoneAnswered"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/VenueSearch.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS Ring = 6 MaxLat = 4 Cap = 2 WrapBox = TRUE PoleGuard = TRUE",
+        "INVARIANTS BoxSound SqlMatchesSpecification LegacyMatchesSpecification"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/VenueSearchCapped.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS Ring = 6 MaxLat = 4 Cap = 1 WrapBox = TRUE PoleGuard = TRUE",
+        "INVARIANTS LegacyMatchesSpecification"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/VenueSearchNoPoleGuard.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS Ring = 6 MaxLat = 4 Cap = 2 WrapBox = TRUE PoleGuard = FALSE",
+        "INVARIANTS SqlMatchesSpecification"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/VenueSearchNoWrap.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS Ring = 6 MaxLat = 4 Cap = 2 WrapBox = FALSE PoleGuard = TRUE",
+        "INVARIANTS BoxSound"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
