@@ -167,7 +167,6 @@
       "scripts/__tests__/build-trust.test.mjs",
       "scripts/__tests__/calendar-http-runtime.mjs",
       "scripts/__tests__/campaign-tiktok-ui.test.mjs",
-      "scripts/__tests__/catalog-decision-history.test.mjs",
       "scripts/__tests__/catalog-list-audit.test.mjs",
       "scripts/__tests__/checkout-amount-postgres.mjs",
       "scripts/__tests__/checkout-money-http.mjs",
@@ -302,7 +301,6 @@
       "scripts/build-ui-with-install.sh",
       "scripts/capture-feature-audit-visuals.mjs",
       "scripts/capture-music-directory-visuals.mjs",
-      "scripts/catalog-decision-history.mjs",
       "scripts/catalog-list-audit.mjs",
       "scripts/check-admin-guards.py",
       "scripts/check-api-availability.mjs",
@@ -370,7 +368,6 @@
       "scripts/interactions/test-schema.sh",
       "scripts/lib/alloy-controls.mjs",
       "scripts/lib/auth_throttle_http.py",
-      "scripts/lib/catalog-decision-history.mjs",
       "scripts/lib/compiled-api-surface.mjs",
       "scripts/lib/continuous-improvement-loop-verify.mjs",
       "scripts/lib/continuous-improvement-loop.mjs",
@@ -1679,13 +1676,19 @@
       "tdf-hq-ui/src/routes/publicRoutes.tsx",
       "tdf-hq-ui/src/services/cartSummary.test.ts",
       "tdf-hq-ui/src/services/cartSummary.ts",
+      "tdf-hq-ui/src/services/chatkit.test.ts",
+      "tdf-hq-ui/src/services/chatkit.ts",
+      "tdf-hq-ui/src/services/directoryPreviewImage.ts",
       "tdf-hq-ui/src/services/googleDrive.compatibility.test.ts",
       "tdf-hq-ui/src/services/googleDrive.recovery.test.ts",
       "tdf-hq-ui/src/services/googleDrive.ts",
       "tdf-hq-ui/src/services/instagramAuth.test.ts",
       "tdf-hq-ui/src/services/instagramAuth.ts",
+      "tdf-hq-ui/src/services/merchImage.ts",
       "tdf-hq-ui/src/services/storageCredentials.test.ts",
       "tdf-hq-ui/src/services/storageCredentials.ts",
+      "tdf-hq-ui/src/services/tidalAgent.test.ts",
+      "tdf-hq-ui/src/services/tidalAgent.ts",
       "tdf-hq-ui/src/services/videoAttribution.test.ts",
       "tdf-hq-ui/src/services/videoAttribution.ts",
       "tdf-hq-ui/src/session/EventMemoryOwnership.integration.test.tsx",
@@ -1739,8 +1742,6 @@
       "tdf-hq-ui/src/utils/bottomDock.ts",
       "tdf-hq-ui/src/utils/chatReadState.test.ts",
       "tdf-hq-ui/src/utils/chatReadState.ts",
-      "tdf-hq-ui/src/utils/chatkit.test.ts",
-      "tdf-hq-ui/src/utils/chatkit.ts",
       "tdf-hq-ui/src/utils/checkoutStripe.ts",
       "tdf-hq-ui/src/utils/coursePriceInput.test.ts",
       "tdf-hq-ui/src/utils/coursePriceInput.ts",
@@ -1756,7 +1757,6 @@
       "tdf-hq-ui/src/utils/deviceTicketOrders.ts",
       "tdf-hq-ui/src/utils/directoryContactRouting.test.ts",
       "tdf-hq-ui/src/utils/directoryContactRouting.ts",
-      "tdf-hq-ui/src/utils/directoryPreviewImage.ts",
       "tdf-hq-ui/src/utils/directoryStatusLabel.test.ts",
       "tdf-hq-ui/src/utils/directoryStatusLabel.ts",
       "tdf-hq-ui/src/utils/domoQuoteAccess.ts",
@@ -1841,8 +1841,6 @@
       "tdf-hq-ui/src/utils/socialEventRoutes.ts",
       "tdf-hq-ui/src/utils/stringValues.test.ts",
       "tdf-hq-ui/src/utils/stringValues.ts",
-      "tdf-hq-ui/src/utils/tidalAgent.test.ts",
-      "tdf-hq-ui/src/utils/tidalAgent.ts",
       "tdf-hq-ui/src/utils/torrentAudio.test.ts",
       "tdf-hq-ui/src/utils/torrentAudio.ts",
       "tdf-hq-ui/src/utils/torrentWorker.test.ts",
@@ -4129,7 +4127,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "5fe81add4eef1c0bfddb256fa9425ec65865e2e9ae8025950879f49c60f814a6",
+      "sha256": "3b75451201352914e57227c19008fee7c8e8747ff00bf81ae3a43a7a3512fa6b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4205,15 +4203,9 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-06d2d6277df17fbc",
-      "path": "scripts/__tests__/catalog-decision-history.test.mjs",
-      "sha256": "9ad3bbd3935b32fe1c9ebd8dc9c3a69ac14087b4476c1ef710af6b1ddbfa2bcd",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "fc016d403d5fde53b380852cafbcc27b9eabe9484b17dff0380f53945271c81c",
+      "sha256": "c00b6cc4f77cdfaecd99dc8edcd08e2be7494054bc3937b0ff0ab726c56e88de",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5015,12 +5007,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-ca761aa510f5ae58",
-      "path": "scripts/catalog-decision-history.mjs",
-      "sha256": "5582b801a0cbbbb9bd754dc9a7a89a10340ea768083157e0ec136fbbcef7fb9a",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-74289e89f4a7d171",
       "path": "scripts/catalog-list-audit.mjs",
       "sha256": "0fe478a23657510ee4b447c089b1db245b055075e2fbe3e7802bdf4c418e66c1",
@@ -5161,7 +5147,7 @@
     {
       "id": "SURFACE-dcc180d2a4916e98",
       "path": "scripts/continuous-improvement-loop-verify.mjs",
-      "sha256": "cda066e5c99afe1f8d2018e559813afaf8814216c23ad7df7cb2b6d67a46be76",
+      "sha256": "2c25693b5cc8608695c2353f3a7e31f5ec918e02fbd670bb6f0bfaa2f2e7d96c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5420,12 +5406,6 @@
       "id": "SURFACE-e51d4870cffa2db7",
       "path": "scripts/lib/auth_throttle_http.py",
       "sha256": "c30b34ba0e5057b013ffd601421ed462c61a71e61e51e25f233e130d3c915989",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-87f61f7e51faf3c1",
-      "path": "scripts/lib/catalog-decision-history.mjs",
-      "sha256": "57c2b822b62515f22aaf324db783d46a0a83229b5ec3c32fe403da7444f383f7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9571,7 +9551,7 @@
     {
       "id": "SURFACE-85a789593d432274",
       "path": "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
-      "sha256": "0875707b1e3bbb8a2d239f8010d28acf6c00f0d2b4c8987bb6f9727903d26945",
+      "sha256": "88d0bc910d5475efcacd80343a2ca22c26deeed0877a1a8b33ee776d2b9f7b74",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9787,19 +9767,19 @@
     {
       "id": "SURFACE-d385ed9b2a05df5c",
       "path": "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
-      "sha256": "0f61ba07e4d1c71af5f550af67ada13232f96b00104a7a6f353582991353db61",
+      "sha256": "f9267cf851d329989385ba3d2d6a65fe8051273ca88eb7e0c13199217e550533",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f3829ea86f743f20",
       "path": "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
-      "sha256": "7173d17dab6abf84da8125d603f0cca08938932c52dc9d662adee5566173a4ab",
+      "sha256": "a0cf13c5031908e17c9262369e2cf40691f2fe6b522bfdc2d58a9f9cf668919e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "ecb3980cf1338692699e0d95e528fa6e5a629d644a1fdb09a81bda9be12c7084",
+      "sha256": "92b40034a5f656569d0a741bbf500988e3c56d5168f7670fb0e462d216c4cb4a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9859,7 +9839,7 @@
     {
       "id": "SURFACE-30ea18f2f9ded258",
       "path": "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
-      "sha256": "f9ab33b25f9332b9eb82d16d5c3fe90fa6e2aea7387a23af2b46117031695d0b",
+      "sha256": "18948d1de94e15e4dd011ff84ea20e8abfbd555143643fbc071bcb02aaa9768b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10057,7 +10037,7 @@
     {
       "id": "SURFACE-b9a225105c7c3965",
       "path": "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
-      "sha256": "dee2406544003d535d637f676003536c5268358eb2795bf2156a534da54d1996",
+      "sha256": "c5ed4498942c9877963be413fa3cf0935b79dcdfc379e694bd911dd0f45668f5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10069,7 +10049,7 @@
     {
       "id": "SURFACE-d7474e771e08a175",
       "path": "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx",
-      "sha256": "db2529edba3200186b347848aa0eee09fde91be1bfc5ff1002ee8ade2150677b",
+      "sha256": "2f0d87fa38e8332fcc43c538e161f15983e151834ea632a6ea60ada12a4a90c0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10657,7 +10637,7 @@
     {
       "id": "SURFACE-7c62d34c2753965f",
       "path": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
-      "sha256": "0afbcb02a8815f03c2680716215c33b4bc81ab174a35d53bdde9dfb8c21f5521",
+      "sha256": "0bc16de856444448355df561faa113516467ecf19abc45c7ab483ea99b5f7faf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11143,7 +11123,7 @@
     {
       "id": "SURFACE-925beea0bce49282",
       "path": "tdf-hq-ui/src/hooks/useChatKitScript.ts",
-      "sha256": "3b9d8cf8726cb28c69b1418649de257c9d1444f08436697fb98e2835105def4a",
+      "sha256": "9709e7772a436e059b6444328e7aa82b24f19619e5fca3ee012931c1f0745cb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11581,7 +11561,7 @@
     {
       "id": "SURFACE-7dcbd0bbd9154a13",
       "path": "tdf-hq-ui/src/pages/ChatKitPage.tsx",
-      "sha256": "9e7aff2369573d24dfb08dcf40e8fdcef3ee0a9df2baf1bbc31df0d964dad858",
+      "sha256": "49d877385e03884964f5e846aa00ace2ae861c1d32e300be8488eeee471eab11",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11755,7 +11735,7 @@
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "f044db59618c2b80c0cb634948e5bb101d1c5a02161d1fe6e032486aa447291d",
+      "sha256": "5b494fa55283cc129ee2a97c9368c8e20568a7e1d8c1a1fb72dc44cfbaadd021",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12229,7 +12209,7 @@
     {
       "id": "SURFACE-fd84edf3f19cbb72",
       "path": "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx",
-      "sha256": "903ab61924dab5e7fbb2f09243d99e4ca3adca8420a6c771fa93da9162913206",
+      "sha256": "8802decc6b0dc674157c812bbdb7cf3c6794d8d28a90990bff69a97480992d8f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12253,7 +12233,7 @@
     {
       "id": "SURFACE-50bc88ca100727b8",
       "path": "tdf-hq-ui/src/pages/MerchProductPage.tsx",
-      "sha256": "205a5f7d23588c210a3da95622b2f755396880dbd816986974e51b1b91666a0b",
+      "sha256": "67454737b7d4baefd16e5e1ded5fa5ab017209755376a988e8ece6685f2f1fba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12295,7 +12275,7 @@
     {
       "id": "SURFACE-c223f9f65297d13a",
       "path": "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
-      "sha256": "e257cb0a49e7a7773fc26e24fa9f5f93fb7a68167fca821228f344fa4ced8aa4",
+      "sha256": "7ca4ea0e0c5251120b9b75cce931ced2398540ed2019244a0a5aaf5f220cc4cd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12343,7 +12323,7 @@
     {
       "id": "SURFACE-a4131610c954eb01",
       "path": "tdf-hq-ui/src/pages/MusicMakerPage.tsx",
-      "sha256": "57da61c3585f03f15dfe98cfea806848d6a097e1f24eae4ca14fb26ad97f3722",
+      "sha256": "d495e6d8db40d2bb0865169b3f6fe5260db2c58eb217282267196498fda3ea97",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12823,7 +12803,7 @@
     {
       "id": "SURFACE-b3708173ec172c34",
       "path": "tdf-hq-ui/src/pages/TidalAgentPage.tsx",
-      "sha256": "60546da14ead5c38ee449806806b0cec2e7850783fdde8fd4856e4ee0dc67bab",
+      "sha256": "6735c4b7da713b82c799b364caedae41543cf4f978bb8b3fe5ef3d73a9c9562b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13229,6 +13209,24 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-da584b04b98ddce4",
+      "path": "tdf-hq-ui/src/services/chatkit.test.ts",
+      "sha256": "1dccb3233df93d94bbc29dc1dd3c9aa5ae671932fad79b68a0c3b98c28df9e0f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ed8d6a15f76d1ff3",
+      "path": "tdf-hq-ui/src/services/chatkit.ts",
+      "sha256": "aa9d12f21b3cfdd2c4ff4ff34cac5c478994e8eff297ee7a32fe83e9c98fa9c7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c31be98f2d9a2c86",
+      "path": "tdf-hq-ui/src/services/directoryPreviewImage.ts",
+      "sha256": "fbc84ab48e53593022775a4dd0958710db6f56ac2c159d5ed62eb6d6bbea75f2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-44afd8597edafbfa",
       "path": "tdf-hq-ui/src/services/googleDrive.compatibility.test.ts",
       "sha256": "8d274a9ae9ecfd3fb82a697f471120ecd7886a05c75cb0d9cba1c1ff8ff2591d",
@@ -13259,6 +13257,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-ebe88c638a51b4b1",
+      "path": "tdf-hq-ui/src/services/merchImage.ts",
+      "sha256": "2950624530a69e6941ab51047ab55ccfb54ea252503ce9376fe1758262512e3c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-68cc8430d447a4af",
       "path": "tdf-hq-ui/src/services/storageCredentials.test.ts",
       "sha256": "611f5d45537dee1acb779b309fd597b0a32d96d49f4618f9d4710101549161af",
@@ -13268,6 +13272,18 @@
       "id": "SURFACE-5b0333f721efcfc2",
       "path": "tdf-hq-ui/src/services/storageCredentials.ts",
       "sha256": "717325e86d79eae3f88e33f7b66ecff62fa9dae25d3b7c5c367ef3c85dde5bf1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-98a0471575f01124",
+      "path": "tdf-hq-ui/src/services/tidalAgent.test.ts",
+      "sha256": "bdb7b4139d0897760429bb1444cb1c329b62319312e2fe04c6d7bab9496aaae2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f174cc3a47be1331",
+      "path": "tdf-hq-ui/src/services/tidalAgent.ts",
+      "sha256": "dbe5c9d15ec4f2a6d9c45ac96266579fddc45ed423e858f6037acb82b5e580bd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13589,18 +13605,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-e7bd26890a222487",
-      "path": "tdf-hq-ui/src/utils/chatkit.test.ts",
-      "sha256": "1dccb3233df93d94bbc29dc1dd3c9aa5ae671932fad79b68a0c3b98c28df9e0f",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-90b9bd720574a571",
-      "path": "tdf-hq-ui/src/utils/chatkit.ts",
-      "sha256": "aa9d12f21b3cfdd2c4ff4ff34cac5c478994e8eff297ee7a32fe83e9c98fa9c7",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-3bd1e7eea819bcf8",
       "path": "tdf-hq-ui/src/utils/checkoutStripe.ts",
       "sha256": "1c074e0363401634344800112291a32552aba9a1244dd7986c54257f05af24b2",
@@ -13688,12 +13692,6 @@
       "id": "SURFACE-ee4de6bae5ebb7e0",
       "path": "tdf-hq-ui/src/utils/directoryContactRouting.ts",
       "sha256": "aab47ec50fb90d092402f7c7d9ae00bf61b9a539962370cb8db616474cdbc941",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-bb88b59d02aa9172",
-      "path": "tdf-hq-ui/src/utils/directoryPreviewImage.ts",
-      "sha256": "4b8021888eb9b3d4af5bc955cd613641bc8668e9ddb99eaa819b3583ff395605",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14011,7 +14009,7 @@
     {
       "id": "SURFACE-69214ab4dd4d9619",
       "path": "tdf-hq-ui/src/utils/merch.ts",
-      "sha256": "a4da12769d4b44015b4dc0e78194989fd56149f27fb0e06554506b895563e430",
+      "sha256": "856534cd0a75a19eac6e0fbffe6cddf954f1f6a60ca79d658d6c7c2e3e911872",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14198,18 +14196,6 @@
       "id": "SURFACE-131656bc7b0c9088",
       "path": "tdf-hq-ui/src/utils/stringValues.ts",
       "sha256": "bb37dcd6a7ab5824a49761f9cee589aa43be29ca95a3bcef9b9aa356e69b5858",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-0ac75bd9c2678a24",
-      "path": "tdf-hq-ui/src/utils/tidalAgent.test.ts",
-      "sha256": "bdb7b4139d0897760429bb1444cb1c329b62319312e2fe04c6d7bab9496aaae2",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-b4e27fc326828984",
-      "path": "tdf-hq-ui/src/utils/tidalAgent.ts",
-      "sha256": "b35a74c2ac0f386ad40e738e756a810a9bee6c15321bd5a61820de8e38bca9bd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23533,7 +23519,7 @@
     },
     {
       "path": "docs/adr/0133-enforced-module-boundaries.md",
-      "sha256": "1ad8bee679ad95b168f4e90a57d073191cf34eb12c198244bb2d952d19321db8",
+      "sha256": "e3dee74c7da16d5da2deebc6acae6775d9064322046712bc3871e313f6d22830",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23715,7 +23701,7 @@
     },
     {
       "path": "docs/catalog-persistence/README.md",
-      "sha256": "808e0f0fa3f86525cfc7ef729e24ecf9850c6b58c88bb73b1c18b6ba1376b555",
+      "sha256": "a373acea2f4f04a453c52a38cd1c77383586c1c5f75ca8f8f008a0e7c774f604",
       "authority": "inferred",
       "authorityBasis": "Status: implementation in progress. This directory records the immutable baseline, architecture,",
       "kind": "requirement-candidate"
@@ -32577,7 +32563,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "292b6bee6a78a427f992f004e9f66fa346c54b31e87024cb574804d025af3b98",
+      "sha256": "adb3cf49f4de53d7d3e1479f194eb68a6ff6a7e7d4dcaa9adc8bfc3ec224a369",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
