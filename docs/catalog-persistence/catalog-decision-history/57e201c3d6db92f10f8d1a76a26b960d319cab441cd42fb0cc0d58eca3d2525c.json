@@ -1,0 +1,26 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "59a6c2f1ad6d61a54f96",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "studio-gallery-storage-integration",
+  "justification": "Append the studio gallery seed after the reviewed storage identity guards, preserving both original SQL introductions and complete parent reviews.",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 262
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:bf108393c08def26f949d45b305bec6da83df6ab14504e6362ce0b7489672a97"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:9aeb2180100432499d9bd1d33a4ef3a707a21966e8f82e716d4e41e9182eee0b"
+    }
+  ]
+}

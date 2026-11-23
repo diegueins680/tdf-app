@@ -1,0 +1,10 @@
+{
+  "id": "d98b80c87ee6f14c72ec",
+  "classification": "dynamic-business-catalog",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "navigation_item, navigation_item_permission",
+  "priority": "P1-cross-platform",
+  "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+  "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+  "reviewed": true
+}

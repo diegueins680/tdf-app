@@ -258,6 +258,7 @@ library
     TDF.ServerFeedback
     TDF.ServerRadio
     TDF.ServerFanClub
+    TDF.Fans.FeedAffinity
     TDF.ServerFuture
     TDF.Routes.Courses
     TDF.Routes.DomoQuotes
@@ -279,6 +280,8 @@ library
     TDF.Catalog.Seed
     TDF.Catalog.Types
     TDF.Directory.Policy
+    TDF.Directory.SemanticIndex
+    TDF.Directory.SemanticSearch
     TDF.DDEX.Types
     TDF.DDEX.Models
     TDF.DDEX.DB
@@ -468,6 +471,8 @@ test-suite tdf-hq-test
     TDF.Catalog.RecordsSpec
     TDF.Catalog.PipelineSpec
     TDF.Directory.PolicySpec
+    TDF.Directory.SemanticSearchPostgresSpec
+    TDF.Directory.SemanticSearchSpec
     TDF.Profiles.ArtistSpec
     TDF.Profiles.ArtistActivationSpec
     TDF.Server.MerchRuntimeSpec
@@ -479,6 +484,7 @@ test-suite tdf-hq-test
     TDF.AppleSignInSpec
     TDF.ServerExtraSpec
     TDF.ServerFanClubSpec
+    TDF.Fans.FeedAffinitySpec
     TDF.Fans.ArtistRecommendationsSpec
     TDF.Fans.ArtistSimilaritySpec
     TDF.ServerSpec

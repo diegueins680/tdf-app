@@ -29,8 +29,9 @@ httpTestConfig = AppConfig
   , sessionTokenTtlSeconds = 3600
   , stripeSecretKey = Nothing, stripePublishableKey = Nothing, stripeWebhookSecret = Nothing
   , contextualReputationEnabled = False, publicReputationProjectionEnabled = False
+  , directorySemanticSearchEnabled = False
   , singleFeatureOnboardingExperimentEnabled = False
-  , eventDiscoveryEnabled = False, eventDiscoveryAutoPublish = False, eventDiscoveryPilotLimit = 1
+  , fanFeedAffinityEnabled = False, eventDiscoveryEnabled = False, eventDiscoveryAutoPublish = False, eventDiscoveryPilotLimit = 1
   , ticketmasterApiKey = Nothing, ticketmasterApiBase = disabledEndpoint
   , eventDiscoveryLookaheadDays = 1, eventDiscoveryMaxPagesPerCity = 1, eventDiscoveryHourLocal = 0
   , eventDiscoveryCountryCode = Nothing, googleRoutesApiKey = Nothing, googleRoutesApiBase = disabledEndpoint

@@ -1,0 +1,22 @@
+{
+  "id": "0cfb8aa20b474bac72fd",
+  "classification": "dynamic-business-catalog",
+  "disposition": "historical-evidence-replaced-by-forward-migration",
+  "specializedModel": "domain-specific catalog table selected during consumer refactor",
+  "priority": "P1-cross-platform",
+  "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+  "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
+    "line": 378,
+    "kind": "sql-check-values",
+    "name": "CHECK IN",
+    "valueCount": 9,
+    "consumerCount": 284,
+    "exactDuplicateIds": [],
+    "similarCandidateIds": []
+  }
+}

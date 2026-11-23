@@ -1,0 +1,26 @@
+{
+  "id": "4b9923e0291fcb70bfb4",
+  "classification": "genuine-technical-constant",
+  "disposition": "explicit-allowlist",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P1-integrity",
+  "risk": "Changing immutable migration order or source identity can prevent safe startup and recovery.",
+  "justification": "Reviewed 246-entry ordered release protocol: preserve the exact 244-entry main prefix, append the previously introduced featured preference (1f1b5a4855) and source-health migration introduced in 46fd778c0. No applied SQL or old introduction changes. Application rollback retains source observations and the invalidity gate.",
+  "reviewed": true,
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 246
+  },
+  "reviewBatch": "universal-player-2026-11-06",
+  "previousDecision": {
+    "$historyRef": "sha256:13f2f6314586e76ad314b8d99b15391b092a16355472baa7f87977c21f17bb3d"
+  },
+  "concurrentPreviousDecisions": [
+    {
+      "$historyRef": "sha256:999ecf4a4c9d2dd3d3501db983cd35277011ff16cf7c3c3fdd1b2d7ee35fc0fa"
+    }
+  ]
+}

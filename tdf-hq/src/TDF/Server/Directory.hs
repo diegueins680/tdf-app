@@ -8,12 +8,14 @@ module TDF.Server.Directory
   ( directoryPublicServer
   , directoryProtectedServer
   , consumeRate
+  , searchSql
   , startAgreementDepositExpiryJob
   ) where
 
 import Control.Applicative ((<|>))
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Exception (SomeException, try)
+import Control.Exception.Safe (tryAny)
 import Control.Monad (forM_, forever, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, asks)
@@ -46,8 +48,11 @@ import TDF.API.Directory
 import TDF.Auth (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
 import qualified TDF.CMS.Models as CMS
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import TDF.Config (AppConfig(..))
 import TDF.DB (Env(..))
 import TDF.Directory.Policy
+import TDF.Directory.SemanticIndex (resolveQueryEmbedding)
+import TDF.Directory.SemanticSearch (plannedSearch, searchPlan)
 import TDF.Server.DirectoryAgreementText
 import TDF.Models (RoleEnum(Admin))
 import qualified TDF.Models.SocialEventsModels as Social
@@ -120,8 +125,24 @@ searchDirectory mQuery mEntityType mCityId mLatitude mLongitude mRadiusKm
         , optionalText intent
         ]
       eventVisibilityParams = [PersistText Social.externalEventRefSuppressedStatus]
-  ranked <- jsonRows (searchSql False) (commonParams <> eventVisibilityParams <> [optionalText cursor, PersistInt64 (fromIntegral (limit + 1))])
-  sponsored <- jsonRows (searchSql True) (commonParams <> eventVisibilityParams <> [PersistNull, PersistInt64 3])
+  -- DIR-SEMANTIC-SEARCH-001: with the flag off, or without a query
+  -- embedding, the plan is lexical and both statements are today's.
+  cfg <- asks envConfig
+  pool <- asks envPool
+  queryEmbedding <- liftIO (resolveQueryEmbedding cfg pool query)
+  let plan = searchPlan (directorySemanticSearchEnabled cfg) queryEmbedding
+      rankedParams = [optionalText cursor, PersistInt64 (fromIntegral (limit + 1))]
+      sponsoredParams = [PersistNull, PersistInt64 3]
+      searchRows sponsoredOnly tailParams = do
+        let lexical = searchSql sponsoredOnly
+            (statement, semanticParams) = plannedSearch plan lexical
+            run sql extra = runSqlPool (rawSql sql (commonParams <> map PersistText extra <> eventVisibilityParams <> tailParams) :: SqlPersistT IO [Single CMS.AesonValue]) pool
+        rows <- if null semanticParams
+          then liftIO (run lexical [])
+          else liftIO (tryAny (run statement semanticParams) >>= either (const (run lexical [])) pure)
+        pure [CMS.unAesonValue value | Single value <- rows]
+  ranked <- searchRows False rankedParams
+  sponsored <- searchRows True sponsoredParams
   facetRows <- jsonRows facetsSql (commonParams <> eventVisibilityParams)
   let visible = take limit ranked
       next = if length ranked > limit then valueCursor (last visible) else Nothing

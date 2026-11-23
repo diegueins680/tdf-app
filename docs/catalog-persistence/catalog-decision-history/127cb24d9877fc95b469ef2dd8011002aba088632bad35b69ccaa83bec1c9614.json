@@ -1,0 +1,10 @@
+{
+  "id": "c0525989deca2a62a658",
+  "classification": "governed-reference-data",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "navigation_item, navigation_item_permission",
+  "priority": "P1-cross-platform",
+  "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+  "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+  "reviewed": true
+}

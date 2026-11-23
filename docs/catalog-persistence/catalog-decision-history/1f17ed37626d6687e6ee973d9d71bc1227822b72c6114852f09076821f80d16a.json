@@ -1,0 +1,21 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "555cf6fbf926c0b2ceab",
+  "reviewed": true,
+  "justification": "Preserve all 262 migration objects of the previously reviewed manifest in exact order and append only 2026-11-20_course_follow_up_reminder_delivery, an additive table for course follow-up reminder claims, introduced by 7da005edcdcce714343d3bbf7273fc31dd0743f4. No applied SQL is rewritten. This is an author review of the deployment registry composition; it does not authorize applying migrations or release and supplies no independent approval.",
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "course-follow-up-reminders-2026-11-20",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 263
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:57e201c3d6db92f10f8d1a76a26b960d319cab441cd42fb0cc0d58eca3d2525c"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "9fca63dce34f8900c6a4",
+  "classification": "dynamic-business-catalog",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "navigation_item, navigation_item_permission",
+  "priority": "P1-cross-platform",
+  "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+  "justification": "The social sidebar group renames the /social/eventos entry from 'Eventos sociales' to 'Eventos' so events have one navigation label. Routes and access are unchanged; persisting navigation remains the reviewed migration target.",
+  "reviewed": true,
+  "evidence": {
+    "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+    "line": 163
+  },
+  "reviewBatch": "events-nav-carousel-2026-10-08",
+  "reviewMethod": "successor-of-reviewed-decision",
+  "previousDecision": {
+    "$historyRef": "sha256:f997c3f18e5bdf55c7dd587d807a05f1a2482a7b5787e3a1e2a4f4cda6438970"
+  }
+}

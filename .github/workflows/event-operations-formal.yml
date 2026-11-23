@@ -90,6 +90,8 @@ jobs:
         run: python formal/payments/checkout_money_arithmetic.py
       - name: Prove deposit policy lemmas and negative controls
         run: python formal/payments/deposit_policy_arithmetic.py
+      - name: Prove feed affinity ranking lemmas and negative controls
+        run: python formal/social/feed_affinity_arithmetic.py
       - name: Prove provider binding admission and conjunct necessity
         run: python formal/payments/provider_binding_admission.py
       - name: Prove PlaceToPay query admission, exact minor units and guard necessity
@@ -104,6 +106,8 @@ jobs:
         run: python formal/payments/stripe_ticket_capture.py
       - name: Prove hosted dead-letter review coverage and guard necessity
         run: python formal/payments/hosted_dead_letter_review.py
+      - name: Prove directory ranking tiers, semantic fallback and guard necessity
+        run: python formal/directory/semantic_rank.py
       - name: Prove artist similarity ranking exclusions and total order
         run: python formal/fans/artist_similarity_ranking.py
       - name: Generate formal assurance and release decision
@@ -227,6 +231,9 @@ jobs:
 
       - name: Check public artist visibility SQL on isolated PostgreSQL
         run: sh scripts/test-artist-visibility-postgres.sh
+
+      - name: Check feed affinity evidence SQL on isolated PostgreSQL
+        run: sh scripts/test-feed-affinity-postgres.sh
 
       - name: Check fan recommendation SQL on isolated PostgreSQL
         run: sh scripts/test-fan-recommendations-postgres.sh
