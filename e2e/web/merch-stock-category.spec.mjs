@@ -103,7 +103,7 @@ for (const [language, round] of [['es', 0], ...Array.from({ length: 12 }, (_, i)
     await expect.poll(() => writes.length).toBe(4); await expect(stock).toHaveValue('9');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
-  test(`merch category labels retain raw filter codes, ${language} @critical @mobile-flow`, async ({ page, baseURL }, info) => {
+  test(`merch category labels retain raw filter codes, ${language} #${round} @critical @mobile-flow`, async ({ page, baseURL }, info) => {
     const { writes, reads } = await fixture(page, baseURL, language);
     await page.goto('/tiendas');
     await page.getByRole('combobox', { name: new RegExp('^'+category) }).click(); await page.getByRole('option', { name: en ? 'Bundle' : 'Paquete', exact: true }).click();
