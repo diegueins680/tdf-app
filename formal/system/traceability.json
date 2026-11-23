@@ -12794,7 +12794,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Ranking envelope and index invariants proved for their models and exercised on PostgreSQL with a stand-in provider; HTTP-level checks with the flag on, a profile-row fixture and hosted CI receipts remain; the flag stays off in production by owner decision."
+        "reason": "Ranking envelope and index invariants proved for their models and exercised on PostgreSQL with a stand-in provider; HTTP-level checks with the flag on, a profile-row fixture and hosted CI receipts remain; the owner set the flag in the production environment file on 2026-11-23; it takes effect only once production runs a build with this change and the migration is applied."
       },
       "historicalStatus": null
     },
@@ -94875,7 +94875,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fac9403e0169226e28ee05a3989c88cadb72c4f94664c149aa21e5d06148f30e",
+      "sourceSha256": "b94cf157e76b2649c7c5b2df4dabff021f3a1c012060baf443516bf1baf2850d",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -94903,7 +94903,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fac9403e0169226e28ee05a3989c88cadb72c4f94664c149aa21e5d06148f30e",
+      "sourceSha256": "b94cf157e76b2649c7c5b2df4dabff021f3a1c012060baf443516bf1baf2850d",
       "definition": {
         "states": [
           "absent",
@@ -94933,7 +94933,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "fac9403e0169226e28ee05a3989c88cadb72c4f94664c149aa21e5d06148f30e",
+      "sourceSha256": "b94cf157e76b2649c7c5b2df4dabff021f3a1c012060baf443516bf1baf2850d",
       "definition": {
         "export": [
           "queued",

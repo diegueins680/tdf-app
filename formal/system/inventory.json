@@ -31856,7 +31856,7 @@
     },
     {
       "path": "formal/system/directory-semantic-search.md",
-      "sha256": "043058dba2f6f900517612ead7fe7ae1b4b8f2e7f4ad1494adeb490928c83a0b",
+      "sha256": "547762a097bbe3f12375ebe10cf731ae726b4ac5817e2d3884434f746f2e710d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32661,7 +32661,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "fac9403e0169226e28ee05a3989c88cadb72c4f94664c149aa21e5d06148f30e",
+      "sha256": "b94cf157e76b2649c7c5b2df4dabff021f3a1c012060baf443516bf1baf2850d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

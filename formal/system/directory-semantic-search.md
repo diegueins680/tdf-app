@@ -197,8 +197,11 @@ Taken on 2026-11-22, each the recommended default:
 - The pattern-match redaction of contact details stands.
 - A page ordered with a query embedding followed by one ordered without it may repeat
   or skip an item; accepted.
-- The flag stays off in production. Turning it on is a separate, explicit decision
-  after the migration is applied there.
+- The flag stays off by default. On 2026-11-23 the owner decided to turn it on in
+  production: `DIRECTORY_SEMANTIC_SEARCH_ENABLED=true` is set in the production API
+  environment file. It has no effect until production runs a backend build that
+  contains this change, and the feature stays inert until the migration is applied
+  there.
 
 ## Still open
 
