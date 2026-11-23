@@ -2793,6 +2793,7 @@
       "tdf-hq/test/TDF/Server/EventResearchSpec.hs",
       "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
       "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs",
+      "tdf-hq/test/TDF/Server/PublicBookingNotificationsSpec.hs",
       "tdf-hq/test/TDF/ServerAdminSpec.hs",
       "tdf-hq/test/TDF/ServerAuthSpec.hs",
       "tdf-hq/test/TDF/ServerExtraSpec.hs",
@@ -18939,7 +18940,7 @@
     {
       "id": "SURFACE-e6a81cd4686d612d",
       "path": "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs",
-      "sha256": "e0716a47f555d27e774694ebe97ca81593b4a1b4a9f12f6e3b86adf257f246b9",
+      "sha256": "055ce356e9bed865142443faa0564068140666e63fee0d1aef603d98b3c37941",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19365,7 +19366,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "463d29cae8a590b7c4cc9958fdb001fd4df0f434cd6c296a58cf734395d48507",
+      "sha256": "bb0842e5aba9cd5040b8a00f7efca6edc0c4b55cacbf5badd0ddc8a5fc748ef9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19443,7 +19444,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "ed5218631cf32a371b46324e7b3c0f4b5cdaf49487b183b414de15a5da04f5e0",
+      "sha256": "fb16a79a9d25d414ba29bfe59dfe5136cd0c739fe735ff352040266d5047578c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19900,6 +19901,12 @@
       "id": "SURFACE-c823af87bc95031c",
       "path": "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs",
       "sha256": "eb5ef47f63c9a53124d0cac7c5b2bbf6a20ceee47d64a2f028c4d3730443801b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d7671e17d5e5026c",
+      "path": "tdf-hq/test/TDF/Server/PublicBookingNotificationsSpec.hs",
+      "sha256": "5ae99dd14686c6786f79f478186928d48408c8358e4466513a007a1a5f57d672",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31639,7 +31646,7 @@
     },
     {
       "path": "formal/system/bookings-routes.md",
-      "sha256": "b93488923ec5cb199938c933d5d6c31843c9f3636a394c877a847e39b8c9e902",
+      "sha256": "cae573b63e36538ebf6c22b27af1018b51364bd738bf8563789ff1c865ad0e01",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32647,7 +32654,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c9cc5f566a92e034c771edd492285a74a521a3098d0e3977dbfe166e83c33fce",
+      "sha256": "8bf039dd58bf73942d9dd5dd60442b01abb2f8c50f291f5a0b69f9619c623953",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
