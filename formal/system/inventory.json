@@ -32010,7 +32010,7 @@
     },
     {
       "path": "formal/system/friend-suggestions-pagerank.md",
-      "sha256": "3cf26056d907525aa2be83c27b1af05fe19a3171214078a8083d87cafa957761",
+      "sha256": "2d6a0ea33342d7b4000838e8debf349572c08f0ca7ea2c3b534ed7caa6b14950",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
