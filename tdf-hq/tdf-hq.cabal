@@ -487,6 +487,7 @@ test-suite tdf-hq-test
     TDF.ServerProposalsSpec
     TDF.Social.FollowHandlerSpec
     TDF.Server.EventRelationsSpec
+    TDF.Server.PublicBookingNotificationsSpec
     TDF.Social.FollowSpec
     TDF.Services.EventDiscoverySpec
     TDF.Services.YouTubeSpec
