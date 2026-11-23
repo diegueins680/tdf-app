@@ -8,7 +8,8 @@ import { Merch } from '../api/merch';
 import { MerchReputation } from '../api/merchReputation';
 import { MerchReputationSummary } from '../components/merch/MerchReputationSummary';
 import { useMetaTags } from '../hooks/useMetaTags';
-import { merchCategoryLabel, formatMerchMoney, merchLanguage, resolveMerchImageUrl } from '../utils/merch';
+import { merchCategoryLabel, formatMerchMoney, merchLanguage } from '../utils/merch';
+import { resolveMerchImageUrl } from '../services/merchImage';
 
 const categories = ['', 'apparel', 'vinyl', 'cd', 'cassette', 'poster', 'accessory', 'limited_edition', 'bundle'] as const;
 
