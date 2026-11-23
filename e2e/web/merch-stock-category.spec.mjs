@@ -57,9 +57,10 @@ async function inspect(page, field) {
   expect(await field.evaluate(async node => (await globalThis.axe.run(node.closest('.MuiFormControl-root'), { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] } })).violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.failureSummary) })))).toEqual([]);
 }
 
-for (const language of ['es', 'en']) {
+// DIAGNOSTIC ONLY (not for merge): repeat the English journey and dump page state when the Stock field is missing.
+for (const [language, round] of [['es', 0], ...Array.from({ length: 12 }, (_, i) => ['en', i])]) {
   const en = language === 'en', category = en ? 'Category' : 'Categoría', limited = en ? 'Limited edition' : 'Edición limitada';
-  test(`merch stock edits stay explicit and versioned, ${language} @critical @mobile-flow`, async ({ page, baseURL }, info) => {
+  test(`merch stock edits stay explicit and versioned, ${language} #${round} @critical @mobile-flow`, async ({ page, baseURL }, info) => {
     // Draft rejection/retry plus a stock conflict, reload and retry are one journey.
     test.setTimeout(60_000);
     const { writes } = await fixture(page, baseURL, language);
@@ -73,6 +74,17 @@ for (const language of ['es', 'en']) {
     await draft.getByRole('combobox', { name: new RegExp('^'+category) }).click(); await page.getByRole('option', { name: limited, exact: true }).click();
     const quantity = draft.getByRole('textbox', { name: 'Stock', exact: true }), weight = draft.getByRole('textbox', { name: en ? 'Weight (grams)' : 'Peso (gramos)', exact: true });
     const save = draft.getByRole('button', { name: en ? 'Save draft' : 'Guardar borrador', exact: true });
+    await quantity.waitFor({ timeout: 12000 }).catch(async error => {
+      const state = await page.evaluate(() => ({
+        htmlLang: document.documentElement.lang, storedLocale: localStorage.getItem('tdf-hq-ui/locale'),
+        headings: [...document.querySelectorAll('h1,h2,h3')].map(h => h.textContent),
+        listboxes: document.querySelectorAll('[role=listbox]').length, ariaHiddenRoot: document.getElementById('root')?.getAttribute('aria-hidden'),
+        labels: [...document.querySelectorAll('form label')].map(l => l.textContent), active: document.activeElement?.outerHTML.slice(0, 200),
+        categoryText: [...document.querySelectorAll('form [role=combobox]')].map(c => c.textContent),
+      })).catch(e => ({ evaluateFailed: String(e) }));
+      console.log('MERCH-DIAG ' + info.project.name + ' ' + JSON.stringify(state));
+      throw error;
+    });
     await quantity.fill(''); await expect(save).toBeDisabled(); await expect(quantity).toHaveValue(''); await inspect(page, quantity);
     await page.screenshot({ path: info.outputPath('merch-stock-inline-error.png') });
     await quantity.fill('21474836470'); await expect(save).toBeDisabled(); await expect(quantity).toHaveValue('21474836470');
