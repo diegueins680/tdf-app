@@ -8930,7 +8930,8 @@
         "e2e/web/fixtures/native-music-setup.mjs",
         "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
         "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
-        "e2e/web/radio-navigation.spec.mjs"
+        "e2e/web/radio-navigation.spec.mjs",
+        "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx"
       ],
       "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness.",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
@@ -10164,7 +10165,7 @@
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/utils/directoryPreviewImage.ts",
+        "tdf-hq-ui/src/services/directoryPreviewImage.ts",
         "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
@@ -15377,6 +15378,7 @@
         "tdf-hq-ui/src/pages/MerchProductPage.tsx",
         "tdf-hq-ui/src/pages/MerchReputationPage.tsx",
         "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
+        "tdf-hq-ui/src/services/merchImage.ts",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
         "tdf-hq-ui/src/pages/NotificationPage.tsx",
         "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
@@ -24000,10 +24002,15 @@
       "implementation": [
         "tdf-hq/src/TDF/Server/SocialDiscovery.hs",
         "tdf-hq/src/TDF/Server/SocialSync.hs",
-        "tdf-hq/src/TDF/Server.hs"
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
+        "tdf-hq-ui/src/hooks/useChatKitScript.ts",
+        "tdf-hq-ui/src/pages/ChatKitPage.tsx",
+        "tdf-hq-ui/src/services/chatkit.ts"
       ],
       "tests": [
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq-ui/src/services/chatkit.test.ts"
       ],
       "formalModels": [],
       "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
@@ -24989,10 +24996,14 @@
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
-        "tdf-hq/src/TDF/Server.hs"
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq-ui/src/services/tidalAgent.ts",
+        "tdf-hq-ui/src/pages/TidalAgentPage.tsx",
+        "tdf-hq-ui/src/pages/MusicMakerPage.tsx"
       ],
       "tests": [
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq-ui/src/services/tidalAgent.test.ts"
       ],
       "formalModels": [],
       "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
@@ -28166,7 +28177,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "The ratchet is enforced; 8 backend imports, 7 web imports and 16 oversized files remain listed debt."
+        "reason": "The ratchet is enforced; 8 backend imports, 2 web imports and 16 oversized files remain listed debt."
       },
       "authority": "User request 2026-11-10; layer definitions and limits are an engineering decision recorded in ADR 0133, owner confirmation pending.",
       "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",

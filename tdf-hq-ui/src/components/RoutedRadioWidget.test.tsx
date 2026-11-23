@@ -19,7 +19,7 @@ jest.unstable_mockModule('../api/radio', () => ({ RadioAPI: {
 jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: {
   listItems: jest.fn(async () => ({ items: [], total: 0 })),
 } }));
-jest.unstable_mockModule('../utils/tidalAgent', () => ({ generateTidalCode: jest.fn() }));
+jest.unstable_mockModule('../services/tidalAgent', () => ({ generateTidalCode: jest.fn() }));
 const { default: RoutedRadioWidget } = await import('./RoutedRadioWidget');
 
 const destinations = ['/inicio', '/marketplace', '/musica', '/configuracion/inscripciones-curso', '/records', '/fans', '/solicitudes-acceso/revision'];
