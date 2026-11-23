@@ -858,6 +858,12 @@ test('dated-UX-parent: main-parent: decision reconciliation preserves reviewed e
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,
       reviewBatch: 'unit-test-review',
+      // The removed review is kept as retirement provenance, so any history it
+      // references stays reachable in the content-addressed store.
+      sourceRemovalRetirements: [{
+        reason: 'Catalog refresh unit-test-review: these candidates are no longer in the static list inventory. Their full reviewed decisions are preserved here as history; no catalog values are affected.',
+        decisions: [{ ...preserved, id: 'stale-id' }],
+      }],
     });
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
@@ -2463,6 +2469,12 @@ test('dated-UX-parent: UX-parent: decision reconciliation preserves reviewed ent
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,
       reviewBatch: 'unit-test-review',
+      // The removed review is kept as retirement provenance, so any history it
+      // references stays reachable in the content-addressed store.
+      sourceRemovalRetirements: [{
+        reason: 'Catalog refresh unit-test-review: these candidates are no longer in the static list inventory. Their full reviewed decisions are preserved here as history; no catalog values are affected.',
+        decisions: [{ ...preserved, id: 'stale-id' }],
+      }],
     });
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
@@ -4103,6 +4115,12 @@ test('dated-storage-parent: refund-parent: decision reconciliation preserves rev
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,
       reviewBatch: 'unit-test-review',
+      // The removed review is kept as retirement provenance, so any history it
+      // references stays reachable in the content-addressed store.
+      sourceRemovalRetirements: [{
+        reason: 'Catalog refresh unit-test-review: these candidates are no longer in the static list inventory. Their full reviewed decisions are preserved here as history; no catalog values are affected.',
+        decisions: [{ ...preserved, id: 'stale-id' }],
+      }],
     });
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
@@ -5708,6 +5726,12 @@ test('dated-storage-parent: storage-parent: decision reconciliation preserves re
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,
       reviewBatch: 'unit-test-review',
+      // The removed review is kept as retirement provenance, so any history it
+      // references stays reachable in the content-addressed store.
+      sourceRemovalRetirements: [{
+        reason: 'Catalog refresh unit-test-review: these candidates are no longer in the static list inventory. Their full reviewed decisions are preserved here as history; no catalog values are affected.',
+        decisions: [{ ...preserved, id: 'stale-id' }],
+      }],
     });
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
