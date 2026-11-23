@@ -6688,7 +6688,7 @@ test('directory semantic search appends its migration after the chat delivery mi
   const { stdout } = await integrationExec('git', ['show', added.introducedBy + ':' + added.path], { cwd: integrationRoot });
   assert.equal(await fs.readFile(path.join(integrationRoot, added.path), 'utf8'), stdout);
   const reviewFile = 'docs/catalog-persistence/catalog-list-decisions.json';
-  const decisions = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8')).decisions;
+  const decisions = readExpandedDecisions(integrationRoot).decisions;
   // The register on main is larger than the shared helper's buffer.
   const published = await integrationExec('git', ['show', main + ':' + reviewFile],
     { cwd: integrationRoot, maxBuffer: 512 * 1024 * 1024 });
