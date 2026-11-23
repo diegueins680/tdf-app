@@ -12727,7 +12727,7 @@
       ],
       "forbiddenTransitions": [
         "Returning a document because it has an embedding",
-        "Storing or keeping an embedding for a search document that is not published, public and allowed",
+        "Storing an embedding for a search document that is not published, public, allowed, effective and unexpired, or keeping one past the next sweep",
         "Ranking with an embedding of other text, another provider or another model",
         "Sending text of a document that was not eligible when claimed, private fields, or an identifier of the caller",
         "Substituting a locally computed vector for a failed provider call",
@@ -12739,7 +12739,7 @@
       ],
       "authorization": "Public route, unchanged. The sweep runs in the API process with the application database role.",
       "privacy": "Only text the public directory already shows is sent, after removing what looks like an e-mail address or telephone number; queries are sent as text and cached under a SHA-256 key without the text. Search is not personalised: no per-user signal is read, so every caller receives the non-personalised result. Hidden, private, blocked, unlisted and merged documents are neither embedded nor returned.",
-      "concurrency": "The provider is called outside any transaction; the write locks the document row and rechecks eligibility and the text hash; a trigger deletes the embedding when the document is hidden or rewritten; the sweep purges what remains. Several processes may sweep concurrently.",
+      "concurrency": "The provider is called outside any transaction; the write locks the document row and rechecks eligibility and the text hash; the hash covers the document's title, subtitle, summary, search text and source version; a trigger deletes the embedding when the document is hidden, expires by an update, or changes revision; the sweep purges what remains, including documents that expire with the clock. Several processes may sweep concurrently.",
       "idempotency": "The write is an upsert by document; the migration and its rollback can be applied repeatedly.",
       "failure": "Provider error, timeout, exhausted budget, unusable vector, missing tables or a failing semantic statement all yield today's statement and ranking.",
       "recovery": "Set the flag to false; embeddings and cached query vectors are derived data and can be dropped (rollback file).",
@@ -12784,7 +12784,7 @@
       "ambiguity": [
         "The Z3 model is over real numbers; agreement with PostgreSQL float8 and numeric evaluation is tested on examples, not proved.",
         "The TLA+ model treats each statement as atomic; that FOR SHARE on the document row makes the guarded write atomic against a concurrent update is assumed PostgreSQL behaviour.",
-        "The model's public state is the search document's own columns; a profile hidden without a refresh of its search document is excluded by the read predicate at once and by the sweep within a minute, not by the trigger.",
+        "The model's public state is the search document's own columns; a profile hidden without a refresh of its search document, and a document whose expiry passes with the clock, are excluded by the read predicate at once and by the sweep within a minute, not by the trigger.",
         "The range proofs assume quality, availability and reputation in [0, 1] (CHECK constraints) and source_updated_at not in the future; a future timestamp already takes the activity term out of range in the unmodified statement.",
         "Similarity only reorders documents that pass the text filter; the owner decided on 2026-11-22 that it does not admit documents, so the visible effect is small by design.",
         "If the query embedding is available for one page and not the next, an item can repeat or be skipped between pages; the cache makes this rare and does not exclude it.",
@@ -29560,7 +29560,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "3ffa8e983cf026b680b3a454e7a5a7701bd19e47f4cb4af0106e4689515c3252",
+    "docs/catalog-persistence/catalog-list-decisions.json": "4f8267be1a6ffe43d98721fa06e03b93df3ef8c21bd8de0a201683babab942d8",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -30035,7 +30035,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "66a7f59f3770eda28c109f4de5eda25c4ff7d82135f95b8cf125755b367e3007",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "62a2b6070250e1e89f2690a283a15776beacc409da3e96133254bd371f8ca7ab",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -30224,7 +30224,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "8740cb8707745f529b0de9e25aad010746af3e7baa979b2a3f6868bda69c10f4",
+    "scripts/production-migrations.json": "a4b037a109a8c91d5dee562e106470c8215b579654d914a6f527fc0ca0997b00",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "e497d1ce41e8b1bdc3ae776a164b0cb3c6317b5c799ecce85205ef9c79602729",
@@ -31373,7 +31373,7 @@
     "tdf-hq/sql/2026-11-20_chat_external_delivery.sql": "62f4d0b58ce66ddc0cb345084f1d5b9e5313033ad9dcb6dded08b8957783b1c6",
     "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql": "09dec141f5de428cb9bda712bf2aa9b4ec4f75ee13a16bc511c6e16a34031edd",
     "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery_rollback.sql": "510f4ab65e13fd0faf203afd83a68e8c2df817723452b98603580b27f9586219",
-    "tdf-hq/sql/2026-11-21_directory_semantic_search.sql": "8a67bc9cd4b3e01e3065f1941dc6b5a899333e634e364933e55894c041ea107b",
+    "tdf-hq/sql/2026-11-21_directory_semantic_search.sql": "81f9103c5784b7b37a64ddf3bf8b6ba47a1cceef8e0abcbb70d02df21953d148",
     "tdf-hq/sql/2026-11-21_directory_semantic_search_rollback.sql": "5315ffa9ab1537f23395649fec23ea8af1f7dc26e9d6923977353a0090a0136f",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
@@ -31467,7 +31467,7 @@
     "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs": "79047936e9a4fff6cbf15767563a68cba32c1d4eaff754a2e6f18046615d3a43",
     "tdf-hq/src/TDF/Directory/Policy.hs": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
     "tdf-hq/src/TDF/Directory/SemanticIndex.hs": "6b5f5b37bd59756a393e72aa2bb8084dad24202a4bb6c18480890557acda0aed",
-    "tdf-hq/src/TDF/Directory/SemanticSearch.hs": "61736ca270a639877377167a4aaa55fdec82f72b1cf7cb737c504da2aea35709",
+    "tdf-hq/src/TDF/Directory/SemanticSearch.hs": "d01241f6b9421ab3311f483f944b20fb6806b9d59da3b034e2a7c4e6c62250fa",
     "tdf-hq/src/TDF/DriveOAuthClient.hs": "3d5bb29922ad21c6bf618af565fba70cfe29b5c6fcca2272c8c61e3ee370c3ac",
     "tdf-hq/src/TDF/Email.hs": "facc9c82964701339f17b288e10e7e531c05ae101bf8ba83f4cd1dfd16b89196",
     "tdf-hq/src/TDF/Email/Service.hs": "3c127c8506531eed57c738e5beb7708b6f19aafb906c215a6867b5ef3c689059",
@@ -31633,7 +31633,7 @@
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
     "tdf-hq/test/TDF/Directory/PolicySpec.hs": "dbdf1ba83c196b2fa26cdbe9af0348da88a562e4cc454cca7198daa590033884",
-    "tdf-hq/test/TDF/Directory/SemanticSearchPostgresSpec.hs": "23645e964f8544cab8f2d4539fc5381349299d3f32223f6b55767f1c11a16e87",
+    "tdf-hq/test/TDF/Directory/SemanticSearchPostgresSpec.hs": "e37bab713e75b59cbed51e876bc63e46b84636755733e18fccb8ce60877f4e5d",
     "tdf-hq/test/TDF/Directory/SemanticSearchSpec.hs": "628d05dbc6faf814a6cf5c7187dada5aadffa56aa38fca2aa2ff5ba4c1d4f140",
     "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "f1c1b9227060dab62db7b84721558d4294d3e5780cee71c0b7e52bd82fcde748",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "3fac72c8e53e52a81933aeba58c908980c90b6db398eb17716dea7d70b0d3f7c",
@@ -54944,7 +54944,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "66a7f59f3770eda28c109f4de5eda25c4ff7d82135f95b8cf125755b367e3007",
+      "sha256": "62a2b6070250e1e89f2690a283a15776beacc409da3e96133254bd371f8ca7ab",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58227,7 +58227,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "8740cb8707745f529b0de9e25aad010746af3e7baa979b2a3f6868bda69c10f4",
+      "sha256": "a4b037a109a8c91d5dee562e106470c8215b579654d914a6f527fc0ca0997b00",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -80801,7 +80801,7 @@
     {
       "id": "SURFACE-0a4ad284b06105ba",
       "path": "tdf-hq/sql/2026-11-21_directory_semantic_search.sql",
-      "sha256": "8a67bc9cd4b3e01e3065f1941dc6b5a899333e634e364933e55894c041ea107b",
+      "sha256": "81f9103c5784b7b37a64ddf3bf8b6ba47a1cceef8e0abcbb70d02df21953d148",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -82910,7 +82910,7 @@
     {
       "id": "SURFACE-65fa05e273480c4e",
       "path": "tdf-hq/src/TDF/Directory/SemanticSearch.hs",
-      "sha256": "61736ca270a639877377167a4aaa55fdec82f72b1cf7cb737c504da2aea35709",
+      "sha256": "d01241f6b9421ab3311f483f944b20fb6806b9d59da3b034e2a7c4e6c62250fa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86882,7 +86882,7 @@
     {
       "id": "SURFACE-49f29c4216e62e48",
       "path": "tdf-hq/test/TDF/Directory/SemanticSearchPostgresSpec.hs",
-      "sha256": "23645e964f8544cab8f2d4539fc5381349299d3f32223f6b55767f1c11a16e87",
+      "sha256": "e37bab713e75b59cbed51e876bc63e46b84636755733e18fccb8ce60877f4e5d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -95272,7 +95272,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a6cbb7896d05f8030d62f339febbfd8dc1c72f54208a2cc37f3cf13c88d73a27",
+      "sourceSha256": "a37711dffc409f26c067a8d08c1cc1e1198dfc5a9b738b2ed3c44ec8dbbd01a5",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -95300,7 +95300,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a6cbb7896d05f8030d62f339febbfd8dc1c72f54208a2cc37f3cf13c88d73a27",
+      "sourceSha256": "a37711dffc409f26c067a8d08c1cc1e1198dfc5a9b738b2ed3c44ec8dbbd01a5",
       "definition": {
         "states": [
           "absent",
@@ -95330,7 +95330,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a6cbb7896d05f8030d62f339febbfd8dc1c72f54208a2cc37f3cf13c88d73a27",
+      "sourceSha256": "a37711dffc409f26c067a8d08c1cc1e1198dfc5a9b738b2ed3c44ec8dbbd01a5",
       "definition": {
         "export": [
           "queued",

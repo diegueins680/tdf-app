@@ -6648,7 +6648,7 @@ test('directory semantic search appends its migration after the chat delivery mi
   assert.deepEqual(added, {
     id: '2026-11-21_directory_semantic_search',
     path: 'tdf-hq/sql/2026-11-21_directory_semantic_search.sql',
-    introducedBy: '7dd229965b98cdcd7609c1ca18f37891f8edc296',
+    introducedBy: 'd48fd5f1117f6778759185ac2e6ba559937bc360',
   });
   assert.deepEqual(current, { ...before, migrations: [...before.migrations, added] });
   const { stdout } = await integrationExec('git', ['show', added.introducedBy + ':' + added.path], { cwd: integrationRoot });

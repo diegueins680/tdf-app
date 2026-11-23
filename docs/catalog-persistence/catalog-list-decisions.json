@@ -399414,7 +399414,7 @@
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decisions",
       "reviewBatch": "directory-semantic-search-2026-11-21",
-      "justification": "Append the directory semantic search migration (DIR-SEMANTIC-SEARCH-001) after the reviewed chat external delivery migration. The 264 reviewed migration objects keep their order, paths and introduction commits; the new entry introduces tdf-hq/sql/2026-11-21_directory_semantic_search.sql at commit 7dd229965b98cdcd7609c1ca18f37891f8edc296.",
+      "justification": "Append the directory semantic search migration (DIR-SEMANTIC-SEARCH-001) after the reviewed chat external delivery migration. The 264 reviewed migration objects keep their order, paths and introduction commits; the new entry introduces tdf-hq/sql/2026-11-21_directory_semantic_search.sql at commit d48fd5f1117f6778759185ac2e6ba559937bc360.",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,

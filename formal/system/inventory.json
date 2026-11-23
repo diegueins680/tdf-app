@@ -4216,7 +4216,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "66a7f59f3770eda28c109f4de5eda25c4ff7d82135f95b8cf125755b367e3007",
+      "sha256": "62a2b6070250e1e89f2690a283a15776beacc409da3e96133254bd371f8ca7ab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5812,7 +5812,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "8740cb8707745f529b0de9e25aad010746af3e7baa979b2a3f6868bda69c10f4",
+      "sha256": "a4b037a109a8c91d5dee562e106470c8215b579654d914a6f527fc0ca0997b00",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17560,7 +17560,7 @@
     {
       "id": "SURFACE-0a4ad284b06105ba",
       "path": "tdf-hq/sql/2026-11-21_directory_semantic_search.sql",
-      "sha256": "8a67bc9cd4b3e01e3065f1941dc6b5a899333e634e364933e55894c041ea107b",
+      "sha256": "81f9103c5784b7b37a64ddf3bf8b6ba47a1cceef8e0abcbb70d02df21953d148",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18478,7 +18478,7 @@
     {
       "id": "SURFACE-65fa05e273480c4e",
       "path": "tdf-hq/src/TDF/Directory/SemanticSearch.hs",
-      "sha256": "61736ca270a639877377167a4aaa55fdec82f72b1cf7cb737c504da2aea35709",
+      "sha256": "d01241f6b9421ab3311f483f944b20fb6806b9d59da3b034e2a7c4e6c62250fa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19690,7 +19690,7 @@
     {
       "id": "SURFACE-49f29c4216e62e48",
       "path": "tdf-hq/test/TDF/Directory/SemanticSearchPostgresSpec.hs",
-      "sha256": "23645e964f8544cab8f2d4539fc5381349299d3f32223f6b55767f1c11a16e87",
+      "sha256": "e37bab713e75b59cbed51e876bc63e46b84636755733e18fccb8ce60877f4e5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26809,7 +26809,7 @@
     },
     {
       "path": "formal/directory/README.md",
-      "sha256": "253f76f77b929370914f25bf08c0f6a8d6e33303001252290d57279779ff7c41",
+      "sha256": "b12ba392d788ea88c51f97585f966c33ae8cdb0abc0ab078d7ce5a5c623d779f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31940,7 +31940,7 @@
     },
     {
       "path": "formal/system/directory-semantic-search.md",
-      "sha256": "547762a097bbe3f12375ebe10cf731ae726b4ac5817e2d3884434f746f2e710d",
+      "sha256": "0dc79839a28c4f56d4065603038d6844b3f6ed3967902a00e4bc94468e637e9c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32752,7 +32752,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a6cbb7896d05f8030d62f339febbfd8dc1c72f54208a2cc37f3cf13c88d73a27",
+      "sha256": "a37711dffc409f26c067a8d08c1cc1e1198dfc5a9b738b2ed3c44ec8dbbd01a5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
