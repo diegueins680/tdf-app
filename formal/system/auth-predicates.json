@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "1de4a92a8c20d55341e0991bf4aefc1495bddb52ba9c2b3d01b2b91f800cb2d6"
+    "tdf-hq/tdf-hq.cabal": "06cf60d8ced75b4a71446afa35fa25c7cdfee57930be8096176dc49567c2f10c"
   },
   "obligations": [
     {
@@ -997,9 +997,9 @@
       "source": "tdf-hq/tdf-hq.cabal",
       "reviewedAgainst": "129962b8903f127909c1eda0f22657ac67947075",
       "previousSha256": "3f719d332f1c5cee5585d53f4e2f78b059d5e260f3d1740133766befb79c3a66",
-      "currentSha256": "1de4a92a8c20d55341e0991bf4aefc1495bddb52ba9c2b3d01b2b91f800cb2d6",
-      "change": "Register the TDF.Fans.ArtistSimilarity library module and its TDF.Fans.ArtistSimilaritySpec test module on current protected main 129962b89.",
-      "semanticReview": "The merged Cabal file differs from protected main's by exactly two added lines: the TDF.Fans.ArtistSimilarity entry in the library's other-modules and the TDF.Fans.ArtistSimilaritySpec entry in the test suite's other-modules. git merged them without conflicts. They add no dependency, flag or build option, and no other controlled source changes, so the conditional authentication and recovery context is unchanged.",
+      "currentSha256": "06cf60d8ced75b4a71446afa35fa25c7cdfee57930be8096176dc49567c2f10c",
+      "change": "Register the new TDF.Venues.Search and TDF.Venues.SearchFold library modules and the TDF.Venues.SearchSpec test module on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly three added lines: the TDF.Venues.Search and TDF.Venues.SearchFold entries in the library's exposed-modules and the TDF.Venues.SearchSpec entry in the test suite's other-modules. TDF.Venues.SearchFold imports only base and text. TDF.Venues.Search holds a pure venue filter, a bounding box and read-only SQL over venue and revenue_feature_flag, imports only TDF.Models.SocialEventsModels from this package, and is imported only by TDF.Server.SocialEventsHandlers. Neither uses Template Haskell, CPP, OPTIONS_GHC, foreign imports or unsafePerformIO, and neither defines an authorization predicate, RoleEnum, ingestion admission or recovery arithmetic. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
       "qualification": "This review covers the conditional solver source context."
     }
   ]

@@ -1350,9 +1350,9 @@
       "introducedBy": "d48fd5f1117f6778759185ac2e6ba559937bc360"
     },
     {
-      "id": "2026-11-21_artist_similarity",
-      "path": "tdf-hq/sql/2026-11-21_artist_similarity.sql",
-      "introducedBy": "89d467302501d47ce53c1551b031c46cb7bb1162"
+      "id": "2026-11-21_venue_search_sql",
+      "path": "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
+      "introducedBy": "1c581e2e6016b76e04269a29b09d38665719559d"
     }
   ]
 }

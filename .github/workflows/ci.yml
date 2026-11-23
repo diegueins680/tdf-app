@@ -673,6 +673,7 @@ jobs:
           sh scripts/test-music-publication.sh
           sh scripts/test-index-declarations.sh
           sh scripts/test-interaction-write-budget.sh
+          sh scripts/test-venue-search.sh
 
       - name: Verify single assignment of an event without an organizer
         env:

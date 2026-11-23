@@ -49,6 +49,7 @@ import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
 import qualified TDF.StorageSecuritySpec as StorageSecuritySpec
 import qualified TDF.VideoCampaignsSpec as VideoCampaignsSpec
+import qualified TDF.Venues.SearchSpec as VenueSearchSpec
 import qualified TDF.Auth.AccountNameSpec as AccountNameSpec
 import qualified TDF.Auth.GoogleProfileNameSpec as GoogleProfileNameSpec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
@@ -18553,6 +18554,7 @@ main = hspec $ do
     EventOperationsDatabaseBoundarySpec.spec
     EventResearchSpec.spec
     VideoCampaignsSpec.spec
+    VenueSearchSpec.spec
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
