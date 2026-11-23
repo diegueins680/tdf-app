@@ -498,6 +498,7 @@ type FanSecureAPI =
       :<|> FollowArtistAPI
       :<|> UnfollowArtistAPI
          )
+  :<|> "me" :> "recommendations" :> QueryParam "limit" Int :> Get '[JSON] [ArtistRecommendationDTO]
   :<|> "me" :> "artist-profile" :>
          ( Get '[JSON] ArtistProfileDTO
        :<|> ReqBody '[JSON] ArtistProfileUpsert :> Put '[JSON] ArtistProfileDTO
