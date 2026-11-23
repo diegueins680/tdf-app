@@ -19879,6 +19879,99 @@
       "historicalStatus": null
     },
     {
+      "id": "COMMUNITY-FEED-AFFINITY-001",
+      "title": "Personal hot order of a fan-club feed from the viewer's affinity to each author",
+      "statement": "With the runtime gate FAN_FEED_AFFINITY_ENABLED on, a viewer who has not switched personalisation off and who reacted or replied to items of the club feed in the last 90 days receives the hot sort ordered by affinity * (reactions + 1) / max(1, ageHours)^0.8, where the affinity to an author is 1 + min(reactions + 2 * replies, 20) / 10. In every other case the hot sort keeps the previous score reactions / max(1, ageHours)^0.8. Pinned items, the top and chronological sorts, the returned items and the response shape do not change. Route: GET /fan-clubs/{artistId}/feed.",
+      "property": "For every request: returned(mode) is a permutation of returned(fallback); gate off \\/ optedOut \\/ no usable evidence => order = previous hot order (wherever that was determined); the unpinned order is the strict total order (score desc, kind, created_at desc, id desc); personalised /\\ y precedes x => 3 * (reactions(y) + 1) / decay(y) >= (reactions(x) + 1) / decay(x); evidence \\subseteq items of the served feed that the viewer may read and that are not hidden; optedOut => no behaviour read.",
+      "domain": "COMMUNITY",
+      "authority": "Owner request of 2026-11-21 for affinity-based feed ranking; rule and constants approved by the owner on 2026-11-21 (club feed only, reactions + 1 in personalised mode, type weight 1, hidden items excluded from evidence only). formal/system/feed-affinity-ranking.md.",
+      "source": "formal/system/feed-affinity-ranking.md",
+      "contract": "tdf-hq/src/TDF/Fans/FeedAffinity.hs",
+      "actors": [
+        "Fan"
+      ],
+      "preconditions": [
+        "Authenticated bearer session and the existing guards of the club feed route",
+        "FAN_FEED_AFFINITY_ENABLED set at startup for any personalised order (default off)"
+      ],
+      "inputs": [
+        "GET /fan-clubs/{artistId}/feed?sort=hot",
+        "social_v2_preference.personalized of the viewer",
+        "The viewer's reactions and replies to items of the served feed in the last 90 days"
+      ],
+      "state": {
+        "initial": "Stored feed items, reactions, replies and the viewer's personalisation preference",
+        "terminal": [
+          "Ordered feed in personalised mode",
+          "Ordered feed in fallback mode"
+        ]
+      },
+      "allowedTransitions": [
+        "None; ranking reads and never writes."
+      ],
+      "forbiddenTransitions": [
+        "Adding or dropping a feed item because of ranking",
+        "A personalised order with the gate off, for a viewer who opted out, or where the preference table is not installed",
+        "Reading the behaviour of a viewer who opted out",
+        "Counting an interaction with a hidden item, an item the viewer may not read, an item outside the served feed, or the viewer's own item as evidence",
+        "Changing the top or chronological sort, or the position of pinned items",
+        "Returning a score, an affinity or the mode"
+      ],
+      "effects": [
+        "None; read-only."
+      ],
+      "implementation": [
+        "tdf-hq/src/TDF/Fans/FeedAffinity.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/config/default.env.example"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Fans/FeedAffinitySpec.hs",
+        "scripts/test-feed-affinity-sql.py",
+        "scripts/test-feed-affinity-postgres.sh",
+        "scripts/verify-inductive-proofs.sh",
+        "formal/social/feed_affinity_arithmetic.py"
+      ],
+      "formalModels": [
+        "formal/social/FeedAffinity.tla",
+        "formal/social/FeedAffinity.cfg",
+        "formal/social/FeedAffinityGateOff.cfg",
+        "formal/social/FeedAffinityFloorZero.cfg",
+        "formal/social/FeedAffinityNoTieBreak.cfg",
+        "formal/social/FeedAffinityUnfilteredEvidence.cfg",
+        "formal/social/FeedAffinityOptOutIgnored.cfg",
+        "formal/social/feed_affinity_arithmetic.py"
+      ],
+      "verification": "PROVED on the model (Apalache inductive invariant: initiation, consecution, implication; four candidate items of which any subset is visible, three authors, abstract scores 0..6 and 1..12, any affinity in 1..3): permutation, exclusion of non-visible items and of hidden or unreadable evidence, fallback order and no behaviour read when the gate is off or the viewer opted out or has no usable evidence, order fixed by the key, displacement bound. PROVED over exact real and integer arithmetic (Z3, unsat of the negation, any positive decay): affinity in [1, 3] and monotone, displacement bound 3 and its tightness, the key is a strict total order, the tie-break keeps the previous stable order, score monotone in reactions and affinity and anti-monotone in decay. BOUNDED (TLC, three items, two authors, two score values): the same invariants, plus four negative controls that must fail (floor 0, no tie-break, evidence read before the visibility filter, opt-out ignored) and three Z3 witnesses (zero floor, unequal type weights, key without id). TESTED (Hspec and QuickCheck on the Haskell code): permutation, pinned first, fallback equal to a copy of the previous sort, top and chronological sorts unchanged, input-order independence, displacement bound, monotonicity on Double, evidence tally and hidden-item exclusion, the loader on SQLite (gate off reads nothing, opt-out reads no behaviour, window, visibility and own-item filters). TESTED on PostgreSQL: the canonical-interaction and preference SQL extracted from the Haskell source against a fixture.",
+      "evidence": "scripts/verify-inductive-proofs.sh output; formal/social/feed_affinity_arithmetic.py output; tdf-hq-test FeedAffinitySpec run; scripts/test-feed-affinity-postgres.sh output.",
+      "historicalStatus": "new",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for the rule as modelled and for the pure ranking function. The step from the model to the Haskell sort, the Double arithmetic, the SQL against the migrated schema and the handler wiring rest on tests, compilation and review, not on proof.",
+      "ambiguity": [
+        "The models abstract the sort as emitting the item whose key precedes all waiting items; that Data.List.sortBy realises this is tested, not proved.",
+        "Double arithmetic, including the exponent 0.8, is tested only; the Z3 lemmas are over exact arithmetic with an arbitrary positive decay.",
+        "The Apalache proof is for at most four items and three affinity levels; larger feeds are covered by the Z3 pairwise lemmas and by tests.",
+        "The canonical-interaction SQL runs against a fixture with the columns it reads, not the migrated schema, and no HTTP-level test serves a personalised feed.",
+        "Which items a viewer may read is decided by Interactions.visible and is outside this requirement; hidden items are still returned flagged, as before.",
+        "The constants (90 days, reply weight 2, cap 20, affinity 1 to 3) were approved without usage data.",
+        "The discovery feed (GET /fans/discovery) is not personalised; the owner deferred it.",
+        "Before this change the order of two items of one kind with equal created_at was left to the database; it is now by id descending."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Rule proved on the model and over exact arithmetic and tested on the implementation; correspondence of the Haskell code to the model, the migrated-schema SQL and an HTTP-level personalised response are not established."
+      },
+      "authorization": "Unchanged: the existing guards of the club feed route; the viewer is taken from the session.",
+      "privacy": "Reads only the viewer's own reactions and replies, nothing with the gate off and no behaviour for a viewer whose social_v2_preference.personalized is false. Only the order of the response depends on them; no score, affinity or mode is returned. Hidden or unreadable items are never evidence.",
+      "concurrency": "Items and evidence are read in the handler's transaction at the pool's default isolation. The order properties hold for any evidence values, so a concurrent reaction can change one response's order and nothing else.",
+      "idempotency": "Read-only.",
+      "failure": "Where social_v2_preference is not installed the request is served in fallback mode. Any other database error fails the request as for the rest of the handler.",
+      "recovery": "Unset FAN_FEED_AFFINITY_ENABLED and restart: every viewer returns to the previous order.",
+      "observability": "HTTP status only; the mode is not logged or returned."
+    },
+    {
       "id": "SCHOOL-PUBLIC-INTAKE-001",
       "title": "Public school intake: signup, interests and trial requests",
       "statement": "Anyone signs up, registers an interest or requests a trial lesson; keyed requests replay instead of duplicating contacts. Routes: POST /trials/v1/signup; POST /trials/v1/interests; POST /trials/v1/trial-requests.",

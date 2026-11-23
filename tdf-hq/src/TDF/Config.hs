@@ -112,6 +112,7 @@ data AppConfig = AppConfig
   , directorySemanticSearchEnabled :: Bool
   , publicReputationProjectionEnabled :: Bool
   , singleFeatureOnboardingExperimentEnabled :: Bool
+  , fanFeedAffinityEnabled :: Bool
   , eventDiscoveryEnabled :: Bool
   , eventDiscoveryAutoPublish :: Bool
   , eventDiscoveryPilotLimit :: Int
@@ -811,6 +812,7 @@ loadConfig = do
   directorySemanticSearchEnabledEnv <- lookupEnv "DIRECTORY_SEMANTIC_SEARCH_ENABLED"
   publicReputationProjectionEnabledEnv <- lookupEnv "PUBLIC_REPUTATION_PROJECTION_ENABLED"
   singleFeatureOnboardingExperimentEnabledEnv <- lookupEnv "SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED"
+  fanFeedAffinityEnabledEnv <- lookupEnv "FAN_FEED_AFFINITY_ENABLED"
   eventDiscoveryEnabledEnv <- lookupEnv "EVENT_DISCOVERY_ENABLED"
   eventDiscoveryAutoPublishEnv <- lookupEnv "EVENT_DISCOVERY_AUTO_PUBLISH"
   eventDiscoveryPilotLimitEnv <- lookupEnv "EVENT_DISCOVERY_PILOT_LIMIT"
@@ -898,6 +900,11 @@ loadConfig = do
       "SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED"
       False
       singleFeatureOnboardingExperimentEnabledEnv
+  fanFeedAffinityEnabledVal <-
+    validateStartupBooleanFlag
+      "FAN_FEED_AFFINITY_ENABLED"
+      False
+      fanFeedAffinityEnabledEnv
   eventDiscoveryEnabledVal <-
     validateStartupBooleanFlag
       "EVENT_DISCOVERY_ENABLED"
@@ -1110,6 +1117,7 @@ loadConfig = do
     , directorySemanticSearchEnabled = directorySemanticSearchEnabledVal
     , publicReputationProjectionEnabled = publicReputationProjectionEnabledVal
     , singleFeatureOnboardingExperimentEnabled = singleFeatureOnboardingExperimentEnabledVal
+    , fanFeedAffinityEnabled = fanFeedAffinityEnabledVal
     , eventDiscoveryEnabled = eventDiscoveryEnabledVal
     , eventDiscoveryAutoPublish = eventDiscoveryAutoPublishVal
     , eventDiscoveryPilotLimit = eventDiscoveryPilotLimitVal
