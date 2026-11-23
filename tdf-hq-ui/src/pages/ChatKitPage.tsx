@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import { ChatKit, useChatKit } from '@openai/chatkit-react';
 import { env, reportMissingEnv } from '../utils/env';
-import { createChatKitClientSecretFetcher } from '../utils/chatkit';
+import { createChatKitClientSecretFetcher } from '../services/chatkit';
 import { useChatKitScript } from '../hooks/useChatKitScript';
 
 export default function ChatKitPage() {

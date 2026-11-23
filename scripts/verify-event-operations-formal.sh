@@ -232,6 +232,10 @@ run_negative_tlc CatalogReorderPartialRollback.cfg catalog-reorder-partialrollba
 run_negative_tlc CatalogReorderStaleRevision.cfg catalog-reorder-stalerevision 'Invariant NoStaleCommit is violated' CatalogReorder.tla
 run_negative_tlc CatalogReorderNoAuthorization.cfg catalog-reorder-noauthorization 'Invariant NoUnauthorizedCommit is violated' CatalogReorder.tla
 run_negative_tlc CatalogReorderNoAudit.cfg catalog-reorder-noaudit 'Invariant AtomicEvidence is violated' CatalogReorder.tla
+run_tlc VenueSearch.tla VenueSearch.cfg venue-search
+run_negative_tlc VenueSearchNoWrap.cfg venue-search-nowrap 'Invariant BoxSound is violated' VenueSearch.tla
+run_negative_tlc VenueSearchNoPoleGuard.cfg venue-search-nopoleguard 'Invariant SqlMatchesSpecification is violated' VenueSearch.tla
+run_negative_tlc VenueSearchCapped.cfg venue-search-capped 'Invariant LegacyMatchesSpecification is violated' VenueSearch.tla
 run_tlc StudioBookingProjection.tla StudioBookingProjection.cfg studiobookingprojection
 run_negative_tlc StudioBookingProjectionStale.cfg studiobookingprojection-stale 'Invariant ProjectionCurrent is violated' StudioBookingProjection.tla
 run_negative_tlc StudioBookingProjectionReactivation.cfg studiobookingprojection-reactivation 'Invariant ProjectionCurrent is violated' StudioBookingProjection.tla

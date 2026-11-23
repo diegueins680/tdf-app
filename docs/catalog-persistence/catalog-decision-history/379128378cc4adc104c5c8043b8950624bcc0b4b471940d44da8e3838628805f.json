@@ -1,0 +1,26 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "7671a3e996c85f7aa51d",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "chat-external-delivery-course-reminders-integration",
+  "justification": "Compose the two reviewed successors of 59a6c2f1ad6d61a54f96: keep main's manifest exactly, including 2026-11-20_course_follow_up_reminder_delivery appended after the studio gallery seed, then append only 2026-11-20_chat_external_delivery (introduced by 8da140ae64c51b8ef006e7678589c8bcf5ef38f3, the commit holding its final SQL), an additive, repeatable migration. Every earlier migration object, its order and its SQL stay unchanged, and both complete parent review graphs are retained. This author review does not authorize deployment or provider activation and is not independent approval.",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 264
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:1f17ed37626d6687e6ee973d9d71bc1227822b72c6114852f09076821f80d16a"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:1901764dca4d19919b2b65954414c771a5adf173859da163b3379dee6e6e6e3f"
+    }
+  ]
+}

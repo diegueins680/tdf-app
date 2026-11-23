@@ -1,0 +1,19 @@
+{
+  "id": "8ea9381b405e317f5e7f",
+  "classification": "dynamic-business-catalog",
+  "disposition": "retain-in-code",
+  "specializedModel": "navigation_item",
+  "priority": "P3-retain",
+  "risk": "Changing UI constants could break rendering or user experience.",
+  "justification": "Reviewed public header navigation: the TDF Mobile entry now carries its entry surface (surface=nav) so the landing attributes the visit and the click is measured as interest. Still client routes and localized labels only; distribution state keeps coming from the validated manifest.",
+  "reviewed": true,
+  "previousDecision": {
+    "$historyRef": "sha256:c51c37ebd0b93acdaf7b7dc26ae57543060ceb0bb2dbbcc7e5ee1bd31941349f"
+  },
+  "evidence": {
+    "file": "tdf-hq-ui/src/components/PublicBranding.tsx",
+    "line": 23
+  },
+  "reviewBatch": "events-nav-carousel-2026-10-08",
+  "reviewMethod": "successor-of-reviewed-decision"
+}

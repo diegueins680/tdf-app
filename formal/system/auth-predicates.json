@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "30e6f885b75d8c9742ef970856985269b74244c807dc0ff9f364e2b11673ede0"
+    "tdf-hq/tdf-hq.cabal": "ad8464697185513d41a2b0f0342098e8bfc9f3091b779facf9e6a9151ecbabcd"
   },
   "obligations": [
     {
@@ -977,11 +977,38 @@
     },
     {
       "source": "tdf-hq/tdf-hq.cabal",
-      "reviewedAgainst": "6cd7b2d2d4183bb6c4e3dc3fe2ab1f3b9869593c",
+      "reviewedAgainst": "0d9f2aaed81c5919b558c16a7a38f6050faa6039",
       "previousSha256": "1958140b10c2e13a43dc83f4d0aaf38fc8be222bba91d3446fc29eb7252c86b4",
-      "currentSha256": "30e6f885b75d8c9742ef970856985269b74244c807dc0ff9f364e2b11673ede0",
-      "change": "Register the TDF.Fans.ArtistSimilarity library module and its TDF.Fans.ArtistSimilaritySpec test module on top of the fan recommendations branch after it took protected main 6142acf4c.",
-      "semanticReview": "The merged Cabal file differs from the base branch's reviewed file by exactly two added lines: the TDF.Fans.ArtistSimilarity entry in the library's other-modules and the TDF.Fans.ArtistSimilaritySpec entry in the test suite's other-modules. git merged them without conflicts. They add no dependency, flag or build option, and no other controlled source changes, so the conditional authentication and recovery context is unchanged.",
+      "currentSha256": "463d29cae8a590b7c4cc9958fdb001fd4df0f434cd6c296a58cf734395d48507",
+      "change": "Register the new TDF.Fans.FeedAffinity module in the library's other-modules and TDF.Fans.FeedAffinitySpec in the test suite's other-modules (COMMUNITY-FEED-AFFINITY-001).",
+      "semanticReview": "The Cabal file differs from protected main's by exactly two added lines, the TDF.Fans.FeedAffinity library module and its TDF.Fans.FeedAffinitySpec test module. The library module ranks the fan-club hot feed and reads the viewer's own reactions and replies; it is imported only by TDF.ServerFanClub. No dependency, flag, language extension or compiler option changes, and no module in the solver source context imports it.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "030ca5c3b0c993a8783a1146d75c8f7bc48188a9",
+      "previousSha256": "463d29cae8a590b7c4cc9958fdb001fd4df0f434cd6c296a58cf734395d48507",
+      "currentSha256": "3f719d332f1c5cee5585d53f4e2f78b059d5e260f3d1740133766befb79c3a66",
+      "change": "Register the new TDF.Directory.SemanticIndex and TDF.Directory.SemanticSearch library modules and their TDF.Directory.SemanticSearchPostgresSpec and TDF.Directory.SemanticSearchSpec test modules on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly four added lines: the TDF.Directory.SemanticIndex and TDF.Directory.SemanticSearch entries in the library's exposed-modules and the TDF.Directory.SemanticSearchPostgresSpec and TDF.Directory.SemanticSearchSpec entries in the test suite's other-modules. TDF.Directory.SemanticSearch is pure ranking arithmetic and SQL text for directory search and imports nothing from this package; TDF.Directory.SemanticIndex runs the embedding sweep and the query-vector lookup, imports only TDF.Config, TDF.DB, TDF.Directory.SemanticSearch and TDF.RagStore from this package, and is imported only by TDF.App.Boot and TDF.Server.Directory. Neither imports TDF.Auth, TDF.ServerAuth, a role type or a recovery binding. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "129962b8903f127909c1eda0f22657ac67947075",
+      "previousSha256": "3f719d332f1c5cee5585d53f4e2f78b059d5e260f3d1740133766befb79c3a66",
+      "currentSha256": "06cf60d8ced75b4a71446afa35fa25c7cdfee57930be8096176dc49567c2f10c",
+      "change": "Register the new TDF.Venues.Search and TDF.Venues.SearchFold library modules and the TDF.Venues.SearchSpec test module on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly three added lines: the TDF.Venues.Search and TDF.Venues.SearchFold entries in the library's exposed-modules and the TDF.Venues.SearchSpec entry in the test suite's other-modules. TDF.Venues.SearchFold imports only base and text. TDF.Venues.Search holds a pure venue filter, a bounding box and read-only SQL over venue and revenue_feature_flag, imports only TDF.Models.SocialEventsModels from this package, and is imported only by TDF.Server.SocialEventsHandlers. Neither uses Template Haskell, CPP, OPTIONS_GHC, foreign imports or unsafePerformIO, and neither defines an authorization predicate, RoleEnum, ingestion admission or recovery arithmetic. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "1184f9ffeffa2fd5f280fad2f026c12ab7224f4d",
+      "previousSha256": "06cf60d8ced75b4a71446afa35fa25c7cdfee57930be8096176dc49567c2f10c",
+      "currentSha256": "ad8464697185513d41a2b0f0342098e8bfc9f3091b779facf9e6a9151ecbabcd",
+      "change": "Register the TDF.Fans.ArtistSimilarity library module and its TDF.Fans.ArtistSimilaritySpec test module on current protected main 1184f9ffe.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly two added lines: the TDF.Fans.ArtistSimilarity entry in the library's other-modules and the TDF.Fans.ArtistSimilaritySpec entry in the test suite's other-modules. git merged them without conflicts. They add no dependency, flag or build option, and no other controlled source changes, so the conditional authentication and recovery context is unchanged.",
       "qualification": "This review covers the conditional solver source context."
     }
   ]

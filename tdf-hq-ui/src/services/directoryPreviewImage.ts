@@ -1,6 +1,6 @@
 import { API_BASE_URL } from '../api/client';
 import type { DirectoryEntityType } from '../api/directory';
-import { safePublicImageUrl } from './eventSharing';
+import { safePublicImageUrl } from '../utils/eventSharing';
 
 export type DirectoryPreviewKind = DirectoryEntityType;
 

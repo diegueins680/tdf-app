@@ -1,0 +1,15 @@
+{
+  "id": "63a1d7ad2f5cd665a512",
+  "classification": "security-system-registry",
+  "disposition": "consumer-update",
+  "specializedModel": "feature-registry strict-admin negative fixture",
+  "priority": "P3-consumer",
+  "risk": "A role fixture must not become a runtime grant source.",
+  "justification": "Reviewed featureRegistry.test.ts cases use Admin, Producer and AandR to verify that the video-source feature remains strictly administrative; no runtime role catalog is created.",
+  "reviewed": true,
+  "reviewMethod": "source-review-2026-10-04",
+  "reviewBatch": "specification-conformance-shipped-mobile",
+  "evidence": {
+    "file": "tdf-hq-ui/src/features/featureRegistry.test.ts"
+  }
+}

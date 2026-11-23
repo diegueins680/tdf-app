@@ -1,0 +1,27 @@
+{
+  "id": "105fd7b2786498f6bb56",
+  "classification": "security-system-registry",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "navigation_item, navigation_item_permission",
+  "priority": "P0-security",
+  "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+  "justification": "The 165-entry generated registry is regenerated from tdf-hq/assets/feature-registry.json at tdf-app main plus EVT-MY-TICKETS-001, and its source digest matches. Compared with the reviewed 164 entries: social.tickets gains the web route /mis-entradas, a description and requiredAuth 'optional' (the app's /tickets screen still sends guests to sign in, and its API scope stays the caller-scoped GET /social-events/ticket-orders); the remaining differences were already merged in the parent registry and only reach the app now: social.music-campaigns (signed-in campaign workspace), added search synonyms and keywords for directory classifieds, and social.event.logistics without the Scheduling module requirement (its event-member-or-admin and event-manager-or-admin record scopes remain). No role, permission grant or API scope is added beyond the parent registry.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "web-my-tickets-20261119",
+  "evidence": {
+    "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+    "line": 55,
+    "kind": "array",
+    "name": "mobileFeatureRegistry",
+    "valueCount": 165
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:366d8f76aa27dc0535bef240148eeed006eea9dfb89cd08c8d06b05b546eb9d7"
+    }
+  ],
+  "previousDecision": {
+    "$historyRef": "sha256:fd6718f0115d1c7c9e289aa3138c321b9e530837a21e9e1e74b6941247db9e02"
+  }
+}

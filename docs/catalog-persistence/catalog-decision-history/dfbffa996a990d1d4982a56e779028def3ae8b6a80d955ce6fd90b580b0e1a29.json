@@ -1,0 +1,92 @@
+{
+  "id": "27def070486792cad395",
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "justification": "Reconcile two concurrent successors of the 227-entry memory/provider review a2bb0e82: protected main dd9adc5d (PR #686, 228 entries, decision 040c32c5b44ceadb2dde) appends 2026-10-31_api_token_session_expiry, and the formal audit branch 644a3303 (PR #691, 234 entries, decision d9468b767dadec9cf3d8) appends seven audit migrations and records one compatible applied checksum. The merged 235-entry manifest keeps main's 228-entry review as its exact prefix (canonical sha256 94bd4e11130835ca3b26b1298abfa21fc294a11bcf67faf5f3f42c759bb43196) and places the seven audit migrations after it in their reviewed order, so the audit's 234-entry view (the manifest without main's entry, canonical sha256 7f387a707d441c2adad76971b0635ff288d152f64f638ccf3c3165ee7a2f2dd1) is unchanged byte for byte; both parent reviews and their entire graphs are retained by canonical hash. The migrations are independent (api_token validity window versus commerce, social, directory and identity objects). This technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the merged head, independent review and protected integration remain required.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "formal-audit-phase2-session-expiry-main-20261102",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 235
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:838d44d1b601aa625763e4d6120a53ce75f8c1ac6e0a1c298868a012f8aef5e3"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:feeea0a842a532ac9b2be3a38494f58237b2088dea149d9f74d7f3249159ddc9"
+    }
+  ],
+  "sourceReviewReferences": [
+    {
+      "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "dfa00521daab7ab21082169feef62f988da149470afb2bf24151bf53674e05ac",
+      "sourceEntry": {
+        "id": "f48c34252ff8930b3d74"
+      },
+      "sourceEntryCanonicalSha256": "d08e3ff9409b47ab035fc67269d79010fd3738333fdc971c305ded3ddfeadf9b",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "816e33527bddc88f717e3a02a1ae1c9b04cbabeba90271e80488579a7d5fa1f9",
+      "sourceEntry": {
+        "id": "2634b239375f2ad309ba"
+      },
+      "sourceEntryCanonicalSha256": "6bcc3d19c2aea1adb0ce6ede68d59ec60b025b953a083bc5be6090f4be90ed1a",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "df3417afcd9095d570d7be683eef5ab3382361d1",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "08f6e44ccd5ce830bee7363c0e66639cc9081be85e7b7c487d8b2089336cf062",
+      "sourceEntry": {
+        "id": "a2bb0e828d5b94c1cb31"
+      },
+      "sourceEntryCanonicalSha256": "2a868127eeb27cf8ffcaf4d162dd6123bf0ae8ad9ce54901c0cabb631cf43e6e",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+      "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+    },
+    {
+      "sourceRevision": "70f35ce2a7c3bdd385c2f22e210c34aae4855d5f",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "979001b3f6bedf6eba7b3a125f243b680c120c81a722286b7faaee25e5ba49a1",
+      "sourceEntry": {
+        "id": "903e61463c0222f30d9b"
+      },
+      "sourceEntryCanonicalSha256": "9adad9f469eb233e58e2cbfac22651f797d7aba5e438d1f10ce880c436e0566c",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+      "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+    },
+    {
+      "sourceRevision": "644a3303bc938cabac5673a9940850e1bb124566",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "18ab55179d6524a8aa50b1f5d4d309e2201d7e9171844172ac8d4d57f382faa0",
+      "sourceEntry": {
+        "id": "d9468b767dadec9cf3d8"
+      },
+      "sourceEntryCanonicalSha256": "61cbf1e27157b704dcad31fb8800df2d3498c2b57efb3dbc519f63f8b38e1c18",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+      "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+    },
+    {
+      "sourceRevision": "dd9adc5d654033878e34107c2da4c9bf731f7980",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "dc58f1432d87069b5c371863e0fa86edf58ce30b32ceada8080847ef5c56a3af",
+      "sourceEntry": {
+        "id": "040c32c5b44ceadb2dde"
+      },
+      "sourceEntryCanonicalSha256": "e863458f044f4994d17134c7cd04ae00e8d48c95c2f59f23f076c6d27cfcf85e",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+      "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+    }
+  ]
+}

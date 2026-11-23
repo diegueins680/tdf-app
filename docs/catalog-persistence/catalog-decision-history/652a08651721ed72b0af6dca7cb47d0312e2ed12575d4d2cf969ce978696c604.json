@@ -1,0 +1,48 @@
+{
+  "id": "a2bb0e828d5b94c1cb31",
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "justification": "Preserve the complete223-entry protected main4b81ab4 migration prefix, including posted-ledger-header and provider/domain guards, and append only the four original event-memory migrations with unchanged SQL and introduction ancestors. Preserve both exact223-entry main and226-entry memory review graphs and every distinct historical review variant. This227-entry technical execution-registry classification grants no production execution, campaign consent, financial transaction, provider activation, permission or release waiver; fresh combined runtime/CI, independent review and protected integration remain required.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "event-memory-provider-main-technical-reconciliation-20261026",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 227
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:981d0e1be28c643aacb3d141d98e21724152bfd1671566f3c6b2cfaea11af540"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:ad7980aac7c02abec3ccc2e4eedc0e7762db566aa8384d2d14d5630380406692"
+    }
+  ],
+  "sourceReviewReferences": [
+    {
+      "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "dfa00521daab7ab21082169feef62f988da149470afb2bf24151bf53674e05ac",
+      "sourceEntry": {
+        "id": "f48c34252ff8930b3d74"
+      },
+      "sourceEntryCanonicalSha256": "d08e3ff9409b47ab035fc67269d79010fd3738333fdc971c305ded3ddfeadf9b",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "816e33527bddc88f717e3a02a1ae1c9b04cbabeba90271e80488579a7d5fa1f9",
+      "sourceEntry": {
+        "id": "2634b239375f2ad309ba"
+      },
+      "sourceEntryCanonicalSha256": "6bcc3d19c2aea1adb0ce6ede68d59ec60b025b953a083bc5be6090f4be90ed1a",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    }
+  ]
+}

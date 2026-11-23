@@ -1,0 +1,21 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "637d04560e76b4a6a5c4",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "directory-semantic-search-2026-11-21",
+  "justification": "Append the directory semantic search migration (DIR-SEMANTIC-SEARCH-001) after the reviewed chat external delivery migration. The 264 reviewed migration objects keep their order, paths and introduction commits; the new entry introduces tdf-hq/sql/2026-11-21_directory_semantic_search.sql at commit d48fd5f1117f6778759185ac2e6ba559937bc360.",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 265
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:379128378cc4adc104c5c8043b8950624bcc0b4b471940d44da8e3838628805f"
+  }
+}
