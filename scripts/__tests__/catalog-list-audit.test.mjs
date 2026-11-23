@@ -6562,7 +6562,7 @@ const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26
 // reminders, then the music audio measurement (MEDIA-MUSIC-LOUDNESS-001).
 // Verify each is the original, unchanged entry, then compare the rest as before.
 const COURSE_REMINDER_ENTRY = '2026-11-20_course_follow_up_reminder_delivery';
-const REVIEWED_APPENDS = [COURSE_REMINDER_ENTRY, '2026-11-21_music_audio_measurement'];
+const REVIEWED_APPENDS = [COURSE_REMINDER_ENTRY, '2026-11-20_chat_external_delivery', '2026-11-21_music_audio_measurement'];
 async function withoutCourseReminder(manifest) {
   let migrations = manifest.migrations;
   for (const id of REVIEWED_APPENDS.toReversed()) {
@@ -6576,9 +6576,20 @@ async function withoutCourseReminder(manifest) {
   return { ...manifest, migrations };
 }
 
+// MSG-DELIVERY-001 (2026-11-20) appends one reviewed migration after the
+// course reminder; strip it explicitly so the compositions below stay exact.
+async function withoutChatDelivery(manifest) {
+  const appended = manifest.migrations.at(-1);
+  if (appended?.id !== '2026-11-20_chat_external_delivery') return manifest;
+  await integrationExec('git', ['merge-base', '--is-ancestor', appended.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const { stdout } = await integrationExec('git', ['show', appended.introducedBy + ':' + appended.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, appended.path), 'utf8'), stdout);
+  return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
+}
+
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const combined = await withoutCourseReminder(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
+  const combined = await withoutCourseReminder(await withoutChatDelivery(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'))));
   assert.equal(combined.migrations.at(-1).id, '2026-11-07_studio_gallery');
   const actual = { ...combined, migrations: combined.migrations.slice(0, -1) };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
@@ -6612,7 +6623,7 @@ test('studio gallery appends its original migration and preserves both complete 
   const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
   const before = await integrationParent(base, file);
   const original = (await integrationParent(gallery, file)).migrations.at(-1);
-  const current = await withoutCourseReminder(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
+  const current = await withoutCourseReminder(await withoutChatDelivery(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'))));
   assert.equal(original.id, '2026-11-07_studio_gallery');
   // Later reviewed appends follow the gallery entry; the composition test
   // above names each of them. The manifest up to the gallery is unchanged.

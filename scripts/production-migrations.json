@@ -1340,6 +1340,11 @@
       "introducedBy": "7da005edcdcce714343d3bbf7273fc31dd0743f4"
     },
     {
+      "id": "2026-11-20_chat_external_delivery",
+      "path": "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
+      "introducedBy": "8da140ae64c51b8ef006e7678589c8bcf5ef38f3"
+    },
+    {
       "id": "2026-11-21_music_audio_measurement",
       "path": "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
       "introducedBy": "6ab7ca2abd473e901c619f2fc9488dbf5a5dab2b"
