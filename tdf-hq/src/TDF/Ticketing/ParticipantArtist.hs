@@ -51,14 +51,18 @@ registerParticipantArtistForOrder now order = do
             -- event, or an order and an edit, then check and change the lineup
             -- one at a time, so the artist ceiling cannot be passed.
             lockEventLineup eventKey
-            mArtist <- participantArtistFor now order partyIdValue
-            case mArtist of
-                Nothing -> pure ()
-                Just artistKey -> do
-                    linked <- get (EventArtistKey eventKey artistKey)
-                    listed <- count [EventArtistEventId ==. eventKey]
-                    when (isNothing linked && listed < maxListedEventArtists) $
-                        void (insertUnique (EventArtist eventKey artistKey (Just "participant")))
+            -- A full lineup is left unchanged. The check comes before the
+            -- profile helper, so a buyer who cannot be listed does not get an
+            -- artist profile created as a side effect.
+            listed <- count [EventArtistEventId ==. eventKey]
+            when (listed < maxListedEventArtists) $ do
+                mArtist <- participantArtistFor now order partyIdValue
+                case mArtist of
+                    Nothing -> pure ()
+                    Just artistKey -> do
+                        linked <- get (EventArtistKey eventKey artistKey)
+                        when (isNothing linked) $
+                            void (insertUnique (EventArtist eventKey artistKey (Just "participant")))
         _ -> pure ()
 
 -- The tickets inserted just before this already hold the event's KEY SHARE
