@@ -14,6 +14,7 @@ import {
   Switch,
   TextField,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
@@ -64,6 +65,7 @@ export default function TaxonomyFilterBar({
 }: TaxonomyFilterBarProps) {
   const { t, i18n } = useTranslation();
   const language = resolveTaxonomyLanguage(i18n?.resolvedLanguage ?? i18n?.language);
+  const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)', { noSsr: true });
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [onlyHere, setOnlyHere] = useState(false);
   const [nearMeMessage, setNearMeMessage] = useState<string | null>(null);
@@ -187,7 +189,7 @@ export default function TaxonomyFilterBar({
         </Alert>
       )}
 
-      <Collapse in={expanded} id={panelId} unmountOnExit>
+      <Collapse in={expanded} id={panelId} timeout={reduceMotion ? 0 : undefined} unmountOnExit>
         <Stack spacing={1.5} sx={{ mt: 1.5 }}>
           {optionsError && <Alert severity="warning">{t('taxonomyFilters.loadError')}</Alert>}
           <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: `repeat(${dimensions.length}, minmax(0, 1fr))` } }}>
