@@ -10490,7 +10490,7 @@
     {
       "id": "SURFACE-8ff97ac79f9014bb",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
-      "sha256": "a454d3ef63cbd0e5ff763ee4accc326af004b95f28888193ce18515d16a59e8d",
+      "sha256": "2026696bafa50eca38ae4da863815200ec4b8c8db7460f1192d1c136035d4517",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12560,13 +12560,13 @@
     {
       "id": "SURFACE-57d71f490b9a0d52",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
-      "sha256": "5f358b5c6ec7f9a42292fcfc6de984b66101976a5edcf3558abeb1148f4f19de",
+      "sha256": "b91a88cdf824df3c20b7c93be331898a9a870235333dfa904ccb6ecee25275b5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6b97ed3a68e676f6",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-      "sha256": "feedf51eab249474ab6e971bd6a9aef7c72d3be117f2b01f7cfe3aea19ca32e5",
+      "sha256": "eeb712efbd3cbff628839fc8f200c7b0b3fa2b2cb8777e09a2c63a93aaf7853f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14174,13 +14174,13 @@
     {
       "id": "SURFACE-385779829756a659",
       "path": "tdf-hq-ui/src/utils/providerPaymentResume.test.ts",
-      "sha256": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
+      "sha256": "7021794baee4e86ad068acd0f5c69f1c4c00fc6d4b50a68eff0c8a0484eff49c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-02c8cdf3d4eb64fb",
       "path": "tdf-hq-ui/src/utils/providerPaymentResume.ts",
-      "sha256": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
+      "sha256": "ad8fbd9b88aa8b65b4928e8f6d756e1a6a8fbb78b3294f7563c7dcdd734ceca5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18248,7 +18248,7 @@
     {
       "id": "SURFACE-9038b2dbdf428e2c",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
-      "sha256": "38bcf3bde4d2ef0ee7620c98b9586fb8b7db5c165207d34bbb28b8e73891244a",
+      "sha256": "f16b44bc57ffd1ab79b6d838ffdc604e39a6bdd3cfc195f56b48b0c245a9ad49",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18260,7 +18260,7 @@
     {
       "id": "SURFACE-163048cc75f29b92",
       "path": "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
-      "sha256": "0845b9639d054fbb4e43af1a86abf9b9b1587306e8f2ee0200ad529d2fd17fd3",
+      "sha256": "eafb32778abc9e483394275a25a7c042e69600acfb4532fed2722578ab870d11",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19046,7 +19046,7 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "d5129a96d1450d4c428ff8d6886abb1311116c24c43f40b8ae3e01327dfd3116",
+      "sha256": "e635917ea9b611e78acc7621d88a132ebd7bc3e5e7411e3170e925fa2272a58c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19580,7 +19580,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "0b8f75b56d07375dc1aedfa447191eb9f714b21d25924ee247c0c19160a1a4cd",
+      "sha256": "c7b13d94b00bd54768dd18652fd55165b510ed44c4ce18e6fc610f04be9f2427",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19706,13 +19706,13 @@
     {
       "id": "SURFACE-5d36ee6901338dab",
       "path": "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
-      "sha256": "5b0a405f5a8e81e439655b8aac0384c828258113c625cfa1f1d4acb0376a3cde",
+      "sha256": "427e5e58f1441e7f898847f5c37ba3d23f1a6b997f468e03a62a892333d13c7a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "110a2aadfc9f1659c7f0d641e66d1d737383f18b5eb0855ff6652d60653eabe9",
+      "sha256": "44054e10e58b273a89b785c4edab4ef5113b3d57da79c2663e537cdeaf5fa894",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25206,7 +25206,7 @@
     },
     {
       "path": "docs/marketplace/manual-gates.md",
-      "sha256": "f0c70150c7e005806675054c6ba2b208b5dff12bbaa01a33811ddb1ff3e2b149",
+      "sha256": "9db184c3c03c0fcb99718eb41f793f8fc277146480099b2f91d471ca2401fa8f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25837,6 +25837,13 @@
     {
       "path": "docs/payments/ecuador-payment-platform-audit-2026-09-11.md",
       "sha256": "819d350d7e7ebc11b344f84f19524af661313c10348a4e4116efd18aade2c26d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/ecuador-payment-review-2026-11-24.md",
+      "sha256": "79a0a639e5d02a62c2163849057836b93b21abbf9617667360833d0b07d1009f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
