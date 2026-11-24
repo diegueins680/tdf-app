@@ -52,6 +52,7 @@ library
     TDF.API.SocialRelationships
     TDF.Social.FanEffects
     TDF.Fans.ArtistRecommendations
+    TDF.Fans.ArtistSimilarity
     TDF.API.FanFollowing
     TDF.Social.RelationshipWrites
     TDF.Social.RelationshipReads
@@ -88,6 +89,7 @@ library
     TDF.API.WhatsApp
     TDF.API.DDEX
     TDF.API.Directory
+    TDF.API.Taxonomy
     TDF.API.Reviews
     TDF.API.MerchReputation
     TDF.API.Catalog
@@ -171,6 +173,7 @@ library
     TDF.MusicRelease.Domain
     TDF.MusicRelease.ContentValidation
     TDF.MusicRelease.Money
+    TDF.MusicRelease.Loudness
     TDF.MusicRelease.CredentialCache
     TDF.MusicRelease.DDEX.ERN432
     TDF.MusicRelease.Storage.S3
@@ -238,11 +241,15 @@ library
     TDF.Server.EventAttendees
     TDF.Server.TicketSalesWindow
     TDF.Server.SocialEventsHandlers
+    TDF.Server.SocialEventsTaxonomy
     TDF.Server.SocialArtistOwnership
     TDF.Server.StripeTicketCapture
     TDF.Server.EventResearch
     TDF.Server.DDEX
     TDF.Server.Directory
+    TDF.Server.Taxonomy
+    TDF.Taxonomy.Filter
+    TDF.Taxonomy.GenreSuggestion
     TDF.Server.DirectoryAgreementText
     TDF.Server.Merch
     TDF.Server.Reviews
@@ -282,6 +289,8 @@ library
     TDF.Catalog.Seed
     TDF.Catalog.Types
     TDF.Directory.Policy
+    TDF.Directory.SemanticIndex
+    TDF.Directory.SemanticSearch
     TDF.DDEX.Types
     TDF.DDEX.Models
     TDF.DDEX.DB
@@ -297,6 +306,8 @@ library
     TDF.DDEX.ERN.V432.Convert
     TDF.DDEX.Observability
     TDF.DDEX.TestFixtures
+    TDF.Venues.Search
+    TDF.Venues.SearchFold
     TDF.Version
     TDF.WhatsApp.Client
     TDF.WhatsApp.History
@@ -421,6 +432,7 @@ test-suite tdf-hq-test
     TDF.OperationsInboundCaptureSpec
     TDF.ProviderIdentitySpec
     TDF.CredentialLifecycleSpec
+    TDF.Venues.SearchSpec
     TDF.WhatsAppConsentSpec
     TDF.LedgerPostingSpec
     TDF.MusicPublicationSpec
@@ -463,6 +475,7 @@ test-suite tdf-hq-test
     TDF.Artists.EnrichmentSpec
     TDF.MusicRelease.DDEX.ERN432Spec
     TDF.MusicRelease.ContentSpec
+    TDF.MusicRelease.LoudnessSpec
     TDF.MusicRelease.Storage.S3Spec
     TDF.MusicRelease.DomainSpec
     TDF.EventOperations.DatabaseBoundarySpec
@@ -471,6 +484,10 @@ test-suite tdf-hq-test
     TDF.Catalog.RecordsSpec
     TDF.Catalog.PipelineSpec
     TDF.Directory.PolicySpec
+    TDF.Directory.SemanticSearchPostgresSpec
+    TDF.Directory.SemanticSearchSpec
+    TDF.Taxonomy.FilterSpec
+    TDF.Taxonomy.GenreSuggestionSpec
     TDF.Profiles.ArtistSpec
     TDF.Profiles.ArtistActivationSpec
     TDF.Server.MerchRuntimeSpec
@@ -484,6 +501,7 @@ test-suite tdf-hq-test
     TDF.ServerFanClubSpec
     TDF.Fans.FeedAffinitySpec
     TDF.Fans.ArtistRecommendationsSpec
+    TDF.Fans.ArtistSimilaritySpec
     TDF.ServerSpec
     TDF.StartupResponseSpec
     TDF.ServerAdminSpec

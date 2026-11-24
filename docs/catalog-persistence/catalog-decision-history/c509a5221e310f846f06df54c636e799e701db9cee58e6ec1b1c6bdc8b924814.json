@@ -1,0 +1,27 @@
+{
+  "id": "72cd06bd8f08545fb49a",
+  "classification": "dynamic-business-catalog",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "domain-specific catalog table selected during consumer refactor",
+  "priority": "P1-cross-platform",
+  "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+  "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-hq/docs/openapi/api.yaml",
+    "line": 11096,
+    "kind": "openapi-enum",
+    "name": "reportReason",
+    "valueCount": 9,
+    "consumerCount": 24,
+    "exactDuplicateIds": [
+      "fae071613149bc188784"
+    ],
+    "similarCandidateIds": [
+      "fae071613149bc188784",
+      "8b88a85d1241e1ec1056"
+    ]
+  }
+}

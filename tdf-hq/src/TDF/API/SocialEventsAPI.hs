@@ -441,7 +441,26 @@ type EventsRoutes =
         :> QueryParam "venueId" Text
         :> QueryParam "limit" Int
         :> QueryParam "offset" Int
+        -- TAX-FILTER-001: the venue's location and the lineup's genres.
+        :> QueryParams "countryIds" UUID
+        :> QueryParams "regionIds" UUID
+        :> QueryParams "cityIds" UUID
+        :> QueryParams "genreIds" UUID
         :> Get '[JSON] [EventDTO]
+        -- Kept ahead of "events/:id" so "facets" is never read as an id.
+        :<|> "events" :> "facets"
+        :> QueryParam "city" Text
+        :> QueryParam "scope" Text
+        :> QueryParam "start_after" Text
+        :> QueryParam "event_type_id" Text
+        :> QueryParam "workflow_state_id" Text
+        :> QueryParam "artistId" Text
+        :> QueryParam "venueId" Text
+        :> QueryParams "countryIds" UUID
+        :> QueryParams "regionIds" UUID
+        :> QueryParams "cityIds" UUID
+        :> QueryParams "genreIds" UUID
+        :> Get '[JSON] Value
         :<|> "events" :> ReqBody '[JSON] EventDTO :> Post '[JSON] EventDTO
         :<|> "events" :> IdParam :> Get '[JSON] EventDTO
         :<|> "events" :> IdParam :> ReqBody '[JSON] EventUpdateDTO :> Put '[JSON] EventDTO

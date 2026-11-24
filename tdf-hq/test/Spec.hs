@@ -49,6 +49,7 @@ import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
 import qualified TDF.StorageSecuritySpec as StorageSecuritySpec
 import qualified TDF.VideoCampaignsSpec as VideoCampaignsSpec
+import qualified TDF.Venues.SearchSpec as VenueSearchSpec
 import qualified TDF.Auth.AccountNameSpec as AccountNameSpec
 import qualified TDF.Auth.GoogleProfileNameSpec as GoogleProfileNameSpec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
@@ -189,6 +190,10 @@ import qualified TDF.Catalog.RecordsSpec as CatalogRecordsSpec
 import qualified TDF.Catalog.SecuritySpec as CatalogSecuritySpec
 import qualified TDF.Catalog.PipelineSpec as CatalogPipelineSpec
 import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
+import qualified TDF.Directory.SemanticSearchPostgresSpec as DirectorySemanticSearchPostgresSpec
+import qualified TDF.Directory.SemanticSearchSpec as DirectorySemanticSearchSpec
+import qualified TDF.Taxonomy.FilterSpec as TaxonomyFilterSpec
+import qualified TDF.Taxonomy.GenreSuggestionSpec as GenreSuggestionSpec
 import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage, passwordResetLink, passwordResetLinkWithLocale, passwordResetEmailContent)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
@@ -672,6 +677,7 @@ import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
 import qualified TDF.MusicCredentialCacheSpec as MusicCredentialCacheSpec
 import qualified TDF.MusicRelease.DomainSpec as MusicDomainSpec
 import qualified TDF.MusicRelease.ContentSpec as MusicContentSpec
+import qualified TDF.MusicRelease.LoudnessSpec as MusicLoudnessSpec
 import qualified TDF.MusicRelease.DDEX.ERN432Spec as MusicErn432Spec
 import qualified TDF.MusicRelease.Storage.S3Spec as MusicS3Spec
 import qualified TDF.DriveReplaySpec as DriveReplaySpec
@@ -681,6 +687,7 @@ import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
 import qualified TDF.Fans.FeedAffinitySpec as FeedAffinitySpec
 import qualified TDF.Fans.ArtistRecommendationsSpec as ArtistRecommendationsSpec
+import qualified TDF.Fans.ArtistSimilaritySpec as ArtistSimilaritySpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
 import qualified TDF.Server.EventRelationsSpec as EventRelationsSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
@@ -14807,6 +14814,7 @@ main = hspec $ do
                         }
                 _autoStopOptions
                     :<|> _searchStreams
+                    :<|> _streamFacets
                     :<|> _upsertActive
                     :<|> _importStreams
                     :<|> _refreshMetadata
@@ -14855,6 +14863,7 @@ main = hspec $ do
                         }
                 _autoStopOptions
                     :<|> _searchStreams
+                    :<|> _streamFacets
                     :<|> _upsertActive
                     :<|> _importStreams
                     :<|> _refreshMetadata
@@ -18543,6 +18552,10 @@ main = hspec $ do
     DDEXParseSpec.spec
     DDEXBusinessRulesSpec.spec
     DirectoryPolicySpec.spec
+    DirectorySemanticSearchSpec.spec
+    DirectorySemanticSearchPostgresSpec.spec
+    TaxonomyFilterSpec.spec
+    GenreSuggestionSpec.spec
     EventDiscoverySpec.spec
     RecordsIngestion.spec
     YouTubeSpec.spec
@@ -18550,6 +18563,7 @@ main = hspec $ do
     EventOperationsDatabaseBoundarySpec.spec
     EventResearchSpec.spec
     VideoCampaignsSpec.spec
+    VenueSearchSpec.spec
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
@@ -18569,6 +18583,7 @@ main = hspec $ do
       describe "music-unit-ddex" MusicErn432Spec.spec
       describe "music-unit-storage" MusicS3Spec.spec
       describe "music-unit-credential-cache" MusicCredentialCacheSpec.spec
+      describe "music-unit-loudness" MusicLoudnessSpec.spec
     StorageSecuritySpec.spec
     DriveReplaySpec.spec
     WhatsAppRedeliverySpec.spec
@@ -18587,6 +18602,7 @@ main = hspec $ do
     ServerFanClubSpec.spec
     FeedAffinitySpec.spec
     ArtistRecommendationsSpec.spec
+    ArtistSimilaritySpec.spec
     FollowSpec.spec
     SuggestionRankSpec.spec
     SuggestionStoreSpec.spec

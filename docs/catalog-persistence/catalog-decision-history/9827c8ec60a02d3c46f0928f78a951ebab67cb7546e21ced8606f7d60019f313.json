@@ -1,0 +1,48 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "cf87e472d0b33b82a82d",
+  "reviewed": true,
+  "justification": "Preserve all 258 migration objects of protected main 9399daf147d6c53dab153783e2d5721bebba566f in exact order, then append only the domo entries 2026-11-02_domo_refund_lifecycle with their existing introduction metadata and SQL byte-identical to reviewed branch parent c702734dd932b8445e2429462d6638e03261435a. Historical SQL qualification remains bound to that branch snapshot; this composition does not rewrite it or claim byte identity with an earlier introduction. Both complete parent review graphs and resolution objects are nested unchanged. This is an author review of the deployment registry composition; it does not authorize applying migrations, activating features, performing provider operations or release, and supplies no independent approval.",
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "domo-main-reconciliation-20261119",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 259
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:d4abcafe3efd939782adfce512a7f8f663f10cc62ffeb5d2535e4a0ebe2fd2e1"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:afd794f0addd04c1162ebc42fdefc08bb5309d5977b1b3a6e541e023d1ef3e2d"
+    }
+  ],
+  "sourceReviewReferences": [
+    {
+      "sourceRevision": "9399daf147d6c53dab153783e2d5721bebba566f",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "41c9a99d6511626df943e9477e6ccf32a2d6f4a97b899e22fa56aff8fdf33d60",
+      "sourceEntry": {
+        "id": "912cda11c7b6eb622f76"
+      },
+      "sourceEntryCanonicalSha256": "3c2f539985558c2fc29d53f33ab1e2c70696282473d894cebf8a14ab73072300",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "c702734dd932b8445e2429462d6638e03261435a",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "ebc3d7d7748aba226fc158797da1cb31ff522e02c38f30606fec9ef9d0a03399",
+      "sourceEntry": {
+        "id": "b4ea7d2b5ef71086012c"
+      },
+      "sourceEntryCanonicalSha256": "dd732968eb10ef0cbd9fcdcd944acda542cee9aab2bc2393bf91fa8a8783c362",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    }
+  ]
+}

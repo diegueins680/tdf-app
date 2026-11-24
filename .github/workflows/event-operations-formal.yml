@@ -92,6 +92,8 @@ jobs:
         run: python formal/payments/deposit_policy_arithmetic.py
       - name: Prove feed affinity ranking lemmas and negative controls
         run: python formal/social/feed_affinity_arithmetic.py
+      - name: Prove the venue search bounding box and its negative controls
+        run: python formal/social/venue_search_bounding_box.py
       - name: Prove provider binding admission and conjunct necessity
         run: python formal/payments/provider_binding_admission.py
       - name: Prove PlaceToPay query admission, exact minor units and guard necessity
@@ -109,6 +111,12 @@ jobs:
       - name: Prove friend suggestion walk invariants on bounded graphs and their controls
         timeout-minutes: 20
         run: python scripts/verify-friend-suggestion-pagerank.py --max-nodes 4
+      - name: Prove directory ranking tiers, semantic fallback and guard necessity
+        run: python formal/directory/semantic_rank.py
+      - name: Prove artist similarity ranking exclusions and total order
+        run: python formal/fans/artist_similarity_ranking.py
+      - name: Prove music loudness decision monotonicity and controls
+        run: python formal/music/loudness_decision.py
       - name: Generate formal assurance and release decision
         if: ${{ !cancelled() }}
         timeout-minutes: 15

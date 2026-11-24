@@ -15,6 +15,19 @@ jest.unstable_mockModule('../api/client', () => ({ API_BASE_URL: 'https://api.td
   post: jest.fn(), put: jest.fn(), del: jest.fn() }));
 // Capture the real search client before installing the ordinary component fixture.
 // The malformed-response regression below delegates through its actual parser.
+// TAX-FILTER-001: shared filter options and the profile-city default are not under test here.
+jest.unstable_mockModule('../api/taxonomy', () => ({
+  Taxonomy: {
+    filterOptions: jest.fn(async () => ({ countries: [], regions: [], cities: [], genres: [] })),
+    radioFacets: jest.fn(async () => ({})), musicReleaseFacets: jest.fn(async () => ({})), eventFacets: jest.fn(async () => ({})),
+    myGenreSuggestions: jest.fn(async () => []), checkGenreSuggestion: jest.fn(), submitGenreSuggestion: jest.fn(),
+  },
+  appendTaxonomyParams: (params: URLSearchParams, selection?: Record<string, string[]>) => {
+    Object.entries(selection ?? {}).forEach(([key, values]) => (values ?? []).forEach((value) => params.append(key, value)));
+    return params;
+  },
+}));
+jest.unstable_mockModule('../components/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
 const { musicReleases: actualMusicReleases } = await import('../api/musicReleases');
 const tracks = Array.from({ length: 13 }, (_, n): MusicPublicTrackSearchHit => ({ trackId: `track-${n}`, recordingId: `recording-${n}`,
   releaseId: 'release', releaseVersionId: 'version', releaseSlug: 'synthetic-release', releaseTitle: 'Lanzamiento', title: `Pista ${n}`,

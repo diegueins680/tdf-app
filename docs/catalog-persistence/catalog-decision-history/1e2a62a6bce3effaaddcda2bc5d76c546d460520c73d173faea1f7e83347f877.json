@@ -1,0 +1,9 @@
+{
+  "id": "9f7714307b6856ea63cf",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "risk": "Expanding exception details can expose database internals or mishandle cancellation and retryable conflicts.",
+  "justification": "DatabaseFailure is the Haskell exception-classification boundary: SQL serialization/deadlock errors map to TransactionConflict, other synchronous failures to DatabaseUnavailable, and asynchronous cancellation is rethrown. These are sanitized runtime variants, not business catalog entries.",
+  "reviewed": true
+}

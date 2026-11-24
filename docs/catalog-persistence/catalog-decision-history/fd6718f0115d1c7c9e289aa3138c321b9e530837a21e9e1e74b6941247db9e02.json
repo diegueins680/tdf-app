@@ -1,0 +1,27 @@
+{
+  "id": "fd606f7d00f82c78cb20",
+  "classification": "security-system-registry",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "navigation_item, navigation_item_permission",
+  "priority": "P0-security",
+  "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+  "justification": "Preserve protected mobile navigation and add the existing launch workspace as generated dispatch metadata, without permission grants or provider activation.",
+  "reviewed": true,
+  "reviewMethod": "manual-source-review",
+  "reviewBatch": "eventos-label-2026-10-11",
+  "evidence": {
+    "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+    "line": 55,
+    "kind": "array",
+    "name": "mobileFeatureRegistry",
+    "valueCount": 164
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:8c0ade0fbaa0a85e827751cb386f8feebcead8839ef2ef1b89a7826bc9395d1e"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:366d8f76aa27dc0535bef240148eeed006eea9dfb89cd08c8d06b05b546eb9d7"
+    }
+  ]
+}

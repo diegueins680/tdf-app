@@ -22,6 +22,7 @@ import           TDF.Server.NotificationDelivery (notificationDeliveryServer)
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
 import qualified TDF.Fans.ArtistRecommendations as ArtistRecommendations
+import qualified TDF.Fans.ArtistSimilarity as ArtistSimilarity
 import qualified TDF.Social.RelationshipReads as SocialReads
 import qualified TDF.Social.SuggestionStore as SocialSuggestions
 import qualified TDF.Social.RelationshipWrites as SocialWrites
@@ -226,6 +227,7 @@ import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Server.Directory as DirectoryServer
+import qualified TDF.Server.Taxonomy as TaxonomyServer
 import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MusicRelease as MusicReleaseServer
 import TDF.MusicRelease.CredentialCache (musicCredentialCache)
@@ -783,6 +785,7 @@ server env =
   :<|> CatalogServer.publicCatalogServer
   :<|> InteractionsServer.publicInteractionsServer
   :<|> DirectoryServer.directoryPublicServer
+  :<|> TaxonomyServer.taxonomyPublicServer
   :<|> MerchServer.merchPublicServer
   :<|> publicUpcomingEventsServer
   :<|> ReviewsServer.reviewsPublicServer
@@ -4002,6 +4005,7 @@ protectedServer user =
   :<|> AuthServer.artistInvitationsServer user
   :<|> navigationPreferencesServer user
   :<|> DirectoryServer.directoryProtectedServer user
+  :<|> TaxonomyServer.taxonomyProtectedServer user
   :<|> MerchServer.merchProtectedServer user
   :<|> OperationsServer.operationsServer user
   :<|> EventOperationsServer.eventOperationsServer user
@@ -7918,15 +7922,23 @@ fanListFollows user = do
     profileMap <- fetchArtistProfileMap artistIds
     pure (map (fanFollowEntityToDTO nameMap profileMap) follows)
 
--- | GET /fans/me/recommendations (COMMUNITY-FAN-RECOMMENDATION-001).
+-- | GET /fans/me/recommendations (COMMUNITY-FAN-RECOMMENDATION-001). With
+-- FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED the ranking reads the stored
+-- multi-signal similarity (COMMUNITY-ARTIST-SIMILARITY-001); otherwise it is
+-- the follows-only ranking.
 fanListRecommendations :: AuthedUser -> Maybe Int -> AppM [ArtistRecommendationDTO]
 fanListRecommendations user mLimit = do
   requireFanAccess user
-  Env pool _ <- ask
+  Env pool cfg <- ask
+  let limit = ArtistRecommendations.clampRecommendationLimit mLimit
   recommendations <- liftIO $ flip runSqlPool pool $
-    ArtistRecommendations.loadArtistRecommendations
-      (auPartyId user)
-      (ArtistRecommendations.clampRecommendationLimit mLimit)
+    if fanMultiSignalRecommendationsEnabled cfg
+      then
+        ArtistSimilarity.loadSimilarityRecommendations
+          ArtistSimilarity.StoredGeneration
+          (auPartyId user)
+          limit
+      else ArtistRecommendations.loadArtistRecommendations (auPartyId user) limit
   pure
     [ ArtistRecommendationDTO
         { arecArtistId = ArtistRecommendations.recArtistId item

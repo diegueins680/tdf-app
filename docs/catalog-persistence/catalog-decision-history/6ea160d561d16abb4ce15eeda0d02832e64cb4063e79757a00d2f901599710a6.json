@@ -1,0 +1,54 @@
+{
+  "id": "903e61463c0222f30d9b",
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "justification": "Preserve the complete 227-entry protected main c377ce75 migration prefix (canonical sha256 3fb0233724d5f6080b6d8933e46f0cd79c34b73fd3070e3e17b742ce1ff5113e) and append only the six formal-audit migrations introduced on PR #691 (artist tip idempotency, Domo cancellation policy and record, social delivery designation, course deposit policy, directory claim revocation) with unchanged SQL and introduction ancestors. The entire 227-entry review graph (memory, provider and header parents) is preserved by canonical hashes. This 233-entry technical execution-registry classification grants no production execution, refund, provider activation, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "formal-audit-phase2-main-c377ce75-20261102",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 233
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:652a08651721ed72b0af6dca7cb47d0312e2ed12575d4d2cf969ce978696c604"
+  },
+  "sourceReviewReferences": [
+    {
+      "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "dfa00521daab7ab21082169feef62f988da149470afb2bf24151bf53674e05ac",
+      "sourceEntry": {
+        "id": "f48c34252ff8930b3d74"
+      },
+      "sourceEntryCanonicalSha256": "d08e3ff9409b47ab035fc67269d79010fd3738333fdc971c305ded3ddfeadf9b",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "816e33527bddc88f717e3a02a1ae1c9b04cbabeba90271e80488579a7d5fa1f9",
+      "sourceEntry": {
+        "id": "2634b239375f2ad309ba"
+      },
+      "sourceEntryCanonicalSha256": "6bcc3d19c2aea1adb0ce6ede68d59ec60b025b953a083bc5be6090f4be90ed1a",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "df3417afcd9095d570d7be683eef5ab3382361d1",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "08f6e44ccd5ce830bee7363c0e66639cc9081be85e7b7c487d8b2089336cf062",
+      "sourceEntry": {
+        "id": "a2bb0e828d5b94c1cb31"
+      },
+      "sourceEntryCanonicalSha256": "2a868127eeb27cf8ffcaf4d162dd6123bf0ae8ad9ce54901c0cabb631cf43e6e",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+      "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+    }
+  ]
+}

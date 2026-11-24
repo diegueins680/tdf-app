@@ -1,0 +1,19 @@
+{
+  "id": "2223179c95a61ccff02d",
+  "classification": "security-system-registry",
+  "disposition": "retain-in-code",
+  "specializedModel": "navigation_item, navigation_item_permission",
+  "priority": "P3-retain",
+  "risk": "Changing navigation or UI constants could break rendering or user experience.",
+  "justification": "The administration navigation adds the protected video-source screen. This array maps client routes to labels; source approval and publication authority remain server-enforced.",
+  "reviewed": true,
+  "reviewMethod": "manual-source-review",
+  "reviewBatch": "records-ingestion-2026-09-28",
+  "evidence": {
+    "file": "tdf-hq-ui/src/components/SidebarNav.tsx",
+    "line": 210,
+    "kind": "array",
+    "name": "items",
+    "valueCount": 19
+  }
+}

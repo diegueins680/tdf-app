@@ -1,0 +1,26 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "ce7bfcaf485d7a8914f3",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "chat-external-delivery-20261120",
+  "justification": "Preserve every reviewed migration object of the previous decision in its exact order and append only 2026-11-20_chat_external_delivery (introduced by 239fc3974a114d08d3d27d6f4899f9cfcf4fd81e), an additive, repeatable migration. The parent review graph remains nested unchanged. This author review does not authorize deployment or provider activation and is not independent approval.",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 262
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:bf108393c08def26f949d45b305bec6da83df6ab14504e6362ce0b7489672a97"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:6040d6cb14e7f6246eac8e66931cb3acf4474f51ab2240c775c9a3bc84fd18f1"
+    }
+  ]
+}
