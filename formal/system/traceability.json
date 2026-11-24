@@ -30426,7 +30426,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "de4b09f474bffac1f7264695654ef0ba320e6d0bba1df7bc07c31f3addfd0319",
+    "scripts/production-migrations.json": "7390479a39316116de5c79ff3189c0cbaae83657755bd0b874f2a81fc5b06adc",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "e497d1ce41e8b1bdc3ae776a164b0cb3c6317b5c799ecce85205ef9c79602729",
@@ -31655,7 +31655,7 @@
     "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "8a792c1acc5881f86cd99d27b8916bc021d95853f7bcde82cac290aebef2300d",
     "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs": "0e1b0135876e275cb5131236e7907060dca3f128b9e6341b2d6221141fee21e5",
     "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "983df8a6ae7a9054a8caa8626c55f0a6b6b1d7d2099330ded3efc6d48f6dc8e8",
-    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "e683710d467e99bef533498a64d1220fbd18286fa91f9580f68dfa6eb46c4043",
+    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "91c8133e0e8ea041d17c0223e9efdce17bb8ab609a6a67ffefa7b218616a04b6",
     "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs": "6352a40de1dd0aa01c67502609c0a06b51205eeb851c3efaabca6babfa3fbb88",
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "92c1c8b67ba216a4a5a3f563260f4a83beef6628cfdbbbcb9711b9f6b8bf55ec",
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "7b33d92413ab2ef23d3f4064257448e8ff87109da4098308b752828b679a6edc",
@@ -31807,7 +31807,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "ad8464697185513d41a2b0f0342098e8bfc9f3091b779facf9e6a9151ecbabcd",
+    "tdf-hq/tdf-hq.cabal": "160b94c18d6e4642c3b68c0596e062d09ac38e60d878fb1a7d0110975f52b1c3",
     "tdf-hq/test/ArtistSimilarityProbe.hs": "3ec4f5ba3547477e75ed6cff02b735cb3cb852720ffa20fcbdc5bec8f0352efe",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
@@ -31836,7 +31836,7 @@
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "5b0a405f5a8e81e439655b8aac0384c828258113c625cfa1f1d4acb0376a3cde",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "110a2aadfc9f1659c7f0d641e66d1d737383f18b5eb0855ff6652d60653eabe9",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "5e6e01f53e07e1219445a288aa4ba4f67ba7c7fb1a5381277c2b26c62a4a8436",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "135de88596c0230d902d294fcb47728f872f5a668d4bd51659c8f7b1e27ec425",
@@ -58713,7 +58713,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "de4b09f474bffac1f7264695654ef0ba320e6d0bba1df7bc07c31f3addfd0319",
+      "sha256": "7390479a39316116de5c79ff3189c0cbaae83657755bd0b874f2a81fc5b06adc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81436,6 +81436,13 @@
       ]
     },
     {
+      "id": "SURFACE-4a1db15b418bd008",
+      "path": "tdf-hq/sql/2026-11-24_datafast_recovery.sql",
+      "sha256": "2b483352b983daaf6ca25b3975109da8c692c0cf1a2481d292cd26160685e992",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -82549,6 +82556,13 @@
       ]
     },
     {
+      "id": "SURFACE-e354dd8c2764ac25",
+      "path": "tdf-hq/src/TDF/Commerce/DatafastRecovery.hs",
+      "sha256": "7a9e0f69cb5a6131c306b9ff4cd1696827b56ae88de9dcc9e202ecac65514dce",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-7bb4e94c65f7c89c",
       "path": "tdf-hq/src/TDF/Commerce/DepositPolicy.hs",
       "sha256": "6829fa5bf78c1d1839770e0728960967dfdbcdca62661dadd06adb2191d0a94f",
@@ -82915,7 +82929,7 @@
     {
       "id": "SURFACE-24ec334e6417bf04",
       "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-      "sha256": "e683710d467e99bef533498a64d1220fbd18286fa91f9580f68dfa6eb46c4043",
+      "sha256": "91c8133e0e8ea041d17c0223e9efdce17bb8ab609a6a67ffefa7b218616a04b6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86598,7 +86612,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "ad8464697185513d41a2b0f0342098e8bfc9f3091b779facf9e6a9151ecbabcd",
+      "sha256": "160b94c18d6e4642c3b68c0596e062d09ac38e60d878fb1a7d0110975f52b1c3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87291,7 +87305,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "110a2aadfc9f1659c7f0d641e66d1d737383f18b5eb0855ff6652d60653eabe9",
+      "sha256": "5e6e01f53e07e1219445a288aa4ba4f67ba7c7fb1a5381277c2b26c62a4a8436",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -94238,6 +94252,7 @@
     "SURFACE-528ba14a45085166",
     "SURFACE-926be86200012f94",
     "SURFACE-dd062802b0652474",
+    "SURFACE-4a1db15b418bd008",
     "SURFACE-7c4cd603babd8c4c",
     "SURFACE-87ed7351125c499c",
     "SURFACE-1c1ef431782f3c8d",
@@ -94273,6 +94288,7 @@
     "SURFACE-fafba19435170b95",
     "SURFACE-511b3353261bf5fb",
     "SURFACE-68f141730b470989",
+    "SURFACE-e354dd8c2764ac25",
     "SURFACE-42d48212b5b3fd40",
     "SURFACE-64cb8366887e5054",
     "SURFACE-059d1c74b4946473",
