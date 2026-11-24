@@ -3,18 +3,38 @@
 -- | TAX-GENRE-SUGGESTION-001: casing, spelling, duplicate and review checks.
 module TDF.Taxonomy.GenreSuggestionSpec (spec) where
 
+import Control.Concurrent.Async (concurrently)
+import Control.Exception (bracket)
+import Control.Monad (void)
+import Control.Monad.Logger (runNoLoggingT)
+import Control.Monad.Reader (runReaderT)
+import qualified Data.ByteString.Char8 as BS
+import Data.Char (digitToInt, isAsciiLower)
+import Data.Int (Int64)
+import Data.List (sort)
+import Data.Pool (destroyAllResources)
+import qualified Data.UUID.V4 as Random
+import Database.Persist.Postgresql (createPostgresqlPool)
+import Database.Persist.Sql (toSqlKey)
+import qualified Database.PostgreSQL.Simple as PG
+import Servant ((:<|>)(..), errHTTPCode, runHandler)
+import System.Environment (lookupEnv)
+import TDF.API.Taxonomy (GenreSuggestionRequest(..), GenreSuggestionApproval(..))
+import TDF.Auth (AuthedUser(..))
+import TDF.DB (Env(..))
+import TDF.Models (RoleEnum(Admin))
+import TDF.Test.DisposablePostgres (isDisposablePostgresUrl)
 import Data.Either (isLeft)
 import Data.Maybe (fromJust)
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
-import Data.Char (isAsciiLower)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.UUID as UUID
 import Test.Hspec
 import Test.QuickCheck
 
-import TDF.Server.Taxonomy (genreSuggestionSlug)
+import TDF.Server.Taxonomy (genreSuggestionSlug, taxonomyProtectedServer)
 import TDF.Taxonomy.GenreSuggestion
 
 existing :: [ExistingGenre]
@@ -72,6 +92,14 @@ spec = describe "TAX-GENRE-SUGGESTION-001 genre suggestion checks" $ do
       verdict (checkGenreSuggestion existing True "Regueton" "Regueton")
         `shouldBe` Just (NeedsReview ["similar_to_existing", "unknown_word:regueton"])
 
+  it "publishes one genre when artists submit or administrators approve the same bilingual name concurrently" $ do
+    configured <- lookupEnv "TDF_DISCOVERY_TEST_DATABASE_URL"
+    ci <- lookupEnv "CI"
+    case configured of
+      Nothing -> pendingWith "Set TDF_DISCOVERY_TEST_DATABASE_URL to the migrated discovery test database"
+      Just url | isDisposablePostgresUrl (ci == Just "true") url -> publicationRace url
+      Just _ -> expectationFailure "Expected a disposable discovery test database"
+
   describe "automatic approval" $ do
     it "approves a name made only of known words" $ do
       verdict (check "pop rock" "pop rock") `shouldBe` Just AutoApprove
@@ -99,3 +127,41 @@ spec = describe "TAX-GENRE-SUGGESTION-001 genre suggestion checks" $ do
       genreSuggestionSlug "Cumbia Villera" `shouldBe` "cumbia-villera"
       genreSuggestionSlug "Rock en Español" `shouldBe` "rock-en-espanol"
       genreSuggestionSlug "R&B" `shouldBe` "r-b"
+
+publicationRace :: String -> IO ()
+publicationRace url =
+  bracket (PG.connectPostgreSQL connection) PG.close $ \db ->
+    bracket (runNoLoggingT (createPostgresqlPool connection 2)) destroyAllResources $ \pool ->
+      bracket (newArtist db) (cleanup db) $ \artist -> do
+        nonce <- Random.nextRandom
+        let vocabulary = ["rock", "pop", "cumbia"]
+            wordsForTest = [vocabulary !! (digitToInt c `mod` 3) | c <- take 8 (UUID.toString nonce)]
+            name = T.unwords wordsForTest
+            user = AuthedUser (toSqlKey artist) [Admin] mempty Nothing Nothing
+            _ :<|> submit :<|> _ :<|> _ :<|> approve :<|> _ :<|> _ = taxonomyProtectedServer user
+            run action = runHandler (runReaderT action (Env pool (error "Genre handlers do not use app configuration")))
+            statuses (first, second) = sort (map (either errHTTPCode (const 200)) [first, second])
+            request = GenreSuggestionRequest ("rock " <> name) ("rock " <> name) Nothing Nothing
+        submissions <- concurrently (run (submit request)) (run (submit request))
+        statuses submissions `shouldBe` [200,409]
+        let pending label = do
+              [PG.Only key] <- PG.query db
+                "INSERT INTO genre_suggestion(suggested_by_party_id,submitted_name,name_es,name_en,normalized_key) VALUES (?,?,?,?,replace(gen_random_uuid()::text,'-','')) RETURNING id"
+                (artist, label :: Text, label, label)
+              pure key
+            final = GenreSuggestionApproval ("pop " <> name) ("pop " <> name) Nothing
+        first <- pending "First pending fixture"
+        second <- pending "Second pending fixture"
+        approvals <- concurrently (run (approve first final)) (run (approve second final))
+        statuses approvals `shouldBe` [200,409]
+        counts <- PG.query db "SELECT count(*) FROM genre WHERE created_by=?" (PG.Only artist)
+        counts `shouldBe` [PG.Only (2 :: Int)]
+  where
+    connection = BS.pack url
+    newArtist db = do
+      [PG.Only artist] <- PG.query_ db "INSERT INTO party(display_name,is_org,created_at) VALUES ('Genre concurrency fixture',false,now()) RETURNING id"
+      pure (artist :: Int64)
+    cleanup db artist = PG.withTransaction db $ do
+      void (PG.execute db "DELETE FROM genre_suggestion WHERE suggested_by_party_id=?" (PG.Only artist))
+      -- Published catalog rows retain their audit history in the disposable database.
+      void (PG.execute db "UPDATE genre SET active=false WHERE created_by=?" (PG.Only artist))

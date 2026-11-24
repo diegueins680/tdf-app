@@ -30110,7 +30110,7 @@
     ".github/workflows/check-messaging-token.yml": "68ee6bacc89bb3d49176cd023a289b68c5fcaabf616fe599c645be7b34a20ddf",
     ".github/workflows/check-mobile-distribution.yml": "a02130cf5379c4a451ec8588b989a057a683dcf275fd3d6638b275aaec0ba599",
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
-    ".github/workflows/ci.yml": "a6f18a119d356731a6986c8df045180e8d0fb6671ede0ff05d842015fad3b279",
+    ".github/workflows/ci.yml": "60a98a18c206a9def1ef19cc22d40f6db2f08ac3975b05fc18905b91729c2741",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/domo-refund-validation.yml": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
@@ -30198,7 +30198,7 @@
     "e2e/web/staff-payment-report-money.spec.mjs": "6f70e7798ab7855b6b06cb82119b77c369c342a569fd534adfe8618931e569be",
     "e2e/web/storage-upload-recovery.spec.mjs": "2efc6e5da85b6862d9987c96aee6ac092ec0d92f53c66f15544549a60e7949c4",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
-    "e2e/web/taxonomy-filters.spec.mjs": "52721c4692efd50fc3b3576685cbe51140deee4f805a5028d1ffddba29aaf0ea",
+    "e2e/web/taxonomy-filters.spec.mjs": "4f0f351cff4d5c7c6046b687a93ac4f51ac088b682ecbe21076fe3f50913a91c",
     "e2e/web/ticket-credential.spec.mjs": "4fee41226c9c47a9b6df64ad3b06e99c0ce4ccd8f05c14145935139cdcd59ba1",
     "e2e/web/video-campaigns.spec.mjs": "33bf8365ded5ecdc9329bf260e36486d458f7bedf16bb45f25d04149d7de445c",
     "e2e/web/webtorrent-browser.spec.mjs": "6610f089d7b7c82b5c6460ed623cbc5413e250741162b48cf4e2de7ae14305d0",
@@ -31353,7 +31353,7 @@
     "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.ts": "b59b3004399e500c5729ae35a5aab825a08e43ee4f07276d69b602f05d8ed401",
     "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterStore.ts": "e4dfaac585e8fd764d5e02fbde4ad39c2e0ca5b2edbb6fa3da57eb6041e27a47",
     "tdf-hq-ui/src/components/taxonomyFilters/useProfileCityDefault.ts": "c0f2b752302bda52f17a5dc332aa98d71be8db0ac648c16efa5670c29808894d",
-    "tdf-hq-ui/src/components/taxonomyFilters/useTaxonomyFilters.ts": "45424cd2a21630badd92fff301c976e44bc108dd5f9f4ff6ee3f5505e391941f",
+    "tdf-hq-ui/src/components/taxonomyFilters/useTaxonomyFilters.ts": "c988feb09381861797dae662410d1370b6b7cfa2954b1d8a94e404e1e0b327d8",
     "tdf-hq-ui/src/config/accountDeletionRollout.test.ts": "a32b108366282c451878b0a95dd4c9efb1cdfba44ea779d0069cd03f3b5c913f",
     "tdf-hq-ui/src/config/accountDeletionRollout.ts": "c55e82bd8e87288e48b3ac05b86a9fe1335e4400be3e105d2f4fee71534af911",
     "tdf-hq-ui/src/config/appConfig.ts": "29f5c5e8d461756baa2d66118623a4b7841affeb08ce5f38d0a07a62b664213e",
@@ -31362,7 +31362,7 @@
     "tdf-hq-ui/src/desktop/shell.test.ts": "4a3ff436d1a4fc40424786499a45255e8e1b6b5c795408bcacbf17f874d55769",
     "tdf-hq-ui/src/desktop/shell.ts": "72405a96082db143d40b8ccd906d87ad217956a8e095d9b5dd980991255494ae",
     "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx": "a00ca314f75e38eb3d45483e68bbf1dd026b01cd4f5f152ffb392313627eac8f",
-    "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx": "4ff3615c78a3a326e215dfe873588302f35d23bb227040e78f8556dec94975e5",
+    "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx": "02c1bb047a06dea5665bdfa19f2663c1865b64e92b4475323cf4a18e8ac55832",
     "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx": "5a80e485f7fbb8affa088840f1f8e974499a68485074efbf037c850092f08957",
     "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx": "e261f6a323837e8a86fba18d37c8e47654e390d0e409d2063e00e3b599dde58d",
     "tdf-hq-ui/src/features/discovery/useDirectorySearch.ts": "0f4409994400c7190c601c87d8306189974bada850687b4b25bb21459313ecd4",
@@ -31496,7 +31496,7 @@
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "5b494fa55283cc129ee2a97c9368c8e20568a7e1d8c1a1fb72dc44cfbaadd021",
     "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "3d89ff3049614ddca44cf0c7494ff08f3a9c5d7fce2a1eee379e3a50bac49240",
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "44fc5164de8d794adfb89f8953f78e100ff45c6991f5e7c0bcec3d1f40aa43bd",
-    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "f97cb6743c14f8fa3947ac576cdc84c256ededed2e4b9d7c43592ce6460f481f",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "54d62708206a18bedadbc1e367e4e8ab971e8c02b6dd485b817d547f5ac15d6e",
     "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "cf84798fc9aa8afdad0af5272c6d1b4ba84f892325d35be8d7fc509ac174c1ab",
     "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx": "ff462bdf6febe3b83a73935009e770fbb1b9bafe5497749b7eef73bcf382e4ab",
     "tdf-hq-ui/src/pages/DomoVenuePage.tsx": "8ca17a3b14e7dc4b0a389cda819d2d7deb22cbee3d23dceb22350453874b9401",
@@ -32174,7 +32174,7 @@
     "tdf-hq/src/TDF/Server/SocialEventsTaxonomy.hs": "b0ded6258823c504b7d298b649ab4dfed2e5919cca74c44d5b337009b05c15df",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/StripeTicketCapture.hs": "b2a93b8ef71726410abeb79ec0ec07ef8e96d845ada7d7c0a401fda9b5b7c842",
-    "tdf-hq/src/TDF/Server/Taxonomy.hs": "309fa57182929b1f4434eb5d158b393e79bdb2d2fa8bdb427c6e5517d3118e4f",
+    "tdf-hq/src/TDF/Server/Taxonomy.hs": "a476d951363a1298f6e370fb9fa3be27199273bb9084b18cb8c4c39e2ebfdf6d",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "f6ed880698126fbfbc409ca4b1098c5f5052b0ea22cd44cade3d3e17de0db6cb",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
@@ -32317,7 +32317,7 @@
     "tdf-hq/test/TDF/Social/FollowSpec.hs": "fb6640d2e4e415809328254799fc89c884e1f08e75a4678ef6996f0805c7867b",
     "tdf-hq/test/TDF/StorageSecuritySpec.hs": "3358d870189320cab3387e054111df56893fbdb826b5ea09741579207a71d300",
     "tdf-hq/test/TDF/Taxonomy/FilterSpec.hs": "7f07c9ad5fb4ac7bd1727f36c408f2c2cde0aa264fd540e4e40dc48476a0405b",
-    "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs": "b95d77053f3611ae5627ec666fc34d61173208b40ff35aeb3a37844b47e99376",
+    "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs": "3e6590c46c015318f0152b0cd30020d269bbdf32e3dac07215d81740f0a5107d",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "d57960358b7aa404aff386e6b5fb319a61eef4162cffb5c2877f179360195845",
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "787b4aca5216a0e5ee10906523087f49791ef9b86a2a59eb9d487478e97440e2",
@@ -54465,7 +54465,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "a6f18a119d356731a6986c8df045180e8d0fb6671ede0ff05d842015fad3b279",
+      "sha256": "60a98a18c206a9def1ef19cc22d40f6db2f08ac3975b05fc18905b91729c2741",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55720,7 +55720,7 @@
     {
       "id": "SURFACE-238c10bc24bd2a0a",
       "path": "e2e/web/taxonomy-filters.spec.mjs",
-      "sha256": "52721c4692efd50fc3b3576685cbe51140deee4f805a5028d1ffddba29aaf0ea",
+      "sha256": "4f0f351cff4d5c7c6046b687a93ac4f51ac088b682ecbe21076fe3f50913a91c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -69518,7 +69518,7 @@
     {
       "id": "SURFACE-4bc9d6c53c4d376b",
       "path": "tdf-hq-ui/src/components/taxonomyFilters/useTaxonomyFilters.ts",
-      "sha256": "45424cd2a21630badd92fff301c976e44bc108dd5f9f4ff6ee3f5505e391941f",
+      "sha256": "c988feb09381861797dae662410d1370b6b7cfa2954b1d8a94e404e1e0b327d8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -69711,7 +69711,7 @@
     {
       "id": "SURFACE-7c62d34c2753965f",
       "path": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
-      "sha256": "4ff3615c78a3a326e215dfe873588302f35d23bb227040e78f8556dec94975e5",
+      "sha256": "02c1bb047a06dea5665bdfa19f2663c1865b64e92b4475323cf4a18e8ac55832",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72247,7 +72247,7 @@
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "f97cb6743c14f8fa3947ac576cdc84c256ededed2e4b9d7c43592ce6460f481f",
+      "sha256": "54d62708206a18bedadbc1e367e4e8ab971e8c02b6dd485b817d547f5ac15d6e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87131,7 +87131,7 @@
     {
       "id": "SURFACE-81b04901f3b1c7a4",
       "path": "tdf-hq/src/TDF/Server/Taxonomy.hs",
-      "sha256": "309fa57182929b1f4434eb5d158b393e79bdb2d2fa8bdb427c6e5517d3118e4f",
+      "sha256": "a476d951363a1298f6e370fb9fa3be27199273bb9084b18cb8c4c39e2ebfdf6d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -90349,7 +90349,7 @@
     {
       "id": "SURFACE-f596e7af18f762d5",
       "path": "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs",
-      "sha256": "b95d77053f3611ae5627ec666fc34d61173208b40ff35aeb3a37844b47e99376",
+      "sha256": "3e6590c46c015318f0152b0cd30020d269bbdf32e3dac07215d81740f0a5107d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

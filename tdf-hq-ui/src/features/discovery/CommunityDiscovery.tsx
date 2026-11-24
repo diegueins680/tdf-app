@@ -5,7 +5,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { resolveDirectoryPreviewImage } from '../../services/directoryPreviewImage';
 import { useTranslation } from 'react-i18next';
 import TaxonomyFilterBar from '../../components/taxonomyFilters/TaxonomyFilterBar';
-import { isTaxonomySelectionEmpty, resolveTaxonomyLanguage, taxonomyName, TAXONOMY_URL_KEYS } from '../../components/taxonomyFilters/taxonomyFilterModel';
+import { isTaxonomySelectionEmpty, resolveTaxonomyLanguage, taxonomyName } from '../../components/taxonomyFilters/taxonomyFilterModel';
 import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from '../../components/taxonomyFilters/useTaxonomyFilters';
 import { useProfileCityDefault } from '../../components/taxonomyFilters/useProfileCityDefault';
 import { isArtistPlaceholderImage } from '../../utils/artistFallbacks';
@@ -53,25 +53,11 @@ export default function CommunityDiscovery() {
     if (debounced !== query && debounced === draft.trim().replace(/\s+/gu, ' ')) update('q', debounced);
   }, [debounced, draft, query]); // eslint-disable-line react-hooks/exhaustive-deps
   const profileKind = params.get('profileKind') ?? '';
-  // TAX-FILTER-001: location and genre come from the shared filters. Links
-  // from before the shared filters (?genreId=&cityId=) open as the same filter.
-  useEffect(() => {
-    const legacyGenre = params.get('genreId');
-    const legacyCity = params.get('cityId');
-    if (!legacyGenre && !legacyCity) return;
-    setParams((current) => {
-      const next = new URLSearchParams(current);
-      next.delete('genreId'); next.delete('cityId');
-      if (legacyGenre && !next.getAll(TAXONOMY_URL_KEYS.genreIds).includes(legacyGenre)) next.append(TAXONOMY_URL_KEYS.genreIds, legacyGenre);
-      if (legacyCity && !next.getAll(TAXONOMY_URL_KEYS.cityIds).includes(legacyCity)) next.append(TAXONOMY_URL_KEYS.cityIds, legacyCity);
-      return next;
-    }, { replace: true });
-  }, [params, setParams]);
   const { i18n } = useTranslation();
   const language = resolveTaxonomyLanguage(i18n?.resolvedLanguage ?? i18n?.language);
   const taxonomyOptions = useTaxonomyFilterOptions();
   const profileCity = useProfileCityDefault(taxonomyOptions.data);
-  const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true });
+  const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true, legacyFilters: 'genre-and-city' });
   const { selection } = taxonomyFilters;
   const genreNames = new Map((taxonomyOptions.data?.genres ?? []).map((genre) => [genre.id, taxonomyName(genre, language)]));
   const requestedPage = Number(params.get('page'));

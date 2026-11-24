@@ -134,6 +134,23 @@ test('a mirrored page follows a second tab and can clear only its own filters @c
   await second.close();
 });
 
+test('legacy genre links override a different shared genre on Community and global search @critical', async ({ page, baseURL }) => {
+  const api = await fixture(page, baseURL);
+  await page.addInitScript((genre) => localStorage.setItem('tdf-hq-ui/taxonomy-filters/v1', JSON.stringify({
+    initialized: true, selection: { countryIds: [], regionIds: [], cityIds: [], genreIds: [genre] },
+  })), ROCK);
+  for (const [path, surface] of [['/fans', 'community'], ['/buscar', 'directory']]) {
+    await page.goto(`${path}?genreId=${CUMBIA}`);
+    const filters = page.getByTestId(`${surface}-taxonomy-filters`);
+    await expect(filters.getByTestId(`${surface}-taxonomy-chip`)).toHaveText(['Cumbia']);
+    await expect.poll(() => new URL(page.url()).searchParams.has('genreId')).toBe(false);
+    await expect.poll(() => api.lastCall('/directory/search')?.getAll('genreIds')).toEqual([CUMBIA]);
+    await filters.getByRole('button', { name: 'Limpiar filtros' }).click();
+    await expect.poll(() => api.lastCall('/directory/search')?.getAll('genreIds')).toEqual([]);
+    expect(api.lastCall('/directory/search')?.has('genreId')).toBe(false);
+  }
+});
+
 test('English viewers see English names, and a shared link opens as this section\'s own filters @critical', async ({ page, baseURL }, testInfo) => {
   const api = await fixture(page, baseURL);
   await page.addInitScript(() => window.localStorage.setItem('tdf-hq-ui/locale', 'en'));

@@ -18,6 +18,7 @@ import {
   taxonomySelectionsEqual,
   TAXONOMY_LOCAL_SCOPE_KEY,
   TAXONOMY_LOCAL_SCOPE_VALUE,
+  TAXONOMY_URL_KEYS,
   writeTaxonomySelectionToUrl,
 } from './taxonomyFilterModel';
 import { setSharedTaxonomySelection, useSharedTaxonomySelection } from './taxonomyFilterStore';
@@ -48,17 +49,33 @@ export interface SurfaceTaxonomyFilters {
 interface Options {
   /** Keep the selection in the URL (pages). Overlays such as the radio keep it in memory. */
   urlBacked: boolean;
+  legacyFilters?: 'genre' | 'genre-and-city';
   /** Called after a change so a page can reset its pagination. */
   onChange?: () => void;
 }
 
-export const useSurfaceTaxonomyFilters = ({ urlBacked, onChange }: Options): SurfaceTaxonomyFilters => {
+export const useSurfaceTaxonomyFilters = ({ urlBacked, onChange, legacyFilters }: Options): SurfaceTaxonomyFilters => {
   const shared = useSharedTaxonomySelection();
   const [searchParams, setSearchParams] = useSearchParams();
   const [memoryOverride, setMemoryOverride] = useState<TaxonomySelection | null>(null);
 
-  const urlHasState = urlBacked && hasTaxonomyUrlState(searchParams);
-  const urlSelection = useMemo(() => readTaxonomySelectionFromUrl(searchParams), [searchParams]);
+  const canonical = useMemo(() => {
+    if (!legacyFilters) return searchParams;
+    const migrateCity = legacyFilters === 'genre-and-city' && searchParams.has('cityId');
+    if (!migrateCity && !searchParams.has('genreId')) return searchParams;
+    const next = new URLSearchParams(searchParams);
+    const move = (oldKey: string, newKey: string) => {
+      for (const value of next.getAll(oldKey)) {
+        if (value && !next.getAll(newKey).includes(value)) next.append(newKey, value);
+      }
+      next.delete(oldKey);
+    };
+    move('genreId', TAXONOMY_URL_KEYS.genreIds);
+    if (migrateCity) move('cityId', TAXONOMY_URL_KEYS.cityIds);
+    return next;
+  }, [legacyFilters, searchParams]);
+  const urlHasState = urlBacked && hasTaxonomyUrlState(canonical);
+  const urlSelection = useMemo(() => readTaxonomySelectionFromUrl(canonical), [canonical]);
   const urlMarkedLocal = urlBacked && searchParams.get(TAXONOMY_LOCAL_SCOPE_KEY) === TAXONOMY_LOCAL_SCOPE_VALUE;
 
   const { state: navigationState } = useLocation();
@@ -73,7 +90,7 @@ export const useSurfaceTaxonomyFilters = ({ urlBacked, onChange }: Options): Sur
 
   const pendingFrom = useRef<URLSearchParams | null>(null);
   const writeUrl = useCallback((next: TaxonomySelection | null, local: boolean, removeParams: readonly string[] = []) => {
-    const updated = writeTaxonomySelectionToUrl(searchParams, next, local);
+    const updated = writeTaxonomySelectionToUrl(canonical, next, local);
     updated.delete('page');
     removeParams.forEach((key) => updated.delete(key));
     if (updated.toString() !== searchParams.toString()) pendingFrom.current = searchParams;
@@ -81,20 +98,24 @@ export const useSurfaceTaxonomyFilters = ({ urlBacked, onChange }: Options): Sur
       replace: true,
       state: { ...navigationState, sharedTaxonomy: local ? null : JSON.stringify(next) },
     });
-  }, [searchParams, setSearchParams, navigationState]);
+  }, [canonical, searchParams, setSearchParams, navigationState]);
 
   useEffect(() => {
     // A synchronous store notification can render before the router commits
     // the same user action. Wait for that navigation before mirroring again.
     if (!urlBacked || pendingFrom.current === searchParams) return;
     pendingFrom.current = null;
+    if (canonical !== searchParams) {
+      setSearchParams(canonical, { replace: true, state: navigationState });
+      return;
+    }
     if (!followsShared) {
       mirrored.current = null;
       return;
     }
     if (matchesShared) mirrored.current = shared;
     else writeUrl(shared, false);
-  }, [urlBacked, followsShared, matchesShared, shared, searchParams, writeUrl]);
+  }, [urlBacked, followsShared, matchesShared, shared, searchParams, writeUrl, canonical, setSearchParams, navigationState]);
 
   const setSelection = useCallback((next: TaxonomySelection, onlyHere = false) => {
     const local = onlyHere || isOverride;

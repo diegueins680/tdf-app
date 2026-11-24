@@ -100,7 +100,6 @@ interface SearchUrlState {
   professionId: string;
   serviceId: string;
   instrumentId: string;
-  genreId: string;
   remote: boolean;
   available: boolean;
   radiusKm: number;
@@ -121,7 +120,6 @@ const parseSearchUrl = (search: string): SearchUrlState => {
     professionId: params.get('professionId') ?? '',
     serviceId: params.get('serviceId') ?? '',
     instrumentId: params.get('instrumentId') ?? '',
-    genreId: params.get('genreId') ?? '',
     remote: params.get('remote') === 'true',
     available: params.get('available') === 'true',
     radiusKm: Number.isFinite(radius) ? Math.min(500, Math.max(1, radius)) : 25,
@@ -141,7 +139,6 @@ const buildSearchUrl = (state: SearchUrlState, nearby: boolean, currentSearch = 
   if (state.professionId) params.set('professionId', state.professionId);
   if (state.serviceId) params.set('serviceId', state.serviceId);
   if (state.instrumentId) params.set('instrumentId', state.instrumentId);
-  if (state.genreId) params.set('genreId', state.genreId);
   if (state.remote) params.set('remote', 'true');
   if (state.available) params.set('available', 'true');
   if (nearby) params.set('radiusKm', String(state.radiusKm));
@@ -176,7 +173,7 @@ export default function DirectorySearchPage() {
     && getActiveSession() === session && occurrence.current.generation === generation;
   const urlState = useMemo(() => parseSearchUrl(location.search), [location.search]);
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
-  const { q: query, entityType, professionId, serviceId, instrumentId, genreId, remote, available, radiusKm } = urlState;
+  const { q: query, entityType, professionId, serviceId, instrumentId, remote, available, radiusKm } = urlState;
   const taxonomies = useQuery({
     queryKey: ['directory', 'taxonomies', language],
     queryFn: () => Directory.taxonomies(language),
@@ -218,7 +215,8 @@ export default function DirectorySearchPage() {
   }, [debouncedQuery, draftQuery, query]); // eslint-disable-line react-hooks/exhaustive-deps
   const canonicalSearch = buildSearchUrl({ ...urlState, cityId }, Boolean(coordinates), location.search);
   useEffect(() => {
-    if (location.search.replace(/^\?/, '') === canonicalSearch) return;
+    // The filter hook canonicalizes old genre links before ordinary defaults.
+    if (new URLSearchParams(location.search).has('genreId') || location.search.replace(/^\?/, '') === canonicalSearch) return;
     navigate({ pathname: location.pathname, search: canonicalSearch }, { replace: true });
   }, [canonicalSearch, location.pathname, location.search, navigate]);
 
@@ -239,7 +237,7 @@ export default function DirectorySearchPage() {
 
   const taxonomyOptions = useTaxonomyFilterOptions();
   const profileCity = useProfileCityDefault(taxonomyOptions.data);
-  const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true });
+  const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true, legacyFilters: 'genre' });
   const taxonomySelection = taxonomyFilters.selection;
   const searchBase: DirectorySearchQuery = {
     q: query || undefined,
@@ -251,7 +249,6 @@ export default function DirectorySearchPage() {
     professionId: professionId || undefined,
     serviceId: serviceId || undefined,
     instrumentId: instrumentId || undefined,
-    genreId: genreId || undefined,
     countryIds: taxonomySelection.countryIds,
     regionIds: taxonomySelection.regionIds,
     cityIds: taxonomySelection.cityIds,
@@ -448,7 +445,7 @@ export default function DirectorySearchPage() {
                 </>
               )}
               {!personFilters && <Typography variant="body2" color="text.secondary">{t('directorySearch.placeFiltersHint')}</Typography>}
-              <Button onClick={() => updateSearch({ profileKind: undefined, professionId: '', serviceId: '', instrumentId: '', genreId: '', remote: false, available: false })}>{t('directorySearch.clearFilters')}</Button>
+              <Button onClick={() => updateSearch({ profileKind: undefined, professionId: '', serviceId: '', instrumentId: '', remote: false, available: false })}>{t('directorySearch.clearFilters')}</Button>
             </Stack>
             <Box sx={{ mt: 1.5 }}>
               {/* TAX-FILTER-001: country, region and genre (with subgenres); the city control above keeps its proximity search. */}

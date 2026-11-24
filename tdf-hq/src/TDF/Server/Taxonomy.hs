@@ -10,6 +10,8 @@ module TDF.Server.Taxonomy
   ) where
 
 import Control.Monad (forM_, unless, when)
+import Control.Monad.Except (ExceptT(..), runExceptT)
+import Control.Monad.Trans.Class (lift)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, asks)
 import Data.Aeson (Value(..), encode, object, (.=))
@@ -155,17 +157,32 @@ checkJson SuggestionCheck{..} = object
   where
     nubCorrections = foldr (\c acc -> if any ((== wcWord c) . wcWord) acc then acc else c : acc) []
 
-runCheck :: GenreSuggestionRequest -> AppM SuggestionCheck
-runCheck GenreSuggestionRequest{..} = do
-  (existing, parentResult) <- runDB ((,) <$> loadExistingGenres <*> validateParent parentGenreId)
+type GenreTransaction = ExceptT ServerError (SqlPersistT IO)
+
+checkNames :: Maybe UUID -> Bool -> Text -> Text -> GenreTransaction SuggestionCheck
+checkNames parent distinct spanish english = do
+  existing <- lift loadExistingGenres
+  parentResult <- lift (validateParent parent)
   either (throwError . plainError err400) pure parentResult
-  either (throwError . plainError err400) pure
-    (checkGenreSuggestion existing (fromMaybe False confirmDistinct) nameEs nameEn)
+  either (throwError . plainError err400) pure (checkGenreSuggestion existing distinct spanish english)
+
+-- Both languages participate in duplicate detection and spelling corrections
+-- depend on the live catalog. Serialize the short publication transactions on
+-- the genres catalog row, then read the catalog again under READ COMMITTED.
+withGenrePublication :: GenreTransaction a -> AppM a
+withGenrePublication action = do
+  outcome <- runDB $ runExceptT $ do
+    locks <- lift (rawSql "SELECT 1::bigint FROM catalog_definition WHERE code='genres' FOR NO KEY UPDATE" []
+                   :: SqlPersistT IO [Single Int64])
+    when (null locks) (throwError (plainError err500 "Genre catalog is not configured"))
+    action
+  either throwError pure outcome
 
 checkSuggestion :: AuthedUser -> GenreSuggestionRequest -> AppM Value
-checkSuggestion user request = do
+checkSuggestion user GenreSuggestionRequest{..} = do
   _ <- requireArtist user
-  checkJson <$> runCheck request
+  result <- runDB (runExceptT (checkNames parentGenreId (fromMaybe False confirmDistinct) nameEs nameEn))
+  checkJson <$> either throwError pure result
 
 -- | Shared projection of a suggestion row aliased @suggestion@.
 suggestionProjection :: Text
@@ -238,48 +255,49 @@ suggestionLimits partyId = do
     _ -> (0, 0)
 
 submitSuggestion :: AuthedUser -> GenreSuggestionRequest -> AppM Value
-submitSuggestion user request@GenreSuggestionRequest{..} = do
+submitSuggestion user GenreSuggestionRequest{..} = do
   partyId <- requireArtist user
-  check@SuggestionCheck{..} <- runCheck request
-  case scVerdict of
-    Duplicate _ -> throwError (jsonError err409 (checkJson check))
-    ProbableTypo _ -> throwError (jsonError err409 (checkJson check))
-    _ -> pure ()
-  (pending, today) <- runDB (suggestionLimits partyId)
-  when (pending >= 10 || today >= 20) $
-    throwError (plainError err429 "Too many genre suggestions; wait for the pending ones to be reviewed")
-  let key = ncKey scSpanish
-      submitted = T.unwords (T.words nameEs)
-      reasons = reviewReasonCodes scVerdict
-  result <- runDB $ do
-    -- An identical suggestion already waiting for review is shared, not duplicated.
-    existingPending <- rawSql
-      "SELECT id FROM genre_suggestion WHERE normalized_key=? AND status='pending'"
-      [PersistText key] :: SqlPersistT IO [Single UUID]
-    case existingPending of
-      Single suggestionId : _ -> (,) True <$> loadSuggestion suggestionId
-      [] -> do
-        inserted <- rawSql
-          ( "INSERT INTO genre_suggestion (suggested_by_party_id,parent_genre_id,submitted_name,name_es,name_en,normalized_key,review_reasons) "
-         <> "VALUES (?,?::uuid,?,?,?,?,?::text[]) ON CONFLICT (normalized_key) WHERE status='pending' DO NOTHING RETURNING id"
-          )
-          [ PersistInt64 partyId, maybe PersistNull toPersistValue parentGenreId, PersistText submitted
-          , PersistText (ncName scSpanish), PersistText (ncName scEnglish), PersistText key
-          , PersistText ("{" <> T.intercalate "," (map quoteArrayItem reasons) <> "}")
-          ] :: SqlPersistT IO [Single UUID]
-        case inserted of
-          [] -> pure (True, Nothing)
-          Single suggestionId : _ -> do
-            when (scVerdict == AutoApprove) $ do
-              genreId <- createGenre suggestionId (ncName scSpanish) (ncName scEnglish) parentGenreId partyId Nothing
-              _ <- rawSql
-                "UPDATE genre_suggestion SET status='approved',resolved_genre_id=?::uuid,reviewed_at=now() WHERE id=?::uuid RETURNING 1"
-                [toPersistValue genreId, toPersistValue suggestionId] :: SqlPersistT IO [Single Int64]
-              addToArtistProfile partyId genreId
-            (,) False <$> loadSuggestion suggestionId
-  case result of
-    (alreadySuggested, Just suggestion) -> pure (object ["suggestion" .= suggestion, "alreadySuggested" .= alreadySuggested, "check" .= checkJson check])
-    (_, Nothing) -> throwError (plainError err409 "This genre was suggested at the same time by someone else; try again")
+  withGenrePublication $ do
+    check@SuggestionCheck{..} <- checkNames parentGenreId (fromMaybe False confirmDistinct) nameEs nameEn
+    case scVerdict of
+      Duplicate _ -> throwError (jsonError err409 (checkJson check))
+      ProbableTypo _ -> throwError (jsonError err409 (checkJson check))
+      _ -> pure ()
+    (pending, today) <- lift (suggestionLimits partyId)
+    when (pending >= 10 || today >= 20) $
+      throwError (plainError err429 "Too many genre suggestions; wait for the pending ones to be reviewed")
+    let key = ncKey scSpanish
+        submitted = T.unwords (T.words nameEs)
+        reasons = reviewReasonCodes scVerdict
+    result <- lift $ do
+      -- An identical suggestion already waiting for review is shared, not duplicated.
+      existingPending <- rawSql
+        "SELECT id FROM genre_suggestion WHERE normalized_key=? AND status='pending'"
+        [PersistText key] :: SqlPersistT IO [Single UUID]
+      case existingPending of
+        Single suggestionId : _ -> (,) True <$> loadSuggestion suggestionId
+        [] -> do
+          inserted <- rawSql
+            ( "INSERT INTO genre_suggestion (suggested_by_party_id,parent_genre_id,submitted_name,name_es,name_en,normalized_key,review_reasons) "
+           <> "VALUES (?,?::uuid,?,?,?,?,?::text[]) ON CONFLICT (normalized_key) WHERE status='pending' DO NOTHING RETURNING id"
+            )
+            [ PersistInt64 partyId, maybe PersistNull toPersistValue parentGenreId, PersistText submitted
+            , PersistText (ncName scSpanish), PersistText (ncName scEnglish), PersistText key
+            , PersistText ("{" <> T.intercalate "," (map quoteArrayItem reasons) <> "}")
+            ] :: SqlPersistT IO [Single UUID]
+          case inserted of
+            [] -> pure (True, Nothing)
+            Single suggestionId : _ -> do
+              when (scVerdict == AutoApprove) $ do
+                genreId <- createGenre suggestionId (ncName scSpanish) (ncName scEnglish) parentGenreId partyId Nothing
+                _ <- rawSql
+                  "UPDATE genre_suggestion SET status='approved',resolved_genre_id=?::uuid,reviewed_at=now() WHERE id=?::uuid RETURNING 1"
+                  [toPersistValue genreId, toPersistValue suggestionId] :: SqlPersistT IO [Single Int64]
+                addToArtistProfile partyId genreId
+              (,) False <$> loadSuggestion suggestionId
+    case result of
+      (alreadySuggested, Just suggestion) -> pure (object ["suggestion" .= suggestion, "alreadySuggested" .= alreadySuggested, "check" .= checkJson check])
+      (_, Nothing) -> throwError (plainError err409 "This genre was suggested at the same time by someone else; try again")
   where
     quoteArrayItem item = "\"" <> T.replace "\"" "" (T.replace "\\" "" item) <> "\""
 
@@ -320,32 +338,23 @@ decided suggestionId = runDB (loadSuggestion suggestionId) >>= maybe (throwError
 approveSuggestion :: AuthedUser -> UUID -> GenreSuggestionApproval -> AppM Value
 approveSuggestion user suggestionId GenreSuggestionApproval{..} = do
   adminPartyId <- requireStrictAdmin user
-  (existing, parentResult) <- runDB ((,) <$> loadExistingGenres <*> validateParent approvedParentGenreId)
-  either (throwError . plainError err400) pure parentResult
-  -- The administrator's names are final, but still cleaned, cased and checked
-  -- for duplicates so approval can never create a second "Hip-hop".
-  check <- either (throwError . plainError err400) pure
-    (checkGenreSuggestion existing True approvedNameEs approvedNameEn)
-  case scVerdict check of
-    Duplicate _ -> throwError (jsonError err409 (checkJson check))
-    _ -> pure ()
-  outcome <- runDB $ do
-    locked <- lockPending suggestionId
-    case locked of
-      Left failure -> pure (Left failure)
-      Right author -> do
-        genreId <- createGenre suggestionId (ncName (scSpanish check)) (ncName (scEnglish check)) approvedParentGenreId author (Just adminPartyId)
-        _ <- rawSql
-          ( "UPDATE genre_suggestion SET status='approved',name_es=?,name_en=?,parent_genre_id=?::uuid,resolved_genre_id=?::uuid,"
-         <> "reviewed_by_party_id=?,reviewed_at=now() WHERE id=?::uuid RETURNING 1"
-          )
-          [ PersistText (ncName (scSpanish check)), PersistText (ncName (scEnglish check))
-          , maybe PersistNull toPersistValue approvedParentGenreId, toPersistValue genreId
-          , PersistInt64 adminPartyId, toPersistValue suggestionId
-          ] :: SqlPersistT IO [Single Int64]
-        addToArtistProfile author genreId
-        pure (Right ())
-  either throwError pure outcome
+  withGenrePublication $ do
+    author <- ExceptT (lockPending suggestionId)
+    check <- checkNames approvedParentGenreId True approvedNameEs approvedNameEn
+    case scVerdict check of
+      Duplicate _ -> throwError (jsonError err409 (checkJson check))
+      _ -> pure ()
+    lift $ do
+      genreId <- createGenre suggestionId (ncName (scSpanish check)) (ncName (scEnglish check)) approvedParentGenreId author (Just adminPartyId)
+      _ <- rawSql
+        ( "UPDATE genre_suggestion SET status='approved',name_es=?,name_en=?,parent_genre_id=?::uuid,resolved_genre_id=?::uuid,"
+       <> "reviewed_by_party_id=?,reviewed_at=now() WHERE id=?::uuid RETURNING 1"
+        )
+        [ PersistText (ncName (scSpanish check)), PersistText (ncName (scEnglish check))
+        , maybe PersistNull toPersistValue approvedParentGenreId, toPersistValue genreId
+        , PersistInt64 adminPartyId, toPersistValue suggestionId
+        ] :: SqlPersistT IO [Single Int64]
+      addToArtistProfile author genreId
   decided suggestionId
 
 rejectSuggestion :: AuthedUser -> UUID -> GenreSuggestionRejection -> AppM Value
