@@ -40,6 +40,7 @@ async function fixture(page, baseURL, { authenticated = false } = {}) {
     if (!['fetch', 'xhr'].includes(request.resourceType())) return url.origin === new URL(baseURL).origin ? route.continue() : route.abort();
     const record = () => calls.push({ path: url.pathname, params: url.searchParams });
     if (url.pathname === '/session') return route.fulfill(authenticated ? { json: admin } : { status: 401, json: {} });
+    if (url.pathname === '/fans/me/profile' && authenticated) return route.fulfill({ json: { fpArtistId: 42, fpCity: 'Quito' } });
     if (url.pathname === '/taxonomy/filter-options') return route.fulfill({ json: filterOptions });
     if (url.pathname === '/directory/search') { record(); return route.fulfill({ json: { items: [profile], sponsoredItems: [], facets: { total: 1, entityTypes: { profile: 1 }, cities: [], taxonomy: facets } } }); }
     if (url.pathname === '/music/releases') { record(); return route.fulfill({ json: [] }); }
@@ -112,6 +113,27 @@ test('shared filters reach community search and music, show counts and chips, an
   await expect.poll(() => api.lastCall('/directory/search')?.getAll('genreIds')).toEqual([]);
 });
 
+test('a mirrored page follows a second tab and can clear only its own filters @critical', async ({ page, context, baseURL }) => {
+  const api = await fixture(page, baseURL);
+  await page.goto(`/fans?q=luna&profileKind=band&f.genre=${LATIN}`);
+  const filters = page.getByTestId('community-taxonomy-filters');
+  await filters.getByRole('button', { name: 'Usar estos filtros en todas partes' }).click();
+  const second = await context.newPage();
+  await fixture(second, baseURL);
+  await second.goto(`/musica?f.genre=${CUMBIA}`);
+  await second.getByRole('button', { name: 'Usar estos filtros en todas partes' }).click();
+  await expect.poll(() => api.lastCall('/directory/search')?.getAll('genreIds')).toEqual([CUMBIA]);
+  await expect(page).toHaveURL(new RegExp(CUMBIA));
+  await filters.getByRole('button', { name: /filtros? activos?/ }).click();
+  await filters.getByRole('checkbox', { name: 'Solo en esta sección' }).check();
+  await filters.getByRole('button', { name: 'Limpiar filtros' }).click();
+  await expect(filters.getByTestId('community-taxonomy-chip')).toHaveCount(0);
+  await expect(second.getByTestId('music-taxonomy-chip')).toHaveText('Cumbia');
+  await page.getByRole('button', { name: 'Limpiar búsqueda' }).click();
+  await expect.poll(() => Array.from(new URL(page.url()).searchParams.keys()).sort()).toEqual(['f.scope']);
+  await second.close();
+});
+
 test('English viewers see English names, and a shared link opens as this section\'s own filters @critical', async ({ page, baseURL }, testInfo) => {
   const api = await fixture(page, baseURL);
   await page.addInitScript(() => window.localStorage.setItem('tdf-hq-ui/locale', 'en'));
@@ -130,12 +152,19 @@ test('English viewers see English names, and a shared link opens as this section
 
 test('events follow the shared filters for signed-in viewers @critical', async ({ page, baseURL }, testInfo) => {
   const api = await fixture(page, baseURL, { authenticated: true });
-  await page.goto(`/social/eventos?f.genre=${CUMBIA}&f.city=${GUAYAQUIL}`);
+  await page.goto(`/social/eventos?state=${ROCK}&f.genre=${CUMBIA}&f.city=${GUAYAQUIL}`);
   await expect.poll(() => api.lastCall('/social-events/events')?.getAll('genreIds')).toEqual([CUMBIA]);
   await expect.poll(() => api.lastCall('/social-events/events')?.getAll('cityIds')).toEqual([GUAYAQUIL]);
   await expect.poll(() => api.lastCall('/social-events/events/facets')?.getAll('genreIds')).toEqual([CUMBIA]);
   await expect(page.getByTestId('events-taxonomy-chip')).toHaveText(['Guayaquil', 'Cumbia']);
+  await expect.poll(() => api.lastCall('/social-events/events/facets')?.get('workflow_state_id')).toBe(ROCK);
   await snapshot(page, testInfo, 'events-es');
+  await page.getByRole('button', { name: 'Limpiar filtros', exact: true }).first().click();
+  await expect.poll(() => new URL(page.url()).searchParams.has('state')).toBe(false);
+  const filters = page.getByTestId('events-taxonomy-filters');
+  await filters.getByRole('button', { name: 'Filtrar por lugar y género' }).click();
+  await filters.getByRole('button', { name: 'Cerca de mí' }).click();
+  await expect.poll(() => api.lastCall('/social-events/events')?.getAll('cityIds')).toEqual([QUITO]);
 });
 
 test('administrators approve a pending genre suggestion with reviewed names @critical', async ({ page, baseURL }, testInfo) => {

@@ -6,8 +6,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 let authenticated = true;
 let loading = false;
+const readSession = () => ({ session: authenticated ? { username: 'listener', partyId: 42 } : null, loading });
 jest.unstable_mockModule('../session/SessionContext', () => ({
-  useSession: () => ({ session: authenticated ? { username: 'listener' } : null, loading }),
+  useSession: readSession,
+  useOptionalSession: readSession,
 }));
 jest.unstable_mockModule('../api/radio', () => ({ RadioAPI: {
   search: jest.fn(async () => [{ rsId: 'fixture', rsName: 'Navigation radio', rsStreamUrl: 'https://radio.test/live' }]),

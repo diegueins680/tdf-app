@@ -5,6 +5,7 @@
 
 module TDF.ServerRadio
   ( radioServer
+  , radioFacetsQuery
   , StreamMetadata(..)
   , validateRadioStreamUrl
   , validateRadioTransmissionPublicBase
@@ -61,9 +62,7 @@ import           Data.UUID              (UUID)
 import qualified Data.Aeson             as Aeson
 import           Data.Aeson             (Value)
 import qualified TDF.CMS.Models         as CMS
-import           TDF.Taxonomy.Filter    (TaxonomyFilter(..), mkTaxonomyFilter, postgresUuidArrayParam,
-                                         taxonomyFacetsSql, taxonomyInputColumnsSql, taxonomyInputParams,
-                                         taxonomyMatchSql)
+import           TDF.Taxonomy.Filter    (TaxonomyFilter, mkTaxonomyFilter, taxonomyInputColumnsSql, taxonomyInputParams)
 import qualified Data.UUID              as UUID
 
 import           TDF.API.Radio          (RadioAPI)
@@ -858,6 +857,53 @@ validateRadioCatalogAccess user
       Left err403 { errBody = "Radio catalog changes require a staff module grant" }
   | otherwise = Right ()
 
+-- Regional and city selections identify countries of stations. Keep
+-- each set separately so a facet can omit only its own selection.
+radioScopeCte :: Text
+radioScopeCte =
+  "WITH input AS (SELECT " <> taxonomyInputColumnsSql <> "), scope AS (SELECT input.*, "
+  <> "ARRAY(SELECT DISTINCT country_id FROM subdivision_reference WHERE id=ANY(tax_region_ids)) region_countries, "
+  <> "ARRAY(SELECT DISTINCT country_id FROM city_reference WHERE id=ANY(tax_city_ids)) city_countries FROM input) "
+
+radioCountryMatch :: Bool -> Bool -> Bool -> Text
+radioCountryMatch includeCountry includeRegion includeCity =
+  let country = if includeCountry then "(cardinality(tax_country_ids)=0 OR radio_stream.country_id=ANY(tax_country_ids))" else "TRUE"
+      dimensions = [(ids, countries) | (enabled, ids, countries) <-
+        [(includeRegion, "tax_region_ids", "region_countries"), (includeCity, "tax_city_ids", "city_countries")], enabled]
+      emptyScope = T.intercalate " AND " ["cardinality(" <> ids <> ")=0" | (ids, _) <- dimensions]
+      matches = ["radio_stream.country_id=ANY(" <> countries <> ")" | (_, countries) <- dimensions]
+  in country <> case dimensions of
+       [] -> ""
+       _ -> " AND (" <> T.intercalate " OR " (("(" <> emptyScope <> ")") : matches) <> ")"
+
+radioGenreMatch :: Text
+radioGenreMatch = "taxonomy_genres_match(ARRAY[radio_stream.genre_id],tax_genre_ids)"
+
+facetCounts :: Text -> Text
+facetCounts query =
+  "coalesce((SELECT jsonb_agg(jsonb_build_object('id',id,'count',total) ORDER BY total DESC,id) FROM ("
+  <> query <> ") facet),'[]'::jsonb)"
+
+placeCounts :: Text -> Text -> Bool -> Bool -> Bool -> Text
+placeCounts table countryColumn includeCountry includeRegion includeCity = facetCounts
+  ("SELECT place.id, stations.total FROM " <> table <> " place JOIN ("
+   <> "SELECT radio_stream.country_id,count(*) total FROM radio_stream CROSS JOIN scope WHERE radio_stream.is_active AND "
+   <> radioCountryMatch includeCountry includeRegion includeCity <> " AND " <> radioGenreMatch
+   <> " GROUP BY radio_stream.country_id) stations ON stations.country_id=place." <> countryColumn)
+
+radioFacetsQuery :: Text
+radioFacetsQuery =
+  radioScopeCte <> "SELECT jsonb_build_object('countries',"
+  <> placeCounts "country_reference" "id" False True True
+  <> ",'regions'," <> placeCounts "subdivision_reference" "country_id" True False True
+  <> ",'cities'," <> placeCounts "city_reference" "country_id" True True False
+  <> ",'genres'," <> facetCounts
+       ("SELECT ancestor.id, count(*) total FROM radio_stream CROSS JOIN scope "
+        <> "CROSS JOIN LATERAL unnest(taxonomy_genre_ancestors(ARRAY[radio_stream.genre_id])) ancestor(id) "
+        <> "WHERE radio_stream.is_active AND radio_stream.genre_id IS NOT NULL AND "
+        <> radioCountryMatch True True True <> " GROUP BY ancestor.id")
+  <> ")"
+
 radioServer
   :: forall m.
      ( MonadReader Env m
@@ -952,19 +998,14 @@ radioServer user =
         genreValidation <- validatePublishedGenreReference "genreId" mGenreId
         case countryValidation >> genreValidation >> radioTaxonomyFilter (maybe [] pure mCountryId <> countryIds) regionIds cityIds (maybe [] pure mGenreId <> genreIds) of
           Left err -> pure (Left err)
-          Right raw -> do
-            scoped <- radioCountryScope raw
-            case scoped of
-              Nothing -> pure (Right [])
-              Just taxonomy -> do
-                rows <- rawSql
-                  ( "WITH tax_input AS (SELECT " <> taxonomyInputColumnsSql <> ") "
-                 <> "SELECT ?? FROM radio_stream CROSS JOIN tax_input WHERE radio_stream.is_active AND "
-                 <> taxonomyMatchSql "tax_input" "NULL::uuid" "radio_stream.country_id" radioStreamGenresSql
-                 <> " ORDER BY radio_stream.updated_at DESC, radio_stream.id DESC LIMIT 400"
-                  )
-                  (taxonomyInputParams taxonomy)
-                Right <$> buildRadioStreamDTOs rows
+          Right taxonomy -> do
+            rows <- rawSql
+              ( radioScopeCte <> "SELECT ?? FROM radio_stream CROSS JOIN scope WHERE radio_stream.is_active AND "
+             <> radioCountryMatch True True True <> " AND " <> radioGenreMatch
+             <> " ORDER BY radio_stream.updated_at DESC, radio_stream.id DESC LIMIT 400"
+              )
+              (taxonomyInputParams taxonomy)
+            Right <$> buildRadioStreamDTOs rows
       either (throwError . radioCatalogValidationError) pure result
 
     -- Per-value counts for the radio filter (TAX-FILTER-001), under the same
@@ -975,52 +1016,16 @@ radioServer user =
       result <- liftIO $ flip runSqlPool envPool $
         case radioTaxonomyFilter countryIds regionIds cityIds genreIds of
           Left err -> pure (Left err)
-          Right raw -> do
-            scoped <- radioCountryScope raw
-            -- An impossible scope (country AND a city elsewhere) counts nothing.
-            let taxonomy = fromMaybe raw { tfCountryIds = [nilCountry] } scoped
+          Right taxonomy -> do
             rows <- rawSql
-              ( "WITH tax_input AS (SELECT " <> taxonomyInputColumnsSql <> "), "
-             <> "radio_base AS (SELECT radio_stream.id::text item_key,NULL::uuid city_id,radio_stream.country_id,"
-             <> radioStreamGenresSql <> " genre_ids FROM radio_stream WHERE radio_stream.is_active) "
-             <> "SELECT " <> taxonomyFacetsSql "radio_base" "tax_input"
-              )
-              (taxonomyInputParams taxonomy) :: SqlPersistT IO [Single CMS.AesonValue]
+              radioFacetsQuery (taxonomyInputParams taxonomy) :: SqlPersistT IO [Single CMS.AesonValue]
             pure $ Right $ case rows of
               Single value : _ -> CMS.unAesonValue value
               [] -> Aeson.object []
       either (throwError . radioCatalogValidationError) pure result
 
-    radioStreamGenresSql :: Text
-    radioStreamGenresSql =
-      "CASE WHEN radio_stream.genre_id IS NULL THEN '{}'::uuid[] ELSE ARRAY[radio_stream.genre_id] END"
-
-    nilCountry :: UUID
-    nilCountry = UUID.nil
-
     radioTaxonomyFilter :: [UUID] -> [UUID] -> [UUID] -> [UUID] -> Either Text TaxonomyFilter
     radioTaxonomyFilter = mkTaxonomyFilter
-
-    -- Stations carry no region or city: a selected region or city becomes
-    -- the set of countries they belong to, intersected with any selected
-    -- country. Nothing when that intersection is empty (no station matches).
-    radioCountryScope :: TaxonomyFilter -> SqlPersistT IO (Maybe TaxonomyFilter)
-    radioCountryScope taxonomy
-      | null (tfRegionIds taxonomy) && null (tfCityIds taxonomy) = pure (Just taxonomy)
-      | otherwise = do
-          derived <- rawSql
-            ( "SELECT DISTINCT country_id FROM (SELECT country_id FROM subdivision_reference WHERE id=ANY(?::uuid[]) "
-           <> "UNION SELECT country_id FROM city_reference WHERE id=ANY(?::uuid[])) scope"
-            )
-            [postgresUuidArrayParam (tfRegionIds taxonomy), postgresUuidArrayParam (tfCityIds taxonomy)]
-            :: SqlPersistT IO [Single UUID]
-          let derivedIds = [countryId | Single countryId <- derived]
-              countries
-                | null (tfCountryIds taxonomy) = derivedIds
-                | otherwise = filter (`elem` derivedIds) (tfCountryIds taxonomy)
-          pure $ if null countries
-            then Nothing
-            else Just taxonomy { tfCountryIds = countries, tfRegionIds = [], tfCityIds = [] }
 
     upsertActive :: RadioStreamUpsert -> m RadioStreamDTO
     upsertActive payload = do

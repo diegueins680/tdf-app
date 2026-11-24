@@ -3,7 +3,7 @@
 // anything is stored: a duplicate offers the existing genre, a probable typo
 // offers the existing name (or "it is different", which sends it to review),
 // and a name made of known words is published on submit.
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Button,
@@ -50,12 +50,17 @@ export function GenreSuggestionDialog({ open, onClose, onGenreReady }: DialogPro
   const effectiveEn = sameName ? nameEs : nameEn;
   const request = { nameEs, nameEn: effectiveEn, parentGenreId: parentGenreId || null };
   const parents = useMemo(() => genreOptions(options.data?.genres ?? [], language), [language, options.data?.genres]);
-  const resetCheck = () => { setCheck(null); setResult(null); setError(null); };
+  const revision = useRef(0);
+  const resetCheck = () => { revision.current += 1; setCheck(null); setResult(null); setError(null); };
 
   const checkMutation = useMutation({
-    mutationFn: () => Taxonomy.checkGenreSuggestion(request),
-    onSuccess: (value) => { setCheck(value); setError(null); },
-    onError: (failure: Error) => setError(failure.message),
+    mutationFn: (input: { draft: typeof request; revision: number }) => Taxonomy.checkGenreSuggestion(input.draft),
+    onSuccess: (value, input) => {
+      if (revision.current === input.revision) setCheck(value);
+    },
+    onError: (failure: Error, input) => {
+      if (revision.current === input.revision) setError(failure.message);
+    },
   });
   const submitMutation = useMutation({
     mutationFn: (confirmDistinct: boolean) => Taxonomy.submitGenreSuggestion({ ...request, confirmDistinct }),
@@ -143,7 +148,7 @@ export function GenreSuggestionDialog({ open, onClose, onGenreReady }: DialogPro
       <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
         <Button onClick={close}>{result ? t('taxonomyFilters.suggest.close') : t('taxonomyFilters.suggest.cancel')}</Button>
         {!result && !check && (
-          <Button variant="contained" onClick={() => checkMutation.mutate()} disabled={busy || nameEs.trim().length < 2 || effectiveEn.trim().length < 2}>
+          <Button variant="contained" onClick={() => checkMutation.mutate({ draft: request, revision: revision.current })} disabled={busy || nameEs.trim().length < 2 || effectiveEn.trim().length < 2}>
             {checkMutation.isPending ? t('taxonomyFilters.suggest.checking') : t('taxonomyFilters.suggest.check')}
           </Button>
         )}

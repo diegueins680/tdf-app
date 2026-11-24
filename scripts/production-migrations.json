@@ -1368,6 +1368,11 @@
       "id": "2026-11-21_location_genre_filters",
       "path": "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
       "introducedBy": "a0ca9cd7367ecdd7252dfe50d0a9c94365fc2fcf"
+    },
+    {
+      "id": "2026-11-24_unicode_genre_suggestion_keys",
+      "path": "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql",
+      "introducedBy": "75bb471542ae62f4f4a591bb57fc8565fcc9118d"
     }
   ]
 }

@@ -49,7 +49,7 @@ export const Taxonomy = {
   },
   eventFacets: (
     selection: TaxonomySelection,
-    filters: { city?: string; scope?: string; startAfter?: string; eventTypeId?: string; artistIds?: string[] } = {},
+    filters: { city?: string; scope?: string; startAfter?: string; eventTypeId?: string; workflowStateId?: string; artistIds?: string[] } = {},
     signal?: AbortSignal,
   ) => {
     const params = new URLSearchParams();
@@ -57,6 +57,7 @@ export const Taxonomy = {
     if (filters.scope) params.set('scope', filters.scope);
     if (filters.startAfter) params.set('start_after', filters.startAfter);
     if (filters.eventTypeId) params.set('event_type_id', filters.eventTypeId);
+    if (filters.workflowStateId) params.set('workflow_state_id', filters.workflowStateId);
     if (filters.artistIds?.length) params.set('artistId', filters.artistIds.join(','));
     return get<TaxonomyFacets>(withQuery('/social-events/events/facets', appendTaxonomyParams(params, selection)), signal ? { signal } : undefined);
   },

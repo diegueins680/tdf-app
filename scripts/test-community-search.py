@@ -196,3 +196,11 @@ city_counts = {item['id']: item['count'] for item in facets['cities']}
 assert genre_counts.get(latin) == 1 and genre_counts.get(cumbia) == 1, 'genre counts apply the city filter and roll up to the parent'
 assert city_counts.get(guayaquil) == 1 and city_counts.get(quito, 0) >= 1, 'city counts ignore the city selection itself'
 print('PASS: TAX-FILTER-001 genre closure, OR within / AND across, region from city, missing values hidden, facet counts')
+
+# A checked name in a non-Latin script must also pass the storage constraint.
+assert ids("""BEGIN;
+INSERT INTO party(id, display_name, is_org, created_at) VALUES (990001, 'Genre fixture', false, now());
+INSERT INTO genre_suggestion(suggested_by_party_id, submitted_name, name_es, name_en, normalized_key)
+VALUES (990001, '日本ロック', '日本ロック', 'Japanese rock', '日本ロック') RETURNING normalized_key;
+ROLLBACK;""") == ['日本ロック']
+print('PASS: international genre suggestion persists with its validated key')

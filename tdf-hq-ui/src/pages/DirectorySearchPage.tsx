@@ -238,7 +238,7 @@ export default function DirectorySearchPage() {
 
 
   const taxonomyOptions = useTaxonomyFilterOptions();
-  useProfileCityDefault(taxonomyOptions.data);
+  const profileCity = useProfileCityDefault(taxonomyOptions.data);
   const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true });
   const taxonomySelection = taxonomyFilters.selection;
   const searchBase: DirectorySearchQuery = {
@@ -452,7 +452,7 @@ export default function DirectorySearchPage() {
             </Stack>
             <Box sx={{ mt: 1.5 }}>
               {/* TAX-FILTER-001: country, region and genre (with subgenres); the city control above keeps its proximity search. */}
-              <TaxonomyFilterBar idPrefix="directory" filters={taxonomyFilters} options={taxonomyOptions.data} optionsError={taxonomyOptions.isError}
+              <TaxonomyFilterBar profileCity={profileCity} idPrefix="directory" filters={taxonomyFilters} options={taxonomyOptions.data} optionsError={taxonomyOptions.isError}
                 facets={facets?.taxonomy} dimensions={['countryIds', 'regionIds', 'genreIds']} />
             </Box>
           </Paper>

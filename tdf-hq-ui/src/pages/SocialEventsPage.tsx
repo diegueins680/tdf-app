@@ -303,11 +303,6 @@ export default function SocialEventsPage() {
     if (key !== 'page') next.delete('page');
     return next;
   }, { replace: key === 'city' });
-  const clearFilters = () => setSearchParams(previous => {
-    const next = new URLSearchParams(previous);
-    ['city', 'type', 'state', 'artists', 'past', 'page'].forEach(key => next.delete(key));
-    return next;
-  });
   const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
   const [invites, setInvites] = useState<Record<string, InvitationState>>({});
   const [ticketPurchases, setTicketPurchases] = useState<Record<string, TicketPurchaseState>>({});
@@ -326,7 +321,7 @@ export default function SocialEventsPage() {
   // TAX-FILTER-001: events follow the shared location (venue) and genre
   // (lineup) filters; the free-text city search above stays as it was.
   const taxonomyOptions = useTaxonomyFilterOptions();
-  useProfileCityDefault(taxonomyOptions.data);
+  const profileCity = useProfileCityDefault(taxonomyOptions.data);
   const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true });
   const taxonomySelection = taxonomyFilters.selection;
   const taxonomyKey = JSON.stringify(taxonomySelection);
@@ -407,10 +402,11 @@ export default function SocialEventsPage() {
   const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventWorkflowStateFilter !== '' || artistIds.length > 0 || includePast || page > 1
     || !isTaxonomySelectionEmpty(taxonomySelection);
   const eventFacets = useQuery({
-    queryKey: ['social-events', 'facets', sessionPartyId, cityFilter, eventTypeFilter, artistIds.join(','), includePast, taxonomyKey],
+    queryKey: ['social-events', 'facets', sessionPartyId, cityFilter, eventTypeFilter, eventWorkflowStateFilter, artistIds.join(','), includePast, taxonomyKey],
     queryFn: ({ signal }) => Taxonomy.eventFacets(taxonomySelection, {
       city: cityFilter || undefined,
       eventTypeId: eventTypeFilter || undefined,
+      workflowStateId: eventWorkflowStateFilter || undefined,
       artistIds,
       startAfter: includePast ? undefined : new Date().toISOString(),
     }, signal),
@@ -1080,7 +1076,7 @@ export default function SocialEventsPage() {
           <FormControlLabel label="Incluir eventos pasados" control={
             <Switch checked={includePast} onChange={(_event, checked) => updateFilter('past', checked ? '1' : '')} />
           } />
-          {eventFiltersActive && <Button onClick={() => { clearFilters(); if (!isTaxonomySelectionEmpty(taxonomySelection)) taxonomyFilters.clearAll(); }}>Limpiar filtros</Button>}
+          {eventFiltersActive && <Button onClick={() => taxonomyFilters.clearAll(['city', 'type', 'state', 'artists', 'past'])}>Limpiar filtros</Button>}
           {showRefreshAction && (
             <Button
               variant="outlined"
@@ -1110,7 +1106,7 @@ export default function SocialEventsPage() {
             </Alert>
           )}
         </Stack>
-        <TaxonomyFilterBar idPrefix="events" filters={taxonomyFilters} options={taxonomyOptions.data} optionsError={taxonomyOptions.isError}
+        <TaxonomyFilterBar profileCity={profileCity} idPrefix="events" filters={taxonomyFilters} options={taxonomyOptions.data} optionsError={taxonomyOptions.isError}
           facets={eventFacets.data} />
         {eventCreateUiState.showCreateWelcome && (
           <Card

@@ -79,11 +79,11 @@ const psqlArgs = ['-XAtq', '-v', 'ON_ERROR_STOP=1', '-d', database];
 const sql = input => command('psql', psqlArgs, { input });
 const quote = value => value === null ? 'NULL' : typeof value === 'number' ? String(value)
   : `'${value.replaceAll("'", "''")}'`;
-function query(text, territory = 'EC', limit = 100, offset = 0, mutate = x => x) {
+function query(text, territory = 'EC', limit = 100, offset = 0, mutate = x => x, countries = []) {
   const values = { 'PersistText rawQuery': text, 'optionalText territory': territory,
     'PersistInt64 (fromIntegral limit)': limit, 'PersistInt64 (fromIntegral offset)': offset };
   const parameters = bindings.flatMap(binding => {
-    if (binding === 'taxonomyInputParams taxonomy') return Array(4).fill('{}');
+    if (binding === 'taxonomyInputParams taxonomy') return [`{${countries.join(',')}}`, '{}', '{}', '{}'];
     assert(Object.hasOwn(values, binding));
     return values[binding];
   });
@@ -156,6 +156,8 @@ try {
   const album = make('album', 'A opening', 'album'); publish(album);
   const b = sql(`SELECT recording_id FROM music_release_track WHERE release_version_id='${album.version}' AND track_number=2`);
   same(query('cancion noct'), [b], 'Only matching B is returned, never first track A');
+  same(query('cancion noct', 'EC', 100, 0, undefined, [randomUUID()]), [],
+    'A country outside the recording context excludes an otherwise authorized title match');
   same(query('Guest Artist'), [b], 'Track display artist is searchable');
   assert.equal(query('Spec album').length, 2, 'Release title matches both authorized tracks');
   for (const q of ['Canción', 'CANCION', 'nocturna', 'B Canción']) same(query(q), [b], 'Accent, case and partial search');
@@ -228,7 +230,7 @@ try {
   same(query('%_'), [literal.recording], 'Literal wildcard-containing title remains searchable without matching other records');
   same(query("'; DROP TABLE music_recording; --"), [], 'Parameter text cannot alter SQL');
   console.log('PASS canonical deduplication: multiple matching contexts and quality variants, stable pages, non-Latin/literal/injection controls');
-  console.log(`PASS real PostgreSQL track search: ${migrations.length} selected migrations plus actual directory normalizer; no HTTP/storage/full-schema claim`);
+  console.log('PASS PostgreSQL recording search against the production migration sequence');
 } finally {
   await owner.cleanup();
   console.log('Cleaned only this run’s owned disposable database');

@@ -40,6 +40,7 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { RadioAPI, type RadioStreamDTO, type RadioTransmissionInfo } from '../api/radio';
 import { Taxonomy } from '../api/taxonomy';
 import { useTranslation } from 'react-i18next';
+import { useProfileCityDefault } from './taxonomyFilters/useProfileCityDefault';
 import TaxonomyFilterBar from './taxonomyFilters/TaxonomyFilterBar';
 import { isTaxonomySelectionEmpty, toggleTaxonomyValue } from './taxonomyFilters/taxonomyFilterModel';
 import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from './taxonomyFilters/useTaxonomyFilters';
@@ -214,6 +215,7 @@ export default function RadioWidget() {
   // as an overlay on every page it keeps its own override in memory, not the URL.
   const { t } = useTranslation();
   const taxonomyOptions = useTaxonomyFilterOptions();
+  const profileCity = useProfileCityDefault(taxonomyOptions.data);
   const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: false });
   const taxonomySelection = taxonomyFilters.selection;
   const [favoriteKeys, setFavoriteKeys] = useState<string[]>([]);
@@ -2546,6 +2548,7 @@ export default function RadioWidget() {
                 <Stack spacing={1.5}>
                   <Stack spacing={1}>
                     <TaxonomyFilterBar
+                      profileCity={profileCity}
                       idPrefix="radio"
                       filters={taxonomyFilters}
                       options={taxonomyOptions.data}

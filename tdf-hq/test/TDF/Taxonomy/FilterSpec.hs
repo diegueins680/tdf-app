@@ -3,6 +3,13 @@
 -- | TAX-FILTER-001: shared filter input and SQL fragments.
 module TDF.Taxonomy.FilterSpec (spec) where
 
+import Control.Exception (bracket)
+import qualified Data.ByteString.Char8 as BS
+import Data.String (fromString)
+import qualified Database.PostgreSQL.Simple as PG
+import System.Environment (lookupEnv)
+import TDF.ServerRadio (radioFacetsQuery)
+import TDF.Test.DisposablePostgres (isDisposablePostgresUrl)
 import Data.Either (isLeft)
 import Data.Maybe (fromJust)
 import qualified Data.Text as T
@@ -59,3 +66,22 @@ spec = describe "TAX-FILTER-001 shared taxonomy filters" $ do
 
   it "keeps the directory's literal facet SQL equal to the shared fragment" $
     directoryTaxonomyFacetsSql `shouldBe` taxonomyFacetsSql "taxonomy_base" "input"
+
+  it "counts radio stations by the country of a selected city, retaining the city in country counts" $ do
+    connection <- lookupEnv "TDF_DISCOVERY_TEST_DATABASE_URL"
+    ci <- lookupEnv "CI"
+    case connection of
+      Nothing -> pendingWith "Set TDF_DISCOVERY_TEST_DATABASE_URL to the migrated discovery test database"
+      Just url | isDisposablePostgresUrl (ci == Just "true") url ->
+        bracket (PG.connectPostgreSQL (BS.pack url)) PG.close $ \db -> PG.withTransaction db $ do
+          _ <- PG.execute_ db "CREATE TEMP TABLE radio_stream(country_id uuid, genre_id uuid, is_active boolean) ON COMMIT DROP"
+          _ <- PG.execute_ db "INSERT INTO radio_stream SELECT id,NULL,true FROM country_reference WHERE alpha2 IN ('EC','US')"
+          [PG.Only city] <- PG.query_ db "SELECT id::text FROM city_reference WHERE code='quito-ec-p'"
+          let facets = "WITH facets AS (" <> radioFacetsQuery <> " AS counts) SELECT \
+                \(counts->'countries') = jsonb_build_array(jsonb_build_object('id', (SELECT id FROM country_reference WHERE alpha2='EC'), 'count', 1)), \
+                \(counts->'regions') @> jsonb_build_array(jsonb_build_object('id', (SELECT id FROM subdivision_reference WHERE code='EC-P'), 'count', 1)), \
+                \(counts->'cities') @> jsonb_build_array(jsonb_build_object('id', (SELECT id FROM city_reference WHERE code='quito-ec-p'), 'count', 1)) FROM facets"
+              empty = "{}" :: String
+          result <- PG.query db (fromString (T.unpack facets)) (empty, empty, "{" <> (city :: String) <> "}", empty)
+          result `shouldBe` [(True, True, True)]
+      Just _ -> expectationFailure "Expected a disposable discovery test database"

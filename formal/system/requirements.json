@@ -30068,6 +30068,7 @@
         "tdf-hq/src/TDF/Server/Taxonomy.hs",
         "tdf-hq/src/TDF/API/Taxonomy.hs",
         "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+        "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql",
         "tdf-hq/assets/feature-registry.json",
         "tdf-hq-ui/src/components/taxonomyFilters/GenreSuggestionDialog.tsx",
         "tdf-hq-ui/src/pages/GenreSuggestionsAdminPage.tsx",
@@ -30078,6 +30079,7 @@
       ],
       "tests": [
         "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs",
+        "scripts/test-community-search.py",
         "tdf-hq/test/Spec.hs",
         "e2e/web/taxonomy-filters.spec.mjs",
         "tdf-mobile/__tests__/GenreSuggestionModal.test.tsx"

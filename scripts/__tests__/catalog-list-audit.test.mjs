@@ -6597,8 +6597,13 @@ async function manifestBeforeTaxonomy(file) {
   const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
   const original = (await integrationParent('be996410572a72f8f787b2cd5d345b30523ba1ea', file)).migrations.at(-1);
   assert.equal(original.id, '2026-11-21_location_genre_filters');
-  assert.deepEqual(current.migrations.at(-1), original);
-  return { ...current, migrations: current.migrations.slice(0, -1) };
+  assert.deepEqual(current.migrations.at(-2), original);
+  const unicode = current.migrations.at(-1);
+  assert.equal(unicode.id, '2026-11-24_unicode_genre_suggestion_keys');
+  assert.equal(unicode.path, 'tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql');
+  assert.equal(await fs.readFile(path.join(integrationRoot, unicode.path), 'utf8'), await integrationSource(unicode.introducedBy, unicode.path));
+  await integrationExec('git', ['merge-base', '--is-ancestor', unicode.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  return { ...current, migrations: current.migrations.slice(0, -2) };
 }
 
 test('taxonomy appends its original migration to the full loudness manifest', async () => {
@@ -6621,7 +6626,7 @@ async function manifestBeforeLoudness(file) {
 function decisionBeforeLoudness(decisions) {
   const taxonomy = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations');
   assert.equal(taxonomy.reviewBatch, 'taxonomy-filters-main-integration-20261124');
-  assert.equal(taxonomy.evidence.valueCount, taxonomy.previousDecision.evidence.valueCount + 1);
+  assert.equal(taxonomy.evidence.valueCount, taxonomy.previousDecision.evidence.valueCount + 2);
   assert.equal(taxonomy.concurrentReviewHistory[0].evidence.file, 'scripts/production-migrations.json');
   const tip = taxonomy.previousDecision;
   assert.equal(tip.reviewBatch, 'music-loudness-main-integration-20261124');

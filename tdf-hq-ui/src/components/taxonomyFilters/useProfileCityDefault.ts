@@ -1,6 +1,7 @@
 // TAX-FILTER-001 "near me" default, kept apart from the surface hook so
 // overlays (the radio) do not depend on the session or the fan profile.
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Fans } from '../../api/fans';
 import type { TaxonomyFilterOptions } from '../../api/taxonomy';
 import { useOptionalSession } from '../../session/SessionContext';
@@ -14,24 +15,20 @@ import { isSharedTaxonomyInitialized, markSharedTaxonomyInitialized, setSharedTa
  */
 export const useProfileCityDefault = (options: TaxonomyFilterOptions | undefined) => {
   const session = useOptionalSession()?.session ?? null;
-  const attempted = useRef(false);
+  const viewerId = session?.partyId ?? null;
+  const profile = useQuery({
+    queryKey: ['fan-profile', viewerId],
+    queryFn: Fans.getProfile,
+    enabled: viewerId !== null && Boolean(options),
+    staleTime: 60_000,
+    retry: false,
+  });
+  const cityName = viewerId !== null ? profile.data?.fpCity : undefined;
   useEffect(() => {
-    if (attempted.current || !options || isSharedTaxonomyInitialized()) return;
-    if (!session) return;
-    attempted.current = true;
-    let cancelled = false;
-    Fans.getProfile()
-      .then((profile) => {
-        if (cancelled || isSharedTaxonomyInitialized()) return;
-        const city = matchCityByName(options.cities, profile.fpCity);
-        if (city) setSharedTaxonomySelection({ ...emptyTaxonomySelection(), cityIds: [city.id] });
-        else markSharedTaxonomyInitialized();
-      })
-      .catch(() => {
-        if (!cancelled) markSharedTaxonomyInitialized();
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [options, session]);
+    if (viewerId === null || !options || !profile.isSuccess || isSharedTaxonomyInitialized()) return;
+    const city = matchCityByName(options.cities, cityName);
+    if (city) setSharedTaxonomySelection({ ...emptyTaxonomySelection(), cityIds: [city.id] });
+    else markSharedTaxonomyInitialized();
+  }, [options, viewerId, profile.isSuccess, cityName]);
+  return cityName;
 };

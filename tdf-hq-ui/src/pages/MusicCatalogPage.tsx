@@ -36,7 +36,7 @@ export default function MusicCatalogPage() {
   // TAX-FILTER-001: releases follow the shared location and genre filters
   // (a release's genres, or its artist's; its artist's location).
   const taxonomyOptions = useTaxonomyFilterOptions();
-  useProfileCityDefault(taxonomyOptions.data);
+  const profileCity = useProfileCityDefault(taxonomyOptions.data);
   const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true });
   const taxonomyKey = JSON.stringify(taxonomyFilters.selection);
   const request = useMemo(() => ({ query: query.trim(), page, taxonomy: taxonomyFilters.selection }),
@@ -79,7 +79,7 @@ export default function MusicCatalogPage() {
         return next;
       }, { replace: true });
     }} inputProps={{ maxLength: 200 }} InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }} />
-    <TaxonomyFilterBar idPrefix="music" filters={taxonomyFilters} options={taxonomyOptions.data} optionsError={taxonomyOptions.isError} facets={facets.data} />
+    <TaxonomyFilterBar profileCity={profileCity} idPrefix="music" filters={taxonomyFilters} options={taxonomyOptions.data} optionsError={taxonomyOptions.isError} facets={facets.data} />
     <Box role="region" aria-label="Resultados musicales" aria-busy={pending}>
       {(releases.isLoading || changingSearch) && <Box display="grid" sx={{ placeItems: 'center' }}><CircularProgress aria-label="Buscando lanzamientos" /></Box>}
       {!changingSearch && releases.isError && <Alert severity="warning" action={<Button onClick={() => void releases.refetch()} disabled={pending} aria-label="Reintentar catálogo">Reintentar</Button>}>El catálogo musical no está disponible en este momento.</Alert>}

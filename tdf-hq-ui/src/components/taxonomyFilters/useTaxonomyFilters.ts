@@ -6,9 +6,9 @@
 //   viewer's shared set opens as a per-surface override.
 // * Changing filters updates the shared set (every surface follows) unless
 //   the viewer chose "only here", which keeps them on this surface.
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { Taxonomy, type TaxonomyFilterOptions, type TaxonomySelection } from '../../api/taxonomy';
 import {
   emptyTaxonomySelection,
@@ -42,7 +42,7 @@ export interface SurfaceTaxonomyFilters {
   resetToShared: () => void;
   /** Make this surface's filters the shared set. */
   applyEverywhere: () => void;
-  clearAll: () => void;
+  clearAll: (removeParams?: readonly string[]) => void;
 }
 
 interface Options {
@@ -61,23 +61,40 @@ export const useSurfaceTaxonomyFilters = ({ urlBacked, onChange }: Options): Sur
   const urlSelection = useMemo(() => readTaxonomySelectionFromUrl(searchParams), [searchParams]);
   const urlMarkedLocal = urlBacked && searchParams.get(TAXONOMY_LOCAL_SCOPE_KEY) === TAXONOMY_LOCAL_SCOPE_VALUE;
 
-  const override = urlBacked ? (urlHasState ? urlSelection : null) : memoryOverride;
+  const { state: navigationState } = useLocation();
+  const mirrored = useRef<TaxonomySelection | null>(null);
+  const matchesShared = taxonomySelectionsEqual(urlSelection, shared);
+  const followsShared = !urlMarkedLocal && (!urlHasState || matchesShared ||
+    navigationState?.sharedTaxonomy === JSON.stringify(urlSelection) ||
+    (mirrored.current !== null && taxonomySelectionsEqual(mirrored.current, urlSelection)));
+  const override = urlBacked ? (followsShared ? null : urlSelection) : memoryOverride;
   const selection = override ?? shared;
-  const isOverride = override !== null && (urlMarkedLocal || !taxonomySelectionsEqual(override, shared));
+  const isOverride = override !== null;
 
-  const writeUrl = useCallback((next: TaxonomySelection | null, local: boolean) => {
-    setSearchParams((current) => {
-      const updated = writeTaxonomySelectionToUrl(current, next, local);
-      updated.delete('page');
-      return updated;
-    }, { replace: true });
-  }, [setSearchParams]);
+  const pendingFrom = useRef<URLSearchParams | null>(null);
+  const writeUrl = useCallback((next: TaxonomySelection | null, local: boolean, removeParams: readonly string[] = []) => {
+    const updated = writeTaxonomySelectionToUrl(searchParams, next, local);
+    updated.delete('page');
+    removeParams.forEach((key) => updated.delete(key));
+    if (updated.toString() !== searchParams.toString()) pendingFrom.current = searchParams;
+    setSearchParams(updated, {
+      replace: true,
+      state: { ...navigationState, sharedTaxonomy: local ? null : JSON.stringify(next) },
+    });
+  }, [searchParams, setSearchParams, navigationState]);
 
-  // Mirror the shared set into the URL so a copied link reproduces the view.
   useEffect(() => {
-    if (!urlBacked || urlHasState || isTaxonomySelectionEmpty(shared)) return;
-    setSearchParams((current) => writeTaxonomySelectionToUrl(current, shared, false), { replace: true });
-  }, [shared, setSearchParams, urlBacked, urlHasState]);
+    // A synchronous store notification can render before the router commits
+    // the same user action. Wait for that navigation before mirroring again.
+    if (!urlBacked || pendingFrom.current === searchParams) return;
+    pendingFrom.current = null;
+    if (!followsShared) {
+      mirrored.current = null;
+      return;
+    }
+    if (matchesShared) mirrored.current = shared;
+    else writeUrl(shared, false);
+  }, [urlBacked, followsShared, matchesShared, shared, searchParams, writeUrl]);
 
   const setSelection = useCallback((next: TaxonomySelection, onlyHere = false) => {
     const local = onlyHere || isOverride;
@@ -99,7 +116,13 @@ export const useSurfaceTaxonomyFilters = ({ urlBacked, onChange }: Options): Sur
     else setMemoryOverride(null);
   }, [selection, urlBacked, writeUrl]);
 
-  const clearAll = useCallback(() => setSelection(emptyTaxonomySelection()), [setSelection]);
+  const clearAll = useCallback((removeParams: readonly string[] = []) => {
+    const empty = emptyTaxonomySelection();
+    if (!isOverride) setSharedTaxonomySelection(empty);
+    if (urlBacked) writeUrl(empty, isOverride, removeParams);
+    else setMemoryOverride(isOverride ? empty : null);
+    onChange?.();
+  }, [isOverride, onChange, urlBacked, writeUrl]);
 
   return { selection, isOverride, setSelection, resetToShared, applyEverywhere, clearAll };
 };

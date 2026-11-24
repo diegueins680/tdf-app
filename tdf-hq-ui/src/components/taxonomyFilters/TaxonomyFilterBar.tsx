@@ -20,6 +20,7 @@ import MyLocationIcon from '@mui/icons-material/MyLocation';
 import { useTranslation } from 'react-i18next';
 import type { TaxonomyFacets, TaxonomyFilterOptions } from '../../api/taxonomy';
 import {
+  emptyTaxonomySelection,
   genreOptions,
   locationOptions,
   matchCityByName,
@@ -161,7 +162,7 @@ export default function TaxonomyFilterBar({
           />
         ))}
         {visibleChips.length > 0 && (
-          <Button size="small" onClick={filters.clearAll}>{t('taxonomyFilters.clearAll')}</Button>
+          <Button size="small" onClick={() => filters.setSelection(emptyTaxonomySelection(), onlyHere)}>{t('taxonomyFilters.clearAll')}</Button>
         )}
       </Stack>
 

@@ -28,18 +28,28 @@ export default function CommunityDiscovery() {
   const [draft, setDraft] = useState(query);
   const debounced = useDebouncedSearch(draft);
   const previousQuery = useRef(query);
-  useEffect(() => { setDraft(query); }, [query]);
+  const submittedQuery = useRef<string | null>(null);
   // The result page and page size live in the URL with the filters, so coming
   // back from a profile restores the same results. Any other change starts
   // again from the first page.
-  const update = (key: string, value: string) => setParams((current) => {
-    const next = new URLSearchParams(current);
-    if (value) next.set(key, value); else next.delete(key);
-    if (key !== 'page') next.delete('page');
-    return next;
-  }, { replace: true });
+  const update = (key: string, value: string) => {
+    if (key === 'q' && value !== query) submittedQuery.current = value;
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      if (value) next.set(key, value); else next.delete(key);
+      if (key !== 'page') next.delete('page');
+      return next;
+    }, { replace: true });
+  };
   useEffect(() => {
-    if (previousQuery.current !== query) { previousQuery.current = query; return; }
+    if (previousQuery.current !== query) {
+      previousQuery.current = query;
+      // History navigation restores the URL. An acknowledgement of our own
+      // search can arrive after the user has already typed more characters.
+      if (submittedQuery.current !== query) setDraft(query);
+      submittedQuery.current = null;
+      return;
+    }
     if (debounced !== query && debounced === draft.trim().replace(/\s+/gu, ' ')) update('q', debounced);
   }, [debounced, draft, query]); // eslint-disable-line react-hooks/exhaustive-deps
   const profileKind = params.get('profileKind') ?? '';
@@ -60,7 +70,7 @@ export default function CommunityDiscovery() {
   const { i18n } = useTranslation();
   const language = resolveTaxonomyLanguage(i18n?.resolvedLanguage ?? i18n?.language);
   const taxonomyOptions = useTaxonomyFilterOptions();
-  useProfileCityDefault(taxonomyOptions.data);
+  const profileCity = useProfileCityDefault(taxonomyOptions.data);
   const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true });
   const { selection } = taxonomyFilters;
   const genreNames = new Map((taxonomyOptions.data?.genres ?? []).map((genre) => [genre.id, taxonomyName(genre, language)]));
@@ -108,11 +118,10 @@ export default function CommunityDiscovery() {
   globalSearchParams.delete('page');
   globalSearchParams.delete('perPage');
   const submit = (event: FormEvent) => { event.preventDefault(); update('q', draft.trim().replace(/\s+/gu, ' ')); };
-  const clear = () => { setDraft(''); setParams((current) => {
-    const next = new URLSearchParams(current);
-    for (const key of ['q', 'profileKind', 'genreId', 'cityId', 'page']) next.delete(key);
-    return next;
-  }, { replace: true }); if (!isTaxonomySelectionEmpty(selection)) taxonomyFilters.clearAll(); };
+  const clear = () => {
+    setDraft('');
+    taxonomyFilters.clearAll(['q', 'profileKind', 'genreId', 'cityId']);
+  };
   return <Box ref={section} component="section" aria-labelledby="community-discovery-heading" sx={{ color: 'text.primary', bgcolor: 'background.paper', p: { xs: 2, sm: 3 }, borderRadius: 2, '& .MuiInputLabel-root': { color: 'text.primary' }, '& .MuiButton-text': { color: 'text.primary' } }}>
     <Typography id="community-discovery-heading" component="h2" variant="h5" mb={2}>Descubre tu comunidad</Typography>
     <Stack component="form" role="search" aria-label="Buscar en Comunidad" onSubmit={submit} spacing={2}>
@@ -126,7 +135,7 @@ export default function CommunityDiscovery() {
           <MenuItem value="">Todos los perfiles</MenuItem><MenuItem value="artist">Artistas</MenuItem><MenuItem value="band">Bandas</MenuItem><MenuItem value="project">Proyectos musicales</MenuItem><MenuItem value="person">Personas</MenuItem>
         </TextField>
       </Stack>
-      <TaxonomyFilterBar idPrefix="community" filters={taxonomyFilters} options={taxonomyOptions.data} optionsError={taxonomyOptions.isError}
+      <TaxonomyFilterBar profileCity={profileCity} idPrefix="community" filters={taxonomyFilters} options={taxonomyOptions.data} optionsError={taxonomyOptions.isError}
         facets={pages[0]?.facets.taxonomy} />
     </Stack>
     <Box sx={{ height: 4, my: 2 }}>{results.isFetching && <LinearProgress aria-label="Buscando perfiles" />}</Box>
