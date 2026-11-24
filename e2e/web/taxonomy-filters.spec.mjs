@@ -4,6 +4,8 @@
 import { expect, test } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
+test.use({ contextOptions: { reducedMotion: 'reduce' } });
+
 const EC = 'aaaaaaaa-0000-4000-8000-000000000001';
 const PICHINCHA = 'bbbbbbbb-0000-4000-8000-000000000001';
 const QUITO = 'cccccccc-0000-4000-8000-000000000001';
@@ -72,8 +74,8 @@ const snapshot = async (page, testInfo, name) => {
 
 test('the filter panel opens immediately when the viewer prefers reduced motion @critical', async ({ page, baseURL }) => {
   await fixture(page, baseURL);
-  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/fans');
+  expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
   const filters = page.getByTestId('community-taxonomy-filters');
   const toggle = filters.getByRole('button', { name: 'Filtrar por lugar y género' });
   await toggle.click();

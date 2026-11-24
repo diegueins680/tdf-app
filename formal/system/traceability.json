@@ -30284,7 +30284,7 @@
     "e2e/web/staff-payment-report-money.spec.mjs": "6f70e7798ab7855b6b06cb82119b77c369c342a569fd534adfe8618931e569be",
     "e2e/web/storage-upload-recovery.spec.mjs": "2efc6e5da85b6862d9987c96aee6ac092ec0d92f53c66f15544549a60e7949c4",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
-    "e2e/web/taxonomy-filters.spec.mjs": "0759cf5650aac4193f9036d0587fcfa449ff2ac3283ff288e03d026f208dbcf0",
+    "e2e/web/taxonomy-filters.spec.mjs": "eb8dedc1fb2b6f342b229385ac7abcead7506a4a5cdaea96cccdb4f356be4db8",
     "e2e/web/ticket-credential.spec.mjs": "4fee41226c9c47a9b6df64ad3b06e99c0ce4ccd8f05c14145935139cdcd59ba1",
     "e2e/web/video-campaigns.spec.mjs": "33bf8365ded5ecdc9329bf260e36486d458f7bedf16bb45f25d04149d7de445c",
     "e2e/web/webtorrent-browser.spec.mjs": "6610f089d7b7c82b5c6460ed623cbc5413e250741162b48cf4e2de7ae14305d0",
@@ -55867,7 +55867,7 @@
     {
       "id": "SURFACE-238c10bc24bd2a0a",
       "path": "e2e/web/taxonomy-filters.spec.mjs",
-      "sha256": "0759cf5650aac4193f9036d0587fcfa449ff2ac3283ff288e03d026f208dbcf0",
+      "sha256": "eb8dedc1fb2b6f342b229385ac7abcead7506a4a5cdaea96cccdb4f356be4db8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
