@@ -10479,13 +10479,13 @@
     {
       "id": "SURFACE-3b9b0b0c805d8c24",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
-      "sha256": "f2c0fd0c1400ed886e2e1874535625eea6ef749c390f76c371ca4ada292b0bf2",
+      "sha256": "6827edfacd4e3545836bb1ec1e32246580a76455f520bf61e3d661f0d795d001",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8ff97ac79f9014bb",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
-      "sha256": "a1622f7df3b793cce5fc58b41095c90f3f5c7d08db30dd7b4b593727405efc0e",
+      "sha256": "c49d13005c7a40dca009a9bd00d62f4ab02f2d3c4643a11f26387cc163e2cf01",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25850,7 +25850,7 @@
     },
     {
       "path": "docs/payments/ecuador-payment-review-2026-11-24.md",
-      "sha256": "cd043903ba09a5bc9543c03046a956d3fc1e6eac125ede7d987d87b5cc955882",
+      "sha256": "e39b8e77de5549f9ffabad3748ee9b869eb510421c1d6d251426d3d011a681f5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
