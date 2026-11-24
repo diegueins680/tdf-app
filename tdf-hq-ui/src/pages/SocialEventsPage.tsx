@@ -1076,7 +1076,14 @@ export default function SocialEventsPage() {
           <FormControlLabel label="Incluir eventos pasados" control={
             <Switch checked={includePast} onChange={(_event, checked) => updateFilter('past', checked ? '1' : '')} />
           } />
-          {eventFiltersActive && <Button onClick={() => taxonomyFilters.clearAll(['city', 'type', 'state', 'artists', 'past'])}>Limpiar filtros</Button>}
+          {eventFiltersActive && (
+            <Button
+              sx={{ width: { xs: '100%', md: 'auto' } }}
+              onClick={() => taxonomyFilters.clearAll(['city', 'type', 'state', 'artists', 'past'])}
+            >
+              Limpiar filtros
+            </Button>
+          )}
           {showRefreshAction && (
             <Button
               variant="outlined"
