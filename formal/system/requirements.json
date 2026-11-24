@@ -29922,16 +29922,17 @@
       ],
       "tests": [
         "tdf-hq-ui/src/player/queueContinuation.test.ts",
-        "tdf-hq-ui/src/player/PlayerProvider.continuation.test.tsx"
+        "tdf-hq-ui/src/player/PlayerProvider.continuation.test.tsx",
+        "e2e/web/music-player-native.spec.mjs"
       ],
       "formalModels": [
         "formal/player/QueueContinuation.tla"
       ],
-      "verification": "PROVED (Apalache inductive invariant, for the TLA+ model, three artists, four recordings, every limit in 0..3, walks of any length): appended recordings belong to served artists, follow the served order, are neither queued nor repeated, and stay within the limit. MODEL-CHECKED (TLC, three artists and three recordings, limits 2 and 3): the same invariants, with a negative control (no check against the queue) that violates NoRepeat, also reproduced by Apalache. TESTED (Jest, 1,000 seeded random cases per property and fixed cases): the same four invariants on planQueueContinuation, determinism and purity, the decision function, the flag, and the loader's order, early stop and failure handling with a stubbed API. NOT VERIFIED: the wiring in PlayerProvider beyond typecheck, lint and review; no browser run.",
-      "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-ui jest run of src/player/queueContinuation.test.ts.",
+      "verification": "PROVED (Apalache inductive invariant, for the TLA+ model, three artists, four recordings, every limit in 0..3, walks of any length): appended recordings belong to served artists, follow the served order, are neither queued nor repeated, and stay within the limit. MODEL-CHECKED (TLC, three artists and three recordings, limits 2 and 3): the same invariants, with a negative control (no check against the queue) that violates NoRepeat, also reproduced by Apalache. TESTED (Jest, 1,000 seeded random cases per property and fixed cases): the same four invariants on planQueueContinuation, determinism and purity, the decision function, the flag, and the loader's order, early stop and failure handling with a stubbed API. A Chromium browser test uses a synthetic signed-in session, catalog and real loopback audio to verify that the recommended track plays after the final native ended event.",
+      "evidence": "scripts/verify-inductive-proofs.sh, the queue continuation and PlayerProvider Jest suites, and the signed-in queue continuation case in e2e/web/music-player-native.spec.mjs.",
       "critical": true,
       "status": "specified and implemented",
-      "confidence": "High for the pure planning function (tested) and the model (proved). Medium for the correspondence between them: review plus random tests of the same invariants. Medium for the PlayerProvider wiring: Jest tests of the provider that a continuation is applied when nothing intervenes and discarded after each explicit playback intent (each fails without the cancellation); no browser test.",
+      "confidence": "High for the pure planning function (tested) and the model (proved). Medium for the correspondence between them: review plus random tests of the same invariants. Component tests cover disabled and anonymous listeners, unresolved identity, successful continuation and cancellation. Browser coverage includes the signed-in transition to a recommended recording.",
       "ambiguity": [
         "The task names TDF.ServerRadio for radio sequencing; radio streams have no artist, so the web player queue was chosen by the implementer. The owner has not confirmed this target.",
         "The exclusions of the server response hold as of that response; an artist hidden between the recommendation read and the release read is not re-checked by the client, and whether the release list route hides releases of an unlisted artist was not examined.",
@@ -29941,7 +29942,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Planning function tested and its model proved; the player wiring is tested in Jest (application, and cancellation by each explicit playback intent) but has no browser test, and the release-route visibility between the two reads was not examined."
+        "reason": "The model covers planning invariants. Jest exercises the loader and the player, and the browser test verifies native playback with synthetic catalog metadata. Release visibility changes between the two server reads remain unverified."
       }
     }
   ]

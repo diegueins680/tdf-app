@@ -7,8 +7,8 @@ import type { PlayerTrack } from './types';
 jest.unstable_mockModule('./analytics', () => ({ installPlayerAnalyticsBridge: () => () => undefined }));
 jest.unstable_mockModule('./assetAccess', () => ({ authorizePlayerAsset: jest.fn() }));
 jest.unstable_mockModule('../utils/logger', () => ({ logger: { warn: jest.fn() } }));
-jest.unstable_mockModule('../config/queueContinuationRollout', () => ({ isQueueContinuationEnabled: () => true }));
-jest.unstable_mockModule('./queueContinuation', () => ({ shouldContinueQueue: () => true }));
+const rolloutEnabled = jest.fn(() => true);
+jest.unstable_mockModule('../config/queueContinuationRollout', () => ({ isQueueContinuationEnabled: rolloutEnabled }));
 jest.unstable_mockModule('./loadQueueContinuation', () => ({ loadQueueContinuation: jest.fn() }));
 const { PlayerProvider, usePlayer } = await import('./PlayerProvider');
 const { loadQueueContinuation } = await import('./loadQueueContinuation');
@@ -25,6 +25,7 @@ let continuationSignal: AbortSignal | undefined;
 
 beforeEach(() => {
   localStorage.clear();
+  rolloutEnabled.mockReturnValue(true);
   jest.spyOn(HTMLMediaElement.prototype, 'currentSrc', 'get').mockImplementation(function (this: HTMLMediaElement) { return this.src; });
   jest.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => undefined);
   jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
@@ -38,18 +39,30 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); jest.restoreAllMocks(); localStorage.clear(); });
 
-async function endQueue() {
-  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+async function endQueue(partyId: number | null = 42, ready = true) {
+  const view = render(<PlayerProvider identity={{ ready, partyId }}><Probe /></PlayerProvider>);
   await act(async () => { player.playTrack(track('one')); });
   await waitFor(() => expect(player.status).toBe('playing'));
   const audio = view.container.querySelector('audio')!;
   await act(async () => { audio.dispatchEvent(new Event('ended')); });
-  expect(loadQueueContinuation).toHaveBeenCalledTimes(1);
   return audio;
 }
 
+it.each([
+  { scenario: 'the feature is off', enabled: false, partyId: 42, ready: true },
+  { scenario: 'the listener is anonymous', enabled: true, partyId: null, ready: true },
+  { scenario: 'identity is still loading', enabled: true, partyId: 42, ready: false },
+])('pauses at the end without requesting tracks when $scenario', async ({ enabled, partyId, ready }) => {
+  rolloutEnabled.mockReturnValue(enabled);
+  await endQueue(partyId, ready);
+  expect(loadQueueContinuation).not.toHaveBeenCalled();
+  expect(player.currentTrack?.id).toBe('one');
+  expect(player.status).toBe('paused');
+});
+
 it('appends and starts the continuation when nothing intervenes', async () => {
   await endQueue();
+  expect(loadQueueContinuation).toHaveBeenCalledTimes(1);
   await act(async () => { resolveContinuation([track('similar')]); });
   await waitFor(() => expect(player.currentTrack?.id).toBe('similar'));
   expect(player.queue.tracks.map((item) => item.id)).toEqual(['one', 'similar']);

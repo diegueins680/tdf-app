@@ -166,9 +166,10 @@ describe('queue continuation loader', () => {
   const recommendation = (id: number): ArtistRecommendationDTO =>
     ({ arecArtistId: id, arecReason: 'similar_fans', arecScore: 1, arecSeedArtistIds: [] });
   const summary = (artistPartyId: number) =>
-    ({ artistPartyId, slug: `release-${artistPartyId}` }) as MusicPublicReleaseSummary;
+    ({ id: `rel-${artistPartyId}`, artistPartyId, slug: `release-${artistPartyId}` }) as MusicPublicReleaseSummary;
   const release = (artistPartyId: number, recordings: string[]) => ({
     id: `rel-${artistPartyId}`,
+    artistPartyId,
     versionId: `ver-${artistPartyId}`,
     tracks: recordings.map((recordingId, index) => ({
       trackId: `track-${artistPartyId}-${index}`,
@@ -214,6 +215,20 @@ describe('queue continuation loader', () => {
     });
     const planned = await loadQueueContinuation([], { api: stub, limit: 2 });
     expect(planned.map((item) => item.recordingId)).toEqual(['rec-4', 'rec-5']);
+  });
+
+  it('skips a release whose owner or identity changed between listing and playback', async () => {
+    const stub = api({
+      getPublicRelease: async (slug) => {
+        const id = Number(slug.replace('release-', ''));
+        const detail = release(id, [`rec-${id}`]);
+        if (id === 1) return { ...detail, artistPartyId: 99 };
+        if (id === 2) return { ...detail, id: 'unrelated-release' };
+        return detail;
+      },
+    });
+    const planned = await loadQueueContinuation([], { api: stub, limit: 1 });
+    expect(planned.map((item) => item.recordingId)).toEqual(['rec-3']);
   });
 
   it('does not repeat what is queued and yields nothing when the recommendation read fails or is aborted', async () => {

@@ -428,7 +428,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     const nextIndex = nextQueueIndex(queue);
     if (nextIndex < 0) {
       haltPlayback();
-      if (!continuationRef.current && shouldContinueQueue(queue, ownerPartyId, isQueueContinuationEnabled())) {
+      if (identityReady && !continuationRef.current && shouldContinueQueue(queue, ownerPartyId, isQueueContinuationEnabled())) {
         const controller = new AbortController();
         const ended = queue;
         continuationRef.current = controller;
@@ -452,7 +452,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     }
     autoplayRef.current = true;
     dispatchQueue({ type: 'select', index: nextIndex });
-  }, [dispatchQueue, haltPlayback, ownerPartyId, play, queue, seek]);
+  }, [dispatchQueue, haltPlayback, identityReady, ownerPartyId, play, queue, seek]);
 
   const previous = useCallback(() => {
     cancelContinuation();
