@@ -86,6 +86,7 @@ library
     TDF.API.WhatsApp
     TDF.API.DDEX
     TDF.API.Directory
+    TDF.API.Taxonomy
     TDF.API.Reviews
     TDF.API.MerchReputation
     TDF.API.Catalog
@@ -237,11 +238,15 @@ library
     TDF.Server.EventAttendees
     TDF.Server.TicketSalesWindow
     TDF.Server.SocialEventsHandlers
+    TDF.Server.SocialEventsTaxonomy
     TDF.Server.SocialArtistOwnership
     TDF.Server.StripeTicketCapture
     TDF.Server.EventResearch
     TDF.Server.DDEX
     TDF.Server.Directory
+    TDF.Server.Taxonomy
+    TDF.Taxonomy.Filter
+    TDF.Taxonomy.GenreSuggestion
     TDF.Server.DirectoryAgreementText
     TDF.Server.Merch
     TDF.Server.Reviews
@@ -478,6 +483,8 @@ test-suite tdf-hq-test
     TDF.Directory.PolicySpec
     TDF.Directory.SemanticSearchPostgresSpec
     TDF.Directory.SemanticSearchSpec
+    TDF.Taxonomy.FilterSpec
+    TDF.Taxonomy.GenreSuggestionSpec
     TDF.Profiles.ArtistSpec
     TDF.Profiles.ArtistActivationSpec
     TDF.Server.MerchRuntimeSpec

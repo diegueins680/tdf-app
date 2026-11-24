@@ -50,7 +50,7 @@ import           Data.Time              (UTCTime, getCurrentTime)
 import           Text.Read              (readMaybe)
 import qualified Data.ByteString.Lazy   as BL
 import           Database.Persist       (Entity(..), PersistValue(PersistText), (=.), (==.), (+=.), (<-.),
-                                         SelectOpt(Asc, Desc, LimitTo), deleteBy, getBy, insert, repsert,
+                                         SelectOpt(Asc, Desc), deleteBy, getBy, insert, repsert,
                                          get, selectFirst, selectList, update, updateWhere)
 import           Database.Persist.Sql   (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
 import           Servant                (NoContent(..), ServerError, ServerT, err400, err403, err500, err502, err503, errBody, throwError, (:<|>)(..))
@@ -58,6 +58,12 @@ import           Network.HTTP.Client    (BodyReader, Manager, brRead, httpLbs, p
                                          responseHeaders, responseTimeoutMicro, requestHeaders, withResponse, Request(..))
 import           Network.HTTP.Types.URI (urlDecode)
 import           Data.UUID              (UUID)
+import qualified Data.Aeson             as Aeson
+import           Data.Aeson             (Value)
+import qualified TDF.CMS.Models         as CMS
+import           TDF.Taxonomy.Filter    (TaxonomyFilter(..), mkTaxonomyFilter, postgresUuidArrayParam,
+                                         taxonomyFacetsSql, taxonomyInputColumnsSql, taxonomyInputParams,
+                                         taxonomyMatchSql)
 import qualified Data.UUID              as UUID
 
 import           TDF.API.Radio          (RadioAPI)
@@ -863,6 +869,7 @@ radioServer
 radioServer user =
        listAutoStopOptions
   :<|> searchStreams
+  :<|> streamFacets
   :<|> upsertActive
   :<|> importStreams
   :<|> refreshMetadata
@@ -937,22 +944,83 @@ radioServer user =
           , rasoVersion = Catalog.radioAutoStopOptionVersion option
           }
 
-    searchStreams :: Maybe UUID -> Maybe UUID -> m [RadioStreamDTO]
-    searchStreams mCountryId mGenreId = do
+    searchStreams :: Maybe UUID -> Maybe UUID -> [UUID] -> [UUID] -> [UUID] -> [UUID] -> m [RadioStreamDTO]
+    searchStreams mCountryId mGenreId countryIds regionIds cityIds genreIds = do
       Env{..} <- ask
       result <- liftIO $ flip runSqlPool envPool $ do
         countryValidation <- validateActiveCountryReference "countryId" mCountryId
         genreValidation <- validatePublishedGenreReference "genreId" mGenreId
-        case countryValidation >> genreValidation of
+        case countryValidation >> genreValidation >> radioTaxonomyFilter (maybe [] pure mCountryId <> countryIds) regionIds cityIds (maybe [] pure mGenreId <> genreIds) of
           Left err -> pure (Left err)
-          Right _ -> do
-            rows <- selectList
-              ([RadioStreamIsActive ==. True]
-                <> maybe [] (\countryId -> [RadioStreamCountryId ==. Just countryId]) mCountryId
-                <> maybe [] (\genreId -> [RadioStreamGenreId ==. Just genreId]) mGenreId)
-              [Desc RadioStreamUpdatedAt, LimitTo 400]
-            Right <$> buildRadioStreamDTOs rows
+          Right raw -> do
+            scoped <- radioCountryScope raw
+            case scoped of
+              Nothing -> pure (Right [])
+              Just taxonomy -> do
+                rows <- rawSql
+                  ( "WITH tax_input AS (SELECT " <> taxonomyInputColumnsSql <> ") "
+                 <> "SELECT ?? FROM radio_stream CROSS JOIN tax_input WHERE radio_stream.is_active AND "
+                 <> taxonomyMatchSql "tax_input" "NULL::uuid" "radio_stream.country_id" radioStreamGenresSql
+                 <> " ORDER BY radio_stream.updated_at DESC, radio_stream.id DESC LIMIT 400"
+                  )
+                  (taxonomyInputParams taxonomy)
+                Right <$> buildRadioStreamDTOs rows
       either (throwError . radioCatalogValidationError) pure result
+
+    -- Per-value counts for the radio filter (TAX-FILTER-001), under the same
+    -- country scoping as the station list.
+    streamFacets :: [UUID] -> [UUID] -> [UUID] -> [UUID] -> m Value
+    streamFacets countryIds regionIds cityIds genreIds = do
+      Env{..} <- ask
+      result <- liftIO $ flip runSqlPool envPool $
+        case radioTaxonomyFilter countryIds regionIds cityIds genreIds of
+          Left err -> pure (Left err)
+          Right raw -> do
+            scoped <- radioCountryScope raw
+            -- An impossible scope (country AND a city elsewhere) counts nothing.
+            let taxonomy = fromMaybe raw { tfCountryIds = [nilCountry] } scoped
+            rows <- rawSql
+              ( "WITH tax_input AS (SELECT " <> taxonomyInputColumnsSql <> "), "
+             <> "radio_base AS (SELECT radio_stream.id::text item_key,NULL::uuid city_id,radio_stream.country_id,"
+             <> radioStreamGenresSql <> " genre_ids FROM radio_stream WHERE radio_stream.is_active) "
+             <> "SELECT " <> taxonomyFacetsSql "radio_base" "tax_input"
+              )
+              (taxonomyInputParams taxonomy) :: SqlPersistT IO [Single CMS.AesonValue]
+            pure $ Right $ case rows of
+              Single value : _ -> CMS.unAesonValue value
+              [] -> Aeson.object []
+      either (throwError . radioCatalogValidationError) pure result
+
+    radioStreamGenresSql :: Text
+    radioStreamGenresSql =
+      "CASE WHEN radio_stream.genre_id IS NULL THEN '{}'::uuid[] ELSE ARRAY[radio_stream.genre_id] END"
+
+    nilCountry :: UUID
+    nilCountry = UUID.nil
+
+    radioTaxonomyFilter :: [UUID] -> [UUID] -> [UUID] -> [UUID] -> Either Text TaxonomyFilter
+    radioTaxonomyFilter = mkTaxonomyFilter
+
+    -- Stations carry no region or city: a selected region or city becomes
+    -- the set of countries they belong to, intersected with any selected
+    -- country. Nothing when that intersection is empty (no station matches).
+    radioCountryScope :: TaxonomyFilter -> SqlPersistT IO (Maybe TaxonomyFilter)
+    radioCountryScope taxonomy
+      | null (tfRegionIds taxonomy) && null (tfCityIds taxonomy) = pure (Just taxonomy)
+      | otherwise = do
+          derived <- rawSql
+            ( "SELECT DISTINCT country_id FROM (SELECT country_id FROM subdivision_reference WHERE id=ANY(?::uuid[]) "
+           <> "UNION SELECT country_id FROM city_reference WHERE id=ANY(?::uuid[])) scope"
+            )
+            [postgresUuidArrayParam (tfRegionIds taxonomy), postgresUuidArrayParam (tfCityIds taxonomy)]
+            :: SqlPersistT IO [Single UUID]
+          let derivedIds = [countryId | Single countryId <- derived]
+              countries
+                | null (tfCountryIds taxonomy) = derivedIds
+                | otherwise = filter (`elem` derivedIds) (tfCountryIds taxonomy)
+          pure $ if null countries
+            then Nothing
+            else Just taxonomy { tfCountryIds = countries, tfRegionIds = [], tfCityIds = [] }
 
     upsertActive :: RadioStreamUpsert -> m RadioStreamDTO
     upsertActive payload = do

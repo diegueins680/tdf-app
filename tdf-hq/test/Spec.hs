@@ -192,6 +192,8 @@ import qualified TDF.Catalog.PipelineSpec as CatalogPipelineSpec
 import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
 import qualified TDF.Directory.SemanticSearchPostgresSpec as DirectorySemanticSearchPostgresSpec
 import qualified TDF.Directory.SemanticSearchSpec as DirectorySemanticSearchSpec
+import qualified TDF.Taxonomy.FilterSpec as TaxonomyFilterSpec
+import qualified TDF.Taxonomy.GenreSuggestionSpec as GenreSuggestionSpec
 import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage, passwordResetLink, passwordResetLinkWithLocale, passwordResetEmailContent)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
@@ -14810,6 +14812,7 @@ main = hspec $ do
                         }
                 _autoStopOptions
                     :<|> _searchStreams
+                    :<|> _streamFacets
                     :<|> _upsertActive
                     :<|> _importStreams
                     :<|> _refreshMetadata
@@ -14858,6 +14861,7 @@ main = hspec $ do
                         }
                 _autoStopOptions
                     :<|> _searchStreams
+                    :<|> _streamFacets
                     :<|> _upsertActive
                     :<|> _importStreams
                     :<|> _refreshMetadata
@@ -18548,6 +18552,8 @@ main = hspec $ do
     DirectoryPolicySpec.spec
     DirectorySemanticSearchSpec.spec
     DirectorySemanticSearchPostgresSpec.spec
+    TaxonomyFilterSpec.spec
+    GenreSuggestionSpec.spec
     EventDiscoverySpec.spec
     RecordsIngestion.spec
     YouTubeSpec.spec

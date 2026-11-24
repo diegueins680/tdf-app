@@ -32,6 +32,7 @@ import           System.Environment           (lookupEnv)
 import           Test.Hspec
 
 import qualified TDF.CMS.Models               as CMS
+import           TDF.Taxonomy.Filter (emptyTaxonomyFilter, taxonomyInputParams)
 import           TDF.Directory.SemanticIndex
 import           TDF.Directory.SemanticSearch
 import qualified TDF.Models.SocialEventsModels as Social
@@ -132,7 +133,7 @@ search fixture plan cursor limit = do
   let (statement, extra) = plannedSearch plan (searchSql False)
       common =
         [ PersistText (queryText fixture), PersistText "classified" ]
-          <> replicate 14 PersistNull
+          <> replicate 14 PersistNull <> taxonomyInputParams emptyTaxonomyFilter
   rows <- rawSql statement
     ( common <> map PersistText extra
         <> [ PersistText Social.externalEventRefSuppressedStatus

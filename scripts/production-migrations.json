@@ -1363,6 +1363,11 @@
       "id": "2026-11-21_music_audio_measurement",
       "path": "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
       "introducedBy": "6ab7ca2abd473e901c619f2fc9488dbf5a5dab2b"
+    },
+    {
+      "id": "2026-11-21_location_genre_filters",
+      "path": "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+      "introducedBy": "a0ca9cd7367ecdd7252dfe50d0a9c94365fc2fcf"
     }
   ]
 }

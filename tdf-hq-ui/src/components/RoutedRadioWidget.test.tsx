@@ -16,6 +16,11 @@ jest.unstable_mockModule('../api/radio', () => ({ RadioAPI: {
   nowPlaying: jest.fn(async () => ({})),
   listAutoStopOptions: jest.fn(async () => ({ options: [] })),
 } }));
+jest.unstable_mockModule('../api/taxonomy', () => ({
+  Taxonomy: { filterOptions: jest.fn(async () => ({ countries: [], regions: [], cities: [], genres: [] })), radioFacets: jest.fn(async () => ({})) },
+  appendTaxonomyParams: (params: URLSearchParams) => params,
+}));
+jest.unstable_mockModule('../api/fans', () => ({ Fans: { getProfile: jest.fn(async () => ({})) } }));
 jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: {
   listItems: jest.fn(async () => ({ items: [], total: 0 })),
 } }));
