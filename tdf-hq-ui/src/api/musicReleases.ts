@@ -1,4 +1,5 @@
 import { del, get, post, put } from './client';
+import { parseMusicLoudnessCheck } from './musicLoudness';
 import { IncrementalSha256 } from '../utils/incrementalSha256';
 import { parseMusicMultipartCompletion } from './musicStorageResponse';
 import { canonicalMusicMinor, musicMinorForWire, type MusicMinorUnits } from '../utils/musicMoney';
@@ -710,6 +711,9 @@ export const musicReleases = {
   getVersion: (releaseId: string, versionId: string) => get<MusicReleaseVersion>(
     apiPath(`/releases/${releaseId}/versions/${versionId}`),
   ),
+  getLoudness: (releaseId: string, versionId: string) => get<unknown>(
+    apiPath(`/releases/${releaseId}/versions/${versionId}/loudness`),
+  ).then(parseMusicLoudnessCheck),
   createCorrection: (releaseId: string, versionId: string, idempotencyKey: string) => post<MusicReleaseVersion>(
     apiPath(`/releases/${releaseId}/versions/${versionId}/corrections`), {},
     { headers: { 'Idempotency-Key': idempotencyKey } },

@@ -12555,22 +12555,6 @@
       "reviewMethod": "manual-source-review"
     },
     {
-      "id": "a54bc30988f056e6d713",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "Typed API-client method dispatch gains searchTracks while every inherited method remains unchanged. These protocol function names are not selectable/reportable domain values.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/api/musicReleases.ts",
-        "line": 518
-      },
-      "reviewBatch": "music-track-search-2026-10-26",
-      "reviewMethod": "manual-source-review"
-    },
-    {
       "id": "6c09847d52c099763024",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -31407,27 +31391,6 @@
       }
     },
     {
-      "classification": "security-system-registry",
-      "disposition": "retain-reviewed-deployment-manifest",
-      "specializedModel": "production migration manifest and applied migration ledger",
-      "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "2817f4536be296b99f44",
-      "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "artist-similarity-2026-11-21",
-      "justification": "Preserve all 266 reviewed migration objects in their exact order, paths and introduction commits, and append only 2026-11-21_artist_similarity (COMMUNITY-ARTIST-SIMILARITY-001: three additive similarity tables and two partial indexes), introduced by 89d467302501d47ce53c1551b031c46cb7bb1162. The complete parent review graph remains in previousDecision. This author review does not authorize deployment or feature activation and is not independent approval.",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 267
-      },
-      "previousDecision": {
-        "$historyRef": "sha256:0002218d6522d63ad815bee808b1d4dac1e41a652108ab940c104ad6a4edb17c"
-      }
-    },
-    {
       "id": "9256b774f7f853c0a060",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -31706,6 +31669,419 @@
         "name": "CHECK IN",
         "valueCount": 2
       }
+    },
+    {
+      "id": "68f51ccc9ae6aa108850",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Individually reviewed all four identifiers: contacts, system, accounts, calendar. They are internal keys naming which sidebar entries are presented as one family of pages. They are never stored, sent to the server, selected by a user or used in an access decision.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-owner-decisions-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/sidebarMenuRules.ts",
+        "line": 9,
+        "kind": "literal-union",
+        "name": "MenuFamilyId",
+        "sourceKind": "production",
+        "valueCount": 4,
+        "values": [
+          "contacts",
+          "system",
+          "accounts",
+          "calendar"
+        ]
+      }
+    },
+    {
+      "id": "b7bd15fde65d088e4193",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Individually reviewed the four switch cases over the same internal family keys (contacts, system, accounts, calendar); each returns the Spanish heading of that family. Presentation only: no stored value, server contract or access decision.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-owner-decisions-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/sidebarMenuRules.ts",
+        "line": 47,
+        "kind": "switch-cases",
+        "name": "family",
+        "sourceKind": "production",
+        "valueCount": 4,
+        "values": [
+          "contacts",
+          "system",
+          "accounts",
+          "calendar"
+        ]
+      }
+    },
+    {
+      "id": "25bf3a1dfd5abe50009d",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-retain",
+      "risk": "Changing navigation or UI constants could break rendering or user experience.",
+      "justification": "Individually reviewed all twelve client routes: three CRM pages, five system pages, two account-administration pages and the calendar with its session list. The switch only groups existing sidebar destinations under one entry and a tab strip. Each route keeps its own access check (canAccessPath and the server); grouping grants nothing and hides nothing from search.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-owner-decisions-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/sidebarMenuRules.ts",
+        "line": 24,
+        "kind": "switch-cases",
+        "name": "path",
+        "sourceKind": "production",
+        "valueCount": 12,
+        "values": [
+          "/crm/contactos",
+          "/crm/empresas",
+          "/crm/leads",
+          "/configuracion/actividad",
+          "/configuracion/logs",
+          "/configuracion/estado",
+          "/admin/diagnosticos",
+          "/admin/commerce/provider-events",
+          "/configuracion/usuarios-admin",
+          "/configuracion/roles-permisos",
+          "/estudio/calendario",
+          "/estudio/ordenes"
+        ]
+      }
+    },
+    {
+      "id": "86d5365ab98f33dbea5d",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-retain",
+      "risk": "Changing navigation or UI constants could break rendering or user experience.",
+      "justification": "Individually reviewed the three client routes whose tab wording differs from the sidebar label (session list, status, users). Display wording for existing destinations only; access remains enforced per route and by the server.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-owner-decisions-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/sidebarMenuRules.ts",
+        "line": 61,
+        "kind": "switch-cases",
+        "name": "item.path",
+        "sourceKind": "production",
+        "valueCount": 3,
+        "values": [
+          "/estudio/ordenes",
+          "/configuracion/estado",
+          "/configuracion/usuarios-admin"
+        ]
+      }
+    },
+    {
+      "id": "a75fadbada935d09bb95",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Synthetic session fixture field names in the page-family tab test follow the existing session contract. Test data only, not a catalog or a grant of access.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-owner-decisions-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/MenuFamilyTabs.test.tsx",
+        "line": 5,
+        "kind": "object-registry",
+        "name": "session",
+        "sourceKind": "test",
+        "valueCount": 5,
+        "values": [
+          "username",
+          "displayName",
+          "roles",
+          "featureFlags",
+          "modules"
+        ]
+      }
+    },
+    {
+      "id": "9b1826ca55900d52662b",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Synthetic module names for the fixture session in the page-family tab test, reset between cases. Test data only; real modules come from the server session.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-owner-decisions-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/MenuFamilyTabs.test.tsx",
+        "line": 10,
+        "kind": "array",
+        "name": "modules",
+        "sourceKind": "test",
+        "valueCount": 3,
+        "values": [
+          "admin",
+          "crm",
+          "scheduling"
+        ]
+      }
+    },
+    {
+      "id": "5f829ca52758751904ec",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Renaming a method breaks its callers at compile time; no runtime authority depends on the names.",
+      "justification": "Typed API-client method names of the music release client, with getLoudness added for the loudness route; implementation mechanics, not selectable catalog values.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicReleases.ts",
+        "line": 614,
+        "kind": "object-registry",
+        "name": "musicReleases",
+        "valueCount": 43,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
+        "predecessorDecision": "a54bc30988f056e6d713"
+      },
+      "previousDecision": {
+        "$historyRef": "sha256:13a3c178663d54b685b829c7fae3b78ac269166879757cdad1903aa4c1448d4c"
+      }
+    },
+    {
+      "id": "5366d3bfbc5f235d3536",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A status outside this list would be rendered as a loudness result the server never produced.",
+      "justification": "The five check statuses the loudness route may answer; the client rejects any other value before rendering.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicLoudness.ts",
+        "line": 8,
+        "kind": "array",
+        "name": "STATUSES",
+        "valueCount": 5,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "ac289f588a35d1b3b7fc",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the Haskell type would let generated clients accept or miss a result state.",
+      "justification": "Contract enumeration of TDF.MusicRelease.Loudness.CheckStatus, the closed result of the pure check, not reference data.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 19484,
+        "kind": "openapi-enum",
+        "name": "status",
+        "valueCount": 5,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "c9e48e74824b84cb7207",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the Haskell type would let generated clients accept or miss a warning.",
+      "justification": "Contract enumeration of TDF.MusicRelease.Loudness.LoudnessFlag, the three comparisons of the approved decision rule.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 19492,
+        "kind": "openapi-enum",
+        "name": "items",
+        "valueCount": 3,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "a0b5a2f81a33c9e734f5",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the database CHECK would let generated clients mislabel a failed measurement.",
+      "justification": "Contract enumeration of the failure reasons the measurement wrapper and the database function can record.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 19498,
+        "kind": "openapi-enum",
+        "name": "failureReason",
+        "valueCount": 9,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "b2ab8f23cab6f7fdb0fb",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the set without the trigger, the Haskell lifecycle and the TLA+ model would let a stale or rewritten measurement mark a track as checked.",
+      "justification": "Lifecycle states of music_audio_measurement, bound in formal/system/state-machine-bindings.json and enforced by the trigger music_audio_measurement_guard; a closed technical state machine, not business catalog data.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
+        "line": 16,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 4,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "1134f4f8cb4efac65b9a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A reason outside the set would be refused by the CHECK and the attempt would stay pending.",
+      "justification": "Failure reasons a measurement attempt can record; each is produced by one branch of scripts/measure-music-loudness.pl or music_finish_audio_measurement.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
+        "line": 21,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 8,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "a221b2060a68339301f2",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Adding or dropping a flag changes the pass/warn decision proved in formal/music/loudness_decision.py.",
+      "justification": "Closed sum of the three comparisons of the approved loudness decision, matched exhaustively by the compiler.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "line": 54,
+        "kind": "haskell-sum-type",
+        "name": "LoudnessFlag",
+        "valueCount": 3,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "faeda2e53127ecb3b026",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the column CHECK would make stored rows unreadable or misread as another state.",
+      "justification": "Haskell mirror of the music_audio_measurement lifecycle states, parsed from the column and matched exhaustively.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "line": 71,
+        "kind": "haskell-sum-type",
+        "name": "MeasurementState",
+        "valueCount": 4,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "c11f0f75e8345464756b",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the trigger would make the tested lifecycle differ from the enforced one.",
+      "justification": "The three events of the measurement lifecycle used by the pure transition function and its tests.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "line": 85,
+        "kind": "haskell-sum-type",
+        "name": "MeasurementEvent",
+        "valueCount": 3,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "2be7224fad3893f06d5f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Adding a status without the contract and the web parser would hide or misreport a result.",
+      "justification": "Closed result of the pure per-track check, rendered to the route and matched exhaustively by the compiler.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "line": 122,
+        "kind": "haskell-sum-type",
+        "name": "CheckStatus",
+        "valueCount": 5,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "classification": "security-system-registry",
+      "disposition": "retain-reviewed-deployment-manifest",
+      "specializedModel": "production migration manifest and applied migration ledger",
+      "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+      "id": "6de858d8fb3cdaaebb91",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "music-loudness-main-integration-20261124",
+      "justification": "Keep the 267 entries from main 39935739 in order and append the original loudness migration. Preserve the complete artist similarity and music loudness manifest reviews. The SQL and both disabled feature flags are unchanged.",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 268
+      },
+      "previousDecision": {
+        "$historyRef": "sha256:eb492f0d15276cd15f7ad5e837be0a98655fe0f30c332cd314ad920b22261aad"
+      },
+      "concurrentReviewHistory": [
+        {
+          "$historyRef": "sha256:b164595893786d259b55d838f5cfb8479339c1bd644d0203cb66d8694098b82b"
+        }
+      ]
     }
   ],
   "sourceContextHistory": [
