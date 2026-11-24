@@ -221,3 +221,24 @@ It does not expose a constructor or synthesize a verified customer IP. Its
 loopback peer has no forwarded assertion, so a fresh gateway request remains
 unavailable regardless of inherited merchant configuration; closed-sales
 refusals must still precede network preflight.
+
+## Recovery from a saved checkout
+
+The backend can poll the authenticated Dataweb transaction report for a saved
+checkout after a restore. The global provider worker, the dedicated
+`DATAFAST_RESTORE_RECOVERY_ENABLED` switch, the database recovery flag and the
+qualified merchant account must all allow the query. Both process switches
+default off. The report endpoint accepts the merchant transaction reference.
+A result can include both a debit and its reversal. A unique, successful debit
+must match the currency, amount and reference before settlement. A legacy
+order reference also requires evidence of the original provider checkout.
+See the [Datafast transaction query](https://developers.datafast.com.ec/index.aspx).
+
+The worker persists claims per original binding and rechecks the claim, account
+and binding after the remote call. Ticket settlement requires a live seat hold
+and runs the canonical ledger writer and ticket issuer in the same transaction.
+For course seats, service bookings and Domo deposits, the worker locks the live
+hold and the existing database triggers apply the domain transition.
+A confirmed sale with an unsupported fulfillment contract is recorded for
+reconciliation. An ambiguous or incomplete report never issues a ticket.
+The worker can discover only bindings present in the restored database.

@@ -16,6 +16,8 @@ import Data.Int (Int64)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (getCurrentTime)
+import qualified Data.Text.Encoding as TE
+import Network.HTTP.Types.URI (urlEncode)
 import Database.Persist (PersistValue(..))
 import Database.Persist.Sql (Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool, toSqlKey)
 import Servant (runHandler)
@@ -131,11 +133,11 @@ query :: Fetch -> DF.ServiceDatafastEnv -> Binding -> Int -> IO Answer
 query fetch config binding generation = do
   let reference = if odd generation then attemptId binding else orderRef binding
       url = T.dropWhileEnd (== '/') (T.pack (DF.sdfBaseUrl config)) <> "/v1/query?entityId="
-        <> DF.sdfEntityId config <> "&merchantTransactionId=" <> reference
+        <> DF.sdfEntityId config <> "&merchantTransactionId=" <> TE.decodeUtf8 (urlEncode True (TE.encodeUtf8 reference))
       request = AdapterRequest C.ProviderDatafast AdapterQuery AdapterGet url
         [("Authorization",sensitiveText ("Bearer " <> DF.sdfBearerToken config))] Nothing NeverRetryAutomatically
       safeRef ch = ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z'
-        || ch >= '0' && ch <= '9' || ch `elem` ("-_." :: String)
+        || ch >= '0' && ch <= '9' || ch `elem` ("-_.:" :: String)
   if T.null reference || T.length reference > 255 || not (T.all safeRef reference)
     then pure (Review "invalid_merchant_reference")
     else do
@@ -197,33 +199,62 @@ finish environment merchant binding generation path answer = do
         Right () -> update "completed" "verified"
       rawExecute "RELEASE SAVEPOINT datafast_restored_payment" []
 
--- Automatic ticket fulfillment uses the same canonical writer and issuance
--- function as the HTTP handler. Other domains have distinct fulfillment
--- contracts; a confirmed sale is durably surfaced for domain reconciliation.
+-- Lock the actual domain hold. Booking, course and Domo sync through their
+-- installed checkout triggers. Ticket issuance also needs the canonical issuer.
 settle :: C.CheckoutEnvironment -> Text -> Binding -> Text -> Text -> SqlPersistT IO (Either Text ())
-settle environment merchant Binding{..} path paymentId
-  | domain /= "event_ticket_order" = pure (Left "verified_datafast_domain_review")
-  | otherwise = do
-      tickets <- rawSql
-        "SELECT r.order_id FROM event_ticket_checkout_runtime r JOIN commerce_checkout_session c ON c.id=r.checkout_id\
-        \ WHERE c.id=?::uuid AND r.order_id::text=c.domain_order_id AND r.checkout_total_minor=c.total_minor\
-        \ AND r.currency=c.currency AND c.paid_minor=0 AND c.status IN ('awaiting_payment','processing','failed')\
-        \ AND r.fulfillment_status='seat_held' AND greatest(r.hold_expires_at,r.manual_hold_expires_at)>clock_timestamp()\
-        \ FOR UPDATE OF r,c" [PersistText checkoutId]
-      case tickets of
-        [Single orderKey] -> do
-          now <- liftIO getCurrentTime
-          let attempt = C.PaymentAttemptReference attemptId
-              checkout = C.CheckoutReference checkoutId
-              correlation = "datafast-recovery:" <> bindingId
-          bound <- C.bindProviderResource (C.ProviderBindingCreation attempt checkout C.ProviderDatafast
-            environment merchant "payment" paymentId (Just path) orderRef amount currency C.AttemptProcessing now correlation)
-          case bound of
-            Left _ -> pure (Left "datafast_payment_binding_conflict")
-            Right () -> do
-              verified <- C.recordVerifiedPaymentOrReconcile (C.VerifiedPayment attempt checkout C.ProviderDatafast
-                environment merchant "checkout" resource storedPath orderRef orderRef amount currency "server_to_server" now correlation)
-              case verified of
-                Left _ -> pure (Left "datafast_payment_requires_review")
-                Right _ -> void (Tickets.finalizePaidTicketOrder now (toSqlKey orderKey)) >> pure (Right ())
-        _ -> pure (Left "datafast_ticket_requires_review")
+settle environment merchant binding@Binding{..} path paymentId = do
+  admitted <- lockFulfillment binding
+  case admitted of
+    Nothing -> pure (Left "verified_datafast_domain_review")
+    Just issue -> do
+      now <- liftIO getCurrentTime
+      let attempt = C.PaymentAttemptReference attemptId
+          checkout = C.CheckoutReference checkoutId
+          correlation = "datafast-recovery:" <> bindingId
+      bound <- C.bindProviderResource C.ProviderBindingCreation
+        { C.pbcAttempt=attempt, C.pbcCheckout=checkout, C.pbcProvider=C.ProviderDatafast
+        , C.pbcEnvironment=environment, C.pbcMerchantRef=merchant, C.pbcResourceType="payment"
+        , C.pbcProviderResource=paymentId, C.pbcResourcePath=Just path, C.pbcOrderReference=orderRef
+        , C.pbcAmountMinor=amount, C.pbcCurrency=currency, C.pbcStage=C.AttemptProcessing
+        , C.pbcOccurredAt=now, C.pbcCorrelationId=correlation }
+      case bound of
+        Left _ -> pure (Left "datafast_payment_binding_conflict")
+        Right () -> do
+          verified <- C.recordVerifiedPaymentOrReconcile C.VerifiedPayment
+            { C.vpAttempt=attempt, C.vpCheckout=checkout, C.vpProvider=C.ProviderDatafast
+            , C.vpEnvironment=environment, C.vpMerchantRef=merchant, C.vpResourceType="checkout"
+            , C.vpProviderResource=resource, C.vpProviderResourcePath=storedPath
+            , C.vpOrderReference=orderRef, C.vpProviderReference=orderRef, C.vpAmountMinor=amount
+            , C.vpCurrency=currency, C.vpEvidence="server_to_server", C.vpOccurredAt=now
+            , C.vpCorrelationId=correlation }
+          case verified of
+            Left _ -> pure (Left "datafast_payment_requires_review")
+            Right _ -> do
+              case issue of
+                Just orderKey -> void (Tickets.finalizePaidTicketOrder now (toSqlKey orderKey))
+                Nothing -> pure ()
+              pure (Right ())
+
+-- The SQL fragments are local constants. The lock and the DB clock prevent
+-- a late provider confirmation from granting an expired reservation.
+lockFulfillment :: Binding -> SqlPersistT IO (Maybe (Maybe Int64))
+lockFulfillment Binding{..} = case domain of
+  "event_ticket_order" -> do
+    orders <- eligible "event_ticket_checkout_runtime" "r.order_id::text" "checkout_total_minor"
+      "r.fulfillment_status='seat_held' AND greatest(r.hold_expires_at,r.manual_hold_expires_at)>clock_timestamp()" "r.order_id"
+    pure $ case orders of [Single ticket] -> Just (Just ticket); _ -> Nothing
+  "service_booking" -> admit "service_booking_checkout_runtime" "r.booking_id::text" "deposit_minor" "r.fulfillment_status='on_hold'"
+  "course_registration" -> admit "course_registration_checkout_runtime" "r.registration_id::text" "due_now_minor" "r.enrollment_status='seat_held'"
+  "domo_event_quote" -> admit "domo_event_quote_runtime" "('domo-quote:'||r.id::text)" "deposit_minor" "r.quote_status='deposit_due' AND r.fulfillment_status='date_held'"
+  _ -> pure Nothing
+  where
+    admit table identity total predicate = do
+      found <- eligible table identity total (predicate <> " AND r.hold_expires_at>clock_timestamp()") "1::bigint"
+      pure $ if found == [Single 1] then Just Nothing else Nothing
+    eligible :: Text -> Text -> Text -> Text -> Text -> SqlPersistT IO [Single Int64]
+    eligible table identity total predicate projection = rawSql
+      ("SELECT " <> projection <> " FROM " <> table <> " r JOIN commerce_checkout_session c ON c.id=r.checkout_id\
+       \ WHERE c.id=?::uuid AND c.domain_type=? AND " <> identity <> "=c.domain_order_id AND r."
+       <> total <> "=c.total_minor AND r.currency=c.currency AND c.paid_minor=0 AND c.refunded_minor=0\
+       \ AND c.status IN ('awaiting_payment','processing','failed') AND " <> predicate <> " FOR UPDATE OF r,c")
+      [PersistText checkoutId,PersistText domain]

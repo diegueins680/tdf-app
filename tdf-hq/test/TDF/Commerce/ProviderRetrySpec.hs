@@ -2396,17 +2396,23 @@ datafastRecoveryWorkerSpec = describe "Datafast recovery across process loss" $ 
       counts <- concurrently (replicate 4 (runQueryTick pool fetch))
       sum counts `shouldBe` 1
       runQueryTick pool noQuery `shouldReturn` 0
-    Nothing -> forM_ ["uuid","legacy","reversed","wrong-amount","expired"] $ \scenario ->
+    Nothing -> forM_ ["uuid","legacy","reversed","wrong-amount","expired","service_booking","course_registration","domo_event_quote"] $ \scenario ->
       it ("restores and verifies the " <> scenario <> " report") $ \pool -> withCompletionEnvironment $ do
         url <- isolatedRecoveryUrl
-        creation <- newCheckout pool
+        let alternateDomain = scenario `elem` ["service_booking","course_registration","domo_event_quote"]
+            shouldSettle = alternateDomain || scenario `elem` ["uuid","legacy"]
+        creation <- if alternateDomain then do
+          [Single idText] <- runSqlPool (rawSql "SELECT payment_test.checkout(?)::text" [PersistText (T.pack scenario)]) pool
+          checkoutCreation pool Checkout.ProviderDatafast idText
+          else newCheckout pool
         payment <- captureFixtureFromCheckout creation "payment" Checkout.AttemptProcessing pool Checkout.ProviderDatafast
         let attempt = Checkout.paymentAttemptReferenceId (Checkout.vpAttempt payment)
             checkout = Checkout.checkoutReferenceId (Checkout.vpCheckout payment)
             isLegacy = scenario == "legacy"
             reference = if isLegacy then Checkout.vpOrderReference payment else attempt
+            saleAmount = Checkout.vpAmountMinor payment
             row kind = A.object ["id" A..= ("synthetic-reported-" <> attempt),"paymentType" A..= (kind :: Text),
-              "amount" A..= (if scenario == "wrong-amount" then "125.16" else "125.15" :: Text),
+              "amount" A..= (if scenario == "wrong-amount" then "125.16" else T.pack (show (Adapter.minorToDecimal saleAmount))),
               "currency" A..= ("USD" :: Text),"merchantTransactionId" A..= reference,
               "checkoutId" A..= Checkout.vpProviderResource payment,
               "result" A..= A.object ["code" A..= ("000.100.112" :: Text)]]
@@ -2429,7 +2435,7 @@ datafastRecoveryWorkerSpec = describe "Datafast recovery across process loss" $ 
               reportFile = dir <> "/provider.json"
           callIsolatedPostgresTool "pg_dump" ["-Fc","-f",dump,"--dbname",url]
           BL.writeFile reportFile (A.encode (reference,records))
-          when (scenario `elem` ["uuid","legacy"]) $
+          when shouldSettle $
             runSqlPool (Checkout.recordVerifiedPaymentOrReconcile payment) pool `shouldReturn` Right True
           destroyAllResources pool
           callIsolatedPostgresTool "pg_restore" ["--clean","--if-exists","--exit-on-error","--no-owner","--dbname",url,dump]
@@ -2450,11 +2456,18 @@ datafastRecoveryWorkerSpec = describe "Datafast recovery across process loss" $ 
             \ FROM commerce_checkout_session c JOIN commerce_payment_attempt a ON a.checkout_id=c.id\
             \ JOIN commerce_provider_binding b ON b.payment_attempt_id=a.id AND b.resource_type='checkout'\
             \ JOIN commerce_datafast_recovery_query q ON q.binding_id=b.id\
-            \ JOIN event_ticket_checkout_runtime r ON r.checkout_id=c.id WHERE c.id=?::uuid"
+            \ LEFT JOIN event_ticket_checkout_runtime r ON r.checkout_id=c.id WHERE c.id=?::uuid"
             [PersistText checkout]) pool :: IO [(Single Int64,Single Text,Single Int64,Single Int64,Single Int64)]
-          if scenario `elem` ["uuid","legacy"]
-            then results `shouldBe` [(Single 12515,Single "completed",Single 1,Single 1,Single 1)]
+          if shouldSettle
+            then results `shouldBe` [(Single saleAmount,Single "completed",Single 1,Single 1,Single (if alternateDomain then 0 else 1))]
             else results `shouldBe` [(Single 0,Single "review",Single 0,Single 0,Single 0)]
+          when alternateDomain $ do
+            let predicate = case scenario of
+                  "service_booking" -> "SELECT fulfillment_status='confirmed' FROM service_booking_checkout_runtime"
+                  "course_registration" -> "SELECT enrollment_status='enrolled' FROM course_registration_checkout_runtime"
+                  _ -> "SELECT quote_status='deposit_paid' AND fulfillment_status='date_reserved' FROM domo_event_quote_runtime"
+            runSqlPool (rawSql (predicate <> " WHERE checkout_id=?::uuid") [PersistText checkout]) pool
+              `shouldReturn` [Single True]
         setRecoveryFlag pool False
 
 isolatedRecoveryUrl :: IO String
