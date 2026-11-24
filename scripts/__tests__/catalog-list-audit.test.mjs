@@ -6593,8 +6593,27 @@ async function integrationSource(ref, file) {
 const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1", "5a81672285dc9c03130fc9fd8355e2b4c58e9e12"];
 
 // Qualify the new append against both published parents before running their historical assertions.
-async function manifestBeforeTaxonomy(file) {
+async function manifestBeforeVenueCoordinates(file) {
   const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const entry = current.migrations.at(-1);
+  const original = (await integrationParent('218797e0c3c8d4c5af839f10c42b3549d4f7f7c5', file)).migrations.at(-1);
+  assert.equal(entry.id, '2026-11-24_venue_coordinate_constraint');
+  assert.deepEqual(entry, original);
+  return { ...current, migrations: current.migrations.slice(0, -1) };
+}
+
+test('venue coordinates append the original SQL after the protected migration sequence', async () => {
+  const file = 'scripts/production-migrations.json';
+  const parent = await integrationParent('bddc0a2a6c18ef101db3c7750a4ec7fe7f01b4d8', file);
+  assert.deepEqual(await manifestBeforeVenueCoordinates(file), parent);
+  const { migrations } = await integrationParent('218797e0c3c8d4c5af839f10c42b3549d4f7f7c5', file);
+  const entry = migrations.at(-1);
+  await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), await integrationSource(entry.introducedBy, entry.path));
+});
+
+async function manifestBeforeTaxonomy(file) {
+  const current = await manifestBeforeVenueCoordinates(file);
   const original = (await integrationParent('be996410572a72f8f787b2cd5d345b30523ba1ea', file)).migrations.at(-1);
   assert.equal(original.id, '2026-11-21_location_genre_filters');
   assert.deepEqual(current.migrations.at(-3), original);
@@ -6626,7 +6645,11 @@ async function manifestBeforeLoudness(file) {
 }
 
 function decisionBeforeLoudness(decisions) {
-  const taxonomy = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations');
+  const coordinates = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations');
+  assert.equal(coordinates.reviewBatch, 'venue-coordinate-constraint-main-integration-20261124');
+  assert.equal(coordinates.evidence.valueCount, coordinates.previousDecision.evidence.valueCount + 1);
+  assert.equal(coordinates.concurrentReviewHistory[0].reviewBatch, 'venue-coordinate-constraint-20261124');
+  const taxonomy = coordinates.previousDecision;
   assert.equal(taxonomy.reviewBatch, 'taxonomy-filters-main-integration-20261124');
   assert.equal(taxonomy.evidence.valueCount, taxonomy.previousDecision.evidence.valueCount + 3);
   assert.equal(taxonomy.concurrentReviewHistory[0].evidence.file, 'scripts/production-migrations.json');
