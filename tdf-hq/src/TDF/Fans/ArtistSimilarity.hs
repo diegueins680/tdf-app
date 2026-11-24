@@ -34,6 +34,7 @@ module TDF.Fans.ArtistSimilarity
   , similarityValue
   , restrictSimilarity
   , rankBySimilarity
+  , frameSeedEligible
     -- * SQL
   , followSignalsSql
   , favouriteSignalsSql
@@ -304,6 +305,15 @@ rankBySimilarity limit eligible excluded followers seedWeights similarity
         followers
         []
 
+-- | The artists whose signals may act as seeds for the frame's fan: listed,
+-- not the fan's own party, and followable under the follow policy where it
+-- is installed, unless the fan already follows them. An artist blocked in
+-- either direction, closed or inactive is therefore never evidence, while a
+-- follow the fan still holds remains a seed.
+frameSeedEligible :: RecommendationFrame -> Set.Set Int64
+frameSeedEligible frame =
+  rfListed frame `Set.difference` (rfExcluded frame `Set.difference` rfFollowed frame)
+
 -- | Every follow as @(fan, artist)@ (no parameters).
 followSignalsSql :: Text
 followSignalsSql =
@@ -525,7 +535,9 @@ runSimilarityGeneration = do
 -- | Recommendations for @fan@ from the multi-signal similarity.
 --
 -- Listing, follows, the follow policy, the fan's own signals and the fan's
--- personalisation switch are always read live. A fan who switched
+-- personalisation switch are always read live. Only 'frameSeedEligible'
+-- artists are seeds, so the live follow policy applies to evidence as it
+-- does to results. A fan who switched
 -- personalisation off, or a request without a usable stored generation, gets
 -- exactly the popularity fallback.
 loadSimilarityRecommendations
@@ -542,9 +554,11 @@ loadSimilarityRecommendations source fan limit = do
     Nothing -> rank Map.empty (Similarity Map.empty Map.empty)
     Just (seedWeights, similarity) -> rank seedWeights similarity
 
--- | The fan's own weights on listed artists and the similarity rows that
--- touch them, or 'Nothing' for a fan who switched personalisation off (then
--- none of the fan's favourites, RSVPs or plays is read).
+-- | The fan's own weights on 'frameSeedEligible' artists (listed, not the
+-- fan, followed or followable under the live follow policy) and the
+-- similarity rows that touch them, or 'Nothing' for a fan who switched
+-- personalisation off (then none of the fan's favourites, RSVPs or plays is
+-- read).
 loadFanSimilarity
   :: MonadIO m
   => SimilaritySource
@@ -572,10 +586,12 @@ loadFanSimilarity source fan frame = do
                   ]
               }
           seedWeights =
-            Map.fromList
-              [ (artist, weight)
-              | ((_, artist), weight) <- Map.toList (signalWeights (rfListed frame) Set.empty inputs)
-              ]
+            Map.restrictKeys
+              (Map.fromList
+                [ (artist, weight)
+                | ((_, artist), weight) <- Map.toList (signalWeights (rfListed frame) Set.empty inputs)
+                ])
+              (frameSeedEligible frame)
       similarity <- case source of
         LiveSignals -> loadSignalSimilarity now
         StoredGeneration -> loadStoredSimilarity (Map.keysSet seedWeights)

@@ -119,6 +119,21 @@ main = do
       (orderByAffinity hundredAffinity (\event -> Map.findWithDefault [] event lineups) [3, 2, 1 :: Int64]
         == (if Map.member 5 hundredAffinity then [2, 1, 3] else [3, 2, 1]))
 
+    -- A block applies to evidence as to results: fan 103 favourites 3, which
+    -- names results until a follow policy refuses 3 to 103.
+    unblocked <- stored 103
+    check "artist 3 explains a result for fan 103 before the block"
+      (any (elem 3 . recSeedArtistIds) unblocked)
+    execute
+      "CREATE FUNCTION social_v2_profile_eligible(viewer bigint, ids bigint[]) \
+      \RETURNS TABLE (profile_id bigint) LANGUAGE sql STABLE AS \
+      \$$ SELECT id FROM unnest(ids) AS id WHERE NOT (viewer = 103 AND id = 3) $$"
+    forM_ [StoredGeneration, LiveSignals] $ \source -> do
+      blocked <- recommend source 103
+      check ("a blocked artist was returned or named for fan 103 (" <> show source <> ")")
+        (all (\item -> recArtistId item /= 3 && notElem 3 (recSeedArtistIds item)) blocked)
+    execute "DROP FUNCTION social_v2_profile_eligible(bigint, bigint[])"
+
     -- The per-fan signal queries are the global ones restricted to the fan.
     favourites :: [(Single Int64, Single Int64)] <- run (rawSql favouriteSignalsSql [])
     rsvps :: [(Single Int64, Single Int64)] <- run (rawSql rsvpSignalsSql [])

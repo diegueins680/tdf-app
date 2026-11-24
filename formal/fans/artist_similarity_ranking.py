@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """COMMUNITY-ARTIST-SIMILARITY-001: exclusions and order of the ranking.
 
-Hand translation of three pinned regions:
+Hand translation of four pinned regions:
 
-  * rankBySimilarity (tdf-hq/src/TDF/Fans/ArtistSimilarity.hs): which artists
-    become `similar_fans` results, which seeds are named, the sort key;
+  * rankBySimilarity and frameSeedEligible
+    (tdf-hq/src/TDF/Fans/ArtistSimilarity.hs): which artists become
+    `similar_fans` results, which seeds are named, the sort key, and which
+    artists may be seeds at all;
+  * loadSimilarityRecommendations and loadFanSimilarity (same module), which
+    it calls and which the region includes: the seed weights are restricted
+    to frameSeedEligible of the live frame;
   * rankArtistRecommendations (tdf-hq/src/TDF/Fans/ArtistRecommendations.hs),
     called with no evidence rows: the popularity fallback and its sort key;
   * loadRecommendationFrame (same module): what the loader puts in the
@@ -19,8 +24,10 @@ candidate holds for every result.
 Proofs (UNSAT of the negation):
   - a result is listed, not followed by the caller, not the caller, and
     followable where the follow policy is installed;
-  - a named seed is listed, carries a positive weight of the caller and is
-    not the result it explains;
+  - a named seed is listed, carries a positive weight of the caller, is
+    not the result it explains, and is followed by the caller or followable
+    where the follow policy is installed (a block in either direction makes
+    an artist neither, so a blocked artist is never evidence);
   - no artist is both a similar result and a fallback result;
   - the sort key of similar results (score descending, follower count
     descending, id ascending) is a strict total order on distinct ids:
@@ -34,7 +41,8 @@ Witnesses: a similar result, a fallback result, and two results whose scores
 and follower counts tie and are ordered by id.
 
 Necessity: the listing check on results, the exclusion check, the listing
-check on seeds, the loader's three exclusions,
+check on seeds (in both places it is applied), the loader's seed restriction
+to followed or followable artists, the loader's three exclusions,
 the removal of similar results from the fallback and the id tie-break are
 removed in turn; each must make a proof fail. Allowing a NaN score must also
 break the order.
@@ -58,13 +66,15 @@ SIMILARITY = 'tdf-hq/src/TDF/Fans/ArtistSimilarity.hs'
 RECOMMENDATIONS = 'tdf-hq/src/TDF/Fans/ArtistRecommendations.hs'
 REGIONS = (
     (SIMILARITY, 'rankBySimilarity\n  :: Int', '-- | Every follow as',
-     '1bef4d458215bcc305d2e1d4a80ba7cbc53deaeff283d6e1a8a9e1fbb40be4eb'),
+     '9668316445b1ed64663012e3e7f5bf5ba31c05b2d85c3619306b79a5dadfc37b'),
+    (SIMILARITY, 'loadSimilarityRecommendations\n  :: MonadIO m', '-- | The stored rows a request',
+     'f63922a0db3dbf3bb2d1c3af5d1ccaa1258f72895a530da8ac0fd2dcec87f0d9'),
     (RECOMMENDATIONS, 'rankArtistRecommendations\n  :: Int', '-- | Artists followed by the fan',
      '58e3cad7967b0766b80f274be1437526d70611425b29eb252ea10546209068e8'),
     (RECOMMENDATIONS, 'loadRecommendationFrame :: MonadIO m', '-- | Recommendations for @fan@',
      'eb3d4c7e42187bf651bcae1ce1b752bda3fd9503abbe4ac55d506466557b1311'),
 )
-GUARDS = ('result-listed', 'result-not-excluded', 'seed-listed',
+GUARDS = ('result-listed', 'result-not-excluded', 'seed-listed', 'loader-restricts-seeds',
           'loader-excludes-followed', 'loader-excludes-own', 'loader-excludes-unfollowable',
           'fallback-skips-similar', 'id-tie-break')
 
@@ -118,7 +128,15 @@ class Request:
         recommendable = lambda a: z3.And(
             z3.Or(z3.Not(kept('result-listed')), eligible(a)),
             z3.Or(z3.Not(kept('result-not-excluded')), z3.Not(excluded(a))))
+        # frameSeedEligible: listed, and followed or not excluded
+        # (the listing is checked here and again by rankBySimilarity; the
+        # 'seed-listed' guard drops both)
+        seed_eligible = lambda a: z3.And(
+            z3.Or(z3.Not(kept('seed-listed')), listed(a)),
+            z3.Or(followed(a), z3.Not(excluded(a))))
+        # loadSimilarityRecommendations: weights restricted to frameSeedEligible
         strength_defined = z3.And(
+            z3.Or(z3.Not(kept('loader-restricts-seeds')), seed_eligible(s)),
             z3.Or(z3.Not(kept('seed-positive-weight')), weight(s) > 0),
             z3.Or(z3.Not(kept('seed-listed')), eligible(s)))
         strength = z3.If(weight(s) > 8, z3.RealVal(1), z3.ToReal(weight(s)) / 8)
@@ -148,6 +166,8 @@ def exclusion_claims(dropped=None):
         'a-named-seed-is-listed': z3.Implies(r.similar, r.listed(s)),
         'a-named-seed-has-a-positive-weight': z3.Implies(r.similar, r.weight(s) > 0),
         'a-named-seed-is-not-its-result': z3.Implies(r.similar, s != c),
+        'a-named-seed-is-followed-or-followable-under-the-policy': z3.Implies(
+            z3.And(r.similar, r.policy), z3.Or(r.followed(s), r.followable(s))),
         'no-artist-is-both-similar-and-fallback': z3.Not(z3.And(r.similar, r.fallback)),
     }
     return {name: z3.Implies(r.wellformed, claim) for name, claim in claims.items()}

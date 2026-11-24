@@ -1,0 +1,24 @@
+{
+  "id": "983ef8e8d29d03eae5af",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+  "justification": "Individually reviewed all three values: paid, pending, closed. They are a presentation grouping of server payment statuses for the Mis entradas page (EVT-MY-TICKETS-001). They are never stored, sent to the server, selected by a user or used in an access decision; the server status remains authoritative and unknown statuses fall to 'closed' (no valid tickets), never to paid.",
+  "reviewed": true,
+  "reviewMethod": "individual-source-review",
+  "reviewBatch": "web-my-tickets-20261119",
+  "evidence": {
+    "file": "tdf-hq-ui/src/utils/deviceTicketOrders.ts",
+    "line": 46,
+    "kind": "literal-union",
+    "name": "TicketOrderStage",
+    "valueCount": 3,
+    "values": [
+      "paid",
+      "pending",
+      "closed"
+    ]
+  }
+}

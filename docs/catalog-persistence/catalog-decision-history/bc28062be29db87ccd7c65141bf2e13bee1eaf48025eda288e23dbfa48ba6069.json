@@ -1,0 +1,25 @@
+{
+  "id": "255ec943da9a86e36cc7",
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "priority": "P1-integrity",
+  "risk": "Divergence can change upload authority, privacy, replay or quota accounting.",
+  "justification": "Preserve the complete 236-entry protected-main migration manifest and exact predecessor review graph, then append only the five account storage schema, Drive identity, deletion, historical-accounting and unconfirmed-deletion-capacity migrations. Their immutable introduction ancestors remain in branch history. No prior SQL, manifest entry, historical source review or catalog row is changed. This execution-registry classification grants no production deployment, quota activation, provider permission or release waiver; current checks, independent review and coordinated recovery remain required.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "content-storage-adapter-protocol-20261104",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 241,
+    "consumerCount": 88,
+    "exactDuplicateIds": [],
+    "similarCandidateIds": []
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:933f9aa1e9f2b335c9f3428669985f79eb8b5a03d04e8242cb1a4e12f61b47c6"
+  }
+}

@@ -1,5 +1,5 @@
 import { post } from '../api/client';
-import { env } from './env';
+import { env } from '../utils/env';
 
 const safePrefixes = ['d1', 'd2', 'd3', 'd4', 'hush', 'bps', 'cps', 'setcps', 'once', 'solo', 'unsolo', 'all', 'xfade', 'xfadeIn'];
 

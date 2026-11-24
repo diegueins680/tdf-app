@@ -21,7 +21,7 @@ import {
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import LazyPaginatedList from '../components/LazyPaginatedList';
-import { buildDefaultConfig, extractTidalCode, tidalAgentRequest } from '../utils/tidalAgent';
+import { buildDefaultConfig, extractTidalCode, tidalAgentRequest } from '../services/tidalAgent';
 
 interface HistoryItem {
   prompt: string;

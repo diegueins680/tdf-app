@@ -1,0 +1,22 @@
+{
+  "id": "7ca220a96b9b65a0fe15",
+  "classification": "genuine-technical-constant",
+  "disposition": "explicit-allowlist",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P0-cutover",
+  "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+  "justification": "The 215-entry registry preserves the full immutable 214-entry prefix and all historical SQL, then appends source moderation introduced by 3bb05ecd7. Installation hides nothing and sends nothing. Actual full-schema replay/rollback and authenticated HTTP verify behavior; committed evidence refuses rollback. This registry review does not authorize production deployment or feature activation.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "event-memory-source-moderation-20261025",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 215
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:892bea85b27234ee33a71e0e1d9ae13a7813b14a66b74417939f7df348dffba4"
+  }
+}

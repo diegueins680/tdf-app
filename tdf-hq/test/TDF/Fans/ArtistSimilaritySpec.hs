@@ -255,6 +255,52 @@ spec = describe "multi-signal artist similarity (COMMUNITY-ARTIST-SIMILARITY-001
       map recArtistId (rankListed (Set.fromList [1, 3, 4])) `shouldBe` [3, 4]
       map recReason (rankListed (Set.fromList [2, 3, 4])) `shouldBe` [Popular, Popular]
 
+    it "admits as seeds only listed artists that are followed or followable" $ do
+      -- Fan 9 follows 1; 3 is blocked (not followable); 9 is the fan's own party.
+      let frame =
+            RecommendationFrame
+              { rfListed = Set.fromList [1, 2, 3, 4, 9]
+              , rfFollowed = Set.fromList [1, 5]
+              , rfExcluded = Set.fromList [1, 5, 9, 3]
+              , rfFollowers = Map.empty
+              }
+      frameSeedEligible frame `shouldBe` Set.fromList [1, 2, 4]
+
+    it "never names a blocked artist the fan favourited as a seed" $ do
+      -- Fan 107 follows nobody and favourites 3, which is similar to 1. Once
+      -- 3 is blocked it is excluded, leaves the seeds and explains nothing.
+      let frame blocked =
+            RecommendationFrame
+              { rfListed = listed
+              , rfFollowed = Set.empty
+              , rfExcluded = Set.fromList [107] `Set.union` blocked
+              , rfFollowers = followers
+              }
+          seeds = Map.fromList [(3, 8)]
+          rankFor blocked =
+            rankBySimilarity 10 listed (rfExcluded (frame blocked)) followers
+              (Map.restrictKeys seeds (frameSeedEligible (frame blocked)))
+              similarity
+          named = concatMap recSeedArtistIds
+      named (rankFor Set.empty) `shouldSatisfy` elem 3
+      named (rankFor (Set.fromList [3])) `shouldSatisfy` notElem 3
+      map recArtistId (rankFor (Set.fromList [3])) `shouldSatisfy` notElem 3
+
+    it "a seed admitted by the frame is listed, and followed or not excluded" $ property $
+      \(w :: World) (followed :: [Int64]) (excluded :: [Int64]) ->
+        let frame =
+              RecommendationFrame
+                { rfListed = wListed w
+                , rfFollowed = Set.fromList followed
+                , rfExcluded = Set.fromList (followed ++ excluded)
+                , rfFollowers = Map.empty
+                }
+        in all
+             (\seed ->
+               Set.member seed (wListed w)
+                 && (Set.member seed (rfFollowed frame) || not (Set.member seed (rfExcluded frame))))
+             (Set.toList (frameSeedEligible frame))
+
     it "returns at most the limit, each artist once" $ property $ \w r ->
       let ids = map recArtistId (rank w r)
       in length ids <= max 0 (rqLimit r) && nub ids == ids

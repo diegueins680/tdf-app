@@ -1,0 +1,22 @@
+{
+  "id": "711d00567a9d1a16ba7d",
+  "classification": "governed-reference-data",
+  "disposition": "historical-evidence-replaced-by-forward-migration",
+  "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+  "priority": "P1-cross-platform",
+  "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+  "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
+    "line": 790,
+    "kind": "sql-check-values",
+    "name": "CHECK IN",
+    "valueCount": 11,
+    "consumerCount": 36,
+    "exactDuplicateIds": [],
+    "similarCandidateIds": []
+  }
+}

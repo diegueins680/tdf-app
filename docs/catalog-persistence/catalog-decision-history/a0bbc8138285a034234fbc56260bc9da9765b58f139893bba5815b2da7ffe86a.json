@@ -1,0 +1,38 @@
+{
+  "id": "92f5d2006375f7fb9757",
+  "classification": "security-system-registry",
+  "disposition": "canonical-contract",
+  "specializedModel": "notification_destination_registry",
+  "priority": "P1-integrity",
+  "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+  "justification": "Existing generated notification destination registry adds event_memories with positive event ID and invitation UUID only. No arbitrary URL, permission or recipient entitlement is inferred; current server policy remains authoritative.",
+  "reviewed": true,
+  "evidence": {
+    "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+    "line": 15
+  },
+  "reviewBatch": "event-memories-2026-10-25",
+  "reviewMethod": "successor-of-reviewed-decision",
+  "previousDecision": {
+    "$historyRef": "sha256:7a86b4561859fdb640efaab2b3cf2c2374edebadfbebb4ccce1760d123b709e2"
+  },
+  "supersededReviews": [
+    {
+      "sourceRevision": "cf723a45e24c7f9a8dd8300d4b7f199b261b5363",
+      "sourceDecisionId": "9de842d0529aa06faf6b",
+      "sourceDecisionSha256": "2718813db7c71f8745fcc5fcf0f52ad5161fca943a4dad578f726ae556059e24",
+      "reason": "Prior complete decision retained in Git; existing nested provenance is unchanged."
+    },
+    {
+      "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+      "sourceDecisionId": "4beaac5c476079656a0a",
+      "sourceDecisionSha256": "4b0adcbe4bb243448dcd91fb2fed31264b27d1880b10be20a69610ece91a31ea",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+      "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
+    }
+  ],
+  "mergedSourceDecision": {
+    "$historyRef": "sha256:7fc63dca4158e1b438e75807e4b95099cf5521a400cdaa059c117e120829652f"
+  }
+}
