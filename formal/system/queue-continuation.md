@@ -1,10 +1,7 @@
 # Queue continuation from similar artists (MEDIA-MUSIC-CONTINUATION-001)
 
 Status: second of the three changes that reuse the artist similarity
-(COMMUNITY-ARTIST-SIMILARITY-001, [artist-similarity.md](artist-similarity.md)). The
-owner asked to continue with the recommended defaults on 2026-11-22; the target and the
-constants below are those defaults and were not approved item by item. Off by default
-behind `VITE_PLAYER_SIMILAR_CONTINUATION_ENABLED`.
+(COMMUNITY-ARTIST-SIMILARITY-001, [artist-similarity.md](artist-similarity.md)). On 2026-11-24 the feature owner approved the web player target, discovery-only artist recommendations, the 12-artist request limit, the five-track continuation limit and the default-off rollout tested at `2931f1306`. The build flag is `VITE_PLAYER_SIMILAR_CONTINUATION_ENABLED`.
 
 ## Why this target
 
@@ -87,11 +84,9 @@ queue under the existing owner rule (MEDIA-MUSIC-PRIVACY-001).
 | | TLC on the same model; negative control without the queue filter appends a recording that is already queued | model-checked |
 | | Jest, seeded random cases over `planQueueContinuation` (1,000 cases per property) and fixed cases | tested |
 | Loader keeps server order, skips failing artists, stops early | Jest with stubbed API | tested |
-| Flag off, anonymous, changed queue: behaviour of the player before this change | Jest on the decision function and the loader | tested |
+| Disabled flag, anonymous listener, unresolved identity, or a new playback intent | Jest on the decision function and player | tested |
+| Signed-in playback moves from the last queued recording to the recommended track | Chromium browser with real loopback audio and synthetic session and catalog responses | tested |
 
-Not established: the wiring inside `PlayerProvider` beyond typecheck and review (no
-browser run); that the release list route hides releases of an artist that is no longer
-listed (not examined); the correspondence between the TLA+ model and the TypeScript
-function (review; the random tests exercise the same four invariants on the code).
+Release visibility changes between the two server reads remain unverified. The seeded tests exercise the same four invariants as the TLA+ model on the TypeScript implementation.
 The web workspace has no property-testing library, so the random cases use a small
 seeded generator instead of QuickCheck; they are tests, not proofs.

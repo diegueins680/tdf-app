@@ -10,7 +10,7 @@ Every route is behind `AuthProtect "bearer-token"` except `POST /music/playback-
 **Shared guards**
 - `requireOwnerPermission`: a strict administrator, or `music_can(actor, artist party, permission)`: a verified artist acting for themself, or an active team member holding the owner/admin role or that permission.
 - Staff-only transitions, DDEX exports and party registration, and infringement actions require `hasStrictAdminAccess`.
-- Feature flags: `music_releases.authoring` (503 when off), `music_releases.public` (404), `music_releases.processing`, `music_releases.commerce`, `music_releases.ddex_export`.
+- Feature flags: `music_releases.authoring` (503 when off), `music_releases.public` (404), `music_releases.processing`, `music_releases.commerce`, `music_releases.ddex_export`, `music_releases.loudness_check` (404 on its route when off).
 
 ## Route → requirement
 
@@ -19,6 +19,7 @@ Every route is behind `AuthProtect "bearer-token"` except `POST /music/playback-
 | version transition, corrections | MEDIA-MUSIC-RELEASE-001 | reviewed |
 | uploads create, part record, confirm | MEDIA-MUSIC-ASSET-001 | reviewed |
 | ddex-exports | MEDIA-MUSIC-DDEX-001 | reviewed |
+| loudness | MEDIA-MUSIC-LOUDNESS-001 | reviewed |
 | `POST purchases` | PAY-MUSIC-PURCHASE-REPLAY-001 | reviewed |
 | paypal create/capture, datafast checkout/status | PAY-MUSIC-OUTCOME-001 | reviewed |
 | downloads/free, entitlements download | PAY-MUSIC-DOWNLOAD-001 | reviewed |

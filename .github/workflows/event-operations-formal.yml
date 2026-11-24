@@ -115,6 +115,8 @@ jobs:
 
       - name: Prove event affinity evidence and page order
         run: python formal/fans/event_affinity_order.py
+      - name: Prove music loudness decision monotonicity and controls
+        run: python formal/music/loudness_decision.py
       - name: Generate formal assurance and release decision
         if: ${{ !cancelled() }}
         timeout-minutes: 15

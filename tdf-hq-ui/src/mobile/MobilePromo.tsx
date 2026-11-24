@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
 const Content = lazy(() => import('./MobilePromoContent'));
-export default function MobilePromo(props: { surface: string; banner?: boolean; compact?: boolean }) {
+export default function MobilePromo(props: { surface: string; banner?: boolean; compact?: boolean; desktopOnly?: boolean }) {
   return <Suspense fallback={null}><Content {...props} /></Suspense>;
 }

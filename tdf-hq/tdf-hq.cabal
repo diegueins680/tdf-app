@@ -87,6 +87,7 @@ library
     TDF.API.WhatsApp
     TDF.API.DDEX
     TDF.API.Directory
+    TDF.API.Taxonomy
     TDF.API.Reviews
     TDF.API.MerchReputation
     TDF.API.Catalog
@@ -170,6 +171,7 @@ library
     TDF.MusicRelease.Domain
     TDF.MusicRelease.ContentValidation
     TDF.MusicRelease.Money
+    TDF.MusicRelease.Loudness
     TDF.MusicRelease.CredentialCache
     TDF.MusicRelease.DDEX.ERN432
     TDF.MusicRelease.Storage.S3
@@ -237,11 +239,15 @@ library
     TDF.Server.EventAttendees
     TDF.Server.TicketSalesWindow
     TDF.Server.SocialEventsHandlers
+    TDF.Server.SocialEventsTaxonomy
     TDF.Server.SocialArtistOwnership
     TDF.Server.StripeTicketCapture
     TDF.Server.EventResearch
     TDF.Server.DDEX
     TDF.Server.Directory
+    TDF.Server.Taxonomy
+    TDF.Taxonomy.Filter
+    TDF.Taxonomy.GenreSuggestion
     TDF.Server.DirectoryAgreementText
     TDF.Server.Merch
     TDF.Server.Reviews
@@ -467,6 +473,7 @@ test-suite tdf-hq-test
     TDF.Artists.EnrichmentSpec
     TDF.MusicRelease.DDEX.ERN432Spec
     TDF.MusicRelease.ContentSpec
+    TDF.MusicRelease.LoudnessSpec
     TDF.MusicRelease.Storage.S3Spec
     TDF.MusicRelease.DomainSpec
     TDF.EventOperations.DatabaseBoundarySpec
@@ -477,6 +484,8 @@ test-suite tdf-hq-test
     TDF.Directory.PolicySpec
     TDF.Directory.SemanticSearchPostgresSpec
     TDF.Directory.SemanticSearchSpec
+    TDF.Taxonomy.FilterSpec
+    TDF.Taxonomy.GenreSuggestionSpec
     TDF.Profiles.ArtistSpec
     TDF.Profiles.ArtistActivationSpec
     TDF.Server.MerchRuntimeSpec

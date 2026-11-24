@@ -42,6 +42,19 @@ jest.unstable_mockModule('@mui/x-date-pickers/DateCalendar', () => ({
     <button type="button" onClick={() => onChange({ toISODate: () => '2099-05-10' })}>Elegir 2099-05-10</button>
   ),
 }));
+// TAX-FILTER-001: shared filter options and the profile-city default are not under test here.
+jest.unstable_mockModule('../api/taxonomy', () => ({
+  Taxonomy: {
+    filterOptions: jest.fn(async () => ({ countries: [], regions: [], cities: [], genres: [] })),
+    radioFacets: jest.fn(async () => ({})), musicReleaseFacets: jest.fn(async () => ({})), eventFacets: jest.fn(async () => ({})),
+    myGenreSuggestions: jest.fn(async () => []), checkGenreSuggestion: jest.fn(), submitGenreSuggestion: jest.fn(),
+  },
+  appendTaxonomyParams: (params: URLSearchParams, selection?: Record<string, string[]>) => {
+    Object.entries(selection ?? {}).forEach(([key, values]) => (values ?? []).forEach((value) => params.append(key, value)));
+    return params;
+  },
+}));
+jest.unstable_mockModule('../components/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
 const { default: SocialEventsPage } = await import('./SocialEventsPage');
 
 const event: SocialEventDTO = { eventId: '7', eventOrganizerPartyId: '42', eventTitle: 'Synthetic money inputs', eventStart: '2099-05-03T20:00:00Z', eventCurrency: 'EUR', eventArtists: [] };

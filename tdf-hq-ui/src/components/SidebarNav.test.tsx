@@ -299,6 +299,42 @@ describe('SidebarNav', () => {
     } finally { session.roles = roles; session.modules = modules; await cleanup(); }
   });
 
+  it('shows an admin one entry per page family and finds each page by name through search', async () => {
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderNav(container, '/configuracion/logs');
+    try {
+      const system = container.querySelector('a[href="/configuracion/actividad"]');
+      expect(system?.textContent).toContain('Sistema');
+      expect(system?.getAttribute('aria-current')).toBe('page');
+      expect(container.querySelector('a[href="/configuracion/logs"]')).toBeNull();
+      expect(container.querySelector('a[href="/configuracion/usuarios-admin"]')?.textContent).toContain('Usuarios y permisos');
+      expect(container.querySelector('a[href="/configuracion/roles-permisos"]')).toBeNull();
+      expect(container.querySelector('a[href="/crm/leads"]')).toBeNull();
+      expect(container.querySelector('a[href="/estudio/ordenes"]')).toBeNull();
+      expect(container.querySelector('a[href="/buscar"]')).toBeNull();
+      expect(container.querySelector('a[href="/manual"]')).toBeNull();
+      await setSearchFilter(container, 'logs');
+      expect(container.querySelector('a[href="/configuracion/logs"]')?.textContent).toContain('Logs');
+      await setSearchFilter(container, 'manual');
+      expect(container.querySelector('a[href="/manual"]')).not.toBeNull();
+    } finally { await cleanup(); }
+  });
+
+  it('lists the calendar but not the internal studio pages for an artist', async () => {
+    const roles = session.roles; const modules = session.modules;
+    session.roles = ['Artist']; session.modules = ['scheduling'];
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderNav(container, '/estudio/calendario');
+    try {
+      expect(container.querySelector('a[href="/estudio/calendario"]')?.textContent).toContain('Calendario');
+      for (const path of ['/estudio/ordenes', '/estudio/pipelines', '/estudio/reportes', '/estudio/campanas/tdf-sessions-domo']) {
+        expect(container.querySelector(`a[href="${path}"]`)).toBeNull();
+      }
+      await setSearchFilter(container, 'pipelines');
+      expect(container.querySelector('a[href="/estudio/pipelines"]')).not.toBeNull();
+    } finally { session.roles = roles; session.modules = modules; await cleanup(); }
+  });
+
   it('lists globalMenu:false destinations only through search or while they are open', async () => {
     const searchOnly = NAV_GROUPS.flatMap(group => group.items).filter(item => item.searchOnly).map(item => item.path);
     expect(searchOnly).toContain('/mi-tienda');

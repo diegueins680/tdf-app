@@ -57,6 +57,7 @@ export async function loadQueueContinuation(
       const [summary] = await api.listPublicReleases(artistId, options.signal);
       if (summary?.artistPartyId !== artistId) continue;
       const release = await api.getPublicRelease(summary.slug);
+      if (release.artistPartyId !== artistId || release.id !== summary.id) continue;
       candidates.push({ artistId, tracks: releaseTracks(release) });
     } catch {
       continue;

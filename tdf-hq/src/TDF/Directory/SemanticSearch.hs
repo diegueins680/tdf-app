@@ -267,7 +267,7 @@ searchPlan True (Just embedding) = SemanticPlan embedding
 searchPlan _ _                   = LexicalPlan
 
 -- | The statement a plan executes and the parameters it adds after the
--- sixteen of the @input@ row. A lexical plan, and a semantic plan whose
+-- lexical parameters of the @input@ row. A lexical plan, and a semantic plan whose
 -- statement cannot be derived, return today's statement and no parameter.
 plannedSearch :: SearchPlan -> Text -> (Text, [Text])
 plannedSearch LexicalPlan lexical = (lexical, [])
@@ -338,7 +338,7 @@ vectorLiteral values =
 -- | End of the @input@ row of @searchSql@; the semantic statement appends the
 -- query vector and its space here.
 semanticInputAnchor :: Text
-semanticInputAnchor = "?::text intent), directory_query_aliases AS MATERIALIZED ("
+semanticInputAnchor = "tax_genre_ids), directory_query_aliases AS MATERIALIZED ("
 
 -- | Start and end of the alias term of @searchSql@.
 semanticAliasOpenAnchor, semanticAliasCloseAnchor :: Text
@@ -373,11 +373,11 @@ similaritySql =
 -- found exactly once, in which case the caller keeps today's statement.
 --
 -- The statement takes three more parameters than today's, bound right after
--- the sixteen of the @input@ row: vector literal, provider, model.
+-- the lexical parameters of the @input@ row: vector literal, provider, model.
 semanticSearchSql :: Text -> Maybe Text
 semanticSearchSql lexical =
   replaceOnce semanticInputAnchor
-    "?::text intent,?::vector q_embedding,?::text q_provider,?::text q_model), directory_query_aliases AS MATERIALIZED ("
+    "tax_genre_ids,?::vector q_embedding,?::text q_provider,?::text q_model), directory_query_aliases AS MATERIALIZED ("
     lexical
     >>= replaceOnce semanticAliasOpenAnchor
       "text_score,greatest(CASE WHEN input.q='' THEN 0 WHEN EXISTS (SELECT 1 FROM catalog_search_alias"

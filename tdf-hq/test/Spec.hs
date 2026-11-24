@@ -192,6 +192,8 @@ import qualified TDF.Catalog.PipelineSpec as CatalogPipelineSpec
 import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
 import qualified TDF.Directory.SemanticSearchPostgresSpec as DirectorySemanticSearchPostgresSpec
 import qualified TDF.Directory.SemanticSearchSpec as DirectorySemanticSearchSpec
+import qualified TDF.Taxonomy.FilterSpec as TaxonomyFilterSpec
+import qualified TDF.Taxonomy.GenreSuggestionSpec as GenreSuggestionSpec
 import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage, passwordResetLink, passwordResetLinkWithLocale, passwordResetEmailContent)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
@@ -675,6 +677,7 @@ import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
 import qualified TDF.MusicCredentialCacheSpec as MusicCredentialCacheSpec
 import qualified TDF.MusicRelease.DomainSpec as MusicDomainSpec
 import qualified TDF.MusicRelease.ContentSpec as MusicContentSpec
+import qualified TDF.MusicRelease.LoudnessSpec as MusicLoudnessSpec
 import qualified TDF.MusicRelease.DDEX.ERN432Spec as MusicErn432Spec
 import qualified TDF.MusicRelease.Storage.S3Spec as MusicS3Spec
 import qualified TDF.DriveReplaySpec as DriveReplaySpec
@@ -14810,6 +14813,7 @@ main = hspec $ do
                         }
                 _autoStopOptions
                     :<|> _searchStreams
+                    :<|> _streamFacets
                     :<|> _upsertActive
                     :<|> _importStreams
                     :<|> _refreshMetadata
@@ -14858,6 +14862,7 @@ main = hspec $ do
                         }
                 _autoStopOptions
                     :<|> _searchStreams
+                    :<|> _streamFacets
                     :<|> _upsertActive
                     :<|> _importStreams
                     :<|> _refreshMetadata
@@ -18548,6 +18553,8 @@ main = hspec $ do
     DirectoryPolicySpec.spec
     DirectorySemanticSearchSpec.spec
     DirectorySemanticSearchPostgresSpec.spec
+    TaxonomyFilterSpec.spec
+    GenreSuggestionSpec.spec
     EventDiscoverySpec.spec
     RecordsIngestion.spec
     YouTubeSpec.spec
@@ -18575,6 +18582,7 @@ main = hspec $ do
       describe "music-unit-ddex" MusicErn432Spec.spec
       describe "music-unit-storage" MusicS3Spec.spec
       describe "music-unit-credential-cache" MusicCredentialCacheSpec.spec
+      describe "music-unit-loudness" MusicLoudnessSpec.spec
     StorageSecuritySpec.spec
     DriveReplaySpec.spec
     WhatsAppRedeliverySpec.spec
