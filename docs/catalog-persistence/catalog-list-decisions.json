@@ -31411,20 +31411,20 @@
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "2817f4536be296b99f44",
+      "id": "34760a95b0cb120b1b60",
       "reviewed": true,
       "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "artist-similarity-2026-11-21",
-      "justification": "Preserve all 266 reviewed migration objects in their exact order, paths and introduction commits, and append only 2026-11-21_artist_similarity (COMMUNITY-ARTIST-SIMILARITY-001: three additive similarity tables and two partial indexes), introduced by 89d467302501d47ce53c1551b031c46cb7bb1162. The complete parent review graph remains in previousDecision. This author review does not authorize deployment or feature activation and is not independent approval.",
+      "reviewBatch": "datafast-recovery-2026-11-24",
+      "justification": "Preserve all 267 previously reviewed migrations in order and append the Datafast recovery ledger keyed by the existing immutable provider binding. The new table records bounded query attempts and the recovery outcome. This author review covers the manifest entry only.",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 267
+        "valueCount": 268
       },
       "previousDecision": {
-        "$historyRef": "sha256:0002218d6522d63ad815bee808b1d4dac1e41a652108ab940c104ad6a4edb17c"
+        "$historyRef": "sha256:eb492f0d15276cd15f7ad5e837be0a98655fe0f30c332cd314ad920b22261aad"
       }
     },
     {
@@ -31868,6 +31868,44 @@
           "crm",
           "scheduling"
         ]
+      }
+    },
+    {
+      "id": "02f33c240b0c77ab47d1",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Uncoordinated changes could repeat queries or settle a report that requires review.",
+      "justification": "The migration constrains the durable query ledger to its three worker states. Its transitions fence active claims and stop completed or review-required bindings from retrying. These values are an internal persistence protocol.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "datafast-recovery-2026-11-24",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-24_datafast_recovery.sql",
+        "line": 8,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 3
+      }
+    },
+    {
+      "id": "b92b2074d6c8d7ba28c1",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Uncoordinated changes could repeat queries or settle a report that requires review.",
+      "justification": "This private result type distinguishes retryable reports, reports requiring operator review and a uniquely verified debit. Only the last branch can call the domain settlement path.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "datafast-recovery-2026-11-24",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Commerce/DatafastRecovery.hs",
+        "line": 126,
+        "kind": "haskell-sum-type",
+        "name": "Answer",
+        "valueCount": 3
       }
     }
   ],

@@ -62,11 +62,11 @@ import TDF.Server.DatafastCheckoutContext (loadDatafastCartParameters, recheckDa
 import qualified TDF.Commerce.DatafastClientIP as ClientIP
 
 import           Control.Monad (when, unless)
-import           Control.Monad.Except (catchError)
+import           Control.Monad.Except (catchError, runExceptT)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask, runReaderT)
 import           Crypto.Hash (Digest, SHA256, hash)
-import           Data.Aeson (FromJSON(..), Value(..), (.=), (.:), (.:?), object, withObject)
+import           Data.Aeson (Value(..), (.=), object)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as KM
@@ -74,7 +74,6 @@ import           Data.ByteArray (constEq)
 import qualified Data.ByteArray.Encoding as BAE
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Lazy as BL
-import           Data.Char (isAsciiLower, isAsciiUpper, isDigit)
 import           Data.Int (Int64)
 import           Data.Maybe (fromMaybe)
 import           Control.Applicative ((<|>))
@@ -97,6 +96,7 @@ import           TDF.API.Types (DatafastCheckoutDTO(..), PaypalCreateDTO(..))
 import           TDF.Auth (AuthedUser(..), ModuleAccess(..), hasStrictAdminAccess, validateModuleAccess)
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.DatafastConfig as DatafastConfig
+import TDF.Commerce.DatafastStatus
 import           TDF.Commerce.PaypalWebhook
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
@@ -1867,93 +1867,13 @@ insertServiceStatusChange orderId status notes changedBy createdAt = do
     }
   pure ()
 
-validateDatafastOrderResourcePath :: Maybe Text -> Text -> Either Text Text
-validateDatafastOrderResourcePath mCheckoutId rawResourcePath = do
-  checkoutId <- maybe (Left "Order does not have a Datafast checkout to confirm") Right mCheckoutId
-  let resourcePath = T.strip rawResourcePath
-      expected = "/v1/checkouts/" <> checkoutId <> "/payment"
-      validCheckoutId =
-        not (T.null checkoutId)
-          && T.length checkoutId <= 256
-          && T.all isDatafastIdChar checkoutId
-  unless validCheckoutId (Left "Stored Datafast checkout ID is invalid")
-  unless (resourcePath == expected) (Left "resourcePath does not match this order's Datafast checkout")
-  pure resourcePath
-  where
-    isDatafastIdChar c = isAsciiLower c || isAsciiUpper c || isDigit c || c `elem` ("-_." :: String)
-
 -- ============================================================================
 -- Datafast Integration
 -- ============================================================================
 
--- | Datafast environment configuration.
-data ServiceDatafastEnv = ServiceDatafastEnv
-  { sdfEntityId    :: Text
-  , sdfBearerToken :: Text
-  , sdfBaseUrl     :: String
-  , sdfTestMode    :: Maybe Text
-  , sdfEnvironment :: Checkout.CheckoutEnvironment
-  }
-
-instance Show ServiceDatafastEnv where
-  show environment =
-    "ServiceDatafastEnv {sdfEntityId = <redacted>, sdfBearerToken = <redacted>, "
-      <> "sdfBaseUrl = " <> show (sdfBaseUrl environment)
-      <> ", sdfTestMode = " <> show (sdfTestMode environment)
-      <> ", sdfEnvironment = " <> show (sdfEnvironment environment) <> "}"
-
-validateDatafastEnvironmentBase
-  :: Checkout.CheckoutEnvironment
-  -> String
-  -> Either Text ()
-validateDatafastEnvironmentBase environment rawBaseUrl = do
-  let baseUrl = T.toLower (T.strip (T.pack rawBaseUrl))
-      mAfterScheme = T.stripPrefix "https://" baseUrl
-      authority = maybe "" (T.takeWhile (`notElem` ("/?#" :: String))) mAfterScheme
-      suffix = maybe "" (T.dropWhile (`notElem` ("/?#" :: String))) mAfterScheme
-      validSuffix = T.null suffix || suffix == "/"
-      validAuthority = not (T.null authority)
-        && not ("@" `T.isInfixOf` authority)
-        && not (":" `T.isInfixOf` authority)
-      isOppwa = authority == "oppwa.com" || ".oppwa.com" `T.isSuffixOf` authority
-      isTest = "test.oppwa.com" `T.isSuffixOf` authority
-  unless (mAfterScheme /= Nothing && validAuthority && validSuffix && isOppwa) $
-    Left "DATAFAST_BASE_URL must be an HTTPS oppwa.com endpoint"
-  case environment of
-    Checkout.CheckoutSandbox ->
-      unless isTest (Left "DATAFAST_ENV=sandbox requires a test.oppwa.com endpoint")
-    Checkout.CheckoutProduction ->
-      when isTest (Left "DATAFAST_ENV=production cannot use a test.oppwa.com endpoint")
-
--- | Load Datafast environment from env vars.
 loadServiceDatafastEnv :: AppM ServiceDatafastEnv
-loadServiceDatafastEnv = do
-  mTest   <- liftIO $ lookupEnv "DATAFAST_TEST_MODE"
-  mEnvironment <- liftIO $ lookupEnv "DATAFAST_ENV"
-  entityId <- loadRequiredSafeEnv "DATAFAST_ENTITY_ID" 256
-  unless (isProviderReference entityId) $
-    throwError (configurationError
-      "DATAFAST_ENTITY_ID must contain only safe provider-reference characters")
-  bearer <- loadRequiredSafeEnv "DATAFAST_BEARER_TOKEN" 4096
-  baseUrlText <- loadRequiredSafeEnv "DATAFAST_BASE_URL" 512
-  testMode <- case mTest of
-    Nothing -> pure Nothing
-    Just _ -> Just <$> loadRequiredSafeEnv "DATAFAST_TEST_MODE" 128
-  let baseUrl = T.unpack (T.toLower baseUrlText)
-  environment <- either (throwError . configurationError) pure
-    (Checkout.resolveCheckoutEnvironment mEnvironment)
-  either (throwError . configurationError) pure
-    (validateDatafastEnvironmentBase environment baseUrl)
-  when (environment == Checkout.CheckoutProduction && testMode /= Nothing) $
-    throwError (configurationError
-      "DATAFAST_TEST_MODE must be unset when DATAFAST_ENV=production")
-  pure ServiceDatafastEnv
-    { sdfEntityId = entityId
-    , sdfBearerToken = bearer
-    , sdfBaseUrl = baseUrl
-    , sdfTestMode = testMode
-    , sdfEnvironment = environment
-    }
+loadServiceDatafastEnv = liftIO (runExceptT readDatafastEnvironment)
+  >>= either (throwError . configurationError) pure
 
 -- Creation additionally needs Dataweb merchant metadata. Status queries keep
 -- using loadServiceDatafastEnv so removing creation metadata cannot block recovery.
@@ -2031,24 +1951,6 @@ requestDatafastCheckoutForService checkout attempt clientIP totalCents currency 
   where
     pad2 n = if n < 10 then "0" <> show n else show n
 
-data ServiceDatafastPaymentStatus = ServiceDatafastPaymentStatus
-  { sdfpsPaymentId             :: Maybe Text
-  , sdfpsAmount                :: Maybe Text
-  , sdfpsCurrency              :: Maybe Text
-  , sdfpsMerchantTransactionId :: Maybe Text
-  , sdfpsResultCode            :: Text
-  } deriving (Show)
-
-instance FromJSON ServiceDatafastPaymentStatus where
-  parseJSON = withObject "ServiceDatafastPaymentStatus" $ \o -> do
-    result <- o .: "result"
-    ServiceDatafastPaymentStatus
-      <$> o .:? "id"
-      <*> o .:? "amount"
-      <*> o .:? "currency"
-      <*> o .:? "merchantTransactionId"
-      <*> result .: "code"
-
 -- | Check Datafast payment status using the server-held merchant credentials.
 checkDatafastPaymentStatus :: Text -> AppM ServiceDatafastPaymentStatus
 checkDatafastPaymentStatus resourcePath = do
@@ -2085,14 +1987,6 @@ extractResultCode _ = Nothing
 -- | Check if a Datafast result code indicates success.
 isDatafastCheckoutCreationSuccess :: Text -> Bool
 isDatafastCheckoutCreationSuccess code = T.strip code == "000.200.100"
-
-isDatafastPaymentSuccess :: Checkout.CheckoutEnvironment -> Text -> Bool
-isDatafastPaymentSuccess environment rawCode =
-  case environment of
-    Checkout.CheckoutProduction -> code == "000.000.000"
-    Checkout.CheckoutSandbox -> code `elem` ["000.100.110", "000.100.112"]
-  where
-    code = T.strip rawCode
 
 providerValidationError :: Text -> ServerError
 providerValidationError message =
@@ -2142,22 +2036,6 @@ validateBoundDatafastSuccessfulPayment checkout environment merchantRef checkout
             then attemptId else orderId
       in validateDatafastSuccessfulPayment expected amount currency status
     _ -> Left "Datafast payment does not match one immutable checkout binding"
-
-validateDatafastSuccessfulPayment
-  :: Text
-  -> Int
-  -> Text
-  -> ServiceDatafastPaymentStatus
-  -> Either Text ()
-validateDatafastSuccessfulPayment expectedOrderId expectedCents expectedCurrency status = do
-  paidCents <- maybe (Left "Datafast response did not include an amount") parseDatafastCents (sdfpsAmount status)
-  paidCurrency <- maybe (Left "Datafast response did not include a currency") (Right . T.toUpper . T.strip) (sdfpsCurrency status)
-  merchantReference <- maybe (Left "Datafast response did not include the merchant transaction ID") (Right . T.strip) (sdfpsMerchantTransactionId status)
-  paymentId <- maybe (Left "Datafast response did not include a payment ID") (Right . T.strip) (sdfpsPaymentId status)
-  unless (paidCents == expectedCents) (Left "Datafast amount does not match the immutable order total")
-  unless (paidCurrency == T.toUpper (T.strip expectedCurrency)) (Left "Datafast currency does not match the immutable order currency")
-  unless (merchantReference == expectedOrderId) (Left "Datafast merchant reference does not match the internal order")
-  unless (not (T.null paymentId) && T.length paymentId <= 256) (Left "Datafast payment ID is invalid")
 
 -- | Render form parameters as URL-encoded body (strict ByteString).
 renderFormBody :: [(ByteString, ByteString)] -> ByteString

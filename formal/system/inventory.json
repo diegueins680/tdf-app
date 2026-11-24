@@ -2498,6 +2498,7 @@
       "tdf-hq/src/TDF/Commerce/DatafastClientIP.hs",
       "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
       "tdf-hq/src/TDF/Commerce/DatafastRecovery.hs",
+      "tdf-hq/src/TDF/Commerce/DatafastStatus.hs",
       "tdf-hq/src/TDF/Commerce/DepositPolicy.hs",
       "tdf-hq/src/TDF/Commerce/DomoCancellation.hs",
       "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
@@ -4241,7 +4242,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "5d837457fb5261357a9902e08df2fac31de5ed8117cc01c75686a745f694b41b",
+      "sha256": "18a92de27b0c30468de7df15b0d6443260fc11ddf8e8b426d297640807341383",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7655,7 +7656,7 @@
     {
       "id": "SURFACE-d464a3dfb4d5f4a3",
       "path": "scripts/verify-datafast-reference.py",
-      "sha256": "8c5d503657b82ab6d5508a281ca61d416f76d89c2a15a00f746b9a3718019c9f",
+      "sha256": "69824d615c26f961c3930df6746ab34785bebd2419d69cf23b881a5d4a70c92a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18155,7 +18156,13 @@
     {
       "id": "SURFACE-e354dd8c2764ac25",
       "path": "tdf-hq/src/TDF/Commerce/DatafastRecovery.hs",
-      "sha256": "7a9e0f69cb5a6131c306b9ff4cd1696827b56ae88de9dcc9e202ecac65514dce",
+      "sha256": "96ac6c6295c068e2c7d7354129ce86fbdff767de683fd697d1b714f160e79729",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5aae0c5d087958c1",
+      "path": "tdf-hq/src/TDF/Commerce/DatafastStatus.hs",
+      "sha256": "352aeb9dbd4f154d3a1554df1a4509f11540ab62642fdc317460fbbab8137e12",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19073,7 +19080,7 @@
     {
       "id": "SURFACE-8bea15f709688422",
       "path": "tdf-hq/src/TDF/Server/ProviderTransport.hs",
-      "sha256": "f42c6b0bf7913cf6f0a0deeae6aa6c14785644edf2d50d97dd840d1202080cae",
+      "sha256": "e0a04ef1b4f99d5709d515f0be96d8071c510ebc5837d962e8ebe5f16d3f7ca6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19103,7 +19110,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "315ba0aaff4bfa27d20e6f22758289a1524a65d3f64d882f541a5192006397ed",
+      "sha256": "4f0276870c13154efee96ccb7396e81e065e35e1f7be7eb3cafaeb9e40a8c901",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19517,7 +19524,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "160b94c18d6e4642c3b68c0596e062d09ac38e60d878fb1a7d0110975f52b1c3",
+      "sha256": "616a5efaa51f9968993c3b0b2a0ece3d6d0e0b9efb41984ed3aee6d80cf56e6e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19733,7 +19740,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "5e6e01f53e07e1219445a288aa4ba4f67ba7c7fb1a5381277c2b26c62a4a8436",
+      "sha256": "d45ad7b18a6fca9a46b1d41e674434735ea4641b4b0d0008726bb043d1f0a682",
       "semanticConformance": "not-established-by-discovery"
     },
     {

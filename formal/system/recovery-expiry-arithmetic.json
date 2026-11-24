@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "ad8464697185513d41a2b0f0342098e8bfc9f3091b779facf9e6a9151ecbabcd",
+    "tdf-hq/tdf-hq.cabal": "616a5efaa51f9968993c3b0b2a0ece3d6d0e0b9efb41984ed3aee6d80cf56e6e",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -1059,6 +1059,15 @@
       "currentSha256": "ad8464697185513d41a2b0f0342098e8bfc9f3091b779facf9e6a9151ecbabcd",
       "change": "Register the TDF.Fans.ArtistSimilarity library module and its TDF.Fans.ArtistSimilaritySpec test module on current protected main 1184f9ffe.",
       "semanticReview": "The merged Cabal file differs from protected main's by exactly two added lines: the TDF.Fans.ArtistSimilarity entry in the library's other-modules and the TDF.Fans.ArtistSimilaritySpec entry in the test suite's other-modules. git merged them without conflicts. They add no dependency, flag or build option, and no other controlled source changes, so the conditional authentication and recovery context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "39935739e2def3817eaa2b84229cc2cc4b4941f1",
+      "previousSha256": "ad8464697185513d41a2b0f0342098e8bfc9f3091b779facf9e6a9151ecbabcd",
+      "currentSha256": "616a5efaa51f9968993c3b0b2a0ece3d6d0e0b9efb41984ed3aee6d80cf56e6e",
+      "change": "Register the DatafastRecovery and DatafastStatus modules in the library.",
+      "semanticReview": "The Cabal diff adds only the two payment modules. The storefront and worker share the same status checks and provider configuration. No compiler option, dependency, flag or version changes. Neither module participates in the source translations for authorization or recovery expiry. The reviewed sources implementing those predicates remain byte-identical.",
       "qualification": "This review covers the conditional solver source context."
     }
   ]

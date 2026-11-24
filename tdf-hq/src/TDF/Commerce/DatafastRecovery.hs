@@ -8,7 +8,7 @@ module TDF.Commerce.DatafastRecovery (recoverOne) where
 
 import Control.Monad (void)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Reader (runReaderT)
+import Control.Monad.Except (runExceptT)
 import qualified Data.Aeson as A
 import qualified Data.Aeson.KeyMap as KM
 import Data.Foldable (toList)
@@ -20,7 +20,6 @@ import qualified Data.Text.Encoding as TE
 import Network.HTTP.Types.URI (urlEncode)
 import Database.Persist (PersistValue(..))
 import Database.Persist.Sql (Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool, toSqlKey)
-import Servant (runHandler)
 import System.Environment (lookupEnv)
 
 import qualified TDF.Commerce.CheckoutStore as C
@@ -28,7 +27,7 @@ import TDF.Commerce.ProviderAdapter
 import TDF.Commerce.ProviderAdapter.Http (AdapterTransportError)
 import qualified TDF.Commerce.ProviderExecutionStore as Store
 import TDF.DB (Env(..))
-import qualified TDF.Server.ServiceStorefront as DF
+import qualified TDF.Commerce.DatafastStatus as DF
 import qualified TDF.Ticketing.Issuance as Tickets
 
 data Binding = Binding
@@ -47,10 +46,10 @@ enabled = do
   pure (worker == Just "true" && datafast == Just "true")
 
 recoverOne :: Fetch -> Env -> C.CheckoutEnvironment -> IO Int
-recoverOne fetch env@Env{envPool} environment = do
+recoverOne fetch Env{envPool} environment = do
   active <- enabled
   if not active then pure 0 else do
-    configured <- runHandler (runReaderT DF.loadServiceDatafastEnv env)
+    configured <- runExceptT DF.readDatafastEnvironment
     case configured of
       Right config | DF.sdfEnvironment config == environment -> do
         let merchant = DF.sdfEntityId config
