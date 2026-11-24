@@ -30,3 +30,15 @@ it('preserves explicit pagination values for server validation', async () => {
   expect(getMock).toHaveBeenCalledWith('/admin/commerce/provider-queries?environment=production&status=retry&limit=0&offset=0');
   expect(postMock).not.toHaveBeenCalled();
 });
+
+it('preserves the JSON source of large overview amounts when the browser provides it', async () => {
+  await CommerceOperations.getPaymentOverview();
+  const [path, , revive] = getMock.mock.calls[0]!;
+  expect(path).toBe('/admin/commerce/overview');
+  const parse = revive as (key: string, value: unknown, context?: { source: string }) => unknown;
+  const amount = '9223372036854775807';
+  expect(parse('cssNetMinor', Number(amount), { source: amount })).toBe(amount);
+  expect(parse('cssNetMinor', 350)).toBe(350);
+  expect(parse('cssCount', 10, { source: '10' })).toBe(10);
+  expect(Number.isSafeInteger(parse('cssNetMinor', Number(amount)))).toBe(false);
+});

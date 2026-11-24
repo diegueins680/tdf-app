@@ -75,10 +75,10 @@ export interface CommercePaymentIntentSummary {
   cpiStatus: string;
   cpiCurrency: string;
   cpiCount: number;
-  cpiAmountMinor: number;
-  cpiAuthorizedMinor: number;
-  cpiCapturedMinor: number;
-  cpiRefundedMinor: number;
+  cpiAmountMinor: number | string;
+  cpiAuthorizedMinor: number | string;
+  cpiCapturedMinor: number | string;
+  cpiRefundedMinor: number | string;
 }
 
 export interface CommerceAmountComponentSummary {
@@ -87,7 +87,7 @@ export interface CommerceAmountComponentSummary {
   cacSource: string;
   cacCurrency: string;
   cacCount: number;
-  cacAmountMinor: number;
+  cacAmountMinor: number | string;
 }
 
 export interface CommerceCommissionSummary {
@@ -95,11 +95,11 @@ export interface CommerceCommissionSummary {
   ccmEnvironment: string;
   ccmCurrency: string;
   ccmCount: number;
-  ccmBasisAmountMinor: number;
-  ccmCommissionMinor: number;
-  ccmProviderFeeMinor: number;
-  ccmTaxMinor: number;
-  ccmSellerNetMinor: number;
+  ccmBasisAmountMinor: number | string;
+  ccmCommissionMinor: number | string;
+  ccmProviderFeeMinor: number | string;
+  ccmTaxMinor: number | string;
+  ccmSellerNetMinor: number | string;
 }
 
 export interface CommerceRefundSummary {
@@ -108,7 +108,7 @@ export interface CommerceRefundSummary {
   crfStatus: string;
   crfCurrency: string;
   crfCount: number;
-  crfAmountMinor: number;
+  crfAmountMinor: number | string;
 }
 
 export interface CommerceDisputeSummary {
@@ -118,7 +118,7 @@ export interface CommerceDisputeSummary {
   cdsStatus: string;
   cdsCurrency: string;
   cdsCount: number;
-  cdsAmountMinor: number;
+  cdsAmountMinor: number | string;
 }
 
 export interface CommerceReconciliationSummary {
@@ -127,8 +127,8 @@ export interface CommerceReconciliationSummary {
   crsStatus: string;
   crsCurrency?: string | null;
   crsCount: number;
-  crsExpectedMinor: number;
-  crsActualMinor: number;
+  crsExpectedMinor: number | string;
+  crsActualMinor: number | string;
 }
 
 export interface CommerceSettlementSummary {
@@ -137,12 +137,12 @@ export interface CommerceSettlementSummary {
   cssStatus: string;
   cssCurrency: string;
   cssCount: number;
-  cssGrossMinor: number;
-  cssFeeMinor: number;
-  cssWithholdingMinor: number;
-  cssRefundMinor: number;
-  cssChargebackMinor: number;
-  cssNetMinor: number;
+  cssGrossMinor: number | string;
+  cssFeeMinor: number | string;
+  cssWithholdingMinor: number | string;
+  cssRefundMinor: number | string;
+  cssChargebackMinor: number | string;
+  cssNetMinor: number | string;
 }
 
 export interface CommerceSellerBalanceSummary {
@@ -151,7 +151,7 @@ export interface CommerceSellerBalanceSummary {
   csbAvailability: string;
   csbCurrency: string;
   csbEntryCount: number;
-  csbNetAmountMinor: number;
+  csbNetAmountMinor: number | string;
 }
 
 export interface CommercePayoutSummary {
@@ -160,7 +160,7 @@ export interface CommercePayoutSummary {
   cpsStatus: string;
   cpsCurrency: string;
   cpsCount: number;
-  cpsAmountMinor: number;
+  cpsAmountMinor: number | string;
 }
 
 export interface CommercePaymentOverview {
@@ -176,6 +176,11 @@ export interface CommercePaymentOverview {
   cpoSellerBalances: CommerceSellerBalanceSummary[];
   cpoPayouts: CommercePayoutSummary[];
 }
+
+// Keep the exact JSON integer before a browser rounds a large report amount.
+const overviewAmount = (key: string, value: unknown, context?: { source?: string }) =>
+  key.endsWith('Minor') && typeof value === 'number' && !Number.isSafeInteger(value)
+    ? context?.source ?? value : value;
 
 export const CommerceOperations = {
   listReconciliationExceptions: (params: CommerceReconciliationFilters = {}) => {
@@ -195,7 +200,7 @@ export const CommerceOperations = {
     if (params.offset !== undefined) query.set('offset', String(params.offset));
     return get<CommerceProviderQueries>(`/admin/commerce/provider-queries?${query.toString()}`);
   },
-  getPaymentOverview: () => get<CommercePaymentOverview>('/admin/commerce/overview'),
+  getPaymentOverview: () => get<CommercePaymentOverview>('/admin/commerce/overview', {}, overviewAmount),
 
   listProviderEvents: (params?: {
     status?: CommerceProviderEventStatus;

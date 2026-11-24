@@ -121,7 +121,9 @@ export class ApiError extends Error {
 
 export const HTTP_STATUS_REQUEST_TIMEOUT = 408 satisfies ApiError['status'];
 
-async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+type JsonReviver = (key: string, value: unknown, context?: { source?: string }) => unknown;
+
+async function api<T>(path: string, init: RequestInit = {}, reviver?: JsonReviver): Promise<T> {
   const endApiRequest = beginApiRequest();
   const requestEpoch = getAuthSessionEpoch();
 
@@ -179,7 +181,7 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       return raw as unknown as T;
     }
     try {
-      return JSON.parse(raw) as T;
+      return JSON.parse(raw, reviver) as T;
     } catch {
       return raw as unknown as T;
     }
@@ -188,8 +190,8 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
 }
 
-export const get = <T>(p: string, init: RequestInit = {}) =>
-  api<T>(p, { ...init, method: 'GET' });
+export const get = <T>(p: string, init: RequestInit = {}, reviver?: JsonReviver) =>
+  api<T>(p, { ...init, method: 'GET' }, reviver);
 export const post = <T>(p: string, body: unknown, init: RequestInit = {}) =>
   api<T>(p, { ...init, method: 'POST', body: JSON.stringify(body) });
 export const postEmpty = <T>(p: string) => api<T>(p, { method: 'POST' });
