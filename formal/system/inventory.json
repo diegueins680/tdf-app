@@ -25850,7 +25850,7 @@
     },
     {
       "path": "docs/payments/ecuador-payment-review-2026-11-24.md",
-      "sha256": "ae55aa0f0fa02fd163db1fe7dcaf7920b529d964d081a69852c7e77a4a07abdf",
+      "sha256": "6b652e0f55867c702d2b318c4c28bc7fd9aa16a8f3468044d00bdbe2aa8493bf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
