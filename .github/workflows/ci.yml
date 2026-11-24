@@ -550,6 +550,14 @@ jobs:
           createdb -h postgres -U postgres tdf_records_runtime_test
           ./scripts/test-records-ingestion-runtime.sh
 
+      - name: Verify artist similarity job, stored read and reference
+        env:
+          PGPASSWORD: postgres
+          TDF_ARTIST_SIMILARITY_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_artist_similarity_test
+        run: |
+          createdb -h postgres -U postgres tdf_artist_similarity_test
+          sh scripts/test-artist-similarity-postgres.sh
+
       - name: Verify shared event pilot and publication boundaries
         env:
           PGPASSWORD: postgres

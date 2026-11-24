@@ -16349,6 +16349,7 @@ marketplaceTestConfig seedFlag =
         , googleRoutesApiBase = "https://routes.googleapis.com"
         , eventLogisticsRecheckEnabled = False
         , artistEnrichmentEnabled = False
+        , fanMultiSignalRecommendationsEnabled = False
         , artistEnrichmentAutoPublish = False
         , artistEnrichmentHourLocal = 4
         , artistEnrichmentBatchSize = 500

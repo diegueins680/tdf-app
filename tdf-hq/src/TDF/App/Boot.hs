@@ -78,6 +78,7 @@ import TDF.Cron (
     startEventDiscoveryJob,
     startEventLogisticsRecheckJob,
     startArtistEnrichmentJob,
+    startArtistSimilarityJob,
     startInstagramSyncJob,
     startSocialAutoReplyJob,
   )
@@ -161,6 +162,7 @@ runBootServer = do
         startEventDiscoveryJob env
         startEventLogisticsRecheckJob env
         startArtistEnrichmentJob env
+        startArtistSimilarityJob env
         startInstagramSyncJob env
         startSocialAutoReplyJob env
         startCampaignAutomationJob env

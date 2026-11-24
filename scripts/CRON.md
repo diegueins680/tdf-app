@@ -42,3 +42,18 @@ Cron example (runs every 6 hours):
 ```
 0 */6 * * * cd /opt/tdf-app && /usr/bin/node scripts/sync-artist-drive.js >> /var/log/tdf-artist-drive.log 2>&1
 ```
+
+## Artist similarity for fan recommendations
+
+COMMUNITY-ARTIST-SIMILARITY-001, `formal/system/artist-similarity.md`.
+
+- With `FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED=true` the backend stores the
+  multi-signal artist similarity once at start and then daily at 03:00 server-local
+  time. The flag is off by default; with it off no job runs and
+  `GET /fans/me/recommendations` ranks from follows only.
+- Requires `tdf-hq/sql/2026-11-21_artist_similarity.sql`. Do not enable the flag where
+  fans cannot reach the personalisation switch (see the contract).
+- Each run is one transaction; a failed run leaves the previous generation in use
+  and logs `[Cron][ArtistSimilarity] Run failed`. A generation older than 48 hours is
+  not served: recommendations fall back to the most followed artists.
+- Only one replica runs it (advisory lock 8401320261121). Disable with the flag.

@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "06cf60d8ced75b4a71446afa35fa25c7cdfee57930be8096176dc49567c2f10c",
+    "tdf-hq/tdf-hq.cabal": "ad8464697185513d41a2b0f0342098e8bfc9f3091b779facf9e6a9151ecbabcd",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -1050,6 +1050,15 @@
       "currentSha256": "06cf60d8ced75b4a71446afa35fa25c7cdfee57930be8096176dc49567c2f10c",
       "change": "Register the new TDF.Venues.Search and TDF.Venues.SearchFold library modules and the TDF.Venues.SearchSpec test module on current protected main.",
       "semanticReview": "The merged Cabal file differs from protected main's by exactly three added lines: the TDF.Venues.Search and TDF.Venues.SearchFold entries in the library's exposed-modules and the TDF.Venues.SearchSpec entry in the test suite's other-modules. TDF.Venues.SearchFold imports only base and text. TDF.Venues.Search holds a pure venue filter, a bounding box and read-only SQL over venue and revenue_feature_flag, imports only TDF.Models.SocialEventsModels from this package, and is imported only by TDF.Server.SocialEventsHandlers. Neither uses Template Haskell, CPP, OPTIONS_GHC, foreign imports or unsafePerformIO, and neither defines an authorization predicate, RoleEnum, ingestion admission or recovery arithmetic. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "1184f9ffeffa2fd5f280fad2f026c12ab7224f4d",
+      "previousSha256": "06cf60d8ced75b4a71446afa35fa25c7cdfee57930be8096176dc49567c2f10c",
+      "currentSha256": "ad8464697185513d41a2b0f0342098e8bfc9f3091b779facf9e6a9151ecbabcd",
+      "change": "Register the TDF.Fans.ArtistSimilarity library module and its TDF.Fans.ArtistSimilaritySpec test module on current protected main 1184f9ffe.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly two added lines: the TDF.Fans.ArtistSimilarity entry in the library's other-modules and the TDF.Fans.ArtistSimilaritySpec entry in the test suite's other-modules. git merged them without conflicts. They add no dependency, flag or build option, and no other controlled source changes, so the conditional authentication and recovery context is unchanged.",
       "qualification": "This review covers the conditional solver source context."
     }
   ]
