@@ -2410,6 +2410,8 @@
       "tdf-hq/sql/2026-11-21_directory_semantic_search_rollback.sql",
       "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
       "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql",
+      "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql",
+      "tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -4232,7 +4234,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "835c5991aa94b37b0849a1929b431a192660eb7be430e94e072fdae75c269f7a",
+      "sha256": "d243ea26e21d142eec75f839bbcacfc4782eb021e13d4c0182a9dc3f50da8ad5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5840,7 +5842,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6c0a03c67a25dc1050e9466d95e724e753b402d4d093bb684986f9d295164d05",
+      "sha256": "94ea3080de97c13bab302521107b6c5da6ec07ba5998f5a7fb837215650428e1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7514,7 +7516,7 @@
     {
       "id": "SURFACE-86a1f24a716c11ec",
       "path": "scripts/test-venue-search.sh",
-      "sha256": "2d1f31d1f4f6ffdd6a8346f44ea6bf5f42684b3b9d49d0242b7af1e669bdf144",
+      "sha256": "97c29a16abdd3b3bfc3a104ae5ed22c64069bb314efa2365cd41af8c9f832bcc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17622,6 +17624,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-10ce780b0e3bba7b",
+      "path": "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql",
+      "sha256": "b8b072a0c8c62431c6795e13309e740501af4f5ef90f497396eb15f84477869c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-def3a20cbc135f56",
+      "path": "tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql",
+      "sha256": "10ed3efcf7e1cb08659689bde7e0114f58f0899090eeab164c63da99b59ee55d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -19406,7 +19420,7 @@
     {
       "id": "SURFACE-0233f07ad8ee305f",
       "path": "tdf-hq/src/TDF/Venues/Search.hs",
-      "sha256": "c0352e27e14fdb7ec8fd49c83214053bc0c65853cc5183a0ee7ed11a384a2967",
+      "sha256": "4f3965259bc43dc51b9e01276299a42f16fcd2c715fce32a3c9695af7fc57f57",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20150,7 +20164,7 @@
     {
       "id": "SURFACE-4564ae309b51c027",
       "path": "tdf-hq/test/TDF/Venues/SearchSpec.hs",
-      "sha256": "a31e06c160bb0aac3509150e0111e29e9fd94314d994ff11eeda885cb1a4afc9",
+      "sha256": "304834b92f4acfa749c1c88b4f0e3760a0958268c3189fcbcd36f5375c837cfe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32857,7 +32871,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "faf02760609e02259706597a6683b3f433e9f04c4a5010dbbd9ddeccdbfe83b0",
+      "sha256": "13c52b0a04a485a9a538dd109db5e8391113d1806df78c3d791e04b637405b48",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32997,7 +33011,7 @@
     },
     {
       "path": "formal/system/venue-search.md",
-      "sha256": "8106a62e8657a5741f67190edd31e2b47e084e30f89b76de0f3c9a1a042b80f1",
+      "sha256": "3c4d8cb5179123732c68184f2b5fe4558e125767f58830d924a4779dacab0cd1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
