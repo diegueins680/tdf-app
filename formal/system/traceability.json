@@ -31753,7 +31753,7 @@
     "tdf-hq/src/TDF/Server/TicketSalesWindow.hs": "fd215386f1396fb5dc12414bae565889b31f196de8efcc431037df4f9517fa9a",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "275d926b7861b10ac4022f8d6f3ddf7d1348fcce214ec9416938cf6e2c43f645",
-    "tdf-hq/src/TDF/ServerAuth.hs": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
+    "tdf-hq/src/TDF/ServerAuth.hs": "b20db383c88a651a9112b53cab02b5ff0f8241fb71953107ad23eb6bc69e78a4",
     "tdf-hq/src/TDF/ServerExtra.hs": "8d687b85c57102a16614ec245ba96c2d1d53f8a9ac2e63ac61d3a5ad1d5cd892",
     "tdf-hq/src/TDF/ServerFanClub.hs": "33f33ace3dea49738921abd7dc4b09b84bca0d1b0d7556300d8050f5eb3a4300",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
@@ -31874,7 +31874,7 @@
     "tdf-hq/test/TDF/ReadinessSpec.hs": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAdminSpec.hs": "e7a0734ee48ad1e74fd70aae7b82928001c36512bc1de5f6aebaa2c80bc283b8",
-    "tdf-hq/test/TDF/ServerAuthSpec.hs": "4fa9818a84fa8ed5d501148df24115264975081c9dd5f903340305d75c19bab8",
+    "tdf-hq/test/TDF/ServerAuthSpec.hs": "5a46228f35aa4916b548b27cee6bfb3830cdef1329b95972979cae7924bbb58f",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "4746db879d19f0d2387b5198f6d402b7262b7ed2f50b4ec7772b6585172ae474",
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "0cff8f4196afbd1c7247802a051a70a720eb53ef135d2bc5f5f789efd37f1162",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
@@ -85638,7 +85638,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
+      "sha256": "b20db383c88a651a9112b53cab02b5ff0f8241fb71953107ad23eb6bc69e78a4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -88159,7 +88159,7 @@
     {
       "id": "SURFACE-7c37a9a53d010234",
       "path": "tdf-hq/test/TDF/ServerAuthSpec.hs",
-      "sha256": "4fa9818a84fa8ed5d501148df24115264975081c9dd5f903340305d75c19bab8",
+      "sha256": "5a46228f35aa4916b548b27cee6bfb3830cdef1329b95972979cae7924bbb58f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

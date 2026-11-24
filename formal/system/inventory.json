@@ -19154,7 +19154,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
+      "sha256": "b20db383c88a651a9112b53cab02b5ff0f8241fb71953107ad23eb6bc69e78a4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20066,7 +20066,7 @@
     {
       "id": "SURFACE-7c37a9a53d010234",
       "path": "tdf-hq/test/TDF/ServerAuthSpec.hs",
-      "sha256": "4fa9818a84fa8ed5d501148df24115264975081c9dd5f903340305d75c19bab8",
+      "sha256": "5a46228f35aa4916b548b27cee6bfb3830cdef1329b95972979cae7924bbb58f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32346,7 +32346,7 @@
     },
     {
       "path": "formal/system/identity-routes.md",
-      "sha256": "2b3c4317eb31e1a923ba43d34a4305eab245314966372ae02390492cf05126a8",
+      "sha256": "3265ae2549273db3717235ebe03ddeb10faa6bc40407501d4d03c90015ffae37",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
