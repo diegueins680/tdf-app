@@ -29,6 +29,7 @@ import {
   loadProviderPaymentPending,
   loadProviderPaymentResume,
   markProviderPaymentResumeCompleted,
+  paymentAttemptCanBeReleased,
   safePaymentReturnPath,
   saveProviderPaymentPending,
   saveProviderPaymentResume,
@@ -118,6 +119,11 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
           : 'Pago confirmado.',
       };
     case 'confirmed_no_charge':
+      if (!session.canRetryOrFallback) {
+        return { severity: 'warning', message: english
+          ? 'Contact TDF before making another payment.'
+          : 'Consulta con TDF antes de realizar otro pago.' };
+      }
       return {
         severity: 'info',
         message: english
@@ -341,8 +347,8 @@ export default function HostedProviderCheckout({
     };
   }, [activeContext, english, refreshSession, session]);
 
-  const safetyLocked = busy || potentiallyAmbiguous
-    || Boolean(session && !session.canRetryOrFallback);
+  const canReleaseAttempt = paymentAttemptCanBeReleased(session?.state, session?.canRetryOrFallback);
+  const safetyLocked = busy || potentiallyAmbiguous || Boolean(session && !canReleaseAttempt);
 
   useEffect(() => {
     onSafetyLockChangeRef.current?.(safetyLocked);
@@ -519,7 +525,7 @@ export default function HostedProviderCheckout({
   };
 
   const resetKnownNoCharge = () => {
-    if (!session?.canRetryOrFallback || !selected || !activeContext) return;
+    if (!canReleaseAttempt || !selected || !activeContext) return;
     clearProviderPaymentResume(activeContext.checkoutId);
     clearProviderPaymentPending(activeContext.checkoutId);
     clearPaymentIdempotencyKey(
@@ -560,12 +566,11 @@ export default function HostedProviderCheckout({
       {additionalMethods}
       {methods.map((method) => {
         const isSelected = selected?.label === method.label;
-        const blockedByAttempt = session?.canRetryOrFallback === false;
         return (
           <PaymentMethodButton
             key={method.label}
             busy={busy && isSelected}
-            disabled={disabled || availabilityUnknown || busy || ((safetyLocked || blockedByAttempt) && !isSelected) || (Boolean(session) && isSelected)}
+            disabled={disabled || availabilityUnknown || busy || (safetyLocked && !isSelected) || (Boolean(session) && isSelected)}
             onClick={() => {
               // The first tap on PayPhone only asks for the wallet number.
               if (method.paymentMethod === 'payphone_wallet' && !payphoneFieldsVisible) { setPayphoneRequested(true); return; }
@@ -631,7 +636,7 @@ export default function HostedProviderCheckout({
           {english ? 'Refresh verified status' : 'Actualizar estado del pago'}
         </Button>
       )}
-      {session?.canRetryOrFallback && (session.state === 'failed' || session.state === 'confirmed_no_charge') && (
+      {canReleaseAttempt && (
         <Button variant="outlined" onClick={resetKnownNoCharge} disabled={disabled || availabilityUnknown || busy}>
           {english ? 'Choose another payment method' : 'Elegir otro método de pago'}
         </Button>
