@@ -51,7 +51,7 @@ export const safePaymentReturnPath = (value: string): string | null => {
   const normalized = value.trim();
   return normalized.startsWith('/')
       && !normalized.startsWith('//')
-      && !/[\r\n]/.test(normalized)
+      && !Array.from(normalized).some(char => char === '\\' || char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)
     ? normalized
     : null;
 };
@@ -260,5 +260,5 @@ export const clearPaymentIdempotencyKey = (
 export const paymentAttemptCanBeReleased = (
   state: string | null | undefined,
   canRetryOrFallback: boolean | null | undefined,
-): boolean => state === 'confirmed_no_charge'
-  || (state === 'failed' && canRetryOrFallback === true);
+): boolean => canRetryOrFallback === true
+  && (state === 'confirmed_no_charge' || state === 'failed');

@@ -43,6 +43,8 @@ describe('provider payment redirect recovery', () => {
     expect(safePaymentReturnPath('/curso/demo/orden/7')).toBe('/curso/demo/orden/7');
     expect(safePaymentReturnPath('//evil.example/path')).toBeNull();
     expect(safePaymentReturnPath('https://evil.example/path')).toBeNull();
+    expect(safePaymentReturnPath('/orden\\7')).toBeNull();
+    expect(safePaymentReturnPath('/orden/\t7')).toBeNull();
     expect(saveProviderPaymentResume({
       version: 1,
       checkoutId,
@@ -153,6 +155,9 @@ describe('provider payment redirect recovery', () => {
   it('releases recovery only for authoritative no-charge outcomes', () => {
     expect(paymentAttemptCanBeReleased('succeeded', false)).toBe(false);
     expect(paymentAttemptCanBeReleased('confirmed_no_charge', true)).toBe(true);
+    expect(paymentAttemptCanBeReleased('confirmed_no_charge', false)).toBe(false);
+    expect(paymentAttemptCanBeReleased('confirmed_no_charge', undefined)).toBe(false);
+    expect(paymentAttemptCanBeReleased('processing', true)).toBe(false);
     expect(paymentAttemptCanBeReleased('failed', true)).toBe(true);
     expect(paymentAttemptCanBeReleased('failed', false)).toBe(false);
     expect(paymentAttemptCanBeReleased('processing', false)).toBe(false);

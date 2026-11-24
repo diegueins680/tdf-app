@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
 import { jest } from '@jest/globals';
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import {
@@ -26,7 +26,7 @@ jest.unstable_mockModule('../utils/env', () => ({
 
 jest.unstable_mockModule('../api/providerPaymentSessions', () => ({
   getProviderPaymentSession: getMock,
-  safeProviderRedirect: () => null,
+  safeProviderRedirect: (_provider: string, redirect: string | null) => redirect,
 }));
 
 jest.unstable_mockModule('../contexts/LocalePreferencesContext', () => ({
@@ -58,8 +58,10 @@ const session = (state: string, canRetryOrFallback: boolean) => ({
   canRetryOrFallback,
 });
 
-const renderPage = (entry = '/pagos/retorno') => {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+const renderPage = (
+  entry = '/pagos/retorno',
+  client = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+) => {
   return render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[entry]}>
@@ -136,6 +138,26 @@ describe('ProviderPaymentReturnPage', () => {
     expect(getMock).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['payphone', 'https://pay.payphonetodoesposible.com/Anonymous/Index', 'origin'],
+    ['placetopay', 'https://checkout-test.placetopay.ec/session/test', 'no-referrer'],
+  ])('uses the appropriate referrer policy when continuing a %s session', async (provider, redirectUrl, policy) => {
+    getMock.mockResolvedValue({ ...session('requires_customer_action', false), provider, redirectUrl });
+    renderPage();
+    const link = await screen.findByRole('link', { name: 'Continuar con el pago' });
+    expect(link.getAttribute('href')).toBe(redirectUrl);
+    expect(link.getAttribute('referrerpolicy')).toBe(policy);
+  });
+
+  it('keeps a claimable prepared session locked when an older server permits fallback', async () => {
+    getMock.mockResolvedValue(session('prepared', true));
+    renderPage();
+    await screen.findByText(/No pagues otra vez/);
+    expect(alternativesMock).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('link', { name: 'Volver a la orden' }));
+    expect(loadProviderPaymentResume(checkoutId)).not.toBeNull();
+  });
+
   it('retains the private recovery lock when the result is ambiguous', async () => {
     getMock.mockResolvedValue(session('ambiguous', false));
     renderPage();
@@ -144,6 +166,53 @@ describe('ProviderPaymentReturnPage', () => {
 
     expect(await screen.findByText('Orden')).toBeTruthy();
     expect(loadProviderPaymentResume(checkoutId)).not.toBeNull();
+  });
+
+  it('keeps the original attempt when the provider denies retry even for a no-charge state', async () => {
+    const key = loadOrCreatePaymentIdempotencyKey(checkoutId, 'placetopay', 'card');
+    getMock.mockResolvedValue(session('confirmed_no_charge', false));
+    renderPage();
+    await screen.findByText(/No pagues otra vez/);
+    expect(screen.queryByText(/Vuelve a la orden para elegir/)).toBeNull();
+    expect(alternativesMock).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('link', { name: 'Volver a la orden' }));
+    await screen.findByText('Orden');
+    expect(loadProviderPaymentResume(checkoutId)).not.toBeNull();
+    expect(window.sessionStorage.getItem(paymentIdempotencyStorageKey(checkoutId, 'placetopay', 'card'))).toBe(key);
+  });
+
+  it('checks a cached no-charge result again when the buyer returns to the page', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 30_000 } } });
+    client.setQueryData(['provider-payment-session-return', checkoutId, attemptId], session('failed', true));
+    let complete!: (result: ReturnType<typeof session>) => void;
+    getMock.mockImplementation(() => new Promise(resolve => { complete = resolve; }));
+    renderPage('/pagos/retorno', client);
+    expect(getMock).toHaveBeenCalledWith(checkoutId, attemptId, 'secure-checkout-lookup-token');
+    expect(screen.queryByText(/No se realizó ningún cobro/)).toBeNull();
+    expect(alternativesMock).not.toHaveBeenCalled();
+    await act(async () => { complete(session('processing', false)); });
+    expect(await screen.findByText(/No pagues otra vez/)).toBeTruthy();
+    expect(loadProviderPaymentResume(checkoutId)).not.toBeNull();
+  });
+
+  it('keeps the private attempt locked when a return status check pauses offline', () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 30_000 } } });
+    client.setQueryData(['provider-payment-session-return', checkoutId, attemptId], session('failed', true));
+    const originalKey = loadOrCreatePaymentIdempotencyKey(checkoutId, 'placetopay', 'card');
+    onlineManager.setOnline(false);
+    try {
+      renderPage('/pagos/retorno', client);
+      expect(screen.getByText(/cuando vuelva la conexión/)).toBeTruthy();
+      expect(screen.queryByText(/No se realizó ningún cobro/)).toBeNull();
+      expect(getMock).not.toHaveBeenCalled();
+      expect(alternativesMock).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('link', { name: 'Volver a la orden' }));
+      expect(loadProviderPaymentResume(checkoutId)).not.toBeNull();
+      expect(loadOrCreatePaymentIdempotencyKey(checkoutId, 'placetopay', 'card')).toBe(originalKey);
+    } finally {
+      client.clear();
+      onlineManager.setOnline(true);
+    }
   });
 
   it('clears recovery and the reusable key only after authoritative no-charge evidence', async () => {
