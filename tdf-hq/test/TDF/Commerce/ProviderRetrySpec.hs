@@ -3094,6 +3094,17 @@ fullDomainQuerySpec = describe "full-schema domain query settlement" $
           (Reconciliation.applyQueryResult payment result "domain-query-replay" now) pool))
         outcomes `shouldBe` replicate 4 (Right Reconciliation.ReconciliationProcessed)
         runSqlPool (paymentSnapshot payment) pool `shouldReturn` paid
+        when (domain == "event_ticket_order") $ do
+          tickets <- runSqlPool (rawSql
+            "SELECT r.fulfillment_status,o.status,o.quantity,\
+            \ (SELECT count(*) FROM event_ticket t WHERE t.order_ref_id=o.id AND t.status='issued'),\
+            \ (SELECT count(*) FROM event_ticket_confirmation_delivery d WHERE d.order_id=o.id),\
+            \ (SELECT count(*) FROM event_ticket_fulfillment_event e WHERE e.order_id=o.id AND e.to_status='issued')\
+            \ FROM event_ticket_checkout_runtime r JOIN event_ticket_order o ON o.id=r.order_id\
+            \ WHERE r.checkout_id=?::uuid"
+            [PersistText checkoutId]) pool
+            :: IO [(Single Text, Single Text, Single Int64, Single Int64, Single Int64, Single Int64)]
+          tickets `shouldBe` [(Single "issued", Single "paid", Single 1, Single 1, Single 1, Single 1)]
 
 reconciliationTransactionSpec :: SpecWith ConnectionPool
 reconciliationTransactionSpec = describe "authoritative query transaction ownership" $ do
