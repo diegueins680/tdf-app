@@ -19455,7 +19455,7 @@
       "title": "Friend suggestions ranked by personalized PageRank over follows",
       "statement": "Behind FRIEND_SUGGESTIONS_PAGERANK_ENABLED (off by default), GET /social/suggestions returns the stored result of a nightly personalized PageRank over actor-confirmed social_v2_pair.follow_a and follow_b directions for the signed-in viewer: a random walk with restart at the viewer (damping 0.85, 100 iterations, dead ends return to the viewer) over live people with a verified email (provider-bound credential or completed password reset) at least seven days old with an open profile and no block with the viewer, ordered by score and then party id, at most 20 of the 50 stored. With the flag off, for a viewer who opted out of personalization, without the schema or social-v2 policy, without a stored result younger than 48 hours, when any party that carried score for the viewer is no longer eligible, or on any read failure, the route returns exactly the previous second-degree count answer.",
       "domain": "COMMUNITY",
-      "authority": "Owner request and approval of 2026-11-21: the rule, its constants and the nine decisions of the proposal in formal/system/friend-suggestions-pagerank.md. Two departures from the approved text are recorded there.",
+      "authority": "Owner request and approval of 2026-11-21: the rule, its constants and the nine decisions of the proposal in formal/system/friend-suggestions-pagerank.md. On 24 November the owner approved actor-confirmed canonical follows for rollout.",
       "source": "formal/system/friend-suggestions-pagerank.md",
       "contract": "tdf-hq/src/TDF/Social/SuggestionRank.hs",
       "property": "For every viewer v and step t: p_t >= 0 /\\ SUM p_t = 1 /\\ (a \\notin nodes(G_v) => p_t(a) = 0); p_t depends only on v and the follows between nodes of G_v; norm1(p_100 - p*) <= 2 * 0.85^100 < 2e-7. For every returned personalized entry a: a # v /\\ a stored for v /\\ eligibleNow(v, a) /\\ no follow between v and a /\\ every party in support(v) is eligible now. flagOff \\/ optedOut(v) => response = fallback(v).",
@@ -19504,6 +19504,8 @@
       "recovery": "Turn the flag off: the route returns the fallback without touching the tables. tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql drops the three derived tables.",
       "observability": "One log line per run with viewer and candidate counts, or the failure.",
       "implementation": [
+        "tdf-hq/src/TDF/API/SocialRelationships.hs",
+        "tdf-hq-ui/src/api/social.ts",
         "tdf-hq/src/TDF/Social/SuggestionRank.hs",
         "tdf-hq/src/TDF/Social/SuggestionStore.hs",
         "tdf-hq/src/TDF/Auth/EmailVerification.hs",
@@ -19519,6 +19521,7 @@
         "tdf-hq-ui/src/api/types.ts"
       ],
       "tests": [
+        "scripts/social/RelationshipReadSpec.hs",
         "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs",
         "tdf-hq/test/TDF/Social/SuggestionStoreSpec.hs",
         "scripts/test-friend-suggestions-sql.py",
@@ -19530,7 +19533,7 @@
         "formal/event-operations/FriendSuggestionGraph.als",
         "scripts/verify-friend-suggestion-pagerank.py"
       ],
-      "verification": "PROVED (Z3, exact reals, one step, every viewer, node set and follow relation up to 4 accounts; negative control for each): a step keeps a distribution on the viewer's graph a distribution, dead ends included; an account outside the graph holds no score and follow rows touching it do not change the step; a step contracts the L1 distance by the damping (symbolic up to 3 accounts, per follow relation with the viewer fixed and all accounts nodes at 4); 2 * 0.85^100 < 2e-7. The induction over iterations and the fixed-point argument are a hand proof in the contract. BOUNDED MODEL (Alloy 6.2.0, up to 5 accounts, six mutation controls): follows by or to accounts failing the age or email filter leave every viewer's graph unchanged; only live, aged, verified accounts are reachable; a block in either direction removes the account. TESTED (Hspec + QuickCheck): the Haskell ranking over exact Rational and over Double (sum within 1e-9), exclusions, ordering, limits, input-order independence, the run's per-viewer computation, the flag and the fallback JSON. TESTED (PostgreSQL 16): the statements extracted from the Haskell source and the migration, 13 accounts and 15 read scenarios including opt-out, staleness and each evidence exclusion, plus the password-reset verification write. TESTED (Jest): the web label.",
+      "verification": "PROVED (Z3, exact reals, one step, every viewer, node set and follow relation up to 4 accounts; negative control for each): a step keeps a distribution on the viewer's graph a distribution, dead ends included; an account outside the graph holds no score and follow rows touching it do not change the step; a step contracts the L1 distance by the damping (symbolic up to 3 accounts, per follow relation with the viewer fixed and all accounts nodes at 4); 2 * 0.85^100 < 2e-7. The induction over iterations and the fixed-point argument are a hand proof in the contract. BOUNDED MODEL (Alloy 6.2.0, up to 5 accounts, six mutation controls): follows by or to accounts failing the age or email filter leave every viewer's graph unchanged; only live, aged, verified accounts are reachable; a block in either direction removes the account. TESTED (Hspec + QuickCheck): the Haskell ranking over exact Rational and over Double (sum within 1e-9), exclusions, ordering, limits, input-order independence, the run's per-viewer computation, the flag and the fallback JSON. TESTED (PostgreSQL 16): the statements extracted from the Haskell source and the migration, 13 accounts and 16 read scenarios including opt-out, staleness and each evidence exclusion, plus the password-reset verification write. TESTED (Jest): the web label.",
       "evidence": "scripts/verify-friend-suggestion-pagerank.py --max-nodes 4 output; scripts/verify-alloy-controls.mjs result for FriendSuggestionGraph.als; tdf-hq-test SuggestionRankSpec and SuggestionStoreSpec runs; scripts/test-friend-suggestions-sql.py output; Jest suggestionReason run.",
       "critical": true,
       "status": "specified and implemented",
@@ -31019,6 +31022,7 @@
     "scripts/scan-music-legacy-releases.sh": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
     "scripts/seal-event-report.mjs": "2c7087ccb785b9a725a5c1e9e23582236d76a40be28f62e08b0f2124d4fa4764",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
+    "scripts/social/RelationshipReadSpec.hs": "9d3dcfa8dfde6b721ec45727cdf9b2fcb05c254f9127741fe6ab4763f3b7e3ea",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
     "scripts/social/chat-delivery.sql": "41cbcdb64b815cd034bb14c96da007e18d80a4208f7b5ce22d5e151e399c1636",
     "scripts/social/chat-notifications.sql": "1bb1b293aabacbeede286dba05911f20f8a85b59faf18f12d1b399288a32a734",
@@ -31394,6 +31398,7 @@
     "tdf-hq-ui/src/api/reviews.ts": "8fc0a3b74789b159185572e537899ad62139fd8b784a32ec8639d3c6da792dcb",
     "tdf-hq-ui/src/api/session.test.ts": "b00e52d37736c2f913029b4ebd6d327b488b4fb00515e7be468f4788c0bf775e",
     "tdf-hq-ui/src/api/session.ts": "6eda870f29bab94f61c66905b79eece8247a242f66d8a1b4b9e56a055b81b0a9",
+    "tdf-hq-ui/src/api/social.ts": "d088d9263aa314f305eea2ba6234b64918bbed38f37c20ddb400b77f99de06d0",
     "tdf-hq-ui/src/api/socialEvents.test.ts": "94e606bd6901c34bcf460a614294be9f4eb027c39b9ef2110e55df65aef5962b",
     "tdf-hq-ui/src/api/socialEvents.ts": "f81dd3da13df4da52a1e908416bf6de4e34bae73e1fb6804b62d70c0070a1501",
     "tdf-hq-ui/src/api/socialV2.test.ts": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
@@ -32219,6 +32224,7 @@
     "tdf-hq/src/TDF/API/Radio.hs": "3b01c772d15c8798d929bb0cfab1619bee8d58a363b8399cac3e5cf58b1e4906",
     "tdf-hq/src/TDF/API/ServiceStorefront.hs": "9695a49d51f2b9c62f4c9703f09266daa50698dfab767dc473e6e2e7186d8d25",
     "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "518bbefbe360e85da7e0f0daf6f669d83e62a17a533193afec7d5177acbbb197",
+    "tdf-hq/src/TDF/API/SocialRelationships.hs": "81b3b72e6087fe5fd3b708969dc32ee1a7290aec2aae89510c7fb7e7ba9069be",
     "tdf-hq/src/TDF/API/Taxonomy.hs": "b9087285c746dcc9195326e759aebaf6a3bb32ecd94f3751efa62c12404e0b49",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
     "tdf-hq/src/TDF/App/Boot.hs": "7260323ae062fc41f078e3b3aaa46b4afcf1f1491515d141da8de8add3acd807",
@@ -50302,6 +50308,18 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/src/TDF/API/SocialRelationships.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/social.ts": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/src/TDF/Social/SuggestionRank.hs": [
       {
         "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
@@ -50342,6 +50360,12 @@
       {
         "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
         "relationship": "implementation"
+      }
+    ],
+    "scripts/social/RelationshipReadSpec.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs": [
@@ -60704,7 +60728,12 @@
       "path": "scripts/social/RelationshipReadSpec.hs",
       "sha256": "9d3dcfa8dfde6b721ec45727cdf9b2fcb05c254f9127741fe6ab4763f3b7e3ea",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-e3d0d4ee0253885f",
@@ -67297,7 +67326,12 @@
       "path": "tdf-hq-ui/src/api/social.ts",
       "sha256": "d088d9263aa314f305eea2ba6234b64918bbed38f37c20ddb400b77f99de06d0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-0996ea3719ee9457",
@@ -84021,7 +84055,12 @@
       "path": "tdf-hq/src/TDF/API/SocialRelationships.hs",
       "sha256": "81b3b72e6087fe5fd3b708969dc32ee1a7290aec2aae89510c7fb7e7ba9069be",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c9bd1bcf315011ee",
@@ -95805,7 +95844,6 @@
     "SURFACE-5d4cb8015e79dca2",
     "SURFACE-e42416493ea0dbea",
     "SURFACE-4516bcc170cbbb8d",
-    "SURFACE-750774099dae3f98",
     "SURFACE-e3d0d4ee0253885f",
     "SURFACE-9a5043de3e53e7e2",
     "SURFACE-c6d8995610ec7a67",
@@ -95988,7 +96026,6 @@
     "SURFACE-cbc3e7cf8a1ab0e0",
     "SURFACE-82d9be6dba61ff66",
     "SURFACE-58348bbc9ffe221b",
-    "SURFACE-56d69609ed44245e",
     "SURFACE-0996ea3719ee9457",
     "SURFACE-5658ebb431d6a53d",
     "SURFACE-44b36f2b091d43e1",
@@ -96628,7 +96665,6 @@
     "SURFACE-d6409fbc750d012c",
     "SURFACE-5f0cc56e954d47f0",
     "SURFACE-c1e9e07dfd2c941f",
-    "SURFACE-224511e286675674",
     "SURFACE-c9bd1bcf315011ee",
     "SURFACE-fe906347e07abbb3",
     "SURFACE-9655351d027b1acb",
@@ -98338,7 +98374,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ca195f5c4bd7d78b07dd1f58b203d84ca02a1fe1cf64841d1b3ac5bcf74b73bd",
+      "sourceSha256": "92451949099fb6908208c2dfc37c149e77f3342795d42354d366d6d7735c89ff",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -98366,7 +98402,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ca195f5c4bd7d78b07dd1f58b203d84ca02a1fe1cf64841d1b3ac5bcf74b73bd",
+      "sourceSha256": "92451949099fb6908208c2dfc37c149e77f3342795d42354d366d6d7735c89ff",
       "definition": {
         "states": [
           "absent",
@@ -98396,7 +98432,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ca195f5c4bd7d78b07dd1f58b203d84ca02a1fe1cf64841d1b3ac5bcf74b73bd",
+      "sourceSha256": "92451949099fb6908208c2dfc37c149e77f3342795d42354d366d6d7735c89ff",
       "definition": {
         "export": [
           "queued",
@@ -98453,7 +98489,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ca195f5c4bd7d78b07dd1f58b203d84ca02a1fe1cf64841d1b3ac5bcf74b73bd",
+      "sourceSha256": "92451949099fb6908208c2dfc37c149e77f3342795d42354d366d6d7735c89ff",
       "definition": {
         "states": [
           "pending",
