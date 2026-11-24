@@ -159,7 +159,11 @@ test('events follow the shared filters for signed-in viewers @critical', async (
   await expect(page.getByTestId('events-taxonomy-chip')).toHaveText(['Guayaquil', 'Cumbia']);
   await expect.poll(() => api.lastCall('/social-events/events/facets')?.get('workflow_state_id')).toBe(ROCK);
   await snapshot(page, testInfo, 'events-es');
-  await page.getByRole('button', { name: 'Limpiar filtros', exact: true }).first().click();
+  const clear = page.getByRole('button', { name: 'Limpiar filtros', exact: true }).first();
+  // On phones the docked radio overlays the bottom edge of the scroll area.
+  await clear.evaluate((button) => button.scrollIntoView({ block: 'center', behavior: 'instant' }));
+  if (testInfo.project.use.hasTouch) await clear.tap();
+  else await clear.click();
   await expect.poll(() => new URL(page.url()).searchParams.has('state')).toBe(false);
   const filters = page.getByTestId('events-taxonomy-filters');
   await filters.getByRole('button', { name: 'Filtrar por lugar y género' }).click();
