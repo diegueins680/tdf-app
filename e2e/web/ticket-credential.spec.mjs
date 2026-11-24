@@ -60,12 +60,16 @@ test('Guest issued QR downloads on a narrow screen without installing the app @c
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test('PayPhone receives only the origin after opening and reloading a private ticket order @critical', async ({ page, baseURL }) => {
+test('PayPhone receives only the origin and a returned ticket checkout recovers after a temporary outage @critical', async ({ page, baseURL }) => {
   const origin = new URL(baseURL).origin;
   const orderPath = '/eventos/41/orden/92';
   const checkoutId = '9ecc9364-e7c2-4d61-8ecd-50762ad1c097';
   const attemptId = '37122204-1ac3-402d-a948-d22bf7256f16';
   const providerUrl = 'https://pay.payphone.app/Anonymous/Index?paymentId=synthetic';
+  const returnUrl = new URL('/pagos/retorno', origin);
+  returnUrl.searchParams.set('tdf_checkout', checkoutId);
+  let creations = 0;
+  let statusReads = 0;
   await page.addInitScript(() => {
     localStorage.setItem('tdf-hq-ui/locale', 'es');
     localStorage.setItem('tdf:event-ticket-checkout:41:92', 'synthetic-order-capability');
@@ -73,7 +77,8 @@ test('PayPhone receives only the origin after opening and reloading a private ti
   await page.route('**/*', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
-    if (url.href === providerUrl) return route.fulfill({ body: 'Synthetic PayPhone checkout' });
+    if (url.href === providerUrl) return route.fulfill({ contentType: 'text/html',
+      body: `<a href="${returnUrl.href}">Volver a TDF</a>` });
     if (request.isNavigationRequest() && url.origin === origin && url.pathname === orderPath) {
       const asset = await route.fetch();
       const response = await ticketPageResponse({
@@ -100,9 +105,19 @@ test('PayPhone receives only the origin after opening and reloading a private ti
         organizerPayableMinor: 2000, platformFeeMinor: 0, termsVersion: 'test', policyVersion: 'test' },
     } });
     if (path === `/commerce/checkouts/${checkoutId}/payment-sessions`) {
+      creations++;
+      expect(request.method()).toBe('POST');
       expect(request.postDataJSON()).toEqual({ provider: 'payphone', paymentMethod: 'card' });
-      return route.fulfill({ json: { attemptId, provider: 'payphone', paymentMethod: 'card',
+      return route.fulfill({ json: { checkoutId, attemptId, provider: 'payphone', paymentMethod: 'card',
         state: 'requires_customer_action', canRetryOrFallback: false, redirectUrl: providerUrl } });
+    }
+    if (path === `/commerce/checkouts/${checkoutId}/payment-sessions/${attemptId}`) {
+      expect(request.method()).toBe('GET');
+      expect(request.headers()['x-checkout-lookup-token']).toBe('synthetic-order-capability');
+      statusReads++;
+      if (statusReads === 1) return route.fulfill({ status: 503, json: {} });
+      return route.fulfill({ json: { checkoutId, attemptId, provider: 'payphone',
+        state: 'succeeded', canRetryOrFallback: false, redirectUrl: null } });
     }
     if (path === '/health') return route.fulfill({ json: { status: 'ok', db: 'ok' } });
     if (path.startsWith('/catalogs/')) return route.fulfill({ json: { catalogs: [], items: [] } });
@@ -116,4 +131,9 @@ test('PayPhone receives only the origin after opening and reloading a private ti
   await page.getByRole('button', { name: 'Tarjeta · PayPhone' }).click();
   expect(await (await providerRequest).headerValue('referer')).toBe(`${origin}/`);
   await expect(page).toHaveURL(providerUrl);
+  await page.getByRole('link', { name: 'Volver a TDF' }).click();
+  await expect(page).toHaveURL(returnUrl.href);
+  await expect(page.getByText('Pago confirmado. Vuelve a la orden para ver el siguiente paso.')).toBeVisible();
+  expect(statusReads).toBe(2);
+  expect(creations).toBe(1);
 });

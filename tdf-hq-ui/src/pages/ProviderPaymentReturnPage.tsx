@@ -40,7 +40,9 @@ export default function ProviderPaymentReturnPage() {
       resume!.lookupToken,
     ),
     enabled: Boolean(resume),
-    retry: false,
+    // Each return needs fresh evidence. The session query client retries
+    // transient read failures and stops on client errors.
+    staleTime: 0,
     refetchOnWindowFocus: true,
     refetchInterval: (query) => {
       const state = query.state.data?.state;
@@ -49,7 +51,7 @@ export default function ProviderPaymentReturnPage() {
   });
 
   const resumedCheckoutId = resume?.checkoutId;
-  const session = status.isError || status.isFetching ? undefined : status.data;
+  const session = status.isSuccess && status.fetchStatus === 'idle' ? status.data : undefined;
   const knownNoCharge = paymentAttemptCanBeReleased(session?.state, session?.canRetryOrFallback);
   const alternatives = useQuery({
     queryKey: ['payment-return-alternatives', resumedCheckoutId, resume?.attemptId, resume?.returnPath],
@@ -102,6 +104,11 @@ export default function ProviderPaymentReturnPage() {
                   <CircularProgress size={24} />
                   <Typography>{english ? 'Confirming your payment…' : 'Confirmando tu pago…'}</Typography>
                 </Stack>
+              )}
+              {status.fetchStatus === 'paused' && (
+                <Alert severity="info">{english
+                  ? 'We’ll check this payment when your connection returns.'
+                  : 'Consultaremos este pago cuando vuelva la conexión.'}</Alert>
               )}
               {status.isError && (
                 <>
