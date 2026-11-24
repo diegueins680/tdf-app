@@ -562,6 +562,12 @@
    "boundary": "public-read"
   },
   {
+   "method": "GET",
+   "path": "/music/facets/releases",
+   "boundary": "public-read",
+   "requirement": "TAX-FILTER-001"
+  },
+  {
    "method": "POST",
    "path": "/music/playback-events",
    "boundary": "public-intake"
@@ -969,6 +975,12 @@
    "method": "GET",
    "path": "/social-events/upcoming",
    "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/taxonomy/filter-options",
+   "boundary": "public-read",
+   "requirement": "TAX-FILTER-001"
   },
   {
    "method": "POST",

@@ -1,0 +1,94 @@
+{
+  "id": "79a6def1e91baee6e937",
+  "classification": "genuine-technical-constant",
+  "disposition": "explicit-allowlist",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P0-cutover",
+  "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+  "justification": "Preserve the complete221-entry foundation prefix (protected main917806 all220 entries plus the original invitation migration), then append the three original source moderation, NULL authorization and permission-lock migrations without changing their SQL or introduction SHAs. This224-entry execution registry retains both the217- and221-entry source reviews, including the protected financial220 lineage. Canonical combined schema, runtime, independent review and deployment remain separate obligations; this review authorizes no production action or communication.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "event-memory-source-main-917806-20261026",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 224
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:56f87607b1f47d9f74b0ea26e136f73ebe007f0541dc8593def1c98d79a2f97b"
+  },
+  "sourceReviewReferences": [
+    {
+      "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+      "sourceEntry": {
+        "id": "3f336173e03f10fc023c"
+      },
+      "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+      "sourceEntry": {
+        "id": "2b073f20afd2f3798b1e"
+      },
+      "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+      "sourceEntry": {
+        "id": "a1eb1e750e7543b88fe1"
+      },
+      "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "2c3b0017a352e223803eca40de4a500d9902717f",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "ded861bdcbb03b246ff965701f7392265e4aff0a36b86b9e2fd4e50859c70904",
+      "sourceEntry": {
+        "id": "c28667c70e40dcc18a55"
+      },
+      "sourceEntryCanonicalSha256": "f50f89961486277052c8354582f09684859e64488072dda296b75c43ec07d4d7",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "917806ff9c8d455a01bfb8a29c80d6ff353e0e0b",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+      "sourceEntry": {
+        "id": "b7cc47848f3f9882770f"
+      },
+      "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "ddb92379859aa7ac7e1d87aec99bb1be3cc1f941",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "1a193c51384355bf1d57e23e2868b8d4759f2324cb1f74cc78659d919b9b910a",
+      "sourceEntry": {
+        "id": "d55b0d93ab3224fe96ac"
+      },
+      "sourceEntryCanonicalSha256": "cb3c85d4b0a4ce7c962aec6a67eb2cc3ffbd2714a14c65e5a9721b2ab6dd2fdc",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "534c5631ac79e927c887c5c730e252fe4dad7cc5",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "337adcd09b9d81a0255d8eb61118c6fce8e1d3669fcda9acc04adbd69d6ce92e",
+      "sourceEntry": {
+        "id": "0ab5d4354ae923d8f2db"
+      },
+      "sourceEntryCanonicalSha256": "4369a49366796704db894cd929e773d333e4994b3338f9d6386f8aa4b12556e6",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    }
+  ]
+}

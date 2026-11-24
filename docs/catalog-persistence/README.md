@@ -18,6 +18,28 @@ These references preserve the full earlier decision and its nested history witho
 recursively copying it into every successor. Keep the source commits reachable through
 the consolidation merge before retiring source branches.
 
+### Review history store
+
+`catalog-list-decisions.json` keeps only the active decisions inline. Every other
+decision object — `previousDecision` chains, `concurrentReviewHistory`, retired,
+superseded and reconciliation records — lives once in `catalog-decision-history/`,
+one file per object named by the SHA-256 of its exact stored bytes, and the
+document points to it with `{ "$historyRef": "sha256:<hex>" }`. Stored objects
+reference their own predecessors the same way. Expanding the document reproduces
+the earlier fully nested file byte for byte, so no review is lost; it only stops
+being copied into every successor. Because each object is its own file, two
+branches that add reviews merge without conflicts.
+
+- Author successor decisions as before, with the parent decision nested inline,
+  then run `node scripts/catalog-decision-history.mjs compact`
+  (`npm run audit:catalog-lists:refresh` does this automatically).
+- `node scripts/catalog-decision-history.mjs verify` (part of
+  `npm run audit:catalog-lists`) rejects edited, missing, unreferenced or inline history.
+- `node scripts/catalog-decision-history.mjs expand --output PATH` writes the
+  fully nested document. Tests read the current file through
+  `readExpandedDecisions` in `scripts/lib/catalog-decision-history.mjs`; revisions
+  committed before the store carry no references and read unchanged.
+
 Historical baseline and review revisions describe evidence provenance. The ordered
 `scripts/production-migrations.json` contract remains migration authority; a retained
 review or a generated catalog report does not establish production application.

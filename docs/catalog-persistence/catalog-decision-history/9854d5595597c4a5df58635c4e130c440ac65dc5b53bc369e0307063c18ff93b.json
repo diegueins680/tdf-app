@@ -1,0 +1,22 @@
+{
+  "id": "2a0d6d57a51e35d91376",
+  "classification": "security-system-registry",
+  "disposition": "canonical-contract",
+  "specializedModel": "notification_destination_registry",
+  "priority": "P1-integrity",
+  "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+  "justification": "Canonical typed notification destination registry; chat_thread uses a validated positive safe thread identity, selects only an authorized existing conversation and never accepts an arbitrary URL. Generated into Mobile.",
+  "reviewed": true,
+  "evidence": {
+    "file": "tdf-hq-ui/src/components/notificationTarget.ts",
+    "line": 14
+  },
+  "reviewBatch": "chat-notification-destination-2026-10-13",
+  "reviewMethod": "successor-of-reviewed-decision",
+  "previousDecision": {
+    "$historyRef": "sha256:d980668a93ff59abb5146ffb31addf30d99f73e306b68468064f8d573819dfd5"
+  },
+  "mergedSourceDecision": {
+    "$historyRef": "sha256:a4c944041c168eb9276c2b88b11f7904e080a95d67321f537f1ce5832edee2d2"
+  }
+}

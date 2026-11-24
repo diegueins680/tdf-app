@@ -1,0 +1,10 @@
+{
+  "id": "82181bc7a177bc6f96f4",
+  "classification": "security-system-registry",
+  "disposition": "retain-in-code",
+  "specializedModel": "navigation_item, navigation_item_permission",
+  "priority": "P3-retain",
+  "risk": "Changing navigation or UI constants could break rendering or user experience.",
+  "justification": "UI navigation items and display constants are client-side presentation mechanics, not governed business catalog data.",
+  "reviewed": true
+}

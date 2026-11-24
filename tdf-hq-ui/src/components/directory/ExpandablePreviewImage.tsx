@@ -2,7 +2,7 @@ import { useEffect, useState, type ComponentProps } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { Box, ButtonBase, Dialog, IconButton } from '@mui/material';
 import DirectoryPreviewImage from './DirectoryPreviewImage';
-import { resolveDirectoryPreviewImage } from '../../utils/directoryPreviewImage';
+import { resolveDirectoryPreviewImage } from '../../services/directoryPreviewImage';
 
 type ExpandablePreviewImageProps = ComponentProps<typeof DirectoryPreviewImage> & {
   /** Accessible name of the control that opens the full image. */

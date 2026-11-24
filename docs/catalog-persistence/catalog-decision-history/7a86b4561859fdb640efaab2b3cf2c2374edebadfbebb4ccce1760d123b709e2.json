@@ -1,0 +1,30 @@
+{
+  "id": "4beaac5c476079656a0a",
+  "classification": "security-system-registry",
+  "disposition": "canonical-contract",
+  "specializedModel": "notification_destination_registry",
+  "priority": "P1-integrity",
+  "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+  "justification": "Generated Mobile notification destination registry adds chat_thread with the same validated numeric identity and canonical web route as the web resolver; arbitrary URL navigation remains rejected.",
+  "reviewed": true,
+  "evidence": {
+    "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+    "line": 15
+  },
+  "reviewBatch": "chat-notifications-2026-10-13",
+  "reviewMethod": "successor-of-reviewed-decision",
+  "previousDecision": {
+    "$historyRef": "sha256:5ecdebe0bb3b65f07f548b0dda4e40af4a520e83317112f850ce4de60b847905"
+  },
+  "supersededReviews": [
+    {
+      "sourceRevision": "cf723a45e24c7f9a8dd8300d4b7f199b261b5363",
+      "sourceDecisionId": "9de842d0529aa06faf6b",
+      "sourceDecisionSha256": "2718813db7c71f8745fcc5fcf0f52ad5161fca943a4dad578f726ae556059e24",
+      "reason": "Prior complete decision retained in Git; existing nested provenance is unchanged."
+    }
+  ],
+  "mergedSourceDecision": {
+    "$historyRef": "sha256:7fc63dca4158e1b438e75807e4b95099cf5521a400cdaa059c117e120829652f"
+  }
+}

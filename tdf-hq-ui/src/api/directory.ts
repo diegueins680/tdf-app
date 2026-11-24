@@ -38,8 +38,14 @@ export type MyOffersStatus = NonNullable<NonNullable<operations['listMyApplicati
 
 const idempotencyHeaders = (key?: string) => ({ headers: { 'Idempotency-Key': key ?? crypto.randomUUID() } });
 
-const append = (params: URLSearchParams, key: string, value: string | number | boolean | null | undefined) => {
-  if (value !== undefined && value !== null && value !== '') params.set(key, `${value}`);
+const append = (params: URLSearchParams, key: string, value: string | number | boolean | readonly string[] | null | undefined) => {
+  // Repeatable parameters (TAX-FILTER-001 countryIds/regionIds/cityIds/genreIds) repeat the key.
+  if (typeof value === 'object' && value !== null) {
+    params.delete(key);
+    value.forEach((item: string) => { if (item) params.append(key, item); });
+    return;
+  }
+  if (value !== undefined && value !== null && value !== '') params.set(key, String(value));
 };
 
 export const Directory = {

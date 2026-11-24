@@ -34,6 +34,8 @@ module TDF.Fans.ArtistRecommendations
   , followerCountsSql
   , followPolicyInstalledSql
   , followableArtistsSql
+  , RecommendationFrame (..)
+  , loadRecommendationFrame
   , loadArtistRecommendations
   ) where
 
@@ -224,23 +226,27 @@ followableArtistsSql :: Text
 followableArtistsSql =
   "SELECT profile_id FROM social_v2_profile_eligible(?, ?::bigint[])"
 
--- | Recommendations for @fan@ from the current follow rows.
---
--- Aggregate reads in the caller's transaction: the fan's own follows, the
--- shared-fan counts between those and every other artist, and the follower
--- count of each artist. No individual follower other than the fan is read.
--- Where the follow policy is installed, an artist the fan may not follow is
--- excluded before ranking, so the list never offers a follow that would be
--- refused and the limit is filled with followable artists.
-loadArtistRecommendations
-  :: MonadIO m
-  => PartyId
-  -> Int
-  -> SqlPersistT m [ArtistRecommendation]
-loadArtistRecommendations fan limit = do
+-- | What every ranking of one fan's recommendations starts from, read live.
+data RecommendationFrame = RecommendationFrame
+  { rfListed    :: !(Set.Set Int64)
+    -- ^ publicly listed artists: the only results and the only evidence
+  , rfFollowed  :: !(Set.Set Int64)
+    -- ^ artists the fan follows
+  , rfExcluded  :: !(Set.Set Int64)
+    -- ^ never returned: followed, the fan's own party, and not followable
+  , rfFollowers :: !(Map.Map Int64 Int)
+    -- ^ follower count of each artist
+  } deriving (Eq, Show)
+
+-- | Load the 'RecommendationFrame' of @fan@ in the caller's transaction: the
+-- fan's own follows and the follower count of each artist. Where the follow
+-- policy is installed, an artist the fan may not follow is excluded, so a
+-- list never offers a follow that would be refused and the limit is filled
+-- with followable artists.
+loadRecommendationFrame :: MonadIO m => PartyId -> SqlPersistT m RecommendationFrame
+loadRecommendationFrame fan = do
   listed <- Set.map fromSqlKey <$> loadPubliclyListedArtistParties
   followedRows <- rawSql followedArtistsSql [fanValue]
-  coFollowRows <- rawSql coFollowSql [fanValue, fanValue, fanValue]
   followerRows <- rawSql followerCountsSql []
   let followed = [artistId | Single artistId <- followedRows]
       alreadyExcluded = Set.fromList (fromSqlKey fan : followed)
@@ -254,22 +260,44 @@ loadArtistRecommendations fan limit = do
           rawSql followableArtistsSql [fanValue, toPersistValue (arrayLiteral candidates)]
         let followable = Set.fromList [artistId | Single artistId <- followableRows]
         pure (Set.fromList candidates `Set.difference` followable)
-  let excluded = alreadyExcluded `Set.union` notFollowable
-      followers =
-        Map.fromList
-          [ (artistId, countToInt total)
-          | (Single artistId, Single total) <- followerRows
-          ]
-      coFollows =
-        [ CoFollow seed candidate (countToInt shared)
-        | (Single seed, Single candidate, Single shared) <- coFollowRows
-        ]
-  pure (rankArtistRecommendations limit listed excluded followers coFollows)
+  pure
+    RecommendationFrame
+      { rfListed = listed
+      , rfFollowed = Set.fromList followed
+      , rfExcluded = alreadyExcluded `Set.union` notFollowable
+      , rfFollowers =
+          Map.fromList
+            [ (artistId, countToInt total)
+            | (Single artistId, Single total) <- followerRows
+            ]
+      }
   where
     fanValue = toPersistValue fan
 
-    countToInt :: Int64 -> Int
-    countToInt = fromIntegral . max 0
-
     arrayLiteral :: [Int64] -> Text
     arrayLiteral ids = "{" <> T.intercalate "," (map (T.pack . show) ids) <> "}"
+
+-- | Recommendations for @fan@ from the current follow rows.
+--
+-- Aggregate reads in the caller's transaction: the 'RecommendationFrame' and
+-- the shared-fan counts between the fan's follows and every other artist. No
+-- individual follower other than the fan is read.
+loadArtistRecommendations
+  :: MonadIO m
+  => PartyId
+  -> Int
+  -> SqlPersistT m [ArtistRecommendation]
+loadArtistRecommendations fan limit = do
+  frame <- loadRecommendationFrame fan
+  coFollowRows <- rawSql coFollowSql [fanValue, fanValue, fanValue]
+  let coFollows =
+        [ CoFollow seed candidate (countToInt shared)
+        | (Single seed, Single candidate, Single shared) <- coFollowRows
+        ]
+  pure
+    (rankArtistRecommendations limit (rfListed frame) (rfExcluded frame) (rfFollowers frame) coFollows)
+  where
+    fanValue = toPersistValue fan
+
+countToInt :: Int64 -> Int
+countToInt = fromIntegral . max 0
