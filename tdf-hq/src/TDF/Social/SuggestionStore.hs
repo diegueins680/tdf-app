@@ -123,10 +123,11 @@ blockedPairsSql :: Text
 blockedPairsSql =
   "SELECT party_a, party_b FROM social_v2_pair WHERE block_a OR block_b"
 
--- | Every follow as (follower, followed) (no parameters).
+-- | Each side controls its own outgoing canonical follow (no parameters).
 followRowsSql :: Text
 followRowsSql =
-  "SELECT follower_party_id, following_party_id FROM party_follow"
+  "SELECT party_a, party_b FROM social_v2_pair WHERE follow_a \
+  \UNION ALL SELECT party_b, party_a FROM social_v2_pair WHERE follow_b"
 
 -- | Record a run. Parameters: start time, damping, iterations, viewer count.
 insertRunSql :: Text
@@ -180,9 +181,9 @@ servedSuggestionsSql =
   \WHERE c.viewer_id = ? \
   \AND c.candidate_id IN (SELECT profile_id FROM social_v2_profile_eligible(?, \
   \ARRAY(SELECT s.candidate_id FROM social_suggestion_score s WHERE s.viewer_id = ?))) \
-  \AND NOT EXISTS (SELECT 1 FROM party_follow f \
-  \WHERE (f.follower_party_id = ? AND f.following_party_id = c.candidate_id) \
-  \OR (f.follower_party_id = c.candidate_id AND f.following_party_id = ?)) \
+  \AND NOT EXISTS (SELECT 1 FROM social_v2_pair f \
+  \WHERE f.party_a = least(?::bigint, c.candidate_id) AND f.party_b = greatest(?::bigint, c.candidate_id) \
+  \AND (f.follow_a OR f.follow_b)) \
   \ORDER BY c.position LIMIT ?"
 
 data RunSummary = RunSummary
@@ -312,8 +313,9 @@ readStoredSuggestions viewer = do
 -- runs. With it on, the stored candidates are served when
 -- 'readStoredSuggestions' allows; an invalid session, any database error and
 -- every refusal lead to @fallback@, which applies its own checks.
-suggestions :: AuthedUser -> ReadM [SuggestedFriendDTO] -> ReadM [SuggestedFriendDTO]
-suggestions user fallback = do
+suggestions :: AuthedUser -> ReadM [SuggestedFriendDTO] -> Bool -> ReadM [SuggestedFriendDTO]
+suggestions _ fallback False = fallback
+suggestions user fallback True = do
   enabled <- liftIO suggestionsEnabled
   if not enabled
     then fallback

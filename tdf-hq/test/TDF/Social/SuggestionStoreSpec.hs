@@ -40,7 +40,7 @@ withFlag value =
 
 run :: Env -> Either ServerError [SuggestedFriendDTO] -> IO (Either ServerError [SuggestedFriendDTO])
 run env fallback =
-  runHandler (runReaderT (suggestions viewer (either throwError pure fallback)) env)
+  runHandler (runReaderT (suggestions viewer (either throwError pure fallback) True) env)
 
 unusedEnv :: Env
 unusedEnv = Env
@@ -59,6 +59,11 @@ spec = describe "TDF.Social.SuggestionStore (COMMUNITY-FRIEND-SUGGESTION-001)" $
 
     it "off: the answer is the fallback and the database is not touched" $ do
       result <- withFlag Nothing (run unusedEnv (Right legacy))
+      fmap encode result `shouldBe` Right (encode legacy)
+
+    it "keeps the fallback for an older client even while the flag is on" $ do
+      result <- withFlag (Just "true") $
+        runHandler (runReaderT (suggestions viewer (pure legacy) False) unusedEnv)
       fmap encode result `shouldBe` Right (encode legacy)
 
     it "off: a fallback refusal is returned as it is" $ do

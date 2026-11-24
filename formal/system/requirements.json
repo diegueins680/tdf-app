@@ -19452,7 +19452,7 @@
     {
       "id": "COMMUNITY-FRIEND-SUGGESTION-001",
       "title": "Friend suggestions ranked by personalized PageRank over follows",
-      "statement": "Behind FRIEND_SUGGESTIONS_PAGERANK_ENABLED (off by default), GET /social/suggestions returns the stored result of a nightly personalized PageRank over party_follow for the signed-in viewer: a random walk with restart at the viewer (damping 0.85, 100 iterations, dead ends return to the viewer) over live people with a verified email (provider-bound credential or completed password reset) at least seven days old with an open profile and no block with the viewer, ordered by score and then party id, at most 20 of the 50 stored. With the flag off, for a viewer who opted out of personalization, without the schema or social-v2 policy, without a stored result younger than 48 hours, when any party that carried score for the viewer is no longer eligible, or on any read failure, the route returns exactly the previous second-degree count answer.",
+      "statement": "Behind FRIEND_SUGGESTIONS_PAGERANK_ENABLED (off by default), GET /social/suggestions returns the stored result of a nightly personalized PageRank over actor-confirmed social_v2_pair.follow_a and follow_b directions for the signed-in viewer: a random walk with restart at the viewer (damping 0.85, 100 iterations, dead ends return to the viewer) over live people with a verified email (provider-bound credential or completed password reset) at least seven days old with an open profile and no block with the viewer, ordered by score and then party id, at most 20 of the 50 stored. With the flag off, for a viewer who opted out of personalization, without the schema or social-v2 policy, without a stored result younger than 48 hours, when any party that carried score for the viewer is no longer eligible, or on any read failure, the route returns exactly the previous second-degree count answer.",
       "domain": "COMMUNITY",
       "authority": "Owner request and approval of 2026-11-21: the rule, its constants and the nine decisions of the proposal in formal/system/friend-suggestions-pagerank.md. Two departures from the approved text are recorded there.",
       "source": "formal/system/friend-suggestions-pagerank.md",
@@ -19468,8 +19468,8 @@
         "FRIEND_SUGGESTIONS_PAGERANK_ENABLED=true when the API starts, for the run to be scheduled"
       ],
       "inputs": [
-        "GET /social/suggestions",
-        "party_follow, party, user_credential, auth_provider_identity, party_email_verification, social_v2_preference and social_v2_pair rows at the run's snapshot"
+        "GET /social/suggestions?networkReason=true for capable clients; other clients receive the fallback",
+        "party, user_credential, auth_provider_identity, party_email_verification, social_v2_preference and social_v2_pair rows at the run's snapshot"
       ],
       "state": {
         "initial": "No stored result",
@@ -19539,10 +19539,10 @@
         "A verified email is an auth_provider_identity binding or a completed password reset; neither is withdrawn when the party later changes its address, and the reset write is covered by the SQL test and a no-op test, not by an HTTP-level reset.",
         "The follow-policy filter is exercised against a stand-in with the migrated signature, not the migrated social_v2_profile_eligible itself; no HTTP-level test runs the route or the run against a fully migrated database.",
         "Account age is party.created_at; credentials have no creation time.",
-        "The filters stop only accounts that fail them; whether the legacy friend writer still lets one side create both directions was not checked.",
-        "Mobile reads the route with a hand-written type and would show a zero mutual count for a personalized entry; the flag must stay off until Mobile handles sfReason.",
+        "The graph uses actor-confirmed follow directions. Legacy friendship and fan-club mirrors cannot contribute score.",
+        "Clients request networkReason=true only if they support sfReason. Older clients receive the existing fallback.",
         "The manifest successor review for the new migration is an author review, not independent approval; the migration has not been rehearsed on a production-shaped database.",
-        "Production activation state of social-v2 and the size of party_follow were not observed."
+        "Production activation state of social-v2 and the number of actor-confirmed follows were not observed."
       ],
       "conformance": {
         "classification": "PARTIAL",

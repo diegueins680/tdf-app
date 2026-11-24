@@ -19453,7 +19453,7 @@
     {
       "id": "COMMUNITY-FRIEND-SUGGESTION-001",
       "title": "Friend suggestions ranked by personalized PageRank over follows",
-      "statement": "Behind FRIEND_SUGGESTIONS_PAGERANK_ENABLED (off by default), GET /social/suggestions returns the stored result of a nightly personalized PageRank over party_follow for the signed-in viewer: a random walk with restart at the viewer (damping 0.85, 100 iterations, dead ends return to the viewer) over live people with a verified email (provider-bound credential or completed password reset) at least seven days old with an open profile and no block with the viewer, ordered by score and then party id, at most 20 of the 50 stored. With the flag off, for a viewer who opted out of personalization, without the schema or social-v2 policy, without a stored result younger than 48 hours, when any party that carried score for the viewer is no longer eligible, or on any read failure, the route returns exactly the previous second-degree count answer.",
+      "statement": "Behind FRIEND_SUGGESTIONS_PAGERANK_ENABLED (off by default), GET /social/suggestions returns the stored result of a nightly personalized PageRank over actor-confirmed social_v2_pair.follow_a and follow_b directions for the signed-in viewer: a random walk with restart at the viewer (damping 0.85, 100 iterations, dead ends return to the viewer) over live people with a verified email (provider-bound credential or completed password reset) at least seven days old with an open profile and no block with the viewer, ordered by score and then party id, at most 20 of the 50 stored. With the flag off, for a viewer who opted out of personalization, without the schema or social-v2 policy, without a stored result younger than 48 hours, when any party that carried score for the viewer is no longer eligible, or on any read failure, the route returns exactly the previous second-degree count answer.",
       "domain": "COMMUNITY",
       "authority": "Owner request and approval of 2026-11-21: the rule, its constants and the nine decisions of the proposal in formal/system/friend-suggestions-pagerank.md. Two departures from the approved text are recorded there.",
       "source": "formal/system/friend-suggestions-pagerank.md",
@@ -19469,8 +19469,8 @@
         "FRIEND_SUGGESTIONS_PAGERANK_ENABLED=true when the API starts, for the run to be scheduled"
       ],
       "inputs": [
-        "GET /social/suggestions",
-        "party_follow, party, user_credential, auth_provider_identity, party_email_verification, social_v2_preference and social_v2_pair rows at the run's snapshot"
+        "GET /social/suggestions?networkReason=true for capable clients; other clients receive the fallback",
+        "party, user_credential, auth_provider_identity, party_email_verification, social_v2_preference and social_v2_pair rows at the run's snapshot"
       ],
       "state": {
         "initial": "No stored result",
@@ -19540,10 +19540,10 @@
         "A verified email is an auth_provider_identity binding or a completed password reset; neither is withdrawn when the party later changes its address, and the reset write is covered by the SQL test and a no-op test, not by an HTTP-level reset.",
         "The follow-policy filter is exercised against a stand-in with the migrated signature, not the migrated social_v2_profile_eligible itself; no HTTP-level test runs the route or the run against a fully migrated database.",
         "Account age is party.created_at; credentials have no creation time.",
-        "The filters stop only accounts that fail them; whether the legacy friend writer still lets one side create both directions was not checked.",
-        "Mobile reads the route with a hand-written type and would show a zero mutual count for a personalized entry; the flag must stay off until Mobile handles sfReason.",
+        "The graph uses actor-confirmed follow directions. Legacy friendship and fan-club mirrors cannot contribute score.",
+        "Clients request networkReason=true only if they support sfReason. Older clients receive the existing fallback.",
         "The manifest successor review for the new migration is an author review, not independent approval; the migration has not been rehearsed on a production-shaped database.",
-        "Production activation state of social-v2 and the size of party_follow were not observed."
+        "Production activation state of social-v2 and the number of actor-confirmed follows were not observed."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -30994,7 +30994,7 @@
     "scripts/test-feed-affinity-postgres.sh": "70f9150eeb1bb45a6cb541fc383b5eefee1597eb19c0d3659addbea65cb3e1b0",
     "scripts/test-feed-affinity-sql.py": "1a0f4449c9ab3e4650ab47879188559c59087389499ac1c0914e7a1ec9f3a63b",
     "scripts/test-friend-suggestions-postgres.sh": "475a761847eb4abcd395f68d65a852de2ac280d8b7f93d70bb150df4185600c9",
-    "scripts/test-friend-suggestions-sql.py": "f9155d79b38061a12ebfce9124b551015f8766da1f4b577c6d661c4762412fae",
+    "scripts/test-friend-suggestions-sql.py": "7ec0e742339e8b64732b2c3922f52cecf29900abb9c09fe391cac942d28d149a",
     "scripts/test-google-account-name-verifier.py": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
     "scripts/test-guarded-release.py": "072a3aea42d088aac1cb00825bf34c7f3d08ff9fff21c630017f2ee5c9977a74",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -32316,7 +32316,7 @@
     "tdf-hq/src/TDF/Social/Server.hs": "3b1b4af11566dd037bf44c8fd89b2c198a085171ee23d5d2b4d1f11ab630a731",
     "tdf-hq/src/TDF/Social/Session.hs": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
     "tdf-hq/src/TDF/Social/SuggestionRank.hs": "5e9e231e34f9693c0a09a9f580420285037aa9c69512bee291fc220b21b0c860",
-    "tdf-hq/src/TDF/Social/SuggestionStore.hs": "cf3352af4cd08a0b818255e729cabdcef21ce410d2c8d82d78a785e42995f918",
+    "tdf-hq/src/TDF/Social/SuggestionStore.hs": "b299ef0cb3c24ac9b64d7049b5daa3df0ff762807248601795c757603c2a1603",
     "tdf-hq/src/TDF/StorageVault.hs": "7f5d13cfc664291e3d23044322859c95f359b1e4bb00fbc82a87794e5da1849b",
     "tdf-hq/src/TDF/Taxonomy/Filter.hs": "003e84d79f0d69122fc45414fc71bef213e520312a73a7a26310b75c5f132fd2",
     "tdf-hq/src/TDF/Taxonomy/GenreSuggestion.hs": "857a4c94e03668d33dddd0fc644e4aed669ba1c9773d49236cc0dcd0fdaab1ca",
@@ -32431,7 +32431,7 @@
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "b7e084839124ff880822e8264211fbadebf88190bd18d2fbd904e1848bdbe9b9",
     "tdf-hq/test/TDF/Social/FollowSpec.hs": "fb6640d2e4e415809328254799fc89c884e1f08e75a4678ef6996f0805c7867b",
     "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs": "f85567f40ae2e3e2b8bee19e37362fe683594fb7de3a28c4c4f009c9002b5ee4",
-    "tdf-hq/test/TDF/Social/SuggestionStoreSpec.hs": "4faba33420f07851daad5e64161910d026e213d4896b16873b9095e6a681702a",
+    "tdf-hq/test/TDF/Social/SuggestionStoreSpec.hs": "4805590f663514fca48b384f87ee2e5357c88ff09a525244adcf853d9376698d",
     "tdf-hq/test/TDF/StorageSecuritySpec.hs": "3358d870189320cab3387e054111df56893fbdb826b5ea09741579207a71d300",
     "tdf-hq/test/TDF/Taxonomy/FilterSpec.hs": "7f07c9ad5fb4ac7bd1727f36c408f2c2cde0aa264fd540e4e40dc48476a0405b",
     "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs": "89182563f1b1e76db33e3004500b198197fe828aea30f1faccad5738ed7d4471",
@@ -60563,7 +60563,7 @@
     {
       "id": "SURFACE-750774099dae3f98",
       "path": "scripts/social/RelationshipReadSpec.hs",
-      "sha256": "8094406fe42352a4d387feff8395dfdfdf06a0e0a33312ccb6b7da45e73f3a99",
+      "sha256": "9d3dcfa8dfde6b721ec45727cdf9b2fcb05c254f9127741fe6ab4763f3b7e3ea",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -62030,7 +62030,7 @@
     {
       "id": "SURFACE-b8aeb29dd33939a7",
       "path": "scripts/test-friend-suggestions-sql.py",
-      "sha256": "f9155d79b38061a12ebfce9124b551015f8766da1f4b577c6d661c4762412fae",
+      "sha256": "7ec0e742339e8b64732b2c3922f52cecf29900abb9c09fe391cac942d28d149a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67156,7 +67156,7 @@
     {
       "id": "SURFACE-56d69609ed44245e",
       "path": "tdf-hq-ui/src/api/social.ts",
-      "sha256": "baa97853bbf238a668c76fd01b4cd2bd4507ea0cea663280bb4ccf0de0a312cc",
+      "sha256": "d088d9263aa314f305eea2ba6234b64918bbed38f37c20ddb400b77f99de06d0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -83816,7 +83816,7 @@
     {
       "id": "SURFACE-224511e286675674",
       "path": "tdf-hq/src/TDF/API/SocialRelationships.hs",
-      "sha256": "9ea909370a55c985f2b7e5fdf5a62eaea4a3b77438e52fd3371e2299afbc54dd",
+      "sha256": "81b3b72e6087fe5fd3b708969dc32ee1a7290aec2aae89510c7fb7e7ba9069be",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -88177,7 +88177,7 @@
     {
       "id": "SURFACE-824227145b08a710",
       "path": "tdf-hq/src/TDF/Social/SuggestionStore.hs",
-      "sha256": "cf3352af4cd08a0b818255e729cabdcef21ce410d2c8d82d78a785e42995f918",
+      "sha256": "b299ef0cb3c24ac9b64d7049b5daa3df0ff762807248601795c757603c2a1603",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -90726,7 +90726,7 @@
     {
       "id": "SURFACE-c38c57423312ecae",
       "path": "tdf-hq/test/TDF/Social/SuggestionStoreSpec.hs",
-      "sha256": "4faba33420f07851daad5e64161910d026e213d4896b16873b9095e6a681702a",
+      "sha256": "4805590f663514fca48b384f87ee2e5357c88ff09a525244adcf853d9376698d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -98135,7 +98135,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bd8b0e140ad76b77c7fcbc519cd04a43663db2eec4dc025ea6b0cbd903794fad",
+      "sourceSha256": "acf17727318b31a21a6456cb79e2fa03911e81d67066bbfe21e1ec84f083ca7e",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -98163,7 +98163,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bd8b0e140ad76b77c7fcbc519cd04a43663db2eec4dc025ea6b0cbd903794fad",
+      "sourceSha256": "acf17727318b31a21a6456cb79e2fa03911e81d67066bbfe21e1ec84f083ca7e",
       "definition": {
         "states": [
           "absent",
@@ -98193,7 +98193,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bd8b0e140ad76b77c7fcbc519cd04a43663db2eec4dc025ea6b0cbd903794fad",
+      "sourceSha256": "acf17727318b31a21a6456cb79e2fa03911e81d67066bbfe21e1ec84f083ca7e",
       "definition": {
         "export": [
           "queued",
@@ -98250,7 +98250,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bd8b0e140ad76b77c7fcbc519cd04a43663db2eec4dc025ea6b0cbd903794fad",
+      "sourceSha256": "acf17727318b31a21a6456cb79e2fa03911e81d67066bbfe21e1ec84f083ca7e",
       "definition": {
         "states": [
           "pending",

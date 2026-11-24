@@ -73,6 +73,7 @@ CREATE TABLE social_v2_preference (party_id BIGINT PRIMARY KEY REFERENCES party(
   personalized BOOLEAN NOT NULL DEFAULT true, closed BOOLEAN NOT NULL DEFAULT false);
 CREATE TABLE social_v2_pair (party_a BIGINT NOT NULL, party_b BIGINT NOT NULL,
   block_a BOOLEAN NOT NULL DEFAULT false, block_b BOOLEAN NOT NULL DEFAULT false,
+  follow_a BOOLEAN NOT NULL DEFAULT false, follow_b BOOLEAN NOT NULL DEFAULT false,
   PRIMARY KEY (party_a, party_b), CHECK (party_a < party_b));
 CREATE TABLE party_follow (follower_party_id BIGINT NOT NULL, following_party_id BIGINT NOT NULL,
   UNIQUE (follower_party_id, following_party_id));
@@ -100,8 +101,11 @@ INSERT INTO auth_provider_identity (issuer, subject, credential_id) VALUES
   ('g','9',9),('g','10',10),('g','11',11);
 INSERT INTO social_v2_preference (party_id, personalized, closed) VALUES
   (7,true,true),(10,false,false);
-INSERT INTO social_v2_pair (party_a, party_b, block_a, block_b) VALUES (1,9,false,true),(2,3,false,false);
-INSERT INTO party_follow VALUES (1,2),(2,3),(2,11),(2,4),(4,3),(9,3),(2,2);
+INSERT INTO social_v2_pair (party_a, party_b, block_a, block_b) VALUES (1,9,false,true);
+INSERT INTO social_v2_pair (party_a,party_b,follow_a,follow_b) VALUES
+  (1,2,true,false),(2,3,true,true),(2,11,true,false),(2,4,true,false),(3,4,false,true),(3,9,false,true);
+-- Reciprocal legacy rows and a legacy-only path must never contribute score.
+INSERT INTO party_follow VALUES (1,2),(2,3),(2,11),(2,4),(4,3),(9,3),(2,2),(2,1),(1,10);
 """
 
 RUN_START = "'2026-11-21 08:00:00+00'"
@@ -111,15 +115,16 @@ SUPPORT = "'{1,2,3,11}'"
 SCENARIOS = (
     # name, statements applied after the stored result, usable, served
     ('baseline', '', 1, [3, 11]),
-    ('viewer now follows a candidate', 'INSERT INTO party_follow VALUES (1,3);', 1, [11]),
-    ('a candidate now follows the viewer', 'INSERT INTO party_follow VALUES (11,1);', 1, [3]),
+    ('legacy mirror cannot suppress a candidate', 'INSERT INTO party_follow VALUES (1,3),(3,1);', 1, [3, 11]),
+    ('viewer now follows a candidate', 'INSERT INTO social_v2_pair (party_a,party_b,follow_a) VALUES (1,3,true);', 1, [11]),
+    ('a candidate now follows the viewer', 'INSERT INTO social_v2_pair (party_a,party_b,follow_b) VALUES (1,11,true);', 1, [3]),
     ('policy refuses a candidate', 'INSERT INTO refused VALUES (1,3);', 1, [11]),
     ('policy refuses for another viewer only', 'INSERT INTO refused VALUES (2,3);', 1, [3, 11]),
     ('evidence closed its profile',
      'INSERT INTO social_v2_preference (party_id, closed) VALUES (2, true);', 0, None),
     ('evidence blocked the viewer',
      'INSERT INTO social_v2_pair VALUES (1,11,false,true);', 0, None),
-    ('viewer blocked evidence', 'INSERT INTO social_v2_pair VALUES (1,2,true,false);', 0, None),
+    ('viewer blocked evidence', 'UPDATE social_v2_pair SET block_a=true,follow_a=false WHERE party_a=1 AND party_b=2;', 0, None),
     ('evidence was deactivated', 'UPDATE user_credential SET active = false WHERE party_id = 3;', 0, None),
     ('evidence lost its verified identity',
      'DELETE FROM auth_provider_identity WHERE credential_id = 2;', 0, None),
@@ -208,7 +213,7 @@ def main():
         'OPTEDOUT': [(10,)], 'BLOCKS': [(1, 9)], 'UNWRITABLE': [(0,)], 'WRITABLE': [(1,)],
         'VERIFIED': [(13,)],
         'ELIGIBLERESET': [(party,) for party in sorted(EXPECTED_ELIGIBLE_AFTER_RESET)],
-        'FOLLOWS': [(1, 2), (2, 2), (2, 3), (2, 4), (2, 11), (4, 3), (9, 3)],
+        'FOLLOWS': [(1, 2), (2, 3), (2, 4), (2, 11), (3, 2), (4, 3), (9, 3)],
         'RUN': [(1,)], 'RUN2': [(2,)], 'NOROW': [(0,)], 'LIMIT': [(3,)], 'LEFT': [(1, 0, 0)],
     }
     for index, (_, _, usable_now, served_now) in enumerate(SCENARIOS):

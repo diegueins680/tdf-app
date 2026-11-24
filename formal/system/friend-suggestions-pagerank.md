@@ -2,7 +2,7 @@
 
 `GET /social/suggestions` keeps its route, authentication and array shape. Behind
 `FRIEND_SUGGESTIONS_PAGERANK_ENABLED`, off by default, its order comes from a
-personalized PageRank over `party_follow` computed by a nightly run, instead of the
+personalized PageRank over actor-confirmed `social_v2_pair` follows computed by a nightly run, instead of the
 second-degree count. Directory ranking is not touched.
 
 The owner approved the rule, the constants and the nine decisions of the proposal on
@@ -20,7 +20,7 @@ For a viewer `v`:
   (`social_v2_preference.closed`), and was created at least `MIN_AGE = 7 days` before
   the run started (`party.created_at`).
 - **Viewer graph `G_v`.** Nodes: `E` minus every party with a block towards or from `v`
-  (`social_v2_pair.block_a OR block_b`). Edges: `party_follow` rows whose two ends are
+  (`social_v2_pair.block_a OR block_b`). Edges: each true `follow_a` contributes A → B and each true `follow_b` contributes B → A, when both ends are
   both nodes, without self-links. An excluded party has no node, so it has no score and
   no edge through which score could pass.
 - **Walk.** `p_0 = e_v` (all mass on the viewer). With damping `d = 0.85`:
@@ -112,7 +112,7 @@ reals, bounded graphs, one step), **bounded model** (Alloy, graph structure only
 | Property | Evidence | What it does not cover |
 |---|---|---|
 | Excluded parties never carry score: a non-node holds no score, and follow rows touching a non-node do not change a step | Proved by Z3 for every viewer, node set and follow relation up to 4 accounts (`scripts/verify-friend-suggestion-pagerank.py`), with a control that admits follows into excluded accounts. Bounded model in Alloy up to 5 accounts (`formal/event-operations/FriendSuggestionGraph.als`) for the graph structure, blocks included. Tested by QuickCheck on `TDF.Social.SuggestionRank` | Larger graphs; the Haskell and SQL text (the Z3 step is a hand translation of `walkStep`) |
-| Excluded parties never appear: which accounts are eligible, and which stored candidates are served | Tested on PostgreSQL with the statements extracted from the Haskell source (`scripts/test-friend-suggestions-sql.py`): 13 accounts, 15 read scenarios and the password-reset write | Not proved. In that test `social_v2_profile_eligible` is a stand-in with the migrated signature. The same statements were also executed once, by hand, on a database built by the complete migration rehearsal (real function, real tables): they run and return no rows there, because that fixture has no eligible account. No scenario was checked against the real policy function |
+| Excluded parties never appear: which accounts are eligible, and which stored candidates are served | Tested on PostgreSQL with the statements extracted from the Haskell source (`scripts/test-friend-suggestions-sql.py`): 13 accounts, 16 read scenarios and the password-reset write | Not proved. In that test `social_v2_profile_eligible` is a stand-in with the migrated signature. The same statements were also executed once, by hand, on a database built by the complete migration rehearsal (real function, real tables): they run and return no rows there, because that fixture has no eligible account. No scenario was checked against the real policy function |
 | `p_t` is a probability distribution for every `t`, dead ends included | Proved by Z3 as a one-step inductive invariant up to 4 accounts, with a control that drops the dead-end return. Tested by QuickCheck: exact over `Rational` after every step; over `Double` within `1e-9` after 100 steps | The `Double` tolerance is tested, not proved. Induction over `t` is the hand argument above |
 | Convergence: `norm1(p_T - p*) <= 2e-7` | Hand proof above. Proved by Z3: the one-step contraction (symbolic up to 3 accounts; for 4 accounts every one of the 4096 follow relations with the viewer fixed and every account a node), and `2 * 0.85^100 < 2e-7`; a control with factor 0.84 is refuted. Tested by QuickCheck over `Rational` | General size and the induction rest on the hand proof. `Double` rounding is outside the proof |
 | Fake follows: accounts that are too new or unverified cannot change any viewer's graph, whatever they follow and whoever is made to follow them | Bounded model in Alloy up to 5 accounts; controls that remove the age filter or the email filter each produce a counterexample. Tested by QuickCheck | Bounded. Says nothing about accounts that pass both filters. "Same graph gives same order" is the function signature, not a model result |
@@ -145,9 +145,7 @@ later changes its address.
 - This reverses the retirement recorded in `docs/social/relationship-read-boundary.md`
   (2026-09-16) for viewers who are served a personalized result; that document still
   describes the fallback.
-- Mobile reads the same route with a hand-written type and would show "0" mutual
-  connections for a personalized entry. The flag must stay off until Mobile ignores the
-  count when `sfReason` is `network`.
+- Clients that render the network reason request `?networkReason=true`. All other clients receive the existing fallback, including older Mobile releases.
 - Account age is `party.created_at`; credentials have no creation time. A CRM contact
   created long ago that registers today counts as old.
 - Rule 5 is coarse: one account closing its profile sends every viewer it carried score
@@ -156,23 +154,9 @@ later changes its address.
   receive.
 - The filters stop only accounts that fail them. An account that waits seven days and
   signs in with Google, or resets its password, is a normal node; it gains score only if a node follows it.
-- **The follow rows are not all consented, and this blocks turning the flag on.**
-  `TDF.Social.RelationshipWrites.addFriend` (`POST /social/friends/:id`) writes both
-  `actor -> peer` and `peer -> actor` in one call, without the peer's agreement, unless
-  the pair already has canonical social-v2 state (`social_v2_lock_legacy_write`).
-  `TDF.Social.FanEffects.populateClub` does the same between fan-club members in the
-  never-activated stage. An account that passes both filters can therefore make any
-  node "follow" it and receive part of that node's score in every walk that reaches
-  the node. `party_follow` does not record who wrote a row, so the walk cannot tell
-  such rows apart. These two are the only writers of `party_follow` in the backend, so
-  every row has a reverse row written by the same caller: the relation is in effect
-  undirected, and for each pair one side did not choose it. No rule over these rows
-  alone can separate chosen follows from imposed ones. None of the evidence above covers this: the Alloy model and the
-  tests take the follow rows of eligible accounts as given. The writer is listed as an
-  incomplete follow-up in `docs/social/relationship-read-boundary.md` and is not
-  changed here. The flag should stay off until the writer stops creating the reverse
-  row, or the walk reads a relation that only the follower can write.
-- Whether social-v2 is activated in production, and the size of `party_follow`, were
+- Each actor sets their own follow direction through the canonical social mutation. Legacy
+  friend, vCard and fan-club rows have no actor provenance and contribute no edges.
+- Whether social-v2 is activated in production, and the count of actor-confirmed follows, were
   not checked (the production read was denied). If activated, the fallback is `[]`.
   One run costs about `100 * follows` map updates per viewer, in memory.
 - The run starts only if the flag is on when the API starts; turning the flag on needs

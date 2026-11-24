@@ -34,7 +34,7 @@ application env captured = serveWithContext (Proxy @ProtectedRelationships) cont
     (`runReaderT` env) (\user -> relationshipList user "followers" (throwError err501)
       :<|> relationshipList user "following" (throwError err501)
       :<|> relationshipList user "friends" (throwError err501)
-      :<|> suggestions user (throwError err501))
+      :<|> const (suggestions user (throwError err501)))
   where
     context = case captured of
       Nothing -> authContext env
