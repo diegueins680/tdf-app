@@ -8727,7 +8727,7 @@
     {
       "id": "SURFACE-2e3549439fba7b8e",
       "path": "tdf-hq-ui/src/api/client.ts",
-      "sha256": "341b56ac7ceead3b110e3fdb58181730a05c10dc0925a5824ad73815e2a5d323",
+      "sha256": "85285706aed397034d2bfd9797ae9661f2adfbbe9ed13f81e23d2ea685a4b155",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8745,13 +8745,13 @@
     {
       "id": "SURFACE-4f1a575585c3cc83",
       "path": "tdf-hq-ui/src/api/commerceOperations.test.ts",
-      "sha256": "24fb56c61fa897f389edf3d2efdf72020f3dd3f16ce53559d8113d3c072c20fa",
+      "sha256": "db89fb6aced78a08f9e13cdc47da3d97b27317be3adf6480e0322cfca0f41b57",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-53e830f66e47cd69",
       "path": "tdf-hq-ui/src/api/commerceOperations.ts",
-      "sha256": "ebbfafeaffec0931711e16124eb58d1f3772d8d0c9782d8d99405d4c16abb97c",
+      "sha256": "6d0add34e48749816dd4626dcb9c7b6923931e2a200ac53444afb6489c62fc66",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11715,13 +11715,13 @@
     {
       "id": "SURFACE-39fe3c9e56197ba9",
       "path": "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
-      "sha256": "24b4e9da00d5f6f970774d2300d85e78b3b6364988106b64b7226efe19d91c9c",
+      "sha256": "5c237e12aeb8516505d7b504df4cde75d3aa7565cc26e957c464e59b448f6b5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4863f94a96956295",
       "path": "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
-      "sha256": "6f1e8487723dcc8da6f717139f89d71d2c4ffdba924a5709ec170a2a0634168c",
+      "sha256": "72be023b6167d16d705ca7231d9883f4a296f7a2b32d3d246a01306e6abdece3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25850,7 +25850,7 @@
     },
     {
       "path": "docs/payments/ecuador-payment-review-2026-11-24.md",
-      "sha256": "b2be8605ff19dfeed20daac31f6e194eec8a6c244dc3b3e5419cf7841d5b4586",
+      "sha256": "ae55aa0f0fa02fd163db1fe7dcaf7920b529d964d081a69852c7e77a4a07abdf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32962,7 +32962,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "0f9001fca798b41f65baf49ecf14fe9fc9e73fb3a291b0d93e0af6e12944dd4b",
+      "sha256": "44b9d51a620d26f62d97ba46252f060016397b1e1468d180c74ca1a28882d7e9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

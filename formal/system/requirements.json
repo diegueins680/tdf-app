@@ -29727,6 +29727,72 @@
         "reason": "Specification, SQL, fold and handler tested; box proved in real arithmetic and model-checked; the flag is disabled, and enabling it and confirming production data are owner steps."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "PAY-COMMERCE-OVERVIEW-PRECISION-001",
+      "title": "Display exact signed minor units in the commerce operations overview",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "Each monetary field in the administrative commerce overview displays the signed Int64 minor-unit value for its reported currency or an unavailable marker.",
+      "authority": "Payment operations reporting and financial accuracy requirements for the Ecuador payment review.",
+      "source": "docs/payments/ecuador-payment-review-2026-11-24.md",
+      "contract": "docs/payments/ecuador-payment-review-2026-11-24.md",
+      "property": "For an admitted signed Int64 value n and currency with d default fraction digits, the displayed amount represents n / 10^d exactly, including negative subunit amounts.",
+      "actors": [
+        "Authorized commerce operations reader"
+      ],
+      "preconditions": [
+        "The report supplies an integer number of minor units and a currency. The browser supports BigInt and Intl.NumberFormat."
+      ],
+      "inputs": [
+        "Overview JSON fields ending in Minor, currency code and display locale"
+      ],
+      "state": {
+        "read": "Raw JSON or cached overview value",
+        "terminal": [
+          "Exact localized amount",
+          "Unavailable amount"
+        ]
+      },
+      "allowedTransitions": [
+        "Read a safe JSON integer directly or retain its exact raw integer token when available.",
+        "Validate signed range and split minor units into integer and fractional components for rendering."
+      ],
+      "forbiddenTransitions": [
+        "Display a decoded unsafe number as an exact amount without its source token.",
+        "Round a signed integer balance through a floating-point conversion to major units."
+      ],
+      "effects": [
+        "Read and render the existing administrative overview."
+      ],
+      "authorization": "The existing administrative route controls access to the report.",
+      "privacy": "The regression suite uses synthetic financial totals.",
+      "concurrency": "Each response is interpreted independently. The read establishes no cross-report snapshot.",
+      "idempotency": "Repeated rendering of the same values and locale yields the same amount without financial side effects.",
+      "failure": "Out-of-range, malformed or unrecoverably imprecise values render an em dash.",
+      "recovery": "Refresh the authorized report from its original source. Existing financial records retain their historical values.",
+      "observability": "Regression cases verify JSON source preservation, both signed limits, negative subunit display, zero- and three-decimal currencies and unavailable values.",
+      "implementation": [
+        "tdf-hq-ui/src/api/client.ts",
+        "tdf-hq-ui/src/api/commerceOperations.ts",
+        "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/api/commerceOperations.test.ts",
+        "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Jest tests of the overview reader and its formatter. TypeScript checks the finance consumer.",
+      "evidence": "docs/payments/ecuador-payment-review-2026-11-24.md",
+      "status": "specified and implemented",
+      "confidence": "Local regression coverage of the documented representations and currencies.",
+      "ambiguity": [
+        "If a producer rounds a value before serialization, the browser cannot reconstruct the original integer."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite parser and display tests. Bank reconciliation and production acceptance require separate merchant evidence."
+      }
     }
   ]
 }

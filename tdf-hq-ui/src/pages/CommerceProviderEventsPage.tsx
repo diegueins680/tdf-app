@@ -104,12 +104,21 @@ const formatTimestamp = (value: string | null | undefined, locale: string) => {
   return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString(locale);
 };
 
-const formatMinor = (minor: number, currency: string, locale: string) => {
-  try {
-    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(minor / 100);
-  } catch {
-    return `${currency} ${(minor / 100).toFixed(2)}`;
-  }
+export const formatMinor = (minor: number | string, currency: string, locale: string) => {
+  const raw = typeof minor === 'number' && Number.isSafeInteger(minor) ? String(minor) : minor;
+  if (typeof raw !== 'string' || !/^-?(0|[1-9][0-9]{0,18})$/.test(raw) || !/^[A-Z]{3}$/.test(currency)) return '—';
+  const amount = BigInt(raw);
+  if (amount < -(2n ** 63n) || amount > 2n ** 63n - 1n) return '—';
+  const formatter = new Intl.NumberFormat(locale, { style: 'currency', currency });
+  const decimals = formatter.resolvedOptions().maximumFractionDigits ?? 2;
+  const scale = 10n ** BigInt(decimals);
+  const whole = amount / scale;
+  const fraction = (amount < 0n ? -amount : amount) % scale;
+  const fractionDigits = new Intl.NumberFormat(locale, {
+    useGrouping: false, minimumIntegerDigits: Math.max(1, decimals),
+  }).format(fraction);
+  return formatter.formatToParts(amount < 0n && whole === 0n ? -0 : whole)
+    .map(part => part.type === 'fraction' ? fractionDigits : part.value).join('');
 };
 
 const overviewRecordCount = (overview: CommercePaymentOverview | undefined) => ({

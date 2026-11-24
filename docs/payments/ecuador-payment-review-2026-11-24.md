@@ -87,7 +87,7 @@ The diagrams and transition tables in ADRs 0100, 0101, 0104 and 0115 remain auth
 
 ## Datafast recovery after a database restore
 
-Redelivery and fresh-process discovery have separate outcomes. After a pre-confirmation database restore, the canonical writer applied one of eight submitted copies of synthetic Datafast evidence. The harness supplied that evidence from memory. A separate 24 November rehearsal restored the same class of snapshot, started a fresh query worker with a ready test merchant and recovery enabled, and observed zero claimed jobs and zero transport calls. The saved checkout remained processing, with zero paid and zero receipts. The worker currently schedules PayPhone and PlaceToPay. A saved Datafast binding alone cannot recover an approval without a fresh authenticated status result or independent redelivery. For attempts absent from the snapshot, obtain independent provider transaction/settlement evidence. Keep the release qualification open until a fresh process can recover the saved charge and preserve the domain-specific fulfillment and accounting effects. [Fresh-process evidence](https://github.com/diegueins680/tdf-app/pull/826) · [Rehearsal design and earlier results](../evidence/datafast-payment-recovery-2026-11-18.md)
+Redelivery and fresh-process discovery have separate outcomes. After a pre-confirmation database restore, the canonical writer applied one of eight submitted copies of synthetic Datafast evidence. The harness supplied that evidence from memory. A separate 24 November rehearsal restored the same class of snapshot, started a fresh query worker with a ready test merchant and recovery enabled, and observed zero claimed jobs and zero transport calls. The saved checkout remained processing, with zero paid and zero receipts. The worker currently schedules PayPhone and PlaceToPay. A saved Datafast binding alone cannot recover an approval without a fresh authenticated status result or independent redelivery. For attempts absent from the snapshot, obtain independent provider transaction/settlement evidence. The separate Datafast recovery draft adds durable discovery and reports synthetic qualification of supported active holds. At commit 9c3a3b46d the PR reported eight passing PostgreSQL 16.10 restore-and-restart cases with synthetic transport, covering ticket, course, booking and Domo flows. Merchant certification and release qualification remain open. The four payment drafts reviewed here do not include that worker. [Datafast recovery draft #831](https://github.com/diegueins680/tdf-app/pull/831). [Fresh-process evidence](https://github.com/diegueins680/tdf-app/pull/826) · [Rehearsal design and earlier results](../evidence/datafast-payment-recovery-2026-11-18.md)
 
 ## Verification and remaining gates
 
@@ -115,3 +115,79 @@ Date 2026-11-24 UTC. Root baseline `736e84f597a9c50e71de062830a98a58f7d1d028`. L
 | `node scripts/check-generated-api.mjs`, `node scripts/check-api-availability.mjs`, `python3 scripts/test-checkout-money-verifier.py` | Both committed generated clients at the pinned revisions passed drift checks. API availability passed; eight money-verifier checks passed. |
 | 06:00, production public GET `/commerce/payment-capabilities` | 51 successful read-only requests. Two countries × eight flows × three common methods, plus three additional EC ticket methods. |
 | Credentialed provider tests and staging | No new run. Historical PayPhone Button Prueba evidence is linked above. Current checkout-to-refund, worker Confirm, statement settlement and seller payout require the accounts listed above. |
+
+### Final qualification on the reviewed stack
+
+At the code revisions below, a fresh isolated root and a fresh pinned mobile installation each ran `npm ci --ignore-scripts --no-audit`. The locked web i18next version was 23.16.8. The first offline root install lacked a cached dependency, so installation used the project registry. Reused installations from the earlier tests were superseded by these results. Times are UTC on 24 November.
+
+| Time | Environment and command | Outcome |
+|---|---|---|
+| 06:27–06:32 | Web, exact payment suites listed below; `npm --prefix tdf-hq-ui run typecheck`; ESLint on all modified web source and tests | 263 tests in 26 suites passed. Typecheck and lint passed. A preliminary full-path filter also matched the worktree directory; it was stopped and rerun with exact paths. |
+| 06:29–06:31 | Native pinned checkout, `npm test -- --runTestsByPath __tests__/TicketCheckout.test.tsx __tests__/ticketCheckoutIdempotency.test.ts` | 22 tests in two suites passed. |
+| 06:29–06:31 | `REQUIRE_MOBILE_WORKSPACE=1 npm run generate:api && node scripts/check-generated-api.mjs` | Regenerated both clients; byte-for-byte identical to their committed revisions. An earlier run without installed native dependencies skipped native generation. |
+| 05:44–06:35 | `TDF_PROVIDER_RETRY_DATABASE_URL=postgresql://postgres@127.0.0.1:56284/tdf_provider_retry_test sh scripts/test-provider-retry-runtime.sh` | 267 migrations applied and replayed. Full Haskell backend and test executable built. 533 examples, zero failures, one isolated restore case pending in this invocation. The script exited successfully after mandatory rollback checks. |
+| 06:35–06:42 | Dedicated PG16 UTF-8 loopback cluster on port 56285, role synthetic, `sh scripts/load-payment-test-schema.sh` followed by `psql -f scripts/__tests__/fixtures/provider-domain-fixtures.sql`. Run the compiled test with `TDF_RECOVERY_RESTORE_LAB=synthetic-loopback-only TDF_PROVIDER_RETRY_DATABASE_URL=postgresql://synthetic@127.0.0.1:56285/tdf_provider_retry_test` and `--match='payment snapshot restore laboratory' --fail-on=empty +RTS -N2 -RTS`. | The separately gated case passed, one example and zero failures. The real dump/restore reverted a synthetic Datafast capture. Eight concurrent recovery attempts applied that payment once. The initial SQL_ASCII fixture and then a missing test-only schema required correction before the successful run. |
+| 06:35 | Compiled `tdf-hq-test --match=validatePayPal --fail-on=empty +RTS -N2 -RTS` and `tdf-hq-test --match=validateDatafast --fail-on=empty +RTS -N2 -RTS` | 17 PayPal and 18 Datafast validation examples passed. |
+| 06:02–06:32 | `node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output /private/tmp/tdf-payments-20261124-catalog.json`; `python3 scripts/check-state-machines.py --static` | Strict catalog gate passed with pinned mobile initialized; 12 state-machine validators matched their models. |
+
+The exact web invocation was
+
+```sh
+npm --prefix tdf-hq-ui test -- --runInBand --runTestsByPath src/__tests__/DatafastReturnPage.test.tsx \
+  src/__tests__/DomoQuoteCheckoutPage.test.tsx \
+  src/api/checkoutPaymentAlternatives.test.ts \
+  src/api/commerceOperations.test.ts \
+  src/api/paymentCapabilities.test.ts \
+  src/api/providerPaymentSessions.test.ts \
+  src/components/RefundManagementPanel.logic.test.ts \
+  src/components/RefundManagementPanel.test.tsx \
+  src/components/StripeCheckoutModal.logic.test.ts \
+  src/components/__tests__/RefundManagementPanel.test.tsx \
+  src/components/__tests__/StripeCheckoutModal.test.tsx \
+  src/components/events/EventManualPaymentsPanel.test.tsx \
+  src/components/payments/HeldRefundRecoveryPanel.test.tsx \
+  src/components/payments/HostedProviderCheckout.test.tsx \
+  src/components/payments/PaymentAlternativesNotice.test.tsx \
+  src/components/payments/ProviderQueryRecoveryPanel.test.tsx \
+  src/components/payments/ReconciliationEvidencePanel.test.tsx \
+  src/components/payments/StripePaymentAlternativesNotice.test.tsx \
+  src/components/payments/TicketBankTransferPanel.test.tsx \
+  src/features/marketplace/agreementPayment.test.ts \
+  src/i18n/paymentLocales.test.ts \
+  src/pages/CommerceProviderEventsPage.test.tsx \
+  src/pages/PaymentsPage.partySelector.test.ts \
+  src/pages/PaymentsPage.recovery.test.tsx \
+  src/pages/ProviderPaymentReturnPage.test.tsx \
+  src/utils/providerPaymentResume.test.ts
+```
+
+Review in order. Each PR targets its predecessor. Retarget after the corresponding parent lands under the normal release process.
+
+| Draft | Implementation commit | Scope |
+|---|---|---|
+| [#827](https://github.com/diegueins680/tdf-app/pull/827) | `afd5e941b` | Canonical retry authority, market assessment and operator documentation |
+| [#828](https://github.com/diegueins680/tdf-app/pull/828) | `b9a8a6f84` | PayPhone create-response binding and adapter contract tests |
+| [#829](https://github.com/diegueins680/tdf-app/pull/829) | `dca806700` | Buyer recovery, stale refresh, redirect referrers and compatible fallback |
+| [#830](https://github.com/diegueins680/tdf-app/pull/830) | `5c5337c56` | Exact signed minor-unit display for finance overview, including fees, refunds, commissions, settlements and seller balances |
+
+## Continuation on main 39935739
+
+The payment drafts incorporated main `39935739e2def3817eaa2b84229cc2cc4b4941f1` after #757 merged. The common lockfile now installs i18next 26.3.4. The repository's exact Safe Install audit command, `./node_modules/.bin/audit-ci --config ./audit-ci.jsonc`, passed locally. Initial runs on the previous base had failed on GHSA-6jcc-5g8w-32mx. [Initial audit failure](https://github.com/diegueins680/tdf-app/actions/runs/45340082939) · [Merged dependency repair](https://github.com/diegueins680/tdf-app/pull/757)
+
+On 24 November at 06:51–06:55 UTC, a mocked regression showed that a failed payment-status GET stopped polling and left a stale provider continuation available. The fix in #829 serializes manual and timer-driven reads, retries the original checkout and attempt after a temporary error, and withholds continuation until the next successful check. Once verified, a terminal result stops polling. The focused web run passed 42 examples in the hosted checkout and return-page suites, including the interrupted and concurrent-refresh cases. The pre-fix regression failed. The updated status behavior uses the existing API and storage format. [Checkout repair](https://github.com/diegueins680/tdf-app/commit/c3dda60ca)
+
+At 06:56–06:59 UTC the combined stack (finance implementation `52a4a3a8a` and updated checkout parent `c3dda60ca`) passed 265 web tests in the same 26 suites listed above, 22 native ticket tests, 11 readiness/report contract checks, and web typechecking. Both API clients regenerated byte-for-byte from OpenAPI. ESLint passed for both edited checkout files. The source, SQL and backend test trees matched the previously qualified payment stack. No new merchant or staging transaction ran.
+
+The production-mode web build also passed six synthetic Chromium checks for guest ticket QR downloads and the PayPhone origin-only referrer following a private ticket reload. Desktop, phone and tablet each exercised both cases. The command was `playwright test --config=/private/tmp/tdf-payments-continue-playwright.mjs --workers=1 --project=chromium-desktop --project=chromium-phone --project=chromium-tablet ticket-credential.spec.mjs`. The temporary configuration inherited the repository's Playwright settings and launched this worktree's own build on loopback port 42682. Provider requests were intercepted by the repository fixture. [Browser cases](../../e2e/web/ticket-credential.spec.mjs)
+
+### Buyer return after an interrupted status request
+
+On 24 November 2026, a desktop Chromium regression on the previous build reached the PayPhone return page and remained at the status-retry button after a synthetic HTTP 503. A separate unit regression found that a recently cached no-charge result could be displayed without reading the current attempt. At commit `4672faadf` the return page revalidates on entry, uses the session client's bounded retry policy for transient reads, and keeps the original recovery lock while offline. The explicit retry button remains available if the automatic attempts are exhausted. [Return-page change and regressions](https://github.com/diegueins680/tdf-app/commit/4672faadf817b71061f7faa65c60d99e384e3f2f)
+
+The production-mode browser fixture now starts a private ticket checkout, opens the synthetic hosted PayPhone page, and navigates back in the same tab. The first status read receives a 503. The second read presents a synthetic verified payment. Desktop, phone and tablet each completed the flow with one creation and two reads of the original attempt, sending the private lookup capability in its request header. None of those requests reached a payment provider. The three guest QR-download checks also passed. [Browser regression](../../e2e/web/ticket-credential.spec.mjs)
+
+At 07:12–07:16 UTC the two focused suites passed 44 tests. The combined stack reran the 26-suite Jest command above and passed 267 tests, as well as TypeScript and the generated-client drift check. The combined browser build used `npm --prefix tdf-hq-ui run build:e2e`; initial JavaScript was 394,611 gzip bytes. The six Chromium cases passed with `playwright test -c /private/tmp/tdf-payments-return-top-browser.mjs --workers=1 --project=chromium-desktop --project=chromium-phone --project=chromium-tablet ticket-credential.spec.mjs`. The temporary config used the repository defaults and served this build on loopback port 42683. One preliminary invocation loaded the runner and fixture from different worktrees and failed test collection; the recorded run used the same worktree for both.
+
+### Administrative overview amount precision
+
+The commerce operations overview reads each settlement, reconciliation and other monetary total in the reported currency's minor units. For example, USD −1 displays as −$0.01 and JPY 321 as ¥321. The browser retains an unsafe JSON integer's exact source text when available. The formatter accepts signed Int64 values, including both limits, and displays an em dash for an unsafe decoded number whose original text is unavailable. The report reader and formatter have a dedicated canonical requirement, PAY-COMMERCE-OVERVIEW-PRECISION-001. The original hosted repository-quality run found four finance source and test files with missing mappings. [Hosted check](https://github.com/diegueins680/tdf-app/actions/runs/45346980217/job/138288658999)
