@@ -1683,6 +1683,10 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyCountryIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyRegionIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyCityIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyGenreIds'
       responses:
         '200':
           description: Matching events
@@ -6286,6 +6290,10 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyCountryIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyRegionIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyCityIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyGenreIds'
       responses:
         '200':
           description: Active radio streams in deterministic update order
@@ -8784,6 +8792,17 @@ paths:
   /directory/search: { $ref: './directory.yaml#/paths/~1directory~1search' }
   /directory/suggestions: { $ref: './directory.yaml#/paths/~1directory~1suggestions' }
   /directory/taxonomies: { $ref: './directory.yaml#/paths/~1directory~1taxonomies' }
+  /taxonomy/filter-options: { $ref: './taxonomy.yaml#/paths/~1taxonomy~1filter-options' }
+  /genres/suggestions/check: { $ref: './taxonomy.yaml#/paths/~1genres~1suggestions~1check' }
+  /genres/suggestions: { $ref: './taxonomy.yaml#/paths/~1genres~1suggestions' }
+  /genres/suggestions/mine: { $ref: './taxonomy.yaml#/paths/~1genres~1suggestions~1mine' }
+  /admin/genre-suggestions: { $ref: './taxonomy.yaml#/paths/~1admin~1genre-suggestions' }
+  /admin/genre-suggestions/{suggestionId}/approve: { $ref: './taxonomy.yaml#/paths/~1admin~1genre-suggestions~1{suggestionId}~1approve' }
+  /admin/genre-suggestions/{suggestionId}/reject: { $ref: './taxonomy.yaml#/paths/~1admin~1genre-suggestions~1{suggestionId}~1reject' }
+  /admin/genre-suggestions/{suggestionId}/merge: { $ref: './taxonomy.yaml#/paths/~1admin~1genre-suggestions~1{suggestionId}~1merge' }
+  /radio/streams/facets: { $ref: './taxonomy.yaml#/paths/~1radio~1streams~1facets' }
+  /music/facets/releases: { $ref: './taxonomy.yaml#/paths/~1music~1facets~1releases' }
+  /social-events/events/facets: { $ref: './taxonomy.yaml#/paths/~1social-events~1events~1facets' }
   /directory/profiles/{slug}: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{slug}' }
   /directory/party-profiles/{partyId}: { $ref: './directory.yaml#/paths/~1directory~1party-profiles~1{partyId}' }
   /directory/profiles/{slug}/reviews: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{slug}~1reviews' }

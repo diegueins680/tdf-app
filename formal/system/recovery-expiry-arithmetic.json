@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "ce2bae809a91a14505ee64239b126fcc14e513490d27af06366b0dded5979bca",
+    "tdf-hq/tdf-hq.cabal": "903875f4791eb97ba37309de7e409343fab2dc5757ebb604ee815c862ca071bb",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -1077,6 +1077,15 @@
       "currentSha256": "ce2bae809a91a14505ee64239b126fcc14e513490d27af06366b0dded5979bca",
       "change": "Register the loudness library and test modules alongside the directory, venue and artist changes on main.",
       "semanticReview": "The Cabal diff against the reviewed main revision adds only TDF.MusicRelease.Loudness and TDF.MusicRelease.LoudnessSpec to their existing module lists. Dependencies, flags and build options are identical to main.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "228ab63e448b93970aa0bb32af6320c4cfb88e57",
+      "previousSha256": "ce2bae809a91a14505ee64239b126fcc14e513490d27af06366b0dded5979bca",
+      "currentSha256": "903875f4791eb97ba37309de7e409343fab2dc5757ebb604ee815c862ca071bb",
+      "change": "Register the taxonomy API, handlers, filter model and two specification modules.",
+      "semanticReview": "Compared the Cabal diff against main. Only the module lists change. Package dependencies, constraints, flags and build options remain identical.",
       "qualification": "This review covers the conditional solver source context."
     }
   ]
