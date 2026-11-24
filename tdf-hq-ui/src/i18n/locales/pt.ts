@@ -63,7 +63,7 @@ const pt = {
     bookingItems: 'reservas', classItems: 'aulas', trackItems: 'faixas',
     statuses: { confirmed: 'Confirmada', confirmada: 'Confirmada', scheduled: 'Agendada', programada: 'Agendada', mix: 'Mixagem' },
   },
-  sessionMenu: { noRoles: 'Nenhuma função atribuída', logout: 'Sair', open: 'Abrir menu da sessão' },
+  sessionMenu: { help: 'Ajuda e conta', manual: 'Manual', docs: 'Documentação', about: 'Sobre', security: 'Segurança', whatsapp: 'Preferências do WhatsApp', deleteAccount: 'Excluir minha conta', noRoles: 'Nenhuma função atribuída', logout: 'Sair', open: 'Abrir menu da sessão' },
   preferences: {
     title: 'Idioma e região', subtitle: 'Escolha como idioma, dinheiro, datas e horários são exibidos.',
     language: 'Idioma', currency: 'Moeda', timezone: 'Fuso horário', country: 'Código do país',
