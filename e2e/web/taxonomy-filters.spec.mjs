@@ -134,6 +134,30 @@ test('a mirrored page follows a second tab and can clear only its own filters @c
   await second.close();
 });
 
+test('filter controls stay in place while the panel opens with ordinary motion @critical', async ({ page, baseURL }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await fixture(page, baseURL);
+  await page.goto('/fans');
+  const filters = page.getByTestId('community-taxonomy-filters');
+  const toggle = filters.getByRole('button', { name: 'Filtrar por lugar y género' });
+  const scroll = await toggle.evaluate((button) => new Promise((resolve) => {
+    const section = button.closest('section');
+    const observer = new MutationObserver(() => {
+      const panel = document.getElementById(button.getAttribute('aria-controls'));
+      if (!panel || panel.scrollHeight <= panel.clientHeight) return;
+      observer.disconnect();
+      // A browser can scroll a clipped input into view as it receives focus.
+      panel.scrollTop = panel.scrollHeight;
+      resolve(panel.scrollTop);
+    });
+    observer.observe(section, { childList: true, subtree: true, attributes: true });
+    button.click();
+  }));
+  expect(scroll).toBe(0);
+  await filters.getByRole('checkbox', { name: 'Solo en esta sección' }).check();
+  await expect(page.locator('#community-taxonomy-panel')).toHaveCSS('overflow-y', 'visible');
+});
+
 test('legacy genre links override a different shared genre on Community and global search @critical', async ({ page, baseURL }) => {
   const api = await fixture(page, baseURL);
   await page.addInitScript((genre) => localStorage.setItem('tdf-hq-ui/taxonomy-filters/v1', JSON.stringify({

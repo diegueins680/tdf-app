@@ -3972,7 +3972,7 @@
     {
       "id": "SURFACE-238c10bc24bd2a0a",
       "path": "e2e/web/taxonomy-filters.spec.mjs",
-      "sha256": "4f0f351cff4d5c7c6046b687a93ac4f51ac088b682ecbe21076fe3f50913a91c",
+      "sha256": "72b551dc4386787a8b1ef520230cbfb57357db7e6e0dbee150a801dbcc8e897f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10704,7 +10704,7 @@
     {
       "id": "SURFACE-88d4e0a7d6283fb4",
       "path": "tdf-hq-ui/src/components/taxonomyFilters/TaxonomyFilterBar.tsx",
-      "sha256": "4e55ca15b5831599453af6b0dc6ae3d119190e7bd8f607fb1cb65cd7048ed771",
+      "sha256": "787688d3ac83e5ad9d9a3110fc70f1c5156d3fc146b2a18961a4850d142ad970",
       "semanticConformance": "not-established-by-discovery"
     },
     {
