@@ -1,6 +1,7 @@
 import mobileApp from './mobileApp.es';
 import accountDeletion from './accountDeletion.es';
 import directorySearch from './directorySearch.es';
+import taxonomyFilters from './taxonomyFilters.es';
 import marketplace from './marketplace.es';
 import authEntry from './authEntry.es';
 const es = {
@@ -9,6 +10,7 @@ const es = {
   records: { videoUnavailable: 'Video no disponible en la fuente', thumbnailUnavailable: 'Miniatura no disponible', loadingThumbnail: 'Cargando miniatura' },
   authEntry,
   directorySearch,
+  taxonomyFilters,
   marketplace,
   auditAccessibility: {
     loadingFeaturedArtists: 'Cargando artistas destacados',

@@ -6592,6 +6592,7 @@ async function integrationSource(ref, file) {
 // Retain both original published parents and additionally guard latest published main.
 const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1", "5a81672285dc9c03130fc9fd8355e2b4c58e9e12"];
 
+// Qualify the new append against both published parents before running their historical assertions.
 // Compare historical compositions with the entire prefix preceding the verified Datafast append.
 async function manifestBeforeDatafast(file) {
   const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
@@ -6601,7 +6602,7 @@ async function manifestBeforeDatafast(file) {
 
 test('Datafast recovery appends its original SQL and preserves the complete protected manifest decision', async () => {
   const file = 'scripts/production-migrations.json';
-  const base = '228ab63e448b93970aa0bb32af6320c4cfb88e57';
+  const base = 'bddc0a2a6c18ef101db3c7750a4ec7fe7f01b4d8';
   const parent = await integrationParent(base, file);
   const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
   const added = {
@@ -6622,9 +6623,32 @@ test('Datafast recovery appends its original SQL and preserves the complete prot
   assert.deepEqual(current.previousDecision, prior.decisions.find(isManifest));
 });
 
-// Qualify the new append against both published parents before running their historical assertions.
-async function manifestBeforeLoudness(file) {
+async function manifestBeforeTaxonomy(file) {
   const current = await manifestBeforeDatafast(file);
+  const original = (await integrationParent('be996410572a72f8f787b2cd5d345b30523ba1ea', file)).migrations.at(-1);
+  assert.equal(original.id, '2026-11-21_location_genre_filters');
+  assert.deepEqual(current.migrations.at(-3), original);
+  const additions = current.migrations.slice(-2);
+  assert.deepEqual(additions.map(entry => entry.id), ['2026-11-24_unicode_genre_suggestion_keys', '2026-11-24_preserve_selected_genre_ids']);
+  for (const entry of additions) {
+    assert.equal(entry.path, `tdf-hq/sql/${entry.id}.sql`);
+    assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), await integrationSource(entry.introducedBy, entry.path));
+    await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  }
+  return { ...current, migrations: current.migrations.slice(0, -3) };
+}
+
+test('taxonomy appends its original migration to the full loudness manifest', async () => {
+  const file = 'scripts/production-migrations.json';
+  assert.deepEqual(await manifestBeforeTaxonomy(file), await integrationParent('228ab63e448b93970aa0bb32af6320c4cfb88e57', file));
+  const { migrations } = await integrationParent('be996410572a72f8f787b2cd5d345b30523ba1ea', file);
+  const entry = migrations.at(-1);
+  await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), await integrationSource(entry.introducedBy, entry.path));
+});
+
+async function manifestBeforeLoudness(file) {
+  const current = await manifestBeforeTaxonomy(file);
   const original = (await integrationParent('f008ebb18d9aa7c2e892301ddf435d0da6020e2f', file)).migrations.at(-1);
   assert.equal(original.id, '2026-11-21_music_audio_measurement');
   assert.deepEqual(current.migrations.at(-1), original);
@@ -6632,7 +6656,11 @@ async function manifestBeforeLoudness(file) {
 }
 
 function decisionBeforeLoudness(decisions) {
-  const tip = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations').previousDecision;
+  const taxonomy = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations').previousDecision;
+  assert.equal(taxonomy.reviewBatch, 'taxonomy-filters-main-integration-20261124');
+  assert.equal(taxonomy.evidence.valueCount, taxonomy.previousDecision.evidence.valueCount + 3);
+  assert.equal(taxonomy.concurrentReviewHistory[0].evidence.file, 'scripts/production-migrations.json');
+  const tip = taxonomy.previousDecision;
   assert.equal(tip.reviewBatch, 'music-loudness-main-integration-20261124');
   assert.equal(tip.evidence.valueCount, tip.previousDecision.evidence.valueCount + 1);
   assert.equal(tip.concurrentReviewHistory[0].reviewBatch, 'music-loudness-check-20261121');
@@ -6643,7 +6671,7 @@ test('music loudness appends the original SQL migration to the complete main man
   const file = 'scripts/production-migrations.json';
   const parent = await integrationParent('39935739e2def3817eaa2b84229cc2cc4b4941f1', file);
   assert.deepEqual(await manifestBeforeLoudness(file), parent);
-  const { migrations } = await manifestBeforeDatafast(file);
+  const { migrations } = await manifestBeforeTaxonomy(file);
   const { introducedBy, path: sql } = migrations.at(-1);
   await integrationExec('git', ['merge-base', '--is-ancestor', introducedBy, 'HEAD'], { cwd: integrationRoot });
   assert.equal(await fs.readFile(path.join(integrationRoot, sql), 'utf8'), await integrationSource(introducedBy, sql));
@@ -6892,8 +6920,11 @@ test('current My tickets mirror matches its generator and rejects the prior main
     assert.equal(selected.length, ids.size);
     const current = selected.find(row => row.evidence?.name === 'mobileFeatureRegistry');
     assert.ok(current);
-    assert.equal(current.id, '105fd7b2786498f6bb56');
-    assert.equal(current.previousDecision.id, 'ea29c6e8a6cd165802a8');
+    // The taxonomy filters successor (one appended feature) keeps the My
+    // tickets review whole as its predecessor.
+    assert.equal(current.id, 'd2149b0cbd417238e171');
+    assert.equal(current.previousDecision.id, '105fd7b2786498f6bb56');
+    assert.equal(current.previousDecision.previousDecision.id, 'ea29c6e8a6cd165802a8');
     const decisions = path.join(temporary, 'decisions.json');
     await fs.writeFile(decisions, JSON.stringify(selected));
     const args = [path.join(integrationRoot, 'scripts/catalog-list-audit.mjs'), '--root', repo, '--decisions', decisions, '--fail-on-unreviewed'];

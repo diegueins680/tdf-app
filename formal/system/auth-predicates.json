@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "0e4ebd2221df4526de525907598987d93393cb1210ef92ae8d59364410c2b4b2"
+    "tdf-hq/tdf-hq.cabal": "a73b58dbb8b8aa87db14a3338d01887b07ed35b7f6eae2dbc1118f4152f1dd3b"
   },
   "obligations": [
     {
@@ -1033,7 +1033,16 @@
       "source": "tdf-hq/tdf-hq.cabal",
       "reviewedAgainst": "228ab63e448b93970aa0bb32af6320c4cfb88e57",
       "previousSha256": "ce2bae809a91a14505ee64239b126fcc14e513490d27af06366b0dded5979bca",
-      "currentSha256": "0e4ebd2221df4526de525907598987d93393cb1210ef92ae8d59364410c2b4b2",
+      "currentSha256": "903875f4791eb97ba37309de7e409343fab2dc5757ebb604ee815c862ca071bb",
+      "change": "Register the taxonomy API, handlers, filter model and two specification modules.",
+      "semanticReview": "Compared the Cabal diff against main. Only the module lists change. Package dependencies, constraints, flags and build options remain identical.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "bddc0a2a6c18ef101db3c7750a4ec7fe7f01b4d8",
+      "previousSha256": "903875f4791eb97ba37309de7e409343fab2dc5757ebb604ee815c862ca071bb",
+      "currentSha256": "a73b58dbb8b8aa87db14a3338d01887b07ed35b7f6eae2dbc1118f4152f1dd3b",
       "change": "Register the DatafastRecovery and DatafastStatus modules in the library.",
       "semanticReview": "The Cabal diff adds only the two payment modules. The storefront and worker share the same status checks and provider configuration. No compiler option, dependency, flag or version changes. Neither module participates in the source translations for authorization or recovery expiry. The reviewed sources implementing those predicates remain byte-identical.",
       "qualification": "This review covers the conditional solver source context."
