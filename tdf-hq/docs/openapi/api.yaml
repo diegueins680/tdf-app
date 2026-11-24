@@ -12851,6 +12851,9 @@ components:
         organizerPayableMinor: { type: integer, format: int64, minimum: 0 }
         platformFeeMinor: { type: integer, format: int64, minimum: 0 }
         termsVersion: { type: string }
+        tierName: { type: string, nullable: true, description: Tier recorded on the purchased checkout line. }
+        termsSummary: { type: string, description: Terms of the policy accepted for this order. }
+        refundPolicy: { type: string, description: Refund policy accepted for this order. }
     PublicEventTicket:
       type: object
       additionalProperties: false

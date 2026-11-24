@@ -117,6 +117,9 @@ data TicketRuntimeView = TicketRuntimeView
   , trvCheckoutTotalMinor :: Int64
   , trvOrganizerPayable   :: Int64
   , trvPlatformFeeMinor   :: Int64
+  , trvTierName           :: Maybe Text
+  , trvTermsSummary       :: Text
+  , trvRefundPolicy       :: Text
   , trvTermsVersion       :: Text
   } deriving (Eq, Show)
 
@@ -810,8 +813,11 @@ loadTicketRuntimeView orderKey = do
     \ runtime.unit_price_minor, runtime.gross_face_value_minor,\
     \ runtime.discount_minor, runtime.net_face_value_minor, runtime.buyer_fee_minor,\
     \ runtime.organizer_fee_minor, runtime.tax_minor, runtime.checkout_total_minor,\
-    \ runtime.organizer_payable_minor, runtime.platform_fee_minor, runtime.terms_version, runtime.tax_included\
+    \ runtime.organizer_payable_minor, runtime.platform_fee_minor, runtime.terms_version, runtime.tax_included,\
+    \ item.snapshot->>'tier_name', policy.terms_summary, policy.refund_policy\
     \ FROM event_ticket_checkout_runtime runtime\
+    \ JOIN event_ticket_checkout_policy policy ON policy.id = runtime.policy_id\
+    \ LEFT JOIN commerce_checkout_line_item item ON item.checkout_id = runtime.checkout_id AND item.line_number = 1\
     \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
     \ WHERE runtime.order_id = ? AND checkout.domain_type = 'event_ticket_order'\
     \ AND checkout.domain_order_id = runtime.order_id::text\
@@ -822,7 +828,7 @@ loadTicketRuntimeView orderKey = do
       [( Single Int64, Single Int64, Single Text, Single Text, Single Text
        , Single UTCTime, Single (Maybe UTCTime), Single Text, Single Text, Single Int, Single Int64
        , Single Int64, Single Int64, Single Int64, Single Int64, Single Int64
-       , Single Int64, Single Int64, Single Int64, Single Int64, Single Text, Single Bool
+       , Single Int64, Single Int64, Single Int64, Single Int64, Single Text, (Single Bool, Single (Maybe Text), Single Text, Single Text)
        )])
   pure $ case rows of
     [( Single trvOrderId, Single trvEventId, Single trvCheckoutId
@@ -832,7 +838,7 @@ loadTicketRuntimeView orderKey = do
      , Single trvDiscountMinor, Single trvNetMinor, Single trvBuyerFeeMinor
      , Single trvOrganizerFeeMinor, Single trvTaxMinor
      , Single trvCheckoutTotalMinor, Single trvOrganizerPayable
-     , Single trvPlatformFeeMinor, Single trvTermsVersion, Single trvTaxIncluded
+     , Single trvPlatformFeeMinor, Single trvTermsVersion, (Single trvTaxIncluded, Single trvTierName, Single trvTermsSummary, Single trvRefundPolicy)
      )] -> Just TicketRuntimeView{..}
     _ -> Nothing
 
@@ -872,6 +878,9 @@ loadTicketCheckoutDTO orderKey lookupToken = do
         , Routes.checkoutTotalMinor = trvCheckoutTotalMinor runtime
         , Routes.organizerPayableMinor = trvOrganizerPayable runtime
         , Routes.platformFeeMinor = trvPlatformFeeMinor runtime
+        , Routes.tierName = trvTierName runtime
+        , Routes.termsSummary = trvTermsSummary runtime
+        , Routes.refundPolicy = trvRefundPolicy runtime
         , Routes.termsVersion = trvTermsVersion runtime
         }
     , Routes.paymentMethods = paymentMethods
