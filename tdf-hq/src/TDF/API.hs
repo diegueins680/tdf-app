@@ -6,7 +6,10 @@
 
 module TDF.API where
 
+import TDF.Commerce.DatafastClientIP (DatafastClientRequest)
+
 import qualified TDF.API.Chat as Chat
+import TDF.API.NotificationDelivery (NotificationDeliveryAPI)
 import TDF.VideoCampaigns (VideoCampaignAPI)
 import TDF.API.FanFollowing (FollowArtistAPI, UnfollowArtistAPI)
 import TDF.API.SocialRelationships (FollowersAPI, FollowingAPI, FriendsAPI, SuggestionsAPI, AddFriendAPI, RemoveFriendAPI, VCardAPI)
@@ -114,8 +117,8 @@ type InputListPublicAPI =
          :> Get '[JSON] [Entity InventoryItem]
 
 type InputListSeedAPI =
-       "inventory" :> "seed" :> SeedAPI
-  :<|> "sessions" :> "seed" :> SeedAPI
+       "inventory" :> "seed" :> AuthProtect "bearer-token" :> SeedAPI
+  :<|> "sessions" :> "seed" :> AuthProtect "bearer-token" :> SeedAPI
 
 type InputListAPI = InputListPublicAPI :<|> InputListSeedAPI
 
@@ -384,7 +387,7 @@ type BookingPublicAPI =
   :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
          :> "datafast" :> "checkout"
          :> Header "X-Order-Lookup-Token" Text
-         :> Post '[JSON] DatafastCheckoutDTO
+         :> DatafastClientRequest :> Post '[JSON] DatafastCheckoutDTO
   :<|> "bookings" :> "public" :> "orders" :> Capture "bookingId" Int64
          :> "datafast" :> "status"
          :> Header "X-Order-Lookup-Token" Text
@@ -440,7 +443,11 @@ type McpAPI = ReqBody '[JSON] Value :> Post '[JSON] Value
 
 type SessionCookieHeaders = Headers '[Header "Set-Cookie" Text]
 
-type LoginAPI = ReqBody '[JSON] LoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
+-- The forwarded header and the peer give the client address of the
+-- per-address login limit (TDF.Auth.ClientAddress).
+type LoginAPI =
+  Header "X-Forwarded-For" Text :> RemoteHost
+    :> ReqBody '[JSON] LoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 type GoogleLoginAPI = ReqBody '[JSON] GoogleLoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 type AppleLoginAPI = ReqBody '[JSON] AppleLoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 
@@ -491,6 +498,7 @@ type FanSecureAPI =
       :<|> FollowArtistAPI
       :<|> UnfollowArtistAPI
          )
+  :<|> "me" :> "recommendations" :> QueryParam "limit" Int :> Get '[JSON] [ArtistRecommendationDTO]
   :<|> "me" :> "artist-profile" :>
          ( Get '[JSON] ArtistProfileDTO
        :<|> ReqBody '[JSON] ArtistProfileUpsert :> Put '[JSON] ArtistProfileDTO
@@ -629,6 +637,7 @@ type ProtectedAPI =
   :<|> WhatsAppConsentAPI
   :<|> "social" :> SocialAPI
   :<|> ChatAPI
+  :<|> NotificationDeliveryAPI
   :<|> ChatKitSessionAPI
   :<|> TidalAgentAPI
   :<|> "social-sync" :> SocialSyncAPI
@@ -684,7 +693,7 @@ type API =
   :<|> WhatsAppWebhookAPI
   :<|> MetaAPI
   :<|> AcademyAPI
-  :<|> "seed"   :> SeedAPI
+  :<|> "seed"   :> AuthProtect "bearer-token" :> SeedAPI
   :<|> "input-list" :> InputListAPI
   :<|> AdsPublicAPI
   :<|> CmsPublicAPI

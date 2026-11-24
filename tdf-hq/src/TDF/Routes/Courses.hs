@@ -30,6 +30,8 @@ module TDF.Routes.Courses
   , WhatsAppWebhookAPI
   ) where
 
+import TDF.Commerce.DatafastClientIP (DatafastClientRequest)
+
 import           Data.Char (isAlphaNum)
 import           Data.Aeson (FromJSON(parseJSON), Object, Options(..), ToJSON(toJSON), Value(..), defaultOptions, genericParseJSON, genericToJSON, (.:!))
 import qualified Data.Aeson.Key as AesonKey
@@ -422,7 +424,7 @@ type CoursesPublicAPI =
   :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64
          :> "datafast" :> "checkout"
          :> Header "X-Order-Lookup-Token" Text
-         :> Post '[JSON] APITypes.DatafastCheckoutDTO
+         :> DatafastClientRequest :> Post '[JSON] APITypes.DatafastCheckoutDTO
   :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64
          :> "datafast" :> "status"
          :> Header "X-Order-Lookup-Token" Text

@@ -1,4 +1,5 @@
 import { formatPriceCentsInput, parseOptionalPriceCents } from '../utils/priceInput';
+import PrivateAttachmentLink from '../components/PrivateAttachmentLink';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -23,7 +24,6 @@ import {
 } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import DescriptionIcon from '@mui/icons-material/Description';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PaymentCreate, PaymentDTO } from '../api/types';
@@ -269,17 +269,7 @@ export function PaymentForm({
   return (
     <Card variant="outlined">
       <CardContent>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-          <Typography variant="h6">Nuevo pago manual</Typography>
-          <Button
-            startIcon={<AddCircleIcon />}
-            variant="contained"
-            onClick={handleSubmit}
-            disabled={mutation.isPending || amountValue.cents === null}
-          >
-            Registrar pago
-          </Button>
-        </Stack>
+        <Typography variant="h6" sx={{ mb: 2 }}>Nuevo pago manual</Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
               <PartySelector value={selectedParty} onChange={setSelectedParty} field={{ label: 'Contacto', required: true, helperText: fieldHints.party ?? 'Busca por nombre o @username.' }} search={{ context: 'billing_contact', kind: 'any', accountOnly: false }} />
@@ -442,6 +432,15 @@ export function PaymentForm({
             </Stack>
           </Grid>
         </Grid>
+        <Button
+          startIcon={<AddCircleIcon />}
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={mutation.isPending || amountValue.cents === null}
+          sx={{ mt: 2 }}
+        >
+          Registrar pago
+        </Button>
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {error}
@@ -650,16 +649,14 @@ export default function PaymentsPage() {
                             <TableCell>{pay.payReference ?? '-'}</TableCell>
                             <TableCell>
                               {pay.payAttachment ? (
-                                <Button
-                                  size="small"
-                                  startIcon={<DescriptionIcon fontSize="small" />}
-                                  component="a"
+                                <PrivateAttachmentLink
+                                  fileName="comprobante"
                                   href={pay.payAttachment}
                                   target="_blank"
                                   rel="noreferrer"
                                 >
                                   Ver
-                                </Button>
+                                </PrivateAttachmentLink>
                               ) : (
                                 <Typography variant="body2" color="text.secondary">
                                   —
@@ -687,9 +684,9 @@ export default function PaymentsPage() {
                           <Box key={p.payId}>
                             <Typography variant="body2">
                               #{p.payId} - {p.payPeriod ?? p.payPaidAt} -{' '}
-                              <a href={p.payAttachment ?? '#'} target="_blank" rel="noreferrer">
+                              <PrivateAttachmentLink href={p.payAttachment ?? '#'} fileName="comprobante" target="_blank" rel="noreferrer">
                                 {p.payAttachment}
-                              </a>
+                              </PrivateAttachmentLink>
                             </Typography>
                           </Box>
                         ))}

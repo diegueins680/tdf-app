@@ -52,12 +52,21 @@ Do not hand-edit generated API client files.
 
 ## Continuous Improvement Loop
 
-The loop is useful, but pushing to `main` is now blocked by default:
+The loop proposes changes; it never lands them:
 
-- the default config inherits your current branch
+- it never commits to, merges into, or pushes `main`, and it never merges or deletes other branches
+- each iteration branches from the latest `origin/main` and, if it passes verification, is pushed as `continuous-improvement-loop/<timestamp>-<n>` with a draft pull request
+- it runs only in its own linked worktree (`CONTINUOUS_LOOP_WORKTREE`), so it cannot touch a checkout someone is working in
+- failed or unverified iterations are discarded, not checkpointed
 - the default unattended config keeps `pollGitHub` off until auth is healthy and you explicitly opt in
-- `loop:start`, the supervisor, and direct `node scripts/continuous-improvement-loop.mjs` runs all refuse `main` unless you opt in
-- the loop can still checkpoint dirty worktrees and push fixes after CI repair, so branch choice still matters
+
+Setup:
+
+```bash
+git worktree add --detach ../tdf-app-loop-work origin/main
+export CONTINUOUS_LOOP_WORKTREE="$(cd ../tdf-app-loop-work && pwd)"
+npm run loop:start        # or: npm run loop:install-launchd
+```
 
 Useful toggles:
 
@@ -67,24 +76,13 @@ npm run loop:enable-ci-polling
 npm run loop:disable-ci-polling
 ```
 
-For unattended work, prefer a branch-scoped config copied from the default:
-
-```json
-{
-  "pushRemote": "origin",
-  "pushBranch": "codex/your-branch",
-  "pollGitHub": true,
-  "ciRepairCommand": "./scripts/codex-loop-worker.sh ci-repair {ci_report_file}"
-}
-```
-
 Recommended guardrails:
 
-- Never point unattended experiments at `main` until the loop behavior is explicitly what you want.
+- Keep `verifyCommand` pointed at a real build-and-test gate; the loop refuses to run without one.
+- Keep `maxOpenPullRequests` small so review stays ahead of the loop.
 - Turn `pollGitHub` on only when `gh auth` is healthy or you intentionally provide a valid token.
-- If you intentionally want `main`, set `"allowPushToMain": true` in the config or export `CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN=1`.
 - Review `tmp/continuous-improvement-loop/status.json` and `tmp/continuous-improvement-loop.log`.
-- Only use `--allow-dirty` when you intentionally want to preserve an existing baseline.
+- Only use `--allow-dirty` for manual runs where you intentionally want to preserve an existing baseline.
 
 ## Known Repo-Specific Traps
 

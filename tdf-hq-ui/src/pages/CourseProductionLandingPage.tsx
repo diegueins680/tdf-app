@@ -1,4 +1,5 @@
 import PaymentMethodChoices, { PaymentMethodButton } from '../components/payments/PaymentMethodChoices';
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import MarkdownText from '../components/MarkdownText';
 import {
   forwardRef,
@@ -365,8 +366,10 @@ export default function CourseProductionLandingPage() {
   const [showStickyCta, setShowStickyCta] = useState(false);
   const [pendingCheckoutFocus, setPendingCheckoutFocus] = useState(false);
   const [checkout, setCheckout] = useState<CourseCheckoutResponse | null>(null);
+  const [checkoutAvailabilityUnknown, setCheckoutAvailabilityUnknown] = useState(false);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
+  const [attemptedPaymentMethod, setAttemptedPaymentMethod] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
   const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
@@ -503,6 +506,7 @@ export default function CourseProductionLandingPage() {
       lastAttemptRef.current = null;
       clearEnrollmentDraft(selectedSlug);
       setCheckout(response);
+      setCheckoutAvailabilityUnknown(false);
       const token = response.lookupToken?.trim();
       if (token) saveCourseLookupToken(selectedSlug, response.registrationId, token);
       if (response.checkoutAvailable) {
@@ -823,6 +827,7 @@ export default function CourseProductionLandingPage() {
   useEffect(() => {
     const registrationId = Number(routeRegistrationId);
     if (!Number.isSafeInteger(registrationId) || registrationId <= 0 || !pathSlug) return;
+    setCheckoutAvailabilityUnknown(true);
     const token = loadCourseLookupToken(pathSlug, registrationId);
     if (!token) {
       setPaymentError('No encontramos el acceso seguro de esta orden en este navegador.');
@@ -838,6 +843,7 @@ export default function CourseProductionLandingPage() {
     request
       .then((response) => {
         setCheckout(response);
+        setCheckoutAvailabilityUnknown(false);
         if (resourcePath) {
           navigate(location.pathname, { replace: true });
         }
@@ -861,6 +867,7 @@ export default function CourseProductionLandingPage() {
   }, [checkout]);
 
   const handleDatafastPayment = async () => {
+    setAttemptedPaymentMethod('datafast');
     if (!checkout || !checkoutLookupToken) {
       setPaymentError('No encontramos el acceso seguro de esta orden.');
       return;
@@ -884,6 +891,7 @@ export default function CourseProductionLandingPage() {
   };
 
   const handlePaypalPayment = async () => {
+    setAttemptedPaymentMethod('paypal');
     if (!checkout || !checkoutLookupToken) {
       setPaymentError('No encontramos el acceso seguro de esta orden.');
       return;
@@ -916,9 +924,12 @@ export default function CourseProductionLandingPage() {
     const script = document.createElement('script');
     script.src = datafastCheckout.dcWidgetUrl;
     script.async = true;
-    script.onerror = () => setPaymentError(
+    script.onerror = () => {
+      setAttemptedPaymentMethod('datafast');
+      setPaymentError(
       'No se pudo cargar Datafast. No se confirmó ningún pago.',
     );
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [datafastCheckout, datafastDialogOpen, datafastWidgetKey]);
@@ -934,9 +945,12 @@ export default function CourseProductionLandingPage() {
     script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=${encodeURIComponent(checkout?.quote?.currency ?? 'USD')}`;
     script.async = true;
     script.onload = () => setPaypalReady(true);
-    script.onerror = () => setPaymentError(
+    script.onerror = () => {
+      setAttemptedPaymentMethod('paypal');
+      setPaymentError(
       'No se pudo cargar PayPal. La inscripción continúa sin pago.',
     );
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [checkout?.paymentMethods, checkout?.quote?.currency, paypalClientId]);
@@ -969,6 +983,7 @@ export default function CourseProductionLandingPage() {
             checkoutLookupToken,
           );
           setCheckout(response);
+          setCheckoutAvailabilityUnknown(false);
           setPaypalDialogOpen(false);
           setPaypalOrderId(null);
           setPaymentError(
@@ -1047,10 +1062,12 @@ export default function CourseProductionLandingPage() {
                 <Box ref={checkoutCardRef} tabIndex={-1} sx={{ outline: 'none', scrollMarginTop: 16 }}>
                   <CourseCheckoutCard
                     checkout={checkout}
+                    availabilityUnknown={checkoutAvailabilityUnknown}
                     paymentBusy={paymentBusy}
                     hostedPaymentLocked={hostedPaymentLocked}
                     hostedPaymentDisabled={datafastDialogOpen || paypalDialogOpen}
                     paymentError={paymentError}
+                    attemptedPaymentMethod={attemptedPaymentMethod}
                     checkoutLookupToken={checkoutLookupToken}
                     initialBuyerPhone={normalizePhoneToE164(phone) ?? phone}
                     paypalAvailable={Boolean(paypalClientId && paypalReady)}
@@ -1064,6 +1081,7 @@ export default function CourseProductionLandingPage() {
                         checkout.registrationId,
                         checkoutLookupToken,
                       ));
+                      setCheckoutAvailabilityUnknown(false);
                     }}
                   />
                 </Box>
@@ -1162,6 +1180,11 @@ export default function CourseProductionLandingPage() {
                 El formulario es alojado por Datafast. Al volver, TDF verificará importe, moneda, comercio y referencia en el servidor antes de confirmar el pago.
               </Alert>
               {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+              {paymentError && <PaymentAlternativesNotice availabilityUnknown={checkoutAvailabilityUnknown}
+                methods={(checkout?.paymentMethods ?? []).filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                failedMethod={attemptedPaymentMethod}
+                blocked
+              />}
               {datafastCheckout && datafastReturnUrl && (
                 <Box ref={datafastFormRef} key={datafastWidgetKey} sx={{ minHeight: 360 }}>
                   <form
@@ -1193,6 +1216,11 @@ export default function CourseProductionLandingPage() {
                 Aprobar en PayPal no basta: TDF captura y verifica la orden en el servidor antes de mostrar el pago como confirmado.
               </Alert>
               {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+              {paymentError && <PaymentAlternativesNotice availabilityUnknown={checkoutAvailabilityUnknown}
+                methods={(checkout?.paymentMethods ?? []).filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                failedMethod={attemptedPaymentMethod}
+                blocked
+              />}
               <Box ref={paypalButtonRef} sx={{ minHeight: 48 }} />
             </Stack>
           </DialogContent>
@@ -1207,10 +1235,12 @@ export default function CourseProductionLandingPage() {
 
 function CourseCheckoutCard({
   checkout,
+  availabilityUnknown,
   paymentBusy,
   hostedPaymentLocked,
   hostedPaymentDisabled,
   paymentError,
+  attemptedPaymentMethod,
   checkoutLookupToken,
   initialBuyerPhone,
   paypalAvailable,
@@ -1220,10 +1250,12 @@ function CourseCheckoutCard({
   onHostedPaymentConfirmed,
 }: {
   checkout: CourseCheckoutResponse;
+  availabilityUnknown: boolean;
   paymentBusy: boolean;
   hostedPaymentLocked: boolean;
   hostedPaymentDisabled: boolean;
   paymentError: string | null;
+  attemptedPaymentMethod: string | null;
   checkoutLookupToken: string | null;
   initialBuyerPhone?: string | null;
   paypalAvailable: boolean;
@@ -1237,12 +1269,12 @@ function CourseCheckoutCard({
   const quote = checkout.quote;
   const legacyPaymentMethods = checkout.checkoutAvailable && !paid && (checkout.paymentMethods.includes('datafast') || (checkout.paymentMethods.includes('paypal') && paypalAvailable)) ? (<>
                 {checkout.paymentMethods.includes('datafast') && (
-                  <PaymentMethodButton disabled={paymentBusy || hostedPaymentLocked} onClick={onDatafast}>
+                  <PaymentMethodButton disabled={availabilityUnknown || paymentBusy || hostedPaymentLocked} onClick={onDatafast}>
                     Tarjeta · Datafast
                   </PaymentMethodButton>
                 )}
                 {checkout.paymentMethods.includes('paypal') && paypalAvailable && (
-                  <PaymentMethodButton disabled={paymentBusy || hostedPaymentLocked} onClick={onPaypal}>
+                  <PaymentMethodButton disabled={availabilityUnknown || paymentBusy || hostedPaymentLocked} onClick={onPaypal}>
                     Pagar con PayPal
                   </PaymentMethodButton>
                 )}
@@ -1305,7 +1337,8 @@ function CourseCheckoutCard({
             </Typography>
           )}
           {paymentError && <Alert severity="warning">{paymentError}</Alert>}
-          {checkout.checkoutAvailable && !paid && checkout.paymentMethods.length === 0 && (
+
+          {checkout.checkoutAvailable && !paid && !availabilityUnknown && checkout.paymentMethods.length === 0 && (
             <Alert severity="info" variant="outlined">
               Todavía no hay un método de pago en línea para esta orden. La reserva no equivale a pago.
             </Alert>
@@ -1321,6 +1354,10 @@ function CourseCheckoutCard({
                     returnPath: `/curso/${encodeURIComponent(checkout.courseSlug)}/orden/${checkout.registrationId}`,
                   }}
                   offeredMethods={checkout.checkoutAvailable && !paid ? checkout.paymentMethods : []}
+                  alternativeMethods={checkout.checkoutAvailable && !paid ? checkout.paymentMethods.filter((method) => method !== 'paypal' || paypalAvailable) : []}
+                  availabilityUnknown={availabilityUnknown}
+                  paymentFailure={!paid && (paymentError || checkout.paymentStatus === 'failed')
+                    ? { method: attemptedPaymentMethod, needsVerification: checkout.paymentStatus !== 'failed' } : null}
                   disabled={!checkout.checkoutAvailable || paid || paymentBusy || hostedPaymentDisabled}
                   initialBuyerPhone={initialBuyerPhone}
                   onSafetyLockChange={onHostedSafetyLockChange}

@@ -47,7 +47,8 @@ updates only that artist's featured-video field, while locking the reviewed
 campaign revision. It does not publish to external networks. This action was
 not executed for the Liquid Paper Girl campaign.
 
-The first launch plan is under `docs/campaigns/liquid-paper-girl-2026-10-20/`.
+The first launch plan (Liquid Paper Girl, 2026-10-20) is kept with the
+operator's private campaign files, outside this public repository.
 Its original and derived media URLs are deliberately empty until an authorized
 operator hosts the files. Existing production artist ID 51 was reused, without
 creating a duplicate profile or a fictitious user account.

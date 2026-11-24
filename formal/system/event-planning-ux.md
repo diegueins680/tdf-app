@@ -47,3 +47,7 @@ Remaining UX work: compact agenda/lazy operation reads, a shared paid-ticket poo
 with private courtesy issuance, campaign readiness checks and a reviewed delegated
 event-manager role. The current logistics editor role is not full administration
 of tickets, event metadata, finance, refunds or team permissions.
+
+Courtesy issuance and a delegated administrator of one event were added later
+and are described in [event-admin-delegation.md](event-admin-delegation.md)
+(EVT-ADMIN-DELEGATION-001); a shared paid-ticket pool is still not implemented.

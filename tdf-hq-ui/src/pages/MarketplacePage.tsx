@@ -1,5 +1,7 @@
 import { formatPriceCentsInput } from '../utils/priceInput';
 import { rentalPriceField } from '../utils/rentalPriceInput';
+import StripePaymentAlternativesNotice from '../components/payments/StripePaymentAlternativesNotice';
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import MarkdownText from '../components/MarkdownText';
 import { resolveApiBase } from '../config/apiBase';
 import { readOptionalBrowserStorage, writeOptionalBrowserPreference, removeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
@@ -62,7 +64,7 @@ import {
   readCartMeta,
   writeCartMeta,
   type MarketplaceCartMeta,
-} from '../features/marketplace/cartSummary';
+} from '../services/cartSummary';
 import { BOTTOM_DOCK_OFFSET } from '../utils/bottomDock';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 // The pure entry defers injecting js.stripe.com until checkout actually calls loadStripe.
@@ -368,16 +370,19 @@ const readRuntimeEnv = (key: string): string => {
 };
 
 interface MarketplaceStripePaymentFormProps {
+  clientSecret: string;
+  error: string | null;
   orderId: string;
   totalDisplay: string;
   onSuccess: (orderId: string) => Promise<void> | void;
   onError: (message: string) => void;
 }
 
-function MarketplaceStripePaymentForm({ orderId, totalDisplay, onSuccess, onError }: MarketplaceStripePaymentFormProps) {
+function MarketplaceStripePaymentForm({ clientSecret, error, orderId, totalDisplay, onSuccess, onError }: MarketplaceStripePaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [isSubmitting, setSubmitting] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!stripe || !elements || isSubmitting) return;
@@ -411,7 +416,8 @@ function MarketplaceStripePaymentForm({ orderId, totalDisplay, onSuccess, onErro
       <Typography variant="body2" color="text.secondary">
         Total: {totalDisplay}
       </Typography>
-      <PaymentElement />
+      <PaymentElement onChange={(event) => setSelectedMethod(event.value.type)} />
+      {error && <StripePaymentAlternativesNotice clientSecret={clientSecret} failedMethod={selectedMethod} />}
       <Button
         variant="contained"
         onClick={() => {
@@ -605,9 +611,9 @@ export default function MarketplacePage() {
       marketplace: true,
     }),
   });
-  const showPaypalOption = paypalConfiguredInBrowser
+  const showPaypalOption = paypalConfiguredInBrowser && marketplacePaymentMethodsQuery.isSuccess
     && Boolean(marketplacePaymentMethodsQuery.data?.paypal);
-  const showDatafastOption = !datafastUnavailable
+  const showDatafastOption = !datafastUnavailable && marketplacePaymentMethodsQuery.isSuccess
     && Boolean(marketplacePaymentMethodsQuery.data?.datafast);
   const [savedCartMeta, setSavedCartMeta] = useState<{ cartId: string; count: number; updatedAt: number | null } | null>(() => {
     const meta = readCartMeta();
@@ -2621,9 +2627,20 @@ export default function MarketplacePage() {
                               />
                             )}
                           </Stack>
+                          {(Boolean(stripeError) || Boolean(datafastError) || Boolean(paypalError)) && (
+                            <PaymentAlternativesNotice availabilityUnknown={!marketplacePaymentMethodsQuery.isSuccess}
+                              methods={[
+                                ...(showStripeOption ? ['stripe'] : []),
+                                ...(showDatafastOption ? ['datafast'] : []),
+                                ...(showPaypalOption && paypalReady ? ['paypal'] : []),
+                              ]}
+                              failedMethod={stripeError ? 'stripe' : datafastError ? 'datafast' : 'paypal'}
+                              blocked
+                            />
+                          )}
                           {marketplacePaymentMethodsQuery.isError && (
                             <Alert severity="warning" variant="outlined">
-                              Los pagos en línea no están disponibles. Puedes enviar una solicitud sin pago.
+                              No pudimos verificar los métodos de pago en línea. Puedes enviar una solicitud sin pago.
                             </Alert>
                           )}
                           {paymentMethod === 'card' && (
@@ -2910,14 +2927,20 @@ export default function MarketplacePage() {
         <DialogTitle>Pagar con Stripe</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2}>
-            {stripeError && (
+            {stripeError && (<>
               <Alert severity="warning" onClose={() => setStripeError(null)}>
                 {stripeError}
               </Alert>
-            )}
+              <PaymentAlternativesNotice availabilityUnknown={!marketplacePaymentMethodsQuery.isSuccess} methods={[
+                ...(showDatafastOption ? ['datafast'] : []),
+                ...(showPaypalOption && paypalReady ? ['paypal'] : []),
+              ]} failedMethod="stripe" blocked />
+            </>)}
             {stripePromise && stripeElementsOptions && stripeIntent ? (
               <Elements stripe={stripePromise} options={stripeElementsOptions}>
                 <MarketplaceStripePaymentForm
+                  clientSecret={stripeIntent.spiClientSecret}
+                  error={stripeError}
                   orderId={stripeIntent.spiOrderId}
                   totalDisplay={cartSubtotal}
                   onSuccess={handleStripePaymentSuccess}
@@ -2960,11 +2983,12 @@ export default function MarketplacePage() {
               Paga con tarjeta de crédito o débito. Al finalizar serás redirigido para confirmar tu pedido. Si no
               ves el formulario, pulsa “Reintentar” y revisa tu conexión.
             </Typography>
-            {datafastError && (
+            {datafastError && (<>
               <Alert severity="warning" onClose={() => setDatafastError(null)}>
                 {datafastError}
               </Alert>
-            )}
+              <PaymentAlternativesNotice availabilityUnknown={!marketplacePaymentMethodsQuery.isSuccess} methods={showPaypalOption && paypalReady ? ['paypal'] : []} failedMethod="datafast" blocked />
+            </>)}
             {datafastCheckout && datafastReturnUrl && (
               <Box ref={datafastFormRef} key={datafastWidgetKey} sx={{ minHeight: 360, '& form': { width: '100%' } }}>
                 <form
@@ -3261,6 +3285,10 @@ export default function MarketplacePage() {
               Confirma tu pago de {cartSubtotal}. Se procesará con PayPal de forma segura.
             </Typography>
             {!paypalReady && <Alert severity="info">Cargando PayPal...</Alert>}
+            {paypalError && <>
+              <Alert severity="warning">{paypalError}</Alert>
+              <PaymentAlternativesNotice availabilityUnknown={!marketplacePaymentMethodsQuery.isSuccess} methods={showDatafastOption ? ['datafast'] : []} failedMethod="paypal" blocked />
+            </>}
             <Box id="paypal-button-container" sx={{ mt: 1 }} />
           </Stack>
         </DialogContent>

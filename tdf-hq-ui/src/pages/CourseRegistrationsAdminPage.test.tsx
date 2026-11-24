@@ -24,6 +24,9 @@ const listRegistrationsMock = jest.fn<
 const getRegistrationDossierMock = jest.fn<
   (slug: string, registrationId: number) => Promise<CourseRegistrationDossierDTO | null>
 >();
+const getRegistrationMock = jest.fn<
+  (slug: string, registrationId: number) => Promise<CourseRegistrationDTO>
+>();
 const listRegistrationEmailsMock = jest.fn<
   (registrationId: number, limit?: number) => Promise<CourseEmailEventDTO[]>
 >();
@@ -34,6 +37,7 @@ jest.unstable_mockModule('../api/courses', () => ({
     listRegistrations: (params?: { slug?: string; status?: string; limit?: number }) => listRegistrationsMock(params),
     getRegistrationDossier: (slug: string, registrationId: number) =>
       getRegistrationDossierMock(slug, registrationId),
+    getRegistration: (slug: string, registrationId: number) => getRegistrationMock(slug, registrationId),
     listRegistrationEmails: (registrationId: number, limit?: number) =>
       listRegistrationEmailsMock(registrationId, limit),
     updateStatus: jest.fn(() => Promise.resolve(null)),
@@ -214,7 +218,7 @@ const markPaidOptionalFollowUpAccessibleLabel = 'Agregar seguimiento opcional';
 const emptyFollowUpAlertMessage =
   'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
 const firstFollowUpComposerHelpText =
-  'Este formulario ya está abierto para registrar el primer seguimiento. Escribe la nota y aparecerá Guardar seguimiento.';
+  'Escribe una nota para registrar el primer seguimiento.';
 const openPaymentWorkflowLabel = 'Registrar pago';
 const markPaymentPendingLabel = 'Marcar pago pendiente';
 const compactPaymentPendingActionLabel = 'Pasar a pendiente';
@@ -579,6 +583,8 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockReset();
     getRegistrationDossierMock.mockReset();
     listRegistrationEmailsMock.mockReset();
+    getRegistrationMock.mockReset();
+    getRegistrationMock.mockRejectedValue(new Error('not found'));
     listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' }]);
     listRegistrationsMock.mockResolvedValue([buildRegistration()]);
     getRegistrationDossierMock.mockResolvedValue(null);
@@ -644,6 +650,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Expediente de inscripción');
+      const whatsappLink = document.body.querySelector<HTMLAnchorElement>('a[href="https://wa.me/593999000111"]');
+      expect(whatsappLink?.textContent).toBe('+593999000111');
+      expect(whatsappLink?.getAttribute('target')).toBe('_blank');
       expect(document.body.textContent).not.toContain(emptySystemEmailHistoryMessage);
       expect(document.body.textContent).not.toContain(showSystemEmailsLabel);
       expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
@@ -688,7 +697,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
+      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(true);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
       expect(countButtonsByText(document.body, optionalDossierContextActionsLabel)).toBe(0);
       expect(countButtonsByText(document.body, compactOptionalDossierContextActionsLabel)).toBe(0);
@@ -715,7 +724,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(false);
       expect(document.body.textContent).not.toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
     });
 
@@ -771,7 +780,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(false);
       expect(document.body.textContent).toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
     });
 
@@ -784,7 +793,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
       expect(hasLabel(document.body, 'Asunto')).toBe(true);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(true);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(true);
     });
 
     await act(async () => {
@@ -1196,6 +1205,54 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
     });
+
+    await cleanup();
+  });
+
+  it('opens a linked registration that the limited list does not include and keeps the link until it resolves', async () => {
+    const linked = buildRegistration({ crId: 987, crCourseSlug: 'cohorte-antigua', crFullName: 'Grace Hopper' });
+    let resolveLinked: (reg: CourseRegistrationDTO) => void = () => undefined;
+    getRegistrationMock.mockImplementation(() => new Promise((resolve) => { resolveLinked = resolve; }));
+    getRegistrationDossierMock.mockImplementation(() => new Promise(() => undefined));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(
+      container,
+      '/inscripciones-curso?registration=987&slug=cohorte-antigua',
+    );
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalled();
+      expect(getRegistrationMock).toHaveBeenCalledWith('cohorte-antigua', 987);
+    });
+    expect(getRegistrationDossierMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      resolveLinked(linked);
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getRegistrationDossierMock).toHaveBeenCalledWith('cohorte-antigua', 987);
+      expect(document.body.textContent).toContain('Expediente de inscripción');
+    });
+
+    await cleanup();
+  });
+
+  it('explains when a linked registration cannot be opened', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(
+      container,
+      '/inscripciones-curso?registration=987&slug=cohorte-antigua',
+    );
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('No pudimos abrir la inscripción del enlace.');
+    });
+    expect(getRegistrationDossierMock).not.toHaveBeenCalled();
 
     await cleanup();
   });
@@ -3506,8 +3563,8 @@ describe('CourseRegistrationsAdminPage', () => {
       const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
       expect(dialogHeadings).toContain('Notas internas');
       expect(getButtonByText(document.body, 'Cancelar notas')).toBeTruthy();
-      expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
-      expect(document.body.textContent).toContain('Escribe una nota para mostrar Guardar notas.');
+      expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
+      expect(document.body.textContent).toContain('Escribe una nota para habilitar el guardado.');
       expect(countButtonsByText(document.body, 'Ocultar editor')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
@@ -3524,7 +3581,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(false);
-      expect(document.body.textContent).not.toContain('Escribe una nota para mostrar Guardar notas.');
+      expect(document.body.textContent).not.toContain('Escribe una nota para habilitar el guardado.');
     });
 
     await act(async () => {
@@ -5740,8 +5797,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'Notas internas')).toBe(true);
-      expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
-      expect(document.body.textContent).toContain('Escribe una nota para mostrar Guardar notas.');
+      expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
+      expect(document.body.textContent).toContain('Escribe una nota para habilitar el guardado.');
       expect(countButtonsByText(document.body, optionalDossierNotesActionLabel)).toBe(0);
     });
 
@@ -6328,7 +6385,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByText(document.body, 'Cancelar evidencia')).toBeTruthy();
       expect(countButtonsByText(document.body, 'Cerrar pago')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar evidencia')).toBe(0);
-      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
+      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(true);
     });
 
     await act(async () => {
@@ -6539,7 +6596,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
       expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
-      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
+      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(true);
       expect(getButtonByText(document.body, 'Cancelar comprobante')).toBeTruthy();
     });
 
@@ -6718,7 +6775,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(firstReceiptComposerHelpText);
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
-      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
+      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(true);
       expect(getButtonByText(document.body, 'Cancelar comprobante')).toBeTruthy();
     });
 
@@ -7100,7 +7157,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
-      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
+      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(true);
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Agregar comprobante',
@@ -7629,8 +7686,8 @@ describe('CourseRegistrationsAdminPage', () => {
       const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
       expect(dialogHeadings).toContain('Notas internas');
       expect(hasLabel(document.body, 'Notas internas')).toBe(true);
-      expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
-      expect(document.body.textContent).toContain('Escribe una nota para mostrar Guardar notas.');
+      expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
+      expect(document.body.textContent).toContain('Escribe una nota para habilitar el guardado.');
     });
 
     await act(async () => {
@@ -7641,7 +7698,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(false);
-      expect(document.body.textContent).not.toContain('Escribe una nota para mostrar Guardar notas.');
+      expect(document.body.textContent).not.toContain('Escribe una nota para habilitar el guardado.');
     });
 
     await cleanup();
@@ -7694,7 +7751,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Tipo')).toBe(false);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
       expect(hasLabel(document.body, 'Asunto')).toBe(false);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(false);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(false);
       expect(document.body.textContent).toContain('Agrega tipo, asunto, recordatorio o evidencia solo si hacen falta.');
       expect(getButtonByText(document.body, 'Agregar detalles opcionales')).toBeTruthy();
       expect(
@@ -7702,7 +7759,7 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim() === 'Usar enlace existente en lugar de subir adjunto',
         ),
       ).toBe(false);
-      expect(countButtonsByText(document.body, 'Guardar seguimiento')).toBe(0);
+      expect(getButtonByText(document.body, 'Guardar seguimiento').disabled).toBe(true);
       expect(getButtonByText(document.body, 'Cancelar seguimiento')).toBeTruthy();
     });
 
@@ -7726,7 +7783,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'Tipo')).toBe(true);
       expect(hasLabel(document.body, 'Asunto')).toBe(true);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(true);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(true);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir adjunto')).toBeTruthy();
     });
 
@@ -7964,7 +8021,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'Asunto')).toBe(true);
-      expect(hasLabel(document.body, 'Próximo seguimiento')).toBe(true);
+      expect(hasLabel(document.body, 'Recordatorio (próximo seguimiento)')).toBe(true);
       expect(getButtonByText(document.body, 'Ocultar detalles opcionales')).toBeTruthy();
     });
 

@@ -8,6 +8,7 @@ import { COMMUNITY_LANDING_PATH } from '../utils/loginRouting';
 import RouteLoadingFallback from './RouteLoadingFallback';
 
 const MobileAppPage = lazy(() => import('../pages/MobileAppPage'));
+const MyTicketsPage = lazy(() => import('../pages/MyTicketsPage'));
 const AccountDeletionPage = lazy(() => import('../pages/AccountDeletionPage'));
 const VideoCampaignsPage = lazy(() => import('../pages/VideoCampaignsPage'));
 const ArtistOnboardingPage = lazy(() => import('../pages/ArtistOnboardingPage'));
@@ -21,6 +22,7 @@ const DomoVenuePage = lazy(() => import('../pages/DomoVenuePage'));
 const DomoQuoteCheckoutPage = lazy(() => import('../pages/DomoQuoteCheckoutPage'));
 const DirectorySearchPage = lazy(() => import('../pages/DirectorySearchPage'));
 const DirectoryPublicDetailPage = lazy(() => import('../pages/DirectoryPublicDetailPage'));
+const EventAdminInvitationAcceptPanel = lazy(() => import('../components/events/EventAdminInvitationAcceptPanel'));
 const EventCommunityEntry = lazy(() => import('./EventCommunityEntry'));
 const SocialEventWorkspacePage = lazy(() => import('../pages/SocialEventWorkspacePage'));
 const FanClubPage = lazy(() => import('../pages/FanClubPage'));
@@ -109,12 +111,13 @@ export function renderPublicRoutes() {
       <Route path="/buscar" element={<PublicBranding><DirectorySearchPage /></PublicBranding>} />
       <Route path="/directorio/:slug" element={<PublicBranding><DirectoryPublicDetailPage kind="profile" /></PublicBranding>} />
       <Route path="/clasificados/:slug" element={<PublicBranding><DirectoryPublicDetailPage kind="classified" /></PublicBranding>} />
-      <Route path="/eventos/:eventId" element={<PublicBranding><DirectoryPublicDetailPage kind="event" /></PublicBranding>} />
+      <Route path="/eventos/:eventId" element={<PublicBranding><EventAdminInvitationAcceptPanel /><DirectoryPublicDetailPage kind="event" /></PublicBranding>} />
       <Route path="/social/eventos/:eventId" element={<EventCommunityEntry />}>
         <Route index element={<SocialEventWorkspacePage />} />
       </Route>
       <Route path="/eventos/:eventId/entradas" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
       <Route path="/eventos/:eventId/orden/:orderId" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
+      <Route path="/mis-entradas" element={<PublicBranding><MyTicketsPage /></PublicBranding>} />
       <Route path="/pagos/retorno" element={<PublicBranding><ProviderPaymentReturnPage /></PublicBranding>} />
       <Route path="/venues/:venueId" element={<PublicBranding><DirectoryPublicDetailPage kind="venue" /></PublicBranding>} />
       <Route path="/conversacion/:destinationKind/:destinationId" element={<PublicBranding><InteractionPage /></PublicBranding>} />

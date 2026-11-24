@@ -34,6 +34,7 @@ describe('canonical checkout capability client', () => {
       placeToPayBankRedirect: false,
       placeToPayDeunaQr: false,
       payPhoneWallet: false,
+      payPhoneCard: false,
       bankTransfer: false,
     });
 
@@ -51,6 +52,22 @@ describe('canonical checkout capability client', () => {
         'seller_payouts',
       ]);
     }
+  });
+
+  it('offers PayPhone card only when the card route names PayPhone', async () => {
+    getMock
+      .mockResolvedValueOnce({ routes: [{ provider: 'payphone' }] })
+      .mockResolvedValue({ routes: [] });
+
+    const methods = await loadAvailableCheckoutMethods({
+      currency: 'USD',
+      amountMinor: 500,
+      productFlow: 'professional_service',
+    });
+    expect(methods.payPhoneCard).toBe(true);
+    expect(methods.payPhoneWallet).toBe(false);
+    expect(methods.datafast).toBe(false);
+    expect(methods.placeToPayCard).toBe(false);
   });
 
   it('rejects the aggregate check when any route lookup cannot be verified', async () => {

@@ -9,6 +9,10 @@ servers:
     description: Development server
 
 paths:
+  /music/artists/{artistPartyId}/featured-track:
+    $ref: './artist-playback.yaml#/paths/~1music~1artists~1{artistPartyId}~1featured-track'
+  /music/me/featured-track:
+    $ref: './artist-playback.yaml#/paths/~1music~1me~1featured-track'
   /artists/video-campaigns:
     get:
       operationId: listVideoCampaigns
@@ -1876,6 +1880,38 @@ paths:
         '204': { description: RSVP absent after the idempotent operation }
         '401': { description: Authentication required }
         '429': { description: Mutation rate limit exceeded }
+  /social-events/events/{eventId}/attendees:
+    get:
+      tags: [Social events]
+      summary: List visible attendee profiles for one RSVP status
+      operationId: listEventAttendees
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+        - { name: status, in: query, required: true, schema: { type: string, enum: [accepted, maybe] } }
+        - { name: after, in: query, schema: { type: integer, format: int64, minimum: 0 } }
+      responses:
+        '200':
+          description: Up to 20 profiles visible to the viewer, ordered by stable RSVP identifier
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor]
+                properties:
+                  nextCursor: { type: string, nullable: true }
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, name, avatarUrl]
+                      properties:
+                        id: { type: string }
+                        name: { type: string }
+                        avatarUrl: { type: string, nullable: true }
+        '400': { description: Invalid status or cursor }
+        '401': { description: Authentication required }
+        '404': { description: Event is missing or inaccessible }
   /social-events/events/{eventId}/rsvp-summary:
     get:
       tags: [Social events]
@@ -4164,6 +4200,40 @@ paths:
       responses:
         '200':
           description: Follow removed
+  /fans/me/recommendations:
+    get:
+      tags: [FanHub]
+      summary: Recommend artists to follow
+      description: >-
+        Returns publicly listed artists the authenticated fan does not follow yet,
+        best match first. Artists followed by the same fans as the artists the
+        caller follows come first (`similar_fans`, cosine similarity of the
+        follower sets); when those are fewer than `limit` the list is completed
+        with the most followed artists (`popular`). Read-only.
+      operationId: listFanArtistRecommendations
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of artists; values outside 1..24 are clamped.
+          schema:
+            type: integer
+            default: 6
+      responses:
+        '200':
+          description: Recommended artists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArtistRecommendation'
+        '401':
+          description: Authentication required
+        '403':
+          description: Fan access required
   /fans/me/artist-profile:
     get:
       tags: [FanHub]
@@ -6019,11 +6089,122 @@ paths:
           description: Not allowed
         '404':
           description: Not found
+  /chat/threads/{threadId}/read:
+    parameters:
+      - name: threadId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    post:
+      tags: [Chat]
+      summary: Record that the caller read a conversation
+      description: Stores a recipient read receipt up to a message and marks that conversation's chat notices read. External email/push reminders are not sent for messages already read.
+      operationId: markChatThreadRead
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatThreadReadRequest'
+      responses:
+        '204':
+          description: Receipt stored
+        '400':
+          description: Invalid identifiers
+        '404':
+          description: Not a participant
+  /notifications/channels:
+    get:
+      tags: [Notifications]
+      summary: Get chat reminder channels
+      description: Email and phone reminder preferences for chat notices. The in-app notice is always on.
+      operationId: getNotificationChannels
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Current channels
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationChannels'
+    put:
+      tags: [Notifications]
+      summary: Update chat reminder channels
+      operationId: updateNotificationChannels
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationChannels'
+      responses:
+        '200':
+          description: Saved channels
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationChannels'
+  /notifications/push-subscriptions:
+    post:
+      tags: [Notifications]
+      summary: Register this device for push notifications
+      description: Registers an Expo push token for the caller. The token is stored encrypted; a token registered by another account moves to the caller.
+      operationId: registerPushSubscription
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscriptionRegister'
+      responses:
+        '204':
+          description: Registered
+        '422':
+          description: Unsupported provider, platform or token
+        '503':
+          description: Push notifications are not configured
+  /notifications/push-subscriptions/revoke:
+    post:
+      tags: [Notifications]
+      summary: Stop push notifications on this device
+      operationId: revokePushSubscription
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscriptionRevoke'
+      responses:
+        '204':
+          description: Revoked (or already inactive)
+        '422':
+          description: Invalid token
   /drive/token:
+    delete:
+      tags: [Drive]
+      summary: Disconnect personal Google Drive
+      description: Erases this account's encrypted delegated credential. In-flight refreshes cannot restore it. Existing external files remain in the user's provider account. Provider-wide OAuth revocation is separately managed in Google permissions.
+      operationId: disconnectDrive
+      security:
+        - bearerAuth: []
+      responses:
+        '204': { description: Personal connection erased }
+        '401': { description: Current authenticated session required }
     post:
       tags: [Drive]
       summary: Exchange Google Drive OAuth code
-      description: Exchanges a Google OAuth code (PKCE) for Drive tokens.
+      description: Stores delegated Google credentials encrypted on the server and returns an owner-bound opaque TDFConnection handle. Provider access and refresh tokens are never returned. Legacy browser tokens require new consent.
       operationId: exchangeDriveToken
       security:
         - bearerAuth: [ ]
@@ -6046,7 +6227,7 @@ paths:
     post:
       tags: [Drive]
       summary: Refresh Google Drive access token
-      description: Refreshes a Google Drive access token using a refresh token.
+      description: Resolves the authenticated owner-bound TDFConnection handle; refreshes provider credentials inside the encrypted server vault when required. Raw Google refresh tokens are rejected.
       operationId: refreshDriveToken
       security:
         - bearerAuth: [ ]
@@ -8616,7 +8797,16 @@ paths:
   /directory/classifieds: { $ref: './directory.yaml#/paths/~1directory~1classifieds' }
   /directory/classifieds/{classifiedId}/status: { $ref: './directory.yaml#/paths/~1directory~1classifieds~1{classifiedId}~1status' }
   /directory/classifieds/{classifiedId}/applications: { $ref: './directory.yaml#/paths/~1directory~1classifieds~1{classifiedId}~1applications' }
+  /directory/applications: { $ref: './directory.yaml#/paths/~1directory~1applications' }
+  /directory/applications/{applicationId}: { $ref: './directory.yaml#/paths/~1directory~1applications~1{applicationId}' }
+  /directory/applications/{applicationId}/counter: { $ref: './directory.yaml#/paths/~1directory~1applications~1{applicationId}~1counter' }
   /directory/applications/{applicationId}/status: { $ref: './directory.yaml#/paths/~1directory~1applications~1{applicationId}~1status' }
+  /directory/agreements: { $ref: './directory.yaml#/paths/~1directory~1agreements' }
+  /directory/agreements/{agreementId}: { $ref: './directory.yaml#/paths/~1directory~1agreements~1{agreementId}' }
+  /directory/agreements/{agreementId}/status: { $ref: './directory.yaml#/paths/~1directory~1agreements~1{agreementId}~1status' }
+  /directory/agreements/{agreementId}/payments: { $ref: './directory.yaml#/paths/~1directory~1agreements~1{agreementId}~1payments' }
+  /directory/payout-accounts: { $ref: './directory.yaml#/paths/~1directory~1payout-accounts' }
+  /directory/profiles/{profileId}/payout-accounts/{provider}: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{profileId}~1payout-accounts~1{provider}' }
   /directory/invitations: { $ref: './directory.yaml#/paths/~1directory~1invitations' }
   /directory/invitations/{invitationId}/status: { $ref: './directory.yaml#/paths/~1directory~1invitations~1{invitationId}~1status' }
   /directory/contact: { $ref: './directory.yaml#/paths/~1directory~1contact' }
@@ -8633,6 +8823,7 @@ paths:
   /directory/admin/claims/{claimId}/status: { $ref: './directory.yaml#/paths/~1directory~1admin~1claims~1{claimId}~1status' }
   /directory/admin/verifications: { $ref: './directory.yaml#/paths/~1directory~1admin~1verifications' }
   /directory/admin/verifications/{verificationId}/status: { $ref: './directory.yaml#/paths/~1directory~1admin~1verifications~1{verificationId}~1status' }
+  /directory/admin/agreements/disputes: { $ref: './directory.yaml#/paths/~1directory~1admin~1agreements~1disputes' }
   /directory/admin/moderation: { $ref: './directory.yaml#/paths/~1directory~1admin~1moderation' }
   /directory/admin/moderation/{caseId}/decisions: { $ref: './directory.yaml#/paths/~1directory~1admin~1moderation~1{caseId}~1decisions' }
   /directory/admin/merges: { $ref: './directory.yaml#/paths/~1directory~1admin~1merges' }
@@ -9017,6 +9208,147 @@ paths:
         '404': { description: Quote not found }
         '409': { description: Quote cannot be cancelled or the refund request was refused }
         '503': { description: No approved cancellation policy exists }
+  /admin/domo/quotes/{quoteId}/refund:
+    get:
+      tags: [Admin]
+      operationId: getDomoRefund
+      summary: Read the bound cancellation refund
+      description: Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      responses:
+        '200':
+          description: Current refund state; processing does not mean money returned
+          content: { application/json: { schema: { type: object } } }
+        '400': { description: Invalid quote identifier or evidence }
+        '401': { description: Session revoked or expired }
+        '403': { description: Strict administrator or module access required }
+        '409': { description: Missing independent approval or inconsistent binding, state or evidence }
+        '429': { description: Provider query quota exhausted }
+        '502': { description: Provider outcome unverified; keep the same refund ID }
+        '503': { description: Qualified capabilities or configuration disabled }
+  /admin/domo/quotes/{quoteId}/refund/approve:
+    post:
+      tags: [Admin]
+      operationId: approveDomoRefund
+      summary: Approve independently without contacting the provider
+      description: Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      responses:
+        '200':
+          description: Current refund state; processing does not mean money returned
+          content: { application/json: { schema: { type: object } } }
+        '400': { description: Invalid quote identifier or evidence }
+        '401': { description: Session revoked or expired }
+        '403': { description: Strict administrator or module access required }
+        '409': { description: Missing independent approval or inconsistent binding, state or evidence }
+        '429': { description: Provider query quota exhausted }
+        '502': { description: Provider outcome unverified; keep the same refund ID }
+        '503': { description: Qualified capabilities or configuration disabled }
+  /admin/domo/quotes/{quoteId}/refund/execute:
+    post:
+      tags: [Admin]
+      operationId: executeDomoRefund
+      summary: Claim one execution permit; automatic PayPal POST or manual handoff
+      description: Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      responses:
+        '200':
+          description: Current refund state; processing does not mean money returned
+          content: { application/json: { schema: { type: object } } }
+        '400': { description: Invalid quote identifier or evidence }
+        '401': { description: Session revoked or expired }
+        '403': { description: Strict administrator or module access required }
+        '409': { description: Missing independent approval or inconsistent binding, state or evidence }
+        '429': { description: Provider query quota exhausted }
+        '502': { description: Provider outcome unverified; keep the same refund ID }
+        '503': { description: Qualified capabilities or configuration disabled }
+  /admin/domo/quotes/{quoteId}/refund/reconcile:
+    post:
+      tags: [Admin]
+      operationId: reconcileDomoRefund
+      summary: Query a known PayPal refund; exact completion alone settles the obligation
+      description: Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      responses:
+        '200':
+          description: Current refund state; processing does not mean money returned
+          content: { application/json: { schema: { type: object } } }
+        '400': { description: Invalid quote identifier or evidence }
+        '401': { description: Session revoked or expired }
+        '403': { description: Strict administrator or module access required }
+        '409': { description: Missing independent approval or inconsistent binding, state or evidence }
+        '429': { description: Provider query quota exhausted }
+        '502': { description: Provider outcome unverified; keep the same refund ID }
+        '503': { description: Qualified capabilities or configuration disabled }
+  /admin/domo/quotes/{quoteId}/refund/manual-evidence:
+    post:
+      tags: [Admin]
+      operationId: recordDomoManualRefundEvidence
+      summary: Record immutable evidence of a manual refund without completing it
+      description: Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/DomoManualRefundEvidence' } } }
+      responses:
+        '200':
+          description: Current refund state; processing does not mean money returned
+          content: { application/json: { schema: { type: object } } }
+        '400': { description: Invalid quote identifier or evidence }
+        '401': { description: Session revoked or expired }
+        '403': { description: Strict administrator or module access required }
+        '409': { description: Missing independent approval or inconsistent binding, state or evidence }
+        '429': { description: Provider query quota exhausted }
+        '502': { description: Provider outcome unverified; keep the same refund ID }
+        '503': { description: Qualified capabilities or configuration disabled }
+  /admin/domo/quotes/{quoteId}/refund/confirm-manual:
+    post:
+      tags: [Admin]
+      operationId: confirmDomoManualRefund
+      summary: Independently verify the recorded receipt and post the canonical refund
+      description: Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      responses:
+        '200':
+          description: Current refund state; processing does not mean money returned
+          content: { application/json: { schema: { type: object } } }
+        '400': { description: Invalid quote identifier or evidence }
+        '401': { description: Session revoked or expired }
+        '403': { description: Strict administrator or module access required }
+        '409': { description: Missing independent approval or inconsistent binding, state or evidence }
+        '429': { description: Provider query quota exhausted }
+        '502': { description: Provider outcome unverified; keep the same refund ID }
+        '503': { description: Qualified capabilities or configuration disabled }
+  /admin/domo/quotes/{quoteId}/refund/provider-reference:
+    post:
+      tags: [Admin]
+      operationId: bindDomoRefundProviderReference
+      summary: Record an operator-discovered PayPal refund ID for exact authenticated readback
+      description: Current strict administrator distinct from the requester. A query candidate is not evidence of returned money. The original processing fence and existing provider identity are retained; this route never issues a refund POST.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PublicDomoQuoteId'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/DomoRefundProviderReference' } } }
+      responses:
+        '200': { description: Current processing refund and its immutable query candidate, content: { application/json: { schema: { type: object } } } }
+        '400': { description: Malformed identifier }
+        '401': { description: Current authenticated session required }
+        '403': { description: Strict administrator and Admin module access required }
+        '409': { description: Provider identity, binding or refund state conflicts }
   /fans/me/notifications:
     get:
       tags: [Notifications]
@@ -10451,8 +10783,16 @@ paths:
         '503':
           description: Persisted automatic assignment policy is unavailable or inconsistent
 
+  /music/legacy/{sourceId}/access:
+    $ref: './media-health.yaml#/paths/~1music~1legacy~1{sourceId}~1access'
+  /music/media-health:
+    $ref: './media-health.yaml#/paths/~1music~1media-health'
+  /music/media-health/{sourceKind}/{sourceId}/revalidate:
+    $ref: './media-health.yaml#/paths/~1music~1media-health~1{sourceKind}~1{sourceId}~1revalidate'
+
 security:
   - bearerAuth: [ ]
+
 
 components:
   securitySchemes:
@@ -10642,6 +10982,46 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    ChatThreadReadRequest:
+      type: object
+      additionalProperties: false
+      required: [lastMessageId]
+      properties:
+        lastMessageId:
+          type: integer
+          format: int64
+          minimum: 1
+    NotificationChannels:
+      type: object
+      additionalProperties: false
+      required: [email, push]
+      properties:
+        email:
+          type: boolean
+        push:
+          type: boolean
+    PushSubscriptionRegister:
+      type: object
+      additionalProperties: false
+      required: [provider, token, platform]
+      properties:
+        provider:
+          type: string
+          description: Push provider; the backend accepts `expo`.
+        token:
+          type: string
+          maxLength: 255
+        platform:
+          type: string
+          description: Device platform; the backend accepts `ios` or `android`.
+    PushSubscriptionRevoke:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        token:
+          type: string
+          maxLength: 255
     VideoCampaignWrite:
       type: object
       additionalProperties: false
@@ -10716,6 +11096,10 @@ components:
         defaultDestination: { type: string, enum: [tdf, google_drive], nullable: true }
         revision: { type: integer, format: int64, minimum: 0 }
 
+    ArtistFeaturedTrack:
+      $ref: './artist-playback.yaml#/components/schemas/ArtistFeaturedTrack'
+    MusicArtistFeaturedTrackRequest:
+      $ref: './artist-playback.yaml#/components/schemas/MusicArtistFeaturedTrackRequest'
     InvoiceLineDTO:
       type: object
       required:
@@ -12227,7 +12611,7 @@ components:
         retainedMinor: { type: integer, format: int64, minimum: 0 }
         refundDueMinor: { type: integer, format: int64, minimum: 0, description: retainedMinor + refundDueMinor equals the collected money }
         currency: { type: string, pattern: '^[A-Z]{3}$' }
-        refundStatus: { type: string, enum: [none, awaiting_operator, requested] }
+        refundStatus: { type: string, enum: [none, awaiting_operator, requested, approved, processing, succeeded, failed, cancelled] }
         alreadyCancelled: { type: boolean, description: True when the quote was cancelled earlier and the stored record is returned }
     DomoQuoteCancelRequest:
       type: object
@@ -12236,6 +12620,22 @@ components:
       properties:
         canceller: { type: string, enum: [customer, tdf] }
         note: { type: string, maxLength: 500 }
+    DomoRefundProviderReference:
+      type: object
+      additionalProperties: false
+      required: [providerRefundId]
+      properties:
+        providerRefundId: { type: string, minLength: 1, maxLength: 256, pattern: '^[A-Za-z0-9_.-]+$' }
+    DomoManualRefundEvidence:
+      type: object
+      additionalProperties: false
+      required: [externalReference, evidenceReference, amountMinor, currency, occurredAt]
+      properties:
+        externalReference: { type: string, maxLength: 256, pattern: '^[A-Za-z0-9_.-]+$' }
+        evidenceReference: { type: string, minLength: 16, maxLength: 256, description: Secure internal reference to the actual receipt; never a credential or raw bank document }
+        amountMinor: { type: integer, format: int64, minimum: 1 }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        occurredAt: { type: string, format: date-time }
     PublicDomoQuoteLine:
       type: object
       additionalProperties: false
@@ -12284,9 +12684,12 @@ components:
         holdExpiresAt: { type: string, format: date-time }
         termsAcceptedAt: { type: string, format: date-time, nullable: true }
         depositPaidAt: { type: string, format: date-time, nullable: true }
+        cancellation:
+          nullable: true
+          allOf: [{ $ref: '#/components/schemas/PublicDomoCancellation' }]
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card] }
     PublicDomoPaypalCaptureRequest:
       type: object
       additionalProperties: false
@@ -12433,7 +12836,7 @@ components:
         quote: { $ref: '#/components/schemas/PublicEventTicketQuote' }
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, bank_transfer] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card, bank_transfer] }
         tickets:
           type: array
           description: Empty until fulfillment issues tickets after verified payment.
@@ -12630,7 +13033,7 @@ components:
           type: array
           description: Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown.
           uniqueItems: true
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, bank_transfer] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card, bank_transfer] }
         manualPayment:
           allOf: [{ $ref: '#/components/schemas/PublicBookingManualPayment' }]
           nullable: true
@@ -17348,6 +17751,26 @@ components:
         ffStartedAt:
           type: string
           format: date
+    ArtistRecommendation:
+      type: object
+      required: [arecArtistId, arecReason, arecScore, arecSeedArtistIds]
+      properties:
+        arecArtistId:
+          type: integer
+          format: int64
+        arecReason:
+          type: string
+          enum: [similar_fans, popular]
+        arecScore:
+          type: number
+          format: double
+          description: Sum of the cosine similarities to the followed artists; 0 for `popular`.
+        arecSeedArtistIds:
+          type: array
+          description: Followed artists behind a `similar_fans` entry, strongest first (at most 3).
+          items:
+            type: integer
+            format: int64
     CourseSession:
       type: object
       properties:
@@ -17515,7 +17938,7 @@ components:
           nullable: true
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, payphone_card] }
         checkoutAvailable: { type: boolean }
     CoursePaypalCaptureRequest:
       type: object
@@ -17556,6 +17979,7 @@ components:
         refreshToken:
           type: string
     DriveTokenResponse:
+      description: Nonsecret TDFConnection descriptor. accessToken and refreshToken contain the same opaque owner-bound handle; neither contains a provider credential.
       type: object
       required: [accessToken, expiresIn]
       properties:

@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "decision": "docs/adr/0133-enforced-module-boundaries.md",
+  "systems": {
+    "backend": {
+      "language": "haskell",
+      "sourceRoots": [
+        "tdf-hq/src",
+        "tdf-hq/app"
+      ],
+      "layers": [
+        {
+          "name": "persistence",
+          "match": [
+            "^TDF\\.Models(Extra)?$",
+            "^TDF\\.Models\\.",
+            "\\.Models$",
+            "^TDF\\.UUIDInstances$"
+          ]
+        },
+        {
+          "name": "transfer-types",
+          "match": [
+            "^TDF\\.DTO($|\\.)",
+            "^TDF\\.API\\.Types$"
+          ]
+        },
+        {
+          "name": "domain",
+          "default": true
+        },
+        {
+          "name": "http-contract",
+          "match": [
+            "^TDF\\.API($|\\.)",
+            "^TDF\\.Routes\\."
+          ]
+        },
+        {
+          "name": "http-delivery",
+          "match": [
+            "^TDF\\.Server($|\\.|[A-Z])",
+            "\\.Server$"
+          ]
+        },
+        {
+          "name": "composition",
+          "match": [
+            "^TDF\\.App\\.Boot$",
+            "^[^.]+$"
+          ]
+        }
+      ],
+      "knownViolations": [
+        "TDF.Artists.Enrichment -> TDF.API.Admin",
+        "TDF.Catalog.DB -> TDF.API.DDEX",
+        "TDF.ContentStorage -> TDF.API.ContentStorage",
+        "TDF.Courses.Metadata -> TDF.Routes.Courses",
+        "TDF.Cron -> TDF.API.Admin",
+        "TDF.Cron -> TDF.Routes.Courses",
+        "TDF.MusicRelease.ContentValidation -> TDF.API.MusicRelease",
+        "TDF.Social.Chat -> TDF.API.Chat"
+      ],
+      "sizeBudget": {
+        "maxLines": 2500,
+        "headroom": 300,
+        "oversized": {
+          "tdf-hq/src/TDF/API/Types.hs": 2900,
+          "tdf-hq/src/TDF/Server.hs": 21300,
+          "tdf-hq/src/TDF/Server/Catalog.hs": 3300,
+          "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": 10900,
+          "tdf-hq/src/TDF/ServerAuth.hs": 3000,
+          "tdf-hq/src/TDF/ServerExtra.hs": 5400,
+          "tdf-hq/src/TDF/Services/EventDiscovery.hs": 3200
+        }
+      }
+    },
+    "web": {
+      "language": "typescript",
+      "sourceRoots": [
+        "tdf-hq-ui/src"
+      ],
+      "exclude": [
+        "\\.test\\.tsx?$",
+        "(^|/)__tests__/",
+        "(^|/)__mocks__/",
+        "^test/"
+      ],
+      "skipImportScan": [
+        "^api/generated/"
+      ],
+      "layers": [
+        {
+          "name": "foundation",
+          "match": [
+            "^(vendor|assets|styles|lib|i18n)/"
+          ]
+        },
+        {
+          "name": "utils",
+          "match": [
+            "^utils/"
+          ]
+        },
+        {
+          "name": "config",
+          "match": [
+            "^config/"
+          ]
+        },
+        {
+          "name": "auth-state",
+          "match": [
+            "^auth/"
+          ]
+        },
+        {
+          "name": "api",
+          "match": [
+            "^api/"
+          ]
+        },
+        {
+          "name": "app-services",
+          "default": true
+        },
+        {
+          "name": "components",
+          "match": [
+            "^components/"
+          ]
+        },
+        {
+          "name": "features",
+          "match": [
+            "^features/"
+          ]
+        },
+        {
+          "name": "pages",
+          "match": [
+            "^pages/"
+          ]
+        },
+        {
+          "name": "routing",
+          "match": [
+            "^routes/"
+          ]
+        },
+        {
+          "name": "shell",
+          "match": [
+            "^[^/]+$",
+            "^player/PlayerShell\\.tsx$"
+          ]
+        }
+      ],
+      "knownViolations": [
+        "api/authHeader.ts -> session/SessionContext.tsx",
+        "utils/inAppBrowser.ts -> mobile/distribution.ts"
+      ],
+      "sizeBudget": {
+        "maxLines": 2000,
+        "headroom": 300,
+        "exempt": [
+          "^api/generated/"
+        ],
+        "oversized": {
+          "tdf-hq-ui/src/components/RadioWidget.tsx": 3500,
+          "tdf-hq-ui/src/pages/AdminUsersPage.tsx": 2200,
+          "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": 2500,
+          "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx": 9800,
+          "tdf-hq-ui/src/pages/FanHubPage.tsx": 2500,
+          "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx": 2700,
+          "tdf-hq-ui/src/pages/MarketplacePage.tsx": 3600,
+          "tdf-hq-ui/src/pages/PublicBookingPage.tsx": 2600,
+          "tdf-hq-ui/src/pages/SocialEventsPage.tsx": 2400
+        }
+      }
+    }
+  }
+}

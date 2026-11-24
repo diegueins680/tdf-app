@@ -1,0 +1,24 @@
+{
+  "id": "ddcaea8fa30272376cdb",
+  "classification": "dynamic-business-catalog",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "domain-specific catalog table selected during consumer refactor",
+  "priority": "P1-cross-platform",
+  "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+  "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-hq-ui/src/pages/MerchOrderTrackingPage.tsx",
+    "line": 55,
+    "kind": "jsx-option-values",
+    "name": "JSX value attributes",
+    "valueCount": 5,
+    "consumerCount": 62,
+    "exactDuplicateIds": [],
+    "similarCandidateIds": [
+      "37947a8e810836a21c9a"
+    ]
+  }
+}

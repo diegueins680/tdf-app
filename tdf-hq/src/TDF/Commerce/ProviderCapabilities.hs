@@ -363,11 +363,20 @@ providerProfile provider = case provider of
     }
   ProviderPayPhone -> Just ProviderProfile
     { ppProvider = provider
-    , ppFlows = directFlows
+    -- ADR 0136: the payment button with split serves marketplace charges.
+    -- Routing still needs verified evidence for every marketplace capability.
+    , ppFlows = directFlows <> [FlowMarketplace]
     , ppMethodCapabilities =
         [ (MethodPayPhoneWallet,
             [ CapabilityOneTime
             , CapabilityServerVerification
+            ])
+        , (MethodCard,
+            [ CapabilityOneTime
+            , CapabilityServerVerification
+            , CapabilityConnectedAccounts
+            , CapabilitySplitSettlement
+            , CapabilitySellerPayouts
             ])
         ]
     }

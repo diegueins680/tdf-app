@@ -1,20 +1,23 @@
 /** @jest-environment jsdom */
 import { act } from 'react';
+import { fireEvent } from '@testing-library/react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes, useNavigate, type NavigateFunction } from 'react-router-dom';
 import { jest } from '@jest/globals';
-import type { MarketplaceCustomerRequestDTO, MarketplaceOrderDTO } from '../api/types';
+import type { MarketplaceCustomerRequestDTO, MarketplaceCustomerRequestSubmitPayload, MarketplaceCustomerRequestType, MarketplaceOrderDTO } from '../api/types';
 
 const getOrderMock = jest.fn<(orderId: string, lookupToken: string) => Promise<MarketplaceOrderDTO>>();
 const submitManualEvidenceMock = jest.fn<(orderId: string, reference: string, lookupToken: string) => Promise<MarketplaceOrderDTO>>();
 const listCustomerRequestsMock = jest.fn<() => Promise<MarketplaceCustomerRequestDTO[]>>();
-const submitCustomerRequestMock = jest.fn<() => Promise<MarketplaceCustomerRequestDTO>>();
+const submitCustomerRequestMock = jest.fn<(id: string, payload: MarketplaceCustomerRequestSubmitPayload, token: string, key: string) => Promise<MarketplaceCustomerRequestDTO>>();
+const clearRequestKey = jest.fn();
+const getRequestKey = jest.fn(() => 'marketplace-request-idempotency-0001');
 
 jest.unstable_mockModule('../api/marketplace', () => ({
   loadMarketplaceLookupToken: (orderId: string) =>
     window.sessionStorage.getItem(`tdf-marketplace-order-lookup:${orderId}`),
-  getMarketplaceRequestIdempotencyKey: () => 'marketplace-request-idempotency-0001',
-  clearMarketplaceRequestIdempotencyKey: jest.fn(),
+  getMarketplaceRequestIdempotencyKey: getRequestKey,
+  clearMarketplaceRequestIdempotencyKey: clearRequestKey,
   Marketplace: {
     getOrder: getOrderMock,
     submitManualEvidence: submitManualEvidenceMock,
@@ -111,6 +114,7 @@ describe('MarketplaceOrderTrackingPage manual payments', () => {
     listCustomerRequestsMock.mockReset();
     listCustomerRequestsMock.mockResolvedValue([]);
     submitCustomerRequestMock.mockReset();
+    clearRequestKey.mockClear(); getRequestKey.mockClear();
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -140,6 +144,44 @@ describe('MarketplaceOrderTrackingPage manual payments', () => {
   const editReference = async (value: string) => {
     await act(async () => { setInputValue(referenceInput(), value); });
   };
+
+  it('uses the sale labels for both the current state and delivery history', async () => {
+    getOrderMock.mockResolvedValue({ ...orderFixture('awaiting_evidence'), moFulfillmentHistory: [
+      ['on_hold', '2030-01-01T15:00:00Z'], ['ready_for_pickup', '2030-01-01T15:01:00Z'],
+    ] });
+    await renderPage();
+    expect(container.textContent).toContain('Entrega: Reserva activa');
+    expect(container.textContent).toContain('Lista para retiro');
+    expect(container.textContent).not.toContain('on hold');
+    expect(submitManualEvidenceMock).not.toHaveBeenCalled();
+    expect(submitCustomerRequestMock).not.toHaveBeenCalled();
+  });
+
+  it('distinguishes pending deposit return from settlement and payment in rental history', async () => {
+    getOrderMock.mockResolvedValue({ ...orderFixture('approved'), moOrderKind: 'rental',
+      moStatus: 'paid', moCheckoutStatus: 'paid', moFulfillmentStatus: 'deposit_refund_due',
+      moDepositStatus: 'partial_refund_due', moDepositDeductionUsdCents: 1000,
+      moFulfillmentHistory: [['returned_pending_inspection', '2030-01-01T15:00:00Z'], ['deposit_refund_due', '2030-01-01T15:01:00Z']],
+    });
+    await renderPage();
+    expect(container.textContent).toContain('Renta: Devolución de depósito pendiente');
+    expect(container.textContent).toContain('Devuelta; inspección pendiente');
+    expect(container.textContent).toContain('Estado del depósito: Devolución parcial pendiente');
+    expect(container.textContent).toContain('deducción propuesta');
+    expect(container.textContent).toContain('El pago, la custodia del equipo y la devolución del depósito se confirman por separado.');
+    expect(submitCustomerRequestMock).not.toHaveBeenCalled();
+  });
+
+  it('does not infer pending payment from missing deposit data or unknown state codes', async () => {
+    getOrderMock.mockResolvedValue({ ...orderFixture('approved'), moOrderKind: 'rental', moDepositStatus: null,
+      moFulfillmentStatus: 'future_state', moFulfillmentHistory: [['future_state', '2030-01-01T15:00:00Z']],
+    });
+    await renderPage();
+    expect(container.textContent).toContain('Estado del depósito: Sin información');
+    expect(container.textContent).toContain('Renta: future_state');
+    expect(container.textContent).not.toContain('Estado del depósito: pendiente');
+    expect(submitCustomerRequestMock).not.toHaveBeenCalled();
+  });
 
   it('associates invalid references with their field, retains the full text and focuses without sending', async () => {
     getOrderMock.mockResolvedValue(orderFixture('awaiting_evidence'));
@@ -240,6 +282,99 @@ describe('MarketplaceOrderTrackingPage manual payments', () => {
     expect(container.textContent).not.toContain('Pedido order-1');
     expect(container.querySelector('[data-testid="marketplace-reference-form"]')).toBeNull();
     expect(submitManualEvidenceMock).not.toHaveBeenCalled();
+  });
+
+  const rentalOrder = () => ({ ...orderFixture('submitted'), moOrderKind: 'rental', moFulfillmentStatus: 'confirmed', moRentalEndDate: '2030-01-31' });
+  const requestFormElement = () => container.querySelector<HTMLFormElement>('[data-testid="marketplace-request-form"]')!;
+  const reasonInput = () => requestFormElement().querySelector<HTMLTextAreaElement>('textarea')!;
+  const dateInput = () => requestFormElement().querySelector<HTMLInputElement>('input[type="date"]')!;
+  const submitRequest = () => requestFormElement().dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  const chooseRequest = async (label: string) => {
+    await act(async () => { fireEvent.mouseDown(requestFormElement().querySelector('[role="combobox"]')!); });
+    const option = Array.from(document.querySelectorAll<HTMLElement>('[role="option"]')).find(el => el.textContent === label)!;
+    await act(async () => { fireEvent.click(option); });
+  };
+  const editReason = async (value: string) => {
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set?.call(reasonInput(), value);
+      reasonInput().dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  };
+  const createdRequest = (type: MarketplaceCustomerRequestType): MarketplaceCustomerRequestDTO => ({
+    mcrRequestId: 'request-2', mcrOrderId: 'order-1', mcrOrderKind: 'rental', mcrRequestType: type,
+    mcrStatus: 'submitted', mcrReason: '  Motivo original  '.trim(), mcrRequestedEndDate: '2030-02-01',
+    mcrEvidenceUrl: null, mcrRequestedAt: '2030-01-01T15:10:00Z', mcrReviewedAt: null, mcrReviewNotes: null,
+  });
+
+  it('shows type/reason/date errors without creating a key or request, and keeps overlong text', async () => {
+    getOrderMock.mockResolvedValue(rentalOrder()); await renderPage();
+    await act(async () => { submitRequest(); });
+    expect(requestFormElement().querySelector('[role="combobox"]')).toBe(document.activeElement);
+    expect(container.textContent).toContain('Elige un tipo de solicitud');
+    await chooseRequest('Solicitar extensión de fechas');
+    await editReason('Motivo válido');
+    await act(async () => { setInputValue(dateInput(), '2030-01-31'); submitRequest(); });
+    expect(dateInput()).toBe(document.activeElement);
+    expect(dateInput().getAttribute('aria-invalid')).toBe('true');
+    expect(dateInput().getAttribute('min')).toBe('2030-02-01');
+    await act(async () => { setInputValue(dateInput(), '2030-02-01'); });
+    await editReason('R'.repeat(1001));
+    await act(async () => { submitRequest(); });
+    expect(reasonInput().value).toBe('R'.repeat(1001));
+    expect(reasonInput().hasAttribute('maxlength')).toBe(false);
+    expect(reasonInput()).toBe(document.activeElement);
+    expect(document.getElementById(reasonInput().getAttribute('aria-describedby')!)?.textContent).toContain('3 a 1000');
+    await editReason('Motivo\u202einválido'); await act(async () => { submitRequest(); });
+    expect(container.textContent).toContain('caracteres no admitidos');
+    expect(getRequestKey).not.toHaveBeenCalled(); expect(submitCustomerRequestMock).not.toHaveBeenCalled();
+  });
+
+  it('locks the request, recovers a failed exact attempt and never rotates its key for an edited draft', async () => {
+    getOrderMock.mockResolvedValue(rentalOrder());
+    let reject!: (error: Error) => void;
+    submitCustomerRequestMock.mockImplementationOnce(() => new Promise((_resolve, fail) => { reject = fail; }));
+    submitCustomerRequestMock.mockResolvedValueOnce(createdRequest('rental_extension'));
+    await renderPage(); await chooseRequest('Solicitar extensión de fechas');
+    await editReason('  Motivo original  ');
+    await act(async () => { setInputValue(dateInput(), '2030-02-01'); });
+    await act(async () => { submitRequest(); submitRequest(); });
+    expect(submitCustomerRequestMock).toHaveBeenCalledTimes(1);
+    expect(reasonInput().disabled).toBe(true); expect(dateInput().disabled).toBe(true);
+    expect(requestFormElement().querySelector('[role="combobox"]')?.getAttribute('aria-disabled')).toBe('true');
+    await act(async () => { reject(new Error('unknown outcome')); });
+    expect(reasonInput().value).toBe('  Motivo original  '); expect(clearRequestKey).not.toHaveBeenCalled();
+    await editReason('Motivo cambiado'); await act(async () => { submitRequest(); });
+    expect(submitCustomerRequestMock).toHaveBeenCalledTimes(1); expect(getRequestKey).toHaveBeenCalledTimes(1);
+    const restore = Array.from(requestFormElement().querySelectorAll('button')).find(el => el.textContent?.includes('Usar datos del intento anterior'))!;
+    await act(async () => { restore.click(); });
+    expect(reasonInput().value).toBe('  Motivo original  '); expect(dateInput().value).toBe('2030-02-01');
+    expect(submitCustomerRequestMock).toHaveBeenCalledTimes(1);
+    await act(async () => { submitRequest(); });
+    expect(submitCustomerRequestMock.mock.calls[1]).toEqual(submitCustomerRequestMock.mock.calls[0]);
+    expect(clearRequestKey).toHaveBeenCalledWith('order-1', 'rental_extension');
+    expect(container.textContent).toContain('no cancela, devuelve ni extiende automáticamente');
+    expect(container.textContent).toContain('Solicitar extensión de fechas · En revisión');
+  });
+
+  it('keeps a thousand Unicode characters and rejects another order’s response without clearing its key', async () => {
+    getOrderMock.mockResolvedValue(rentalOrder());
+    submitCustomerRequestMock.mockResolvedValue({ ...createdRequest('rental_cancellation'), mcrOrderId: 'other-order' });
+    await renderPage(); await chooseRequest('Cancelar antes de la entrega del equipo');
+    await editReason('𝄞'.repeat(1000)); await act(async () => { submitRequest(); });
+    expect(submitCustomerRequestMock).toHaveBeenCalledWith('order-1', { mcrsRequestType: 'rental_cancellation', mcrsReason: '𝄞'.repeat(1000) }, 'lookup-secret', 'marketplace-request-idempotency-0001');
+    expect(reasonInput().value).toBe('𝄞'.repeat(1000)); expect(clearRequestKey).not.toHaveBeenCalled();
+    expect(container.textContent).not.toContain('request-2');
+  });
+
+  it('retains the request draft when preparing its stored retry key throws, without sending', async () => {
+    getOrderMock.mockResolvedValue(rentalOrder());
+    await renderPage(); await chooseRequest('Cancelar antes de la entrega del equipo');
+    await editReason('Borrador que debe conservarse');
+    getRequestKey.mockImplementationOnce(() => { throw new Error('Synthetic key creation failure'); });
+    await act(async () => { submitRequest(); });
+    expect(submitCustomerRequestMock).not.toHaveBeenCalled(); expect(clearRequestKey).not.toHaveBeenCalled();
+    expect(reasonInput().value).toBe('Borrador que debe conservarse'); expect(reasonInput().disabled).toBe(false);
+    expect(container.textContent).toContain('No pudimos confirmar la solicitud');
   });
 
   it('submits the customer reference with the scoped lookup token and keeps payment pending', async () => {

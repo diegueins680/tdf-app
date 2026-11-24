@@ -1,4 +1,4 @@
-import { getLogoutRevision, getLogoutStatus, hasLogoutIntent, ownsLogoutRevision, subscribeLogoutIntent } from '../session/logoutIntent';
+import { getLogoutRevision, getLogoutStatus, hasLogoutIntent, ownsLogoutRevision, subscribeLogoutIntent } from '../auth/logoutIntent';
 import { authErrorMessage } from '../utils/authErrorMessage';
 import { logger } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';

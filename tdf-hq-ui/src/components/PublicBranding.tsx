@@ -27,6 +27,8 @@ import {
 } from '../utils/instagramTraffic';
 
 const FeatureMenu = lazy(() => import('./SidebarNav'));
+// Signed-in visitors see their notifications (chat messages included) on every public page too.
+const NotificationBell = lazy(() => import('./NotificationBell'));
 
 const PUBLIC_NAV_ITEMS = [
   { label: 'authEntry.search', to: '/buscar' },
@@ -263,7 +265,12 @@ export default function PublicBranding({
                 {!focusedPurchase && <MarketplaceCartButton />}
                 {!focusedPurchase && <IconButton component={RouterLink} to="/buscar" aria-label={t('authEntry.search')} sx={{ minWidth: 44, minHeight: 44 }}><SearchIcon /></IconButton>}
                 {session ? (
-                  <SessionMenu />
+                  <>
+                    <Suspense fallback={null}>
+                      <NotificationBell />
+                    </Suspense>
+                    <SessionMenu />
+                  </>
                 ) : showLoginButton && (
                   <Button
                     variant="contained"

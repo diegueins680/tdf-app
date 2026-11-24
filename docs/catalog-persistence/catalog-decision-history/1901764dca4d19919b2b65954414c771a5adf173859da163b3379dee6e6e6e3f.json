@@ -1,0 +1,26 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "9aa9a5145af329f38439",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "chat-external-delivery-studio-gallery-integration",
+  "justification": "Compose the two reviewed successors of 7362b266dc1dd2eaabfb: keep the studio gallery seed exactly as main appended it after the storage identity guards, then append only 2026-11-20_chat_external_delivery (introduced by 239fc3974a114d08d3d27d6f4899f9cfcf4fd81e), an additive, repeatable migration. Every earlier migration object, its order and its SQL stay unchanged, and both complete parent review graphs are retained. This author review does not authorize deployment or provider activation and is not independent approval.",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 263
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:57e201c3d6db92f10f8d1a76a26b960d319cab441cd42fb0cc0d58eca3d2525c"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:468b2a95b079a096a41ddde76d9ef792b0329620aef80a8d19b74eb96419a49a"
+    }
+  ]
+}

@@ -1,9 +1,9 @@
-import { hasLogoutIntent } from '../session/logoutIntent';
+import { hasLogoutIntent } from '../auth/logoutIntent';
 import { logger } from '../utils/logger';
 import { fetchWithDeadline, RequestTimeoutError } from './requestDeadline';
 import { buildAuthorizationHeader } from './authHeader';
 import { extractErrorDetails } from './errorMessage';
-import { getAuthSessionEpoch, isSessionAuthFailureMessage, notifyAuthSessionExpired } from '../session/authEvents';
+import { getAuthSessionEpoch, isSessionAuthFailureMessage, notifyAuthSessionExpired } from '../auth/authEvents';
 import { resolveApiBase } from '../config/apiBase';
 
 const API_BASE = resolveApiBase();

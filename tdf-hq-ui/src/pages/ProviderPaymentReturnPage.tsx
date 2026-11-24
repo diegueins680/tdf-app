@@ -2,9 +2,12 @@ import { Alert, Box, Button, Card, CardContent, CircularProgress, Container, Sta
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
+import { loadCheckoutPaymentAlternatives } from '../api/checkoutPaymentAlternatives';
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 
-import { getProviderPaymentSession, safePlaceToPayRedirect } from '../api/providerPaymentSessions';
+import { getProviderPaymentSession, safeProviderRedirect } from '../api/providerPaymentSessions';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { env } from '../utils/env';
 import {
   clearPaymentIdempotencyKey,
   clearProviderPaymentResume,
@@ -25,7 +28,9 @@ export default function ProviderPaymentReturnPage() {
   const { locale } = useLocalePreferences();
   const english = locale.toLowerCase().startsWith('en');
   const [searchParams] = useSearchParams();
-  const checkoutId = searchParams.get('tdf_checkout');
+  // PayPhone appends its own query (id, clientTransactionId) to the response
+  // URL and may do so with a second '?', so keep only the checkout id itself.
+  const checkoutId = searchParams.get('tdf_checkout')?.split('?')[0] ?? null;
   const resume = loadProviderPaymentResume(checkoutId ?? undefined);
   const status = useQuery({
     queryKey: ['provider-payment-session-return', resume?.checkoutId, resume?.attemptId],
@@ -44,6 +49,13 @@ export default function ProviderPaymentReturnPage() {
   });
 
   const resumedCheckoutId = resume?.checkoutId;
+  const alternatives = useQuery({
+    queryKey: ['payment-return-alternatives', resumedCheckoutId, resume?.attemptId, resume?.returnPath],
+    queryFn: () => loadCheckoutPaymentAlternatives(resume!),
+    enabled: Boolean(resume && !status.isError && status.data?.canRetryOrFallback
+      && ['failed', 'confirmed_no_charge'].includes(status.data.state)),
+    retry: false,
+  });
   useEffect(() => {
     if (resumedCheckoutId && status.data?.state === 'succeeded') {
       markProviderPaymentResumeCompleted(resumedCheckoutId);
@@ -68,16 +80,17 @@ export default function ProviderPaymentReturnPage() {
     || (session?.state === 'failed' && session.canRetryOrFallback);
   const ambiguous = session?.state === 'ambiguous'
     || Boolean(session && !session.canRetryOrFallback && !succeeded);
-  const redirect = session?.provider === 'placetopay'
-    ? safePlaceToPayRedirect(session.redirectUrl)
-    : null;
+  const redirect = safeProviderRedirect(session?.provider, session?.redirectUrl);
   const canReleaseAttempt = paymentAttemptCanBeReleased(
     session?.state,
     session?.canRetryOrFallback,
   );
+  const paypalConfigured = Boolean(env.read('VITE_PAYPAL_CLIENT_ID'));
+  const paypalAvailable = paypalConfigured
+    && typeof window !== 'undefined' && Boolean(window.paypal?.Buttons);
 
   const releaseAttemptIfAuthoritative = () => {
-    if (!canReleaseAttempt) return;
+    if (!canReleaseAttempt || status.isError || status.isFetching) return;
     clearProviderPaymentResume(resume.checkoutId);
     if (knownNoCharge) {
       clearPaymentIdempotencyKey(
@@ -128,6 +141,23 @@ export default function ProviderPaymentReturnPage() {
                     ? 'The server confirmed that no charge completed. Return to the order to choose an available method.'
                     : 'No se realizó ningún cobro. Vuelve a la orden para elegir un método disponible.'}
                 </Alert>
+              )}
+              {knownNoCharge && alternatives.isSuccess && (
+                <PaymentAlternativesNotice
+                  methods={alternatives.data.filter((method) => method !== 'paypal' || paypalAvailable)}
+                  availabilityUnknown={status.isError || status.isFetching}
+                  methodsToCheck={paypalConfigured && !paypalAvailable
+                    ? alternatives.data.filter((method) => method === 'paypal') : []}
+                  failedMethod={resume.paymentMethod === 'payphone_wallet'
+                    ? 'payphone_wallet' : `${resume.provider}_${resume.paymentMethod}`}
+                  blocked={status.isError || status.isFetching}
+                  english={english}
+                />
+              )}
+              {knownNoCharge && alternatives.isError && (
+                <Alert severity="info">{english
+                  ? 'Return to the original order to refresh its available payment methods.'
+                  : 'Vuelve a la orden original para consultar sus medios de pago disponibles.'}</Alert>
               )}
               {ambiguous && (
                 <Alert severity="warning">

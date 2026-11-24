@@ -1,0 +1,35 @@
+{
+  "id": "34210b76e81fd04cffae",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Incorrect typed method dispatch can redirect authenticated writes or expose private transfer evidence; server scope and ownership remain authoritative.",
+  "justification": "Reviewed the combined 75 transport methods: main adds the event/order-scoped receipt read, while memories add author edit/delete and event media upload. Both parent registries are preserved; method keys are implementation dispatch, not selectable business catalogs.",
+  "reviewed": true,
+  "reviewMethod": "combined-reviewed-parent-successor",
+  "reviewBatch": "event-memories-main-integration-2026-10-25",
+  "evidence": {
+    "file": "tdf-hq-ui/src/api/socialEvents.ts",
+    "line": 582,
+    "valueCount": 75
+  },
+  "previousDecisions": [
+    {
+      "$historyRef": "sha256:90b99ef3800addeb7626cc49111eb00baf1c4a4f6e0ee8181da4aa1e9f3569df"
+    },
+    {
+      "$historyRef": "sha256:591dce154be630f7ca588bec65651d9a49ff9a634f4a298dc510746c61069fe2"
+    }
+  ],
+  "supersededReviews": [
+    {
+      "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
+      "sourceDecisionId": "48cbf22770303d844cdc",
+      "sourceDecisionSha256": "d0122e0027c1c7297c180b0448c75e7e36f9624693c402eba70a6e38d5625114",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
+      "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
+    }
+  ]
+}

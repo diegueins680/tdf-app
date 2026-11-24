@@ -20,7 +20,7 @@ import ForbiddenPage from '../pages/ForbiddenPage';
 import PublicBranding from '../components/PublicBranding';
 import UpcomingEventsCarousel from '../components/events/UpcomingEventsCarousel';
 import UpcomingEventsPublicPage from '../pages/UpcomingEventsPublicPage';
-import { evaluatePathAccess } from '../features/featureRegistry';
+import { evaluatePathAccess } from '../utils/featureRegistry';
 import { useNavigationPreferences } from '../hooks/useNavigationPreferences';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';

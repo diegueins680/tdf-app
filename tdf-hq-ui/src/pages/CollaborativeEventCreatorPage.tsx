@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Accordion,
@@ -23,11 +23,13 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
+import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternateOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
+import MicExternalOnOutlinedIcon from '@mui/icons-material/MicExternalOnOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PublicIcon from '@mui/icons-material/Public';
 import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined';
@@ -41,13 +43,21 @@ import {
 } from '../api/socialEvents';
 import type { PartySelectorOption } from '../api/partySelector';
 import PageShell from '../components/PageShell';
+import EventLineupPicker from '../components/events/EventLineupPicker';
+import EventPublishControl from '../components/events/EventPublishControl';
 import TicketPricePreview from '../components/events/TicketPricePreview';
 import { UserSelector } from '../components/party-selector/PartySelector';
 import { useSession } from '../session/SessionContext';
-import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { canAccessPath } from '../utils/accessControl';
+import { useLocalePreferences, wasTimezoneChosenOnThisDevice } from '../contexts/LocalePreferencesContext';
 import {
+  EVENT_ART_ACCEPT,
   buildInitialCollaborativeEventDraft,
   createCollaborativeEvent,
+  normalizeLineup,
+  resolveEventCreatorTimezone,
+  saveNamedLineup,
+  validateEventArtFile,
   type CollaborativeEventCreationResult,
   type CollaborativeEventDraft,
   type EventCollaboratorDraft,
@@ -76,6 +86,7 @@ const loadDraft = (timezone: string): CollaborativeEventDraft => {
     return {
       ...initial,
       ...stored,
+      publicAddress: typeof stored.publicAddress === 'string' ? stored.publicAddress : '',
       timezone: typeof stored.timezone === 'string' && stored.timezone.trim()
         ? stored.timezone : initial.timezone,
       durationMinutes: stored.durationMinutes === null
@@ -94,11 +105,20 @@ const loadDraft = (timezone: string): CollaborativeEventDraft => {
               ),
           )
         : [],
+      artists: Array.isArray(stored.artists)
+        ? normalizeLineup(stored.artists.filter((artist) => Boolean(
+            artist
+            && typeof artist.artistName === 'string'
+            && (artist.artistId === null || typeof artist.artistId === 'string'),
+          )))
+        : [],
     };
   } catch {
     return initial;
   }
 };
+
+const artistCountLabel = (count: number) => `${count} artista${count === 1 ? '' : 's'}`;
 
 const eventDateLabel = (draft: CollaborativeEventDraft) => {
   const start = DateTime.fromFormat(draft.startAt, LOCAL_DATE_TIME_FORMAT, { zone: draft.timezone });
@@ -115,13 +135,42 @@ const roleLabel = (role: EventCollaboratorDraft['role']) =>
 
 export default function CollaborativeEventCreatorPage() {
   const { session } = useSession();
-  const { locale, timezone, currency } = useLocalePreferences();
+  const { locale, timezone: preferredTimezone, currency } = useLocalePreferences();
+  const timezone = useMemo(
+    () => resolveEventCreatorTimezone(
+      preferredTimezone,
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      wasTimezoneChosenOnThisDevice(preferredTimezone),
+    ),
+    [preferredTimezone],
+  );
+  const canPlanLogistics = canAccessPath('/social/eventos/0/logistica', session?.roles, session?.modules, session?.featureFlags);
   const qc = useQueryClient();
   const [draft, setDraft] = useState<CollaborativeEventDraft>(() => loadDraft(timezone));
   const [creationResult, setCreationResult] =
     useState<CollaborativeEventCreationResult | null>(null);
   const [collaboratorCandidate, setCollaboratorCandidate] = useState<PartySelectorOption | null>(null);
   const sessionPartyId = session?.partyId != null ? String(session.partyId) : '';
+  // The art lives only in memory: a File cannot be restored from the saved draft.
+  const [artFile, setArtFile] = useState<File | null>(null);
+  const [artProblem, setArtProblem] = useState('');
+  const [artPreviewUrl, setArtPreviewUrl] = useState('');
+  const artInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!artFile || typeof URL.createObjectURL !== 'function') {
+      setArtPreviewUrl('');
+      return undefined;
+    }
+    const url = URL.createObjectURL(artFile);
+    setArtPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [artFile]);
+  const chooseArt = (file: File | undefined) => {
+    if (!file) return;
+    const problem = validateEventArtFile(file);
+    setArtProblem(problem ?? '');
+    if (!problem) setArtFile(file);
+  };
 
   const venuesQuery = useQuery({
     queryKey: ['social-venues'],
@@ -171,7 +220,9 @@ export default function CollaborativeEventCreatorPage() {
           elmPartyId: collaborator.partyId,
           elmRole: collaborator.role,
         }),
-    }),
+      saveLineup: SocialEventsAPI.updateEvent,
+      uploadArt: (eventId, file) => SocialEventsAPI.uploadEventImage(eventId, file, file.name),
+    }, artFile),
     onSuccess: (result) => {
       setCreationResult(result);
       try {
@@ -180,6 +231,8 @@ export default function CollaborativeEventCreatorPage() {
         // Ignore storage restrictions after the server has accepted the event.
       }
       void qc.invalidateQueries({ queryKey: ['social-events'] });
+      // The home panel lists the organizer's upcoming events.
+      void qc.invalidateQueries({ queryKey: ['dashboard-my-events'] });
       void qc.invalidateQueries({ queryKey: ['event-logistics', result.event.eventId] });
     },
   });
@@ -226,6 +279,41 @@ export default function CollaborativeEventCreatorPage() {
     },
   });
 
+  const retryArtMutation = useMutation({
+    mutationFn: ({ eventId, file }: { eventId: string; file: File }) =>
+      SocialEventsAPI.uploadEventImage(eventId, file, file.name),
+    onSuccess: (_result, { eventId }) => {
+      setCreationResult((current) => current?.event.eventId === eventId
+        ? { ...current, artUploaded: true, artError: null }
+        : current);
+      void qc.invalidateQueries({ queryKey: ['social-events'] });
+      void qc.invalidateQueries({ queryKey: ['social-event', eventId] });
+      void qc.invalidateQueries({ queryKey: ['public-upcoming-events'] });
+      void qc.invalidateQueries({ queryKey: ['upcoming-events-carousel'] });
+      void qc.invalidateQueries({ queryKey: ['public-event-ticket-storefront', eventId] });
+      void qc.invalidateQueries({ queryKey: ['public-event-ticket-storefront', Number(eventId)] });
+    },
+    onError: (reason, { eventId }) => setCreationResult((current) => current?.event.eventId === eventId
+      ? { ...current, artError: reason instanceof Error ? reason.message : 'No se pudo subir el arte.' }
+      : current),
+  });
+
+  const retryLineupMutation = useMutation({
+    mutationFn: async () => {
+      const eventId = creationResult?.event.eventId?.trim();
+      if (!eventId) throw new Error('El evento no tiene un identificador válido.');
+      return saveNamedLineup(eventId, draft, SocialEventsAPI.updateEvent);
+    },
+    onSuccess: () => {
+      setCreationResult((current) => current && { ...current, pendingArtists: [], lineupError: null });
+      void qc.invalidateQueries({ queryKey: ['social-events'] });
+    },
+    onError: (reason) => setCreationResult((current) => current && {
+      ...current,
+      lineupError: reason instanceof Error ? reason.message : 'No se pudo guardar a los artistas nuevos.',
+    }),
+  });
+
   const updateDraft = <Key extends keyof CollaborativeEventDraft>(
     key: Key,
     value: CollaborativeEventDraft[Key],
@@ -268,15 +356,33 @@ export default function CollaborativeEventCreatorPage() {
 
   const startAnotherEvent = () => {
     setDraft(buildInitialCollaborativeEventDraft(DateTime.now().setZone(timezone)));
+    setArtFile(null);
+    setArtProblem('');
     setCreationResult(null);
   };
 
+  const artInput = (
+    <input
+      ref={artInputRef}
+      type="file"
+      accept={EVENT_ART_ACCEPT}
+      hidden
+      aria-label="Arte del evento"
+      data-testid="event-art-input"
+      onChange={(event) => {
+        chooseArt(event.target.files?.[0]);
+        event.target.value = '';
+      }}
+    />
+  );
+
   if (creationResult) {
     const eventId = String(creationResult.event.eventId);
+    const published = creationResult.event.eventIsPublic === true && creationResult.event.eventPublicListable === true;
     return (
       <PageShell
         title="Evento creado"
-        subtitle="Tu borrador ya está listo para que el equipo lo desarrolle."
+        subtitle={published ? 'Tu evento ya tiene una página pública.' : 'Tu borrador ya está listo para que el equipo lo desarrolle.'}
         maxWidth="md"
         actions={(
           <Button
@@ -299,7 +405,7 @@ export default function CollaborativeEventCreatorPage() {
                   {creationResult.event.eventTitle}
                 </Typography>
                 <Typography color="text.secondary">
-                  {eventDateLabel(draft)} · guardado como planificación
+                  {eventDateLabel(draft)} · {published ? 'publicado' : 'guardado como planificación'}
                 </Typography>
               </Box>
               <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
@@ -312,11 +418,72 @@ export default function CollaborativeEventCreatorPage() {
                   variant="outlined"
                 />
                 <Chip
-                  icon={draft.isPublic ? <PublicIcon /> : <LockOutlinedIcon />}
-                  label={draft.isPublic ? 'Visible públicamente' : 'Borrador privado'}
+                  icon={published ? <PublicIcon /> : <LockOutlinedIcon />}
+                  label={published ? 'Visible públicamente' : draft.isPublic ? 'Pendiente de publicar' : 'Borrador privado'}
+                  color={published ? 'success' : 'default'}
                   variant="outlined"
                 />
+                {creationResult.artUploaded && (
+                  <Chip icon={<AddPhotoAlternateOutlinedIcon />} label="Arte cargado" color="success" variant="outlined" />
+                )}
+                {draft.artists.length > creationResult.pendingArtists.length && (
+                  <Chip
+                    icon={<MicExternalOnOutlinedIcon />}
+                    label={artistCountLabel(draft.artists.length - creationResult.pendingArtists.length)}
+                    color="success"
+                    variant="outlined"
+                  />
+                )}
               </Stack>
+
+              {creationResult.artError && (
+                <Stack spacing={1} sx={{ width: '100%' }}>
+                  <Alert severity="warning">
+                    El evento se creó, pero no se pudo subir el arte: {creationResult.artError}
+                  </Alert>
+                  {artInput}
+                  {artFile && <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>{artFile.name}</Typography>}
+                  {artProblem && <Alert severity="error">{artProblem}</Alert>}
+                  <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                    <Button
+                      onClick={() => {
+                        if (creationResult.event.eventId && artFile) {
+                          retryArtMutation.mutate({ eventId: creationResult.event.eventId, file: artFile });
+                        }
+                      }}
+                      disabled={retryArtMutation.isPending || !creationResult.event.eventId || !artFile || Boolean(artProblem)}
+                    >
+                      {retryArtMutation.isPending ? 'Subiendo arte…' : 'Reintentar'}
+                    </Button>
+                    <Button
+                      onClick={() => artInputRef.current?.click()}
+                      disabled={retryArtMutation.isPending}
+                    >
+                      Elegir otro archivo
+                    </Button>
+                  </Stack>
+                </Stack>
+              )}
+              {creationResult.pendingArtists.length > 0 && (
+                <Alert
+                  severity="warning"
+                  action={(
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={() => retryLineupMutation.mutate()}
+                      disabled={retryLineupMutation.isPending}
+                    >
+                      Reintentar
+                    </Button>
+                  )}
+                  sx={{ width: '100%' }}
+                >
+                  El evento se creó, pero falta agregar a{' '}
+                  {creationResult.pendingArtists.map((artist) => artist.artistName).join(', ')}
+                  {creationResult.lineupError ? `: ${creationResult.lineupError}` : '.'}
+                </Alert>
+              )}
 
               {creationResult.failedCollaborators.length > 0 && (
                 <Alert
@@ -340,15 +507,28 @@ export default function CollaborativeEventCreatorPage() {
                 </Alert>
               )}
 
+              {creationResult.event.eventId && (
+                <EventPublishControl
+                  key={eventId}
+                  event={creationResult.event}
+                  promptAfterSave
+                  artUploadFailed={Boolean(creationResult.artError)}
+                  onPublished={(event) => setCreationResult((current) =>
+                    current?.event.eventId === eventId ? { ...current, event } : current
+                  )}
+                />
+              )}
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <Button
-                  component={RouterLink}
-                  to={`/social/eventos/${encodeURIComponent(eventId)}/logistica`}
-                  variant="contained"
-                  startIcon={<RocketLaunchOutlinedIcon />}
-                >
-                  Planificar con el equipo
-                </Button>
+                {canPlanLogistics && (
+                  <Button
+                    component={RouterLink}
+                    to={`/social/eventos/${encodeURIComponent(eventId)}/logistica`}
+                    variant="outlined"
+                    startIcon={<RocketLaunchOutlinedIcon />}
+                  >
+                    Planificar con el equipo
+                  </Button>
+                )}
                 <Button
                   component={RouterLink}
                   to={`/social/eventos/${encodeURIComponent(eventId)}`}
@@ -356,7 +536,7 @@ export default function CollaborativeEventCreatorPage() {
                 >
                   Ver evento
                 </Button>
-                <Button onClick={startAnotherEvent}>Crear otro</Button>
+                <Button onClick={startAnotherEvent} disabled={retryArtMutation.isPending}>Crear otro</Button>
               </Stack>
             </Stack>
           </CardContent>
@@ -396,11 +576,68 @@ export default function CollaborativeEventCreatorPage() {
             )}
             {mutationError && <Alert severity="error">{mutationError}</Alert>}
 
+            <Card variant="outlined" component="section" aria-labelledby="event-art-heading">
+              <CardContent>
+                <Stack spacing={2}>
+                  <Box>
+                    <Chip label="1 · El arte" size="small" color="primary" />
+                    <Typography id="event-art-heading" variant="h5" fontWeight={800} sx={{ mt: 1 }}>
+                      Empieza por el arte del evento
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Sube el afiche o flyer. Es lo primero que verá el público. JPG, PNG, WebP o GIF de hasta 10 MB.
+                    </Typography>
+                  </Box>
+                  {artInput}
+                  {artFile ? (
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
+                      {artPreviewUrl && (
+                        <Box
+                          component="img"
+                          src={artPreviewUrl}
+                          alt="Vista previa del arte del evento"
+                          sx={{ width: { xs: '100%', sm: 200 }, maxHeight: 260, objectFit: 'contain', borderRadius: 2, bgcolor: 'action.hover' }}
+                        />
+                      )}
+                      <Stack spacing={1} sx={{ minWidth: 0 }}>
+                        <Typography fontWeight={700} sx={{ overflowWrap: 'anywhere' }}>{artFile.name}</Typography>
+                        <Stack direction="row" spacing={1}>
+                          <Button variant="outlined" onClick={() => artInputRef.current?.click()}>Cambiar arte</Button>
+                          <Button color="inherit" onClick={() => { setArtFile(null); setArtProblem(''); }}>Quitar</Button>
+                        </Stack>
+                      </Stack>
+                    </Stack>
+                  ) : (
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      startIcon={<AddPhotoAlternateOutlinedIcon />}
+                      onClick={() => artInputRef.current?.click()}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        chooseArt(event.dataTransfer.files?.[0]);
+                      }}
+                      sx={{ py: 4, borderStyle: 'dashed', borderWidth: 2, '&:hover': { borderStyle: 'dashed', borderWidth: 2 } }}
+                    >
+                      Subir el arte del evento
+                    </Button>
+                  )}
+                  {artProblem && <Alert severity="error">{artProblem}</Alert>}
+                  {!artFile && (
+                    <Typography variant="caption" color="text.secondary">
+                      ¿Aún no lo tienes? Puedes continuar y subirlo después desde el evento.
+                    </Typography>
+                  )}
+                </Stack>
+              </CardContent>
+            </Card>
+
             <Card variant="outlined">
               <CardContent>
                 <Stack spacing={2}>
                   <Box>
-                    <Chip label="1 · Lo esencial" size="small" color="primary" />
+                    <Chip label="2 · Lo esencial" size="small" color="primary" />
                     <Typography variant="h5" fontWeight={800} sx={{ mt: 1 }}>
                       ¿Qué vamos a crear?
                     </Typography>
@@ -512,7 +749,28 @@ export default function CollaborativeEventCreatorPage() {
               <CardContent>
                 <Stack spacing={2}>
                   <Box>
-                    <Chip label="2 · El equipo" size="small" color="primary" />
+                    <Chip label="3 · Los artistas" size="small" color="primary" />
+                    <Typography variant="h5" fontWeight={800} sx={{ mt: 1 }}>
+                      ¿Quién se presenta?
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Busca artistas de la plataforma. Si alguien todavía no está, escribe su
+                      nombre y lo creamos por ti.
+                    </Typography>
+                  </Box>
+                  <EventLineupPicker
+                    value={draft.artists}
+                    onChange={(artists) => updateDraft('artists', artists)}
+                  />
+                </Stack>
+              </CardContent>
+            </Card>
+
+            <Card variant="outlined">
+              <CardContent>
+                <Stack spacing={2}>
+                  <Box>
+                    <Chip label="4 · El equipo" size="small" color="primary" />
                     <Typography variant="h5" fontWeight={800} sx={{ mt: 1 }}>
                       ¿Quién lo va a construir contigo?
                     </Typography>
@@ -591,12 +849,18 @@ export default function CollaborativeEventCreatorPage() {
                 <Box>
                   <Typography fontWeight={800}>Detalles opcionales</Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Descripción, capacidad, precio, tickets y visibilidad
+                    Descripción, capacidad, precio y visibilidad
                   </Typography>
                 </Box>
               </AccordionSummary>
               <AccordionDetails>
                 <Stack spacing={2}>
+                  <TextField
+                    label="Dirección pública del evento"
+                    value={draft.publicAddress ?? ''}
+                    onChange={(event) => updateDraft('publicAddress', event.target.value)}
+                    helperText="Opcional. Puedes indicar una vivienda si tienes autorización para publicar su dirección exacta."
+                  />
                   <TextField
                     label="Descripción"
                     value={draft.description}
@@ -626,12 +890,6 @@ export default function CollaborativeEventCreatorPage() {
                     />
                   </Stack>
                   <TicketPricePreview price={draft.price} currency={currency} locale={locale} />
-                  <TextField
-                    label="Enlace de tickets"
-                    value={draft.ticketUrl}
-                    onChange={(event) => updateDraft('ticketUrl', event.target.value)}
-                    placeholder="https://…"
-                  />
                   <FormControlLabel
                     control={(
                       <Switch
@@ -639,13 +897,32 @@ export default function CollaborativeEventCreatorPage() {
                         onChange={(_, checked) => updateDraft('isPublic', checked)}
                       />
                     )}
-                    label="Mostrar en el catálogo público de eventos"
+                    label="Incluir en el catálogo al publicar"
                   />
                   <Alert severity={draft.isPublic ? 'info' : 'success'}>
                     {draft.isPublic
-                      ? 'El evento será visible de inmediato, aunque seguirá en estado de planificación.'
+                      ? 'El evento aparecerá en el catálogo cuando lo publiques desde su página.'
                       : 'Recomendado: el evento empieza como borrador privado para que el equipo lo prepare.'}
                   </Alert>
+                  <Accordion variant="outlined" disableGutters slotProps={{ transition: { unmountOnExit: true } }}>
+                    <AccordionSummary
+                      id="external-ticketing-toggle"
+                      aria-controls="external-ticketing-details"
+                      expandIcon={<ExpandMoreIcon />}
+                    >
+                      Venta externa de entradas
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <TextField
+                        fullWidth
+                        label="Enlace externo de entradas"
+                        value={draft.ticketUrl}
+                        onChange={(event) => updateDraft('ticketUrl', event.target.value)}
+                        placeholder="https://…"
+                        helperText="Agrega el enlace si usas una boletería externa."
+                      />
+                    </AccordionDetails>
+                  </Accordion>
                 </Stack>
               </AccordionDetails>
             </Accordion>
@@ -659,6 +936,14 @@ export default function CollaborativeEventCreatorPage() {
           >
             <CardContent>
               <Stack spacing={2}>
+                {artPreviewUrl && (
+                  <Box
+                    component="img"
+                    src={artPreviewUrl}
+                    alt=""
+                    sx={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 2 }}
+                  />
+                )}
                 <Box>
                   <Typography variant="overline" color="text.secondary">
                     Vista previa
@@ -671,6 +956,12 @@ export default function CollaborativeEventCreatorPage() {
                   <Stack direction="row" spacing={1} alignItems="center">
                     <CalendarMonthIcon color="action" fontSize="small" />
                     <Typography variant="body2">{eventDateLabel(draft)}</Typography>
+                  </Stack>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <MicExternalOnOutlinedIcon color="action" fontSize="small" />
+                    <Typography variant="body2">
+                      {draft.artists.length === 0 ? 'Artistas por definir' : artistCountLabel(draft.artists.length)}
+                    </Typography>
                   </Stack>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <GroupsOutlinedIcon color="action" fontSize="small" />
@@ -687,7 +978,7 @@ export default function CollaborativeEventCreatorPage() {
                       ? <PublicIcon color="action" fontSize="small" />
                       : <LockOutlinedIcon color="action" fontSize="small" />}
                     <Typography variant="body2">
-                      {draft.isPublic ? 'Visible públicamente' : 'Borrador privado'}
+                      {draft.isPublic ? 'Pendiente de publicar' : 'Borrador privado'}
                     </Typography>
                   </Stack>
                 </Stack>

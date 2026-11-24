@@ -1,0 +1,19 @@
+{
+  "id": "b4afb300f6c7ae1e24dd",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+  "justification": "Typed API-client dispatch adds artist featured-track GET/PUT methods while retaining all inherited methods. These transport function names are implementation mechanics, not editable/selectable domain catalog values.",
+  "reviewed": true,
+  "evidence": {
+    "file": "tdf-hq-ui/src/api/musicReleases.ts",
+    "line": 545
+  },
+  "reviewBatch": "artist-featured-track-2026-10-30",
+  "reviewMethod": "manual-source-review",
+  "previousDecision": {
+    "$historyRef": "sha256:13a3c178663d54b685b829c7fae3b78ac269166879757cdad1903aa4c1448d4c"
+  }
+}

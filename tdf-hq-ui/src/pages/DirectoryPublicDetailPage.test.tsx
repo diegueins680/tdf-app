@@ -54,6 +54,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
+jest.unstable_mockModule('../api/eventAttendees', () => ({ listAttendees: jest.fn() }));
 jest.unstable_mockModule('../api/eventTickets', () => ({ EventTickets: { getStorefront: storefrontMock } }));
 // Keep the real feed component while isolating its explicit domain API boundary.
 // Do not invent successful low-level transport methods merely to satisfy imports.
@@ -64,6 +65,7 @@ const { ApiError } = await import('../api/client');
 jest.unstable_mockModule('../api/client', () => ({ ApiError, API_BASE_URL: 'https://tdf-hq.example.test' }));
 
 const { default: DirectoryPublicDetailPage } = await import('./DirectoryPublicDetailPage');
+const { default: appI18n } = await import('../i18n');
 
 const profile = {
   id: 'profile-17',
@@ -113,8 +115,8 @@ function renderPage(initialEntry: string, authenticationFallback?: string) {
 }
 
 describe('DirectoryPublicDetailPage contact continuity', () => {
-  beforeEach(() => {
-    jest.spyOn(navigator, 'language', 'get').mockReturnValue('es-EC');
+  beforeEach(async () => {
+    await appI18n.changeLanguage('es');
     sessionMock = null;
     profileMock.mockReset().mockResolvedValue(profile);
     profileReviewsMock.mockReset().mockResolvedValue({ items: [], nextCursor: null });
@@ -256,8 +258,18 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
     view.queryClient.clear();
   });
 
-  it('offers the same explicit target-bound continuation in English', async () => {
+  it('stays in Spanish, the app default, for a browser set to English', async () => {
     jest.spyOn(navigator, 'language', 'get').mockReturnValue('en-US');
+    sessionMock = { username: 'ana-fan', displayName: 'Ana Fan', roles: ['customer'], modules: [], partyId: 42 };
+    const view = renderPage('/directorio/ana?resume=contact&profileId=profile-17');
+
+    expect(await screen.findByText('Continúa tu contacto con Ana Sintética')).toBeTruthy();
+    expect(screen.queryByText('Continue your contact with Ana Sintética')).toBeNull();
+    view.queryClient.clear();
+  });
+
+  it('offers the same explicit target-bound continuation in English', async () => {
+    await act(async () => { await appI18n.changeLanguage('en'); });
     sessionMock = { username: 'ana-fan', displayName: 'Ana Fan', roles: ['customer'], modules: [], partyId: 42 };
     const view = renderPage('/directorio/ana?resume=contact&profileId=profile-17');
 
@@ -330,13 +342,23 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
 
 describe('canonical public event authentication fallback', () => {
   const event = { id: 141, title: 'Synthetic completed event', startTime: '2026-10-24T19:00:00Z', endTime: '2026-10-25T02:00:00Z', timezone: 'America/Guayaquil', isPublic: true, workflowStateCode: 'completed', publicShareEligible: true, rsvpEligible: false };
-  beforeEach(() => {
+  beforeEach(async () => {
     sessionMock = null;
     profileMock.mockReset();
     storefrontMock.mockReset().mockRejectedValue(new Error('storefront unavailable'));
-    jest.spyOn(navigator, 'language', 'get').mockReturnValue('es-EC');
+    await appI18n.changeLanguage('es');
   });
   afterEach(() => { cleanup(); jest.restoreAllMocks(); });
+
+  it.each([
+    ['Dirección del evento: Calle de Prueba 12, Quito\n\nJam de barrio', 'Calle de Prueba 12, Quito'],
+    ['Jam de barrio', 'Quito, EC'],
+  ])('renders the organizer-provided location or city for %s', async (description, expected) => {
+    profileMock.mockResolvedValueOnce({ ...event, description, location: { city: 'Quito', countryCode: 'EC' } });
+    renderPage('/eventos/141', '/login?redirect=event');
+    expect(await screen.findByText(expected)).toBeTruthy();
+    expect(screen.queryByText(/ubicación pública es aproximada/i)).toBeNull();
+  });
 
   it.each([401, 403, 404])('retains the original protected target when public metadata is unavailable (%s)', async status => {
     profileMock.mockRejectedValueOnce(new ApiError('Unavailable', status));

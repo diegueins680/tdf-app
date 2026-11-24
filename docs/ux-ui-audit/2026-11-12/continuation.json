@@ -231,6 +231,42 @@
       "principle": "Prevención de errores y continuidad del contexto",
       "finding": "El seguimiento del marketplace deshabilitaba el envío de referencias cortas sin explicarlas junto al campo, limitaba el texto con maxLength y dejaba editarlo durante el envío. El estado del formulario podía reutilizarse al cambiar de orden.",
       "change": "Validación asociada al campo con foco al enviar, texto completo conservado, límites existentes por carácter Unicode y controles no admitidos, referencia capturada y bloqueada durante el envío y guardia inmediata de duplicados. Un rechazo conserva el borrador para reintento explícito; cada orden tiene estado montado propio y respuestas antiguas no sustituyen la orden actual. El ID completo se ajusta en teléfono y la evidencia recibida sigue pendiente de revisión, sin confirmar pago."
+    },
+    {
+      "id": "COG-20261119-01",
+      "principle": "Prevención de errores y recuperación explícita",
+      "finding": "Las solicitudes del marketplace ocultaban la causa de entradas inválidas detrás de un botón deshabilitado, recortaban el motivo y permitían editar durante el envío. Una edición tras una respuesta incierta podía reutilizar la clave de otro contenido.",
+      "change": "Errores asociados a tipo, motivo y fecha; foco al primer error, motivo completo con límite visible y fecha de extensión estrictamente posterior a la devolución vigente. El envío bloquea el contenido y duplicados. Si el resultado es incierto, recuperar los datos del intento anterior no escribe; un envío explícito posterior conserva contenido y clave. La solicitud recibida no confirma cancelación, devolución, pago ni extensión."
+    },
+    {
+      "id": "COG-20261119-02",
+      "principle": "Continuidad de selección y estabilidad visual",
+      "finding": "CI capturó una selección de artista perdida en WebKit: el refresco de búsqueda podía retirar temporalmente el nodo pulsado entre mouse-down y mouse-up.",
+      "change": "Se mantienen los resultados anteriores del mismo usuario durante la carga. Una opción que sigue coincidiendo conserva su nodo al refrescar los datos; las opciones de otro usuario no se usan como reemplazo. La prueba fuerza el refresco con el puntero presionado y conserva las verificaciones de unión, URL, filtros y búsqueda más allá de cincuenta artistas."
+    },
+    {
+      "id": "COG-20261119-03",
+      "principle": "Reconocimiento, vocabulario común y significado del estado",
+      "finding": "El seguimiento mostraba códigos ingleses de entrega, custodia y depósito. Un depósito sin dato se presentaba como pendiente, y los estados largos estrechaban el historial del teléfono.",
+      "change": "Etiquetas españolas compartidas con la vista de equipo para venta y renta; depósito pendiente/parcial pendiente distinto de devuelto/parcialmente devuelto/retenido. Sin dato muestra Sin información; códigos desconocidos se conservan. El historial se apila y sus etiquetas se ajustan al ancho. Solo presentación; no se modifica el estado ni se inicia una operación."
+    },
+    {
+      "id": "COG-20261119-04",
+      "principle": "Vocabulario compartido y reconocimiento del estado",
+      "finding": "El equipo aún veía códigos de depósito y evidencia en inglés, aunque el seguimiento del cliente ya mostraba las mismas situaciones en español.",
+      "change": "La vista de equipo comparte el estado del depósito y muestra métodos y evidencia en español. Evidencia en revisión, verificada, rechazada y por conciliar conservan significados distintos; no afirman un reembolso de proveedor. Datos ausentes/desconocidos y códigos de acciones se conservan. Las etiquetas se ajustan al diálogo; no cambia la liquidación ni la revisión independiente."
+    },
+    {
+      "id": "COG-20261119-05",
+      "principle": "Reconocimiento y vocabulario compartido",
+      "finding": "El equipo veía tipos y estados de solicitudes en inglés mientras el cliente recibía las mismas etiquetas en español. La evidencia y los métodos manuales también conservaban códigos técnicos.",
+      "change": "Se comparte el texto anterior del cliente sin cambiar códigos, orden ni elegibilidad. El equipo distingue referencia recibida, revisión y evidencia aprobada/rechazada; la aprobación no reemplaza el estado canónico de pago. Transferencia, efectivo y POS usan etiquetas comunes. Los códigos desconocidos se conservan completos y el registro se ajusta al diálogo."
+    },
+    {
+      "id": "COG-20261119-06",
+      "principle": "Prevención de errores monetarios y carga extrínseca",
+      "finding": "Monto declarado mostraba directamente mmeSubmittedAmountMinor: 10000 centavos aparecían como 10000 USD en vez de 100,00 USD.",
+      "change": "La lectura usa el formateador exacto de centavos y la moneda suministrada. Ausencia, cero y valores fuera de precisión son distintos; sin moneda válida o importe representable muestra Monto no disponible, nunca Gratis por falta de dato. No se modifica importe, payload, estado ni revisión del servidor."
     }
   ],
   "measurements": [
@@ -342,7 +378,7 @@
       "id": 14,
       "item": "Vocabulario compartido",
       "status": "Parcial",
-      "nextOrEvidence": "Asistencia y correo simplificados en web; falta verificar todas las superficies móviles. Categorías de mercancía compartidas en español/inglés en cuatro superficies; filtros y API conservan códigos. Seguimiento de mercancía usa Novedades/Updates y recuperación en lenguaje común, sin mostrar el acceso privado."
+      "nextOrEvidence": "Asistencia y correo simplificados en web; falta verificar todas las superficies móviles. Categorías de mercancía compartidas en español/inglés en cuatro superficies; filtros y API conservan códigos. Seguimiento de mercancía usa Novedades/Updates y recuperación en lenguaje común, sin mostrar el acceso privado. Estados de entrega y renta compartidos entre seguimiento y equipo; depósito pendiente/parcial pendiente separado de devolución completada, sin inferir estado cuando falta el dato. Historial legible en teléfono; no cambia la autoridad del servidor. En el equipo, el resumen comparte las etiquetas de depósito del cliente y los registros de liquidación muestran método y evidencia en español. Recepción, verificación, rechazo y conciliación conservan códigos, notas y revisión independiente; no afirman reembolso de proveedor. Solicitudes comparten tipos/estados exactos con el cliente; evidencia y métodos manuales usan español, preservando códigos desconocidos y todos los guards de revisión."
     },
     {
       "id": 15,
@@ -354,7 +390,7 @@
       "id": 16,
       "item": "Errores junto al campo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia en entradas; referencia bancaria en reservas, con texto conservado al fallar y campo deshabilitado durante el envío; código/teléfono PayPhone. Quedan otras superficies de pago sin revalidar. Los cuatro precios de renta también muestran error/ayuda por campo. El monto de pago manual y la tarifa por hora tienen errores asociados al campo. Stock, umbral de alerta y peso de mercancía tienen errores accesibles junto al campo. Contacto y dirección de entrega de mercancía ahora tienen errores por campo, límites, foco al enviar y guard contra submit directo inválido o no disponible. Motivo de cancelación y reporte de pedido tienen límites, errores asociados, foco al enviar y texto sin truncar en campos acotados; confirmación nombrada y guards de estado/lectura/pending. Seguimiento del marketplace: referencia bancaria con error asociado y foco, sin truncar, bloqueo durante envío, reintento explícito y borrador propio por orden; no confirma pago."
+      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia en entradas; referencia bancaria en reservas, con texto conservado al fallar y campo deshabilitado durante el envío; código/teléfono PayPhone. Quedan otras superficies de pago sin revalidar. Los cuatro precios de renta también muestran error/ayuda por campo. El monto de pago manual y la tarifa por hora tienen errores asociados al campo. Stock, umbral de alerta y peso de mercancía tienen errores accesibles junto al campo. Contacto y dirección de entrega de mercancía ahora tienen errores por campo, límites, foco al enviar y guard contra submit directo inválido o no disponible. Motivo de cancelación y reporte de pedido tienen límites, errores asociados, foco al enviar y texto sin truncar en campos acotados; confirmación nombrada y guards de estado/lectura/pending. Seguimiento del marketplace: referencia bancaria con error asociado y foco, sin truncar, bloqueo durante envío, reintento explícito y borrador propio por orden; no confirma pago. Solicitudes del marketplace: errores de tipo/motivo/fecha, texto completo, bloqueo durante envío y recuperación explícita del intento incierto con su misma clave; no confirma operaciones."
     },
     {
       "id": 17,
@@ -408,7 +444,7 @@
       "id": 25,
       "item": "Herramientas del equipo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Servicios, eventos, comercio, música y ahora cursos aceptan moneda exacta según sus contratos; filtros monetarios de operaciones corregidos. Cursos conservan precio y campos descriptivos del borrador, y ediciones posteriores a una publicación pendiente. Estados de mercancía traducidos. Otros componentes/etiquetas y evaluación humana pendientes. Configuración de renta: cuatro importes en USD, conversión exacta y rango de 32 bits según el endpoint existente; reintento conserva valores. Pagos manuales y tarifa de reportes usan centavos exactos. PDF/plantilla bloqueados si tarifa o total no conserva centavos; corte y bloques nuevos usan día local. Stock/peso conservan texto completo, cero explícito, límites y versión autorizada del servidor; rechazo no borra la edición. El editor montado conserva borradores frente a refetch y conflicto; exige revisar valores nuevos antes de otro guardado, sin rebases ni reintentos de escritura automáticos."
+      "nextOrEvidence": "Servicios, eventos, comercio, música y ahora cursos aceptan moneda exacta según sus contratos; filtros monetarios de operaciones corregidos. Cursos conservan precio y campos descriptivos del borrador, y ediciones posteriores a una publicación pendiente. Estados de mercancía traducidos. Otros componentes/etiquetas y evaluación humana pendientes. Configuración de renta: cuatro importes en USD, conversión exacta y rango de 32 bits según el endpoint existente; reintento conserva valores. Pagos manuales y tarifa de reportes usan centavos exactos. PDF/plantilla bloqueados si tarifa o total no conserva centavos; corte y bloques nuevos usan día local. Stock/peso conservan texto completo, cero explícito, límites y versión autorizada del servidor; rechazo no borra la edición. El editor montado conserva borradores frente a refetch y conflicto; exige revisar valores nuevos antes de otro guardado, sin rebases ni reintentos de escritura automáticos. El monto declarado de evidencia manual ahora convierte centavos a moneda con precisión; ausencia, cero e importes no representables quedan diferenciados, sin editar el importe del servidor."
     },
     {
       "id": 26,
@@ -432,7 +468,7 @@
       "id": 29,
       "item": "Gestión de eventos",
       "status": "Integración pendiente",
-      "nextOrEvidence": "Existe una rama de gestión de eventos; revisar antes de duplicar trabajo. No se declara integrada en #722."
+      "nextOrEvidence": "Existe una rama de gestión de eventos; revisar antes de duplicar trabajo. No se declara integrada en #722. En el flujo existente se conserva el nodo de artistas coincidentes durante un refresco de búsqueda. Se fuerza el caso entre pointer-down/up en siete configuraciones; no integra la rama de gestión separada."
     },
     {
       "id": 30,
@@ -500,9 +536,9 @@
       "scope": "Full web checkpoint before the final schedule-disclosure change; affected suites and browser paths rerun afterwards."
     },
     "latestFocusedJest": {
-      "suitesPassed": 2,
-      "testsPassed": 17,
-      "sourceCommit": "0158b83fc1aaabc3f7f24c324f0bf4d38ccdf372"
+      "suitesPassed": 5,
+      "testsPassed": 142,
+      "sourceCommit": "51d789cd0462c407e0e62d83d58ef97dee6ac449"
     },
     "browser": {
       "passed": 22,
@@ -516,24 +552,24 @@
       "latestBookingDisclosurePassed": 10
     },
     "governance": {
-      "sourceCommit": "0158b83fc1aaabc3f7f24c324f0bf4d38ccdf372",
+      "sourceCommit": "51d789cd0462c407e0e62d83d58ef97dee6ac449",
       "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-      "mappedChangedMaterialSurfaces": 136,
+      "mappedChangedMaterialSurfaces": 146,
       "inventory": "passed",
       "traceability": "passed",
       "semanticConformance": "not established by these checks"
     },
     "catalog": {
-      "candidates": 1429,
+      "candidates": 1435,
       "unreviewed": 0,
       "stale": 0,
-      "preservationTestsPassed": 11
+      "preservationTestsPassed": 14
     },
     "typecheck": "passed",
     "lint": "passed",
     "latestBrowserMatrix": {
-      "cases": 28,
-      "passed": 28,
+      "cases": 35,
+      "passed": 35,
       "failed": 0,
       "skipped": 0,
       "flaky": 0,
@@ -547,47 +583,41 @@
         "WebKit critical"
       ],
       "caseGroups": {
-        "marketplaceReferenceRecovery": 7,
-        "marketplaceOrderIdentity": 7,
-        "existingPayPhoneAndTicketTransferErrors": 14
+        "manualEvidenceStatusAndCurrencyAmount": 7,
+        "approvedEvidenceAndMissingAmount": 7,
+        "staffExtensionRequestAndUnknownCodes": 7,
+        "existingCustomerRequestRecovery": 7,
+        "existingStaffDepositEvidence": 7
       },
       "checks": [
-        "Associated error/helper/focus for invalid reference; all121 input characters retained without maxlength truncation",
-        "Pending reference and submit locked; direct form redispatch creates no second request",
-        "503 preserves raw draft; explicit retry sends identical trimmed reference and same private lookup header; no automatic retry",
-        "Accepted evidence remains unpaid and awaiting review, with no client payment confirmation",
-        "SPA order change starts a fresh draft; old response completion is awaited before checking new draft/order retention",
-        "Full UUID and reference form fit phone card; normal viewport/pointer and keyboard focus checks",
-        "All WCAG tags run after paint, opaque ancestors and finite animations; persistent MuiTouchRipple-childPulsate focus decoration stays active and is the only infinite-animation exception",
-        "Existing PayPhone and ticket reference/file validation browser regressions retained"
+        "10000 cents displayed as100.00 in supplied currency, not10000 currency units",
+        "Evidence approval alone never shows canonical payment confirmation; missing amount is not free",
+        "Shared customer/staff type/status labels; extension remains quote-only and current dates unchanged",
+        "Existing note gates, private/domain write prevention and full unfamiliar-code text retained",
+        "Full dialog WCAG2a/2aa/21aa/22aa and viewport containment; existing customer-key recovery and staff deposit regressions"
       ],
       "harness": {
         "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
         "port": 4189,
         "reuseExistingServer": false,
         "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
-        "identity": "Fresh build and strict owned preview required by adapter. Initial live preview64619 cwd and /inicio bytes verified against this worktree; final run rebuilt and owned its preview through the same strict adapter."
+        "identity": "Initial preview87065 and final preview88831 cwd independently verified in this worktree; each served /inicio byte-for-byte equal to tdf-hq-ui/dist/index.html. Adapter rebuilds and owns4189 with reuse disabled."
       },
-      "log": "/private/tmp/cogload-seventeenth-browser-verified.log",
-      "limitations": "All API traffic synthetic; no real reference, order, payment or inbox changed. Browser configurations do not establish native-device/human comprehension acceptance."
+      "log": "/private/tmp/cogload-twentyfirst-browser-final.log",
+      "limitations": "All API traffic synthetic; new cases view/fill only and reject financial/domain writes. Existing customer-recovery case uses intercepted synthetic requests. No real review/payment/refund or native-device/human-comprehension acceptance."
     },
     "latestCompletedHostedCheckpoint": {
-      "commit": "b847fcb6fcfde142455c1bb5ce1d566d3bd91be1",
-      "ciRun": 44215774402,
+      "commit": "f11327af1ad809147f23b50e988dcc631d416836",
+      "ciRun": 44546156327,
       "ciConclusion": "success",
       "webJest": {
         "suites": 383,
-        "tests": 4433,
+        "tests": 4446,
         "result": "passed"
       },
-      "backend": "passed",
       "mainBrowser": {
-        "passed": 1065,
+        "passed": 1100,
         "skipped": 22,
-        "failed": 0
-      },
-      "nativeMusic": {
-        "passed": 74,
         "failed": 0
       },
       "additionalBrowser": {
@@ -596,8 +626,14 @@
         "deletion": 10,
         "discovery": 25
       },
-      "specialistWorkflows": "all four passed: catalog44215778836,event44215783030,social44215787342,interaction44215791734",
-      "scope": "Verified completed workflows and actual completed job logs for this prior head only. Conditional payment-staging and native-Android jobs were skipped; this is not native-device verification."
+      "nativeMusic": {
+        "passed": 74,
+        "failed": 0
+      },
+      "otherJobs": "backend, repository, mobile static, migrations and API passed; payment-staging inspection and native Android skipped",
+      "specialistWorkflows": "all four passed: catalog44546163641,event44546170718,social44546177587,interaction44546184126",
+      "admission": "Exact-head main integration admission44546078820 passed.",
+      "scope": "Priorf113 only. No current-head full hosted success is claimed."
     },
     "latestNativePlaybackRecheck": {
       "cases": 4,
@@ -619,32 +655,81 @@
       "description": "La reverificación local de música nativa aprobó cuatro casos WebKit (dos recorridos repetidos dos veces) con el decodificador y reloj reales. No prueba que el fallo hosted esté resuelto. El primer intento usó el puerto4190 restringido por WebKit, no cargó la app y se detuvo; se excluye como evidencia de producto."
     },
     "latestHostedCheckpointSnapshot": {
-      "commit": "b847fcb6fcfde142455c1bb5ce1d566d3bd91be1",
-      "ciRun": 44215774402,
-      "ciConclusion": "success",
-      "webJest": {
-        "suites": 383,
-        "tests": 4433,
-        "result": "passed"
+      "commit": "a4edbe4b107e2f37b1091e02bac0d75fac472554",
+      "ciRun": 44637036389,
+      "ciStatus": "in_progress",
+      "ciConclusion": "pending",
+      "jobs": [
+        {
+          "conclusion": "success",
+          "name": "changes",
+          "status": "completed"
+        },
+        {
+          "conclusion": "skipped",
+          "name": "payment-staging-inspection",
+          "status": "completed"
+        },
+        {
+          "conclusion": "",
+          "name": "persona-web-e2e",
+          "status": "in_progress"
+        },
+        {
+          "conclusion": "success",
+          "name": "native-music-e2e",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "mobile-quality",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "api-contract-tests",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "repo-quality",
+          "status": "completed"
+        },
+        {
+          "conclusion": "",
+          "name": "backend-quality",
+          "status": "in_progress"
+        },
+        {
+          "conclusion": "success",
+          "name": "migration-tests",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "ui-quality",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "api-contracts",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "production-migrations",
+          "status": "completed"
+        }
+      ],
+      "specialistWorkflows": {
+        "catalog44637041897": "success",
+        "social44637052487": "success",
+        "interaction44637056406": "success",
+        "event44637047873": "queued"
       },
-      "backend": "passed",
-      "mainBrowser": {
-        "passed": 1065,
-        "skipped": 22,
-        "failed": 0
-      },
-      "nativeMusic": {
-        "passed": 74,
-        "failed": 0
-      },
-      "additionalBrowser": {
-        "storage": 8,
-        "torrent": 21,
-        "deletion": 10,
-        "discovery": 25
-      },
-      "specialistWorkflows": "all four passed: catalog44215778836,event44215783030,social44215787342,interaction44215791734",
-      "scope": "Verified completed workflows and actual completed job logs for this prior head only. Conditional payment-staging and native-Android jobs were skipped; this is not native-device verification."
+      "admission": "Main integration admission44636947505 was cancelled with zero jobs; no reason or successful admission established in this continuation.",
+      "counts": "No new full numeric logs captured while parent CI is incomplete; job-success statuses are not reused as current-head suite/case counts.",
+      "scope": "Prior a4ed snapshot only; no overall new-head hosted success claimed."
     }
   },
   "limitations": [
@@ -773,6 +858,30 @@
     {
       "path": "figures/marketplace-reference-retry-phone.png",
       "scope": "Rechazo sintético: referencia retenida para reintento explícito, con aviso de que la orden sigue impaga."
+    },
+    {
+      "path": "figures/marketplace-request-errors-phone.png",
+      "scope": "Solicitud sintética: fecha posterior obligatoria y motivo completo de 1001 caracteres con error asociado, dentro del teléfono."
+    },
+    {
+      "path": "figures/marketplace-request-recovery-phone.png",
+      "scope": "Resultado sintético incierto: cambios bloqueados hasta restaurar el intento original; restaurar no envía la solicitud."
+    },
+    {
+      "path": "figures/marketplace-rental-status-phone.png",
+      "scope": "Historial de renta sintético: devolución de depósito pendiente e inspección diferenciadas; sin mutación financiera real."
+    },
+    {
+      "path": "figures/staff-deposit-pending-phone.png",
+      "scope": "Registro sintético de depósito: evidencia en revisión, método real, notas y revisión independiente; no se envía ninguna liquidación ni reembolso."
+    },
+    {
+      "path": "figures/staff-manual-evidence-amount-phone.png",
+      "scope": "Evidencia manual sintética: 10000 centavos se presentan como 100,00 USD para revisión; la referencia no confirma pago. No se envía una aprobación."
+    },
+    {
+      "path": "figures/staff-request-labels-phone.png",
+      "scope": "Solicitud de extensión sintética con texto compartido, notas y cotización requerida; la fecha original no cambia y no se envía una revisión."
     }
   ],
   "followups": [
@@ -2252,7 +2361,622 @@
       },
       "hostedCI": "New published head requires its own full workflows; prior green results apply only to b847fcb6.",
       "limitations": "Retention covers the mounted order and failed send. Another order, reload or leaving the page resets the draft; no new storage or automatic retry. Endpoint, private access, payment/stock authority, request types and fulfillment policy unchanged. No merge/deployment, real payment/order/email or native-device acceptance."
+    },
+    {
+      "date": "2026-11-19",
+      "baseCommit": "7f564d20af27017a577888cfaee54dd2fee848d7",
+      "scope": "Retry-key preparation exceptions are caught without sending or clearing drafts. Marketplace request inline validation, pending/uncertain-attempt recovery and strict calendar dates; matching artist pointer-node continuity across same-principal search refresh, addressing the prior hosted failure. No role/removal/provider decision or separate-branch integration.",
+      "regressionVerification": {
+        "suites": 4,
+        "tests": 40,
+        "log": "/private/tmp/cogload-eighteenth-unit-verified.log",
+        "checks": [
+          "Marketplace request/reference/API regressions, full Unicode bounds, strict extension date and captured-key recovery",
+          "Artist refresh identity/principal separation, fifty-selection cap and event filter/venue integration"
+        ]
+      },
+      "browserVerification": {
+        "cases": 70,
+        "passed": 70,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "artistPointerRefreshAndUnion": 7,
+          "venueResolutionAndPaging": 7,
+          "searchBeyondFiftyFilterAndLineup": 28,
+          "marketplaceBankReference": 14,
+          "marketplaceCustomerRequest": 14
+        },
+        "checks": [
+          "Pointer held across a deferred search, same matching option node retained and released into canonical7,8 union; URL/city/past/reload/clear assertions kept",
+          "Same-principal placeholders only; existing fifty-selection cap, beyond-fifty search and referenced-venue loading regressions",
+          "Type/reason/date inline association and focus; strict next-calendar-day extension and complete1001-character draft retained",
+          "Pending request capture/locks and immediate duplicate guard;503 retains raw draft/key",
+          "Changed content blocked after uncertainty; restoring the original attempt sends nothing and focuses reason; separate retry uses identical payload/key/private header",
+          "Accepted request stays under review and does not change paid/fulfillment/rental dates; old order completion cannot clear the new draft",
+          "Existing bank reference/route isolation regressions and full WCAG/pointer/viewport checks retained"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Fresh strict preview from worktree. Initial preview36794 and final preview62873 cwd and served /inicio bytes verified against this worktree. The main rerun uses the same pre-hardening application build after own heavy checks finish; WCAG rules and timeouts stay unchanged. The affected request cases are rechecked separately on the final build."
+        },
+        "log": "/private/tmp/cogload-eighteenth-browser-final.log",
+        "supplementaryVerification": {
+          "cases": 14,
+          "passed": 14,
+          "failed": 0,
+          "log": "/private/tmp/cogload-eighteenth-request-final.log",
+          "scope": "Affected request scenarios on the final build after retry-key boundary adjustment; unchanged artist/reference paths retain main70-case evidence."
+        },
+        "limitations": "All API traffic synthetic. No real request/order/payment/publication. Browser configurations do not establish native-device or human comprehension acceptance."
+      },
+      "catalogCandidates": 1429,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "Existing request kinds, artist limits and every complete decision preserved. Bounds/date/control rules mirror Server.hs validateMarketplaceRequiredOperationText and Commerce/MarketplaceOperations.hs validateMarketplaceCustomerRequest. No API/schema or catalog choice added. Canonical JSON/CSV refreshed.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "7f564d20af27017a577888cfaee54dd2fee848d7",
+        "ciRun": 44342388741,
+        "ciConclusion": "failure",
+        "webJest": {
+          "suites": 383,
+          "tests": 4438,
+          "result": "passed"
+        },
+        "backend": "passed",
+        "mainBrowser": {
+          "passed": 1078,
+          "skipped": 22,
+          "failed": 1
+        },
+        "mainBrowserFailure": "WebKit desktop artist union stayed at7 after the Beta click. Failure screenshot shows Beta still typed and unselected; trace crosses a debounced options refresh during interaction. Matching option nodes are now preserved across the query data gap; the new test forces refresh between pointer down/up and verifies the same node before release. New full hosted result remains required.",
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": "skipped after main browser failure",
+          "deletion": "skipped after main browser failure",
+          "discovery": "skipped after main browser failure"
+        },
+        "specialistWorkflows": "all four passed: catalog44342396276,event44342405355,social44342413169,interaction44342420179",
+        "admission": "Exact-head main admission44342563162 succeeded; other admission occurrences cancelled.",
+        "scope": "Prior7f564d20 only. UI/backend/native/specialist successes do not establish an overall CI pass."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "6551e637327ec183e813df2021f1ac14078802e7",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 141,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "initialLocalBrowserAttempt": {
+        "passed": 65,
+        "failed": 5,
+        "log": "/private/tmp/cogload-eighteenth-browser.log",
+        "diagnosis": "Five test-wide30s timeouts under concurrent local checks, distinct from the prior hosted7,8 value failure. Traces showed12.4s setup and slow route fulfillment; contention inferred. Final complete matrix rerun after own heavy checks finished, with no further application/test/timeout changes."
+      },
+      "lateHardening": {
+        "scope": "The main70-case matrix used the build preceding the final retry-key error-boundary adjustment. A fault-injection unit proves no write and retained draft; full typecheck and focused lint rerun, followed by the affected14 request cases. Unchanged artist/reference paths retain main-matrix evidence."
+      },
+      "hostedCI": "Exact4669 CI completed cancelled: browser1093/22 and web383/4443 pass, native-music cancelled; no overall pass.",
+      "limitations": "Uncertain-attempt snapshot exists only in mounted order memory; no persisted payload recovery, key rotation or new backend protocol. Unknown outcome requires restoring/retrying the same attempt before edits. Global SessionQueryProvider still isolates principal/credential/role occurrences. Separate root/mobile drafts unchanged, and outstanding decisions/native/human acceptance remain open.",
+      "hostedVerification": {
+        "commit": "4669d12deaf891f31a78f4d49140d59d260e50da",
+        "ciRun": 44475536949,
+        "ciConclusion": "cancelled",
+        "webJest": {
+          "suites": 383,
+          "tests": 4443,
+          "result": "passed"
+        },
+        "backend": "passed",
+        "mainBrowser": {
+          "passed": 1093,
+          "skipped": 22,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "nativeMusic": "Cancelled after reaching case67/74; no completed pass claimed. Job has20-minute timeout; log reports operation cancelled, no definitive cancellation cause established.",
+        "aggregateQuality": "failed because required native-music job was cancelled",
+        "specialistWorkflows": "all four passed: catalog44475540765,event44475544582,social44475548670,interaction44475552720",
+        "admission": "Exact-head source-admission44475364595 succeeded.",
+        "scope": "Prior4669 only. Hosted artist-union and request cases now pass in the main browser matrix, but this is not an overall CI pass."
+      }
+    },
+    {
+      "date": "2026-11-19",
+      "pass": "nineteenth",
+      "baseCommit": "4669d12deaf891f31a78f4d49140d59d260e50da",
+      "scope": "Shared sale/rental labels, distinct deposit-return copy and contained history labels. No state transition, settlement, permission, payment, API or idempotency change.",
+      "regressionVerification": {
+        "suites": 3,
+        "tests": 92,
+        "log": "/private/tmp/cogload-nineteenth-unit-final.log",
+        "checks": [
+          "Customer tracking current/history and missing/unknown states",
+          "Existing staff order and private marketplace API regressions"
+        ]
+      },
+      "browserVerification": {
+        "cases": 35,
+        "passed": 35,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "requestValidationAndRecovery": 14,
+          "bankReferenceRecoveryAndOrderIsolation": 14,
+          "localizedStateAndDepositDisplay": 7
+        },
+        "checks": [
+          "Current and historical sale/rental states share the staff labels",
+          "Pending partial deposit return stays distinct from completed partial return and payment",
+          "Missing deposit is Sin información; unknown long code stays complete without horizontal overflow",
+          "History label bounds, normal pointer reachability and WCAG2a/2aa/21aa/22aa checks",
+          "Existing request and bank-reference invalid/pending/rejection/retry/order-isolation regressions",
+          "Only synthetic reads/writes; status presentation itself sends no mutation"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Initial preview64803 and final preview66848 cwd independently verified in this worktree; each served /inicio byte-for-byte equal to tdf-hq-ui/dist/index.html. Adapter builds and owns port4189, with no reused server."
+        },
+        "log": "/private/tmp/cogload-nineteenth-browser-final.log",
+        "limitations": "Synthetic API/browser checks do not establish native-device or human-comprehension acceptance."
+      },
+      "catalogCandidates": 1430,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 12,
+      "catalogReview": "Two moved display maps retain exact complete predecessors and their classification/disposition. The one additional deposit map is individually source-reviewed against the existing SQL states; earlier1429 complete decisions remain in current/history. Historical reconciliation tests replay that exact parent; separate current-source test checks extraction, full object preservation and backend vocabulary. No bulk builder/reclassification. Canonical JSON/CSV refreshed from the same final scan.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "4669d12deaf891f31a78f4d49140d59d260e50da",
+        "ciRun": 44475536949,
+        "ciConclusion": "cancelled",
+        "webJest": {
+          "suites": 383,
+          "tests": 4443,
+          "result": "passed"
+        },
+        "backend": "passed",
+        "mainBrowser": {
+          "passed": 1093,
+          "skipped": 22,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "nativeMusic": "Cancelled after reaching case67/74; no completed pass claimed. Job has20-minute timeout; log reports operation cancelled, no definitive cancellation cause established.",
+        "aggregateQuality": "failed because required native-music job was cancelled",
+        "specialistWorkflows": "all four passed: catalog44475540765,event44475544582,social44475548670,interaction44475552720",
+        "admission": "Exact-head source-admission44475364595 succeeded.",
+        "scope": "Prior4669 only. Hosted artist-union and request cases now pass in the main browser matrix, but this is not an overall CI pass."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "2f5ab01bf0e4830f7ef60459a359630358108c53",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 142,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "initialLocalBrowserAttempt": {
+        "passed": 33,
+        "failed": 2,
+        "log": "/private/tmp/cogload-nineteenth-browser.log",
+        "diagnosis": "Two existing recovery cases reached their30s test budgets. Tablet trace shows22.6s in the first button locator before a normal click; WebKit reference case reached its final retry click at the deadline. The entire matrix was repeated with unchanged source/assertions/timeouts; no definitive stall cause established."
+      },
+      "hostedCI": "Exactf113 CI44546156327 and all four specialist workflows completed successfully; counts apply to that prior head only.",
+      "limitations": "Unknown state codes stay visible as received; no guessed status or new select option. Earlier request recovery remains mounted-page only. Outstanding owner decisions, native/human acceptance and separate branch integrations remain open.",
+      "hostedVerification": {
+        "commit": "f11327af1ad809147f23b50e988dcc631d416836",
+        "ciRun": 44546156327,
+        "ciConclusion": "success",
+        "webJest": {
+          "suites": 383,
+          "tests": 4446,
+          "result": "passed"
+        },
+        "mainBrowser": {
+          "passed": 1100,
+          "skipped": 22,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "otherJobs": "backend, repository, mobile static, migrations and API passed; payment-staging inspection and native Android skipped",
+        "specialistWorkflows": "all four passed: catalog44546163641,event44546170718,social44546177587,interaction44546184126",
+        "admission": "Exact-head main integration admission44546078820 passed.",
+        "scope": "Priorf113 only. No current-head full hosted success is claimed."
+      }
+    },
+    {
+      "date": "2026-11-19",
+      "pass": "twentieth",
+      "baseCommit": "f11327af1ad809147f23b50e988dcc631d416836",
+      "scope": "Staff deposit/settlement display labels, shared method-option wording and contained evidence records. Existing payloads, note requirements, method codes/order/availability, review guards, idempotency and backend settlement authority unchanged.",
+      "regressionVerification": {
+        "suites": 3,
+        "tests": 95,
+        "log": "/private/tmp/cogload-twentieth-unit.log",
+        "checks": [
+          "Pending evidence with note gating and exact requires_reconciliation action/trimmed notes",
+          "Verified forfeiture and provider warning; missing/unknown data without write or invented status",
+          "Existing staff/customer order and private API contracts"
+        ]
+      },
+      "browserVerification": {
+        "cases": 28,
+        "passed": 28,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "staffPendingEvidenceAndReviewControls": 7,
+          "staffVerifiedAndUnknownEvidence": 7,
+          "existingRentalDeduction": 7,
+          "existingCustomerStateDisplay": 7
+        },
+        "checks": [
+          "Staff summary uses the same deposit label as customer tracking",
+          "Evidence receipt is distinct from verification and provider refund",
+          "Notes still gate the existing review controls; viewing/filling sends no financial write",
+          "Verified forfeiture remains distinct from a cash/provider refund",
+          "Missing deposit shows Sin información and long unfamiliar evidence codes stay complete",
+          "Protected evidence href, method codes, known labels, viewport containment and WCAG2a/2aa/21aa/22aa retained",
+          "Existing exact deduction/bounds and customer state regressions retained"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Strict preview65628 cwd independently verified in this worktree and /inicio bytes equal tdf-hq-ui/dist/index.html. Adapter rebuilt the app and owned4189 with reuse disabled."
+        },
+        "log": "/private/tmp/cogload-twentieth-browser.log",
+        "limitations": "All API traffic synthetic. No real review, settlement, refund or external evidence-link navigation. Browser configurations do not establish native-device or human-comprehension acceptance."
+      },
+      "catalogCandidates": 1432,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 13,
+      "catalogReview": "Two new display maps individually source-reviewed against the existing four SQL status/four method codes. All1430 complete parent decisions remain unchanged; the new parent-replay regression protects both prior marketplace extraction history and earlier reconciliation checks. No bulk builder, reclassification, lifecycle transition or new option. Canonical JSON/CSV refreshed from one final scan.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "f11327af1ad809147f23b50e988dcc631d416836",
+        "ciRun": 44546156327,
+        "ciConclusion": "success",
+        "webJest": {
+          "suites": 383,
+          "tests": 4446,
+          "result": "passed"
+        },
+        "mainBrowser": {
+          "passed": 1100,
+          "skipped": 22,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "otherJobs": "backend, repository, mobile static, migrations and API passed; payment-staging inspection and native Android skipped",
+        "specialistWorkflows": "all four passed: catalog44546163641,event44546170718,social44546177587,interaction44546184126",
+        "admission": "Exact-head main integration admission44546078820 passed.",
+        "scope": "Priorf113 only. No current-head full hosted success is claimed."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "24f2dd136f4a20554ba0cd6ffd208b6a8cb278fe",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 143,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "hostedCI": "Prior a4ed hosted snapshot is recorded separately; it is not evidence for the new source.",
+      "limitations": "Staff customer-request/manual-evidence rows and other forms still need audit. No new field validation or persisted recovery is implemented in this display-only pass. Outstanding owner decisions, native/human acceptance and separate branch integrations remain open.",
+      "hostedVerification": {
+        "commit": "a4edbe4b107e2f37b1091e02bac0d75fac472554",
+        "ciRun": 44637036389,
+        "ciStatus": "in_progress",
+        "ciConclusion": "pending",
+        "jobs": [
+          {
+            "conclusion": "success",
+            "name": "changes",
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "payment-staging-inspection",
+            "status": "completed"
+          },
+          {
+            "conclusion": "",
+            "name": "persona-web-e2e",
+            "status": "in_progress"
+          },
+          {
+            "conclusion": "success",
+            "name": "native-music-e2e",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "mobile-quality",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "api-contract-tests",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "repo-quality",
+            "status": "completed"
+          },
+          {
+            "conclusion": "",
+            "name": "backend-quality",
+            "status": "in_progress"
+          },
+          {
+            "conclusion": "success",
+            "name": "migration-tests",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "ui-quality",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "api-contracts",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "production-migrations",
+            "status": "completed"
+          }
+        ],
+        "specialistWorkflows": {
+          "catalog44637041897": "success",
+          "social44637052487": "success",
+          "interaction44637056406": "success",
+          "event44637047873": "queued"
+        },
+        "admission": "Main integration admission44636947505 was cancelled with zero jobs; no reason or successful admission established in this continuation.",
+        "counts": "No new full numeric logs captured while parent CI is incomplete; job-success statuses are not reused as current-head suite/case counts.",
+        "scope": "Prior a4ed snapshot only; no overall new-head hosted success claimed."
+      }
+    },
+    {
+      "date": "2026-11-19",
+      "pass": "twenty-first",
+      "baseCommit": "a4edbe4b107e2f37b1091e02bac0d75fac472554",
+      "scope": "Shared request labels, readable manual evidence/method labels and exact declared-amount display. No new operation, option, validation gate, permission, payload, idempotency or server authority.",
+      "regressionVerification": {
+        "suites": 5,
+        "tests": 142,
+        "log": "/private/tmp/cogload-twentyfirst-unit.log",
+        "checks": [
+          "Safe maximum/zero/missing/unsafe amount and currency display; shared exact formatter regressions",
+          "Manual rejection and quotation review preserve action code/trimmed notes and order state",
+          "Evidence-approved versus canonical-paid distinction and existing private order/API contracts"
+        ]
+      },
+      "browserVerification": {
+        "cases": 35,
+        "passed": 35,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "manualEvidenceStatusAndCurrencyAmount": 7,
+          "approvedEvidenceAndMissingAmount": 7,
+          "staffExtensionRequestAndUnknownCodes": 7,
+          "existingCustomerRequestRecovery": 7,
+          "existingStaffDepositEvidence": 7
+        },
+        "checks": [
+          "10000 cents displayed as100.00 in supplied currency, not10000 currency units",
+          "Evidence approval alone never shows canonical payment confirmation; missing amount is not free",
+          "Shared customer/staff type/status labels; extension remains quote-only and current dates unchanged",
+          "Existing note gates, private/domain write prevention and full unfamiliar-code text retained",
+          "Full dialog WCAG2a/2aa/21aa/22aa and viewport containment; existing customer-key recovery and staff deposit regressions"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Initial preview87065 and final preview88831 cwd independently verified in this worktree; each served /inicio byte-for-byte equal to tdf-hq-ui/dist/index.html. Adapter rebuilds and owns4189 with reuse disabled."
+        },
+        "log": "/private/tmp/cogload-twentyfirst-browser-final.log",
+        "limitations": "All API traffic synthetic; new cases view/fill only and reject financial/domain writes. Existing customer-recovery case uses intercepted synthetic requests. No real review/payment/refund or native-device/human-comprehension acceptance."
+      },
+      "smokeVerification": {
+        "cases": 3,
+        "passed": 3,
+        "log": "/private/tmp/cogload-twentyfirst-smoke.log"
+      },
+      "initialBrowserAttempt": {
+        "interrupted": true,
+        "log": "/private/tmp/cogload-twentyfirst-browser.log",
+        "reason": "Two new locators selected strong labels Monto declarado/Fechas instead of their full p rows. Corrected only to exact-label parent locators, retaining value/date assertions and timeouts. Three new desktop cases then passed before the final complete matrix. Application source unchanged by the locator fix. Initial progress was mistakenly described as passes and explicitly corrected."
+      },
+      "catalogCandidates": 1435,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 14,
+      "catalogReview": "One moved request-status review keeps its exact complete predecessor; three additional display maps are individually source-reviewed against existing SQL/API codes. The prior request type/status label bodies are byte-for-byte unchanged. All1432 complete parent decisions reconstruct exactly; older settlement/extraction/Apple histories remain protected. No bulk builder, reclassification or new selectable code. Canonical JSON/CSV rendered from one final scan.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "a4edbe4b107e2f37b1091e02bac0d75fac472554",
+        "ciRun": 44637036389,
+        "ciStatus": "in_progress",
+        "ciConclusion": "pending",
+        "jobs": [
+          {
+            "conclusion": "success",
+            "name": "changes",
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "payment-staging-inspection",
+            "status": "completed"
+          },
+          {
+            "conclusion": "",
+            "name": "persona-web-e2e",
+            "status": "in_progress"
+          },
+          {
+            "conclusion": "success",
+            "name": "native-music-e2e",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "mobile-quality",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "api-contract-tests",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "repo-quality",
+            "status": "completed"
+          },
+          {
+            "conclusion": "",
+            "name": "backend-quality",
+            "status": "in_progress"
+          },
+          {
+            "conclusion": "success",
+            "name": "migration-tests",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "ui-quality",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "api-contracts",
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "production-migrations",
+            "status": "completed"
+          }
+        ],
+        "specialistWorkflows": {
+          "catalog44637041897": "success",
+          "social44637052487": "success",
+          "interaction44637056406": "success",
+          "event44637047873": "queued"
+        },
+        "admission": "Main integration admission44636947505 was cancelled with zero jobs; no reason or successful admission established in this continuation.",
+        "counts": "No new full numeric logs captured while parent CI is incomplete; job-success statuses are not reused as current-head suite/case counts.",
+        "scope": "Prior a4ed snapshot only; no overall new-head hosted success claimed."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "51d789cd0462c407e0e62d83d58ef97dee6ac449",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 146,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "hostedCI": "Fresh exact-head workflows required; no current-head overall pass claimed.",
+      "limitations": "Read-only formatting does not collect or verify a bank amount. Existing manual/settlement/request forms and review fields retain their existing validation/recovery behavior; further audit remains. Owner decisions, separate branch integration and native/human acceptance remain open."
     }
   ],
-  "lastUpdated": "2026-11-18"
+  "lastUpdated": "2026-11-19"
 }

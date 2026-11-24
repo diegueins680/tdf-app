@@ -1,3 +1,6 @@
+import { ACCOUNT_PLACEHOLDER_NAME } from './signupFields';
+import { normalizeArtistImageUrl } from './artistImage';
+
 export const ARTIST_GLOBAL_FALLBACK = '/artist-fallback.svg';
 
 // The light-theme primary/secondary shades in theme/appTheme.ts, all with white text.
@@ -48,10 +51,29 @@ export const ARTIST_HERO_FALLBACKS = {
 } as const satisfies Readonly<Record<string, string>>;
 
 export function getArtistHeroImage(apHeroImageUrl: string | null | undefined, apSlug: string | null | undefined, artistName?: string | null): string {
-  const persistedImage = apHeroImageUrl?.trim();
+  const persistedImage = normalizeArtistImageUrl(apHeroImageUrl);
   if (persistedImage && !isArtistPlaceholderImage(persistedImage)) return persistedImage;
 
   const normalizedSlug = apSlug?.trim().toLowerCase() ?? '';
   return ARTIST_HERO_FALLBACKS[normalizedSlug as keyof typeof ARTIST_HERO_FALLBACKS]
     ?? artistPlaceholderImage(artistName);
+}
+
+/**
+ * An artist profile nobody has named yet: it still carries the account
+ * placeholder. Listing it gives visitors a card that identifies no one.
+ */
+export function isUnnamedArtistProfile(artist: { apDisplayName?: string | null }): boolean {
+  const name = artist.apDisplayName?.trim() ?? '';
+  return name === '' || name === ACCOUNT_PLACEHOLDER_NAME;
+}
+
+interface ArtistPictureFields { apHeroImageUrl?: string | null; apSlug?: string | null }
+
+export const hasArtistPicture = (artist: ArtistPictureFields): boolean =>
+  !isArtistPlaceholderImage(getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug));
+
+/** Lists artists with a real picture first, keeping the incoming order within each group. */
+export function picturedArtistsFirst<T extends ArtistPictureFields>(artists: readonly T[]): T[] {
+  return [...artists.filter(hasArtistPicture), ...artists.filter((artist) => !hasArtistPicture(artist))];
 }

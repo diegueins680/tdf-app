@@ -264,3 +264,54 @@ it.each(['', '0'])('keeps incomplete purchase price %s saveable as a draft, with
     expect(acceptTerms).not.toHaveBeenCalled(); expect(validate).not.toHaveBeenCalled(); expect(transition).not.toHaveBeenCalled();
   } finally { close(); }
 });
+
+
+it.each([0, 1, 2])('keeps raw prices attached to surviving rules after deleting track %i', async removed => {
+  configurePrice('100');
+  const original = version.tracks[0]!;
+  version.tracks = [original, { ...original, trackId: 'track-two', recordingId: 'recording-two', trackNumber: 2 },
+    { ...original, trackId: 'track-three', recordingId: 'recording-three', trackNumber: 3 }];
+  const rule = version.availability[0] as Record<string, unknown>;
+  version.availability = version.tracks.map((track, index) => ({ ...rule,
+    release_track_id: track.trackId, price_minor: String((index + 1) * 100) }));
+  // A release-wide rule survives every track deletion as well.
+  version.availability.splice(1, 0, { ...rule, release_track_id: null, price_minor: '400' });
+  const close = await openStudio();
+  try {
+    const fields = screen.getAllByRole<HTMLInputElement>('textbox', { name: 'Precio (USD)' });
+    const raw = ['9.99', '7,77', '2.22', '90071992547409.93'];
+    fields.forEach((field, index) => fireEvent.change(field, { target: { value: raw[index] } }));
+    fireEvent.click(screen.getByRole('button', { name: `Eliminar pista ${removed + 1}` }));
+    const deletedRule = removed === 0 ? 0 : removed + 1;
+    expect(screen.getAllByRole<HTMLInputElement>('textbox', { name: 'Precio (USD)' }).map(field => field.value))
+      .toEqual(raw.filter((_value, index) => index !== deletedRule));
+    await click('Guardar ahora');
+    await waitFor(() => expect(saveContent).toHaveBeenCalledTimes(1));
+    const before = [
+      { trackRef: `track-${original.recordingId}`, priceMinor: '999' },
+      { trackRef: null, priceMinor: '777' },
+      { trackRef: 'track-recording-two', priceMinor: '222' },
+      { trackRef: 'track-recording-three', priceMinor: '9007199254740993' },
+    ];
+    expect(saveContent.mock.calls[0]?.[2].availability.map(({ trackRef, priceMinor }) => ({ trackRef, priceMinor })))
+      .toEqual(before.filter((_value, index) => index !== deletedRule));
+  } finally { close(); }
+});
+
+it('retains an invalid price on its surviving rule when another track is removed', async () => {
+  configurePrice('100');
+  const first = version.tracks[0]!;
+  version.tracks = [first, { ...first, trackId: 'second', recordingId: 'second-recording', trackNumber: 2 }];
+  const rule = version.availability[0] as Record<string, unknown>;
+  version.availability = version.tracks.map(track => ({ ...rule, release_track_id: track.trackId }));
+  const close = await openStudio();
+  try {
+    const fields = screen.getAllByRole<HTMLInputElement>('textbox', { name: 'Precio (USD)' });
+    fireEvent.change(fields[0]!, { target: { value: '9.99' } });
+    fireEvent.change(fields[1]!, { target: { value: '4,' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar pista 1' }));
+    expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'Precio (USD)' }).value).toBe('4,');
+    expect(button('Guardar ahora').matches(':disabled')).toBe(true);
+    expect(saveContent).not.toHaveBeenCalled();
+  } finally { close(); }
+});

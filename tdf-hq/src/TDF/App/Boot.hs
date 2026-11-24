@@ -64,22 +64,27 @@ import TDF.Ticketing.Confirmation (startTicketConfirmationWorker)
 import TDF.Invoice.Datil (startTaxInvoiceWorker)
 import TDF.Cors (corsPolicy)
 import TDF.CampaignAutomation (startCampaignAutomationJob)
+import qualified TDF.Auth.Throttle as Throttle
 import qualified TDF.CMS.Models as CMS
 import qualified TDF.Catalog.Models as Catalog
 import TDF.Catalog.Integrity (applyCatalogIntegrity)
 import TDF.Catalog.Security (ensureBootstrapSecurityRole, validateSecurityRegistry)
 import TDF.Catalog.Seed (seedCatalogFoundation, validateCatalogRuntimeRegistries)
 import qualified TDF.DDEX.Models as Ddex
+import TDF.Server.Directory (startAgreementDepositExpiryJob)
 import TDF.Cron (
     startCoursePaymentReminderJob,
+    startCourseFollowUpReminderJob,
     startEventDiscoveryJob,
     startEventLogisticsRecheckJob,
     startArtistEnrichmentJob,
+    startArtistSimilarityJob,
     startInstagramSyncJob,
     startSocialAutoReplyJob,
   )
 import TDF.Services.RecordsIngestion (startRecordsIngestionJob)
 import TDF.Interactions.Notifications (startInteractionNotifications)
+import TDF.Chat.Delivery (startChatDeliveryWorker)
 import TDF.DB (ConnectionPool, Env (..), makePool)
 import TDF.Models (
     PartyId,
@@ -89,6 +94,7 @@ import TDF.Models (
   )
 import TDF.Models.SocialEventsModels (migrateSocialEvents)
 import TDF.ModelsExtra (migrateExtra)
+import TDF.Directory.SemanticIndex (startDirectorySemanticIndexWorker)
 import TDF.Operations.Worker (startOperationsWorker)
 import TDF.Reputation.Worker (startReputationWorker)
 import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
@@ -148,11 +154,15 @@ runBootServer = do
         let env = Env{envPool = pool, envConfig = cfg}
         writeIORef appRef (wrapApp (mkApp env))
         startCoursePaymentReminderJob env
+        startCourseFollowUpReminderJob env
+        startAgreementDepositExpiryJob env
         startRecordsIngestionJob (envPool env)
         startInteractionNotifications (envPool env)
+        startChatDeliveryWorker env
         startEventDiscoveryJob env
         startEventLogisticsRecheckJob env
         startArtistEnrichmentJob env
+        startArtistSimilarityJob env
         startInstagramSyncJob env
         startSocialAutoReplyJob env
         startCampaignAutomationJob env
@@ -163,6 +173,7 @@ runBootServer = do
         startTicketConfirmationWorker env
         startTaxInvoiceWorker env
         startReputationWorker env
+        startDirectorySemanticIndexWorker env
 
   serverResult <- newEmptyMVar
   _ <-
@@ -280,6 +291,8 @@ runAllMigrations cfg = do
   syncRegionalDeploymentEnablement cfg
   ensureBrainTagsArray
   runMigration migrateTrials
+  -- The login, signup and reset throttles read this table on every request.
+  Throttle.ensureAuthThrottleSchema
   ensureInternationalColumns
   restoreLegacyPartyRoles legacyRoles
   validateSecurityRegistry

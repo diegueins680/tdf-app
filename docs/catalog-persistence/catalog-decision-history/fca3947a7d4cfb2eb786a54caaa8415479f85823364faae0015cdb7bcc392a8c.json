@@ -1,0 +1,10 @@
+{
+  "id": "44897a684b882440a71e",
+  "classification": "security-system-registry",
+  "disposition": "consumer-update",
+  "specializedModel": "navigation_item, navigation_item_permission",
+  "priority": "P3-consumer",
+  "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+  "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+  "reviewed": true
+}

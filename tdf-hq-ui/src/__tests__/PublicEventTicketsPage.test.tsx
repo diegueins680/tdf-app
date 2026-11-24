@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { fireEvent } from '@testing-library/react';
 
 const getStorefrontMock = jest.fn<(eventId: number) => Promise<unknown>>();
@@ -244,6 +244,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await renderTracking('/eventos/41/orden/92');
     await waitForExpectation(() => expect(container.textContent).toContain('Entradas emitidas'));
     expect(getCheckoutMock).toHaveBeenCalledWith(41, 92, 'secure-lookup-token');
+    expect(container.querySelector('a[href="/mis-entradas"]')?.textContent).toBe('Ver todas mis entradas');
     expect(container.textContent).not.toContain('Elige tus entradas');
   });
 
@@ -253,6 +254,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await renderTracking('/eventos/41/orden/92');
     await waitForExpectation(() => expect(container.textContent).toContain('Estado de la orden'));
     expect(container.textContent).toContain('La orden no está pagada');
+    expect(container.querySelector('a[href="/mis-entradas"]')).toBeNull();
     const actions = Array.from(container.querySelectorAll('button')).map((button) => button.textContent ?? '');
     expect(actions.some((label) => /datafast|paypal|transferencia|tarjeta|pagar/i.test(label))).toBe(false);
     expect(container.textContent).not.toContain('Elige tus entradas');
@@ -312,6 +314,39 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.textContent).toContain('TICKET-VERIFIED');
     expect(container.textContent).toContain('Entradas emitidas');
     expect(createCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it('opens an order from the confirmation email link on a new device and clears the key from the address', async () => {
+    window.localStorage.clear();
+    const emailedKey = 'ab'.repeat(32);
+    getCheckoutMock.mockResolvedValue(checkoutFixture({
+      paymentStatus: 'paid', fulfillmentStatus: 'issued', paymentMethods: [],
+      tickets: [{ ticketId: 501, ticketCode: 'TICKET-EMAILED', status: 'issued', holderName: 'Comprador' }],
+    }));
+    const LocationProbe = () => {
+      const location = useLocation();
+      return <output data-testid="address">{`${location.pathname}${location.search}${location.hash}`}</output>;
+    };
+    await act(async () => {
+      root.render(<MemoryRouter initialEntries={[`/eventos/41/orden/92#acceso=${emailedKey}`]}>
+        <QueryClientProvider client={queryClient}>
+          <LocationProbe />
+          <Routes><Route path="/eventos/:eventId/orden/:orderId" element={<PublicEventTicketsPage />} /></Routes>
+        </QueryClientProvider>
+      </MemoryRouter>);
+    });
+    await waitForExpectation(() => expect(container.textContent).toContain('TICKET-EMAILED'));
+    expect(getCheckoutMock).toHaveBeenCalledWith(41, 92, emailedKey);
+    expect(getCheckoutMock.mock.calls.every(([, , token]) => token === emailedKey)).toBe(true);
+    expect(container.querySelector('[data-testid="address"]')?.textContent).toBe('/eventos/41/orden/92');
+    expect(window.localStorage.getItem('tdf:event-ticket-checkout:41:92')).toBe(emailedKey);
+  });
+
+  it('ignores a malformed key in the address', async () => {
+    window.localStorage.clear();
+    await renderTracking('/eventos/41/orden/92#acceso=not-a-key');
+    await waitForExpectation(() => expect(container.textContent).toContain('enlace de tu correo de confirmación'));
+    expect(getCheckoutMock).not.toHaveBeenCalled();
   });
 
   it('explains missing order access without offering another purchase', async () => {

@@ -19,8 +19,12 @@ module TDF.Server.ServiceStorefront
   , loadServiceDatafastEnv
   , loadServiceDatafastCheckoutEnv
   , requestDatafastCheckoutForService
+  , loadDatafastCartParameters
+  , loadDatafastClientIP
+  , recheckDatafastCheckout
   , checkDatafastPaymentStatus
   , validateDatafastSuccessfulPayment
+  , validateBoundDatafastSuccessfulPayment
   , parseDatafastCents
   , validateIdempotencyKey
   , validateServiceFulfillmentTransition
@@ -54,20 +58,21 @@ module TDF.Server.ServiceStorefront
   , providerResponse
   ) where
 
+import TDF.Server.DatafastCheckoutContext (loadDatafastCartParameters, recheckDatafastCheckout, loadDatafastClientIP, loadServiceDatafastCheckoutReuse)
+import qualified TDF.Commerce.DatafastClientIP as ClientIP
+
 import           Control.Monad (when, unless)
 import           Control.Monad.Except (catchError)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask, runReaderT)
-import           Control.Exception.Safe (tryAny)
 import           Crypto.Hash (Digest, SHA256, hash)
-import           Data.Aeson (Result(..), eitherDecode, FromJSON(..), Value(..), (.=), (.:), (.:?), object, withObject)
+import           Data.Aeson (FromJSON(..), Value(..), (.=), (.:), (.:?), object, withObject)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as KM
 import           Data.ByteArray (constEq)
 import qualified Data.ByteArray.Encoding as BAE
 import           Data.ByteString (ByteString)
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char (isAsciiLower, isAsciiUpper, isDigit)
 import           Data.Int (Int64)
@@ -79,8 +84,8 @@ import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime, addUTCTime, defaultTimeLocale, formatTime, getCurrentTime)
 import           Data.UUID (UUID, fromText, toText)
 import           Data.UUID.V4 (nextRandom)
-import           Database.Persist (toPersistValue, PersistValue(..), selectList, get, insert, insertUnique, getBy, replace, update, Entity(..), (==.), (=.), SelectOpt(..))
-import           Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool, updateWhereCount)
+import           Database.Persist (PersistValue(..), selectList, get, insert, insertUnique, getBy, replace, update, Entity(..), (==.), (=.), SelectOpt(..))
+import           Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, updateWhereCount)
 import           Network.HTTP.Client (Request(..), RequestBody(..), Manager)
 import           Servant
 import           System.Environment (lookupEnv)
@@ -90,9 +95,9 @@ import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceS
 import           TDF.API.ServiceStorefrontTypes
 import           TDF.API.Types (DatafastCheckoutDTO(..), PaypalCreateDTO(..))
 import           TDF.Auth (AuthedUser(..), ModuleAccess(..), hasStrictAdminAccess, validateModuleAccess)
-import qualified TDF.Ticketing.Refund as TicketRefund
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.DatafastConfig as DatafastConfig
+import           TDF.Commerce.PaypalWebhook
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
 import qualified TDF.Commerce.ProviderAdapter.Http as ProviderHttp
@@ -102,15 +107,13 @@ import qualified TDF.Commerce.ProviderAdapter.PayPalRefund as RefundQuery
 import           TDF.Config (defaultCurrency, defaultLocale, supportedCurrencies)
 import           TDF.DB (Env(..))
 import           TDF.Internationalization (formatMinorUnitsDecimal, formatMoney, normalizeCurrencyCode)
-import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.ModelsExtra as ME
 import           TDF.DTO.SocialEventsDTO (StripePaymentIntentDTO(..))
-import qualified TDF.Server.SocialEventsHandlers as SocialEvents
 
 import TDF.Server.ProviderTransport
   ( PaypalRefundOutcome(..), parsePaypalRefundOutcome, loadPaypalEnvForService
   , loadRequiredSafeEnv, providerRequest, providerResponse, paypalAccessTokenForService
-  , issuePaypalRefundRemote, isProviderReference )
+  , issuePaypalRefundRemote )
 
 type AppM = ReaderT Env Handler
 
@@ -347,8 +350,8 @@ createStripePaymentIntentHandler _ _ =
   throwError err503
     { errBody = "Stripe checkout is not configured for the service storefront. Use an enabled payment provider." }
 
-createDatafastCheckoutHandler :: Text -> Maybe Text -> AppM DatafastCheckoutDTO
-createDatafastCheckoutHandler orderIdText mLookupToken = do
+createDatafastCheckoutHandler :: Text -> Maybe Text -> ClientIP.DatafastClientRequest -> AppM DatafastCheckoutDTO
+createDatafastCheckoutHandler orderIdText mLookupToken clientRequest = do
   Env{..} <- ask
   now <- liftIO getCurrentTime
   
@@ -371,16 +374,20 @@ createDatafastCheckoutHandler orderIdText mLookupToken = do
           buyerPhone = ME.serviceStorefrontOrderBuyerPhone order
 
       (dfEnv, _) <- loadServiceDatafastCheckoutEnv
+      preflight <- case (status, ME.serviceStorefrontOrderDatafastCheckoutId order) of
+        ("datafast_pending", Just existingCheckoutId) -> pure (Left existingCheckoutId)
+        _ -> Right <$> loadDatafastClientIP clientRequest
       (checkout, attempt) <- beginCanonicalPaymentAttempt
         oid order (sdfEnvironment dfEnv) Checkout.ProviderDatafast
         Checkout.OperationCreate (sdfEntityId dfEnv) "create"
       
-      (checkoutId, widgetUrl) <- case (status, ME.serviceStorefrontOrderDatafastCheckoutId order) of
-        ("datafast_pending", Just existingCheckoutId) -> do
+      checkoutRequest <- recheckDatafastCheckout (loadServiceDatafastCheckoutReuse oid) preflight
+      (checkoutId, widgetUrl) <- case checkoutRequest of
+        Left existingCheckoutId -> do
           let baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
           pure (existingCheckoutId, baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack existingCheckoutId)
-        _ -> requestDatafastCheckoutForService
-          (toPathPiece oid) totalCents currency buyerName buyerEmail buyerPhone
+        Right clientIP -> requestDatafastCheckoutForService
+          checkout attempt clientIP totalCents currency buyerName buyerEmail buyerPhone
           `catchError` failCanonicalPaymentAttempt
             checkout attempt Checkout.ProviderDatafast "datafast_checkout_create"
       
@@ -452,9 +459,7 @@ confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
               currency = ME.serviceStorefrontOrderCurrency order
           result <- if providerSuccess
             then do
-              let validation = validateDatafastSuccessfulPayment
-                    (toPathPiece oid) totalCents currency paymentStatus
-                  actualAmount = sdfpsAmount paymentStatus >>= either (const Nothing) Just . parseDatafastCents
+              let actualAmount = sdfpsAmount paymentStatus >>= either (const Nothing) Just . parseDatafastCents
               paymentId <- maybe
                 (pure resourcePath)
                 pure
@@ -464,6 +469,10 @@ confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
                 -- Datafast DB checkout already charges at the hosted widget;
                 -- this GET verifies that original sale, it does not capture.
                 Checkout.OperationCreate (sdfEntityId dfEnv) "create"
+              validation <- validateBoundDatafastSuccessfulPayment checkout
+                (sdfEnvironment dfEnv) (sdfEntityId dfEnv)
+                (fromMaybe "" (ME.serviceStorefrontOrderDatafastCheckoutId order))
+                totalCents currency paymentStatus
               case validation of
                 Left message -> providerVerificationMismatch
                   checkout attempt Checkout.ProviderDatafast (sdfEnvironment dfEnv)
@@ -874,383 +883,6 @@ processPaypalWebhookEvent environment merchantRef envelope now = do
   env <- ask
   liftIO $ processPaypalWebhookEventIO env environment merchantRef envelope now
 
-processPaypalWebhookEventIO
-  :: Env
-  -> Checkout.CheckoutEnvironment
-  -> Text
-  -> PaypalWebhookEnvelope
-  -> UTCTime
-  -> IO PaypalEventProcessResult
-processPaypalWebhookEventIO Env{envPool = pool} environment merchantRef envelope now =
-  case pweEventType envelope of
-    "PAYMENT.CAPTURE.COMPLETED" -> processCompletedCapture
-    "PAYMENT.CAPTURE.REFUNDED" -> processExternalCaptureChange
-      "external_refund_detected"
-    "PAYMENT.CAPTURE.REVERSED" -> processExternalCaptureChange
-      "external_reversal_detected"
-    _ -> pure PaypalEventIgnored
-  where
-    processCompletedCapture = case parsePaypalWebhookCapture envelope of
-      Left message -> pure (PaypalEventPermanentFailure message Nothing Nothing Nothing)
-      Right capture -> do
-        result <- tryAny $ flip runSqlPool pool $ do
-          mCaptureBound <- loadBoundPaypalCapture
-            environment merchantRef (pwcCaptureId capture)
-          mBound <- case mCaptureBound of
-            Just existing -> pure (Just existing)
-            Nothing -> loadBoundPaypalOrder
-              environment merchantRef (pwcPaypalOrderId capture)
-          case mBound of
-            Nothing -> pure (PaypalEventIgnored, Nothing)
-            Just bound -> case validatePaypalWebhookCaptureBinding merchantRef bound capture of
-              Left message -> do
-                recordPaypalWebhookMismatch environment (pweCreatedAt envelope) bound capture message
-                pure (PaypalEventPermanentFailure message
-                  (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing, Nothing)
-              Right () -> do
-                reconciled <- reconcileLatePaypalCapture environment merchantRef now bound capture
-                if reconciled
-                  then pure (PaypalEventProcessed
-                    (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing, Nothing)
-                  else do
-                    let checkout = Checkout.CheckoutReference (bpcCheckoutId bound)
-                        attempt = Checkout.PaymentAttemptReference (bpcAttemptId bound)
-                        correlationId = "paypal-webhook:" <> pweEventId envelope
-                    binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
-                      { Checkout.pbcAttempt = attempt
-                      , Checkout.pbcCheckout = checkout
-                      , Checkout.pbcProvider = Checkout.ProviderPayPal
-                      , Checkout.pbcEnvironment = environment
-                      , Checkout.pbcMerchantRef = merchantRef
-                      , Checkout.pbcResourceType = "capture"
-                      , Checkout.pbcProviderResource = pwcCaptureId capture
-                      , Checkout.pbcResourcePath = Just
-                          ("/v2/checkout/orders/" <> pwcPaypalOrderId capture <> "/capture")
-                      , Checkout.pbcOrderReference = bpcDomainOrderId bound
-                      , Checkout.pbcAmountMinor = bpcExpectedAmount bound
-                      , Checkout.pbcCurrency = bpcCurrency bound
-                      , Checkout.pbcStage = Checkout.AttemptProcessing
-                      , Checkout.pbcOccurredAt = pweCreatedAt envelope
-                      , Checkout.pbcCorrelationId = correlationId
-                      }
-                    case binding of
-                      Left message -> do
-                        recordPaypalWebhookMismatch environment (pweCreatedAt envelope) bound capture message
-                        pure (PaypalEventPermanentFailure message
-                          (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing, Nothing)
-                      Right () -> do
-                        verified <- Checkout.recordVerifiedPayment Checkout.VerifiedPayment
-                          { Checkout.vpAttempt = attempt
-                          , Checkout.vpCheckout = checkout
-                          , Checkout.vpProvider = Checkout.ProviderPayPal
-                          , Checkout.vpEnvironment = environment
-                          , Checkout.vpMerchantRef = merchantRef
-                          , Checkout.vpResourceType = "capture"
-                          , Checkout.vpProviderResource = pwcCaptureId capture
-                          , Checkout.vpProviderResourcePath = Just
-                              ("/v2/checkout/orders/" <> pwcPaypalOrderId capture <> "/capture")
-                          , Checkout.vpOrderReference = bpcDomainOrderId bound
-                          , Checkout.vpProviderReference = bpcDomainOrderId bound
-                          , Checkout.vpAmountMinor = bpcExpectedAmount bound
-                          , Checkout.vpCurrency = bpcCurrency bound
-                          , Checkout.vpEvidence = "signature_verified_webhook"
-                          , Checkout.vpOccurredAt = pweCreatedAt envelope
-                          , Checkout.vpCorrelationId = correlationId
-                          }
-                        case verified of
-                          Left message -> do
-                            recordPaypalWebhookMismatch environment (pweCreatedAt envelope) bound capture message
-                            pure (PaypalEventPermanentFailure message
-                              (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing, Nothing)
-                          Right newlyPaid -> do
-                            when (newlyPaid && bpcDomainType bound == "mixing_mastering") $ do
-                              rawExecute
-                                "UPDATE service_storefront_order SET status = 'paid',\
-                                \ paypal_capture_id = ?, paid_at = COALESCE(paid_at, ?), updated_at = ?\
-                                \ WHERE id = ?::uuid AND checkout_id = ?::uuid\
-                                \ AND paypal_order_id = ?"
-                                [ PersistText (pwcCaptureId capture)
-                                , PersistUTCTime (pweCreatedAt envelope)
-                                , PersistUTCTime now
-                                , PersistText (bpcDomainOrderId bound)
-                                , PersistText (bpcCheckoutId bound)
-                                , PersistText (pwcPaypalOrderId capture)
-                                ]
-                              rawExecute
-                                "INSERT INTO service_storefront_order_status_change\
-                                \ (order_id, status, notes, changed_by, created_at)\
-                                \ VALUES (?::uuid, 'paid',\
-                                \ 'PayPal capture completed through a signature-verified webhook',\
-                                \ 'paypal_signature_verified_webhook', ?)"
-                                [ PersistText (bpcDomainOrderId bound)
-                                , PersistUTCTime now
-                                ]
-                            confirmation <- if bpcDomainType bound == "event_ticket_order"
-                              then do
-                                orderKey <- maybe
-                                  (fail "Event ticket PayPal binding has an invalid order reference")
-                                  pure
-                                  (fromPathPiece (bpcDomainOrderId bound)
-                                    :: Maybe SM.EventTicketOrderId)
-                                (order, ticketCodes, newlyIssued) <-
-                                  SocialEvents.finalizePaidTicketOrder now orderKey
-                                pure $ if newlyIssued
-                                  then Just (order, ticketCodes)
-                                  else Nothing
-                              else pure Nothing
-                            pure (PaypalEventProcessed
-                              (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing,
-                              confirmation)
-        case result of
-          Left _ -> pure (PaypalEventRetry "PayPal capture event database processing failed")
-          -- finalizePaidTicketOrder records a durable confirmation in the same
-          -- transaction. A webhook retry must not invoke SMTP a second time.
-          Right (outcome, _mConfirmation) -> pure outcome
-
-    processExternalCaptureChange exceptionType =
-      case parsePaypalExternalCaptureChange environment envelope of
-        Left message -> pure (PaypalEventPermanentFailure message Nothing Nothing Nothing)
-        Right (captureId, actualAmount, currency) -> do
-          result <- tryAny $ flip runSqlPool pool $ do
-            mBound <- loadBoundPaypalCapture environment merchantRef captureId
-            case mBound of
-              -- Retry exhaustion must not discard the admission fence. Persist
-              -- verified capture-scoped evidence before requesting another retry;
-              -- future binding/admission will join it without another webhook.
-              Nothing -> do
-                Checkout.recordUnmatchedCaptureException Checkout.ProviderPayPal
-                  environment merchantRef exceptionType captureId actualAmount currency now
-                pure (PaypalEventRetry "PayPal capture binding is not available yet")
-              Just bound
-                | currency /= bpcCurrency bound || actualAmount > bpcExpectedAmount bound ->
-                    pure (PaypalEventPermanentFailure
-                      "PayPal external change does not match the bound capture"
-                      (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
-                | otherwise -> do
-                    -- Serialize the admission fence with scanning. Do not turn an
-                    -- unallocated external refund into an invented ticket refund.
-                    when (bpcDomainType bound == "event_ticket_order") $ do
-                      lockedEvents <- (rawSql
-                        "SELECT event.id FROM social_event event JOIN event_ticket_order orders\
-                        \ ON orders.event_id=event.id WHERE orders.id::text=? FOR UPDATE OF event"
-                        [PersistText (bpcDomainOrderId bound)] :: SqlPersistT IO [Single Int64])
-                      lockedOrders <- (rawSql
-                        "SELECT id FROM event_ticket_order WHERE id::text=? FOR UPDATE"
-                        [PersistText (bpcDomainOrderId bound)] :: SqlPersistT IO [Single Int64])
-                      unless (length lockedEvents == 1 && length lockedOrders == 1) $
-                        fail "External ticket refund is missing its bound order"
-                    known <- if bpcDomainType bound == "event_ticket_order" &&
-                        pweEventType envelope == "PAYMENT.CAPTURE.REFUNDED" then do
-                      let refundId = paypalWebhookResourceId envelope
-                          customId = case pweResource envelope of
-                            Object fields -> lookupObjectText "custom_id" fields >>= (fmap toText . fromText)
-                            _ -> Nothing
-                      refs <- rawSql
-                        "SELECT refund.id::text FROM commerce_refund refund\
-                        \ WHERE refund.checkout_id=?::uuid AND refund.payment_attempt_id=?::uuid\
-                        \ AND refund.provider='paypal' AND refund.environment=? AND refund.merchant_account_ref=?\
-                        \ AND refund.amount_minor=? AND refund.currency=? AND refund.status IN ('processing','succeeded')\
-                        \ AND refund.approved_by>0 AND refund.approved_by<>refund.requested_by\
-                        \ AND (refund.provider_refund_id=? OR (refund.provider_refund_id IS NULL AND refund.id::text=?))\
-                        \ AND (?::text IS NULL OR refund.id::text=?)\
-                        \ AND EXISTS (SELECT 1 FROM event_ticket_refund_allocation allocation WHERE allocation.refund_id=refund.id)"
-                        [PersistText (bpcCheckoutId bound),PersistText (bpcAttemptId bound),
-                         PersistText (Checkout.checkoutEnvironmentText environment),PersistText merchantRef,
-                         PersistInt64 actualAmount,PersistText currency,toPersistValue refundId,toPersistValue customId,
-                         toPersistValue customId,toPersistValue customId]
-                      case (refs,refundId) of
-                        ([Single ref],Just providerId) -> do
-                          _ <- TicketRefund.completeTicketRefund Refund.VerifiedRefund
-                            { Refund.vrRefund=Refund.RefundReference ref,Refund.vrProviderRefund=providerId
-                            , Refund.vrAmountMinor=actualAmount,Refund.vrCurrency=currency
-                            , Refund.vrOccurredAt=pweCreatedAt envelope
-                            , Refund.vrCorrelationId="paypal-ticket-refund:" <> pweEventId envelope }
-                          pure (Just ref)
-                        _ -> pure Nothing
-                    else pure Nothing
-                    case known of
-                      Just ref -> pure (PaypalEventProcessed
-                        (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) (Just ref))
-                      Nothing -> do
-                        Checkout.recordReconciliationException
-                          Checkout.ProviderPayPal environment merchantRef exceptionType
-                          (bpcDomainOrderId bound) captureId
-                          (bpcExpectedAmount bound) (Just actualAmount) currency now
-                        pure (PaypalEventProcessed
-                          (Just (bpcCheckoutId bound)) (Just (bpcAttemptId bound)) Nothing)
-
-          pure $ case result of
-            Left _ -> PaypalEventRetry "PayPal refund or reversal event database processing failed"
-            Right outcome -> outcome
-
-paypalWebhookDomainTypes :: [Text]
-paypalWebhookDomainTypes =
-  [ "mixing_mastering"
-  , "marketplace_sale"
-  , "marketplace_rental"
-  , "service_booking"
-  , "course_registration"
-  , "event_ticket_order"
-  ]
-
-paypalWebhookDomainSupported :: Text -> Bool
-paypalWebhookDomainSupported domainType = domainType `elem` paypalWebhookDomainTypes
-
-paypalCaptureRequiresReconciliation
-  :: UTCTime
-  -> Text
-  -> Maybe UTCTime
-  -> Bool
-paypalCaptureRequiresReconciliation now checkoutStatus expiresAt =
-  checkoutStatus `notElem`
-    ["holding", "awaiting_payment", "processing", "failed", "paid"]
-  || (checkoutStatus /= "paid" && maybe False (<= now) expiresAt)
-
-reconcileLatePaypalCapture
-  :: Checkout.CheckoutEnvironment
-  -> Text
-  -> UTCTime
-  -> BoundPaypalCapture
-  -> PaypalWebhookCapture
-  -> SqlPersistT IO Bool
-reconcileLatePaypalCapture environment merchantRef now bound capture = do
-  rows <- (rawSql
-    "SELECT status, expires_at FROM commerce_checkout_session\
-    \ WHERE id = ?::uuid FOR UPDATE"
-    [PersistText (bpcCheckoutId bound)]
-    :: SqlPersistT IO [(Single Text, Single (Maybe UTCTime))])
-  (checkoutStatus, expiresAt) <- case rows of
-    [(Single status, Single deadline)] -> pure (status, deadline)
-    _ -> fail "PayPal capture binding has no unique canonical checkout"
-  if not (paypalCaptureRequiresReconciliation now checkoutStatus expiresAt)
-    then pure False
-    else do
-      let holdExpired = checkoutStatus /= "paid" && maybe False (<= now) expiresAt
-          exceptionType
-            | holdExpired && bpcDomainType bound == "event_ticket_order" =
-                "payment_after_ticket_hold_expiry"
-            | holdExpired && bpcDomainType bound == "course_registration" =
-                "payment_after_course_hold_expiry"
-            | holdExpired = "payment_after_checkout_expiry"
-            | otherwise = "payment_after_terminal_checkout"
-      when holdExpired $ rawExecute
-        "UPDATE commerce_checkout_session SET status = 'expired', updated_at = ?\
-        \ WHERE id = ?::uuid\
-        \ AND status IN ('holding','awaiting_payment','processing','failed')"
-        [PersistUTCTime now, PersistText (bpcCheckoutId bound)]
-      Checkout.recordReconciliationException
-        Checkout.ProviderPayPal environment merchantRef exceptionType
-        (bpcDomainOrderId bound) (pwcCaptureId capture)
-        (bpcExpectedAmount bound) (Just (bpcExpectedAmount bound))
-        (bpcCurrency bound) now
-      pure True
-
-loadBoundPaypalOrder
-  :: Checkout.CheckoutEnvironment
-  -> Text
-  -> Text
-  -> SqlPersistT IO (Maybe BoundPaypalCapture)
-loadBoundPaypalOrder environment merchantRef paypalOrderId =
-  loadBoundPaypalCaptureBy
-    "binding.resource_type = 'order' AND binding.provider_resource_id = ?"
-    environment merchantRef paypalOrderId
-
-loadBoundPaypalCapture
-  :: Checkout.CheckoutEnvironment
-  -> Text
-  -> Text
-  -> SqlPersistT IO (Maybe BoundPaypalCapture)
-loadBoundPaypalCapture environment merchantRef captureId =
-  loadBoundPaypalCaptureBy
-    "binding.resource_type = 'capture' AND binding.provider_resource_id = ?"
-    environment merchantRef captureId
-
-loadBoundPaypalCaptureBy
-  :: Text
-  -> Checkout.CheckoutEnvironment
-  -> Text
-  -> Text
-  -> SqlPersistT IO (Maybe BoundPaypalCapture)
-loadBoundPaypalCaptureBy bindingPredicate environment merchantRef providerResource = do
-  let domainPlaceholders = T.intercalate "," (replicate (length paypalWebhookDomainTypes) "?")
-  rows <- (rawSql
-    ("SELECT checkout.id::text, attempt.id::text, checkout.domain_type, checkout.domain_order_id,\
-     \ checkout.total_minor, checkout.currency, attempt.merchant_account_ref,\
-     \ order_binding.provider_resource_id\
-     \ FROM commerce_checkout_session checkout\
-     \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id = checkout.id\
-     \ JOIN commerce_provider_binding binding ON binding.payment_attempt_id = attempt.id\
-     \ JOIN commerce_provider_binding order_binding\
-     \   ON order_binding.provider = attempt.provider\
-     \  AND order_binding.environment = attempt.environment\
-     \  AND order_binding.merchant_account_ref = attempt.merchant_account_ref\
-     \  AND order_binding.merchant_reference = checkout.domain_order_id\
-     \  AND order_binding.resource_type = 'order'\
-     \ WHERE checkout.domain_type IN (" <> domainPlaceholders <> ")\
-     \ AND attempt.provider = 'paypal' AND attempt.environment = ?\
-     \ AND attempt.merchant_account_ref = ? AND " <> bindingPredicate)
-    (map PersistText paypalWebhookDomainTypes <>
-      [ PersistText (Checkout.checkoutEnvironmentText environment)
-      , PersistText merchantRef
-      , PersistText providerResource
-      ]) :: SqlPersistT IO
-      [( Single Text, Single Text, Single Text, Single Text, Single Int64
-       , Single Text, Single Text, Single Text
-       )])
-  pure $ case rows of
-    [( Single checkoutId, Single attemptId, Single domainType, Single domainOrderId, Single amount
-     , Single currency, Single storedMerchant, Single paypalOrderId
-     )] -> Just BoundPaypalCapture
-        { bpcCheckoutId = checkoutId
-        , bpcAttemptId = attemptId
-        , bpcDomainType = domainType
-        , bpcDomainOrderId = domainOrderId
-        , bpcExpectedAmount = amount
-        , bpcCurrency = currency
-        , bpcMerchantRef = storedMerchant
-        , bpcPaypalOrderId = paypalOrderId
-        }
-    _ -> Nothing
-
-validatePaypalWebhookCaptureBinding
-  :: Text
-  -> BoundPaypalCapture
-  -> PaypalWebhookCapture
-  -> Either Text ()
-validatePaypalWebhookCaptureBinding configuredMerchant bound capture = do
-  capturedMinor <- fromIntegral <$> parseDatafastCents (pwcAmount capture)
-  unless (pwcStatus capture == "COMPLETED") $
-    Left "PayPal webhook capture is not completed"
-  unless (pwcPaypalOrderId capture == bpcPaypalOrderId bound) $
-    Left "PayPal webhook order ID does not match the immutable provider binding"
-  unless (pwcMerchantId capture == configuredMerchant
-      && pwcMerchantId capture == bpcMerchantRef bound) $
-    Left "PayPal webhook merchant does not match the configured merchant binding"
-  unless (capturedMinor == bpcExpectedAmount bound) $
-    Left "PayPal webhook amount does not match the immutable checkout"
-  unless (pwcCurrency capture == T.toUpper (T.strip (bpcCurrency bound))) $
-    Left "PayPal webhook currency does not match the immutable checkout"
-
-recordPaypalWebhookMismatch
-  :: Checkout.CheckoutEnvironment
-  -> UTCTime
-  -> BoundPaypalCapture
-  -> PaypalWebhookCapture
-  -> Text
-  -> SqlPersistT IO ()
-recordPaypalWebhookMismatch environment occurredAt bound capture _ =
-  Checkout.recordReconciliationException
-    Checkout.ProviderPayPal
-    environment
-    (bpcMerchantRef bound)
-    "provider_verification_mismatch"
-    (bpcDomainOrderId bound)
-    (pwcCaptureId capture)
-    (bpcExpectedAmount bound)
-    (fromIntegral <$> either (const Nothing) Just (parseDatafastCents (pwcAmount capture)))
-    (bpcCurrency bound)
-    occurredAt
-
 selectManualPaymentHandler
   :: Text
   -> Maybe Text
@@ -1406,6 +1038,10 @@ serviceRefundRecoveryHandler
 serviceRefundRecoveryHandler user shouldQuery rawId = do
   env@Env{..} <- ask
   ref <- parseRefundReference rawId
+  existing <- liftIO (runSqlPool (Refund.loadRefund ref) envPool)
+    >>= maybe (throwError err404) pure
+  _ <- liftIO (runSqlPool (loadServiceOrderNumberForCheckout (Refund.rrCheckout existing)) envPool)
+    >>= maybe (throwError err404) pure
   let configured binding = do
         result <- runHandler (runReaderT (refundQueryConfigured binding) env)
         pure (either (const False) id result)
@@ -1682,15 +1318,16 @@ reconcileServiceOrderHandler orderNumber = do
       requireReconciliationBinding paidCheckout
         (sdfEnvironment datafast) (sdfEntityId datafast)
       providerStatus <- checkDatafastPaymentStatus resourcePath
+      validation <- validateBoundDatafastSuccessfulPayment
+        (Checkout.CheckoutReference (spcCheckoutId paidCheckout))
+        (sdfEnvironment datafast) (sdfEntityId datafast)
+        (fromMaybe "" (ME.serviceStorefrontOrderDatafastCheckoutId order))
+        (fromIntegral (spcPaidMinor paidCheckout)) (spcCurrency paidCheckout) providerStatus
       let actualMinor = sdfpsAmount providerStatus
             >>= either (const Nothing) Just . parseDatafastCents
           matched = isDatafastPaymentSuccess
               (sdfEnvironment datafast) (sdfpsResultCode providerStatus)
-            && either (const False) (const True)
-              (validateDatafastSuccessfulPayment
-                (toPathPiece oid)
-                (fromIntegral (spcPaidMinor paidCheckout))
-                (spcCurrency paidCheckout) providerStatus)
+            && either (const False) (const True) validation
           providerReference = fromMaybe resourcePath (sdfpsPaymentId providerStatus)
       unless matched $ liftIO $ flip runSqlPool envPool $
         Checkout.recordReconciliationException
@@ -2327,17 +1964,28 @@ loadServiceDatafastCheckoutEnv = do
     >>= either (throwError . configurationError) pure
   pure (configured, parameters)
 
--- | Request a Datafast checkout session for a service order.
+-- | Read only the immutable checkout snapshot. Nonzero line adjustments need
+-- an explicit, qualified provider projection; never absorb them into a fake
+-- item or infer VAT from the amount charged.
+-- Recheck after payment admission: a concurrent request may publish a saved
+-- checkout while admission waits for its checkout row lock. Missing a previously
+-- saved resource is a conflict, never permission to create without preflight.
+-- | Called only for a fresh checkout, before allocating its payment attempt.
+-- Cached widgets and status/reconciliation never require a new client address.
+-- | Request a Datafast checkout session for a canonical service order.
 requestDatafastCheckoutForService
-  :: Text  -- ^ Transaction ID (order UUID)
+  :: Checkout.CheckoutReference
+  -> Checkout.PaymentAttemptReference  -- ^ Persisted attempt, stable on replay
+  -> ClientIP.DatafastClientIP -- ^ Verified transport-owned customer address
   -> Int   -- ^ Amount in cents
   -> Text  -- ^ Currency
   -> Text  -- ^ Buyer name
   -> Text  -- ^ Buyer email
   -> Maybe Text  -- ^ Buyer phone
   -> AppM (Text, String)  -- ^ (checkoutId, widgetUrl)
-requestDatafastCheckoutForService txnId totalCents currency name email mPhone = do
+requestDatafastCheckoutForService checkout attempt clientIP totalCents currency name email mPhone = do
   (dfEnv, merchantParameters) <- loadServiceDatafastCheckoutEnv
+  cartParameters <- loadDatafastCartParameters checkout totalCents currency
   let manager = ProviderHttp.sharedProviderManager
   let amountTxt = T.pack $ show (totalCents `div` 100) <> "." <> pad2 (totalCents `mod` 100)
       currencyTxt = T.toUpper (T.strip currency)
@@ -2348,14 +1996,15 @@ requestDatafastCheckoutForService txnId totalCents currency name email mPhone = 
         , ("amount", TE.encodeUtf8 amountTxt)
         , ("currency", TE.encodeUtf8 currencyTxt)
         , ("paymentType", "DB")
-        , ("merchantTransactionId", TE.encodeUtf8 txnId)
+        , ("merchantTransactionId", TE.encodeUtf8 (Checkout.paymentAttemptReferenceId attempt))
         , ("customer.givenName", TE.encodeUtf8 givenName)
         , ("customer.surname", TE.encodeUtf8 surname)
         , ("customer.email", TE.encodeUtf8 email)
         ]
       phoneParam = maybe [] (\p -> [("customer.phone", TE.encodeUtf8 p)]) mPhone
       testModeParam = maybe [] (\tm -> [("testMode", TE.encodeUtf8 tm)]) (sdfTestMode dfEnv)
-      allParams = baseParams <> phoneParam <> testModeParam <> merchantParameters
+      allParams = baseParams <> ClientIP.datafastClientIPParameters clientIP
+        <> phoneParam <> testModeParam <> merchantParameters <> cartParameters
       body = renderFormBody allParams
       baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
   req0 <- providerRequest Checkout.ProviderDatafast (baseUrlClean ++ "/v1/checkouts")
@@ -2449,6 +2098,51 @@ providerValidationError :: Text -> ServerError
 providerValidationError message =
   err502 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
 
+-- | The provider's wire reference is the saved creation attempt UUID. Older
+-- checkouts used their domain order ID. Both identifiers must come from the
+-- exact immutable checkout binding, never from a client or another attempt.
+-- Keep merchant_reference on the binding as the domain order ID: the ledger
+-- and domain settlement triggers use that relationship independently.
+validateBoundDatafastSuccessfulPayment
+  :: Checkout.CheckoutReference
+  -> Checkout.CheckoutEnvironment
+  -> Text
+  -> Text
+  -> Int
+  -> Text
+  -> ServiceDatafastPaymentStatus
+  -> AppM (Either Text ())
+validateBoundDatafastSuccessfulPayment checkout environment merchantRef checkoutId amount currency status = do
+  Env{envPool} <- ask
+  references <- liftIO $ flip runSqlPool envPool $ rawSql
+    "SELECT attempt.id::text, checkout.domain_order_id\
+    \ FROM commerce_checkout_session checkout\
+    \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id = checkout.id\
+    \ JOIN commerce_provider_binding binding ON binding.payment_attempt_id = attempt.id\
+    \ WHERE checkout.id = ?::uuid AND checkout.environment = ?\
+    \ AND checkout.total_minor = ? AND checkout.currency = ?\
+    \ AND attempt.provider = 'datafast' AND attempt.operation = 'create'\
+    \ AND attempt.environment = checkout.environment AND attempt.merchant_account_ref = ?\
+    \ AND attempt.amount_minor = checkout.total_minor AND attempt.currency = checkout.currency\
+    \ AND binding.provider = attempt.provider AND binding.environment = attempt.environment\
+    \ AND binding.merchant_account_ref = attempt.merchant_account_ref\
+    \ AND binding.resource_type = 'checkout' AND binding.provider_resource_id = ?\
+    \ AND binding.merchant_reference = checkout.domain_order_id\
+    \ AND binding.amount_minor = checkout.total_minor AND binding.currency = checkout.currency"
+    [ PersistText (Checkout.checkoutReferenceId checkout)
+    , PersistText (Checkout.checkoutEnvironmentText environment)
+    , PersistInt64 (fromIntegral amount)
+    , PersistText currency
+    , PersistText merchantRef
+    , PersistText checkoutId
+    ]
+  pure $ case references of
+    [(Single attemptId, Single orderId)] ->
+      let expected = if fmap T.strip (sdfpsMerchantTransactionId status) == Just attemptId
+            then attemptId else orderId
+      in validateDatafastSuccessfulPayment expected amount currency status
+    _ -> Left "Datafast payment does not match one immutable checkout binding"
+
 validateDatafastSuccessfulPayment
   :: Text
   -> Int
@@ -2464,24 +2158,6 @@ validateDatafastSuccessfulPayment expectedOrderId expectedCents expectedCurrency
   unless (paidCurrency == T.toUpper (T.strip expectedCurrency)) (Left "Datafast currency does not match the immutable order currency")
   unless (merchantReference == expectedOrderId) (Left "Datafast merchant reference does not match the internal order")
   unless (not (T.null paymentId) && T.length paymentId <= 256) (Left "Datafast payment ID is invalid")
-
-parseDatafastCents :: Text -> Either Text Int
-parseDatafastCents raw =
-  case T.splitOn "." (T.strip raw) of
-    [whole] -> parseParts whole "0"
-    [whole, fraction] | T.length fraction <= 2 -> parseParts whole fraction
-    _ -> Left "Datafast amount is invalid"
-  where
-    parseParts whole fraction
-      | T.null whole || T.null fraction = Left "Datafast amount is invalid"
-      | not (T.all isDigit whole && T.all isDigit fraction) = Left "Datafast amount is invalid"
-      | otherwise =
-          let wholeValue = read (T.unpack whole) :: Integer
-              fractionValue = read (T.unpack (T.take 2 (fraction <> "00"))) :: Integer
-              cents = wholeValue * 100 + fractionValue
-          in if cents > 0 && cents <= fromIntegral (maxBound :: Int)
-               then Right (fromIntegral cents)
-               else Left "Datafast amount is invalid"
 
 -- | Render form parameters as URL-encoded body (strict ByteString).
 renderFormBody :: [(ByteString, ByteString)] -> ByteString
@@ -2503,40 +2179,6 @@ data PaypalWebhookHeaders = PaypalWebhookHeaders
   , pwhAuthAlgo          :: Text
   , pwhTransmissionSig   :: Text
   } deriving (Eq, Show)
-
-data PaypalWebhookEnvelope = PaypalWebhookEnvelope
-  { pweEventId   :: Text
-  , pweEventType :: Text
-  , pweCreatedAt :: UTCTime
-  , pweResource  :: Value
-  } deriving (Show)
-
-data PaypalWebhookCapture = PaypalWebhookCapture
-  { pwcCaptureId    :: Text
-  , pwcStatus       :: Text
-  , pwcAmount       :: Text
-  , pwcCurrency     :: Text
-  , pwcMerchantId   :: Text
-  , pwcPaypalOrderId :: Text
-  } deriving (Eq, Show)
-
-data PaypalEventProcessResult
-  = PaypalEventProcessed (Maybe Text) (Maybe Text) (Maybe Text)
-  | PaypalEventIgnored
-  | PaypalEventPermanentFailure Text (Maybe Text) (Maybe Text) (Maybe Text)
-  | PaypalEventRetry Text
-  deriving (Eq, Show)
-
-data BoundPaypalCapture = BoundPaypalCapture
-  { bpcCheckoutId     :: Text
-  , bpcAttemptId      :: Text
-  , bpcDomainType     :: Text
-  , bpcDomainOrderId  :: Text
-  , bpcExpectedAmount :: Int64
-  , bpcCurrency       :: Text
-  , bpcMerchantRef    :: Text
-  , bpcPaypalOrderId  :: Text
-  }
 
 data ServicePaidCheckout = ServicePaidCheckout
   { spcCheckoutId       :: Text
@@ -2580,69 +2222,6 @@ validatePaypalWebhookHeaders now mTransmissionId mTransmissionTime mCertUrl mAut
     , pwhTransmissionSig = signature
     }
 
-parsePaypalWebhookEnvelope :: BL.ByteString -> Either Text PaypalWebhookEnvelope
-parsePaypalWebhookEnvelope rawBody
-  | BL.null rawBody = Left "PayPal webhook body is empty"
-  | BL.length rawBody > 1024 * 1024 = Left "PayPal webhook body exceeds 1048576 bytes"
-  | otherwise = do
-      value <- either (const (Left "Invalid PayPal webhook JSON")) Right
-        (eitherDecode rawBody :: Either String Value)
-      case value of
-        Object obj -> do
-          eventId <- requiredObjectText "id" obj
-          eventType <- requiredObjectText "event_type" obj
-          createTime <- requiredObjectText "create_time" obj
-          createdAt <- parseAesonUtc "PayPal event create_time" createTime
-          resource <- maybe (Left "PayPal webhook omitted resource") Right
-            (KM.lookup "resource" obj)
-          unless (isProviderReference eventId && T.length eventId <= 128) $
-            Left "PayPal webhook event ID is invalid"
-          unless (validPaypalEventType eventType) $
-            Left "PayPal webhook event type is invalid"
-          pure PaypalWebhookEnvelope
-            { pweEventId = eventId
-            , pweEventType = eventType
-            , pweCreatedAt = createdAt
-            , pweResource = resource
-            }
-        _ -> Left "PayPal webhook must be a JSON object"
-
-parsePaypalWebhookCapture :: PaypalWebhookEnvelope -> Either Text PaypalWebhookCapture
-parsePaypalWebhookCapture PaypalWebhookEnvelope{pweResource = Object resource} = do
-  captureId <- requiredObjectText "id" resource
-  status <- requiredObjectText "status" resource
-  amountObject <- maybe (Left "PayPal webhook omitted capture amount") Right
-    (lookupObject "amount" resource)
-  amount <- requiredObjectText "value" amountObject
-  currency <- requiredObjectText "currency_code" amountObject
-  payee <- maybe (Left "PayPal webhook omitted capture payee") Right
-    (lookupObject "payee" resource)
-  merchantId <- requiredObjectText "merchant_id" payee
-  supplementary <- maybe (Left "PayPal webhook omitted supplementary_data") Right
-    (lookupObject "supplementary_data" resource)
-  related <- maybe (Left "PayPal webhook omitted related_ids") Right
-    (lookupObject "related_ids" supplementary)
-  paypalOrderId <- requiredObjectText "order_id" related
-  unless (all isProviderReference [captureId, merchantId, paypalOrderId]) $
-    Left "PayPal webhook contains an invalid provider reference"
-  pure PaypalWebhookCapture
-    { pwcCaptureId = captureId
-    , pwcStatus = T.toUpper (T.strip status)
-    , pwcAmount = T.strip amount
-    , pwcCurrency = T.toUpper (T.strip currency)
-    , pwcMerchantId = merchantId
-    , pwcPaypalOrderId = paypalOrderId
-    }
-parsePaypalWebhookCapture _ = Left "PayPal webhook capture resource must be an object"
-
--- Signature verification and merchant binding remain the caller's authority.
-parsePaypalExternalCaptureChange
-  :: Checkout.CheckoutEnvironment -> PaypalWebhookEnvelope
-  -> Either Text (Text, Int64, Text)
-parsePaypalExternalCaptureChange environment PaypalWebhookEnvelope{pweEventType, pweResource} =
-  RefundQuery.parseExternalCaptureChange environment pweEventType pweResource
-
-
 buildPaypalWebhookVerificationBody
   :: Text
   -> PaypalWebhookHeaders
@@ -2667,23 +2246,6 @@ buildPaypalWebhookVerificationBody webhookId PaypalWebhookHeaders{..} rawBody =
     , "}"
     ]
 
-paypalWebhookResourceId :: PaypalWebhookEnvelope -> Maybe Text
-paypalWebhookResourceId PaypalWebhookEnvelope{pweResource = Object resource} =
-  lookupObjectText "id" resource
-paypalWebhookResourceId _ = Nothing
-
-requiredObjectText :: Text -> Aeson.Object -> Either Text Text
-requiredObjectText key obj =
-  case lookupObjectText key obj of
-    Just value | not (T.null (T.strip value)) -> Right (T.strip value)
-    _ -> Left ("PayPal payload omitted " <> key)
-
-parseAesonUtc :: Text -> Text -> Either Text UTCTime
-parseAesonUtc label rawTimestamp =
-  case Aeson.fromJSON (String (T.strip rawTimestamp)) of
-    Success value -> Right value
-    Error _ -> Left (label <> " is not a valid RFC 3339 timestamp")
-
 requireSafeHeader :: Text -> Int -> Maybe Text -> Either Text Text
 requireSafeHeader name maxLength mRawValue = do
   value <- maybe (Left ("Missing " <> name <> " header")) (Right . T.strip) mRawValue
@@ -2692,15 +2254,6 @@ requireSafeHeader name maxLength mRawValue = do
   unless (T.all (\character -> character >= '!' && character <= '~') value) $
     Left (name <> " header contains unsafe characters")
   pure value
-
-validPaypalEventType :: Text -> Bool
-validPaypalEventType value =
-  not (T.null value)
-    && T.length value <= 100
-    && T.all (\character ->
-      (character >= 'A' && character <= 'Z')
-        || (character >= '0' && character <= '9')
-        || character `elem` ("._-" :: String)) value
 
 isPaypalCertificateUrl :: Text -> Bool
 isPaypalCertificateUrl rawUrl =
@@ -2917,16 +2470,6 @@ findApprovalUrl (Object lnk : rest) =
       | T.toLower (T.strip rel) == "approve" -> Just href
     _ -> findApprovalUrl rest
 findApprovalUrl (_ : rest) = findApprovalUrl rest
-
-lookupObject :: Text -> Aeson.Object -> Maybe Aeson.Object
-lookupObject key obj = case KM.lookup (AesonKey.fromText key) obj of
-  Just (Object value) -> Just value
-  _ -> Nothing
-
-lookupObjectText :: Text -> Aeson.Object -> Maybe Text
-lookupObjectText key obj = case KM.lookup (AesonKey.fromText key) obj of
-  Just (String value) -> Just value
-  _ -> Nothing
 
 onlyObject :: Text -> Aeson.Object -> Maybe Aeson.Object
 onlyObject key obj = case KM.lookup (AesonKey.fromText key) obj of

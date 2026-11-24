@@ -27,9 +27,11 @@ import ShareIcon from '@mui/icons-material/Share';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, Navigate, useLocation, useParams } from 'react-router-dom';
 
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
+import { describeTerms } from '../features/marketplace/offers';
 import { EventTickets } from '../api/eventTickets';
 import { findExternalTicketLink, localizeTicketUnavailableReason } from '../utils/externalTicketing';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -43,8 +45,9 @@ import {
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventRsvpFeed from '../components/events/EventRsvpFeed';
 import { canonicalEventUrl } from '../utils/eventSharing';
-import { resolveDirectoryPreviewImage } from '../utils/directoryPreviewImage';
-import DirectoryPreviewImage from '../components/directory/DirectoryPreviewImage';
+import { resolveDirectoryPreviewImage } from '../services/directoryPreviewImage';
+import ExpandablePreviewImage from '../components/directory/ExpandablePreviewImage';
+import appI18n from '../i18n';
 import { useAnalytics } from '../analytics/useAnalytics';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
@@ -116,7 +119,9 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
     staleTime: 60_000,
   });
   const value = detail.data ?? {};
-  const displayLocale = navigator.language || 'es';
+  // The app's own language (Spanish unless the visitor chose another), never the browser's.
+  const { i18n } = useTranslation(undefined, { i18n: appI18n });
+  const displayLocale = i18n.resolvedLanguage ?? i18n.language ?? 'es';
   const english = displayLocale.toLowerCase().startsWith('en');
   const title = text(value['name']) ?? text(value['title']) ?? 'Directorio musical';
   const description = text(value['bio']) ?? text(value['description']) ?? text(value['creditsSummary']) ?? 'Perfil público en TDF.';
@@ -237,6 +242,9 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
   const composePath = `/social/eventos/${encodeURIComponent(identifier)}?${composeSearch.toString()}#momentos`;
 
   const locationValue = record(value['location']) ?? rows(value['locations'])[0];
+  const addressLine = kind === 'event' ? /^Dirección del evento:[ \t]*(\S[^\r\n]*)/iu.exec(description) : null;
+  const publicLocation = addressLine?.[1]?.trim() ?? [text(locationValue?.['city']), text(locationValue?.['countryCode'])].filter(Boolean).join(', ');
+  const detailDescription = addressLine ? description.slice(addressLine[0].length).trim() : description;
   const professions = rows(value['professions']);
   const instruments = rows(value['instruments']);
   const genres = rows(value['genres']);
@@ -244,9 +252,29 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
   const category = record(value['category']);
   const venue = record(value['venue']);
   const targetId = text(value['id']) ?? identifier;
+  const classifiedSlug = kind === 'classified' ? text(value['slug']) ?? identifier : undefined;
   const authenticatedAction = kind === 'classified'
-    ? `/mis-clasificados?apply=${encodeURIComponent(targetId)}`
+    ? `/mis-clasificados?apply=${encodeURIComponent(targetId)}&slug=${encodeURIComponent(classifiedSlug ?? identifier)}`
     : `/mis-clasificados?contact=${encodeURIComponent(targetId)}&contextKind=profile`;
+  // ADR 0134: marketplace signals of a classified (intent, price mode, slots, anonymous offer stats).
+  const intent = kind === 'classified' ? text(value['intent']) : undefined;
+  const priceMode = kind === 'classified' ? text(value['priceMode']) : undefined;
+  const slotsRemaining = kind === 'classified' ? number(value['slotsRemaining']) : undefined;
+  const slots = kind === 'classified' ? number(value['slots']) : undefined;
+  const offerStats = kind === 'classified' ? record(value['offerStats']) : undefined;
+  const offerDeadline = kind === 'classified' ? text(value['offerDeadlineAt']) : undefined;
+  const offersClosed = kind === 'classified' && (slotsRemaining === 0 || (offerDeadline ? new Date(offerDeadline) < new Date() : false));
+  // ADR 0134: conditions attached by the publisher (duration, capacity, equipment…).
+  const listingTerms = kind === 'classified'
+    ? describeTerms(record(value['terms']), (key, options) => {
+        switch (key) {
+          case 'marketplace.offer.termsDuration': return english ? `Duration: ${String(options?.['minutes'])} min` : `Duración: ${String(options?.['minutes'])} min`;
+          case 'marketplace.offer.termsEquipment': return english ? `Equipment: ${String(options?.['equipment'])}` : `Equipo: ${String(options?.['equipment'])}`;
+          case 'marketplace.offer.termsCapacity': return english ? `Capacity: ${String(options?.['capacity'])}` : `Aforo o tamaño: ${String(options?.['capacity'])}`;
+          default: return key;
+        }
+      })
+    : [];
   const invitationAction = `/mis-clasificados?invite=${encodeURIComponent(targetId)}`;
   const ticketsPath = `/eventos/${encodeURIComponent(identifier)}/entradas`;
   const ticketPrice = checkoutOpen ? lowestTicketPrice(storefront.data?.tiers, displayLocale) : undefined;
@@ -272,11 +300,13 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
               <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={3}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} gap={3} sx={{ minWidth: 0 }}>
                   {/* Always mounted: without media it shows the kind's placeholder. */}
-                  <DirectoryPreviewImage
+                  <ExpandablePreviewImage
                     kind={kind === 'profile' || kind === 'classified' || kind === 'event' ? kind : 'venue'}
                     imageUrl={absolutePreviewImage}
                     alt={kind === 'event' ? `Afiche de ${title}` : `Foto de ${title}`}
                     fallbackAlt={`Imagen de referencia de ${title}`}
+                    expandLabel={english ? 'View the full image' : kind === 'event' ? 'Ver el afiche completo' : 'Ver la imagen completa'}
+                    closeLabel={english ? 'Close' : 'Cerrar'}
                     width={440}
                     height={440}
                     sizes="(min-width: 600px) 220px, 100vw"
@@ -286,13 +316,17 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                       // A shorter poster on phones keeps an event's buy button in the first screen.
                       height: { xs: kind === 'event' ? 200 : 300, sm: 220 },
                       aspectRatio: 'auto',
+                      ...(kind === 'event' && { objectFit: 'contain' }),
                       borderRadius: 3,
                     }}
                   />
                   <Box>
                     <Stack direction="row" gap={1} flexWrap="wrap" mb={1}>
-                      <Chip color="primary" label={kind === 'profile' ? 'Perfil profesional' : kind === 'classified' ? 'Clasificado musical' : kind === 'event' ? 'Evento' : 'Venue'} />
+                      <Chip color="primary" label={kind === 'profile' ? 'Perfil profesional' : kind === 'classified' ? (intent === 'offering' ? 'Ofrece' : intent === 'seeking' ? 'Busca' : 'Anuncio musical') : kind === 'event' ? 'Evento' : 'Venue'} />
                       {category && <Chip label={text(category['name']) ?? 'Oportunidad'} />}
+                      {priceMode && <Chip variant="outlined" label={priceMode === 'fixed' ? 'Precio fijo' : priceMode === 'suggested' ? 'Precio sugerido, negociable' : 'Precio abierto a ofertas'} />}
+                      {typeof slotsRemaining === 'number' && typeof slots === 'number' && <Chip variant="outlined" color={slotsRemaining === 0 ? 'default' : 'success'} label={slotsRemaining === 0 ? 'Cupos cubiertos' : `${slotsRemaining} de ${slots} cupo${slots === 1 ? '' : 's'} disponible${slotsRemaining === 1 ? '' : 's'}`} />}
+                      {offerStats && number(offerStats['count']) ? <Chip variant="outlined" label={`${number(offerStats['count'])} oferta${number(offerStats['count']) === 1 ? '' : 's'} recibida${number(offerStats['count']) === 1 ? '' : 's'}`} /> : null}
                       {eventCancelled && <Chip color="error" label={english ? 'Cancelled' : 'Cancelado'} />}
                     </Stack>
                     <Typography component="h1" variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '3.7rem' } }}>{title}</Typography>
@@ -353,10 +387,8 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                 </Paper>
               ) : null)}
 
-              {locationValue && kind === 'event' && (
-                <Typography color="text.secondary">
-                  {text(locationValue['city']) ?? ''}{text(locationValue['countryCode']) ? `, ${text(locationValue['countryCode'])}` : ''}
-                </Typography>
+              {kind === 'event' && publicLocation && (
+                <Typography color="text.secondary">{publicLocation}</Typography>
               )}
               {locationValue && kind !== 'event' && (
                 <Alert severity="info">
@@ -364,7 +396,7 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                 </Alert>
               )}
               <Divider />
-              <MarkdownText sx={{ fontSize: '1.08rem', lineHeight: 1.75 }}>{description}</MarkdownText>
+              <MarkdownText sx={{ fontSize: '1.08rem', lineHeight: 1.75 }}>{detailDescription}</MarkdownText>
 
               {kind === 'event' && (
                 <Stack spacing={2}>
@@ -438,8 +470,15 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                 </Alert>
               ) : kind === 'event' ? null : (
                 <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
-                  <Typography variant="h5" fontWeight={800}>{kind === 'classified' ? '¿Te interesa esta oportunidad?' : '¿Quieres contactar este perfil?'}</Typography>
-                  <Typography color="text.secondary" mt={1}>TDF mantiene tu correo y teléfono ocultos hasta que decidas compartirlos.</Typography>
+                  <Typography variant="h5" fontWeight={800}>{kind === 'classified' ? (intent === 'offering' ? '¿Te interesa lo que ofrece?' : '¿Puedes cubrir lo que busca? Envía tu oferta') : '¿Quieres contactar este perfil?'}</Typography>
+                  <Typography color="text.secondary" mt={1}>{kind === 'classified' && !offersClosed ? 'Propón tu precio y condiciones; el autor compara las ofertas y elige. TDF mantiene tu correo y teléfono ocultos hasta que decidas compartirlos.' : 'TDF mantiene tu correo y teléfono ocultos hasta que decidas compartirlos.'}</Typography>
+                  {listingTerms.length > 0 && (
+                    <Alert severity="info" icon={false} sx={{ mt: 2 }} data-testid="listing-terms">
+                      <Typography variant="subtitle2" fontWeight={700}>{english ? 'Listing conditions' : 'Condiciones del anuncio'}</Typography>
+                      {listingTerms.map((line) => <Typography key={line} variant="body2">{line}</Typography>)}
+                    </Alert>
+                  )}
+                  {offersClosed && <Alert severity="info" sx={{ mt: 2 }}>Este anuncio ya no recibe ofertas{slotsRemaining === 0 ? ': cubrió sus cupos.' : ': cerró su fecha límite.'}</Alert>}
                   <Stack direction="row" gap={1} flexWrap="wrap" mt={2}>
                     <Button
                       component={RouterLink}
@@ -447,7 +486,7 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                       variant="contained"
                       startIcon={<LoginIcon />}
                     >
-                      {session ? 'Contactar desde uno de mis perfiles' : 'Ingresar para contactar'}
+                      {kind === 'classified' ? (session ? 'Enviar oferta desde uno de mis perfiles' : 'Ingresar para ofertar') : (session ? 'Contactar desde uno de mis perfiles' : 'Ingresar para contactar')}
                     </Button>
                     {kind === 'profile' && session && <Button component={RouterLink} to={invitationAction} variant="outlined" startIcon={<PersonAddAltIcon />}>Invitar a una oportunidad</Button>}
                   </Stack>

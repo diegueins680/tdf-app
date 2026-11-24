@@ -1,3 +1,5 @@
+import { DateTime } from 'luxon';
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import MarkdownText from '../components/MarkdownText';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -12,6 +14,7 @@ import {
   CircularProgress,
   Divider,
   FormControl,
+  FormHelperText,
   InputLabel,
   Link,
   MenuItem,
@@ -24,6 +27,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import type {
   MarketplaceCustomerRequestDTO,
+  MarketplaceCustomerRequestSubmitPayload,
   MarketplaceCustomerRequestType,
   MarketplaceOrderDTO,
 } from '../api/types';
@@ -34,22 +38,8 @@ import {
   loadMarketplaceLookupToken,
 } from '../api/marketplace';
 import { getOrderStatusMeta } from '../utils/marketplace';
+import { marketplaceCustomerRequestStatusLabel, marketplaceCustomerRequestTypeLabel, marketplaceDepositStatusLabel, marketplaceFulfillmentStatusLabel } from '../utils/marketplaceStatusLabel';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
-
-const requestLabels: Record<MarketplaceCustomerRequestType, string> = {
-  sale_cancellation: 'Cancelar antes de la entrega',
-  sale_return: 'Solicitar devolución',
-  rental_cancellation: 'Cancelar antes de la entrega del equipo',
-  rental_extension: 'Solicitar extensión de fechas',
-  rental_dispute: 'Disputar condición, cargo o depósito',
-};
-
-const requestStatusLabels: Record<MarketplaceCustomerRequestDTO['mcrStatus'], string> = {
-  submitted: 'En revisión',
-  needs_quote: 'Requiere cotización',
-  approved: 'Aprobada',
-  rejected: 'Rechazada',
-};
 
 const availableCustomerRequestTypes = (order: MarketplaceOrderDTO): MarketplaceCustomerRequestType[] => {
   const state = order.moFulfillmentStatus ?? '';
@@ -81,6 +71,20 @@ function manualReferenceValidationError(value: string): string | null {
   return null;
 }
 
+function requestReasonValidationError(value: string): string | null {
+  const reason = value.trim();
+  if (Array.from(reason).length < 3 || Array.from(reason).length > 1000) return 'Describe el motivo con 3 a 1000 caracteres.';
+  if (/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u.test(reason.replace(/[\n\r\t]/g, ''))) return 'El motivo contiene caracteres no admitidos. Revisa el texto.';
+  return null;
+}
+
+function extensionDateValidationError(value: string, currentEnd?: string | null): string | null {
+  const valid = (date?: string | null) => Boolean(date && /^\d{4}-\d{2}-\d{2}$/.test(date) && DateTime.fromISO(date, { zone: 'UTC' }).isValid);
+  if (!currentEnd || !valid(currentEnd)) return 'No pudimos validar la fecha actual de devolución. Actualiza el seguimiento.';
+  if (!valid(value) || value <= currentEnd) return 'Elige una fecha posterior a la devolución actual.';
+  return null;
+}
+
 export default function MarketplaceOrderTrackingPage() {
   const { orderId } = useParams<{ orderId: string }>();
   return <MarketplaceOrderTrackingContent key={orderId ?? 'missing'} orderId={orderId} />;
@@ -103,6 +107,18 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
   const [requestedEndDate, setRequestedEndDate] = useState('');
   const [requestSubmitting, setRequestSubmitting] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const [requestTypeError, setRequestTypeError] = useState<string | null>(null);
+  const [requestReasonError, setRequestReasonError] = useState<string | null>(null);
+  const [requestedEndDateError, setRequestedEndDateError] = useState<string | null>(null);
+  const requestInFlight = useRef(false);
+  const requestTypeInput = useRef<HTMLInputElement>(null);
+  const requestReasonInput = useRef<HTMLTextAreaElement>(null);
+  const requestedEndDateInput = useRef<HTMLInputElement>(null);
+  const requestForm = useRef<HTMLFormElement>(null);
+  const requestAttempt = useRef<{
+    type: MarketplaceCustomerRequestType; payload: MarketplaceCustomerRequestSubmitPayload;
+    rawReason: string; rawEndDate: string; key: string;
+  } | null>(null);
 
   useEffect(() => {
     let current = true;
@@ -187,42 +203,57 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
     }
   };
 
+  const requestAttemptChanged = Boolean(requestAttempt.current && (
+    requestAttempt.current.type !== requestType
+    || requestAttempt.current.payload.mcrsReason !== requestReason.trim()
+    || (requestType === 'rental_extension' && requestAttempt.current.payload.mcrsRequestedEndDate !== requestedEndDate)
+  ));
+  const restoreRequestAttempt = () => {
+    const attempt = requestAttempt.current;
+    if (!attempt || requestInFlight.current) return;
+    setRequestType(attempt.type); setRequestReason(attempt.rawReason); setRequestedEndDate(attempt.rawEndDate);
+    setRequestTypeError(null); setRequestReasonError(null); setRequestedEndDateError(null); setRequestError(null);
+    requestReasonInput.current?.focus({ preventScroll: true });
+  };
   const submitCustomerRequest = async () => {
-    if (!orderId || !requestType || requestReason.trim().length < 3) return;
-    if (requestType === 'rental_extension' && !requestedEndDate) return;
+    if (requestInFlight.current || !orderId || !order || status !== 'success') return;
+    const typeError = !requestType || !availableRequestTypes.includes(requestType) ? 'Elige un tipo de solicitud disponible para esta orden.' : null;
+    const reasonError = requestReasonValidationError(requestReason);
+    const dateError = requestType === 'rental_extension' ? extensionDateValidationError(requestedEndDate, order.moRentalEndDate) : null;
+    setRequestTypeError(typeError); setRequestReasonError(reasonError); setRequestedEndDateError(dateError);
+    if (typeError || dateError || reasonError) {
+      requestForm.current?.scrollIntoView?.({ block: 'center', behavior: 'instant' });
+      if (typeError) requestTypeInput.current?.focus();
+      else if (dateError) requestedEndDateInput.current?.focus({ preventScroll: true });
+      else requestReasonInput.current?.focus({ preventScroll: true });
+      return;
+    }
+    if (!requestType || requestAttemptChanged) return;
     const lookupToken = loadMarketplaceLookupToken(orderId);
     if (!lookupToken) {
       setRequestError('Falta la credencial segura de seguimiento. Abre el enlace desde este navegador o contacta soporte.');
       return;
     }
-    setRequestSubmitting(true);
-    setRequestError(null);
+    requestInFlight.current = true; setRequestSubmitting(true); setRequestError(null);
     try {
-      const idempotencyKey = getMarketplaceRequestIdempotencyKey(orderId, requestType);
-      const created = await Marketplace.submitCustomerRequest(
-        orderId,
-        {
-          mcrsRequestType: requestType,
-          mcrsReason: requestReason.trim(),
-          ...(requestType === 'rental_extension'
-            ? { mcrsRequestedEndDate: requestedEndDate }
-            : {}),
-        },
-        lookupToken,
-        idempotencyKey,
-      );
-      clearMarketplaceRequestIdempotencyKey(orderId, requestType);
-      setCustomerRequests((current) => [
-        created,
-        ...current.filter((request) => request.mcrRequestId !== created.mcrRequestId),
-      ]);
-      setRequestType('');
-      setRequestReason('');
-      setRequestedEndDate('');
+      const attempt = requestAttempt.current ?? {
+        type: requestType,
+        payload: { mcrsRequestType: requestType, mcrsReason: requestReason.trim(),
+          ...(requestType === 'rental_extension' ? { mcrsRequestedEndDate: requestedEndDate } : {}) },
+        rawReason: requestReason, rawEndDate: requestedEndDate,
+        key: getMarketplaceRequestIdempotencyKey(orderId, requestType),
+      };
+      requestAttempt.current = attempt;
+      const created = await Marketplace.submitCustomerRequest(orderId, attempt.payload, lookupToken, attempt.key);
+      if (created.mcrOrderId !== order.moOrderId || created.mcrRequestType !== attempt.type) throw new Error('Mismatched request response');
+      clearMarketplaceRequestIdempotencyKey(orderId, attempt.type);
+      requestAttempt.current = null;
+      setCustomerRequests((current) => [created, ...current.filter((request) => request.mcrRequestId !== created.mcrRequestId)]);
+      setRequestType(''); setRequestReason(''); setRequestedEndDate('');
     } catch {
-      setRequestError('No pudimos registrar la solicitud. El pago y la entrega no cambiaron; vuelve a intentar.');
+      setRequestError('No pudimos confirmar la solicitud. El pago y la entrega no cambiaron. Reintenta con los mismos datos para recuperar el resultado.');
     } finally {
-      setRequestSubmitting(false);
+      requestInFlight.current = false; setRequestSubmitting(false);
     }
   };
 
@@ -260,6 +291,9 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
         )}
         {status === 'success' && order && (
           <Stack spacing={2}>
+            {['failed', 'payment_failed', 'declined', 'rejected'].includes(order.moCheckoutStatus ?? order.moStatus) && (
+              <PaymentAlternativesNotice methods={[]} blocked />
+            )}
             <Card variant="outlined" data-testid="marketplace-order-card">
               <CardContent>
                 <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between"
@@ -278,8 +312,8 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
                   </Typography>
                 )}
                 {order.moFulfillmentStatus && (
-                  <Typography variant="body2" color="text.secondary">
-                    {order.moOrderKind === 'rental' ? 'Renta' : 'Entrega'}: {order.moFulfillmentStatus.replace(/_/g, ' ')}
+                  <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+                    {order.moOrderKind === 'rental' ? 'Renta' : 'Entrega'}: {marketplaceFulfillmentStatusLabel(order.moFulfillmentStatus, order.moOrderKind)}
                     {order.moTrackingReference ? ` · Guía: ${order.moTrackingReference}` : ''}
                   </Typography>
                 )}
@@ -348,7 +382,7 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
                   </Box>
                 )}
                 {order.moOrderKind === 'rental' && (
-                  <Alert severity="info" variant="outlined" sx={{ mt: 1.5 }}>
+                  <Alert severity="info" variant="outlined" sx={{ mt: 1.5, '& .MuiAlert-message': { minWidth: 0, overflowWrap: 'anywhere' } }}>
                     <Stack spacing={0.5}>
                       <Typography variant="body2">
                         Fechas: {order.moRentalStartDate} → {order.moRentalEndDate} ({order.moRentalDurationDays} día(s))
@@ -357,7 +391,7 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
                         Renta: {formatMinor(order.moRentalChargeUsdCents)} · depósito reembolsable: {formatMinor(order.moSecurityDepositUsdCents)}
                       </Typography>
                       <Typography variant="body2">
-                        Estado del depósito: {(order.moDepositStatus ?? 'pendiente').replace(/_/g, ' ')}
+                        Estado del depósito: {marketplaceDepositStatusLabel(order.moDepositStatus)}
                         {(order.moDepositDeductionUsdCents ?? 0) > 0
                           ? ` · deducción propuesta ${formatMinor(order.moDepositDeductionUsdCents)}`
                           : ''}
@@ -384,7 +418,7 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
                           variant="outlined"
                         >
                           <Typography variant="body2" fontWeight={700}>
-                            {requestLabels[request.mcrRequestType]} · {requestStatusLabels[request.mcrStatus]}
+                            {marketplaceCustomerRequestTypeLabel(request.mcrRequestType)} · {marketplaceCustomerRequestStatusLabel(request.mcrStatus)}
                           </Typography>
                           <MarkdownText variant="body2">{request.mcrReason}</MarkdownText>
                           {request.mcrRequestedEndDate && (
@@ -398,60 +432,69 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
                         </Alert>
                       ))}
                       {availableRequestTypes.length > 0 && (
-                        <Stack spacing={1.25}>
-                          <Alert severity="info" variant="outlined">
-                            Enviar una solicitud no cancela, devuelve ni extiende automáticamente la orden. TDF debe revisarla. Las extensiones requieren disponibilidad y una nueva cotización.
-                          </Alert>
-                          <FormControl size="small" fullWidth>
-                            <InputLabel id="marketplace-request-type-label">Tipo de solicitud</InputLabel>
-                            <Select
-                              labelId="marketplace-request-type-label"
-                              label="Tipo de solicitud"
-                              value={requestType}
+                        <Box component="form" ref={requestForm} noValidate data-testid="marketplace-request-form"
+                          onSubmit={(event) => { event.preventDefault(); void submitCustomerRequest(); }}>
+                          <Stack spacing={1.25}>
+                            <Alert severity="info" variant="outlined">
+                              Enviar una solicitud no cancela, devuelve ni extiende automáticamente la orden. TDF debe revisarla. Las extensiones requieren disponibilidad y una nueva cotización.
+                            </Alert>
+                            <FormControl size="small" fullWidth required error={Boolean(requestTypeError)} disabled={requestSubmitting}>
+                              <InputLabel id="marketplace-request-type-label">Tipo de solicitud</InputLabel>
+                              <Select labelId="marketplace-request-type-label" label="Tipo de solicitud" value={requestType}
+                                inputRef={requestTypeInput} aria-describedby="marketplace-request-type-help"
+                                sx={{ '& .MuiSelect-select.MuiSelect-select': { whiteSpace: 'normal', overflowWrap: 'anywhere', height: 'auto' } }}
+                                MenuProps={{ PaperProps: { sx: { maxWidth: 'calc(100vw - 32px)' } } }}
+                                onBlur={() => { if (!requestInFlight.current && !requestType) setRequestTypeError('Elige un tipo de solicitud disponible para esta orden.'); }}
+                                onChange={(event) => {
+                                  if (requestInFlight.current) return;
+                                  setRequestType(event.target.value as MarketplaceCustomerRequestType);
+                                  setRequestTypeError(null); setRequestedEndDateError(null);
+                                }}>
+                                {availableRequestTypes.map((type) => (
+                                  <MenuItem key={type} value={type} sx={{ whiteSpace: 'normal' }}>{marketplaceCustomerRequestTypeLabel(type)}</MenuItem>
+                                ))}
+                              </Select>
+                              <FormHelperText id="marketplace-request-type-help">{requestTypeError ?? 'Las opciones dependen del estado actual de la orden.'}</FormHelperText>
+                            </FormControl>
+                            {requestType === 'rental_extension' && (
+                              <TextField label="Nueva fecha de devolución" type="date" inputRef={requestedEndDateInput}
+                                value={requestedEndDate} disabled={requestSubmitting}
+                                onChange={(event) => {
+                                  if (requestInFlight.current) return;
+                                  setRequestedEndDate(event.target.value);
+                                  if (requestedEndDateError) setRequestedEndDateError(extensionDateValidationError(event.target.value, order.moRentalEndDate));
+                                }}
+                                onBlur={() => { if (!requestInFlight.current) setRequestedEndDateError(extensionDateValidationError(requestedEndDate, order.moRentalEndDate)); }}
+                                error={Boolean(requestedEndDateError)}
+                                helperText={requestedEndDateError ?? `Debe ser posterior a ${order.moRentalEndDate ?? 'la fecha actual'}. La extensión requiere revisión.`}
+                                InputLabelProps={{ shrink: true }}
+                                inputProps={{ min: order.moRentalEndDate ? DateTime.fromISO(order.moRentalEndDate, { zone: 'UTC' }).plus({ days: 1 }).toISODate() ?? undefined : undefined }}
+                                size="small" fullWidth required />
+                            )}
+                            <TextField label="Motivo" inputRef={requestReasonInput} value={requestReason}
+                              disabled={requestSubmitting} multiline minRows={2} maxRows={6} fullWidth
                               onChange={(event) => {
-                                setRequestType(event.target.value as MarketplaceCustomerRequestType);
-                                setRequestError(null);
+                                if (requestInFlight.current) return;
+                                setRequestReason(event.target.value);
+                                if (requestReasonError) setRequestReasonError(requestReasonValidationError(event.target.value));
                               }}
-                            >
-                              {availableRequestTypes.map((type) => (
-                                <MenuItem key={type} value={type}>{requestLabels[type]}</MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
-                          {requestType === 'rental_extension' && (
-                            <TextField
-                              label="Nueva fecha de devolución"
-                              type="date"
-                              value={requestedEndDate}
-                              onChange={(event) => setRequestedEndDate(event.target.value)}
-                              InputLabelProps={{ shrink: true }}
-                              inputProps={{ min: order.moRentalEndDate ?? undefined }}
-                              size="small"
-                              required
-                            />
-                          )}
-                          <TextField
-                            label="Motivo"
-                            value={requestReason}
-                            onChange={(event) => setRequestReason(event.target.value)}
-                            multiline
-                            minRows={2}
-                            inputProps={{ minLength: 3, maxLength: 1000 }}
-                            helperText="Describe el cambio solicitado. El estado actual se mantiene hasta revisión."
-                            required
-                          />
-                          <Button
-                            variant="outlined"
-                            disabled={requestSubmitting
-                              || !requestType
-                              || requestReason.trim().length < 3
-                              || (requestType === 'rental_extension' && !requestedEndDate)}
-                            onClick={() => { void submitCustomerRequest(); }}
-                          >
-                            {requestSubmitting ? 'Enviando…' : 'Enviar solicitud'}
-                          </Button>
-                          {requestError && <Alert severity="error">{requestError}</Alert>}
-                        </Stack>
+                              onBlur={() => { if (!requestInFlight.current) setRequestReasonError(requestReasonValidationError(requestReason)); }}
+                              error={Boolean(requestReasonError)}
+                              helperText={requestReasonError ?? '3–1000 caracteres. El estado actual se mantiene hasta revisión.'} required />
+                            {requestAttemptChanged && (
+                              <Alert severity="warning" sx={{ '& .MuiAlert-message': { minWidth: 0, width: '100%' } }}>
+                                <Stack spacing={1}>
+                                  <Typography variant="body2">Ya intentaste enviar una solicitud con otros datos. Recupera ese intento antes de enviar cambios.</Typography>
+                                  <Button type="button" disabled={requestSubmitting} onClick={restoreRequestAttempt}>Usar datos del intento anterior</Button>
+                                </Stack>
+                              </Alert>
+                            )}
+                            <Button type="submit" variant="outlined" disabled={requestSubmitting || requestAttemptChanged}>
+                              {requestSubmitting ? 'Enviando…' : 'Enviar solicitud'}
+                            </Button>
+                            {requestError && <Alert severity="error">{requestError}</Alert>}
+                          </Stack>
+                        </Box>
                       )}
                     </Stack>
                   </Box>
@@ -493,8 +536,9 @@ function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefi
                       {order.moOrderKind === 'rental' ? 'Historial de renta' : 'Historial de entrega'}
                     </Typography>
                     {fulfillmentTimeline.map(([fulfillmentStatus, timestamp]) => (
-                      <Stack key={`${fulfillmentStatus}-${timestamp}`} direction="row" spacing={1} alignItems="center">
-                        <Chip size="small" label={fulfillmentStatus.replace(/_/g, ' ')} />
+                      <Stack key={`${fulfillmentStatus}-${timestamp}`} direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                        <Chip size="small" label={marketplaceFulfillmentStatusLabel(fulfillmentStatus, order.moOrderKind)}
+                          sx={{ maxWidth: '100%', height: 'auto', '& .MuiChip-label': { whiteSpace: 'normal', overflowWrap: 'anywhere', py: 0.5 } }} />
                         <Typography variant="body2" color="text.secondary">
                           {new Date(timestamp).toLocaleString()}
                         </Typography>

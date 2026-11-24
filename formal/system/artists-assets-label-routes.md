@@ -22,7 +22,7 @@ Derived on 2026-11-07 by reading `tdf-hq/src/TDF/Server.hs` (artist and label se
 ## Open behaviours for the owner to decide
 
 **Storage**
-- `POST /assets/upload` trusts the declared MIME type, writes into the public assets root, keeps no database record and never cleans up.
+- **Decided 2026-11-10.** `POST /assets/upload` and the QR upload check that the leading bytes are the declared image format. Still open: the file goes into the public assets root, keeps no database record, is never cleaned up and is not decoded.
 
 **Concurrency**
 - Staff asset checkout checks for an open loan outside the insert transaction with no lock or partial unique index; two concurrent checkouts can both succeed (same finding as the public QR twin).
