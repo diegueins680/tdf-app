@@ -54,7 +54,7 @@ import TDF.DB (Env(..))
 import TDF.Directory.Policy
 import TDF.Directory.SemanticIndex (resolveQueryEmbedding)
 import TDF.Directory.SemanticSearch (plannedSearch, searchPlan)
-import TDF.Taxonomy.Filter (mkTaxonomyFilter, taxonomyInputParams)
+import TDF.Taxonomy.Filter (directoryTaxonomyClause, directoryTaxonomyFacetsSql, mkTaxonomyFilter, taxonomyInputParams)
 import TDF.Server.DirectoryAgreementText
 import TDF.Models (RoleEnum(Admin))
 import qualified TDF.Models.SocialEventsModels as Social
@@ -243,33 +243,6 @@ directoryFilterClause =
   -- ADR 0134: an intent filter only ever selects classifieds, by their
   -- category intent (busco / ofrezco).
   "AND (input.intent IS NULL OR (document.entity_kind='classified' AND EXISTS (SELECT 1 FROM classified intent_classified JOIN classified_category intent_category ON intent_category.id=intent_classified.category_id WHERE intent_classified.id::text=document.entity_id AND intent_category.intent=input.intent))) "
-
--- TAX-FILTER-001: the shared location and genre filters. Kept apart from
--- directoryFilterClause so the taxonomy facets can count each dimension
--- without its own selection. A document's country comes from its country
--- code, its region from its city.
-directoryTaxonomyClause :: Text
-directoryTaxonomyClause =
-  "AND (cardinality(input.tax_country_ids)+cardinality(input.tax_region_ids)+cardinality(input.tax_city_ids)=0 OR taxonomy_location_matches(document.city_id,(SELECT country.id FROM country_reference country WHERE country.alpha2=document.country_code),input.tax_country_ids,input.tax_region_ids,input.tax_city_ids)) " <>
-  "AND (cardinality(input.tax_genre_ids)=0 OR document.genre_ids && input.tax_genre_ids) "
-
--- Per-value taxonomy counts over taxonomy_base; equal to
--- TDF.Taxonomy.Filter.taxonomyFacetsSql "taxonomy_base" "input" (checked in
--- TDF.Taxonomy.FilterSpec) and kept literal for the PostgreSQL test harness.
-directoryTaxonomyFacetsSql :: Text
-directoryTaxonomyFacetsSql =
-  "jsonb_build_object('genres',coalesce((SELECT jsonb_agg(jsonb_build_object('id',facet_id," <>
-  "'count',total) ORDER BY total DESC,facet_id) FROM (SELECT rollup.ancestor_id facet_id,count(DISTINCT b.item_key) total FROM taxonomy_base b CROSS JOIN input CROSS JOIN LATERAL unnest(b.genre_ids) item_genre(genre_id) JOIN (SELECT rolled.id genre_id,ancestor.ancestor_id FROM genre rolled CROSS JOIN LATERAL unnest(taxonomy_genre_ancestors(ARRAY[rolled.id])) ancestor(ancestor_id)) rollup ON rollup.genre_id=item_genre.genre_id WHERE taxonomy_location_matches(b.city_id,b.country_id,input.tax_country_ids,input.tax_region_ids,input.tax_city_ids) GROUP BY 1) facet)," <>
-  "'[]'::jsonb)," <>
-  "'countries',coalesce((SELECT jsonb_agg(jsonb_build_object('id',facet_id," <>
-  "'count',total) ORDER BY total DESC,facet_id) FROM (SELECT coalesce(b.country_id,city.country_id) facet_id,count(DISTINCT b.item_key) total FROM taxonomy_base b CROSS JOIN input LEFT JOIN city_reference city ON city.id=b.city_id WHERE coalesce(b.country_id,city.country_id) IS NOT NULL AND taxonomy_location_matches(b.city_id,b.country_id,NULL::uuid[],input.tax_region_ids,input.tax_city_ids) AND taxonomy_genres_match(b.genre_ids,input.tax_genre_ids) GROUP BY 1) facet)," <>
-  "'[]'::jsonb)," <>
-  "'regions',coalesce((SELECT jsonb_agg(jsonb_build_object('id',facet_id," <>
-  "'count',total) ORDER BY total DESC,facet_id) FROM (SELECT city.subdivision_id facet_id,count(DISTINCT b.item_key) total FROM taxonomy_base b CROSS JOIN input JOIN city_reference city ON city.id=b.city_id WHERE city.subdivision_id IS NOT NULL AND taxonomy_location_matches(b.city_id,b.country_id,input.tax_country_ids,NULL::uuid[],input.tax_city_ids) AND taxonomy_genres_match(b.genre_ids,input.tax_genre_ids) GROUP BY 1) facet)," <>
-  "'[]'::jsonb)," <>
-  "'cities',coalesce((SELECT jsonb_agg(jsonb_build_object('id',facet_id," <>
-  "'count',total) ORDER BY total DESC,facet_id) FROM (SELECT b.city_id facet_id,count(DISTINCT b.item_key) total FROM taxonomy_base b CROSS JOIN input WHERE b.city_id IS NOT NULL AND taxonomy_location_matches(b.city_id,b.country_id,input.tax_country_ids,input.tax_region_ids,NULL::uuid[]) AND taxonomy_genres_match(b.genre_ids,input.tax_genre_ids) GROUP BY 1) facet)," <>
-  "'[]'::jsonb))"
 
 directoryEntityTypeClause :: Text
 directoryEntityTypeClause =

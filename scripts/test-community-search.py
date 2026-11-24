@@ -17,9 +17,16 @@ if sys.argv[1:] and (not emit_sql or len(sys.argv) > 3):
 if emit_sql and len(sys.argv) == 3:
     revision = sys.argv[2]
     assert re.fullmatch(r'[0-9a-f]{40}', revision), 'Immutable source revision required'
-    source = subprocess.check_output(['git', 'show', revision + ':tdf-hq/src/TDF/Server/Directory.hs'], cwd=root, text=True)
-else:
-    source = (root / 'tdf-hq/src/TDF/Server/Directory.hs').read_text()
+
+def read_source(path):
+    if emit_sql and len(sys.argv) == 3:
+        return subprocess.check_output(['git', 'show', revision + ':' + path], cwd=root, text=True)
+    return (root / path).read_text()
+
+source = read_source('tdf-hq/src/TDF/Server/Directory.hs')
+# Historical revisions kept the filter fragments in the handler or predate them.
+if 'directoryTaxonomyFacetsSql' in source and not re.search(r'^directoryTaxonomyFacetsSql\s*=', source, re.M):
+    source += '\n' + read_source('tdf-hq/src/TDF/Taxonomy/Filter.hs')
 if not emit_sql:
     url = os.environ['TDF_DISCOVERY_TEST_DATABASE_URL']
     parsed = urlparse(url)
