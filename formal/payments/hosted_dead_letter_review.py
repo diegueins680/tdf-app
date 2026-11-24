@@ -59,7 +59,7 @@ ROOT = Path(__file__).resolve().parents[2]
 RECON = 'tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs'
 WORKER = 'tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs'
 REGIONS = (
-    (RECON, 'processProviderEventWith\n', 'data QueryFailure = ', '276af4c661c01f4cfe0491c578b663e63332b934d7cc48b90c3febbae5d3a9bc'),
+    (RECON, 'processProviderEventWith\n', 'data QueryFailure = ', '4f78c29cce2f41ca090f01ff14a203563e6c12c18719164e9dd6627f429c1d16'),
     (RECON, 'recordDeadLetterReview\n  :: ProviderEvent.ProviderEventReference', 'retry :: Text -> Maybe', '4670eec7367b0788b5baf10781a98c187354eceaf06a057ef746f168421a4344'),
     (WORKER, 'processHostedPayload\n', 'applyOutcome\n', '81960ddfcba3a796c05ea7024444fae914be0fd5ca8da17d79452d4a4d0cfbc2'),
     (WORKER, 'markRetry\n', 'validateStoredPaypalEvent\n', '2ad6c5d3c190880f77235206412c98d8bef6dc61010d8a39792c2bc03a21d7aa'),
