@@ -3205,8 +3205,10 @@ main = hspec $ do
                   , "payWithCard" .= ("https://pay.payphonetodoesposible.com/PayWithCard/abc" :: Text)
                   , "payWithPayPhone" .= ("https://pay.payphonetodoesposible.com/PayWithPayPhone/abc" :: Text)
                   ]
+                buttonLocator = locator { ProviderAdapter.plExpected = expected
+                  { ProviderAdapter.epReference = ProviderAdapter.cpReference buttonPayment } }
                 parsed = ProviderAdapter.adapterParseResponse payPhoneSplit
-                  ProviderAdapter.AdapterCreate locator prepared
+                  ProviderAdapter.AdapterCreate buttonLocator prepared
             -- The documented preparation ID is opaque text, never the transaction ID.
             fmap ProviderAdapter.adapterResultExternalId parsed `shouldBe` Right "GSizecyUkIAkxTj3SQ"
             fmap ProviderAdapter.adapterResultState parsed
@@ -3215,7 +3217,7 @@ main = hspec $ do
               `shouldBe` Right (Just "https://pay.payphonetodoesposible.com/PayWithCard/abc")
             fmap ProviderAdapter.adapterResultCertainty parsed
               `shouldBe` Right ProviderCapabilities.ProviderAmbiguous
-            ProviderAdapter.adapterParseResponse payPhoneSplit ProviderAdapter.AdapterCreate locator
+            ProviderAdapter.adapterParseResponse payPhoneSplit ProviderAdapter.AdapterCreate buttonLocator
               (A.object
                 [ "paymentId" .= (23178284 :: Int)
                 , "payWithCard" .= ("https://pay.example.com@evil.test/PayWithCard" :: Text)

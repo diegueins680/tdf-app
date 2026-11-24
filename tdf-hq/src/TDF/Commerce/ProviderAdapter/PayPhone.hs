@@ -367,7 +367,7 @@ parseResponse
   -> Value
   -> Either AdapterError AdapterResult
 parseResponse operation locator value = case operation of
-  AdapterCreate -> parsePayPhoneValue parseCreate value
+  AdapterCreate -> parsePayPhoneValue (parseCreate locator) value
   AdapterQuery -> parsePayPhoneValue (parseQuery locator) value
   AdapterCancel -> parsePayPhoneValue
     (parseBooleanMutation AdapterCancelled ProviderConfirmedNoCharge locator) value
@@ -375,12 +375,11 @@ parseResponse operation locator value = case operation of
     (parseBooleanMutation AdapterReversed ProviderSucceeded locator) value
   _ -> unsupportedOperation
 
-parseCreate :: Value -> Parser AdapterResult
-parseCreate = A.withObject "PayPhone create response" $ \object -> do
-  cardPage <- object .:? "payWithCard" :: Parser (Maybe Text)
-  case cardPage of
-    Just page -> parsePrepared object page
-    Nothing -> parseSaleCreate object
+parseCreate :: PaymentLocator -> Value -> Parser AdapterResult
+parseCreate locator = A.withObject "PayPhone create response" $ \object ->
+  if isButtonReference (epReference (plExpected locator))
+    then object .: "payWithCard" >>= parsePrepared object
+    else parseSaleCreate object
 
 -- | Button Prepare answer: the payment id and the hosted page. The charge is
 -- unknown until the buyer pays and the confirmation answers.
