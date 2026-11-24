@@ -189,7 +189,7 @@ async function prepare(page, { previewFallback = false, holdSameOwnerSession = f
   await expect.poll(() => audio.evaluate((a) => a.currentTime), { message: 'Native decoder must advance the real media clock', timeout: 15000 }).toBeGreaterThan(0.5);
   await expect(player.getByRole('button', { name: 'Pausar' })).toBeVisible();
   await audio.evaluate((a) => { globalThis.__originalNativeAudio = a; });
-  return { player, audio, events, fixture, deniedNetwork, assetRequests, finishSession: () => resolveSession() };
+  return { player, audio, events, fixture, release, deniedNetwork, assetRequests, finishSession: () => resolveSession() };
 }
 
 async function seek(player, value) {
@@ -386,6 +386,31 @@ test('@critical PW-MUSIC-NATIVE-02 native ended advances the queue and repetitio
   await expect.poll(() => page.evaluate(() => globalThis.__nativeMediaEvents.filter((e) => e.type === 'ended' && e.trusted).length)).toBeGreaterThanOrEqual(2);
   await expect.poll(() => audio.evaluate((a) => !a.paused && a.currentTime > 0 && a.currentTime < 10)).toBe(true);
   await expect(player.getByText('Pista nativa 2', { exact: true })).toBeVisible();
+});
+
+test('@critical a signed-in listener hears a recommended track after the native queue ends', async ({ page }) => {
+  const { player, audio, release, finishSession } = await prepare(page, { holdSameOwnerSession: true });
+  const recommended = {
+    ...release, id: '11000000-0000-4000-8000-000000000002', slug: 'recommended-release', artistPartyId: 202,
+    tracks: [{ ...release.tracks[0], trackId: trackId(3), recordingId: recordingId(3), title: 'Pista recomendada' }],
+  };
+  let recommendationRequests = 0;
+  await page.route('**/fans/me/recommendations?limit=12', (route) => {
+    recommendationRequests += 1;
+    return route.fulfill({ json: [{ arecArtistId: 202, arecScore: 1, arecReason: 'similar_fans', arecSeedArtistIds: [] }] });
+  });
+  await page.route('**/music/releases?artistPartyId=202&limit=1', (route) => route.fulfill({ json: [recommended] }));
+  await page.route('**/music/releases/recommended-release', (route) => route.fulfill({ json: recommended }));
+  const resolvedSession = page.waitForResponse((response) => new URL(response.url()).pathname === '/session' && response.ok());
+  finishSession();
+  await resolvedSession;
+  await audio.evaluate((element) => { element.currentTime = element.duration - 0.3; });
+  await expect(player.getByText('Pista nativa 2', { exact: true })).toBeVisible();
+  await expect.poll(() => audio.evaluate((element) => element.currentSrc.includes('/media/second/') && element.currentTime > 0.2)).toBe(true);
+  await audio.evaluate((element) => { element.currentTime = element.duration - 0.3; });
+  await expect(player.getByText('Pista recomendada', { exact: true })).toBeVisible();
+  await expect.poll(() => audio.evaluate((element) => element.currentSrc.includes('/media/first/') && !element.paused && element.currentTime > 0.2)).toBe(true);
+  expect(recommendationRequests).toBe(1);
 });
 
 test('@critical PW-MUSIC-NATIVE-03 rapid switching during a pending native play keeps the latest source', async ({ page }) => {

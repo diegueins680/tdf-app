@@ -1260,6 +1260,7 @@
       "tdf-hq-ui/src/config/apiBase.test.ts",
       "tdf-hq-ui/src/config/apiBase.ts",
       "tdf-hq-ui/src/config/appConfig.ts",
+      "tdf-hq-ui/src/config/queueContinuationRollout.ts",
       "tdf-hq-ui/src/contexts/CurrencyContext.test.ts",
       "tdf-hq-ui/src/contexts/CurrencyContext.tsx",
       "tdf-hq-ui/src/contexts/LocalePreferencesContext.storage.test.tsx",
@@ -1680,18 +1681,22 @@
       "tdf-hq-ui/src/pages/teachersPageLogic.ts",
       "tdf-hq-ui/src/player/GlobalPlayer.tsx",
       "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+      "tdf-hq-ui/src/player/PlayerProvider.continuation.test.tsx",
       "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
       "tdf-hq-ui/src/player/PlayerProvider.tsx",
       "tdf-hq-ui/src/player/PlayerShell.tsx",
       "tdf-hq-ui/src/player/analytics.test.ts",
       "tdf-hq-ui/src/player/analytics.ts",
       "tdf-hq-ui/src/player/assetAccess.ts",
+      "tdf-hq-ui/src/player/loadQueueContinuation.ts",
       "tdf-hq-ui/src/player/playbackSession.test.ts",
       "tdf-hq-ui/src/player/playbackSession.ts",
       "tdf-hq-ui/src/player/publicMusicTrack.test.ts",
       "tdf-hq-ui/src/player/publicMusicTrack.ts",
       "tdf-hq-ui/src/player/queue.test.ts",
       "tdf-hq-ui/src/player/queue.ts",
+      "tdf-hq-ui/src/player/queueContinuation.test.ts",
+      "tdf-hq-ui/src/player/queueContinuation.ts",
       "tdf-hq-ui/src/player/sourceMetadata.test.ts",
       "tdf-hq-ui/src/player/sourceMetadata.ts",
       "tdf-hq-ui/src/player/types.ts",
@@ -3870,7 +3875,7 @@
     {
       "id": "SURFACE-056631e61150574f",
       "path": "e2e/web/music-player-native.spec.mjs",
-      "sha256": "56c9594a65f72264034209158aa9076a4578d44be41750771c7b448ba63a187b",
+      "sha256": "10d3810e269ee72ff63aaeef4af65f668b74eeeedf2b1ae2a99f5f84c545d5af",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3984,7 +3989,7 @@
     {
       "id": "SURFACE-238c10bc24bd2a0a",
       "path": "e2e/web/taxonomy-filters.spec.mjs",
-      "sha256": "4f0f351cff4d5c7c6046b687a93ac4f51ac088b682ecbe21076fe3f50913a91c",
+      "sha256": "eb8dedc1fb2b6f342b229385ac7abcead7506a4a5cdaea96cccdb4f356be4db8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7776,7 +7781,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "f15ac543c4723917fc77d8d16092537036884b34478f13e670d4d497de32d9fc",
+      "sha256": "853ac6885bfa0ee962bd879554718187f135b18e9d5a702c9142f8e656235f6d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10734,7 +10739,7 @@
     {
       "id": "SURFACE-88d4e0a7d6283fb4",
       "path": "tdf-hq-ui/src/components/taxonomyFilters/TaxonomyFilterBar.tsx",
-      "sha256": "4e55ca15b5831599453af6b0dc6ae3d119190e7bd8f607fb1cb65cd7048ed771",
+      "sha256": "b1edcb4b3f382c1eab4584a156ab6349cae01079e636e639f79f2a91eccfbbe0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10795,6 +10800,12 @@
       "id": "SURFACE-2a696a014a007a73",
       "path": "tdf-hq-ui/src/config/appConfig.ts",
       "sha256": "29f5c5e8d461756baa2d66118623a4b7841affeb08ce5f38d0a07a62b664213e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b1906b4035a9fd41",
+      "path": "tdf-hq-ui/src/config/queueContinuationRollout.ts",
+      "sha256": "a00f9304705090f7cb786113f14f44ce3c4c7670d8486ba442be69c7ca37b68a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13318,6 +13329,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-b7883b617728eedc",
+      "path": "tdf-hq-ui/src/player/PlayerProvider.continuation.test.tsx",
+      "sha256": "0690e32cc4f75788ef70f16ca077102949ff9db4f51b10c6be730faafa112c49",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
       "sha256": "1817116d31aaccdfe90c6603a68b7f79ec4de53231ec8dc4827801cc5ac978b6",
@@ -13326,7 +13343,7 @@
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "b193d27880210aa51db0dc09417b378a38e84e3431576b320c974dfc99e3cb0c",
+      "sha256": "e9535d71a6596751cffe95701d286f1c7cc755da4fcdac91888c1613d1b92dce",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13351,6 +13368,12 @@
       "id": "SURFACE-d6d70a73f7318a52",
       "path": "tdf-hq-ui/src/player/assetAccess.ts",
       "sha256": "a0da01ca4f664e57db6f1efcbcf5f6cb601c181679bd7d4c4d92b7c5c07c74d1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bdcf94a3c8fe11b0",
+      "path": "tdf-hq-ui/src/player/loadQueueContinuation.ts",
+      "sha256": "f6a951e330a20682e01b3e7d118545a7bc3acdee918251029f751e0d086be359",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13387,6 +13410,18 @@
       "id": "SURFACE-6f181a8eb8c4a407",
       "path": "tdf-hq-ui/src/player/queue.ts",
       "sha256": "5c55aa09fdd0dbf24c32aea638fb1bcf38b620d761d6ca98c3b12c44c6ef375f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f2a96df12d18bd2c",
+      "path": "tdf-hq-ui/src/player/queueContinuation.test.ts",
+      "sha256": "c49a6c82ade53df2647748c5137bb2ea9bb0fb70ba391be86aab02007ae9d8c4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-adc8ebd178bec137",
+      "path": "tdf-hq-ui/src/player/queueContinuation.ts",
+      "sha256": "d60d94add4884b38818773794b12e8937f8d331738321779fc33d2d862ecf08e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14568,7 +14603,7 @@
     {
       "id": "SURFACE-2f83dbcb131f448c",
       "path": "tdf-hq-ui/src/vite-env.d.ts",
-      "sha256": "2eb98da8bd78747ab777539da674451856912393c423323e7d30832ce489826b",
+      "sha256": "bdcf33c62f1bba0ff2fbfefdbb277caa0aac378e636068de90065b5ad6d3786d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26837,7 +26872,7 @@
     },
     {
       "path": "docs/social/relationship-read-boundary.md",
-      "sha256": "6224f9adb90f52b624d1ca44342760fa20c6cd69609a618fb576d6b219d505cc",
+      "sha256": "e29f067050187a27da3c374894a57a7dff60d10867ab31ea080e2fcfc6cdf7aa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31841,6 +31876,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/player/QueueContinuation.cfg",
+      "sha256": "6f29750e1318f8e5b208577f3d6bf238c0d1da27eb26a1c9f8eae2193930f65d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/player/QueueContinuation.tla",
+      "sha256": "95ac7eb759106b89defca960df4a9a6a3f1ef56d5e7b6ac36f55d7d96e8f17c8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/player/QueueContinuationFullLimit.cfg",
+      "sha256": "c3333f1b01daeeed91dd54b56348069782d200df9ad81c21d69dee5ed982e5e7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/player/QueueContinuationNoQueueFilter.cfg",
+      "sha256": "a17ddd069981c5089af8aa43d6fa9f4108f422ff4732d34a2030440fd3f94b45",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/player/README.md",
+      "sha256": "33e535ddf7da27ea33e955cc606b769b7a7de01b8e5b534908e61e076b534fd8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/social/ConsentTraces.cfg",
       "sha256": "877abff564403e4e64fdb1823551971b68d34813f49c75c02f00b0b0b996f716",
       "authority": "inferred",
@@ -32304,7 +32374,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "390c89ae09187a84c23ebcdfbf477eee7ef2d822118a49eab1376e15135d7131",
+      "sha256": "ad5e36a6aefdecbb32e42a4646d728cf99b72481acc5113db56dacc3f60b4d84",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -33395,6 +33465,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/queue-continuation.md",
+      "sha256": "3a3f9ada6ad297d0f6b06414e3419a92c1f55a00bced7783762a085335a0d8ae",
+      "authority": "inferred",
+      "authorityBasis": "Status: second of the three changes that reuse the artist similarity",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/readiness.md",
       "sha256": "0ae73f31404b7036a0f69a9f025bfca6fad0d138a60332e94aad5383f1463fca",
       "authority": "inferred",
@@ -33445,7 +33522,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "acf17727318b31a21a6456cb79e2fa03911e81d67066bbfe21e1ec84f083ca7e",
+      "sha256": "ca195f5c4bd7d78b07dd1f58b203d84ca02a1fe1cf64841d1b3ac5bcf74b73bd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -39220,8 +39297,8 @@
       "declaredId": "RELREAD-01",
       "statement": "Denied identities expose no row fields",
       "source": "docs/social/relationship-read-boundary.md",
-      "line": 112,
-      "sourceSha256": "6224f9adb90f52b624d1ca44342760fa20c6cd69609a618fb576d6b219d505cc",
+      "line": 109,
+      "sourceSha256": "e29f067050187a27da3c374894a57a7dff60d10867ab31ea080e2fcfc6cdf7aa",
       "status": "inferred",
       "declarationColumns": {
         "Requirement": "RELREAD-01 Denied identities expose no row fields",
@@ -39234,7 +39311,7 @@
       "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
       "occurrences": [
         {
-          "line": 112,
+          "line": 109,
           "statement": "Denied identities expose no row fields",
           "columns": {
             "Requirement": "RELREAD-01 Denied identities expose no row fields",
@@ -39251,8 +39328,8 @@
       "declaredId": "RELREAD-02",
       "statement": "Old inferred counts stop at enforcement",
       "source": "docs/social/relationship-read-boundary.md",
-      "line": 113,
-      "sourceSha256": "6224f9adb90f52b624d1ca44342760fa20c6cd69609a618fb576d6b219d505cc",
+      "line": 110,
+      "sourceSha256": "e29f067050187a27da3c374894a57a7dff60d10867ab31ea080e2fcfc6cdf7aa",
       "status": "inferred",
       "declarationColumns": {
         "Requirement": "RELREAD-02 Old inferred counts stop at enforcement",
@@ -39265,7 +39342,7 @@
       "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
       "occurrences": [
         {
-          "line": 113,
+          "line": 110,
           "statement": "Old inferred counts stop at enforcement",
           "columns": {
             "Requirement": "RELREAD-02 Old inferred counts stop at enforcement",
@@ -39282,8 +39359,8 @@
       "declaredId": "RELREAD-03",
       "statement": "Deletion cannot be undone by stale reads",
       "source": "docs/social/relationship-read-boundary.md",
-      "line": 114,
-      "sourceSha256": "6224f9adb90f52b624d1ca44342760fa20c6cd69609a618fb576d6b219d505cc",
+      "line": 111,
+      "sourceSha256": "e29f067050187a27da3c374894a57a7dff60d10867ab31ea080e2fcfc6cdf7aa",
       "status": "inferred",
       "declarationColumns": {
         "Requirement": "RELREAD-03 Deletion cannot be undone by stale reads",
@@ -39296,7 +39373,7 @@
       "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
       "occurrences": [
         {
-          "line": 114,
+          "line": 111,
           "statement": "Deletion cannot be undone by stale reads",
           "columns": {
             "Requirement": "RELREAD-03 Deletion cannot be undone by stale reads",
@@ -39313,8 +39390,8 @@
       "declaredId": "RELREAD-04",
       "statement": "Direction/reciprocity/order are preserved",
       "source": "docs/social/relationship-read-boundary.md",
-      "line": 115,
-      "sourceSha256": "6224f9adb90f52b624d1ca44342760fa20c6cd69609a618fb576d6b219d505cc",
+      "line": 112,
+      "sourceSha256": "e29f067050187a27da3c374894a57a7dff60d10867ab31ea080e2fcfc6cdf7aa",
       "status": "inferred",
       "declarationColumns": {
         "Requirement": "RELREAD-04 Direction/reciprocity/order are preserved",
@@ -39327,7 +39404,7 @@
       "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
       "occurrences": [
         {
-          "line": 115,
+          "line": 112,
           "statement": "Direction/reciprocity/order are preserved",
           "columns": {
             "Requirement": "RELREAD-04 Direction/reciprocity/order are preserved",
@@ -39344,8 +39421,8 @@
       "declaredId": "RELREAD-05",
       "statement": "Current authenticated principal",
       "source": "docs/social/relationship-read-boundary.md",
-      "line": 116,
-      "sourceSha256": "6224f9adb90f52b624d1ca44342760fa20c6cd69609a618fb576d6b219d505cc",
+      "line": 113,
+      "sourceSha256": "e29f067050187a27da3c374894a57a7dff60d10867ab31ea080e2fcfc6cdf7aa",
       "status": "inferred",
       "declarationColumns": {
         "Requirement": "RELREAD-05 Current authenticated principal",
@@ -39358,7 +39435,7 @@
       "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
       "occurrences": [
         {
-          "line": 116,
+          "line": 113,
           "statement": "Current authenticated principal",
           "columns": {
             "Requirement": "RELREAD-05 Current authenticated principal",
@@ -39375,8 +39452,8 @@
       "declaredId": "RELREAD-06",
       "statement": "Read eventually terminates",
       "source": "docs/social/relationship-read-boundary.md",
-      "line": 117,
-      "sourceSha256": "6224f9adb90f52b624d1ca44342760fa20c6cd69609a618fb576d6b219d505cc",
+      "line": 114,
+      "sourceSha256": "e29f067050187a27da3c374894a57a7dff60d10867ab31ea080e2fcfc6cdf7aa",
       "status": "inferred",
       "declarationColumns": {
         "Requirement": "RELREAD-06 Read eventually terminates",
@@ -39389,7 +39466,7 @@
       "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
       "occurrences": [
         {
-          "line": 117,
+          "line": 114,
           "statement": "Read eventually terminates",
           "columns": {
             "Requirement": "RELREAD-06 Read eventually terminates",
@@ -50011,6 +50088,57 @@
         "INIT Init",
         "NEXT Next",
         "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/player/QueueContinuation.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Artists = {1, 2, 3}",
+        "  ArtistCount = 3",
+        "  Recordings = {1, 2, 3}",
+        "  Limit = 2",
+        "  QueueFilter = TRUE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/player/QueueContinuationFullLimit.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Artists = {1, 2, 3}",
+        "  ArtistCount = 3",
+        "  Recordings = {1, 2, 3}",
+        "  Limit = 3",
+        "  QueueFilter = TRUE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/player/QueueContinuationNoQueueFilter.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Artists = {1, 2, 3}",
+        "  ArtistCount = 3",
+        "  Recordings = {1, 2, 3}",
+        "  Limit = 2",
+        "  QueueFilter = FALSE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS NoRepeat",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
