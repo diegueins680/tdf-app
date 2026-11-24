@@ -264,7 +264,7 @@ const es = {
       mix: 'Mezcla',
     },
   },
-  sessionMenu: {
+  sessionMenu: { help: 'Ayuda y cuenta', manual: 'Manual', docs: 'Documentación', about: 'Acerca de', security: 'Seguridad', whatsapp: 'Preferencias de WhatsApp', deleteAccount: 'Eliminar mi cuenta',
     noRoles: 'Sin roles asignados',
     logout: 'Cerrar sesión',
     open: 'Abrir menú de sesión',
