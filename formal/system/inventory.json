@@ -6629,7 +6629,7 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "a2edcfdf47a23fbd4b83558ab0b0b547a713b78536ef4c6e332f53910d297107",
+      "sha256": "325453681705f6a900c90b404edd9de5ac021a370f7234facf9e8e486a2bdd5c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19133,7 +19133,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "a0f8b3708b8fd7747d8a482950a1ee23f50c5ad28ff288c1df632376dbd33f59",
+      "sha256": "5b15626dff92eb0d75d4b3bb011ff08596f2cae373472ac592f386347d163e22",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19571,7 +19571,7 @@
     {
       "id": "SURFACE-26467b9eeb8fc8bb",
       "path": "tdf-hq/src/TDF/Taxonomy/Filter.hs",
-      "sha256": "38c81161299e0cbb9cd604011f6d6addd9274f04562739ff9dce19492d3acc79",
+      "sha256": "003e84d79f0d69122fc45414fc71bef213e520312a73a7a26310b75c5f132fd2",
       "semanticConformance": "not-established-by-discovery"
     },
     {

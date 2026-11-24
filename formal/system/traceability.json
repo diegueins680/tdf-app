@@ -30862,7 +30862,7 @@
     "scripts/test-checkout-policy-terms-identity-migration.sh": "ceded6be2927dfcb777863190ea62779d58c3637e706d48c6dce5a58b97096c1",
     "scripts/test-checkout-terms-history.sh": "237e633cf0bc7e6efd3317e6dfeeddc2f43a2fd948fbae7888e0ee371324f922",
     "scripts/test-checkout-terms-upgrade-concurrency.py": "7f0d4db4046fa61057d2198469529b92bdeb9b05cf0b55233f8a047e042ba504",
-    "scripts/test-community-search.py": "a2edcfdf47a23fbd4b83558ab0b0b547a713b78536ef4c6e332f53910d297107",
+    "scripts/test-community-search.py": "325453681705f6a900c90b404edd9de5ac021a370f7234facf9e8e486a2bdd5c",
     "scripts/test-content-storage-postgres.mjs": "300333c732305b2ef21e7b7aab796a35cfa322a5c48eb1796f9c8415fe69bb5d",
     "scripts/test-content-storage-security-runtime.sh": "b628f0add1e4b629ad68d592034747a8aefddec68edcafa17a9c9c6f55030010",
     "scripts/test-course-identity.sh": "a5015eb97b9548529eb7b7165379ed7c78f2c62a8d8186707b131927870cbbd9",
@@ -32142,7 +32142,7 @@
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/DatafastCheckoutContext.hs": "9a97fe04a57add6ba76518a1dd9dc5342951a7f0bf060ad8964ed1a417f3855b",
-    "tdf-hq/src/TDF/Server/Directory.hs": "a0f8b3708b8fd7747d8a482950a1ee23f50c5ad28ff288c1df632376dbd33f59",
+    "tdf-hq/src/TDF/Server/Directory.hs": "5b15626dff92eb0d75d4b3bb011ff08596f2cae373472ac592f386347d163e22",
     "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs": "3fffa9b76eae802e1629413435696333a45947f8e946a48f28a8170bbe833c83",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "d8c8bd5a028e99f05395e9a2d916d22878ac4121864a3961b71e60a95e3b4af5",
     "tdf-hq/src/TDF/Server/DomoRefunds.hs": "6c520cd643346ad24be6ea7b02c1a6e76f4c407f7ab08176fbe48b47c7f9fd4c",
@@ -32203,7 +32203,7 @@
     "tdf-hq/src/TDF/Social/Server.hs": "3b1b4af11566dd037bf44c8fd89b2c198a085171ee23d5d2b4d1f11ab630a731",
     "tdf-hq/src/TDF/Social/Session.hs": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
     "tdf-hq/src/TDF/StorageVault.hs": "7f5d13cfc664291e3d23044322859c95f359b1e4bb00fbc82a87794e5da1849b",
-    "tdf-hq/src/TDF/Taxonomy/Filter.hs": "38c81161299e0cbb9cd604011f6d6addd9274f04562739ff9dce19492d3acc79",
+    "tdf-hq/src/TDF/Taxonomy/Filter.hs": "003e84d79f0d69122fc45414fc71bef213e520312a73a7a26310b75c5f132fd2",
     "tdf-hq/src/TDF/Taxonomy/GenreSuggestion.hs": "d4ba03730eb6d690340c64ff4dbd5c326a1a7522f894e562d67870f0790b53f1",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "a2568ecfb8235b9c91c0ce144ac5cec72ef0eb5cd52e06f42c3130ed7e347142",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "1cc32127c70c016568235631cc097e92a230125d6742c05aa2c833d6d15db480",
@@ -61217,7 +61217,7 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "a2edcfdf47a23fbd4b83558ab0b0b547a713b78536ef4c6e332f53910d297107",
+      "sha256": "325453681705f6a900c90b404edd9de5ac021a370f7234facf9e8e486a2bdd5c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86256,7 +86256,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "a0f8b3708b8fd7747d8a482950a1ee23f50c5ad28ff288c1df632376dbd33f59",
+      "sha256": "5b15626dff92eb0d75d4b3bb011ff08596f2cae373472ac592f386347d163e22",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87812,7 +87812,7 @@
     {
       "id": "SURFACE-26467b9eeb8fc8bb",
       "path": "tdf-hq/src/TDF/Taxonomy/Filter.hs",
-      "sha256": "38c81161299e0cbb9cd604011f6d6addd9274f04562739ff9dce19492d3acc79",
+      "sha256": "003e84d79f0d69122fc45414fc71bef213e520312a73a7a26310b75c5f132fd2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
