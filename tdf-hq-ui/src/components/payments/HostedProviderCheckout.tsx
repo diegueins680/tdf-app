@@ -243,20 +243,6 @@ export default function HostedProviderCheckout({
     }
   }, []);
 
-  const refreshSession = useCallback(async (
-    context: HostedCheckoutContext,
-    attemptId: string,
-  ) => {
-    const requestScope = recoveryScopeRef.current;
-    const next = await getProviderPaymentSession(
-      context.checkoutId,
-      attemptId,
-      context.lookupToken,
-    );
-    if (recoveryScopeRef.current === requestScope) publishSession(next);
-    return next;
-  }, [publishSession]);
-
   useEffect(() => {
     let cancelled = false;
     setSession(null);
@@ -330,22 +316,44 @@ export default function HostedProviderCheckout({
     return undefined;
   }, [checkout?.checkoutId, english, pendingReturnPathPrefix, publishSession, recoveryRevision]);
 
+  const refreshStatus = useRef<(() => void) | null>(null);
+  const [statusCheck, setStatusCheck] = useState<'ready' | 'checking' | 'unavailable'>('ready');
+  const pollAttemptId = session && POLLABLE_STATES.has(session.state) ? session.attemptId : null;
+  const checkoutId = activeContext?.checkoutId;
+  const lookupToken = activeContext?.lookupToken;
   useEffect(() => {
-    if (!session || !activeContext || !POLLABLE_STATES.has(session.state)) return;
+    setStatusCheck('ready');
+    if (!pollAttemptId || !checkoutId || !lookupToken) return;
     let cancelled = false;
-    const timeout = window.setTimeout(() => {
-      refreshSession(activeContext, session.attemptId)
-        .catch(() => {
-          if (!cancelled) setError(english
-            ? 'Status could not be refreshed. The payment remains unconfirmed.'
-            : 'No pudimos actualizar el estado. El pago sigue sin confirmar.');
-        });
-    }, POLL_INTERVAL_MS);
+    let inFlight = false;
+    const check = async () => {
+      if (inFlight || cancelled) return;
+      inFlight = true;
+      window.clearTimeout(timer);
+      setStatusCheck('checking');
+      try {
+        const next = await getProviderPaymentSession(checkoutId, pollAttemptId, lookupToken);
+        if (cancelled || recoveryScopeRef.current !== recoveryScope) return;
+        setStatusCheck('ready');
+        publishSession(next);
+        if (!POLLABLE_STATES.has(next.state)) return;
+      } catch {
+        if (cancelled || recoveryScopeRef.current !== recoveryScope) return;
+        setStatusCheck('unavailable');
+      } finally {
+        inFlight = false;
+      }
+      timer = window.setTimeout(startCheck, POLL_INTERVAL_MS);
+    };
+    const startCheck = () => { void check(); };
+    let timer = window.setTimeout(startCheck, POLL_INTERVAL_MS);
+    refreshStatus.current = startCheck;
     return () => {
       cancelled = true;
-      window.clearTimeout(timeout);
+      refreshStatus.current = null;
+      window.clearTimeout(timer);
     };
-  }, [activeContext, english, refreshSession, session]);
+  }, [checkoutId, lookupToken, pollAttemptId, publishSession, recoveryScope]);
 
   const canReleaseAttempt = paymentAttemptCanBeReleased(session?.state, session?.canRetryOrFallback);
   const safetyLocked = busy || potentiallyAmbiguous || Boolean(session && !canReleaseAttempt);
@@ -620,18 +628,21 @@ export default function HostedProviderCheckout({
           {english ? 'Recover original payment' : 'Recuperar pago original'}
         </Button>
       )}
-      {copy && <Alert severity={copy.severity}>{copy.message}</Alert>}
+      {copy && statusCheck !== 'unavailable' && <Alert severity={copy.severity}>{copy.message}</Alert>}
       {error && <Alert severity="warning">{error}</Alert>}
-      {existingRedirect && session?.state === 'requires_customer_action' && (
-        <Button variant="contained" onClick={() => navigate(session.provider, existingRedirect)} disabled={disabled || busy}>
+      {statusCheck === 'unavailable' && <Alert severity="warning">{english
+        ? 'Status could not be refreshed. TDF will check this payment again.'
+        : 'No pudimos actualizar el estado. Volveremos a consultar este pago.'}</Alert>}
+      {statusCheck !== 'unavailable' && existingRedirect && session?.state === 'requires_customer_action' && (
+        <Button variant="contained" onClick={() => navigate(session.provider, existingRedirect)} disabled={disabled || busy || statusCheck === 'checking'}>
           {english ? 'Continue on the secure provider page' : 'Continuar con el pago'}
         </Button>
       )}
       {session && activeContext && POLLABLE_STATES.has(session.state) && (
         <Button
           variant="text"
-          disabled={busy}
-          onClick={() => void refreshSession(activeContext, session.attemptId)}
+          disabled={busy || statusCheck === 'checking'}
+          onClick={() => refreshStatus.current?.()}
         >
           {english ? 'Refresh verified status' : 'Actualizar estado del pago'}
         </Button>
