@@ -26562,7 +26562,7 @@
       "concurrency": "Recheck saved provider resources after checkout-row admission waits; a native storefront case observes the blocked reader and concurrently published binding. No universal exactly-once gateway or cross-process configuration-rotation proof is introduced.",
       "idempotency": "Existing operation identities, attempt locks and replay behavior remain unchanged.",
       "failure": "Reject invalid metadata before creating a provider attempt or contacting the gateway.",
-      "recovery": "Use existing authenticated status verification; removing creation metadata is not a refund, no-charge proof or fallback authorization.",
+      "recovery": "Use existing authenticated status verification; removing creation metadata is not a refund, no-charge proof or fallback authorization. A restored checkout with an immutable Datafast binding can enter the gated report-query worker. The worker rechecks merchant, amount, currency, reference, lease and fulfillment hold before posting a unique verified debit. A legacy order reference also requires the provider checkout ID. Reversed or ambiguous reports require reconciliation. Attempts absent from the snapshot require a separate source.",
       "observability": "Retain actual regression, fixed test outputs, source identity and explicit external blockers.",
       "implementation": [
         "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
@@ -26588,7 +26588,13 @@
         "ops/hetzner/Caddyfile.production",
         "scripts/lib/compiled-api-surface.mjs",
         "formal/system/compiled-api-surface.json",
-        "tdf-hq/src/TDF/Server/DatafastCheckoutContext.hs"
+        "tdf-hq/src/TDF/Server/DatafastCheckoutContext.hs",
+        "tdf-hq/sql/2026-11-24_datafast_recovery.sql",
+        "tdf-hq/src/TDF/Commerce/DatafastRecovery.hs",
+        "tdf-hq/src/TDF/Commerce/DatafastStatus.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Server/ProviderTransport.hs",
+        "ops/hetzner/inspect-runtime.py"
       ],
       "tests": [
         "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
@@ -26601,10 +26607,11 @@
         "tdf-hq/test/TDF/Commerce/DatafastClientIPSpec.hs",
         "scripts/verify-datafast-client-ip.py",
         "scripts/__tests__/compiled-api-surface.test.mjs",
-        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs"
+        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
+        "scripts/test-hetzner-inspection.py"
       ],
       "formalModels": [],
-      "verification": "Local Hspec field/UTF-8 cases and SQLite-backed runtime availability tests; no whole-system proof or provider certification. Immutable cart Hspec examples and generated conservation cases cover exact cents, provider field bounds, UTF-8 and refusals; current PostgreSQL/compiled integration evidence is recorded separately. The compiled PostgreSQL reader additionally exercises new and legacy bound references, independent immutable-field faults, read-only replay and behavior-changing source controls; this is not an all-domain handler or settlement execution proof. Transport provenance has actual Servant/WAI examples, generated spoofing cases and six assertion-rejecting source controls. The native storefront route additionally checks pre-attempt refusal, authorization precedence and cached reuse without provider HTTP; other domains retain compiler/type wiring scope. Two direct recheck cases cover latest-resource selection and missing-cache refusal. A native storefront interleaving observes a real PostgreSQL lock waiter and reuses the concurrently published binding without changing its financial snapshot. Existing PostgreSQL ticket sales-gate cases obtain the opaque request argument through its real WAI/Servant combinator; a loopback peer without a forwarded assertion cannot authorize a fresh gateway request. Closed-sales refusals remain authoritative.",
+      "verification": "Local Hspec field/UTF-8 cases and SQLite-backed runtime availability tests; no whole-system proof or provider certification. Immutable cart Hspec examples and generated conservation cases cover exact cents, provider field bounds, UTF-8 and refusals; current PostgreSQL/compiled integration evidence is recorded separately. The compiled PostgreSQL reader additionally exercises new and legacy bound references, independent immutable-field faults, read-only replay and behavior-changing source controls; this is not an all-domain handler or settlement execution proof. Transport provenance has actual Servant/WAI examples, generated spoofing cases and six assertion-rejecting source controls. The native storefront route additionally checks pre-attempt refusal, authorization precedence and cached reuse without provider HTTP; other domains retain compiler/type wiring scope. Two direct recheck cases cover latest-resource selection and missing-cache refusal. A native storefront interleaving observes a real PostgreSQL lock waiter and reuses the concurrently published binding without changing its financial snapshot. Existing PostgreSQL ticket sales-gate cases obtain the opaque request argument through its real WAI/Servant combinator; a loopback peer without a forwarded assertion cannot authorize a fresh gateway request. Closed-sales refusals remain authoritative. The isolated restore suite covers concurrent claims, both references, reversal, wrong amount, expired holds, course seats, service bookings and Domo deposits using a synthetic reporting transport.",
       "evidence": "Exact-candidate local test logs retained in the operator workspace; public secrets excluded.",
       "status": "specified and implemented",
       "critical": true,
@@ -31738,6 +31745,7 @@
     "tdf-hq/sql/2026-11-21_music_audio_measurement_rollback.sql": "5b2ea6d7ce1ad395773f06b955721531c5ce4d7640432ac02389dcd55a2aec25",
     "tdf-hq/sql/2026-11-21_venue_search_sql.sql": "da5184b2f8a2ac0aa7f421e2e44882fa9e040143e1222f386dc4080035ef9450",
     "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql": "a6b9391b61df6a98c08cb049be75aa4c1fe53dbad6acb2df1b57981f8b931e55",
+    "tdf-hq/sql/2026-11-24_datafast_recovery.sql": "2b483352b983daaf6ca25b3975109da8c692c0cf1a2481d292cd26160685e992",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
     "tdf-hq/src/TDF/API.hs": "e20a0a712c4e2631259126803703acbc8107bcf04108de15b35e80535b6485db",
@@ -31785,6 +31793,8 @@
     "tdf-hq/src/TDF/Commerce/CourseCheckout.hs": "89f7c69cf5cf176c890e0cd09f1a0e561ab0fe3e45e9f14fc738b9479a5df917",
     "tdf-hq/src/TDF/Commerce/DatafastClientIP.hs": "ada9342fd3d6cd991870e28b5f117a4efaf9645868f47c3daf7a2d0a0350c88f",
     "tdf-hq/src/TDF/Commerce/DatafastConfig.hs": "fd9b7ef3181f883abfe4a52a96c632f8d8890111f8b956544ba7f250754ea136",
+    "tdf-hq/src/TDF/Commerce/DatafastRecovery.hs": "96ac6c6295c068e2c7d7354129ce86fbdff767de683fd697d1b714f160e79729",
+    "tdf-hq/src/TDF/Commerce/DatafastStatus.hs": "352aeb9dbd4f154d3a1554df1a4509f11540ab62642fdc317460fbbab8137e12",
     "tdf-hq/src/TDF/Commerce/DepositPolicy.hs": "6829fa5bf78c1d1839770e0728960967dfdbcdca62661dadd06adb2191d0a94f",
     "tdf-hq/src/TDF/Commerce/DomoCancellation.hs": "dcbc9345ad6a6c2e850c5d9a523061994e282d65edc92968dfe951797f065ca2",
     "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs": "62983a66fed8f24be14423b8ce4283acb22039dcf4d5a7ed09730c618d8260c1",
@@ -36187,6 +36197,10 @@
       {
         "requirement": "PAY-HOSTED-NOTIFICATIONS-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-DATAFAST-001",
+        "relationship": "implementation"
       }
     ],
     "formal/event-operations/HostedServicePayment.tla": [
@@ -36371,6 +36385,10 @@
       {
         "requirement": "DIR-SEMANTIC-SEARCH-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-DATAFAST-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/inspect-hetzner-production.mjs": [
@@ -36440,6 +36458,10 @@
       },
       {
         "requirement": "DIR-SEMANTIC-SEARCH-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-DATAFAST-001",
         "relationship": "tests"
       }
     ],
@@ -38968,6 +38990,10 @@
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": [
       {
         "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-DATAFAST-001",
         "relationship": "implementation"
       }
     ],
@@ -51241,6 +51267,24 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-11-24_datafast_recovery.sql": [
+      {
+        "requirement": "PAY-DATAFAST-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/DatafastRecovery.hs": [
+      {
+        "requirement": "PAY-DATAFAST-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/DatafastStatus.hs": [
+      {
+        "requirement": "PAY-DATAFAST-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs": [
       {
         "requirement": "PAY-DATAFAST-001",
@@ -55360,6 +55404,10 @@
         },
         {
           "requirement": "DIR-SEMANTIC-SEARCH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-DATAFAST-001",
           "relationship": "implementation"
         }
       ]
@@ -61135,6 +61183,10 @@
         },
         {
           "requirement": "DIR-SEMANTIC-SEARCH-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-DATAFAST-001",
           "relationship": "tests"
         }
       ]
@@ -81869,7 +81921,12 @@
       "path": "tdf-hq/sql/2026-11-24_datafast_recovery.sql",
       "sha256": "2b483352b983daaf6ca25b3975109da8c692c0cf1a2481d292cd26160685e992",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-DATAFAST-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7c4cd603babd8c4c",
@@ -82993,14 +83050,24 @@
       "path": "tdf-hq/src/TDF/Commerce/DatafastRecovery.hs",
       "sha256": "96ac6c6295c068e2c7d7354129ce86fbdff767de683fd697d1b714f160e79729",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-DATAFAST-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5aae0c5d087958c1",
       "path": "tdf-hq/src/TDF/Commerce/DatafastStatus.hs",
       "sha256": "352aeb9dbd4f154d3a1554df1a4509f11540ab62642fdc317460fbbab8137e12",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-DATAFAST-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7bb4e94c65f7c89c",
@@ -83382,6 +83449,10 @@
         },
         {
           "requirement": "PAY-HOSTED-NOTIFICATIONS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-DATAFAST-001",
           "relationship": "implementation"
         }
       ]
@@ -85755,6 +85826,10 @@
       "requirements": [
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-DATAFAST-001",
           "relationship": "implementation"
         }
       ]
@@ -94720,7 +94795,6 @@
     "SURFACE-528ba14a45085166",
     "SURFACE-926be86200012f94",
     "SURFACE-dd062802b0652474",
-    "SURFACE-4a1db15b418bd008",
     "SURFACE-7c4cd603babd8c4c",
     "SURFACE-87ed7351125c499c",
     "SURFACE-1c1ef431782f3c8d",
@@ -94756,8 +94830,6 @@
     "SURFACE-fafba19435170b95",
     "SURFACE-511b3353261bf5fb",
     "SURFACE-68f141730b470989",
-    "SURFACE-e354dd8c2764ac25",
-    "SURFACE-5aae0c5d087958c1",
     "SURFACE-42d48212b5b3fd40",
     "SURFACE-64cb8366887e5054",
     "SURFACE-059d1c74b4946473",
@@ -96463,7 +96535,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e4103cc0e78fce418411c94d1c44ef467af76377b894787043987439787ba9da",
+      "sourceSha256": "5215a159e114fc0391e794faea0e27cf554efecc462bdd33c50ebbabd8aa1479",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -96491,7 +96563,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e4103cc0e78fce418411c94d1c44ef467af76377b894787043987439787ba9da",
+      "sourceSha256": "5215a159e114fc0391e794faea0e27cf554efecc462bdd33c50ebbabd8aa1479",
       "definition": {
         "states": [
           "absent",
@@ -96521,7 +96593,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e4103cc0e78fce418411c94d1c44ef467af76377b894787043987439787ba9da",
+      "sourceSha256": "5215a159e114fc0391e794faea0e27cf554efecc462bdd33c50ebbabd8aa1479",
       "definition": {
         "export": [
           "queued",
@@ -96578,7 +96650,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e4103cc0e78fce418411c94d1c44ef467af76377b894787043987439787ba9da",
+      "sourceSha256": "5215a159e114fc0391e794faea0e27cf554efecc462bdd33c50ebbabd8aa1479",
       "definition": {
         "states": [
           "pending",
