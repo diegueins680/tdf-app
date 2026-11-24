@@ -2437,6 +2437,7 @@
       "tdf-hq/sql/2026-11-21_music_audio_measurement_rollback.sql",
       "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
       "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql",
+      "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
       "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
@@ -4289,7 +4290,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "885a56a1a76a1ebf64940373bf8def27e9424d9e732a9cc1dd96a2b849760e2d",
+      "sha256": "956a681904c0a8260a1c10254d82f5f4df71e241af0d1d198a37d266a1698385",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5903,7 +5904,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "f423295db91f25eaaa5946bfb5b00b014b435d295f81d1570dd1a92465ae2ebe",
+      "sha256": "5ccb34dfbdfacff9439eb32392d7771d97aa689475ad97d9467bfe18b73eb1a8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6629,7 +6630,7 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "325453681705f6a900c90b404edd9de5ac021a370f7234facf9e8e486a2bdd5c",
+      "sha256": "1f3a5fe43cc42c91d2b73976bf5176dfae931d65da34f0a3bd0a4a224f9ad75b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17832,6 +17833,12 @@
       "id": "SURFACE-cf70730ebe5edcb9",
       "path": "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql",
       "sha256": "a6b9391b61df6a98c08cb049be75aa4c1fe53dbad6acb2df1b57981f8b931e55",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f03461b67698d3bd",
+      "path": "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
+      "sha256": "361a542eccf5b1d225686b116d11e82c857ef1dda39dfe915070d39a222ec689",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -33340,7 +33347,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "21f92c5a375109978ccf11639c9ef8c9643258d824e97e77fb35dae4579e1176",
+      "sha256": "faa1e2c0ea6dc9d22852faa1d4b8cd7ab48f7312bb9eccca65bd755e13999f2a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

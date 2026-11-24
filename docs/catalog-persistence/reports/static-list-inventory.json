@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-24T15:52:05.974Z",
+  "generatedAt": "2026-11-24T16:05:34.573Z",
   "repositoryRoot": ".",
-  "filesScanned": 2943,
+  "filesScanned": 2944,
   "candidateCount": 1535,
   "byClassification": {
     "dynamic-business-catalog": 1009,
@@ -16269,7 +16269,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "4b211d7202b4b5a43db4",
+      "id": "2fbe85dc2eccf49b01cd",
       "file": "scripts/production-migrations.json",
       "sourceKind": "production",
       "surface": "automation",
@@ -16547,9 +16547,10 @@
         "{id=2026-11-21_artist_similarity}",
         "{id=2026-11-21_music_audio_measurement}",
         "{id=2026-11-21_location_genre_filters}",
-        "{id=2026-11-24_unicode_genre_suggestion_keys}"
+        "{id=2026-11-24_unicode_genre_suggestion_keys}",
+        "{id=2026-11-24_preserve_selected_genre_ids}"
       ],
-      "valueCount": 270,
+      "valueCount": 271,
       "recommendedClassification": "security-system-registry",
       "lines": [
         3
@@ -16645,7 +16646,7 @@
       "specializedModel": "production migration manifest and applied migration ledger",
       "priority": "",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "justification": "Keep the reviewed migration sequence from main 228ab63e and append the location and genre filters migration followed by its Unicode suggestion-key correction. Retain the independent parent review histories of the loudness and taxonomy lists.",
+      "justification": "Keep the reviewed migration sequence from main 228ab63e and append the location and genre filters migration followed by the Unicode suggestion-key and unavailable-genre corrections. Retain the independent parent review histories of the loudness and taxonomy lists.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
@@ -40709,7 +40710,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 129,
+      "consumerCount": 130,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -40731,6 +40732,7 @@
         "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql",
         "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
         "tdf-hq/sql/2026-11-21_location_genre_filters_rollback.sql",
+        "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
         "tdf-hq/sql/init_schema.sql",
         "tdf-hq/src/TDF/API/Directory.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
@@ -40759,8 +40761,7 @@
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
         "tdf-hq/test/TDF/Profiles/ArtistSpec.hs",
         "tdf-hq/test/TDF/ServerAdminSpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/catalogs.test.ts",
@@ -40883,7 +40884,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 129,
+      "consumerCount": 130,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -40905,6 +40906,7 @@
         "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql",
         "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
         "tdf-hq/sql/2026-11-21_location_genre_filters_rollback.sql",
+        "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
         "tdf-hq/sql/init_schema.sql",
         "tdf-hq/src/TDF/API/Directory.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
@@ -40933,8 +40935,7 @@
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
         "tdf-hq/test/TDF/Profiles/ArtistSpec.hs",
         "tdf-hq/test/TDF/ServerAdminSpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/catalogs.test.ts",
@@ -44360,7 +44361,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 129,
+      "consumerCount": 130,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -44382,6 +44383,7 @@
         "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql",
         "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
         "tdf-hq/sql/2026-11-21_location_genre_filters_rollback.sql",
+        "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
         "tdf-hq/sql/init_schema.sql",
         "tdf-hq/src/TDF/API/Directory.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
@@ -44410,8 +44412,7 @@
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
         "tdf-hq/test/TDF/Profiles/ArtistSpec.hs",
         "tdf-hq/test/TDF/ServerAdminSpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/catalogs.test.ts",
@@ -184141,7 +184142,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 697,
+      "consumerCount": 698,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",

@@ -29920,6 +29920,7 @@
       "contract": "formal/system/taxonomy-filters.md",
       "implementation": [
         "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+        "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
         "tdf-hq/sql/2026-11-21_location_genre_filters_rollback.sql",
         "tdf-hq/src/TDF/Taxonomy/Filter.hs",
         "tdf-hq/src/TDF/API/Taxonomy.hs",

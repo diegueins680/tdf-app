@@ -191,6 +191,9 @@ def titles(**kwargs):
 
 assert {'Lúna', 'Fotoluz'} <= titles(genres=[latin]) and 'Fotoluz Extended' not in titles(genres=[latin]), 'a parent genre must include its subgenres'
 assert titles(genres=[cumbia]) == {'Lúna'}, titles(genres=[cumbia])
+unknown_genre = '88cefd3d-a9ee-4d9a-8e78-4ba1b149cddb'
+assert not titles(genres=[unknown_genre]), 'a shared link with an unavailable genre must not return unrelated artists'
+assert titles(genres=[unknown_genre, cumbia]) == {'Lúna'}, 'a known genre still matches alongside an unavailable selection'
 assert titles(genres=[cumbia, rock]) == {'Lúna', 'Fotoluz Extended'}, 'genres are ORed'
 assert 'Fotoluz' in titles(regions=[guayas]) and 'Lúna' not in titles(regions=[guayas]), 'region comes from the city'
 assert 'Lúna' in titles(cities=[quito, guayaquil]) and 'Fotoluz' in titles(cities=[quito, guayaquil]), 'cities are ORed'

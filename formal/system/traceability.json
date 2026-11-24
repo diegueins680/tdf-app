@@ -29921,6 +29921,7 @@
       "contract": "formal/system/taxonomy-filters.md",
       "implementation": [
         "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+        "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
         "tdf-hq/sql/2026-11-21_location_genre_filters_rollback.sql",
         "tdf-hq/src/TDF/Taxonomy/Filter.hs",
         "tdf-hq/src/TDF/API/Taxonomy.hs",
@@ -30122,7 +30123,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "71cf2ae29fe91d86b6fe7f5abc34b31fc9a2074217d649cce988ea76549d83c9",
+    "docs/catalog-persistence/catalog-list-decisions.json": "05624eee63a7de0ce576d1192dc0e1e8704404a2724e18917b18819558fa18fe",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -30618,7 +30619,7 @@
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
     "scripts/__tests__/catalog-decision-history.test.mjs": "90eb66416f6dd3a92c936aeced40dd23e0d8592026ecbd128430679a93e003b0",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "885a56a1a76a1ebf64940373bf8def27e9424d9e732a9cc1dd96a2b849760e2d",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "956a681904c0a8260a1c10254d82f5f4df71e241af0d1d198a37d266a1698385",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -30811,7 +30812,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "f423295db91f25eaaa5946bfb5b00b014b435d295f81d1570dd1a92465ae2ebe",
+    "scripts/production-migrations.json": "5ccb34dfbdfacff9439eb32392d7771d97aa689475ad97d9467bfe18b73eb1a8",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "e497d1ce41e8b1bdc3ae776a164b0cb3c6317b5c799ecce85205ef9c79602729",
@@ -30862,7 +30863,7 @@
     "scripts/test-checkout-policy-terms-identity-migration.sh": "ceded6be2927dfcb777863190ea62779d58c3637e706d48c6dce5a58b97096c1",
     "scripts/test-checkout-terms-history.sh": "237e633cf0bc7e6efd3317e6dfeeddc2f43a2fd948fbae7888e0ee371324f922",
     "scripts/test-checkout-terms-upgrade-concurrency.py": "7f0d4db4046fa61057d2198469529b92bdeb9b05cf0b55233f8a047e042ba504",
-    "scripts/test-community-search.py": "325453681705f6a900c90b404edd9de5ac021a370f7234facf9e8e486a2bdd5c",
+    "scripts/test-community-search.py": "1f3a5fe43cc42c91d2b73976bf5176dfae931d65da34f0a3bd0a4a224f9ad75b",
     "scripts/test-content-storage-postgres.mjs": "300333c732305b2ef21e7b7aab796a35cfa322a5c48eb1796f9c8415fe69bb5d",
     "scripts/test-content-storage-security-runtime.sh": "b628f0add1e4b629ad68d592034747a8aefddec68edcafa17a9c9c6f55030010",
     "scripts/test-course-identity.sh": "a5015eb97b9548529eb7b7165379ed7c78f2c62a8d8186707b131927870cbbd9",
@@ -31995,6 +31996,7 @@
     "tdf-hq/sql/2026-11-21_music_audio_measurement_rollback.sql": "5b2ea6d7ce1ad395773f06b955721531c5ce4d7640432ac02389dcd55a2aec25",
     "tdf-hq/sql/2026-11-21_venue_search_sql.sql": "da5184b2f8a2ac0aa7f421e2e44882fa9e040143e1222f386dc4080035ef9450",
     "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql": "a6b9391b61df6a98c08cb049be75aa4c1fe53dbad6acb2df1b57981f8b931e55",
+    "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql": "361a542eccf5b1d225686b116d11e82c857ef1dda39dfe915070d39a222ec689",
     "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql": "4f053514c5881c8b1a1dc0090f15b3968921031aa005b3f419e8c2a6c2ceb2ae",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
@@ -54150,6 +54152,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql": [
+      {
+        "requirement": "TAX-FILTER-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/sql/2026-11-21_location_genre_filters_rollback.sql": [
       {
         "requirement": "TAX-FILTER-001",
@@ -56404,7 +56412,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "885a56a1a76a1ebf64940373bf8def27e9424d9e732a9cc1dd96a2b849760e2d",
+      "sha256": "956a681904c0a8260a1c10254d82f5f4df71e241af0d1d198a37d266a1698385",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59723,7 +59731,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "f423295db91f25eaaa5946bfb5b00b014b435d295f81d1570dd1a92465ae2ebe",
+      "sha256": "5ccb34dfbdfacff9439eb32392d7771d97aa689475ad97d9467bfe18b73eb1a8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61217,7 +61225,7 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "325453681705f6a900c90b404edd9de5ac021a370f7234facf9e8e486a2bdd5c",
+      "sha256": "1f3a5fe43cc42c91d2b73976bf5176dfae931d65da34f0a3bd0a4a224f9ad75b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -82847,6 +82855,18 @@
       ]
     },
     {
+      "id": "SURFACE-f03461b67698d3bd",
+      "path": "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
+      "sha256": "361a542eccf5b1d225686b116d11e82c857ef1dda39dfe915070d39a222ec689",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "TAX-FILTER-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-be55e2a2a1d24684",
       "path": "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql",
       "sha256": "4f053514c5881c8b1a1dc0090f15b3968921031aa005b3f419e8c2a6c2ceb2ae",
@@ -97712,7 +97732,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "21f92c5a375109978ccf11639c9ef8c9643258d824e97e77fb35dae4579e1176",
+      "sourceSha256": "faa1e2c0ea6dc9d22852faa1d4b8cd7ab48f7312bb9eccca65bd755e13999f2a",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -97740,7 +97760,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "21f92c5a375109978ccf11639c9ef8c9643258d824e97e77fb35dae4579e1176",
+      "sourceSha256": "faa1e2c0ea6dc9d22852faa1d4b8cd7ab48f7312bb9eccca65bd755e13999f2a",
       "definition": {
         "states": [
           "absent",
@@ -97770,7 +97790,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "21f92c5a375109978ccf11639c9ef8c9643258d824e97e77fb35dae4579e1176",
+      "sourceSha256": "faa1e2c0ea6dc9d22852faa1d4b8cd7ab48f7312bb9eccca65bd755e13999f2a",
       "definition": {
         "export": [
           "queued",
@@ -97827,7 +97847,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "21f92c5a375109978ccf11639c9ef8c9643258d824e97e77fb35dae4579e1176",
+      "sourceSha256": "faa1e2c0ea6dc9d22852faa1d4b8cd7ab48f7312bb9eccca65bd755e13999f2a",
       "definition": {
         "states": [
           "pending",
