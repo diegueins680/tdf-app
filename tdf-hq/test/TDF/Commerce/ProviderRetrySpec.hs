@@ -2386,13 +2386,14 @@ datafastRecoveryWorkerSpec = describe "Datafast recovery across process loss" $ 
     Just reportFile -> it "runs the restored worker" $ \pool -> do
       _ <- isolatedRecoveryUrl
       report <- BL.readFile reportFile >>= either fail pure . A.eitherDecode
-      let (reference, payload) = report :: (Text,A.Value)
+      let (merchant, reference, payload) = report :: (Text,Text,A.Value)
           fetch request = do
             Adapter.arMethod request `shouldBe` Adapter.AdapterGet
             Adapter.arOperation request `shouldBe` Adapter.AdapterQuery
             Adapter.arBody request `shouldBe` Nothing
-            Adapter.arUrl request `shouldBe` ("https://test.oppwa.com/v1/query?entityId=synthetic-provider-retry-merchant&merchantTransactionId=" <> reference)
+            Adapter.arUrl request `shouldBe` ("https://test.oppwa.com/v1/query?entityId=" <> merchant <> "&merchantTransactionId=" <> reference)
             pure (Right payload)
+      setLabMerchant pool merchant
       counts <- concurrently (replicate 4 (runQueryTick pool fetch))
       sum counts `shouldBe` 1
       runQueryTick pool noQuery `shouldReturn` 0
@@ -2405,7 +2406,9 @@ datafastRecoveryWorkerSpec = describe "Datafast recovery across process loss" $ 
           [Single idText] <- runSqlPool (rawSql "SELECT payment_test.checkout(?)::text" [PersistText (T.pack scenario)]) pool
           checkoutCreation pool Checkout.ProviderDatafast idText
           else newCheckout pool
-        payment <- captureFixtureFromCheckout creation "payment" Checkout.AttemptProcessing pool Checkout.ProviderDatafast
+        let merchant = "synthetic-restore-" <> Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+        setLabMerchant pool merchant
+        payment <- captureFixtureFromCheckout (creation { Checkout.pacMerchantRef=merchant }) "payment" Checkout.AttemptProcessing pool Checkout.ProviderDatafast
         let attempt = Checkout.paymentAttemptReferenceId (Checkout.vpAttempt payment)
             checkout = Checkout.checkoutReferenceId (Checkout.vpCheckout payment)
             isLegacy = scenario == "legacy"
@@ -2434,7 +2437,7 @@ datafastRecoveryWorkerSpec = describe "Datafast recovery across process loss" $ 
           let dump = dir <> "/before.dump"
               reportFile = dir <> "/provider.json"
           callIsolatedPostgresTool "pg_dump" ["-Fc","-f",dump,"--dbname",url]
-          BL.writeFile reportFile (A.encode (reference,records))
+          BL.writeFile reportFile (A.encode (merchant,reference,records))
           when shouldSettle $
             runSqlPool (Checkout.recordVerifiedPaymentOrReconcile payment) pool `shouldReturn` Right True
           destroyAllResources pool
@@ -2442,7 +2445,7 @@ datafastRecoveryWorkerSpec = describe "Datafast recovery across process loss" $ 
           destroyAllResources pool
           exe <- getExecutablePath
           original <- getEnvironment
-          let env = [("TDF_DATAFAST_LAB_REPORT",reportFile),("DATAFAST_RESTORE_RECOVERY_ENABLED","true"),
+          let env = [("TDF_DATAFAST_LAB_REPORT",reportFile),("DATAFAST_ENTITY_ID",T.unpack merchant),("DATAFAST_RESTORE_RECOVERY_ENABLED","true"),
                      ("COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED","true"),("COMMERCE_CHECKOUT_ENV","sandbox"),
                      ("PLACETOPAY_LOGIN",""),("PAYPHONE_TOKEN","")]
               child = (Process.proc exe ["--match","runs the restored worker","--fail-on=empty","+RTS","-N2","-RTS"])
@@ -2469,6 +2472,12 @@ datafastRecoveryWorkerSpec = describe "Datafast recovery across process loss" $ 
             runSqlPool (rawSql (predicate <> " WHERE checkout_id=?::uuid") [PersistText checkout]) pool
               `shouldReturn` [Single True]
         setRecoveryFlag pool False
+        setLabMerchant pool "synthetic-provider-retry-merchant"
+  where
+    setLabMerchant :: ConnectionPool -> Text -> IO ()
+    setLabMerchant pool merchant = runSqlPool (rawExecute
+      "UPDATE commerce_provider_account SET merchant_account_ref=? WHERE provider='datafast' AND environment='sandbox'"
+      [PersistText merchant]) pool
 
 isolatedRecoveryUrl :: IO String
 isolatedRecoveryUrl = do
@@ -2974,7 +2983,7 @@ captureFixtureFromCheckout seed requestedResourceType stage pool provider = do
     , Checkout.pbcProvider = provider, Checkout.pbcEnvironment = Checkout.CheckoutSandbox
     , Checkout.pbcMerchantRef = Checkout.pacMerchantRef creation, Checkout.pbcResourceType = resourceType
     , Checkout.pbcProviderResource = resource, Checkout.pbcResourcePath = Nothing
-    , Checkout.pbcOrderReference = boundReference, Checkout.pbcAmountMinor = 12515
+    , Checkout.pbcOrderReference = boundReference, Checkout.pbcAmountMinor = Checkout.pacAmountMinor creation
     , Checkout.pbcCurrency = "USD", Checkout.pbcStage = stage
     , Checkout.pbcOccurredAt = Checkout.pacCreatedAt creation
     , Checkout.pbcCorrelationId = "synthetic-capture-binding" }) pool >>= requireRight
@@ -2984,7 +2993,7 @@ captureFixtureFromCheckout seed requestedResourceType stage pool provider = do
     , Checkout.vpMerchantRef = Checkout.pacMerchantRef creation, Checkout.vpResourceType = resourceType
     , Checkout.vpProviderResource = resource, Checkout.vpProviderResourcePath = Nothing
     , Checkout.vpOrderReference = domainReference, Checkout.vpProviderReference = boundReference
-    , Checkout.vpAmountMinor = 12515, Checkout.vpCurrency = "USD"
+    , Checkout.vpAmountMinor = Checkout.pacAmountMinor creation, Checkout.vpCurrency = "USD"
     , Checkout.vpEvidence = "server_to_server", Checkout.vpOccurredAt = Checkout.pacCreatedAt creation
     , Checkout.vpCorrelationId = "synthetic-capture-verification" }
 
