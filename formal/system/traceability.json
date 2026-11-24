@@ -30751,7 +30751,7 @@
     "tdf-hq-ui/src/api/checkoutPaymentAlternatives.test.ts": "6f2af592e1de31c0e95782c709d18e698c33e797038b182964e5a0a85e6a84ca",
     "tdf-hq-ui/src/api/checkoutPaymentAlternatives.ts": "593c59e32e1a178f8b6d0fb72a8c8e6c8719fc13bd5b11fabca509a3f8bc4069",
     "tdf-hq-ui/src/api/client.test.ts": "facbbb69135af34782629f290941dfa88036c91f24fbf8d6c395c41021d75a76",
-    "tdf-hq-ui/src/api/client.ts": "341b56ac7ceead3b110e3fdb58181730a05c10dc0925a5824ad73815e2a5d323",
+    "tdf-hq-ui/src/api/client.ts": "85285706aed397034d2bfd9797ae9661f2adfbbe9ed13f81e23d2ea685a4b155",
     "tdf-hq-ui/src/api/contentStorage.security.test.ts": "d6849af6c603322b3180734bdcb551e0d3736cef6c4351346fc4a1f63ad97c36",
     "tdf-hq-ui/src/api/contentStorage.ts": "1342d461b505d17bbfe6ac62ea20f2854f9b64e18b1d4c6c0d936d0645044a21",
     "tdf-hq-ui/src/api/courses.ts": "d64ccdbdcd198dc325fa6363273727fae1306a81354e7b0ac522db1c7d5f4513",
@@ -64609,7 +64609,7 @@
     {
       "id": "SURFACE-2e3549439fba7b8e",
       "path": "tdf-hq-ui/src/api/client.ts",
-      "sha256": "341b56ac7ceead3b110e3fdb58181730a05c10dc0925a5824ad73815e2a5d323",
+      "sha256": "85285706aed397034d2bfd9797ae9661f2adfbbe9ed13f81e23d2ea685a4b155",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64643,14 +64643,14 @@
     {
       "id": "SURFACE-4f1a575585c3cc83",
       "path": "tdf-hq-ui/src/api/commerceOperations.test.ts",
-      "sha256": "24fb56c61fa897f389edf3d2efdf72020f3dd3f16ce53559d8113d3c072c20fa",
+      "sha256": "db89fb6aced78a08f9e13cdc47da3d97b27317be3adf6480e0322cfca0f41b57",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-53e830f66e47cd69",
       "path": "tdf-hq-ui/src/api/commerceOperations.ts",
-      "sha256": "ebbfafeaffec0931711e16124eb58d1f3772d8d0c9782d8d99405d4c16abb97c",
+      "sha256": "6d0add34e48749816dd4626dcb9c7b6923931e2a200ac53444afb6489c62fc66",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -70468,14 +70468,14 @@
     {
       "id": "SURFACE-39fe3c9e56197ba9",
       "path": "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
-      "sha256": "24b4e9da00d5f6f970774d2300d85e78b3b6364988106b64b7226efe19d91c9c",
+      "sha256": "5c237e12aeb8516505d7b504df4cde75d3aa7565cc26e957c464e59b448f6b5d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-4863f94a96956295",
       "path": "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
-      "sha256": "6f1e8487723dcc8da6f717139f89d71d2c4ffdba924a5709ec170a2a0634168c",
+      "sha256": "72be023b6167d16d705ca7231d9883f4a296f7a2b32d3d246a01306e6abdece3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },

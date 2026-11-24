@@ -111,3 +111,59 @@ Date 2026-11-24 UTC. Root baseline `736e84f597a9c50e71de062830a98a58f7d1d028`. L
 | `node scripts/check-generated-api.mjs`, `node scripts/check-api-availability.mjs`, `python3 scripts/test-checkout-money-verifier.py` | Both committed generated clients at the pinned revisions passed drift checks. API availability passed; eight money-verifier checks passed. |
 | 06:00, production public GET `/commerce/payment-capabilities` | 51 successful read-only requests. Two countries × eight flows × three common methods, plus three additional EC ticket methods. |
 | Credentialed provider tests and staging | No new run. Historical PayPhone Button Prueba evidence is linked above. Current checkout-to-refund, worker Confirm, statement settlement and seller payout require the accounts listed above. |
+
+### Final qualification on the reviewed stack
+
+At the code revisions below, a fresh isolated root and a fresh pinned mobile installation each ran `npm ci --ignore-scripts --no-audit`. The locked web i18next version was 23.16.8. The first offline root install lacked a cached dependency, so installation used the project registry. Reused installations from the earlier tests were superseded by these results. Times are UTC on 24 November.
+
+| Time | Environment and command | Outcome |
+|---|---|---|
+| 06:27–06:32 | Web, exact payment suites listed below; `npm --prefix tdf-hq-ui run typecheck`; ESLint on all modified web source and tests | 263 tests in 26 suites passed. Typecheck and lint passed. A preliminary full-path filter also matched the worktree directory; it was stopped and rerun with exact paths. |
+| 06:29–06:31 | Native pinned checkout, `npm test -- --runTestsByPath __tests__/TicketCheckout.test.tsx __tests__/ticketCheckoutIdempotency.test.ts` | 22 tests in two suites passed. |
+| 06:29–06:31 | `REQUIRE_MOBILE_WORKSPACE=1 npm run generate:api && node scripts/check-generated-api.mjs` | Regenerated both clients; byte-for-byte identical to their committed revisions. An earlier run without installed native dependencies skipped native generation. |
+| 05:44–06:35 | `TDF_PROVIDER_RETRY_DATABASE_URL=postgresql://postgres@127.0.0.1:56284/tdf_provider_retry_test sh scripts/test-provider-retry-runtime.sh` | 267 migrations applied and replayed. Full Haskell backend and test executable built. 533 examples, zero failures, one isolated restore case pending in this invocation. The script exited successfully after mandatory rollback checks. |
+| 06:35–06:42 | Dedicated PG16 UTF-8 loopback cluster on port 56285, role synthetic, `sh scripts/load-payment-test-schema.sh` followed by `psql -f scripts/__tests__/fixtures/provider-domain-fixtures.sql`. Run the compiled test with `TDF_RECOVERY_RESTORE_LAB=synthetic-loopback-only TDF_PROVIDER_RETRY_DATABASE_URL=postgresql://synthetic@127.0.0.1:56285/tdf_provider_retry_test` and `--match='payment snapshot restore laboratory' --fail-on=empty +RTS -N2 -RTS`. | The separately gated case passed, one example and zero failures. The real dump/restore reverted a synthetic Datafast capture. Eight concurrent recovery attempts applied that payment once. The initial SQL_ASCII fixture and then a missing test-only schema required correction before the successful run. |
+| 06:35 | Compiled `tdf-hq-test --match=validatePayPal --fail-on=empty +RTS -N2 -RTS` and `tdf-hq-test --match=validateDatafast --fail-on=empty +RTS -N2 -RTS` | 17 PayPal and 18 Datafast validation examples passed. |
+| 06:02–06:32 | `node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output /private/tmp/tdf-payments-20261124-catalog.json`; `python3 scripts/check-state-machines.py --static` | Strict catalog gate passed with pinned mobile initialized; 12 state-machine validators matched their models. |
+
+The exact web invocation was
+
+```sh
+npm --prefix tdf-hq-ui test -- --runInBand --runTestsByPath src/__tests__/DatafastReturnPage.test.tsx \
+  src/__tests__/DomoQuoteCheckoutPage.test.tsx \
+  src/api/checkoutPaymentAlternatives.test.ts \
+  src/api/commerceOperations.test.ts \
+  src/api/paymentCapabilities.test.ts \
+  src/api/providerPaymentSessions.test.ts \
+  src/components/RefundManagementPanel.logic.test.ts \
+  src/components/RefundManagementPanel.test.tsx \
+  src/components/StripeCheckoutModal.logic.test.ts \
+  src/components/__tests__/RefundManagementPanel.test.tsx \
+  src/components/__tests__/StripeCheckoutModal.test.tsx \
+  src/components/events/EventManualPaymentsPanel.test.tsx \
+  src/components/payments/HeldRefundRecoveryPanel.test.tsx \
+  src/components/payments/HostedProviderCheckout.test.tsx \
+  src/components/payments/PaymentAlternativesNotice.test.tsx \
+  src/components/payments/ProviderQueryRecoveryPanel.test.tsx \
+  src/components/payments/ReconciliationEvidencePanel.test.tsx \
+  src/components/payments/StripePaymentAlternativesNotice.test.tsx \
+  src/components/payments/TicketBankTransferPanel.test.tsx \
+  src/features/marketplace/agreementPayment.test.ts \
+  src/i18n/paymentLocales.test.ts \
+  src/pages/CommerceProviderEventsPage.test.tsx \
+  src/pages/PaymentsPage.partySelector.test.ts \
+  src/pages/PaymentsPage.recovery.test.tsx \
+  src/pages/ProviderPaymentReturnPage.test.tsx \
+  src/utils/providerPaymentResume.test.ts
+```
+
+Review in order. Each PR targets its predecessor. Retarget after the corresponding parent lands under the normal release process.
+
+| Draft | Implementation commit | Scope |
+|---|---|---|
+| [#827](https://github.com/diegueins680/tdf-app/pull/827) | `afd5e941b` | Canonical retry authority, market assessment and operator documentation |
+| [#828](https://github.com/diegueins680/tdf-app/pull/828) | `b9a8a6f84` | PayPhone create-response binding and adapter contract tests |
+| [#829](https://github.com/diegueins680/tdf-app/pull/829) | `dca806700` | Buyer recovery, stale refresh, redirect referrers and compatible fallback |
+| [#830](https://github.com/diegueins680/tdf-app/pull/830) | `5c5337c56` | Exact signed minor-unit display for finance overview, including fees, refunds, commissions, settlements and seller balances |
+
+The repository Safe Install job reported the inherited i18next advisory GHSA-6jcc-5g8w-32mx. Its dependency change is already present and tested in concurrent PR #757. This payment series keeps the dependency upgrade in that PR. The first specification job also detected stale per-surface evidence; the payment branches regenerated and checked their inventories and traceability. CI status remains visible on each draft. [Audit failure](https://github.com/diegueins680/tdf-app/actions/runs/45340082939) · [Shared dependency repair](https://github.com/diegueins680/tdf-app/pull/757)
