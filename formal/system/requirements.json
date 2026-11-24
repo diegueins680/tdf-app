@@ -29860,11 +29860,253 @@
       "historicalStatus": null
     },
     {
+      "id": "TAX-FILTER-001",
+      "title": "Shared country, region, city and genre filters across community search, radio, music and events",
+      "statement": "Community and global directory search, radio stations, public music releases and track search, and signed-in event listings accept repeatable countryIds, regionIds, cityIds and genreIds referencing the persisted taxonomy. Values inside a dimension are ORed, dimensions are ANDed, a genre includes its active subgenres, a region and missing country derive from the item's city, and an item without a value for an active dimension is not returned. Each surface reports per-value counts that apply every other active filter but not the counted dimension. The web keeps one shared selection per browser, overridable per surface, mirrored in namespaced URL keys so links reproduce the view, shows removable chips and a clear-all action, names options in the viewer's language with fallback to the other, and pre-selects the profile city once; device location is used only after an explicit tap.",
+      "domain": "TAX",
+      "critical": false,
+      "actors": [
+        "Visitor",
+        "Signed-in user",
+        "Fan",
+        "Artist"
+      ],
+      "preconditions": [
+        "2026-11-21_location_genre_filters.sql applied (shared predicates, Ecuador provinces and cities, bilingual subgenres)",
+        "Existing surface visibility, territory and authorization rules remain authoritative"
+      ],
+      "inputs": [
+        "GET /taxonomy/filter-options",
+        "GET /directory/search countryIds/regionIds/cityIds/genreIds",
+        "GET /radio/streams and /radio/streams/facets",
+        "GET /music/releases, /music/search and /music/facets/releases",
+        "GET /social-events/events and /social-events/events/facets",
+        "URL keys f.country, f.region, f.city, f.genre, f.scope"
+      ],
+      "state": {
+        "boundary": "formal/system/taxonomy-filters.md",
+        "selection": [
+          "shared",
+          "surface override"
+        ]
+      },
+      "allowedTransitions": [
+        "unfiltered -> filtered",
+        "shared -> surface override (only here, or a link that differs)",
+        "surface override -> shared (use general filters)",
+        "surface override -> shared set (use everywhere)",
+        "filtered -> cleared"
+      ],
+      "forbiddenTransitions": [
+        "A filter widening the authorized result set",
+        "An item without a value matching an active dimension",
+        "Changing directory saved-search alert semantics",
+        "Requesting device location without an explicit tap or when a profile city exists",
+        "Overriding a viewer's existing selection with the profile-city default"
+      ],
+      "effects": [
+        "Parameterized predicates before pagination on every surface",
+        "Per-dimension facet counts",
+        "Shared browser selection and URL state"
+      ],
+      "authorization": "No new authority: each list keeps its existing public or authenticated check; filter options are public reference data.",
+      "privacy": "Only public reference ids travel in URLs; the profile city is read from the viewer's own profile and never sent elsewhere; device coordinates stay in the browser and become a city id.",
+      "concurrency": "Query keys include the selection; superseded requests are cancelled or ignored as before.",
+      "idempotency": "Selections are deduplicated sets; repeating a parameter has no effect; at most 50 values per dimension.",
+      "failure": "Malformed ids return 400; unknown ids match nothing; failed option or facet reads leave the list usable without counts.",
+      "recovery": "Clear filters, use the general filters, or remove a chip.",
+      "observability": "Visible chips, counts and override notice; existing API telemetry.",
+      "source": "tdf-hq/src/TDF/Taxonomy/Filter.hs and tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+      "contract": "formal/system/taxonomy-filters.md",
+      "implementation": [
+        "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+        "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
+        "tdf-hq/sql/2026-11-21_location_genre_filters_rollback.sql",
+        "tdf-hq/src/TDF/Taxonomy/Filter.hs",
+        "tdf-hq/src/TDF/API/Taxonomy.hs",
+        "tdf-hq/src/TDF/Server/Taxonomy.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/API/Radio.hs",
+        "tdf-hq/src/TDF/ServerRadio.hs",
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsTaxonomy.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/docs/openapi/taxonomy.yaml",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/docs/openapi/music-search.yaml",
+        "tdf-hq-ui/src/api/taxonomy.ts",
+        "tdf-hq-ui/src/api/directory.ts",
+        "tdf-hq-ui/src/api/radio.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterStore.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/useTaxonomyFilters.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/useProfileCityDefault.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/TaxonomyFilterBar.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/taxonomyFilters.es.ts",
+        "tdf-hq-ui/src/i18n/locales/taxonomyFilters.en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+        "playwright.discovery.config.mjs",
+        "tdf-mobile/src/api/taxonomy.ts",
+        "tdf-mobile/src/features/taxonomyFilters/TaxonomyFilterBar.tsx",
+        "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterModel.ts",
+        "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterStore.ts",
+        "tdf-mobile/src/features/taxonomyFilters/useSharedCityDefault.ts",
+        "tdf-mobile/src/features/taxonomyFilters/useTaxonomyFilters.ts"
+      ],
+      "tests": [
+        "scripts/test-community-search.py",
+        "scripts/test-music-catalog-search.mjs",
+        "tdf-hq/test/TDF/Taxonomy/FilterSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
+        "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+        "e2e/web/taxonomy-filters.spec.mjs",
+        "e2e/web/community-discovery.spec.mjs",
+        "tdf-mobile/__tests__/DirectoryTaxonomyFilters.test.tsx",
+        "tdf-mobile/__tests__/taxonomyFilterModel.test.ts",
+        "tdf-mobile/__tests__/taxonomyFilterStore.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Directory SQL executed on migrated PostgreSQL 16 with OR/AND, closure, region and missing-value assertions; radio, music, events and suggestions exercised against a locally built server; React unit and Playwright fixture coverage. Hosted CI and production verification pending.",
+      "ambiguity": [
+        "Regions and cities outside Ecuador are not curated yet.",
+        "Marketplace listings and studio storefront packages carry no location or genre and are reached only through directory classifieds and services.",
+        "Native radio and music screens do not exist; mobile covers directory and events."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local PostgreSQL, compiled-server, React and Playwright fixture evidence; hosted CI and production verification pending."
+      },
+      "authority": "approved by user",
+      "property": "Result = visible items AND each active dimension (OR of its values, genres expanded to descendants, location derived from city); counts per dimension omit only that dimension's own selection.",
+      "verification": "scripts/test-community-search.py on migrated PostgreSQL; Hspec FilterSpec (including literal directory facet SQL equality); React model, discovery and radio tests; Playwright taxonomy-filters spec in Spanish and English.",
+      "evidence": "scripts/test-community-search.py; tdf-hq/test/TDF/Taxonomy/FilterSpec.hs; tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts; e2e/web/taxonomy-filters.spec.mjs"
+    },
+    {
+      "id": "TAX-GENRE-SUGGESTION-001",
+      "title": "Artists suggest bilingual genres checked for casing, spelling and duplicates; administrators settle the rest",
+      "statement": "An artist proposes a genre or subgenre with Spanish and English names and an optional parent. The names are cleaned, cased for their language and compared with every existing genre in both languages ignoring case, accents, spacing and punctuation. An equal name is refused with the existing genre; a near name is refused with the existing name unless the artist confirms it is different; a name whose words all appear in existing genre names is published at once and added to the artist's profile; anything else waits for a strict administrator, who approves with reviewed names, merges into an existing genre or rejects with a note. Pending suggestions are visible to their author.",
+      "domain": "TAX",
+      "critical": false,
+      "actors": [
+        "Artist",
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "genre_suggestion table and guard trigger from 2026-11-21_location_genre_filters.sql",
+        "Artist or administrator role with coherent grants"
+      ],
+      "inputs": [
+        "POST /genres/suggestions/check",
+        "POST /genres/suggestions",
+        "GET /genres/suggestions/mine",
+        "GET /admin/genre-suggestions",
+        "POST /admin/genre-suggestions/{suggestionId}/approve",
+        "POST /admin/genre-suggestions/{suggestionId}/reject",
+        "POST /admin/genre-suggestions/{suggestionId}/merge"
+      ],
+      "state": {
+        "boundary": "formal/system/taxonomy-filters.md",
+        "genre_suggestion.status": [
+          "pending",
+          "approved",
+          "rejected",
+          "merged"
+        ]
+      },
+      "allowedTransitions": [
+        "new -> approved (automatic, all checks pass)",
+        "new -> pending",
+        "pending -> approved",
+        "pending -> rejected",
+        "pending -> merged"
+      ],
+      "forbiddenTransitions": [
+        "approved/rejected/merged -> any",
+        "Creating a genre whose normalized name equals an existing one",
+        "Changing a suggestion's author or submitted name",
+        "Two pending suggestions with the same normalized key",
+        "Rejecting without a note"
+      ],
+      "effects": [
+        "Published genre row with both names",
+        "Membership on the suggesting artist's profile when approved or merged"
+      ],
+      "authorization": "Suggestions require Artist, Artista or Admin with coherent grants; the queue and decisions require strict administrator access.",
+      "privacy": "The queue shows the suggesting artist's public display name only.",
+      "concurrency": "Decisions lock the suggestion row; the partial unique index shares a concurrent identical pending suggestion; the trigger rejects late transitions.",
+      "idempotency": "A repeated identical suggestion returns the pending one; repeated decisions are refused with 409.",
+      "failure": "Unsafe or out-of-range names 400; duplicates and probable typos 409 with the existing genre; more than 10 pending or 20 per day 429.",
+      "recovery": "Use the offered existing genre, confirm a distinct genre for review, or suggest again after rejection.",
+      "observability": "Verdict, cleaned names and corrections before submission; pending chips; admin queue with reasons.",
+      "source": "tdf-hq/src/TDF/Taxonomy/GenreSuggestion.hs and tdf-hq/src/TDF/Server/Taxonomy.hs",
+      "contract": "formal/system/taxonomy-filters.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Taxonomy/GenreSuggestion.hs",
+        "tdf-hq/src/TDF/Server/Taxonomy.hs",
+        "tdf-hq/src/TDF/API/Taxonomy.hs",
+        "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+        "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq-ui/src/components/taxonomyFilters/GenreSuggestionDialog.tsx",
+        "tdf-hq-ui/src/pages/GenreSuggestionsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-mobile/app/editArtistProfile.tsx",
+        "tdf-mobile/src/features/taxonomyFilters/GenreSuggestionModal.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs",
+        "scripts/test-community-search.py",
+        "tdf-hq/test/Spec.hs",
+        "e2e/web/taxonomy-filters.spec.mjs",
+        "tdf-mobile/__tests__/GenreSuggestionModal.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Hspec cases for casing, duplicates, typos, review and approval; every endpoint exercised against a locally built server on migrated PostgreSQL 16 including the transition trigger; Playwright admin approval fixture.",
+      "ambiguity": [
+        "Unknown words always go to review: there is no external dictionary, so the vocabulary is the existing genre names.",
+        "Translation quality between the two names is judged by the same vocabulary check."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local compiled-server and PostgreSQL evidence; hosted CI and production verification pending."
+      },
+      "authority": "approved by user",
+      "property": "No two published genres share a normalized name; a suggestion is decided at most once; only checked or reviewed names are published.",
+      "verification": "Hspec GenreSuggestionSpec; local HTTP smoke of check/submit/mine/approve/reject/merge and trigger refusal; Playwright admin approval.",
+      "evidence": "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs; e2e/web/taxonomy-filters.spec.mjs; formal/system/taxonomy-filters.md"
+    },
+    {
       "id": "MEDIA-MUSIC-CONTINUATION-001",
       "title": "Web player continues an ended queue with tracks of recommended artists",
       "statement": "With VITE_PLAYER_SIMILAR_CONTINUATION_ENABLED set to true at build time, when playback reaches the end of a non-repeating queue of a signed-in listener the web player reads GET /fans/me/recommendations?limit=12 and, in the returned order, the newest public release of each artist, and appends at most five tracks: the first playable track of each artist whose recording is not already queued, one per artist. Playback moves to the first appended track. If nothing can be appended, a read fails, or the queue changed meanwhile, the player pauses at the end of the queue as before; if the listener paused, played, selected a track, went back, loaded a new track or started the radio while it loaded, the player stays as that intent left it. With the flag off or for an anonymous listener the player is unchanged.",
       "domain": "MEDIA",
-      "authority": "Owner instruction of 2026-11-22 to continue with the recommended defaults. The target (the web player queue instead of TDF.ServerRadio, which has no artist to order by) and the constants 12 and 5 are the implementer's defaults and were not approved item by item.",
+      "authority": "On 2026-11-24 the feature owner approved the web player behavior tested at 2931f1306, including the default-off rollout, discovery-only recommendations, a request of up to 12 artists and a continuation of up to five tracks.",
       "source": "formal/system/queue-continuation.md",
       "contract": "tdf-hq-ui/src/player/queueContinuation.ts",
       "property": "plan = planQueueContinuation(queue, candidates, 5) where candidates are in the server order. For every planned track t: t belongs to a candidate artist; the artists of plan are a subsequence of the candidate order without repetition; key(t) is not the key of a queued track and no two planned tracks share a key; |plan| <= 5; plan is a function of (queue, candidates). continue(queue, listener, flag) = flag /\\ listener signed in /\\ queue non-empty /\\ repeat = off /\\ nextQueueIndex(queue) < 0.",
@@ -29934,7 +30176,6 @@
       "status": "specified and implemented",
       "confidence": "High for the pure planning function (tested) and the model (proved). Medium for the correspondence between them: review plus random tests of the same invariants. Component tests cover disabled and anonymous listeners, unresolved identity, successful continuation and cancellation. Browser coverage includes the signed-in transition to a recommended recording.",
       "ambiguity": [
-        "The task names TDF.ServerRadio for radio sequencing; radio streams have no artist, so the web player queue was chosen by the implementer. The owner has not confirmed this target.",
         "The exclusions of the server response hold as of that response; an artist hidden between the recommendation read and the release read is not re-checked by the client, and whether the release list route hides releases of an unlisted artist was not examined.",
         "The model lets the client take any eligible recording of an artist; the code takes the first. Determinism is tested, not proved.",
         "The web workspace has no property-testing library; the random cases come from a seeded generator, not QuickCheck.",

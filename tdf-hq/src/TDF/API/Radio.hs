@@ -5,6 +5,7 @@ module TDF.API.Radio
   ( RadioAPI
   ) where
 
+import           Data.Aeson    (Value)
 import           Data.Int      (Int64)
 import           Data.Text     (Text)
 import           Data.UUID     (UUID)
@@ -22,7 +23,20 @@ type RadioAPI =
    :<|> "streams"
         :> QueryParam "countryId" UUID
         :> QueryParam "genreId" UUID
+        -- TAX-FILTER-001 shared filters. Stations only carry a country, so a
+        -- selected region or city narrows to that region's or city's country.
+        :> QueryParams "countryIds" UUID
+        :> QueryParams "regionIds" UUID
+        :> QueryParams "cityIds" UUID
+        :> QueryParams "genreIds" UUID
         :> Get '[JSON] [RadioStreamDTO]
+   :<|> "streams"
+        :> "facets"
+        :> QueryParams "countryIds" UUID
+        :> QueryParams "regionIds" UUID
+        :> QueryParams "cityIds" UUID
+        :> QueryParams "genreIds" UUID
+        :> Get '[JSON] Value
    :<|> "streams"
         :> "active"
         :> ReqBody '[JSON] RadioStreamUpsert

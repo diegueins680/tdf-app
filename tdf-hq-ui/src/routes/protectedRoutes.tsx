@@ -31,6 +31,7 @@ const CourseRegistrationsAdminPage = lazy(() => import('../pages/CourseRegistrat
 const DocsPage = lazy(() => import('../pages/DocsPage'));
 const DirectoryManagePage = lazy(() => import('../pages/DirectoryManagePage'));
 const DirectoryAdminPage = lazy(() => import('../pages/DirectoryAdminPage'));
+const GenreSuggestionsAdminPage = lazy(() => import('../pages/GenreSuggestionsAdminPage'));
 const EstebanMunozReportPage = lazy(() => import('../pages/EstebanMunozReportPage'));
 const RecordsIngestionPage = lazy(() => import('../pages/RecordsIngestionPage'));
 const EventDiscoverySourcesPage = lazy(() => import('../pages/EventDiscoverySourcesPage'));
@@ -124,6 +125,7 @@ export function renderProtectedRoutes() {
         <Route path="/musica/biblioteca" element={<MusicLibraryPage />} />
         <Route path="/mis-clasificados" element={<DirectoryManagePage />} />
         <Route path="/admin/directorio" element={<DirectoryAdminPage />} />
+        <Route path="/admin/generos" element={<GenreSuggestionsAdminPage />} />
         <Route path="/mi-profesor" element={<TeacherPortalPage />} />
         <Route path="/notificaciones/:notificationId" element={<NotificationPage />} />
         <Route path="/perfil/:partyId" element={<PublicProfilePage />} />

@@ -1,10 +1,7 @@
 # Queue continuation from similar artists (MEDIA-MUSIC-CONTINUATION-001)
 
 Status: second of the three changes that reuse the artist similarity
-(COMMUNITY-ARTIST-SIMILARITY-001, [artist-similarity.md](artist-similarity.md)). The
-owner asked to continue with the recommended defaults on 2026-11-22; the target and the
-constants below are those defaults and were not approved item by item. Off by default
-behind `VITE_PLAYER_SIMILAR_CONTINUATION_ENABLED`.
+(COMMUNITY-ARTIST-SIMILARITY-001, [artist-similarity.md](artist-similarity.md)). On 2026-11-24 the feature owner approved the web player target, discovery-only artist recommendations, the 12-artist request limit, the five-track continuation limit and the default-off rollout tested at `2931f1306`. The build flag is `VITE_PLAYER_SIMILAR_CONTINUATION_ENABLED`.
 
 ## Why this target
 
