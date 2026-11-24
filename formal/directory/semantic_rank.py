@@ -68,7 +68,8 @@ REGIONS = (
     (SEMANTIC, 'similaritySql :: Text', '-- | Derive the semantic statement from today', 'PIN_SIMILARITY'),
 )
 PINS = {
-    'PIN_SEARCH': '68cc5f6bb821bb6d896207ff0f0dcc3cfe842f7c37f0e94a6649bb827929cc18',
+    # TAX-FILTER-001 adds the eligibility predicate before ranking. Tier, score and tie-break expressions are unchanged.
+    'PIN_SEARCH': '350f282b9d1ab362e6b8afdab3b41060322f97fe661c6e8c9873aa5409b7474f',
     'PIN_SIMILARITY': 'e9e3515e1905875a48baae99c2c602325e0a7ee441d8c2d6f59ebe4445e9fe27',
 }
 NUM = r'(\d*\.?\d+)'

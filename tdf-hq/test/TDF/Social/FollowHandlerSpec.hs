@@ -2478,6 +2478,7 @@ socialEventUpdateHandlerFor user =
             :<|> _finance ->
             case eventsServer of
                 _listEvents
+                    :<|> _eventFacets
                     :<|> _createEvent
                     :<|> _getEvent
                     :<|> updateEventHandler
@@ -2494,6 +2495,7 @@ socialEventDeleteHandlerFor user =
         eventsServer :<|> _ ->
             case eventsServer of
                 _listEvents
+                    :<|> _eventFacets
                     :<|> _createEvent
                     :<|> _getEvent
                     :<|> _updateEvent
@@ -2511,6 +2513,7 @@ socialEventImageUploadHandlerFor user =
         eventsServer :<|> _ ->
             case eventsServer of
                 _listEvents
+                    :<|> _eventFacets
                     :<|> _createEvent
                     :<|> _getEvent
                     :<|> _updateEvent
@@ -2559,7 +2562,9 @@ socialEventListHandlerFor user =
     case socialEventsServer user of
         eventsServer :<|> _ ->
             case eventsServer of
-                listEventsHandler :<|> _ -> listEventsHandler
+                -- TAX-FILTER-001 taxonomy lists are empty in these legacy cases.
+                listEventsHandler :<|> _ -> \city scope startAfter eventType state artist venue limit offset ->
+                    listEventsHandler city scope startAfter eventType state artist venue limit offset [] [] [] []
 
 socialEventGetHandlerFor
     :: AuthedUser
@@ -2581,6 +2586,7 @@ socialEventGetHandlerFor user =
             :<|> _finance ->
             case eventsServer of
                 _listEvents
+                    :<|> _eventFacets
                     :<|> _createEvent
                     :<|> getEventHandler
                     :<|> _updateEvent

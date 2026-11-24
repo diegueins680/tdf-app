@@ -187,6 +187,9 @@ import Data.Time (UTCTime, diffUTCTime, getCurrentTime, utctDay)
 import Data.Time.Format (defaultTimeLocale, formatTime)
 import Data.Time.Format.ISO8601 (iso8601ParseM)
 import qualified Data.UUID as UUID
+import Data.UUID (UUID)
+import TDF.Server.SocialEventsTaxonomy (eventTaxonomyClause, eventTaxonomyFacets, taxonomyFilterError)
+import TDF.Taxonomy.Filter (TaxonomyFilter, emptyTaxonomyFilter, mkTaxonomyFilter)
 import qualified Data.UUID.V4 as UUIDV4
 import System.Directory (copyFile, createDirectoryIfMissing, doesDirectoryExist, getFileSize, removePathForcibly)
 import System.Environment (lookupEnv)
@@ -2319,17 +2322,33 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
     eventsServer :: ServerT EventsRoutes AppM
     eventsServer =
         listEvents
+            :<|> eventFacets
             :<|> createEvent
             :<|> getEvent
             :<|> updateEvent
             :<|> uploadEventImage
             :<|> deleteEvent
 
-    listEvents :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [EventDTO]
-    listEvents mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId mLimit mOffset = do
+    listEvents :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> [UUID] -> [UUID] -> [UUID] -> [UUID] -> AppM [EventDTO]
+    listEvents mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId mLimit mOffset countryIds regionIds cityIds genreIds = do
         Env{..} <- ask
+        taxonomy <- either (throwError . taxonomyFilterError) pure (mkTaxonomyFilter countryIds regionIds cityIds genreIds)
         limit <- resolveLimit 200 500 mLimit
         offset <- either throwError pure (validateSocialEventsListOffset mOffset)
+        rows <- selectListedEvents mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId taxonomy limit offset
+        loadSocialEventListDTOs (defaultCurrency envConfig) envPool rows
+
+    -- TAX-FILTER-001 counts over the first 500 events the list would return without its own selection.
+    eventFacets :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> [UUID] -> [UUID] -> [UUID] -> [UUID] -> AppM Aeson.Value
+    eventFacets mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId countryIds regionIds cityIds genreIds = do
+        Env{..} <- ask
+        taxonomy <- either (throwError . taxonomyFilterError) pure (mkTaxonomyFilter countryIds regionIds cityIds genreIds)
+        rows <- selectListedEvents mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId emptyTaxonomyFilter 500 0
+        liftIO $ runSqlPool (eventTaxonomyFacets taxonomy [fromSqlKey (entityKey row) | row <- rows]) envPool
+
+    selectListedEvents :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> TaxonomyFilter -> Int -> Int -> AppM [Entity SocialEvent]
+    selectListedEvents mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId taxonomy limit offset = do
+        Env{..} <- ask
         scope <- either throwError pure (validateEventListScope mScope)
         eventTypeFilter <- traverse
             (\rawId -> liftIO (runSqlPool (loadKnownEventTypeId rawId) envPool) >>= either throwError pure)
@@ -2394,10 +2413,11 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 "EXISTS (SELECT 1 FROM event_artist discovery_artist WHERE discovery_artist.event_id=social_event.id AND discovery_artist.artist_id IN ("
                     <> T.intercalate "," (replicate (length artistKeys) "?") <> "))"
             (cityClause, cityValues) = databaseCityFilter
-            searchClauses = filter (not . T.null) [cityClause, artistClause]
+            (taxonomyClause, taxonomyValues) = eventTaxonomyClause taxonomy
+            searchClauses = filter (not . T.null) [cityClause, artistClause, taxonomyClause]
             discoveryFilter =
                 (T.intercalate " AND " (map (\clause -> "(" <> clause <> ")") searchClauses),
-                 cityValues ++ map toPersistValue artistKeys)
+                 cityValues ++ map toPersistValue artistKeys ++ taxonomyValues)
         let filters =
                 startFilter
                     ++ cityFilter
@@ -2416,7 +2436,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                         else selectVisibleSocialEvents filters discoveryFilter dateOrder limit offset
                     )
                     envPool
-        loadSocialEventListDTOs (defaultCurrency envConfig) envPool rows
+        pure rows
 
     resolveSubscribedEventIds ::
         [Entity EventCity] ->

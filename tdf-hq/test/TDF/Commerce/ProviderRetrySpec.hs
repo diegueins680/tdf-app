@@ -5205,7 +5205,7 @@ ticketEligibilityUpdate pool eventKey change = do
 ticketEligibilityEventUpdate :: AuthedUser -> Text -> TD.EventUpdateDTO -> ReaderT Env Handler TD.EventDTO
 ticketEligibilityEventUpdate user = case Social.socialEventsServer user of
   events :<|> _ -> case events of
-    _ :<|> _ :<|> _ :<|> updateEvent :<|> _ -> updateEvent
+    _ :<|> _ :<|> _ :<|> _ :<|> updateEvent :<|> _ -> updateEvent
 
 ticketTierCapacitySpec :: SpecWith ConnectionPool
 ticketTierCapacitySpec = describe "legacy ticket inventory mutation concurrency" $ do

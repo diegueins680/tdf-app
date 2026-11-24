@@ -17,9 +17,16 @@ if sys.argv[1:] and (not emit_sql or len(sys.argv) > 3):
 if emit_sql and len(sys.argv) == 3:
     revision = sys.argv[2]
     assert re.fullmatch(r'[0-9a-f]{40}', revision), 'Immutable source revision required'
-    source = subprocess.check_output(['git', 'show', revision + ':tdf-hq/src/TDF/Server/Directory.hs'], cwd=root, text=True)
-else:
-    source = (root / 'tdf-hq/src/TDF/Server/Directory.hs').read_text()
+
+def read_source(path):
+    if emit_sql and len(sys.argv) == 3:
+        return subprocess.check_output(['git', 'show', revision + ':' + path], cwd=root, text=True)
+    return (root / path).read_text()
+
+source = read_source('tdf-hq/src/TDF/Server/Directory.hs')
+# Historical revisions kept the filter fragments in the handler or predate them.
+if 'directoryTaxonomyFacetsSql' in source and not re.search(r'^directoryTaxonomyFacetsSql\s*=', source, re.M):
+    source += '\n' + read_source('tdf-hq/src/TDF/Taxonomy/Filter.hs')
 if not emit_sql:
     url = os.environ['TDF_DISCOVERY_TEST_DATABASE_URL']
     parsed = urlparse(url)
@@ -29,7 +36,7 @@ def expression(name):
     start = name + (' sponsoredOnly' if name == 'searchSql' else '') + ' ='
     block = source.split(start, 1)[1].split('\n\n', 1)[0]
     block = block.replace('(if sponsoredOnly then "TRUE " else "FALSE ")', '"FALSE "')
-    tokens = re.findall(r'"(?:[^"\\]|\\.)*"|\b(?:searchDocumentsSql|directoryVisibleEventDocumentClause|directoryDerivedListingDedupClause|directorySourceProfileSql|directoryFilterClause|directoryEntityTypeClause|directorySearchInputSql)\b', block)
+    tokens = re.findall(r'"(?:[^"\\]|\\.)*"|\b(?:searchDocumentsSql|directoryVisibleEventDocumentClause|directoryDerivedListingDedupClause|directorySourceProfileSql|directoryFilterClause|directoryTaxonomyClause|directoryTaxonomyFacetsSql|directoryEntityTypeClause|directorySearchInputSql)\b', block)
     return ''.join(json.loads(token) if token.startswith('"') else expression(token) for token in tokens)
 
 sql = expression('searchSql')
@@ -64,12 +71,18 @@ INSERT INTO artist_profile(artist_party_id,slug,bio,city,hero_image_url,created_
 SELECT directory_refresh_profile_search(id) FROM directory_profile WHERE subject_party_id BETWEEN 990002 AND 990006;
 """
 
-def query(q='', entity=None, kind=None, cursor=None, limit=20, facets=False, changes='', intent=None):
+def uuid_array(values):
+    return '{' + ','.join(values) + '}'
+
+def query(q='', entity=None, kind=None, cursor=None, limit=20, facets=False, changes='', intent=None,
+          countries=(), regions=(), cities=(), genres=()):
     # Positional inputs: q, entity_type, city, latitude, longitude, radius, profession, service,
     # instrument, genre, remote_only, available_only, date_from, date_to, profile_kind, intent (ADR 0134),
-    # then the suppressed status, cursor and limit.
-    params = [q, entity, None, None, None, None, None, None, None, None, None, None, None, None, kind, intent, 'suppressed', cursor, limit]
-    if facets: params = params[:-2]
+    # the TAX-FILTER-001 country, region, city and genre arrays, then the suppressed status, cursor and limit.
+    params = [q, entity, None, None, None, None, None, None, None, None, None, None, None, None, kind, intent,
+              uuid_array(countries), uuid_array(regions), uuid_array(cities), uuid_array(genres),
+              'suppressed', cursor, limit]
+    if facets: params = params[:-2] + ['suppressed']  # the taxonomy facet base repeats the visibility clause
     chunks = (expression('facetsSql') if facets else sql).split('?')
     assert len(chunks) == len(params) + 1
     def quote(value):
@@ -155,3 +168,49 @@ for image in ['https://cdn.example.test/linked-artist.jpg', None]:
     assert row['imageUrl'] == image, row
     assert not any(row['id'] in ('artist-990003', 'artist-990007') for row in rows), rows
 print('PASS: arbitrary artist images, replacement/removal, linked preview refresh and private-image suppression')
+
+# TAX-FILTER-001: shared location and genre filters on community search.
+def ids(statement):
+    result = subprocess.run(['psql', url, '-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-c', statement], text=True, capture_output=True)
+    if result.returncode:
+        raise AssertionError(result.stderr)
+    return result.stdout.split()
+
+latin, cumbia, rock = (ids(f"SELECT id FROM genre WHERE code='{code}'")[0] for code in ('latin', 'cumbia', 'rock'))
+ecuador = ids("SELECT id FROM country_reference WHERE alpha2='EC'")[0]
+pichincha, guayas = (ids(f"SELECT id FROM subdivision_reference WHERE code='{code}'")[0] for code in ('EC-P', 'EC-G'))
+quito, guayaquil = (ids(f"SELECT id FROM city_reference WHERE code='{code}'")[0] for code in ('quito-ec-p', 'guayaquil-ec-g'))
+taxonomy = f"""
+UPDATE artist_profile SET city='Guayaquil', country_code='EC' WHERE artist_party_id=990008;
+UPDATE artist_profile SET city=NULL WHERE artist_party_id=990010;
+INSERT INTO artist_profile_genre_membership(artist_party_id,genre_id,sort_order,created_at) VALUES
+(990001,'{cumbia}',0,now()),(990009,'{rock}',0,now()),(990008,'{latin}',0,now());
+"""
+def titles(**kwargs):
+    return {row['title'] for row in query('', 'artist', limit=50, changes=taxonomy, **kwargs)}
+
+assert {'Lúna', 'Fotoluz'} <= titles(genres=[latin]) and 'Fotoluz Extended' not in titles(genres=[latin]), 'a parent genre must include its subgenres'
+assert titles(genres=[cumbia]) == {'Lúna'}, titles(genres=[cumbia])
+unknown_genre = '88cefd3d-a9ee-4d9a-8e78-4ba1b149cddb'
+assert not titles(genres=[unknown_genre]), 'a shared link with an unavailable genre must not return unrelated artists'
+assert titles(genres=[unknown_genre, cumbia]) == {'Lúna'}, 'a known genre still matches alongside an unavailable selection'
+assert titles(genres=[cumbia, rock]) == {'Lúna', 'Fotoluz Extended'}, 'genres are ORed'
+assert 'Fotoluz' in titles(regions=[guayas]) and 'Lúna' not in titles(regions=[guayas]), 'region comes from the city'
+assert 'Lúna' in titles(cities=[quito, guayaquil]) and 'Fotoluz' in titles(cities=[quito, guayaquil]), 'cities are ORed'
+assert titles(genres=[cumbia], cities=[guayaquil]) == set(), 'dimensions are ANDed'
+assert 'Fotoluz Blank' not in titles(countries=[ecuador]) and 'Fotoluz Blank' not in titles(regions=[pichincha]), 'items without a location are hidden'
+assert 'Fotoluz Blank' in titles(), 'no filter keeps every item'
+facets = query('', 'artist', facets=True, changes=taxonomy, cities=[quito])[0]['taxonomy']
+genre_counts = {item['id']: item['count'] for item in facets['genres']}
+city_counts = {item['id']: item['count'] for item in facets['cities']}
+assert genre_counts.get(latin) == 1 and genre_counts.get(cumbia) == 1, 'genre counts apply the city filter and roll up to the parent'
+assert city_counts.get(guayaquil) == 1 and city_counts.get(quito, 0) >= 1, 'city counts ignore the city selection itself'
+print('PASS: TAX-FILTER-001 genre closure, OR within / AND across, region from city, missing values hidden, facet counts')
+
+# A checked name in a non-Latin script must also pass the storage constraint.
+assert ids("""BEGIN;
+INSERT INTO party(id, display_name, is_org, created_at) VALUES (990001, 'Genre fixture', false, now());
+INSERT INTO genre_suggestion(suggested_by_party_id, submitted_name, name_es, name_en, normalized_key)
+VALUES (990001, '日本ロック', '日本ロック', 'Japanese rock', '日本ロック') RETURNING normalized_key;
+ROLLBACK;""") == ['日本ロック']
+print('PASS: international genre suggestion persists with its validated key')
