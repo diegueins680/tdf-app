@@ -143,6 +143,8 @@ export default function EventRsvpControls({
   const labels = copyFor(locale);
   const [showOnProfile, setShowOnProfile] = useState(session?.preferences?.showEventRsvpsOnProfile ?? true);
   const [feedback, setFeedback] = useState<{ severity: 'success' | 'info' | 'error'; message: string } | null>(null);
+  // The plain link is the fallback for a browser that can neither share nor copy; it stays out of the way otherwise.
+  const [shareFailed, setShareFailed] = useState(false);
   const [showSharePrompt, setShowSharePrompt] = useState(false);
   const [mutationPending, setMutationPending] = useState(false);
   const resumedNonce = useRef<string | null>(null);
@@ -355,6 +357,7 @@ export default function EventRsvpControls({
         captureGrowthEvent(analytics, 'event_share_cancelled', { platform: 'web', event_id: eventId, method });
       } else {
         setFeedback({ severity: 'error', message: labels.shareError });
+        setShareFailed(true);
         captureGrowthEvent(analytics, 'event_share_failed', { platform: 'web', event_id: eventId, method });
       }
     }
@@ -365,6 +368,8 @@ export default function EventRsvpControls({
   const loading = Boolean(session?.partyId && mine.isLoading);
   const busy = pending || loading;
   const summaryValue = summary.data ?? initialSummary ?? { rsvpAcceptedCount: 0, rsvpMaybeCount: 0 };
+  const nativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const directShare = !nativeShare || shareFailed;
   const whatsapp = publicShareEligible
     ? `https://wa.me/?text=${encodeURIComponent(`${buildEventShareMessage({ eventId, title, start, timezone, venue, status: current === 'declined' ? null : current, locale })} ${canonicalEventUrl(window.location.origin, eventId, { utm_source: 'tdf_web', utm_medium: 'whatsapp', utm_campaign: 'event_rsvp' })}`)}`
     : undefined;
@@ -421,12 +426,15 @@ export default function EventRsvpControls({
         label={labels.profile}
       />
       <Typography variant="caption" color="text.secondary">{labels.privacyHint}</Typography>
+      {showSharePrompt && publicShareEligible && <Alert severity="success">{labels.sharePrompt}</Alert>}
       <Stack direction="row" gap={1} flexWrap="wrap">
-        <Button startIcon={<ShareIcon />} disabled={!publicShareEligible} onClick={() => { void share('native'); }}>{labels.share}</Button>
-        <Button startIcon={<ContentCopyIcon />} disabled={!publicShareEligible} onClick={() => { void share('copy'); }}>{labels.copy}</Button>
-        {whatsapp && <Button component="a" href={whatsapp} target="_blank" rel="noreferrer" startIcon={<WhatsAppIcon />} onClick={() => captureGrowthEvent(analytics, 'event_share_started', { platform: 'web', event_id: eventId, method: 'whatsapp' })}>WhatsApp</Button>}
+        {/* One share control where the device has a share sheet (it already offers copy and WhatsApp);
+            copy and WhatsApp where it does not, or after the sheet failed. */}
+        {nativeShare && <Button startIcon={<ShareIcon />} disabled={!publicShareEligible} onClick={() => { void share('native'); }}>{labels.share}</Button>}
+        {directShare && <Button startIcon={<ContentCopyIcon />} disabled={!publicShareEligible} onClick={() => { void share('copy'); }}>{labels.copy}</Button>}
+        {directShare && whatsapp && <Button component="a" href={whatsapp} target="_blank" rel="noreferrer" startIcon={<WhatsAppIcon />} onClick={() => captureGrowthEvent(analytics, 'event_share_started', { platform: 'web', event_id: eventId, method: 'whatsapp' })}>WhatsApp</Button>}
       </Stack>
-      {!compact && publicUrl && (
+      {!compact && publicUrl && shareFailed && (
         <TextField
           label={labels.manualLink}
           value={publicUrl}
@@ -448,7 +456,6 @@ export default function EventRsvpControls({
           {labels.discard}
         </Button>
       )}
-      {showSharePrompt && <Alert severity="success" action={<Button color="inherit" size="small" onClick={() => { void share('native'); }}>{labels.share}</Button>}>{labels.sharePrompt}</Alert>}
       {feedback && <Alert severity={feedback.severity} role="status" aria-live="polite" onClose={() => setFeedback(null)}>{feedback.message}</Alert>}
     </Stack>
   </Box>;

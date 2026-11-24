@@ -6849,3 +6849,11 @@ test('current My tickets mirror matches its generator and rejects the prior main
     await fs.rm(temporary, { recursive: true, force: true });
   }
 });
+
+test('sidebar and tab lists retain their six individually reviewed decisions', async () => {
+  const batch = 'cognitive-load-owner-decisions-20261116';
+  const published = await integrationParent('f5dd1736c0d01605e5c7e17914b065bbc782119b', DECISIONS_FILE);
+  const reviewed = published.decisions.filter(row => row.reviewBatch === batch);
+  assert.equal(reviewed.length, 6);
+  assert.deepEqual(readExpandedDecisions(integrationRoot).decisions.filter(row => row.reviewBatch === batch), reviewed);
+});
