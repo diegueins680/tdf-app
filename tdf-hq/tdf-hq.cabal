@@ -126,6 +126,7 @@ library
     TDF.Commerce.ProviderCapabilityStore
     TDF.Commerce.ProviderExecutionStore
     TDF.Commerce.ProviderReconciliation
+    TDF.Commerce.DatafastRecovery
     TDF.Commerce.ProviderRuntimeConfig
     TDF.Commerce.DatafastConfig
     TDF.Commerce.DatafastClientIP

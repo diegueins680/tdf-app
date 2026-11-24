@@ -40,7 +40,7 @@ import qualified Network.Socket as Socket
 import           Numeric (readHex)
 import qualified Network.HTTP.Client as HC
 import           Servant (Handler, NoContent, ServerError, errHTTPCode, errBody, errHeaders, runHandler, getResponse, getHeaders, serve, hoistServer, (:<|>)(..))
-import           System.Environment (getEnvironment, lookupEnv, setEnv, unsetEnv)
+import           System.Environment (getExecutablePath, getEnvironment, lookupEnv, setEnv, unsetEnv)
 import qualified System.Exit as Exit
 import qualified System.Process as Process
 import           System.IO.Temp (withSystemTempDirectory)
@@ -451,6 +451,7 @@ spec = do
         datafastClientPreflightSpec
         ticketLedgerSpec
         paymentSnapshotRestoreSpec
+        datafastRecoveryWorkerSpec
         ticketAllocationSpec
         legacyStripeRefundSpec
         ticketTierCapacitySpec
@@ -2375,6 +2376,97 @@ paymentSnapshotRestoreSpec = describe "payment snapshot restore laboratory" $
       once `shouldNotBe` before
       apply `shouldReturn` Right False
       runSqlPool (captureSnapshot payment) pool `shouldReturn` once
+
+-- The child starts after pg_restore. Only the synthetic provider keeps the
+-- report; the worker must discover the original binding in the database.
+datafastRecoveryWorkerSpec :: SpecWith ConnectionPool
+datafastRecoveryWorkerSpec = describe "Datafast recovery across process loss" $ do
+  childFile <- runIO (lookupEnv "TDF_DATAFAST_LAB_REPORT")
+  case childFile of
+    Just reportFile -> it "runs the restored worker" $ \pool -> do
+      _ <- isolatedRecoveryUrl
+      report <- BL.readFile reportFile >>= either fail pure . A.eitherDecode
+      let (reference, payload) = report :: (Text,A.Value)
+          fetch request = do
+            Adapter.arMethod request `shouldBe` Adapter.AdapterGet
+            Adapter.arOperation request `shouldBe` Adapter.AdapterQuery
+            Adapter.arBody request `shouldBe` Nothing
+            Adapter.arUrl request `shouldBe` ("https://test.oppwa.com/v1/query?entityId=synthetic-provider-retry-merchant&merchantTransactionId=" <> reference)
+            pure (Right payload)
+      counts <- concurrently (replicate 4 (runQueryTick pool fetch))
+      sum counts `shouldBe` 1
+      runQueryTick pool noQuery `shouldReturn` 0
+    Nothing -> forM_ ["uuid","legacy","reversed","wrong-amount","expired"] $ \scenario ->
+      it ("restores and verifies the " <> scenario <> " report") $ \pool -> withCompletionEnvironment $ do
+        url <- isolatedRecoveryUrl
+        creation <- newCheckout pool
+        payment <- captureFixtureFromCheckout creation "payment" Checkout.AttemptProcessing pool Checkout.ProviderDatafast
+        let attempt = Checkout.paymentAttemptReferenceId (Checkout.vpAttempt payment)
+            checkout = Checkout.checkoutReferenceId (Checkout.vpCheckout payment)
+            isLegacy = scenario == "legacy"
+            reference = if isLegacy then Checkout.vpOrderReference payment else attempt
+            row kind = A.object ["id" A..= ("synthetic-reported-" <> attempt),"paymentType" A..= (kind :: Text),
+              "amount" A..= (if scenario == "wrong-amount" then "125.16" else "125.15" :: Text),
+              "currency" A..= ("USD" :: Text),"merchantTransactionId" A..= reference,
+              "checkoutId" A..= Checkout.vpProviderResource payment,
+              "result" A..= A.object ["code" A..= ("000.100.112" :: Text)]]
+            records = if scenario == "reversed" then [row "DB",row "RF"] else [row "DB"]
+        runSqlPool (rawExecute
+          "INSERT INTO commerce_datafast_recovery_query(binding_id,attempts,next_query_at,state,outcome)\
+          \ SELECT id,1,now(),'review','fixture' FROM commerce_provider_binding WHERE provider='datafast'\
+          \ AND resource_type='checkout' AND payment_attempt_id<>?::uuid ON CONFLICT DO NOTHING"
+          [PersistText attempt]) pool
+        when isLegacy $ runSqlPool (rawExecute
+          "INSERT INTO commerce_datafast_recovery_query SELECT id,1,now()-interval '1 second','pending','unconfirmed'\
+          \ FROM commerce_provider_binding WHERE resource_type='checkout' AND payment_attempt_id=?::uuid"
+          [PersistText attempt]) pool
+        when (scenario == "expired") $ runSqlPool (rawExecute
+          "UPDATE commerce_checkout_session SET status='expired' WHERE id=?::uuid" [PersistText checkout]) pool
+        setRecoveryFlag pool True
+        resetQueryBudget pool Checkout.ProviderDatafast
+        withSystemTempDirectory "tdf-datafast-process-loss-" $ \dir -> do
+          let dump = dir <> "/before.dump"
+              reportFile = dir <> "/provider.json"
+          callIsolatedPostgresTool "pg_dump" ["-Fc","-f",dump,"--dbname",url]
+          BL.writeFile reportFile (A.encode (reference,records))
+          when (scenario `elem` ["uuid","legacy"]) $
+            runSqlPool (Checkout.recordVerifiedPaymentOrReconcile payment) pool `shouldReturn` Right True
+          destroyAllResources pool
+          callIsolatedPostgresTool "pg_restore" ["--clean","--if-exists","--exit-on-error","--no-owner","--dbname",url,dump]
+          destroyAllResources pool
+          exe <- getExecutablePath
+          original <- getEnvironment
+          let env = [("TDF_DATAFAST_LAB_REPORT",reportFile),("DATAFAST_RESTORE_RECOVERY_ENABLED","true"),
+                     ("COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED","true"),("COMMERCE_CHECKOUT_ENV","sandbox"),
+                     ("PLACETOPAY_LOGIN",""),("PAYPHONE_TOKEN","")]
+              child = (Process.proc exe ["--match","runs the restored worker","--fail-on=empty","+RTS","-N2","-RTS"])
+                {Process.env=Just (env <> filter (\(k,_) -> k `notElem` map fst env) original)}
+          (code,output,errors) <- Process.readCreateProcessWithExitCode child ""
+          unless (code == Exit.ExitSuccess) $ expectationFailure (output <> errors)
+          results <- runSqlPool (rawSql
+            "SELECT c.paid_minor,q.state,(SELECT count(*) FROM commerce_receipt WHERE checkout_id=c.id),\
+            \ (SELECT count(*) FROM commerce_ledger_transaction WHERE source_id=a.id::text AND status='posted'),\
+            \ (SELECT count(*) FROM event_ticket WHERE order_ref_id=r.order_id)\
+            \ FROM commerce_checkout_session c JOIN commerce_payment_attempt a ON a.checkout_id=c.id\
+            \ JOIN commerce_provider_binding b ON b.payment_attempt_id=a.id AND b.resource_type='checkout'\
+            \ JOIN commerce_datafast_recovery_query q ON q.binding_id=b.id\
+            \ JOIN event_ticket_checkout_runtime r ON r.checkout_id=c.id WHERE c.id=?::uuid"
+            [PersistText checkout]) pool :: IO [(Single Int64,Single Text,Single Int64,Single Int64,Single Int64)]
+          if scenario `elem` ["uuid","legacy"]
+            then results `shouldBe` [(Single 12515,Single "completed",Single 1,Single 1,Single 1)]
+            else results `shouldBe` [(Single 0,Single "review",Single 0,Single 0,Single 0)]
+        setRecoveryFlag pool False
+
+isolatedRecoveryUrl :: IO String
+isolatedRecoveryUrl = do
+  enabled <- lookupEnv "TDF_RECOVERY_RESTORE_LAB"
+  unless (enabled == Just "synthetic-loopback-only") $
+    pendingWith "Requires explicitly isolated synthetic PostgreSQL laboratory"
+  url <- lookupEnv "TDF_PROVIDER_RETRY_DATABASE_URL" >>= maybe (fail "Missing disposable database") pure
+  let port = T.stripPrefix "postgresql://synthetic@127.0.0.1:" (T.pack url) >>= T.stripSuffix "/tdf_provider_retry_test"
+  unless (maybe False (\p -> not (T.null p) && T.all (\c -> c >= '0' && c <= '9') p) port) $
+    fail "Restore laboratory requires a dedicated synthetic loopback connection"
+  pure url
 
 ticketLedgerSpec :: SpecWith ConnectionPool
 ticketLedgerSpec = describe "ticket capture ledger" $

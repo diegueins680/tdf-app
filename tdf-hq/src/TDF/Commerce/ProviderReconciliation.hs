@@ -32,6 +32,7 @@ import           System.Entropy (getEntropy)
 import           System.Environment (lookupEnv)
 import           System.IO (hPutStrLn, stderr)
 
+import qualified TDF.Commerce.DatafastRecovery as Datafast
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.PaymentIntentStore as Intent
 import           TDF.Commerce.ProviderAdapter
@@ -223,7 +224,8 @@ providerQueryWorkerTickWith fetch env@Env{envPool} = do
       if not installed then pure 0 else do
         placeToPay <- tickProvider environment Checkout.ProviderPlaceToPay
         payPhone <- tickProvider environment Checkout.ProviderPayPhone
-        pure (placeToPay + payPhone)
+        datafast <- Datafast.recoverOne fetch env environment
+        pure (placeToPay + payPhone + datafast)
   where
     tickProvider environment provider = do
       runtime <- loadRuntimeProviderAdapter environment provider
