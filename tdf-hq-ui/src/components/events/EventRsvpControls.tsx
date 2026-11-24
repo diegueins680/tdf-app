@@ -426,6 +426,7 @@ export default function EventRsvpControls({
         label={labels.profile}
       />
       <Typography variant="caption" color="text.secondary">{labels.privacyHint}</Typography>
+      {showSharePrompt && publicShareEligible && <Alert severity="success">{labels.sharePrompt}</Alert>}
       <Stack direction="row" gap={1} flexWrap="wrap">
         {/* One share control where the device has a share sheet (it already offers copy and WhatsApp);
             copy and WhatsApp where it does not, or after the sheet failed. */}
@@ -455,7 +456,6 @@ export default function EventRsvpControls({
           {labels.discard}
         </Button>
       )}
-      {showSharePrompt && <Alert severity="success" action={<Button color="inherit" size="small" onClick={() => { void share('native'); }}>{labels.share}</Button>}>{labels.sharePrompt}</Alert>}
       {feedback && <Alert severity={feedback.severity} role="status" aria-live="polite" onClose={() => setFeedback(null)}>{feedback.message}</Alert>}
     </Stack>
   </Box>;
