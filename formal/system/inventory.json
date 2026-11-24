@@ -11892,25 +11892,25 @@
     {
       "id": "SURFACE-d380d4ada9543610",
       "path": "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx",
-      "sha256": "e3038bcd8c6f70f1daf8acb8c148f2e7266cf1239aa1a6bbcb316f5dd75ef7d2",
+      "sha256": "06d84ebd880bafa2d0e4087d15dd7febe8dffa5b7c5d9b0d0516e66ae90dbd90",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-86468d4e75140c87",
       "path": "tdf-hq-ui/src/pages/CourseBuilderPage.tsx",
-      "sha256": "8becae891de1375f77aee74823def67a63453f1fb89f9d116c59c9bbead1d986",
+      "sha256": "d136014790ece9fe7e06bf511d7f44e6472f0004cb7fc672c097aa546fd3c5a1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-fd4d2654b87334c2",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
-      "sha256": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
+      "sha256": "660c582d2f99ca5a46e2e87ecce07b5321007a0fbc7f671a89051fe7ec86c8f5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "c1e638d0ff65572119237c8c4112d832fe1bdef8e41b1c93824a07b1b95c7122",
+      "sha256": "c5dc98227b5515c78e8d3364dd2613dad59ccd78aa566cb8815121bd9765d8f1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18588,7 +18588,7 @@
     {
       "id": "SURFACE-b5ed9df91b31bc61",
       "path": "tdf-hq/src/TDF/Courses/Production.hs",
-      "sha256": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
+      "sha256": "b2aa7b7febedf047bde371ee19114ecac6111b831da3bbbdf9b72f77f42ef756",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19098,7 +19098,7 @@
     {
       "id": "SURFACE-6076c182710c4ad6",
       "path": "tdf-hq/src/TDF/Seed.hs",
-      "sha256": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
+      "sha256": "ca67f75f5e7408961b3baa9c273df119259bcd0fe3a55225050879d0fb17df4c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
