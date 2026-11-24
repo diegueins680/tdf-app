@@ -42,7 +42,7 @@ Ver [códigos, contrato y migración](correction-concurrency.md).
 
 ## Banderas
 
-La migración crea apagadas, por ambiente, `music_releases.authoring`, `music_releases.processing`, `music_releases.public`, `music_releases.commerce` y `music_releases.ddex_export`. Su orden de activación está en la guía de despliegue. Ninguna variable de entorno sustituye estas puertas de base de datos.
+La migración crea apagadas, por ambiente, `music_releases.authoring`, `music_releases.processing`, `music_releases.public`, `music_releases.commerce` y `music_releases.ddex_export`. Su orden de activación está en la guía de despliegue. Ninguna variable de entorno sustituye estas puertas de base de datos. La migración `2026-11-21_music_audio_measurement` añade, también apagada, `music_releases.loudness_check`: el worker mide la sonoridad de cada máster inspeccionado (`MUSIC_LOUDNESS_TOOL`, límite `MUSIC_LOUDNESS_TIMEOUT_SECONDS`, 900 s por defecto) y `GET /music/releases/{releaseId}/versions/{versionId}/loudness` la informa sin bloquear nada.
 
 ## Variables sin secretos
 

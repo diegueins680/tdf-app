@@ -171,6 +171,7 @@ library
     TDF.MusicRelease.Domain
     TDF.MusicRelease.ContentValidation
     TDF.MusicRelease.Money
+    TDF.MusicRelease.Loudness
     TDF.MusicRelease.CredentialCache
     TDF.MusicRelease.DDEX.ERN432
     TDF.MusicRelease.Storage.S3
@@ -468,6 +469,7 @@ test-suite tdf-hq-test
     TDF.Artists.EnrichmentSpec
     TDF.MusicRelease.DDEX.ERN432Spec
     TDF.MusicRelease.ContentSpec
+    TDF.MusicRelease.LoudnessSpec
     TDF.MusicRelease.Storage.S3Spec
     TDF.MusicRelease.DomainSpec
     TDF.EventOperations.DatabaseBoundarySpec

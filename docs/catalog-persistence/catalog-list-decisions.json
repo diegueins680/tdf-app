@@ -12555,22 +12555,6 @@
       "reviewMethod": "manual-source-review"
     },
     {
-      "id": "a54bc30988f056e6d713",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "Typed API-client method dispatch gains searchTracks while every inherited method remains unchanged. These protocol function names are not selectable/reportable domain values.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/api/musicReleases.ts",
-        "line": 518
-      },
-      "reviewBatch": "music-track-search-2026-10-26",
-      "reviewMethod": "manual-source-review"
-    },
-    {
       "id": "6c09847d52c099763024",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -31407,27 +31391,6 @@
       }
     },
     {
-      "classification": "security-system-registry",
-      "disposition": "retain-reviewed-deployment-manifest",
-      "specializedModel": "production migration manifest and applied migration ledger",
-      "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "34760a95b0cb120b1b60",
-      "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "datafast-recovery-2026-11-24",
-      "justification": "Preserve all 267 previously reviewed migrations in order and append the Datafast recovery ledger keyed by the existing immutable provider binding. The new table records bounded query attempts and the recovery outcome. This author review covers the manifest entry only.",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 268
-      },
-      "previousDecision": {
-        "$historyRef": "sha256:eb492f0d15276cd15f7ad5e837be0a98655fe0f30c332cd314ad920b22261aad"
-      }
-    },
-    {
       "id": "9256b774f7f853c0a060",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -31869,6 +31832,256 @@
           "scheduling"
         ]
       }
+    },
+    {
+      "id": "5f829ca52758751904ec",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Renaming a method breaks its callers at compile time; no runtime authority depends on the names.",
+      "justification": "Typed API-client method names of the music release client, with getLoudness added for the loudness route; implementation mechanics, not selectable catalog values.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicReleases.ts",
+        "line": 614,
+        "kind": "object-registry",
+        "name": "musicReleases",
+        "valueCount": 43,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
+        "predecessorDecision": "a54bc30988f056e6d713"
+      },
+      "previousDecision": {
+        "$historyRef": "sha256:13a3c178663d54b685b829c7fae3b78ac269166879757cdad1903aa4c1448d4c"
+      }
+    },
+    {
+      "id": "5366d3bfbc5f235d3536",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A status outside this list would be rendered as a loudness result the server never produced.",
+      "justification": "The five check statuses the loudness route may answer; the client rejects any other value before rendering.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicLoudness.ts",
+        "line": 8,
+        "kind": "array",
+        "name": "STATUSES",
+        "valueCount": 5,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "ac289f588a35d1b3b7fc",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the Haskell type would let generated clients accept or miss a result state.",
+      "justification": "Contract enumeration of TDF.MusicRelease.Loudness.CheckStatus, the closed result of the pure check, not reference data.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 19484,
+        "kind": "openapi-enum",
+        "name": "status",
+        "valueCount": 5,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "c9e48e74824b84cb7207",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the Haskell type would let generated clients accept or miss a warning.",
+      "justification": "Contract enumeration of TDF.MusicRelease.Loudness.LoudnessFlag, the three comparisons of the approved decision rule.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 19492,
+        "kind": "openapi-enum",
+        "name": "items",
+        "valueCount": 3,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "a0b5a2f81a33c9e734f5",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the database CHECK would let generated clients mislabel a failed measurement.",
+      "justification": "Contract enumeration of the failure reasons the measurement wrapper and the database function can record.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 19498,
+        "kind": "openapi-enum",
+        "name": "failureReason",
+        "valueCount": 9,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "b2ab8f23cab6f7fdb0fb",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the set without the trigger, the Haskell lifecycle and the TLA+ model would let a stale or rewritten measurement mark a track as checked.",
+      "justification": "Lifecycle states of music_audio_measurement, bound in formal/system/state-machine-bindings.json and enforced by the trigger music_audio_measurement_guard; a closed technical state machine, not business catalog data.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
+        "line": 16,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 4,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "1134f4f8cb4efac65b9a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A reason outside the set would be refused by the CHECK and the attempt would stay pending.",
+      "justification": "Failure reasons a measurement attempt can record; each is produced by one branch of scripts/measure-music-loudness.pl or music_finish_audio_measurement.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
+        "line": 21,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 8,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "a221b2060a68339301f2",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Adding or dropping a flag changes the pass/warn decision proved in formal/music/loudness_decision.py.",
+      "justification": "Closed sum of the three comparisons of the approved loudness decision, matched exhaustively by the compiler.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "line": 54,
+        "kind": "haskell-sum-type",
+        "name": "LoudnessFlag",
+        "valueCount": 3,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "faeda2e53127ecb3b026",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the column CHECK would make stored rows unreadable or misread as another state.",
+      "justification": "Haskell mirror of the music_audio_measurement lifecycle states, parsed from the column and matched exhaustively.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "line": 71,
+        "kind": "haskell-sum-type",
+        "name": "MeasurementState",
+        "valueCount": 4,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "c11f0f75e8345464756b",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the trigger would make the tested lifecycle differ from the enforced one.",
+      "justification": "The three events of the measurement lifecycle used by the pure transition function and its tests.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "line": 85,
+        "kind": "haskell-sum-type",
+        "name": "MeasurementEvent",
+        "valueCount": 3,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "2be7224fad3893f06d5f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Adding a status without the contract and the web parser would hide or misreport a result.",
+      "justification": "Closed result of the pure per-track check, rendered to the route and matched exhaustively by the compiler.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "line": 122,
+        "kind": "haskell-sum-type",
+        "name": "CheckStatus",
+        "valueCount": 5,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "classification": "security-system-registry",
+      "disposition": "retain-reviewed-deployment-manifest",
+      "specializedModel": "production migration manifest and applied migration ledger",
+      "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+      "id": "8557bfbdc82f3189424d",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "datafast-recovery-2026-11-24",
+      "justification": "Preserve all 268 previously reviewed migrations in order and append the Datafast recovery ledger keyed by the existing immutable provider binding. The new table records bounded query attempts and the recovery outcome. This author review covers the manifest entry only.",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 269
+      },
+      "previousDecision": {
+        "$historyRef": "sha256:4c0c7a51f06d9355e78bcc8e1538bb9d25b9e24e627cf34811767d530cee55ea"
+      },
+      "concurrentReviewHistory": [
+        {
+          "$historyRef": "sha256:35b1de00a446dd5042d0b77a2e98c59314f2feb9bf4bd3495a6f6202e4330352"
+        }
+      ]
     },
     {
       "id": "02f33c240b0c77ab47d1",

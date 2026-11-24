@@ -115,6 +115,9 @@ export function classifyChangedFiles(files, options = {}) {
         || file === 'scripts/run-music-release-worker.sh'
         || file === 'scripts/run-music-release-worker-once.sh'
         || file === 'scripts/music-s3-upload.pl'
+        || file === 'scripts/measure-music-loudness.pl'
+        || file === 'scripts/test-music-loudness-wrapper.mjs'
+        || file === 'scripts/test-music-loudness-query.mjs'
         || /^scripts\/(?:process-music-release-|build-ddex-)/.test(file)
         || file === 'scripts/music-preview-spec.jq'
         || file === 'scripts/test-music-purchase-asset-query.py'
