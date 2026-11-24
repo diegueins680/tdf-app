@@ -28200,7 +28200,9 @@
         "tdf-hq-ui/src/i18n/locales/es.ts",
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-        "tdf-hq-ui/src/utils/eventLineup.ts"
+        "tdf-hq-ui/src/utils/eventLineup.ts",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-hq-ui/src/utils/jamCircuit.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
@@ -28212,7 +28214,8 @@
         "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
         "tdf-hq/test/Spec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -31478,8 +31481,8 @@
     "tdf-hq-ui/src/pages/ClassesPage.tsx": "2c4c084a7e9287144589b96f3ac9a2ff6c3775bc854c0df027f3717bfa85c203",
     "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
     "tdf-hq-ui/src/pages/CmsAdminPage.tsx": "34d190a224e5011cc799fbb9c25c86d5a8cc98a56bfd01a4df7e718d728a5ec8",
-    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": "c3c495db7182a016a8d4ff2e119853f838157ef7f3892c9124be9131d13f613e",
-    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "da87c197bcc050c4415abd23fe1f7618052a85fa1cf3f4b65ae2f32acc830d37",
+    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": "9c18cd02f3263a37a2be4452a4663712c3baa423186c071fee99e48605ca6827",
+    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "7d888c753e05305f012fc47629572aa62d843b909b0f0c5e835103c7f58b13c1",
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CompaniesPage.tsx": "08964b25803284e26ecb3bafb8968a38b174a0cbd88772529a48cb0cfc951a9c",
     "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx": "e3038bcd8c6f70f1daf8acb8c148f2e7266cf1239aa1a6bbcb316f5dd75ef7d2",
@@ -31493,8 +31496,8 @@
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "351c03a7f95ddf473ef8d86e01c0e5be7b4e2a0fbd2d842209b09feec1731fcd",
     "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts": "b68dae2863db9239158b04f5a6638623980b1eb23204a96c5cefe4512a50f9f3",
     "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": "c0fe46cf4fd2921249219068f66a966a207d0608cd76db24ad3f7827f31c6d87",
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "d2ad6d96fc939f96b50f658fe8d4ce07f9dabda36fb0a6e78d39649bf780001d",
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "5b494fa55283cc129ee2a97c9368c8e20568a7e1d8c1a1fb72dc44cfbaadd021",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "a82390c0bda44353dfe0a910b1eb9976dbe0f8a4243d4259f10e89e2d7559e75",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "4d763cefb804af63ef3ad1627aedbef4befc42d41daeb48acdf9b668b5408ff9",
     "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "3d89ff3049614ddca44cf0c7494ff08f3a9c5d7fce2a1eee379e3a50bac49240",
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "44fc5164de8d794adfb89f8953f78e100ff45c6991f5e7c0bcec3d1f40aa43bd",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "54d62708206a18bedadbc1e367e4e8ab971e8c02b6dd485b817d547f5ac15d6e",
@@ -31744,6 +31747,7 @@
     "tdf-hq-ui/src/utils/inAppBrowser.ts": "e8cf3a4277519ec11f07f2533ff28a113595a2156406bd95d08162edbc793924",
     "tdf-hq-ui/src/utils/incrementalSha256.test.ts": "dfc75d64b7e8ea09c1606d830cb3f9a00c06c7e857e13640eb0e842d15d5184d",
     "tdf-hq-ui/src/utils/incrementalSha256.ts": "a7964918e4d6c577458a488a35f6f938b3584857ea40b2169c27b56c3435f899",
+    "tdf-hq-ui/src/utils/jamCircuit.ts": "9037580926c00df4e86c302d1753ccdaaef9776a21c36ca59bb9aef76d226f30",
     "tdf-hq-ui/src/utils/lazyWithReload.test.ts": "710b76b6d5597703cc8372d533766c1c5742604613411107d829e3af0de0209c",
     "tdf-hq-ui/src/utils/lazyWithReload.ts": "ece64362135f716df791766c2bf113654b91a9e7a4c682e06c1d0d65300be3db",
     "tdf-hq-ui/src/utils/loginRouting.test.ts": "5c479a65858ca142eb22d5314b00b86b28cdef4d4637386ca001abebf150778e",
@@ -40298,6 +40302,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "UX-PUBLIC-DETAIL-001",
         "relationship": "implementation"
       },
@@ -41943,6 +41951,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
         "relationship": "tests"
       },
       {
@@ -52883,6 +52895,12 @@
       },
       {
         "requirement": "SYS-ARCH-BOUNDARY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/jamCircuit.ts": [
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
         "relationship": "implementation"
       }
     ],
@@ -71830,7 +71848,7 @@
     {
       "id": "SURFACE-78d796fee86d9367",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
-      "sha256": "c3c495db7182a016a8d4ff2e119853f838157ef7f3892c9124be9131d13f613e",
+      "sha256": "9c18cd02f3263a37a2be4452a4663712c3baa423186c071fee99e48605ca6827",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71842,7 +71860,7 @@
     {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "da87c197bcc050c4415abd23fe1f7618052a85fa1cf3f4b65ae2f32acc830d37",
+      "sha256": "7d888c753e05305f012fc47629572aa62d843b909b0f0c5e835103c7f58b13c1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72139,7 +72157,7 @@
     {
       "id": "SURFACE-814a4782598cab3d",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-      "sha256": "d2ad6d96fc939f96b50f658fe8d4ce07f9dabda36fb0a6e78d39649bf780001d",
+      "sha256": "a82390c0bda44353dfe0a910b1eb9976dbe0f8a4243d4259f10e89e2d7559e75",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72148,6 +72166,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "tests"
         },
         {
@@ -72163,7 +72185,7 @@
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "5b494fa55283cc129ee2a97c9368c8e20568a7e1d8c1a1fb72dc44cfbaadd021",
+      "sha256": "4d763cefb804af63ef3ad1627aedbef4befc42d41daeb48acdf9b668b5408ff9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72188,6 +72210,10 @@
         },
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "implementation"
         },
         {
@@ -76952,6 +76978,18 @@
       "sha256": "62db8fac9ea4951969cd0217a9867070258b609d1d00a35ac510e2aa5044c27b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-106bd22259e77a2c",
+      "path": "tdf-hq-ui/src/utils/jamCircuit.ts",
+      "sha256": "9037580926c00df4e86c302d1753ccdaaef9776a21c36ca59bb9aef76d226f30",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7ee3df6cd47255b2",
@@ -97732,7 +97770,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "faa1e2c0ea6dc9d22852faa1d4b8cd7ab48f7312bb9eccca65bd755e13999f2a",
+      "sourceSha256": "ba94efb4840b21dafe7dcf3a7237b86f0655d046fbf1e37bcff08445396ac867",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -97760,7 +97798,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "faa1e2c0ea6dc9d22852faa1d4b8cd7ab48f7312bb9eccca65bd755e13999f2a",
+      "sourceSha256": "ba94efb4840b21dafe7dcf3a7237b86f0655d046fbf1e37bcff08445396ac867",
       "definition": {
         "states": [
           "absent",
@@ -97790,7 +97828,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "faa1e2c0ea6dc9d22852faa1d4b8cd7ab48f7312bb9eccca65bd755e13999f2a",
+      "sourceSha256": "ba94efb4840b21dafe7dcf3a7237b86f0655d046fbf1e37bcff08445396ac867",
       "definition": {
         "export": [
           "queued",
@@ -97847,7 +97885,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "faa1e2c0ea6dc9d22852faa1d4b8cd7ab48f7312bb9eccca65bd755e13999f2a",
+      "sourceSha256": "ba94efb4840b21dafe7dcf3a7237b86f0655d046fbf1e37bcff08445396ac867",
       "definition": {
         "states": [
           "pending",
