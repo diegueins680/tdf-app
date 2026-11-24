@@ -10490,7 +10490,7 @@
     {
       "id": "SURFACE-8ff97ac79f9014bb",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
-      "sha256": "a454d3ef63cbd0e5ff763ee4accc326af004b95f28888193ce18515d16a59e8d",
+      "sha256": "2026696bafa50eca38ae4da863815200ec4b8c8db7460f1192d1c136035d4517",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12560,13 +12560,13 @@
     {
       "id": "SURFACE-57d71f490b9a0d52",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
-      "sha256": "5f358b5c6ec7f9a42292fcfc6de984b66101976a5edcf3558abeb1148f4f19de",
+      "sha256": "b91a88cdf824df3c20b7c93be331898a9a870235333dfa904ccb6ecee25275b5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6b97ed3a68e676f6",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-      "sha256": "feedf51eab249474ab6e971bd6a9aef7c72d3be117f2b01f7cfe3aea19ca32e5",
+      "sha256": "eeb712efbd3cbff628839fc8f200c7b0b3fa2b2cb8777e09a2c63a93aaf7853f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14174,13 +14174,13 @@
     {
       "id": "SURFACE-385779829756a659",
       "path": "tdf-hq-ui/src/utils/providerPaymentResume.test.ts",
-      "sha256": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
+      "sha256": "7021794baee4e86ad068acd0f5c69f1c4c00fc6d4b50a68eff0c8a0484eff49c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-02c8cdf3d4eb64fb",
       "path": "tdf-hq-ui/src/utils/providerPaymentResume.ts",
-      "sha256": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
+      "sha256": "ad8fbd9b88aa8b65b4928e8f6d756e1a6a8fbb78b3294f7563c7dcdd734ceca5",
       "semanticConformance": "not-established-by-discovery"
     },
     {

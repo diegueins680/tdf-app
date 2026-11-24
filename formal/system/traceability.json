@@ -30931,7 +30931,7 @@
     "tdf-hq-ui/src/components/notificationTarget.ts": "e21bceb245d6114eebee2644cb683e33549b3b3eb8a48c97cca2e89795053f0d",
     "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "96285dd9f104f929731e47d6dee97f21834dddf9e01f79da642c3b2ec3350f85",
-    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "a454d3ef63cbd0e5ff763ee4accc326af004b95f28888193ce18515d16a59e8d",
+    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "2026696bafa50eca38ae4da863815200ec4b8c8db7460f1192d1c136035d4517",
     "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.test.tsx": "9119938c5bf890d27464c24d61ec147398b83b699bc0ca11a8507ec3f5055d70",
     "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.tsx": "1486cc0b3d3dd271e929cd415d613fdd0663825bdd0a50770980414259112b9e",
     "tdf-hq-ui/src/components/payments/PaymentMethodChoices.tsx": "060d5a7a65c486a1bbdd2eb80b98c31bd62a25aadb1babb2b3530a0eb64d565a",
@@ -31164,8 +31164,8 @@
     "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts": "4941936bcbb954b17033773cc792520831a6219dd23009d834fcab18318de87d",
     "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx": "c3171aef58671769ae696fd2e76eeae0c6e1cfc4d5b8499398f52986e9b25715",
     "tdf-hq-ui/src/pages/PaymentsPage.tsx": "bd0c0f004588ffa15b6bebe83a66238ae54cb636f5053bb9c648cd4eac854c61",
-    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5f358b5c6ec7f9a42292fcfc6de984b66101976a5edcf3558abeb1148f4f19de",
-    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "feedf51eab249474ab6e971bd6a9aef7c72d3be117f2b01f7cfe3aea19ca32e5",
+    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "b91a88cdf824df3c20b7c93be331898a9a870235333dfa904ccb6ecee25275b5",
+    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "eeb712efbd3cbff628839fc8f200c7b0b3fa2b2cb8777e09a2c63a93aaf7853f",
     "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": "9e3a1a9e16505da719971a9eb12fbe79a6436f3bb01317b5994b78e87f134b5a",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "d09b16d162a3ff525890d254da20b878e79b92d971011b8ca49cacce9293faaf",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "7544cf376e7c4721e85ae84341a98014cf0909cc8c8301ee2ec0c01b3beac179",
@@ -31344,8 +31344,8 @@
     "tdf-hq-ui/src/utils/phone.ts": "eb558c757e4f79a86c7ca3df1da08f98df111d8944c57206e85ea9bb5e1f6ff1",
     "tdf-hq-ui/src/utils/priceInput.test.ts": "8da46a8867257fc7df949d781cc833572ccb9de3933cffab0455cc8cf260b3d6",
     "tdf-hq-ui/src/utils/priceInput.ts": "8f44827348cc3e9404b5f56362e6c23031aef5842044efdd1dc72f5348cfc566",
-    "tdf-hq-ui/src/utils/providerPaymentResume.test.ts": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
-    "tdf-hq-ui/src/utils/providerPaymentResume.ts": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
+    "tdf-hq-ui/src/utils/providerPaymentResume.test.ts": "7021794baee4e86ad068acd0f5c69f1c4c00fc6d4b50a68eff0c8a0484eff49c",
+    "tdf-hq-ui/src/utils/providerPaymentResume.ts": "ad8fbd9b88aa8b65b4928e8f6d756e1a6a8fbb78b3294f7563c7dcdd734ceca5",
     "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts": "e588d8dc3d90d1c59f88b833ccce51a34c129c42153f3bb560017432000109df",
     "tdf-hq-ui/src/utils/radioRouteVisibility.ts": "e106acc20d3913b5612806e9ebbfd83fcf1944dea00e1d696357184e84fef647",
     "tdf-hq-ui/src/utils/rentalPriceInput.ts": "5fb0755b4fa08690616edaa7fab6b7d1a4248457157c84f7155e628e8bff2c0b",
@@ -68003,7 +68003,7 @@
     {
       "id": "SURFACE-8ff97ac79f9014bb",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
-      "sha256": "a454d3ef63cbd0e5ff763ee4accc326af004b95f28888193ce18515d16a59e8d",
+      "sha256": "2026696bafa50eca38ae4da863815200ec4b8c8db7460f1192d1c136035d4517",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72531,7 +72531,7 @@
     {
       "id": "SURFACE-57d71f490b9a0d52",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
-      "sha256": "5f358b5c6ec7f9a42292fcfc6de984b66101976a5edcf3558abeb1148f4f19de",
+      "sha256": "b91a88cdf824df3c20b7c93be331898a9a870235333dfa904ccb6ecee25275b5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72551,7 +72551,7 @@
     {
       "id": "SURFACE-6b97ed3a68e676f6",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-      "sha256": "feedf51eab249474ab6e971bd6a9aef7c72d3be117f2b01f7cfe3aea19ca32e5",
+      "sha256": "eeb712efbd3cbff628839fc8f200c7b0b3fa2b2cb8777e09a2c63a93aaf7853f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75805,7 +75805,7 @@
     {
       "id": "SURFACE-385779829756a659",
       "path": "tdf-hq-ui/src/utils/providerPaymentResume.test.ts",
-      "sha256": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
+      "sha256": "7021794baee4e86ad068acd0f5c69f1c4c00fc6d4b50a68eff0c8a0484eff49c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75817,7 +75817,7 @@
     {
       "id": "SURFACE-02c8cdf3d4eb64fb",
       "path": "tdf-hq-ui/src/utils/providerPaymentResume.ts",
-      "sha256": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
+      "sha256": "ad8fbd9b88aa8b65b4928e8f6d756e1a6a8fbb78b3294f7563c7dcdd734ceca5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
