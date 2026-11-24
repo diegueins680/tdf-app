@@ -4149,7 +4149,7 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "4f2f99e39788cd1f67da2623474d725e06e51757b409474118f82d3c9a43aa1d",
+      "sha256": "f7c69d7d5fef627b68b1f4eae37b6117c98a9bbc5ed9b73cf2395cedd62db1a4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8259,7 +8259,7 @@
     {
       "id": "SURFACE-52eaee55a9a4d661",
       "path": "tdf-hq-ui/package.json",
-      "sha256": "c5775b009397ad7f8e873c032fafdea5a2242cc1c6fb5888b383955633b09382",
+      "sha256": "c257a4af51c56735996dd32138844e38718ba1431dc62a58f80151a219f3e236",
       "semanticConformance": "not-established-by-discovery"
     },
     {

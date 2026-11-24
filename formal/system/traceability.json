@@ -30214,7 +30214,7 @@
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
-    "package-lock.json": "4f2f99e39788cd1f67da2623474d725e06e51757b409474118f82d3c9a43aa1d",
+    "package-lock.json": "f7c69d7d5fef627b68b1f4eae37b6117c98a9bbc5ed9b73cf2395cedd62db1a4",
     "package.json": "5fe81add4eef1c0bfddb256fa9425ec65865e2e9ae8025950879f49c60f814a6",
     "playwright.config.mjs": "37eb4ab6c22dc0a3f2e575361426a045ad760a32920fe4a3b36a1f50e660e71b",
     "playwright.desktop.config.mjs": "74292833e979da0f81610adcedcddcfe6a7053cd5dfa6a34b36b2f1ddbddeb92",
@@ -30709,7 +30709,7 @@
     "tdf-hq-ui/e2e/storage-upload.tsx": "db97a876b5beb240476600ccdeff7e3dfaf0dc81a628379b43e0070d3a7cf082",
     "tdf-hq-ui/index.html": "8d3e52d6badb31873b691579390fbee85fcba4329a3f2884421344546a24ecc6",
     "tdf-hq-ui/jest.config.cjs": "1d3db54d537a43ccd90448c5784d9b958dc8989f9d36d765fb3b98275ccacfe1",
-    "tdf-hq-ui/package.json": "c5775b009397ad7f8e873c032fafdea5a2242cc1c6fb5888b383955633b09382",
+    "tdf-hq-ui/package.json": "c257a4af51c56735996dd32138844e38718ba1431dc62a58f80151a219f3e236",
     "tdf-hq-ui/public/account/privacy-es.html": "ad28c451a0f7655163191548e1f8a662432fa2ffb8f8c5a1edd83500bd357b72",
     "tdf-hq-ui/public/account/privacy.html": "67c2f4fcb9fa4125aa656f2fa1b100a613632ad42c85537c12e61bc502623f1a",
     "tdf-hq-ui/public/account/terms-es.html": "2a60ebfcab4add6b10979323dc124d281776e3b173b4be66d8e0f6ce62f6fca8",
@@ -55193,7 +55193,7 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "4f2f99e39788cd1f67da2623474d725e06e51757b409474118f82d3c9a43aa1d",
+      "sha256": "f7c69d7d5fef627b68b1f4eae37b6117c98a9bbc5ed9b73cf2395cedd62db1a4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63756,7 +63756,7 @@
     {
       "id": "SURFACE-52eaee55a9a4d661",
       "path": "tdf-hq-ui/package.json",
-      "sha256": "c5775b009397ad7f8e873c032fafdea5a2242cc1c6fb5888b383955633b09382",
+      "sha256": "c257a4af51c56735996dd32138844e38718ba1431dc62a58f80151a219f3e236",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
