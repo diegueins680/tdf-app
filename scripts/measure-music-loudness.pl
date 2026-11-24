@@ -15,6 +15,7 @@
 use strict;
 use warnings;
 use POSIX qw(:sys_wait_h :errno_h);
+use Time::HiRes qw(clock_gettime CLOCK_MONOTONIC);
 
 my $TOOL = 'ffmpeg-ebur128-v1';
 my $TAIL_BYTES = 65536;
@@ -86,37 +87,44 @@ if ($child == 0) {
 }
 close $writer;
 
-my $timed_out = 0;
-my $deadline_stage = 0;
-local $SIG{ALRM} = sub {
-  $timed_out = 1;
-  if ($deadline_stage == 0) {
-    $deadline_stage = 1;
-    kill 'TERM', $child;
-    alarm $grace;
-  } else {
-    kill 'KILL', $child;
-  }
-};
-# The worker stops a job by signalling this process; the child goes with it.
+my $deadline = clock_gettime(CLOCK_MONOTONIC) + $limit;
+my $kill_deadline = $deadline + $grace;
+my ($timed_out, $killed, $cancelled) = (0, 0, 0);
 for my $signal (qw(TERM INT HUP)) {
-  $SIG{$signal} = sub {
-    kill 'KILL', $child;
-    waitpid $child, 0;
-    exit 143;
-  };
+  $SIG{$signal} = sub { $cancelled = 1 };
 }
-alarm $limit;
 
 my ($head, $tail) = ('', '');
-my ($status, $reaped, $eof) = (0, 0, 0);
+my ($status, $reaped, $drained) = (0, 0, 0);
 my $watched = '';
 vec($watched, fileno($reader), 1) = 1;
-# Stop when the child is reaped and its pipe is drained. A descendant that
-# keeps the pipe open cannot hold the wrapper: end of file is not required.
 while (1) {
+  if (!$reaped && waitpid($child, WNOHANG) == $child) {
+    $status = $?;
+    $reaped = 1;
+  }
+  if ($cancelled) {
+    unless ($reaped) {
+      kill 'KILL', $child;
+      waitpid $child, 0;
+    }
+    exit 143;
+  }
+
+  # A descendant may still hold stderr after FFmpeg exits. Apply the same
+  # deadline to draining that pipe, and only signal an unreaped child.
+  my $now = clock_gettime(CLOCK_MONOTONIC);
+  if (!$timed_out && $now >= $deadline) {
+    $timed_out = 1;
+    kill 'TERM', $child unless $reaped;
+  }
+  last if $reaped && ($timed_out || $drained);
+  if ($timed_out && !$killed && $now >= $kill_deadline) {
+    kill 'KILL', $child;
+    $killed = 1;
+  }
   my $ready = 0;
-  if ($eof) {
+  if ($drained) {
     select undef, undef, undef, 0.05;
   } else {
     $ready = select(my $readable = $watched, undef, undef, 0.2);
@@ -127,18 +135,13 @@ while (1) {
         $tail .= $chunk;
         $tail = substr($tail, -$TAIL_BYTES) if length $tail > $TAIL_BYTES;
       } elsif (defined $count || $! != EINTR) {
-        $eof = 1;
+        $drained = 1;
       }
     }
   }
-  if (!$reaped && waitpid($child, WNOHANG) == $child) {
-    $status = $?;
-    $reaped = 1;
-  }
-  last if $reaped && ($eof || !defined $ready || $ready <= 0);
+  $drained = 1 if $reaped && defined $ready && $ready == 0;
 }
 close $reader;
-alarm 0;
 
 my $version;
 $version = $1 if $head =~ /\Affmpeg version ([A-Za-z0-9.+~:_-]{1,64}) /;

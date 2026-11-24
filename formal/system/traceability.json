@@ -30556,7 +30556,7 @@
     "scripts/lib/whatsapp_consent_conformance.py": "e7e6f0221bb7bcf5ef631827e2dfa6c329d5b4c16733fa5bca6e61bdb748c4a8",
     "scripts/load-payment-test-schema.sh": "8f8e8385a59b6b118c049ab7ac5f48e5525152c45fc8a15d882c37f78b0330d7",
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
-    "scripts/measure-music-loudness.pl": "94f57c6b855e22f26112f760864e040a6bfe0cae4ac423f2f031234a9e529d06",
+    "scripts/measure-music-loudness.pl": "ec2bbe5cf90795329648787d2eddbc5479f12f9dc315cc1ab9f3d31b8b6815ae",
     "scripts/merge-admission.py": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
     "scripts/mobile-publishing-admin-audit.sh": "6443db3bbfc3a044fc95206b5742aa4800137af1dbe1e94656818f275bacd3ad",
     "scripts/music-media-health.py": "2b80bf8d0f812abea2057b364f6384dffcb7d2a4c7275509c02fd7a8d2a0e5c8",
@@ -30671,7 +30671,7 @@
     "scripts/test-music-download-predicate.mjs": "bca6f459131b70b0ac181a6b24b68fb7a853ee9c06121b604f2e3581f9c59bc4",
     "scripts/test-music-integration-rehearsal.mjs": "c1976955269babf795b4588aa4b1f9f7dd6b1cd09b9ac86f69f053953b0cab4b",
     "scripts/test-music-loudness-query.mjs": "47e309112373dfd831d563429069da5acf5ba904820d3d9a92098c7fe6e89ed0",
-    "scripts/test-music-loudness-wrapper.mjs": "9da882bc4920809d0ae082c3c1036ef6c378a8fc1c9f43f6139a3080ee788d7f",
+    "scripts/test-music-loudness-wrapper.mjs": "6a6159e3a2cfdaabfc734eea3f32ca213351bea83b2683e96c1eb3d0d97060cb",
     "scripts/test-music-media-health.mjs": "383825c93a9090858d72ae401cbcad93358cf4e540949c45ed0097b7d90b4efe",
     "scripts/test-music-media-health.py": "899711c458eecca463df2e31938552e505e3ed408fe400fcff17d3923964adda",
     "scripts/test-music-money-wire-verifier.py": "bc1c7cce17011641bbf01ff4ac5382c4d101526bbd3e913fa0c0ae436e915eb5",
@@ -31310,9 +31310,9 @@
     "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx": "9a38d743806d57f1ed655cfe93a2db264c21dd0672db93afbc06c422e4b8698d",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx": "82bb2a837450ba66c5139d899fe44023c79ed3972657f2343929c82861e31ff7",
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "02b7dc725ef0650d7eea8e4de55a144fc9252c0ad841297a8359b7120fc0503f",
-    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx": "7eeacf7144a54d0cb7f2f08de7ced1b1acfb4fe53a53017e73562d24c2790c48",
+    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx": "7b160dfffa455085526a541c537a233ce30d8da09de3e29eca117b921e8f6dd2",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts": "26ae645bd78e98a19c1659bfad09c7a953aa8ae16bcc95632258380882285dde",
-    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "d9c44a133ff55318851cb77da09aa985b23e8293c2461d72c94b1febc133ebf6",
+    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "5942ea5ba020480adb3022dcb4609fee6989fe10a2dcf77f324773ca30a76536",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx": "d5b2555b6b1e5a0bf27f0a124f3fb57019397d06a9695dbf9e8a417ceb72309c",
     "tdf-hq-ui/src/pages/MyTicketsPage.test.tsx": "90b633d62953bbdaf64d3a662c365b7777d3e66cc7c5317a13c174a642388fb8",
     "tdf-hq-ui/src/pages/MyTicketsPage.tsx": "10a77b9b7e6559c909bac78a28b7325f0c08cd6153378e1f69b2220e296c4270",
@@ -61452,7 +61452,7 @@
     {
       "id": "SURFACE-9f6fa8b83cf782e6",
       "path": "scripts/test-music-loudness-wrapper.mjs",
-      "sha256": "9da882bc4920809d0ae082c3c1036ef6c378a8fc1c9f43f6139a3080ee788d7f",
+      "sha256": "6a6159e3a2cfdaabfc734eea3f32ca213351bea83b2683e96c1eb3d0d97060cb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72753,7 +72753,7 @@
     {
       "id": "SURFACE-f537d8c206de6d62",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
-      "sha256": "7eeacf7144a54d0cb7f2f08de7ced1b1acfb4fe53a53017e73562d24c2790c48",
+      "sha256": "7b160dfffa455085526a541c537a233ce30d8da09de3e29eca117b921e8f6dd2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72789,7 +72789,7 @@
     {
       "id": "SURFACE-eb5c18c24c04950e",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
-      "sha256": "d9c44a133ff55318851cb77da09aa985b23e8293c2461d72c94b1febc133ebf6",
+      "sha256": "5942ea5ba020480adb3022dcb4609fee6989fe10a2dcf77f324773ca30a76536",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

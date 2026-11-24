@@ -162,6 +162,29 @@ try {
       assert.ok(outcome.seconds < 4, `took ${outcome.seconds.toFixed(2)} s`);
     });
   }
+  check('the drain deadline still applies after the child has been reaped', () => {
+    // Advance a synthetic monotonic clock when the ordinary child exits. This
+    // exercises the deadline independently of OS pipe sizes and scheduling.
+    writeFileSync(join(work, 'DrainClock.pm'), `package DrainClock;
+use Time::HiRes ();
+no warnings 'redefine';
+*Time::HiRes::clock_gettime = sub (;$) {
+  open my $file, '<', $ENV{TEST_CHILD_PID_FILE} or return 100;
+  my $pid = <$file>;
+  return 100 unless defined $pid && $pid =~ /^(\\d+)$/;
+  return kill(0, $1) ? 100 : 101;
+};
+1;
+`);
+    const outcome = measure(good, {
+      PERL5LIB: work, PERL5OPT: '-MDrainClock',
+      TEST_CHILD_PID_FILE: join(work, 'finished.pid'),
+      MUSIC_LOUDNESS_FFMPEG: fake('finished', 'echo $$ > "$TEST_CHILD_PID_FILE"'),
+      MUSIC_LOUDNESS_TIMEOUT_SECONDS: '1',
+    });
+    assert.equal(outcome.state, 'failed');
+    assert.equal(outcome.reason, 'timeout');
+  });
   check('usage errors exit 2 and print no result', () => {
     for (const [args, extra] of [[[], {}], [[good, good], {}], [[good], { MUSIC_LOUDNESS_TIMEOUT_SECONDS: '0' }],
       [[good], { MUSIC_LOUDNESS_TIMEOUT_SECONDS: '99999' }], [[good], { MUSIC_LOUDNESS_KILL_GRACE_SECONDS: 'soon' }]]) {

@@ -376,6 +376,9 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
     .map((asset) => `${asset.id}:${asset.processingState}`).sort().join(',');
   const loudness = useQuery({
     queryKey: ['music-release-loudness', releaseId, versionId, masterFiles], queryFn: () => musicReleases.getLoudness(releaseId, versionId),
+    refetchInterval: ({ state }) => state.status === 'success' && state.data?.tracks.some(
+      (track) => track.masterAssetId !== null && (track.status === 'not_measured' || track.status === 'pending'),
+    ) ? 10_000 : false,
     retry: false, refetchOnWindowFocus: false,
   });
   const genres = useQuery({

@@ -7063,7 +7063,7 @@
     {
       "id": "SURFACE-9f6fa8b83cf782e6",
       "path": "scripts/test-music-loudness-wrapper.mjs",
-      "sha256": "9da882bc4920809d0ae082c3c1036ef6c378a8fc1c9f43f6139a3080ee788d7f",
+      "sha256": "6a6159e3a2cfdaabfc734eea3f32ca213351bea83b2683e96c1eb3d0d97060cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12487,7 +12487,7 @@
     {
       "id": "SURFACE-f537d8c206de6d62",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
-      "sha256": "7eeacf7144a54d0cb7f2f08de7ced1b1acfb4fe53a53017e73562d24c2790c48",
+      "sha256": "7b160dfffa455085526a541c537a233ce30d8da09de3e29eca117b921e8f6dd2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12499,7 +12499,7 @@
     {
       "id": "SURFACE-eb5c18c24c04950e",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
-      "sha256": "d9c44a133ff55318851cb77da09aa985b23e8293c2461d72c94b1febc133ebf6",
+      "sha256": "5942ea5ba020480adb3022dcb4609fee6989fe10a2dcf77f324773ca30a76536",
       "semanticConformance": "not-established-by-discovery"
     },
     {
