@@ -34,12 +34,15 @@ import {
 } from '../utils/accessControl';
 import { COURSE_REGISTRATIONS_NAV_LABEL } from '../utils/navigationLabels';
 import { featureGroups, standaloneMenuFeatures } from '../utils/featureRegistry';
+import { defaultMenuGroups } from './sidebarMenuRules';
 
 export interface NavItem {
   label: string;
   path: string;
   /** Registered with globalMenu:false: reachable through the menu search, not listed by default. */
   searchOnly?: boolean;
+  /** Set on the one entry that stands for a family of pages: every member's path. */
+  familyPaths?: string[];
 }
 
 export interface NavGroup {
@@ -684,7 +687,8 @@ interface NavItemLinkProps {
 
 function NavItemLink(props: NavItemLinkProps) {
   const { activePath, groupTitle, highlighted, item, searchQuery, unreadCount, onVisit } = props;
-  const isNavItemActive = isRouteActive(activePath, item.path);
+  const isNavItemActive = isRouteActive(activePath, item.path)
+    || (item.familyPaths?.some((path) => isRouteActive(activePath, path)) ?? false);
   const selected = highlighted || (!searchQuery && isNavItemActive);
 
   return (
@@ -747,15 +751,17 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
 
   const filteredNavGroups = useMemo((): NavGroupView[] => {
     const normalizedSearchQuery = filter.trim().toLowerCase();
-    const matches = normalizedSearchQuery
-      ? (item: NavItem) =>
-        item.label.toLowerCase().includes(normalizedSearchQuery) ||
-        item.path.toLowerCase().includes(normalizedSearchQuery)
-      : (item: NavItem) => !item.searchOnly || isRouteActive(location.pathname, item.path);
+    // Without a search the menu follows the per-viewer rules (one entry per
+    // page family, internal studio pages for the studio team). A search looks
+    // through every destination the viewer may open, under its own name.
+    if (!normalizedSearchQuery) return defaultMenuGroups(allowedNavGroups, session?.roles, location.pathname);
+    const matches = (item: NavItem) =>
+      item.label.toLowerCase().includes(normalizedSearchQuery) ||
+      item.path.toLowerCase().includes(normalizedSearchQuery);
     return allowedNavGroups
       .map((group) => ({ ...group, items: group.items.filter(matches) }))
       .filter((group) => group.items.length > 0);
-  }, [allowedNavGroups, filter, location.pathname]);
+  }, [allowedNavGroups, filter, location.pathname, session?.roles]);
 
   const flatFilteredItems = useMemo(
     () => filteredNavGroups.flatMap((group) => group.items),
