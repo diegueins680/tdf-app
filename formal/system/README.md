@@ -9,6 +9,8 @@ Historical green results are not current-candidate evidence.
 
 - [desktop-shell.md](desktop-shell.md): Electron shell boundary over the hosted TDF origin, one system playback session shared by release player and radio, reproducible installers with a fail-closed shell update channel (SYS-DESKTOP-001..003); Linux Electron and unit evidence, installed macOS/Windows acceptance pending.
 
+- [artist-similarity.md](artist-similarity.md): multi-signal artist similarity for fan recommendations (follows, favourites, RSVPs, plays), a nightly stored relation and its per-request reference behind a flag that is off by default (COMMUNITY-ARTIST-SIMILARITY-001); Z3 proofs of exclusions and order on a pinned translation, Apalache inductive proof and TLC controls for the job model, PostgreSQL probe; refinement of the code to the model by review.
+
 - [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
 
 - [event-planning-ux.md](event-planning-ux.md): explicit event clocks, standard ticket fee estimates and bounded poster retry/session checks; delegated management is specified separately below.
@@ -145,6 +147,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [operations-failure-replay.md](operations-failure-replay.md): a manager's retry of a dead-lettered Operations projection re-queues it; the failure follows the projection to resolved or back to dead letter.
 - [ticket-manual-review.md](ticket-manual-review.md): staff review of a ticket bank transfer keeps its row locks to commit; bounded model, three negative controls and PostgreSQL race tests.
 - [index-declarations.md](index-declarations.md): nine uniqueness constraints created from index declarations become plain indexes; bounded model, three negative controls and PostgreSQL tests.
+- [directory-semantic-search.md](directory-semantic-search.md): embedding similarity in the semantic term of directory search behind a default-off flag; ranking envelope proved with Z3, index interleavings with an Apalache inductive invariant, bounded model with four negative controls and PostgreSQL tests.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)
 - [ledger-posting.md](ledger-posting.md): commerce ledger posting rules in PostgreSQL (SYS-MONEY-003)
 - [ledger-header.md](ledger-header.md): immutable posted source/audit headers,

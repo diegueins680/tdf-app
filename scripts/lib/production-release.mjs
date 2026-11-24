@@ -323,6 +323,9 @@ export function buildMigrationBatchSql(migrations, options = {}) {
   // ADR 0135 (2026-11-12) adds marketplace agreements; same opt-out rule.
   const marketplaceAgreementsIncluded = options.marketplaceAgreementsIncluded !== false;
   const marketplaceAgreementPaymentsIncluded = options.marketplaceAgreementPaymentsIncluded !== false;
+  // DIR-SEMANTIC-SEARCH-001 (2026-11-21) adds the directory embedding tables
+  // and their guard trigger; same opt-out rule.
+  const directorySemanticSearchIncluded = options.directorySemanticSearchIncluded !== false;
   const body = entries.map((entry, index) => {
     const applyVariable = `apply_migration_${index + 1}`;
     return [
@@ -375,7 +378,7 @@ export function buildMigrationBatchSql(migrations, options = {}) {
     '  applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()',
     ');',
     body,
-    buildSchemaVerificationSql({ includePsqlHeader: false, socialDesignationIncluded, marketplaceOffersIncluded, marketplaceAgreementsIncluded, marketplaceAgreementPaymentsIncluded }),
+    buildSchemaVerificationSql({ includePsqlHeader: false, socialDesignationIncluded, marketplaceOffersIncluded, marketplaceAgreementsIncluded, marketplaceAgreementPaymentsIncluded, directorySemanticSearchIncluded }),
     "SELECT pg_advisory_unlock(hashtextextended('tdf-production-schema-migrations', 0));",
     '\\else',
     '\\echo Another production schema migration is active; refusing to wait',
@@ -596,6 +599,8 @@ export function buildSchemaVerificationSql(options = {}) {
   // And for the ADR 0135 marketplace agreement schema (2026-11-12_marketplace_agreements).
   const marketplaceAgreementsIncluded = options.marketplaceAgreementsIncluded !== false;
   const marketplaceAgreementPaymentsIncluded = options.marketplaceAgreementPaymentsIncluded !== false;
+  // And for the DIR-SEMANTIC-SEARCH-001 embedding schema (2026-11-21_directory_semantic_search).
+  const directorySemanticSearchIncluded = options.directorySemanticSearchIncluded !== false;
   return `${header}DO $verify$
 DECLARE
   campaign_table TEXT;
@@ -1092,6 +1097,32 @@ ${marketplaceAgreementPaymentsIncluded ? `
     RAISE EXCEPTION 'marketplace.agreement_payments production gate row is missing or already enabled';
   END IF;
 ` : '  -- ADR 0136: marketplace agreement payments verified only when the batch applies 2026-11-12_marketplace_agreement_payments.'}
+${directorySemanticSearchIncluded ? `
+  -- DIR-SEMANTIC-SEARCH-001: directory embeddings (2026-11-21_directory_semantic_search).
+  IF to_regclass('public.directory_search_embedding') IS NULL
+     OR to_regclass('public.directory_query_embedding') IS NULL
+     OR to_regclass('public.directory_query_embedding_budget') IS NULL THEN
+    RAISE EXCEPTION 'Directory semantic search schema (DIR-SEMANTIC-SEARCH-001) is missing';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.directory_search_document'::regclass
+      AND tgname = 'directory_search_embedding_guard_trigger'
+      AND NOT tgisinternal AND tgenabled <> 'D'
+  ) THEN
+    RAISE EXCEPTION 'directory_search_embedding_guard_trigger must delete embeddings of hidden or rewritten documents';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM directory_search_embedding stale
+    WHERE NOT EXISTS (
+      SELECT 1 FROM directory_search_document document
+      WHERE document.entity_kind = stale.entity_kind AND document.entity_id = stale.entity_id
+        AND document.source_status = 'published' AND document.visibility = 'public'
+        AND document.moderation_status = 'allowed')
+  ) THEN
+    RAISE EXCEPTION 'A directory embedding belongs to a document that is not public';
+  END IF;
+` : '  -- DIR-SEMANTIC-SEARCH-001: directory embeddings verified only when the batch applies 2026-11-21_directory_semantic_search.'}
   IF EXISTS (
     SELECT 1 FROM directory_artist_listing_audit()
     WHERE finding_kind IN ('missing_listing','duplicate_derived_listing','public_listing_non_public_profile','stale_listing_search_document')

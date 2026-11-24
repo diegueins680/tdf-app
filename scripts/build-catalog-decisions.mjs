@@ -498,6 +498,17 @@ function main() {
       },
     };
   });
+  // A review whose candidate left the inventory is kept, with the history it
+  // references, as retirement provenance. Dropping it would leave its stored
+  // history objects unreferenced and the history store unverifiable.
+  const activeIds = new Set(decisions.map((decision) => decision.id));
+  const removedDecisions = [...existingDecisions.values()].filter((decision) => !activeIds.has(decision.id));
+  const removalRetirement = removedDecisions.length === 0 ? {} : {
+    sourceRemovalRetirements: (existingReport.reconciliation?.sourceRemovalRetirements ?? []).concat({
+      reason: `Catalog refresh ${options.reviewBatch}: these candidates are no longer in the static list inventory. Their full reviewed decisions are preserved here as history; no catalog values are affected.`,
+      decisions: removedDecisions,
+    }),
+  };
   const report = {
     schemaVersion: 1,
     baselineRevision: existingReport.baselineRevision ?? 'ce0c3bc19e2d9030e871480e9e93790940c9eb12',
@@ -508,9 +519,9 @@ function main() {
       ...(existingReport.reconciliation ?? {}),
       preservedDecisions: preservedDecisionIds.size,
       reviewedByPolicy: decisions.length - preservedDecisionIds.size,
-      removedStaleDecisions: [...existingDecisions.keys()]
-        .filter((id) => !decisions.some((decision) => decision.id === id)).length,
+      removedStaleDecisions: removedDecisions.length,
       reviewBatch: options.reviewBatch,
+      ...removalRetirement,
     },
     decisions,
   };

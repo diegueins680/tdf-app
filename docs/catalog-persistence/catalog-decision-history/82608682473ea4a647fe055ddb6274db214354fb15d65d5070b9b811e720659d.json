@@ -1,0 +1,10 @@
+{
+  "id": "d6ad7e3315a241e6d802",
+  "classification": "security-system-registry",
+  "disposition": "retain-as-fixed-staging-target-allowlist",
+  "specializedModel": "version-controlled nonproduction inspection targets",
+  "priority": "P0-security",
+  "risk": "A mutable or unrestricted app target could send hosting credentials to an unintended scope or inspect production configuration.",
+  "justification": "The two exact app names are an intentionally closed security boundary for read-only staging inspection, not a merchant-selectable payment catalog. Tests reject every other target; any expansion requires code review and app-scoped credentials.",
+  "reviewed": true
+}

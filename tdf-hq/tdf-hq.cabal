@@ -52,6 +52,7 @@ library
     TDF.API.SocialRelationships
     TDF.Social.FanEffects
     TDF.Fans.ArtistRecommendations
+    TDF.Fans.ArtistSimilarity
     TDF.API.FanFollowing
     TDF.Social.RelationshipWrites
     TDF.Social.RelationshipReads
@@ -280,6 +281,8 @@ library
     TDF.Catalog.Seed
     TDF.Catalog.Types
     TDF.Directory.Policy
+    TDF.Directory.SemanticIndex
+    TDF.Directory.SemanticSearch
     TDF.DDEX.Types
     TDF.DDEX.Models
     TDF.DDEX.DB
@@ -295,6 +298,8 @@ library
     TDF.DDEX.ERN.V432.Convert
     TDF.DDEX.Observability
     TDF.DDEX.TestFixtures
+    TDF.Venues.Search
+    TDF.Venues.SearchFold
     TDF.Version
     TDF.WhatsApp.Client
     TDF.WhatsApp.History
@@ -419,6 +424,7 @@ test-suite tdf-hq-test
     TDF.OperationsInboundCaptureSpec
     TDF.ProviderIdentitySpec
     TDF.CredentialLifecycleSpec
+    TDF.Venues.SearchSpec
     TDF.WhatsAppConsentSpec
     TDF.LedgerPostingSpec
     TDF.MusicPublicationSpec
@@ -470,6 +476,8 @@ test-suite tdf-hq-test
     TDF.Catalog.RecordsSpec
     TDF.Catalog.PipelineSpec
     TDF.Directory.PolicySpec
+    TDF.Directory.SemanticSearchPostgresSpec
+    TDF.Directory.SemanticSearchSpec
     TDF.Profiles.ArtistSpec
     TDF.Profiles.ArtistActivationSpec
     TDF.Server.MerchRuntimeSpec
@@ -483,6 +491,7 @@ test-suite tdf-hq-test
     TDF.ServerFanClubSpec
     TDF.Fans.FeedAffinitySpec
     TDF.Fans.ArtistRecommendationsSpec
+    TDF.Fans.ArtistSimilaritySpec
     TDF.ServerSpec
     TDF.StartupResponseSpec
     TDF.ServerAdminSpec

@@ -109,6 +109,7 @@ data AppConfig = AppConfig
   , stripePublishableKey :: Maybe Text
   , stripeWebhookSecret :: Maybe Text
   , contextualReputationEnabled :: Bool
+  , directorySemanticSearchEnabled :: Bool
   , publicReputationProjectionEnabled :: Bool
   , singleFeatureOnboardingExperimentEnabled :: Bool
   , fanFeedAffinityEnabled :: Bool
@@ -125,6 +126,7 @@ data AppConfig = AppConfig
   , googleRoutesApiBase :: Text
   , eventLogisticsRecheckEnabled :: Bool
   , artistEnrichmentEnabled :: Bool
+  , fanMultiSignalRecommendationsEnabled :: Bool
   , artistEnrichmentAutoPublish :: Bool
   , artistEnrichmentHourLocal :: Int
   , artistEnrichmentBatchSize :: Int
@@ -808,6 +810,7 @@ loadConfig = do
   stripePublishableKeyEnv <- lookupEnv "STRIPE_PUBLISHABLE_KEY"
   stripeWebhookSecretEnv <- lookupEnv "STRIPE_WEBHOOK_SECRET"
   contextualReputationEnabledEnv <- lookupEnv "CONTEXTUAL_REPUTATION_ENABLED"
+  directorySemanticSearchEnabledEnv <- lookupEnv "DIRECTORY_SEMANTIC_SEARCH_ENABLED"
   publicReputationProjectionEnabledEnv <- lookupEnv "PUBLIC_REPUTATION_PROJECTION_ENABLED"
   singleFeatureOnboardingExperimentEnabledEnv <- lookupEnv "SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED"
   fanFeedAffinityEnabledEnv <- lookupEnv "FAN_FEED_AFFINITY_ENABLED"
@@ -824,6 +827,8 @@ loadConfig = do
   googleRoutesApiBaseEnv <- lookupEnv "GOOGLE_ROUTES_API_BASE"
   eventLogisticsRecheckEnabledEnv <- lookupEnv "EVENT_LOGISTICS_RECHECK_ENABLED"
   artistEnrichmentEnabledEnv <- lookupEnv "ARTIST_ENRICHMENT_ENABLED"
+  fanMultiSignalRecommendationsEnabledEnv <-
+    lookupEnv "FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED"
   artistEnrichmentAutoPublishEnv <- lookupEnv "ARTIST_ENRICHMENT_AUTO_PUBLISH"
   artistEnrichmentHourEnv <- lookupEnv "ARTIST_ENRICHMENT_HOUR_LOCAL"
   artistEnrichmentBatchSizeEnv <- lookupEnv "ARTIST_ENRICHMENT_BATCH_SIZE"
@@ -878,6 +883,11 @@ loadConfig = do
   resetDbVal <- validateStartupBooleanFlag "RESET_DB" False rdbEnv
   seedDatabaseVal <- validateStartupBooleanFlag "SEED_DB" False sdbEnv
   runMigrationsVal <- validateStartupBooleanFlag "RUN_MIGRATIONS" True migEnv
+  directorySemanticSearchEnabledVal <-
+    validateStartupBooleanFlag
+      "DIRECTORY_SEMANTIC_SEARCH_ENABLED"
+      False
+      directorySemanticSearchEnabledEnv
   contextualReputationEnabledVal <-
     validateStartupBooleanFlag
       "CONTEXTUAL_REPUTATION_ENABLED"
@@ -961,6 +971,11 @@ loadConfig = do
       "ARTIST_ENRICHMENT_ENABLED"
       False
       artistEnrichmentEnabledEnv
+  fanMultiSignalRecommendationsEnabledVal <-
+    validateStartupBooleanFlag
+      "FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED"
+      False
+      fanMultiSignalRecommendationsEnabledEnv
   artistEnrichmentAutoPublishVal <-
     validateStartupBooleanFlag
       "ARTIST_ENRICHMENT_AUTO_PUBLISH"
@@ -1107,6 +1122,7 @@ loadConfig = do
     , stripePublishableKey = fmap T.pack stripePublishableKeyEnv
     , stripeWebhookSecret = fmap T.pack stripeWebhookSecretEnv
     , contextualReputationEnabled = contextualReputationEnabledVal
+    , directorySemanticSearchEnabled = directorySemanticSearchEnabledVal
     , publicReputationProjectionEnabled = publicReputationProjectionEnabledVal
     , singleFeatureOnboardingExperimentEnabled = singleFeatureOnboardingExperimentEnabledVal
     , fanFeedAffinityEnabled = fanFeedAffinityEnabledVal
@@ -1123,6 +1139,7 @@ loadConfig = do
     , googleRoutesApiBase = googleRoutesApiBaseVal
     , eventLogisticsRecheckEnabled = eventLogisticsRecheckEnabledVal
     , artistEnrichmentEnabled = artistEnrichmentEnabledVal
+    , fanMultiSignalRecommendationsEnabled = fanMultiSignalRecommendationsEnabledVal
     , artistEnrichmentAutoPublish = artistEnrichmentAutoPublishVal
     , artistEnrichmentHourLocal = artistEnrichmentHourVal
     , artistEnrichmentBatchSize = artistEnrichmentBatchSizeVal

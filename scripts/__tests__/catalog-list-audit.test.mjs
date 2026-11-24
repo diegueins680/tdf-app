@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFile } from 'node:child_process';
+import { execFile, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import os from 'node:os';
@@ -7,6 +7,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { DECISIONS_FILE, expandAtRevision, readExpandedDecisions } from '../lib/catalog-decision-history.mjs';
 
 // Complete retained parent assertions; dated inputs are explicitly projected.
 {
@@ -857,6 +858,12 @@ test('dated-UX-parent: main-parent: decision reconciliation preserves reviewed e
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,
       reviewBatch: 'unit-test-review',
+      // The removed review is kept as retirement provenance, so any history it
+      // references stays reachable in the content-addressed store.
+      sourceRemovalRetirements: [{
+        reason: 'Catalog refresh unit-test-review: these candidates are no longer in the static list inventory. Their full reviewed decisions are preserved here as history; no catalog values are affected.',
+        decisions: [{ ...preserved, id: 'stale-id' }],
+      }],
     });
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
@@ -2462,6 +2469,12 @@ test('dated-UX-parent: UX-parent: decision reconciliation preserves reviewed ent
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,
       reviewBatch: 'unit-test-review',
+      // The removed review is kept as retirement provenance, so any history it
+      // references stays reachable in the content-addressed store.
+      sourceRemovalRetirements: [{
+        reason: 'Catalog refresh unit-test-review: these candidates are no longer in the static list inventory. Their full reviewed decisions are preserved here as history; no catalog values are affected.',
+        decisions: [{ ...preserved, id: 'stale-id' }],
+      }],
     });
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
@@ -4102,6 +4115,12 @@ test('dated-storage-parent: refund-parent: decision reconciliation preserves rev
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,
       reviewBatch: 'unit-test-review',
+      // The removed review is kept as retirement provenance, so any history it
+      // references stays reachable in the content-addressed store.
+      sourceRemovalRetirements: [{
+        reason: 'Catalog refresh unit-test-review: these candidates are no longer in the static list inventory. Their full reviewed decisions are preserved here as history; no catalog values are affected.',
+        decisions: [{ ...preserved, id: 'stale-id' }],
+      }],
     });
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
@@ -5707,6 +5726,12 @@ test('dated-storage-parent: storage-parent: decision reconciliation preserves re
       reviewedByPolicy: 3,
       removedStaleDecisions: 1,
       reviewBatch: 'unit-test-review',
+      // The removed review is kept as retirement provenance, so any history it
+      // references stays reachable in the content-addressed store.
+      sourceRemovalRetirements: [{
+        reason: 'Catalog refresh unit-test-review: these candidates are no longer in the static list inventory. Their full reviewed decisions are preserved here as history; no catalog values are affected.',
+        decisions: [{ ...preserved, id: 'stale-id' }],
+      }],
     });
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
@@ -6519,8 +6544,17 @@ async function integrationParent(ref, file) {
     { cwd: integrationRoot, maxBuffer: 64 * 1024 * 1024 }).then(({ stdout }) => JSON.parse(stdout)));
   return integrationCache.get(key);
 }
+// The decisions file stores its review history by reference
+// (scripts/lib/catalog-decision-history.mjs); read it fully expanded, exactly
+// as the nested document it represents.
+let expandedDecisionsText;
+async function integrationCurrentText(file, encoding) {
+  if (file !== DECISIONS_FILE) return fs.readFile(path.join(integrationRoot, file), encoding);
+  expandedDecisionsText ??= `${JSON.stringify(readExpandedDecisions(integrationRoot), null, 2)}\n`;
+  return expandedDecisionsText;
+}
 async function integrationRead(ref, file, encoding) {
-  const actualBytes = await fs.readFile(path.join(integrationRoot, file), encoding);
+  const actualBytes = await integrationCurrentText(file, encoding);
   if (file === 'scripts/production-migrations.json' || integrationFiles.has(file)) {
     if (!integrationCurrentFiles.has(file)) integrationCurrentFiles.set(file, { bytes: actualBytes, value: JSON.parse(actualBytes) });
     assert.equal(integrationCurrentFiles.get(file).bytes, actualBytes, `Composed source changed during parent assertions: ${file}`);
@@ -6558,22 +6592,77 @@ async function integrationSource(ref, file) {
 // Retain both original published parents and additionally guard latest published main.
 const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1", "5a81672285dc9c03130fc9fd8355e2b4c58e9e12"];
 
-// Reviewed appends after the studio gallery, oldest first: the course follow-up
-// reminders, then the music audio measurement (MEDIA-MUSIC-LOUDNESS-001).
-// Verify each is the original, unchanged entry, then compare the rest as before.
+// Qualify the new append against both published parents before running their historical assertions.
+async function manifestBeforeLoudness(file) {
+  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const original = (await integrationParent('f008ebb18d9aa7c2e892301ddf435d0da6020e2f', file)).migrations.at(-1);
+  assert.equal(original.id, '2026-11-21_music_audio_measurement');
+  assert.deepEqual(current.migrations.at(-1), original);
+  return { ...current, migrations: current.migrations.slice(0, -1) };
+}
+
+function decisionBeforeLoudness(decisions) {
+  const tip = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations');
+  assert.equal(tip.reviewBatch, 'music-loudness-main-integration-20261124');
+  assert.equal(tip.evidence.valueCount, tip.previousDecision.evidence.valueCount + 1);
+  assert.equal(tip.concurrentReviewHistory[0].reviewBatch, 'music-loudness-check-20261121');
+  return tip.previousDecision;
+}
+
+test('music loudness appends the original SQL migration to the complete main manifest', async () => {
+  const file = 'scripts/production-migrations.json';
+  const parent = await integrationParent('39935739e2def3817eaa2b84229cc2cc4b4941f1', file);
+  assert.deepEqual(await manifestBeforeLoudness(file), parent);
+  const { migrations } = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const { introducedBy, path: sql } = migrations.at(-1);
+  await integrationExec('git', ['merge-base', '--is-ancestor', introducedBy, 'HEAD'], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, sql), 'utf8'), await integrationSource(introducedBy, sql));
+});
+
+// EVT-VENUE-SEARCH-001 appends one migration after the directory semantic search entry.
+// Earlier reviews are verified over the manifest without that entry.
+const VENUE_SEARCH_ENTRY = '2026-11-21_venue_search_sql';
+const withoutVenueSearch = manifest => (
+  { ...manifest, migrations: manifest.migrations.filter(row => row.id !== VENUE_SEARCH_ENTRY) });
+
+// COMMUNITY-ARTIST-SIMILARITY-001 (2026-11-21) appends one reviewed migration
+// after the venue search entry; it has its own test below and nests the venue
+// search review unchanged. Earlier reviews are verified without that entry.
+const ARTIST_SIMILARITY_ENTRY = '2026-11-21_artist_similarity';
+const ARTIST_SIMILARITY_BATCH = 'artist-similarity-2026-11-21';
+const withoutArtistSimilarity = manifest => (
+  { ...manifest, migrations: manifest.migrations.filter(row => row.id !== ARTIST_SIMILARITY_ENTRY) });
+const beforeArtistSimilarity = decision => (
+  decision.reviewBatch === ARTIST_SIMILARITY_BATCH ? decision.previousDecision : decision);
+
+test('venue search appends its migration last, unchanged since its introduction, with the previous review nested', async () => {
+  const file = 'scripts/production-migrations.json';
+  const manifest = withoutArtistSimilarity(await manifestBeforeLoudness(file));
+  const entry = manifest.migrations.at(-1);
+  assert.equal(entry.id, VENUE_SEARCH_ENTRY);
+  assert.equal(manifest.migrations.filter(row => row.id === VENUE_SEARCH_ENTRY).length, 1);
+  await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const { stdout } = await integrationExec('git', ['show', entry.introducedBy + ':' + entry.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), stdout);
+  const decisions = readExpandedDecisions(integrationRoot).decisions;
+  const tip = beforeArtistSimilarity(decisionBeforeLoudness(decisions));
+  assert.equal(tip.reviewBatch, 'venue-search-sql-20261121');
+  assert.equal(tip.evidence.valueCount, manifest.migrations.length);
+  assert.equal(tip.previousDecision.evidence.valueCount, manifest.migrations.length - 1);
+  assert.equal(tip.classification, tip.previousDecision.classification);
+  assert.equal(tip.disposition, tip.previousDecision.disposition);
+});
+
+// Course follow-up reminders append one migration after the studio gallery.
+// Verify it is the original, unchanged entry, then compare the rest as before.
 const COURSE_REMINDER_ENTRY = '2026-11-20_course_follow_up_reminder_delivery';
-const REVIEWED_APPENDS = [COURSE_REMINDER_ENTRY, '2026-11-20_chat_external_delivery', '2026-11-21_music_audio_measurement'];
 async function withoutCourseReminder(manifest) {
-  let migrations = manifest.migrations;
-  for (const id of REVIEWED_APPENDS.toReversed()) {
-    const appended = migrations.at(-1);
-    if (appended?.id !== id) continue;
-    await integrationExec('git', ['merge-base', '--is-ancestor', appended.introducedBy, 'HEAD'], { cwd: integrationRoot });
-    const { stdout } = await integrationExec('git', ['show', appended.introducedBy + ':' + appended.path], { cwd: integrationRoot });
-    assert.equal(await fs.readFile(path.join(integrationRoot, appended.path), 'utf8'), stdout);
-    migrations = migrations.slice(0, -1);
-  }
-  return { ...manifest, migrations };
+  const appended = manifest.migrations.at(-1);
+  if (appended?.id !== COURSE_REMINDER_ENTRY) return manifest;
+  await integrationExec('git', ['merge-base', '--is-ancestor', appended.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const { stdout } = await integrationExec('git', ['show', appended.introducedBy + ':' + appended.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, appended.path), 'utf8'), stdout);
+  return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
 }
 
 // MSG-DELIVERY-001 (2026-11-20) appends one reviewed migration after the
@@ -6589,7 +6678,11 @@ async function withoutChatDelivery(manifest) {
 
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const combined = await withoutCourseReminder(await withoutChatDelivery(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'))));
+  const raw = withoutVenueSearch(withoutArtistSimilarity(await manifestBeforeLoudness(file)));
+  // The directory semantic search migration (DIR-SEMANTIC-SEARCH-001) is the
+  // last reviewed append; it has its own test below.
+  assert.equal(raw.migrations.at(-1).id, '2026-11-21_directory_semantic_search');
+  const combined = await withoutCourseReminder(await withoutChatDelivery({ ...raw, migrations: raw.migrations.slice(0, -1) }));
   assert.equal(combined.migrations.at(-1).id, '2026-11-07_studio_gallery');
   const actual = { ...combined, migrations: combined.migrations.slice(0, -1) };
   const [ux, main] = await Promise.all(INTEGRATION_PARENTS.map(ref => integrationParent(ref, file)));
@@ -6603,7 +6696,7 @@ test('actual UX/storage composition preserves current main, immutable SQL and bo
     await integrationExec('git', ['merge-base', '--is-ancestor', row.introducedBy, 'HEAD'], { cwd: integrationRoot });
   }
   for (const [reviewFile, key] of integrationFiles) {
-    const current = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8'));
+    const current = JSON.parse(await integrationCurrentText(reviewFile, 'utf8'));
     for (const ref of INTEGRATION_PARENTS) {
       const prior = await integrationParent(ref, reviewFile);
       for (const row of prior[key]) assert.ok(integrationFind(current, row), `Lost whole parent object: ${ref}:${reviewFile}`);
@@ -6623,16 +6716,16 @@ test('studio gallery appends its original migration and preserves both complete 
   const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
   const before = await integrationParent(base, file);
   const original = (await integrationParent(gallery, file)).migrations.at(-1);
-  const current = await withoutCourseReminder(await withoutChatDelivery(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'))));
+  const raw = withoutVenueSearch(withoutArtistSimilarity(await manifestBeforeLoudness(file)));
   assert.equal(original.id, '2026-11-07_studio_gallery');
-  // Later reviewed appends follow the gallery entry; the composition test
-  // above names each of them. The manifest up to the gallery is unchanged.
-  const throughGallery = { ...current, migrations: current.migrations.slice(0, before.migrations.length + 1) };
-  assert.deepEqual(throughGallery, { ...before, migrations: [...before.migrations, original] });
+  // The directory semantic search migration is appended last (next test).
+  assert.equal(raw.migrations.at(-1).id, '2026-11-21_directory_semantic_search');
+  const current = await withoutCourseReminder(await withoutChatDelivery({ ...raw, migrations: raw.migrations.slice(0, -1) }));
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, original] });
   const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
   assert.equal(await fs.readFile(path.join(integrationRoot, original.path), 'utf8'), stdout);
   for (const [reviewFile, key] of integrationFiles) {
-    const currentReview = JSON.parse(await fs.readFile(path.join(integrationRoot, reviewFile), 'utf8'));
+    const currentReview = JSON.parse(await integrationCurrentText(reviewFile, 'utf8'));
     for (const parent of [base, gallery]) {
       const old = await integrationParent(parent, reviewFile);
       const row = old[key].find(r => r.evidence?.file === file || r.name === 'migrations' || r.source?.name === 'migrations');
@@ -6641,12 +6734,68 @@ test('studio gallery appends its original migration and preserves both complete 
   }
 });
 
+test('directory semantic search appends its migration after the chat delivery migration and keeps the reviewed manifest decision', async () => {
+  const file = 'scripts/production-migrations.json';
+  const main = '6142acf4cb33bee1aff32daf4c283210344feb4b';
+  const before = await integrationParent(main, file);
+  const current = withoutVenueSearch(withoutArtistSimilarity(await manifestBeforeLoudness(file)));
+  const added = current.migrations.at(-1);
+  assert.deepEqual(added, {
+    id: '2026-11-21_directory_semantic_search',
+    path: 'tdf-hq/sql/2026-11-21_directory_semantic_search.sql',
+    introducedBy: 'd48fd5f1117f6778759185ac2e6ba559937bc360',
+  });
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, added] });
+  const { stdout } = await integrationExec('git', ['show', added.introducedBy + ':' + added.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, added.path), 'utf8'), stdout);
+  const reviewFile = 'docs/catalog-persistence/catalog-list-decisions.json';
+  const decisions = readExpandedDecisions(integrationRoot).decisions;
+  // The register on main is larger than the shared helper's buffer.
+  const published = await integrationExec('git', ['show', main + ':' + reviewFile],
+    { cwd: integrationRoot, maxBuffer: 512 * 1024 * 1024 });
+  const previous = JSON.parse(published.stdout).decisions
+    .find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
+  const tip = beforeArtistSimilarity(decisionBeforeLoudness(decisions));
+  // EVT-VENUE-SEARCH-001 reviews the next append and nests this review unchanged.
+  const successor = tip.reviewBatch === 'venue-search-sql-20261121' ? tip.previousDecision : tip;
+  assert.equal(successor.evidence.valueCount, before.migrations.length + 1);
+  assert.deepEqual(successor.previousDecision, previous);
+});
+
+test('artist similarity appends exactly one migration after venue search and nests the reviewed manifest decision', async () => {
+  const file = 'scripts/production-migrations.json';
+  const main = '1184f9ffeffa2fd5f280fad2f026c12ab7224f4d';
+  const before = await integrationParent(main, file);
+  const current = await manifestBeforeLoudness(file);
+  const added = current.migrations.at(-1);
+  assert.deepEqual(added, {
+    id: ARTIST_SIMILARITY_ENTRY,
+    path: 'tdf-hq/sql/2026-11-21_artist_similarity.sql',
+    introducedBy: '89d467302501d47ce53c1551b031c46cb7bb1162',
+  });
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, added] });
+  await integrationExec('git', ['merge-base', '--is-ancestor', added.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const { stdout } = await integrationExec('git', ['show', added.introducedBy + ':' + added.path], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, added.path), 'utf8'), stdout);
+  const reviewFile = 'docs/catalog-persistence/catalog-list-decisions.json';
+  const published = await integrationExec('git', ['show', main + ':' + reviewFile],
+    { cwd: integrationRoot, maxBuffer: 512 * 1024 * 1024 });
+  const readObject = (objectPath) => execFileSync('git', ['show', main + ':' + objectPath],
+    { cwd: integrationRoot, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const previous = expandAtRevision(JSON.parse(published.stdout), readObject).decisions
+    .find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
+  const successor = decisionBeforeLoudness(readExpandedDecisions(integrationRoot).decisions);
+  assert.equal(previous.reviewBatch, 'venue-search-sql-20261121');
+  assert.equal(successor.evidence.valueCount, before.migrations.length + 1);
+  assert.equal(successor.reviewBatch, ARTIST_SIMILARITY_BATCH);
+  assert.deepEqual(successor.previousDecision, previous);
+});
 
 test('My tickets retains both complete published review graphs and immutable migrations', async () => {
   const assertParent = async (ref) => {
     for (const [file, key] of integrationFiles) {
       const current = integrationCurrentFiles.get(file)?.value
-        ?? JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+        ?? JSON.parse(await integrationCurrentText(file, 'utf8'));
       const before = await integrationParent(ref, file);
       for (const row of before[key]) {
         assert.ok(integrationFind(current, row), `Lost whole ticket parent object: ${ref}:${file}`);
@@ -6708,7 +6857,7 @@ test('current My tickets mirror matches its generator and rejects the prior main
     await integrationExec('git', ['add', '--', file], { cwd: repo });
     const report = JSON.parse(await fs.readFile(path.join(integrationRoot, 'docs/catalog-persistence/reports/static-list-inventory.json'), 'utf8'));
     const ids = new Set(report.candidates.filter(row => row.file === file).map(row => row.id));
-    const register = JSON.parse(await fs.readFile(path.join(integrationRoot, 'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
+    const register = readExpandedDecisions(integrationRoot);
     const selected = register.decisions.filter(row => ids.has(row.id));
     assert.equal(selected.length, ids.size);
     const current = selected.find(row => row.evidence?.name === 'mobileFeatureRegistry');
@@ -6725,4 +6874,12 @@ test('current My tickets mirror matches its generator and rejects the prior main
   } finally {
     await fs.rm(temporary, { recursive: true, force: true });
   }
+});
+
+test('sidebar and tab lists retain their six individually reviewed decisions', async () => {
+  const batch = 'cognitive-load-owner-decisions-20261116';
+  const published = await integrationParent('f5dd1736c0d01605e5c7e17914b065bbc782119b', DECISIONS_FILE);
+  const reviewed = published.decisions.filter(row => row.reviewBatch === batch);
+  assert.equal(reviewed.length, 6);
+  assert.deepEqual(readExpandedDecisions(integrationRoot).decisions.filter(row => row.reviewBatch === batch), reviewed);
 });

@@ -1,0 +1,26 @@
+{
+  "id": "499a0dae973ca8956f8d",
+  "classification": "dynamic-business-catalog",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "content_category, tag",
+  "priority": "P1-cross-platform",
+  "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+  "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx",
+    "line": 12,
+    "kind": "array",
+    "name": "categories",
+    "valueCount": 8,
+    "consumerCount": 65,
+    "exactDuplicateIds": [],
+    "similarCandidateIds": [
+      "18346b7a2c0aaaecf9cc",
+      "25d9f346cc8880a40057",
+      "4fa8a72901b0405dfeb6"
+    ]
+  }
+}

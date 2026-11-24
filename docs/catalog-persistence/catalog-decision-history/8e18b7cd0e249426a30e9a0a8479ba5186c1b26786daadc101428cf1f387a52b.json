@@ -1,0 +1,21 @@
+{
+  "id": "cb4c8bf18f6b66f7a0ad",
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "justification": "Append the studio gallery seed after the existing migration history. Its thirteen-photo revision initializes the public CMS record and preserves editorial changes on retry.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "studio-gallery-seed-first",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 259
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:d4abcafe3efd939782adfce512a7f8f663f10cc62ffeb5d2535e4a0ebe2fd2e1"
+  }
+}

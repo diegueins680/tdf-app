@@ -1,0 +1,24 @@
+{
+  "id": "49d1c72ba174118670bf",
+  "classification": "security-system-registry",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "navigation_item, navigation_item_permission",
+  "priority": "P0-security",
+  "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+  "justification": "The 163-entry generated registry retains the 161 reviewed definitions, relabels the social.events destination from 'Eventos sociales' / 'Social events' to 'Eventos' / 'Events' (the former names stay as search synonyms; route, permissions and API scopes are unchanged), and carries the two music destinations the parent registry already defines: music.public.catalog (public, opened on the web from the app) and music.library (signed-in, no role or module requirement). Neither adds a role, module, permission or API scope. The file is generated from tdf-hq/assets/feature-registry.json and its source digest matches.",
+  "reviewed": true,
+  "reviewMethod": "manual-source-review",
+  "reviewBatch": "eventos-label-2026-10-11",
+  "evidence": {
+    "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+    "line": 55
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:83a3b16f3363dcfdcf149fbfd5f089205874c46f97c379cfa2391656cf81c257"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:366d8f76aa27dc0535bef240148eeed006eea9dfb89cd08c8d06b05b546eb9d7"
+    }
+  ]
+}
