@@ -1358,6 +1358,11 @@
       "id": "2026-11-21_artist_similarity",
       "path": "tdf-hq/sql/2026-11-21_artist_similarity.sql",
       "introducedBy": "89d467302501d47ce53c1551b031c46cb7bb1162"
+    },
+    {
+      "id": "2026-11-21_music_audio_measurement",
+      "path": "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
+      "introducedBy": "6ab7ca2abd473e901c619f2fc9488dbf5a5dab2b"
     }
   ]
 }

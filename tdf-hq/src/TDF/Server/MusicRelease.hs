@@ -35,6 +35,7 @@ import TDF.Auth (AuthedUser(..), hasStrictAdminAccess)
 import qualified TDF.CMS.Models as CMS
 import TDF.DB (Env(..))
 import TDF.MusicRelease.Domain (CorrectionFailure(..), classifyCorrectionFailure)
+import qualified TDF.MusicRelease.Loudness as Loudness
 import qualified TDF.Server.MusicReleaseCommerce as Commerce
 import qualified TDF.Server.MusicReleaseCatalog as Catalog
 import qualified TDF.Server.MusicReleaseDDEX as DDEX
@@ -62,6 +63,7 @@ musicReleaseProtectedServer user =
   :<|> revalidateMediaHealth user
   :<|> createRelease user
   :<|> Catalog.getMusicReleaseVersion user
+  :<|> getReleaseVersionLoudness user
   :<|> createCorrectionVersion user
   :<|> saveDraft user
   :<|> Catalog.replaceMusicReleaseContent user
@@ -433,6 +435,35 @@ applyTransitionDB actor releaseId versionId MusicReleaseTransitionRequest{..} sn
       "UPDATE music_release_version SET state=?,updated_at=NOW() WHERE id=?::uuid AND release_id=?::uuid RETURNING id"
       [PersistText target, toPersistValue versionId, toPersistValue releaseId]
   pure (not (null (changed :: [Single UUID])))
+
+-- MEDIA-MUSIC-LOUDNESS-001. Read-only; the decision and the binding of a
+-- measurement to one file are TDF.MusicRelease.Loudness.trackCheck.
+getReleaseVersionLoudness :: AuthedUser -> UUID -> UUID -> AppM Value
+getReleaseVersionLoudness user releaseId versionId = do
+  requireFeature "music_releases.authoring"
+  enabled <- featureEnabled "music_releases.loudness_check"
+  unless enabled (throwError err404)
+  requireOwnerPermission user releaseId "release.read"
+  ensureVersion releaseId versionId
+  rows <- runDB (rawSql Loudness.loudnessTracksSql [toPersistValue versionId]
+    :: SqlPersistT IO
+         [ ( (Single Text, Single (Maybe Text), Single (Maybe Text), Single Bool)
+           , ( Single (Maybe Text), Single (Maybe Text), Single (Maybe Text)
+             , Single (Maybe Int), Single (Maybe Int), Single (Maybe Text) ) ) ])
+  let limits = Loudness.defaultLoudnessLimits
+      track ((Single recordingId, Single assetId, Single sha, Single usable), measured) =
+        Loudness.trackCheckJSON recordingId assetId
+          (Loudness.trackCheck limits (Loudness.MasterFile <$> assetId <*> sha <*> pure usable)
+            (storedMeasurement measured))
+      storedMeasurement
+        (Single assetId, Single sha, Single state, Single integrated, Single truePeak, Single reason) =
+          Loudness.StoredMeasurement <$> assetId <*> sha
+            <*> (state >>= Loudness.parseMeasurementState)
+            <*> pure integrated <*> pure truePeak <*> pure reason
+  pure (object
+    [ "limits" .= Loudness.loudnessLimitsJSON limits
+    , "tracks" .= map track rows
+    ])
 
 createEditorialComment :: AuthedUser -> UUID -> UUID -> MusicReleaseCommentRequest -> AppM Value
 createEditorialComment user releaseId versionId MusicReleaseCommentRequest{..} = do
