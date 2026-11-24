@@ -126,6 +126,21 @@ describe('MixingMasteringPage commercial truthfulness', () => {
     sessionMock = null;
   });
 
+  it('preserves the package cents from selection through the amount offered for payment', async () => {
+    listPackagesMock.mockResolvedValueOnce([{ ...packageDto, sspPriceUsdCents: 4075 }]);
+    renderPage();
+    expect(await screen.findByText('$40.75')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Seleccionar' }));
+    expect(screen.getByText(/Servicio seleccionado/).textContent).toContain('$40.75 USD');
+    fireEvent.change(screen.getByRole('textbox', { name: /Tu nombre/ }), { target: { value: 'Test Buyer' } });
+    fireEvent.change(screen.getByRole('textbox', { name: /Email/ }), { target: { value: 'buyer@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar al pago' }));
+    expect(screen.getAllByText('$40.75 USD')).toHaveLength(2);
+    expect(loadAvailableCheckoutMethodsMock).toHaveBeenCalledWith(expect.objectContaining({
+      currency: 'USD', amountMinor: 4075, productFlow: 'professional_service',
+    }));
+  });
+
   it('starts the contact step from what a signed-in account already knows', async () => {
     sessionMock = { displayName: 'Elena Paredes', username: 'elena@example.com' };
     renderPage();

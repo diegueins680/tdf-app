@@ -12375,13 +12375,13 @@
     {
       "id": "SURFACE-bee40b89d7a09a1d",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
-      "sha256": "3dafbfa8fbbfdbd112b011cca5b6db49d3507f599277ae76527bb3cb23bda7a7",
+      "sha256": "f8f9ebafeae92cba1e64f21c5d1c93f1ff2fc19bb354bfd9b431f3557d0f8cb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4a562abbc0b9c284",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
-      "sha256": "71899b12b4b5a6cd8ed8c890670aa6b874aa0a34e4e34fb9f4551944b0c40022",
+      "sha256": "ec1e3f12362095f99138ba207e5363bc40191ecd2c156ba2a5f0a7d3df7ec7ab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25850,7 +25850,7 @@
     },
     {
       "path": "docs/payments/ecuador-payment-review-2026-11-24.md",
-      "sha256": "6b652e0f55867c702d2b318c4c28bc7fd9aa16a8f3468044d00bdbe2aa8493bf",
+      "sha256": "cd043903ba09a5bc9543c03046a956d3fc1e6eac125ede7d987d87b5cc955882",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
