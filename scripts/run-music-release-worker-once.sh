@@ -30,7 +30,7 @@ active_child=''
 run_child() {
   local started=$SECONDS result=0 stage
   case "${1##*/}" in
-    perl) stage=storage_upload ;;
+    perl) case "${2##*/}" in measure-music-loudness.pl) stage=loudness_measurement ;; *) stage=storage_upload ;; esac ;;
     curl) stage=storage_request ;;
     process-music-release-audio.sh) stage=audio_pipeline ;;
     process-music-release-artwork.sh) stage=artwork_pipeline ;;
@@ -57,6 +57,7 @@ worker_id=${MUSIC_WORKER_ID:-"music-worker-$$"}
 repository_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 audio_pipeline=${MUSIC_AUDIO_PIPELINE:-"$repository_root/scripts/process-music-release-audio.sh"}
 artwork_pipeline=${MUSIC_ARTWORK_PIPELINE:-"$repository_root/scripts/process-music-release-artwork.sh"}
+loudness_tool=${MUSIC_LOUDNESS_TOOL:-"$repository_root/scripts/measure-music-loudness.pl"}
 ddex_package_builder=${MUSIC_DDEX_PACKAGE_BUILDER:-"$repository_root/scripts/build-ddex-ern432-package.sh"}
 ddex_renderer=${MUSIC_DDEX_RENDER_BIN:-tdf-ddex-render}
 endpoint=${MUSIC_S3_ENDPOINT%/}
@@ -224,6 +225,24 @@ audio_derivative_metadata() {
   jq -c --argjson bitrate "$2" '{pipeline:"audio-v2",preview:.preview,bitrate_kbps:$bitrate,loudness:.normalization.measurement,normalized:true,masterModified:false}' "$1"
 }
 
+# MEDIA-MUSIC-LOUDNESS-001: warn-only loudness measurement of the verified
+# master, behind music_releases.loudness_check. Every path returns 0: neither a
+# missing measurement nor a failed write may fail the inspection. The row is
+# opened and closed through the lease guard for this job and attempt.
+measure_loudness() {
+  local environment=sandbox enabled measurement_id outcome
+  case "$(printf '%s' "${APP_ENV:-}" | tr '[:upper:]' '[:lower:]')" in production|prod) environment=production ;; esac
+  enabled=$(psql_db -v environment="$environment" -c "SELECT enabled FROM revenue_feature_flag WHERE flag_key='music_releases.loudness_check' AND environment=:'environment';") || return 0
+  [ "$enabled" = t ] || return 0
+  measurement_id=$(psql_db -v asset_id="$source_asset_id" -v expected_sha256="$expected_sha256" -v job_id="$job_id" -v attempt="$attempt" -c "SELECT music_begin_audio_measurement(:'asset_id'::uuid,:'expected_sha256','loudness','ffmpeg-ebur128-v1',:'job_id'::uuid,:'attempt'::integer);") || return 0
+  [ -n "$measurement_id" ] || return 0
+  run_child perl "$loudness_tool" "$source_file" > "$working_dir/loudness-result.json" || true
+  active_child=''
+  outcome=$(head -c 4096 "$working_dir/loudness-result.json" | jq -c 'select(type == "object")' 2>/dev/null | head -n 1) || outcome=''
+  [ -n "$outcome" ] || outcome='{"state":"failed","reason":"interrupted"}'
+  psql_db -v measurement_id="$measurement_id" -v job_id="$job_id" -v attempt="$attempt" -v outcome="$outcome" -c "SELECT music_finish_audio_measurement(:'measurement_id'::uuid,:'job_id'::uuid,:'attempt'::integer,:'outcome'::jsonb);" >/dev/null || return 0
+}
+
 process_audio() {
   [ -n "$source_asset_id" ] && [ -n "$recording_id" ] && [ -n "$source_bucket" ] || return 1
   source_file="$working_dir/master"
@@ -260,6 +279,7 @@ process_audio() {
     metadata=$(audio_derivative_metadata "$output_dir/manifest.json" "$bitrate")
     psql_db -v version_id="$version_id" -v recording_id="$recording_id" -v parent_id="$source_asset_id" -v role="$role" -v bucket="$MUSIC_S3_DERIVATIVE_BUCKET" -v object_key="$object_key" -v media_type="$media_type" -v bytes="$derivative_bytes" -v sha256="$derivative_sha" -v metadata="$metadata" -v created_by="$created_by" -c "INSERT INTO music_asset(release_version_id,recording_id,parent_asset_id,asset_role,storage_provider,storage_class,bucket_name,object_key,media_type,byte_size,sha256,processing_state,technical_metadata,provenance,immutable,created_by,ready_at) VALUES(:'version_id'::uuid,:'recording_id'::uuid,:'parent_id'::uuid,:'role','s3_compatible','standard',:'bucket',:'object_key',:'media_type',:'bytes'::bigint,:'sha256','ready',:'metadata'::jsonb,jsonb_build_object('pipeline','audio-v2','sourceAssetId',:'parent_id'::uuid),TRUE,:'created_by'::bigint,NOW()) ON CONFLICT(release_version_id,asset_role,sha256) DO NOTHING;" >/dev/null
   done
+  measure_loudness || echo "Warning: loudness measurement step did not complete" >&2
   mark_succeeded "$(jq -nc --arg sourceSha256 "$expected_sha256" '{pipeline:"audio-v2",sourceSha256:$sourceSha256}')"
 }
 
