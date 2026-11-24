@@ -17,7 +17,7 @@ import           TDF.Commerce.CheckoutStore (CheckoutEnvironment (..))
 import           TDF.Commerce.ProviderAdapter
 import           TDF.Commerce.ProviderAdapter.PayPhone
 import           TDF.Commerce.ProviderAdapter.PlaceToPay
-import           TDF.Commerce.ProviderCapabilities (ProviderOutcomeCertainty (..))
+import           TDF.Commerce.ProviderCapabilities (ProviderOutcomeCertainty (..), hostedSessionCanRetry)
 
 newtype Ref = Ref T.Text deriving (Show)
 
@@ -153,6 +153,29 @@ spec = describe "Provider adapter binding admission (PAY-ADAPTER-BINDING-001)" $
               (placeToPayQuery "REJECTED" reported ["REJECTED", "PENDING"])
         in (fmap adapterResultCertainty rejected === Right ProviderConfirmedNoCharge)
              .&&. (fmap adapterResultCertainty mixed === Right ProviderAmbiguous)
+
+  describe "hosted session fallback" $ do
+    it "keeps every outstanding operation locked until a terminal, safe outcome" $ do
+      let nonterminal = ["prepared", "in_flight", "processing", "requires_customer_action", "ambiguous", "succeeded"]
+      [state | state <- nonterminal, hostedSessionCanRetry state ProviderNotContacted] `shouldBe` []
+      hostedSessionCanRetry "confirmed_no_charge" ProviderConfirmedNoCharge `shouldBe` True
+      hostedSessionCanRetry "failed" ProviderRejectedBeforeCreation `shouldBe` True
+      hostedSessionCanRetry "failed" ProviderAmbiguous `shouldBe` False
+      hostedSessionCanRetry "confirmed_no_charge" ProviderSucceeded `shouldBe` False
+
+  describe "PayPhone create" $ do
+    it "binds Button and wallet replies to the kind of attempt that requested them" $ do
+      let create reference = adapterParseResponse payPhone AdapterCreate
+            (PaymentLocator "pending" (ExpectedPayment reference 200 "USD"))
+          button = create "TDFC-example"
+          wallet = create "TDF-example"
+          sale = object ["transactionId" .= (7 :: Int64)]
+          prepared = object ["paymentId" .= ("prepare-id" :: T.Text),
+            "payWithCard" .= ("https://pay.payphonetodoesposible.com/checkout" :: T.Text)]
+      fmap adapterResultState (button prepared) `shouldBe` Right AdapterRequiresCustomerAction
+      fmap adapterResultState (wallet sale) `shouldBe` Right AdapterPending
+      button sale `shouldSatisfy` isLeft
+      wallet prepared `shouldSatisfy` isLeft
 
   describe "PayPhone query" $ do
     it "admits a sale exactly when reference, amount and currency match" $
