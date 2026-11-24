@@ -18248,7 +18248,7 @@
     {
       "id": "SURFACE-9038b2dbdf428e2c",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
-      "sha256": "38bcf3bde4d2ef0ee7620c98b9586fb8b7db5c165207d34bbb28b8e73891244a",
+      "sha256": "f16b44bc57ffd1ab79b6d838ffdc604e39a6bdd3cfc195f56b48b0c245a9ad49",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18260,7 +18260,7 @@
     {
       "id": "SURFACE-163048cc75f29b92",
       "path": "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
-      "sha256": "0845b9639d054fbb4e43af1a86abf9b9b1587306e8f2ee0200ad529d2fd17fd3",
+      "sha256": "eafb32778abc9e483394275a25a7c042e69600acfb4532fed2722578ab870d11",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19046,7 +19046,7 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "d5129a96d1450d4c428ff8d6886abb1311116c24c43f40b8ae3e01327dfd3116",
+      "sha256": "e635917ea9b611e78acc7621d88a132ebd7bc3e5e7411e3170e925fa2272a58c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19580,7 +19580,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "0b8f75b56d07375dc1aedfa447191eb9f714b21d25924ee247c0c19160a1a4cd",
+      "sha256": "c7b13d94b00bd54768dd18652fd55165b510ed44c4ce18e6fc610f04be9f2427",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19706,13 +19706,13 @@
     {
       "id": "SURFACE-5d36ee6901338dab",
       "path": "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
-      "sha256": "5b0a405f5a8e81e439655b8aac0384c828258113c625cfa1f1d4acb0376a3cde",
+      "sha256": "427e5e58f1441e7f898847f5c37ba3d23f1a6b997f468e03a62a892333d13c7a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "110a2aadfc9f1659c7f0d641e66d1d737383f18b5eb0855ff6652d60653eabe9",
+      "sha256": "44054e10e58b273a89b785c4edab4ef5113b3d57da79c2663e537cdeaf5fa894",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25206,7 +25206,7 @@
     },
     {
       "path": "docs/marketplace/manual-gates.md",
-      "sha256": "f0c70150c7e005806675054c6ba2b208b5dff12bbaa01a33811ddb1ff3e2b149",
+      "sha256": "9db184c3c03c0fcb99718eb41f793f8fc277146480099b2f91d471ca2401fa8f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25837,6 +25837,13 @@
     {
       "path": "docs/payments/ecuador-payment-platform-audit-2026-09-11.md",
       "sha256": "819d350d7e7ebc11b344f84f19524af661313c10348a4e4116efd18aade2c26d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/ecuador-payment-review-2026-11-24.md",
+      "sha256": "79a0a639e5d02a62c2163849057836b93b21abbf9617667360833d0b07d1009f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
