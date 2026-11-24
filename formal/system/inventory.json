@@ -18297,7 +18297,7 @@
     {
       "id": "SURFACE-24ec334e6417bf04",
       "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-      "sha256": "e683710d467e99bef533498a64d1220fbd18286fa91f9580f68dfa6eb46c4043",
+      "sha256": "9d433270a200e4e47a00828713b046cfc0df5dea3c528271beb8c0d527b84d1f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19719,7 +19719,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "44054e10e58b273a89b785c4edab4ef5113b3d57da79c2663e537cdeaf5fa894",
+      "sha256": "0fd11d6376d14d312b5752073683af7bec028a65436e02c7dd63963ab4f5c42e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31191,7 +31191,7 @@
     },
     {
       "path": "formal/event-operations/refund-recovery-correspondence.md",
-      "sha256": "f0943b9df96f724b92825ea5b556ab9babbcece9dc3134368e033a17acb4611d",
+      "sha256": "252891f80c47f75ed53978d605e7abfee230d94b3aaf87b976a804e99c7d7d55",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
