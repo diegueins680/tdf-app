@@ -30567,7 +30567,7 @@
     "formal/system/public-routes.json": "c2c6ccb156e5aec42bfecf84f6a248ccd5cae1a6c49790b5db11098e6c6274ee",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "afce4ea8d7554ae201d465fcee10d9e7ab885df39fc78fabcab86f4bc199b4c5",
+    "formal/system/recovery-expiry-arithmetic.json": "601972f3e54615be6e421d89325f18a5630d956452844ea5775e699508ebc812",
     "formal/system/route-requirements.json": "fae2eeeb651f354a6535deed3d643e05a564a0cd2a5f2e1803f39ebeb7ca01a0",
     "formal/system/state-machine-bindings.json": "6af96259b546588349a4cbc421d22a749ec4bb5faa5997f2ca7926d4fadc602c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
