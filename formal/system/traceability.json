@@ -31220,8 +31220,8 @@
     "tdf-hq-ui/src/pages/MerchSellerPage.money.test.tsx": "e710fc8c8fef8e14f414bf5c0893e3d26cb13c0875a4b1d686d2955cb51f0ca6",
     "tdf-hq-ui/src/pages/MerchSellerPage.tsx": "989db55347905738b325ce45021ba4fce5a84efc13acc4f989661e61527c9890",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "7ca4ea0e0c5251120b9b75cce931ced2398540ed2019244a0a5aaf5f220cc4cd",
-    "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx": "3dafbfa8fbbfdbd112b011cca5b6db49d3507f599277ae76527bb3cb23bda7a7",
-    "tdf-hq-ui/src/pages/MixingMasteringPage.tsx": "71899b12b4b5a6cd8ed8c890670aa6b874aa0a34e4e34fb9f4551944b0c40022",
+    "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx": "f8f9ebafeae92cba1e64f21c5d1c93f1ff2fc19bb354bfd9b431f3557d0f8cb0",
+    "tdf-hq-ui/src/pages/MixingMasteringPage.tsx": "ec1e3f12362095f99138ba207e5363bc40191ecd2c156ba2a5f0a7d3df7ec7ab",
     "tdf-hq-ui/src/pages/MobileAppPage.tsx": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
     "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx": "b914809cea81f9ff7b4c6f02d95cf01813ae506779335e9113c50d04393c76a9",
     "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx": "d34d0f97e2928b467bffa3031398caef895d82eb7f1d046e578375f1a7389d2c",
@@ -72302,7 +72302,7 @@
     {
       "id": "SURFACE-bee40b89d7a09a1d",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
-      "sha256": "3dafbfa8fbbfdbd112b011cca5b6db49d3507f599277ae76527bb3cb23bda7a7",
+      "sha256": "f8f9ebafeae92cba1e64f21c5d1c93f1ff2fc19bb354bfd9b431f3557d0f8cb0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72318,7 +72318,7 @@
     {
       "id": "SURFACE-4a562abbc0b9c284",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
-      "sha256": "71899b12b4b5a6cd8ed8c890670aa6b874aa0a34e4e34fb9f4551944b0c40022",
+      "sha256": "ec1e3f12362095f99138ba207e5363bc40191ecd2c156ba2a5f0a7d3df7ec7ab",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
