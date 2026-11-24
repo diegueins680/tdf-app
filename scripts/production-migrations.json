@@ -1363,6 +1363,21 @@
       "id": "2026-11-21_music_audio_measurement",
       "path": "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
       "introducedBy": "6ab7ca2abd473e901c619f2fc9488dbf5a5dab2b"
+    },
+    {
+      "id": "2026-11-21_location_genre_filters",
+      "path": "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+      "introducedBy": "a0ca9cd7367ecdd7252dfe50d0a9c94365fc2fcf"
+    },
+    {
+      "id": "2026-11-24_unicode_genre_suggestion_keys",
+      "path": "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql",
+      "introducedBy": "75bb471542ae62f4f4a591bb57fc8565fcc9118d"
+    },
+    {
+      "id": "2026-11-24_preserve_selected_genre_ids",
+      "path": "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
+      "introducedBy": "670482f551c6e366040a20cf7f72117aa6df4ab5"
     }
   ]
 }

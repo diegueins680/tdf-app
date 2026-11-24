@@ -84,6 +84,7 @@ import           TDF.API.CommerceOperations (CommerceOperationsAPI)
 import           TDF.API.PaymentCapabilities (PaymentCapabilitiesAPI)
 import           TDF.API.ProviderExecution (ProviderExecutionAPI)
 import           TDF.API.Directory (DirectoryPublicAPI, DirectoryProtectedAPI)
+import           TDF.API.Taxonomy (TaxonomyPublicAPI, TaxonomyProtectedAPI)
 import           TDF.API.Reviews (ReviewsPublicAPI, ReviewsProtectedAPI)
 import           TDF.Operations.API (OperationsAPI)
 import           TDF.EventOperations.API (EventOperationsAPI)
@@ -663,6 +664,7 @@ type ProtectedAPI =
   :<|> "artist-invitations" :> ArtistInvitationsAPI
   :<|> "navigation" :> "preferences" :> NavigationPreferencesAPI
   :<|> DirectoryProtectedAPI
+  :<|> TaxonomyProtectedAPI
   :<|> MerchProtectedAPI
   :<|> OperationsAPI
   :<|> EventOperationsAPI
@@ -703,6 +705,7 @@ type API =
   :<|> PublicCatalogAPI
   :<|> PublicInteractionsAPI
   :<|> DirectoryPublicAPI
+  :<|> TaxonomyPublicAPI
   :<|> MerchPublicAPI
   :<|> PublicUpcomingEventsAPI
   :<|> ReviewsPublicAPI

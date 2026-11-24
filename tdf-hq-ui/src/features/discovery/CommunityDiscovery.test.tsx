@@ -8,6 +8,16 @@ const response = (title: string): DirectorySearchResponse => ({ items: [{ id: 'a
 const pageOf = (title: string, nextCursor?: string): DirectorySearchResponse => ({ ...response(title), facets: { total: 30, entityTypes: { profile: 30 }, cities: [] }, nextCursor });
 const search = jest.fn<(query: DirectorySearchQuery, signal?: AbortSignal) => Promise<DirectorySearchResponse>>();
 jest.unstable_mockModule('../../api/directory', () => ({ Directory: { search, taxonomies: async () => ({ genres: [], cities: [] }) } }));
+const filterOptions = jest.fn(async () => ({
+  countries: [{ id: 'aaaaaaaa-0000-4000-8000-000000000001', code: 'EC', nameEs: 'Ecuador', nameEn: 'Ecuador' }],
+  regions: [{ id: 'bbbbbbbb-0000-4000-8000-000000000001', countryId: 'aaaaaaaa-0000-4000-8000-000000000001', code: 'EC-P', nameEs: 'Pichincha', nameEn: 'Pichincha' }],
+  cities: [{ id: 'cccccccc-0000-4000-8000-000000000001', countryId: 'aaaaaaaa-0000-4000-8000-000000000001', regionId: 'bbbbbbbb-0000-4000-8000-000000000001', code: 'quito', nameEs: 'Quito', nameEn: 'Quito' }],
+  genres: [
+    { id: 'dddddddd-0000-4000-8000-000000000001', code: 'latin', nameEs: 'Latina', nameEn: 'Latin', parentId: null },
+    { id: 'dddddddd-0000-4000-8000-000000000002', code: 'cumbia', nameEs: 'Cumbia', nameEn: 'Cumbia', parentId: 'dddddddd-0000-4000-8000-000000000001' },
+  ],
+}));
+jest.unstable_mockModule('../../api/taxonomy', () => ({ Taxonomy: { filterOptions } }));
 const { default: CommunityDiscovery } = await import('./CommunityDiscovery');
 const { directoryResultPath } = await import('./useDirectorySearch');
 
@@ -154,4 +164,19 @@ test('recovers from a failed search without losing the query', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
   await screen.findByText('Initial');
   expect(screen.getByLabelText('Buscar artistas y perfiles')).toHaveProperty('value', 'Luna');
+});
+
+test('TAX-FILTER-001: shared filters from the URL reach the search and legacy genre/city links still work', async () => {
+  mount('/fans?f.genre=dddddddd-0000-4000-8000-000000000002&f.city=cccccccc-0000-4000-8000-000000000001');
+  await waitFor(() => expect(search).toHaveBeenCalledWith(expect.objectContaining({
+    genreIds: ['dddddddd-0000-4000-8000-000000000002'],
+    cityIds: ['cccccccc-0000-4000-8000-000000000001'],
+  }), expect.any(AbortSignal)));
+  cleanup();
+  search.mockClear();
+  mount('/fans?genreId=dddddddd-0000-4000-8000-000000000001');
+  await waitFor(() => expect(search).toHaveBeenCalledWith(expect.objectContaining({
+    genreIds: ['dddddddd-0000-4000-8000-000000000001'],
+  }), expect.any(AbortSignal)));
+  await waitFor(() => expect(screen.getAllByTestId('community-taxonomy-chip').map((chip) => chip.textContent)).toEqual(['Latina']));
 });

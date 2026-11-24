@@ -23,6 +23,7 @@ import qualified Data.Text.Encoding as TE
 import Data.Text.Encoding.Error (lenientDecode)
 import Data.Time (Day, UTCTime)
 import Data.UUID (UUID)
+import TDF.Taxonomy.Filter (TaxonomyFilter, mkTaxonomyFilter, taxonomyFacetsSql, taxonomyInputColumnsSql, taxonomyInputParams, taxonomyMatchSql)
 import qualified Data.UUID as UUID
 import Database.Persist (PersistValue(..), toPersistValue)
 import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
@@ -49,6 +50,7 @@ type AppM = ReaderT Env Handler
 musicReleasePublicServer :: ServerT MusicReleasePublicAPI AppM
 musicReleasePublicServer =
        listPublicReleases
+  :<|> publicReleaseFacets
   :<|> getPublicRelease
   :<|> Assets.getPublicMusicAssetAccess
   :<|> recordAnonymousPlaybackEvent
@@ -188,10 +190,12 @@ requireOwnerPermission user releaseId permission =
     then pure ()
     else requireMusicPermission user releaseId permission >> pure ()
 
-listPublicReleases :: Maybe Text -> Maybe Text -> Maybe Int64 -> Maybe Int -> Maybe Int -> AppM [Value]
-listPublicReleases edgeCountry query artistPartyId requestedLimit requestedOffset = do
+listPublicReleases :: Maybe Text -> Maybe Text -> Maybe Int64 -> Maybe Int -> Maybe Int
+  -> [UUID] -> [UUID] -> [UUID] -> [UUID] -> AppM [Value]
+listPublicReleases edgeCountry query artistPartyId requestedLimit requestedOffset countryIds regionIds cityIds genreIds = do
   requirePublicFeature
   territory <- Assets.trustedEdgeTerritory edgeCountry
+  taxonomy <- either (throwError . badRequest) pure (mkTaxonomyFilter countryIds regionIds cityIds genreIds)
   let limit = max 1 (min 100 (fromMaybe 24 requestedLimit))
       offset = max 0 (fromMaybe 0 requestedOffset)
       normalizedQuery = T.strip (fromMaybe "" query)
@@ -199,8 +203,8 @@ listPublicReleases edgeCountry query artistPartyId requestedLimit requestedOffse
   -- EXISTS retains one row per release even when several renditions match.
   -- Reuse directory normalization while retaining literal non-Latin matching.
   jsonRows
-    "WITH input AS (SELECT ?::text raw_query,directory_normalize_text(?::text) query)\
-    \ SELECT jsonb_build_object(\
+    ( publicReleaseInputSql <>
+    " SELECT jsonb_build_object(\
     \ 'id',public.id,'artistPartyId',public.artist_party_id,'slug',public.canonical_slug,\
     \ 'kind',public.release_kind,'versionId',public.release_version_id,'versionNumber',public.version_number,\
     \ 'title',public.title,'subtitle',public.subtitle,'versionTitle',public.version_title,\
@@ -208,7 +212,47 @@ listPublicReleases edgeCountry query artistPartyId requestedLimit requestedOffse
     \ 'originalReleaseDate',public.original_release_date,'releaseAtUtc',public.release_at_utc,\
     \ 'labelName',public.label_name,'catalogNumber',public.catalog_number,'publishedAt',public.published_at,\
     \ 'coverAssetId',(SELECT asset.id FROM music_asset asset WHERE asset.release_version_id=public.release_version_id AND asset.asset_role='cover_display' AND asset.processing_state='ready' ORDER BY asset.created_at DESC LIMIT 1)\
-    \) FROM music_public_release public CROSS JOIN input\
+    \)" <> publicReleaseVisibilitySql
+      <> " AND " <> taxonomyMatchSql "input" musicReleaseCitySql musicReleaseCountrySql musicReleaseGenresSql
+      <> " ORDER BY public.published_at DESC, public.id LIMIT ? OFFSET ?"
+    )
+    (publicReleaseParams normalizedQuery territory artistPartyId taxonomy
+      <> [PersistInt64 (fromIntegral limit), PersistInt64 (fromIntegral offset)])
+
+-- | TAX-FILTER-001 per-value counts over the releases the list would show
+-- without its own taxonomy selection (see 'taxonomyFacetsSql').
+publicReleaseFacets :: Maybe Text -> Maybe Text -> Maybe Int64 -> [UUID] -> [UUID] -> [UUID] -> [UUID] -> AppM Value
+publicReleaseFacets edgeCountry query artistPartyId countryIds regionIds cityIds genreIds = do
+  requirePublicFeature
+  territory <- Assets.trustedEdgeTerritory edgeCountry
+  taxonomy <- either (throwError . badRequest) pure (mkTaxonomyFilter countryIds regionIds cityIds genreIds)
+  let normalizedQuery = T.strip (fromMaybe "" query)
+  rows <- jsonRows
+    ( publicReleaseInputSql
+      <> ", music_base AS (SELECT public.id::text item_key," <> musicReleaseCitySql <> " city_id,"
+      <> musicReleaseCountrySql <> " country_id," <> musicReleaseGenresSql <> " genre_ids"
+      <> publicReleaseVisibilitySql <> ") SELECT " <> taxonomyFacetsSql "music_base" "input"
+    )
+    (publicReleaseParams normalizedQuery territory artistPartyId taxonomy)
+  pure (fromMaybe (object []) (listToMaybe rows))
+
+publicReleaseInputSql :: Text
+publicReleaseInputSql =
+  "WITH input AS (SELECT ?::text raw_query,directory_normalize_text(?::text) query," <> taxonomyInputColumnsSql <> ")"
+
+publicReleaseParams :: Text -> Maybe Text -> Maybe Int64 -> TaxonomyFilter -> [PersistValue]
+publicReleaseParams normalizedQuery territory artistPartyId taxonomy =
+  [ PersistText normalizedQuery, PersistText normalizedQuery ] <> taxonomyInputParams taxonomy <>
+  [ optionalText territory
+  , optionalInt64 artistPartyId, optionalInt64 artistPartyId
+  , optionalText territory, optionalText territory, optionalText territory
+  ]
+
+-- | Releases a visitor may see: text match, artist filter and territory
+-- availability. Shared by the list and its facets.
+publicReleaseVisibilitySql :: Text
+publicReleaseVisibilitySql =
+    " FROM music_public_release public CROSS JOIN input\
     \ WHERE (input.raw_query='' OR (\
     \   (input.query<>'' AND directory_normalize_text(public.title) LIKE '%' || input.query || '%')\
     \   OR strpos(lower(public.title),lower(input.raw_query))>0\
@@ -227,13 +271,26 @@ listPublicReleases edgeCountry query artistPartyId requestedLimit requestedOffse
     \   AND EXISTS (SELECT 1 FROM music_availability_rule rule WHERE rule.release_version_id=public.release_version_id\
     \     AND (rule.starts_at IS NULL OR rule.starts_at<=NOW()) AND (rule.ends_at IS NULL OR rule.ends_at>NOW())\
     \     AND ((rule.territory_mode='include' AND ('Worldwide'=ANY(rule.territories) OR ?::text=ANY(rule.territories)))\
-    \       OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories)))))\
-    \ ORDER BY public.published_at DESC, public.id LIMIT ? OFFSET ?"
-    [ PersistText normalizedQuery, PersistText normalizedQuery, optionalText territory
-    , optionalInt64 artistPartyId, optionalInt64 artistPartyId
-    , optionalText territory, optionalText territory, optionalText territory
-    , PersistInt64 (fromIntegral limit), PersistInt64 (fromIntegral offset)
-    ]
+    \       OR (rule.territory_mode='exclude' AND ?::text IS NOT NULL AND NOT (?::text=ANY(rule.territories)))))"
+
+-- | A release's location is its artist's: the city text resolved to exactly
+-- one reference, the country id or, failing that, the country code.
+musicReleaseCitySql :: Text
+musicReleaseCitySql =
+  "(SELECT taxonomy_city_from_text(artist.city,artist.country_id) FROM artist_profile artist WHERE artist.artist_party_id=public.artist_party_id)"
+
+musicReleaseCountrySql :: Text
+musicReleaseCountrySql =
+  "(SELECT coalesce(artist.country_id,(SELECT country.id FROM country_reference country WHERE country.alpha2=upper(btrim(artist.country_code)))) FROM artist_profile artist WHERE artist.artist_party_id=public.artist_party_id)"
+
+-- | A release's genres are its primary and secondary genre; a release with
+-- neither inherits its artist's genres.
+musicReleaseGenresSql :: Text
+musicReleaseGenresSql =
+  "(SELECT CASE WHEN version.primary_genre_id IS NULL AND version.secondary_genre_id IS NULL "
+    <> "THEN ARRAY(SELECT member.genre_id FROM artist_profile_genre_membership member WHERE member.artist_party_id=public.artist_party_id) "
+    <> "ELSE array_remove(ARRAY[version.primary_genre_id,version.secondary_genre_id],NULL) END "
+    <> "FROM music_release_version version WHERE version.id=public.release_version_id)"
 
 getPublicRelease :: Text -> Maybe Text -> AppM Value
 getPublicRelease rawSlug edgeCountry = do
@@ -971,8 +1028,9 @@ allStates =
 -- | Keep this endpoint after the established handlers: its authorized metadata
 -- projection does not change release-detail or library visibility semantics.
 searchPublicTracks :: Maybe Text -> Maybe Text -> Maybe Int -> Maybe Int
+  -> [UUID] -> [UUID] -> [UUID] -> [UUID]
   -> AppM (Headers '[Header "Cache-Control" Text] [MusicPublicTrackSearchHit])
-searchPublicTracks edgeCountry query requestedLimit requestedOffset =
+searchPublicTracks edgeCountry query requestedLimit requestedOffset countryIds regionIds cityIds genreIds =
   search `catchError` \failure -> throwError failure
     { errHeaders = ("Cache-Control", "private, no-store")
         : filter ((/= "Cache-Control") . fst) (errHeaders failure)
@@ -989,8 +1047,9 @@ searchPublicTracks edgeCountry query requestedLimit requestedOffset =
         throwError (badRequest "q is limited to 200 characters")
       unless (limit >= 1 && limit <= 100 && offset >= 0) $
         throwError (badRequest "limit must be 1-100 and offset must be nonnegative")
+      taxonomy <- either (throwError . badRequest) pure (mkTaxonomyFilter countryIds regionIds cityIds genreIds)
       values <- if T.null rawQuery then pure [] else jsonRows
-        "WITH input AS (SELECT ?::text raw_query,directory_normalize_text(?::text) query)\
+        ("WITH input AS (SELECT ?::text raw_query,directory_normalize_text(?::text) query," <> taxonomyInputColumnsSql <> ")\
         \, matching AS MATERIALIZED (\
         \ SELECT track.id track_id,recording.id recording_id,public.id release_id,\
         \   public.release_version_id,public.canonical_slug release_slug,public.title release_title,\
@@ -1000,7 +1059,7 @@ searchPublicTracks edgeCountry query requestedLimit requestedOffset =
         \ FROM music_public_release public\
         \ JOIN music_release_track track ON track.release_version_id=public.release_version_id\
         \ JOIN music_recording recording ON recording.id=track.recording_id CROSS JOIN input\
-        \ WHERE strpos(lower(recording.canonical_title),lower(input.raw_query))>0\
+        \ WHERE (strpos(lower(recording.canonical_title),lower(input.raw_query))>0\
         \   OR strpos(lower(track.display_artist),lower(input.raw_query))>0\
         \   OR strpos(lower(public.title),lower(input.raw_query))>0\
         \   OR strpos(lower(public.display_artist),lower(input.raw_query))>0\
@@ -1008,7 +1067,9 @@ searchPublicTracks edgeCountry query requestedLimit requestedOffset =
         \     strpos(directory_normalize_text(recording.canonical_title),input.query)>0\
         \     OR strpos(directory_normalize_text(track.display_artist),input.query)>0\
         \     OR strpos(directory_normalize_text(public.title),input.query)>0\
-        \     OR strpos(directory_normalize_text(public.display_artist),input.query)>0)))\
+        \     OR strpos(directory_normalize_text(public.display_artist),input.query)>0))) AND "
+        <> taxonomyMatchSql "input" musicReleaseCitySql musicReleaseCountrySql musicReleaseGenresSql <>
+        ")\
         \, authorized AS MATERIALIZED (SELECT context.*,delivery.sources FROM matching context\
         \ JOIN LATERAL (SELECT jsonb_agg(jsonb_build_object(\
         \   'assetId',asset.id,'role',asset.asset_role,'mediaType',asset.media_type,\
@@ -1030,10 +1091,10 @@ searchPublicTracks edgeCountry query requestedLimit requestedOffset =
         \   'releaseSlug',release_slug,'releaseTitle',release_title,'title',title,\
         \   'displayArtist',display_artist,'durationMs',duration_ms,'sources',sources)\
         \ FROM chosen ORDER BY published_at DESC,release_id,disc_number,track_number,track_id\
-        \ LIMIT ? OFFSET ?"
-        [ PersistText rawQuery, PersistText rawQuery, optionalText territory
+        \ LIMIT ? OFFSET ?")
+        ([ PersistText rawQuery, PersistText rawQuery ] <> taxonomyInputParams taxonomy <> [optionalText territory
         , PersistInt64 (fromIntegral limit), PersistInt64 (fromIntegral offset)
-        ]
+        ])
       hits <- mapM decodeHit values
       pure (addHeader ("private, no-store" :: Text) hits)
     decodeHit :: Value -> AppM MusicPublicTrackSearchHit

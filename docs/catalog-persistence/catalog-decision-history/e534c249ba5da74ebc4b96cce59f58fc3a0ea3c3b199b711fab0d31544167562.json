@@ -1,0 +1,21 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "01f479c371c22866216c",
+  "reviewed": true,
+  "justification": "Preserve all 263 migration objects of the previously reviewed manifest in exact order and append only 2026-11-21_location_genre_filters (TAX-FILTER-001, TAX-GENRE-SUGGESTION-001): Ecuadorian province and city references, bilingual subgenres, the shared taxonomy filter functions, the venue city backfill review and the genre_suggestion table, introduced by a0ca9cd7367ecdd7252dfe50d0a9c94365fc2fcf. No applied SQL is rewritten. This is an author review of the deployment registry composition; it does not authorize applying migrations or release and supplies no independent approval.",
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "taxonomy-filters-2026-11-21",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 264
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:1f17ed37626d6687e6ee973d9d71bc1227822b72c6114852f09076821f80d16a"
+  }
+}
