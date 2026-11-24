@@ -70,6 +70,27 @@ const snapshot = async (page, testInfo, name) => {
   await page.screenshot({ path: `${evidenceDir}/${testInfo.project.name}-${name}.png`, fullPage: false });
 };
 
+test('the filter panel opens immediately when the viewer prefers reduced motion @critical', async ({ page, baseURL }) => {
+  await fixture(page, baseURL);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/fans');
+  const filters = page.getByTestId('community-taxonomy-filters');
+  const toggle = filters.getByRole('button', { name: 'Filtrar por lugar y género' });
+  await toggle.click();
+  const panel = page.locator('#community-taxonomy-panel');
+  // Global CSS already shortens the visual transition. The panel also sets
+  // an inline duration for its JavaScript expand/collapse timer.
+  const panelDuration = () => panel.evaluate((node) => Number.parseFloat(node.style.transitionDuration));
+  await expect.poll(panelDuration).toBe(0);
+  await filters.getByRole('checkbox', { name: 'Solo en esta sección' }).check();
+
+  await toggle.click();
+  await expect(panel).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await toggle.click();
+  await expect.poll(panelDuration).toBeGreaterThan(0);
+});
+
 test('shared filters reach community search and music, show counts and chips, and can stay local to one section @critical', async ({ page, baseURL }, testInfo) => {
   const api = await fixture(page, baseURL);
   await page.goto('/fans');
