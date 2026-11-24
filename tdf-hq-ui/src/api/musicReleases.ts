@@ -1,4 +1,6 @@
+import { appendTaxonomyParams, type TaxonomySelection } from './taxonomy';
 import { del, get, post, put } from './client';
+import { parseMusicLoudnessCheck } from './musicLoudness';
 import { IncrementalSha256 } from '../utils/incrementalSha256';
 import { parseMusicMultipartCompletion } from './musicStorageResponse';
 import { canonicalMusicMinor, musicMinorForWire, type MusicMinorUnits } from '../utils/musicMoney';
@@ -608,6 +610,8 @@ export interface MusicPublicCatalogPage {
   limit?: number;
   offset?: number;
   signal?: AbortSignal;
+  /** TAX-FILTER-001 shared location and genre filters. */
+  taxonomy?: Partial<TaxonomySelection>;
 }
 
 export const musicReleases = {
@@ -624,6 +628,7 @@ export const musicReleases = {
       if (!Number.isSafeInteger(page.offset) || page.offset < 0) throw new RangeError('Search offset must be a nonnegative safe integer.');
       params.set('offset', String(page.offset));
     }
+    appendTaxonomyParams(params, page?.taxonomy);
     const suffix = params.toString();
     const path = apiPath(`/search${suffix ? `?${suffix}` : ''}`);
     const response = page?.signal ? get<unknown>(path, { signal: page.signal }) : get<unknown>(path);
@@ -642,6 +647,7 @@ export const musicReleases = {
       if (!Number.isSafeInteger(page.offset) || page.offset < 0) throw new RangeError('Catalog offset must be a nonnegative safe integer.');
       params.set('offset', String(page.offset));
     }
+    appendTaxonomyParams(params, page?.taxonomy);
     const suffix = params.toString();
     const path = apiPath(`/releases${suffix ? `?${suffix}` : ''}`);
     return page?.signal ? get<MusicPublicReleaseSummary[]>(path, { signal: page.signal }) : get<MusicPublicReleaseSummary[]>(path);
@@ -710,6 +716,9 @@ export const musicReleases = {
   getVersion: (releaseId: string, versionId: string) => get<MusicReleaseVersion>(
     apiPath(`/releases/${releaseId}/versions/${versionId}`),
   ),
+  getLoudness: (releaseId: string, versionId: string) => get<unknown>(
+    apiPath(`/releases/${releaseId}/versions/${versionId}/loudness`),
+  ).then(parseMusicLoudnessCheck),
   createCorrection: (releaseId: string, versionId: string, idempotencyKey: string) => post<MusicReleaseVersion>(
     apiPath(`/releases/${releaseId}/versions/${versionId}/corrections`), {},
     { headers: { 'Idempotency-Key': idempotencyKey } },

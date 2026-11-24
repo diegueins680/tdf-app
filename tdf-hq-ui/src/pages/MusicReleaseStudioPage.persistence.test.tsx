@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import type { MusicLoudnessCheck } from '../api/musicLoudness';
 import type { MusicReleaseVersion, MusicReleaseContentInput } from '../api/musicReleases';
 
 // Full MUI Studio renders, including all rights/access controls. This is a
@@ -14,6 +15,7 @@ const version = {
   tracks: [], parties: [], credits: [], identifiers: [], rights: [], availability: [],
   terms: [], assets: [], comments: [], validation: { errors: [] }, updatedAt: '2026-09-15T00:00:00Z',
 } as unknown as MusicReleaseVersion;
+const getLoudness = jest.fn<() => Promise<MusicLoudnessCheck>>();
 const saveMetadata = jest.fn<() => Promise<MusicReleaseVersion>>();
 const saveContent = jest.fn<(releaseId: string, versionId: string, input: MusicReleaseContentInput) => Promise<MusicReleaseVersion>>();
 const acceptTerms = jest.fn<() => Promise<void>>();
@@ -25,12 +27,13 @@ jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () =>
 } }) }));
 jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: { listPublicItems: async () => ({ items: [] }) } }));
 jest.unstable_mockModule('../api/musicReleases', () => ({ musicReleases: {
-  getVersion: async () => version, analytics: async () => null,
+  getVersion: async () => version, getLoudness, analytics: async () => null,
   saveMetadata, saveContent, acceptTerms, validate, transition, uploadAsset,
 } }));
 const { default: Studio } = await import('./MusicReleaseStudioPage');
 
 beforeEach(() => {
+  getLoudness.mockReset().mockRejectedValue(new Error('Loudness unavailable'));
   version.availability = [];
   version.assets = [];
   version.tracks = [];
@@ -96,6 +99,37 @@ async function openStudio() {
   expect(screen.getByDisplayValue('Borrador')).toBeTruthy();
   return () => { view.unmount(); client.clear(); };
 }
+
+it('refreshes an unfinished master in the open editor and stops once it has a result', async () => {
+  configurePrice();
+  const recordingId = version.tracks[0]!.recordingId;
+  const master = { ...version.assets[0]!, recordingId, role: 'master_audio' as const };
+  version.assets = [master];
+  const limits = { integratedLufsTenths: -140, toleranceTenths: 10, truePeakCeilingDbtpTenths: -10 };
+  const track: MusicLoudnessCheck['tracks'][number] = {
+    recordingId, masterAssetId: master.id, status: 'not_measured', checked: false,
+    flags: [], integratedLufsTenths: null, truePeakDbtpTenths: null, failureReason: null,
+  };
+  getLoudness.mockResolvedValueOnce({ limits, tracks: [track] })
+    .mockResolvedValueOnce({ limits, tracks: [{ ...track, status: 'pending' }] })
+    .mockResolvedValue({ limits, tracks: [{ ...track, status: 'pass', checked: true,
+      integratedLufsTenths: -142, truePeakDbtpTenths: -13 }] });
+
+  jest.useFakeTimers();
+  let close: (() => void) | undefined;
+  try {
+    close = await openStudio();
+    await act(async () => { await jest.advanceTimersByTimeAsync(10_100); });
+    expect(screen.getByText(/Midiendo la sonoridad/)).toBeTruthy();
+    await act(async () => { await jest.advanceTimersByTimeAsync(10_100); });
+    expect(screen.getByText(/Dentro del objetivo/)).toBeTruthy();
+    await act(async () => { await jest.advanceTimersByTimeAsync(30_000); });
+    expect(getLoudness).toHaveBeenCalledTimes(3);
+  } finally {
+    close?.();
+    jest.useRealTimers();
+  }
+});
 
 function button(name: string) {
   const element = screen.getByText(name, { exact: true }).closest('button');

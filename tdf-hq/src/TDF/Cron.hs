@@ -10,6 +10,7 @@ module TDF.Cron
   , startSocialAutoReplyJob
   , startEventLogisticsRecheckJob
   , startArtistEnrichmentJob
+  , startArtistSimilarityJob
   , Directive(..)
   , parseDirective
   , selectInstagramSyncAccessToken
@@ -77,12 +78,17 @@ import           Database.Persist        ( (!=.)
                                          , (+=.)
                                           )
 import           Database.Persist.Sql    (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlConn, runSqlPool)
+import           Database.Persist.Sql    (IsolationLevel (RepeatableRead), runSqlConnWithIsolation)
 import           System.Random           (randomRIO)
 import           System.IO               (hPutStrLn, stderr)
 
 import           TDF.DB                  (Env(..), ConnectionPool)
 import           TDF.API.Admin           (ArtistEnrichmentRunRequest(..))
 import           TDF.Artists.Enrichment  (runArtistEnrichmentWithKey)
+import           TDF.Fans.ArtistSimilarity
+  ( GenerationSummary (..)
+  , runSimilarityGeneration
+  )
 import qualified TDF.Email.Service       as EmailSvc
 import qualified TDF.LogBuffer           as LogBuf
 import qualified TDF.ModelsExtra         as ME
@@ -140,6 +146,7 @@ import           TDF.Config
   , ticketmasterApiKey
   , eventLogisticsRecheckEnabled
   , artistEnrichmentEnabled
+  , fanMultiSignalRecommendationsEnabled
   , artistEnrichmentAutoPublish
   , artistEnrichmentHourLocal
   , artistEnrichmentBatchSize
@@ -392,6 +399,65 @@ runArtistEnrichmentWithLeaderLock Env{envPool, envConfig} =
             ("[Cron][ArtistEnrichment] Completed " <> runKey <> " in " <> mode <> " mode.")
       _ -> LogBuf.addLog LogBuf.LogInfo
         "[Cron][ArtistEnrichment] Another API replica owns this run; skipping."
+
+-- | Hour of the local day at which the artist similarity is recomputed.
+artistSimilarityHourLocal :: Int
+artistSimilarityHourLocal = 3
+
+-- | Store the multi-signal artist similarity once at start and then once per
+-- local day (COMMUNITY-ARTIST-SIMILARITY-001). Every replica starts the
+-- scheduler; a session advisory lock lets one of them run.
+startArtistSimilarityJob :: Env -> IO ()
+startArtistSimilarityJob env@Env{envConfig}
+  | not (fanMultiSignalRecommendationsEnabled envConfig) =
+      LogBuf.addLog LogBuf.LogInfo "[Cron][ArtistSimilarity] Disabled by configuration."
+  | otherwise = do
+      void (forkIO (artistSimilarityLoop env))
+      LogBuf.addLog LogBuf.LogInfo
+        ("[Cron][ArtistSimilarity] Scheduled at start and daily at local hour "
+          <> T.pack (show artistSimilarityHourLocal) <> ".")
+
+artistSimilarityLoop :: Env -> IO ()
+artistSimilarityLoop env = do
+  runOnce
+  forever $ do
+    target <- nextLocalTimeUtc (TimeOfDay artistSimilarityHourLocal 0 0)
+    waitUntil target
+    runOnce
+  where
+    runOnce = do
+      result <- tryNonAsync (runArtistSimilarityWithLeaderLock env)
+      case result of
+        Left err -> LogBuf.addLog LogBuf.LogError
+          ("[Cron][ArtistSimilarity] Run failed; the previous generation stays in use: "
+            <> T.pack (displayException err))
+        Right () -> pure ()
+
+-- | One generation in one REPEATABLE READ transaction: all signal reads see a
+-- single snapshot and the generation becomes visible complete or not at all.
+runArtistSimilarityWithLeaderLock :: Env -> IO ()
+runArtistSimilarityWithLeaderLock Env{envPool} =
+  withResource envPool $ \backend -> do
+    lockRows <- runSqlConn
+      (rawSql "SELECT pg_try_advisory_lock(8401320261121)" [] :: SqlPersistT IO [Single Bool])
+      backend
+    case lockRows of
+      [Single True] -> do
+        outcome <- tryNonAsync
+          (runSqlConnWithIsolation runSimilarityGeneration backend RepeatableRead)
+          `finally` void
+            (runSqlConn
+              (rawSql "SELECT pg_advisory_unlock(8401320261121)" [] :: SqlPersistT IO [Single Bool])
+              backend)
+        case outcome of
+          Left err -> throwIO err
+          Right summary -> LogBuf.addLog LogBuf.LogInfo
+            ("[Cron][ArtistSimilarity] Stored generation "
+              <> T.pack (show (gsGeneration summary)) <> ": "
+              <> T.pack (show (gsArtists summary)) <> " artists, "
+              <> T.pack (show (gsPairs summary)) <> " similar pairs.")
+      _ -> LogBuf.addLog LogBuf.LogInfo
+        "[Cron][ArtistSimilarity] Another API replica owns this run; skipping."
 
 -- | Import external events for cities with active subscriptions. Every API
 -- replica starts the loop, while a PostgreSQL advisory lock and per-source

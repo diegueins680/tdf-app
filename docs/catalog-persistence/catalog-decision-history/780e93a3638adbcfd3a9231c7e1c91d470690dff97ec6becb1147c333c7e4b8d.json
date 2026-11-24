@@ -1,0 +1,30 @@
+{
+  "id": "5ed33d9cd50e8f195d05",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Changing or externally governing reducer dispatch tags could break guarded local queue hydration or transport controls. These tags do not authorize media access.",
+  "justification": "Individually reviewed all nine queue reducer tags: restore,replace,enqueue,select,remove,move,clear,shuffle,repeat. The added restore action installs a previously validated matching-owner snapshot through internal guarded hydration; the remaining eight are unchanged client queue operations. These implementation dispatch discriminants are not selectable business catalog values or a privilege registry.",
+  "reviewed": true,
+  "reviewMethod": "individual-source-review",
+  "reviewBatch": "player-listening-identity-20261026",
+  "evidence": {
+    "file": "tdf-hq-ui/src/player/queue.ts",
+    "line": 34,
+    "kind": "switch-cases",
+    "name": "action.type",
+    "valueCount": 9
+  },
+  "sourceReviewReferences": [
+    {
+      "sourceRevision": "7de7c292753565ae6ea64c57dd9aa4b97e330b6d",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceEntry": {
+        "id": "dfec3f046ad1157e0f0c"
+      },
+      "sourceEntryCanonicalSha256": "1fd0dae5a96294d8649e2d2c0167cd15b993dd168f587e5445b011ec5e0544fc",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    }
+  ]
+}

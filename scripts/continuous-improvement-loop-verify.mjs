@@ -7,6 +7,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { parseArgs } from 'node:util';
+import { verifyHistory } from './lib/catalog-decision-history.mjs';
 import {
   TRACEABILITY_FILE,
   VERIFICATION_GATES,
@@ -64,6 +65,13 @@ function runSpecificationGate(repoRoot) {
     console.error(
       `Changed source file(s) that no requirement in formal/system/requirements.json covers: ${unmapped.join(', ')}`,
     );
+    return 1;
+  }
+
+  try {
+    verifyHistory(repoRoot);
+  } catch (error) {
+    console.error(`Catalog decision history is invalid:\n${error.message}`);
     return 1;
   }
 

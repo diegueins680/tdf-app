@@ -3,7 +3,7 @@ import base from './playwright.artist-follow.config.mjs';
 export default defineConfig({
   ...base,
   testIgnore: [],
-  testMatch: 'community-discovery.spec.mjs',
+  testMatch: ['community-discovery.spec.mjs', 'taxonomy-filters.spec.mjs'],
   outputDir: 'artifacts/discovery-playwright/test-results',
   reporter: [['line'], ['json', { outputFile: 'artifacts/discovery-playwright/results.json' }]],
   use: { ...base.use, baseURL: 'http://127.0.0.1:4194' },

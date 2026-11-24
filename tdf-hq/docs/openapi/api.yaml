@@ -1683,6 +1683,10 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyCountryIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyRegionIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyCityIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyGenreIds'
       responses:
         '200':
           description: Matching events
@@ -6286,6 +6290,10 @@ paths:
           schema:
             type: string
             format: uuid
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyCountryIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyRegionIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyCityIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyGenreIds'
       responses:
         '200':
           description: Active radio streams in deterministic update order
@@ -8784,6 +8792,17 @@ paths:
   /directory/search: { $ref: './directory.yaml#/paths/~1directory~1search' }
   /directory/suggestions: { $ref: './directory.yaml#/paths/~1directory~1suggestions' }
   /directory/taxonomies: { $ref: './directory.yaml#/paths/~1directory~1taxonomies' }
+  /taxonomy/filter-options: { $ref: './taxonomy.yaml#/paths/~1taxonomy~1filter-options' }
+  /genres/suggestions/check: { $ref: './taxonomy.yaml#/paths/~1genres~1suggestions~1check' }
+  /genres/suggestions: { $ref: './taxonomy.yaml#/paths/~1genres~1suggestions' }
+  /genres/suggestions/mine: { $ref: './taxonomy.yaml#/paths/~1genres~1suggestions~1mine' }
+  /admin/genre-suggestions: { $ref: './taxonomy.yaml#/paths/~1admin~1genre-suggestions' }
+  /admin/genre-suggestions/{suggestionId}/approve: { $ref: './taxonomy.yaml#/paths/~1admin~1genre-suggestions~1{suggestionId}~1approve' }
+  /admin/genre-suggestions/{suggestionId}/reject: { $ref: './taxonomy.yaml#/paths/~1admin~1genre-suggestions~1{suggestionId}~1reject' }
+  /admin/genre-suggestions/{suggestionId}/merge: { $ref: './taxonomy.yaml#/paths/~1admin~1genre-suggestions~1{suggestionId}~1merge' }
+  /radio/streams/facets: { $ref: './taxonomy.yaml#/paths/~1radio~1streams~1facets' }
+  /music/facets/releases: { $ref: './taxonomy.yaml#/paths/~1music~1facets~1releases' }
+  /social-events/events/facets: { $ref: './taxonomy.yaml#/paths/~1social-events~1events~1facets' }
   /directory/profiles/{slug}: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{slug}' }
   /directory/party-profiles/{partyId}: { $ref: './directory.yaml#/paths/~1directory~1party-profiles~1{partyId}' }
   /directory/profiles/{slug}/reviews: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{slug}~1reviews' }
@@ -10621,6 +10640,30 @@ paths:
         '503': { description: Music commerce is disabled in the applicable environment }
   /music/search:
     $ref: './music-search.yaml#/paths/~1music~1search'
+  /music/releases/{releaseId}/versions/{versionId}/loudness:
+    get:
+      tags: [Music releases]
+      summary: Loudness check of each track's newest master file
+      operationId: getMusicReleaseVersionLoudness
+      description: >-
+        Read-only, requires release.read. For every track, reports the loudness measurement of its
+        newest master file against the approved limits. A track is checked only when the measurement
+        was taken from that exact file (same asset and SHA-256). The result is advisory and never
+        blocks validation, approval or publication (MEDIA-MUSIC-LOUDNESS-001).
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: releaseId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: versionId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Limits and one entry per track, in track order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MusicLoudnessCheck' }
+        '401': { description: Authentication required }
+        '403': { description: Verified artist ownership or team permission required }
+        '404': { description: Release version not found, or the loudness check is disabled in this environment }
+        '503': { description: Authoring disabled }
   /music/releases/{releaseId}/versions/{versionId}/validate:
     post:
       tags: [Music releases]
@@ -19430,6 +19473,48 @@ components:
         territoryCode: { type: string, nullable: true, description: Not trusted for access or stored territory; the server uses the configured edge. }
         occurredAt: { type: string, format: date-time }
         metadata: { description: JSON metadata limited to 16 KiB when encoded. }
+    MusicLoudnessCheck:
+      type: object
+      required: [limits, tracks]
+      properties:
+        limits:
+          type: object
+          description: Approved limits in tenths (-140 is -14.0 LUFS).
+          required: [integratedLufsTenths, toleranceTenths, truePeakCeilingDbtpTenths]
+          properties:
+            integratedLufsTenths: { type: integer }
+            toleranceTenths: { type: integer, minimum: 0 }
+            truePeakCeilingDbtpTenths: { type: integer }
+        tracks:
+          type: array
+          items: { $ref: '#/components/schemas/MusicLoudnessTrack' }
+    MusicLoudnessTrack:
+      type: object
+      required: [recordingId, masterAssetId, status, checked, flags, integratedLufsTenths, truePeakDbtpTenths, failureReason]
+      properties:
+        recordingId: { type: string, format: uuid }
+        masterAssetId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Newest master file of the track that was not deleted.
+        status:
+          type: string
+          enum: [pass, warn, failed, pending, not_measured]
+        checked:
+          type: boolean
+          description: True only for pass and warn, from a measurement of exactly this master file.
+        flags:
+          type: array
+          items:
+            type: string
+            enum: [too_loud, too_quiet, true_peak_over]
+        integratedLufsTenths: { type: integer, nullable: true }
+        truePeakDbtpTenths: { type: integer, nullable: true }
+        failureReason:
+          type: string
+          nullable: true
+          enum: [timeout, decode_error, no_summary, unparseable, out_of_range, silent, tool_unavailable, interrupted, null]
     MusicValidationIssue:
       type: object
       required: [fieldPath, code, message]

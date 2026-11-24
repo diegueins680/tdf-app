@@ -1,0 +1,26 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "6de858d8fb3cdaaebb91",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "music-loudness-main-integration-20261124",
+  "justification": "Keep the 267 entries from main 39935739 in order and append the original loudness migration. Preserve the complete artist similarity and music loudness manifest reviews. The SQL and both disabled feature flags are unchanged.",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 268
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:eb492f0d15276cd15f7ad5e837be0a98655fe0f30c332cd314ad920b22261aad"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:b164595893786d259b55d838f5cfb8479339c1bd644d0203cb66d8694098b82b"
+    }
+  ]
+}

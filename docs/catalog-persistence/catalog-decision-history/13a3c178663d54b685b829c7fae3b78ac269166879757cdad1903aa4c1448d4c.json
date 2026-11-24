@@ -1,0 +1,16 @@
+{
+  "id": "a54bc30988f056e6d713",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+  "justification": "Typed API-client method dispatch gains searchTracks while every inherited method remains unchanged. These protocol function names are not selectable/reportable domain values.",
+  "reviewed": true,
+  "evidence": {
+    "file": "tdf-hq-ui/src/api/musicReleases.ts",
+    "line": 518
+  },
+  "reviewBatch": "music-track-search-2026-10-26",
+  "reviewMethod": "manual-source-review"
+}

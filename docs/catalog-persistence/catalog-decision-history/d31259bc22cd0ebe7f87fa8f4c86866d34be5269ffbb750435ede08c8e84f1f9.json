@@ -1,0 +1,10 @@
+{
+  "id": "dae3b89dd11670870aa4",
+  "classification": "governed-reference-data",
+  "disposition": "consumer-update",
+  "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
+  "priority": "P3-consumer",
+  "risk": "A stale test fixture could stop verifying exact provider-method dispatch and allow client/server contract drift.",
+  "justification": "The mocked list is test-only evidence for the canonical hosted-method mapping and must change with, but never become authority over, the production server and adapter contract.",
+  "reviewed": true
+}

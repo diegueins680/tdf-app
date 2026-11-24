@@ -993,20 +993,23 @@
       "observability": "Exact source fingerprint, Mobile pin, command, result and negative-control log.",
       "authority": "approved",
       "source": "User specification-conformance instruction 2026-10-04, sections 3, 9, 10, 19 and 24",
-      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions. Catalog refresh preserves historical review provenance while recomputing discovery counters.",
+      "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions. Catalog refresh preserves historical review provenance while recomputing discovery counters. Nested review history is stored once per object under docs/catalog-persistence/catalog-decision-history, addressed by the SHA-256 of its exact bytes, and expands to the original nested document byte for byte; edited, missing, orphaned or inline history fails verification.",
       "contract": "formal/system/README.md",
       "implementation": [
         "scripts/specification-conformance.py",
         "scripts/check-new-specification-surfaces.py",
         ".github/workflows/ci.yml",
         "docs/catalog-persistence/catalog-list-decisions.json",
-        "scripts/build-catalog-decisions.mjs"
+        "scripts/build-catalog-decisions.mjs",
+        "scripts/catalog-decision-history.mjs",
+        "scripts/lib/catalog-decision-history.mjs"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",
         "scripts/test-new-specification-surfaces.py",
         "scripts/__tests__/ci-pipeline.test.mjs",
-        "scripts/__tests__/catalog-list-audit.test.mjs"
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/__tests__/catalog-decision-history.test.mjs"
       ],
       "formalModels": [],
       "verification": "Executable conformance and mutation tests; not a whole-program proof. Catalog reconciliation retains historical retirement/provenance sections while recalculating current counters; an original-generator negative control demonstrates the regression.",
@@ -12691,6 +12694,114 @@
       "evidence": "Dated local reproduction and qualification receipts, final candidate source hashes and hosted checks."
     },
     {
+      "id": "DIR-SEMANTIC-SEARCH-001",
+      "title": "Embedding similarity in the semantic term of directory search",
+      "statement": "Behind DIRECTORY_SEMANTIC_SEARCH_ENABLED (off by default) the semantic term of GET /directory/search is max(alias match, cosine similarity of the query and document embeddings clamped to [0, 1]) for publicly listed directory profiles and classifieds; every other weight, the filter, the facets and the ordering are unchanged. With the flag off, or without a query embedding, the request executes the unmodified search statement.",
+      "domain": "DIR",
+      "authority": "Owner request of 2026-11-21 to replace the 0/1 alias semantic score with an embedding signal; the owner approved the rule, the embedded fields, sending public document text and search queries to the configured embedding provider, and the constants on 2026-11-21. On 2026-11-22 the owner kept the recommended defaults for the remaining decisions (rank only, constants and redaction as built, flag off in production). formal/system/directory-semantic-search.md.",
+      "source": "formal/system/directory-semantic-search.md",
+      "contract": "tdf-hq/src/TDF/Directory/SemanticSearch.hs",
+      "property": "semantic(q,d) = max(alias(q,d), sim(q,d)), sim = round4(clamp01(cosine)) for a usable embedding pair and 0 otherwise; P1: q # '' /\\ title(a) = q /\\ title(b) # q => rank(a) > rank(b) for all component values in range; P2: served(d) => public(d), embedded(d) => public(d) /\\ hash(embedding(d)) = hash(text(d)), ranked-with(e,d) => hash(e) = hash(text(d)), sent(text) => was-public(text); P3: ~flag \\/ no query embedding => statement = searchSql; P4: 0 <= score <= 1; P5: the page order is total.",
+      "actors": [
+        "Anonymous visitor",
+        "Background sweep",
+        "Embedding provider"
+      ],
+      "preconditions": [
+        "Migration tdf-hq/sql/2026-11-21_directory_semantic_search.sql applied on a database with the vector extension",
+        "DIRECTORY_SEMANTIC_SEARCH_ENABLED=true and an OPENAI_EMBED_MODEL of 1536 dimensions; otherwise the behaviour is DIR-SEARCH-SYNC-001 unchanged"
+      ],
+      "inputs": [
+        "GET /directory/search (existing parameters)",
+        "Stored document embeddings and the cached or freshly requested query embedding"
+      ],
+      "state": {
+        "initial": "No embedding",
+        "terminal": [
+          "Embedding of the current public text",
+          "No embedding"
+        ]
+      },
+      "allowedTransitions": [
+        "Sweep: claim an eligible document, send its redacted public text, store the vector if the document is still eligible with the claimed text",
+        "Hide or rewrite a search document: its embedding is deleted in the same transaction",
+        "Search request: read a cached query vector, or request one within the per-minute budget and 400 ms and cache it by hash"
+      ],
+      "forbiddenTransitions": [
+        "Returning a document because it has an embedding",
+        "Storing an embedding for a search document that is not published, public, allowed, effective and unexpired, or keeping one past the next sweep",
+        "Ranking with an embedding of other text, another provider or another model",
+        "Sending text of a document that was not eligible when claimed, private fields, or an identifier of the caller",
+        "Substituting a locally computed vector for a failed provider call",
+        "Any change of ranking with the flag off or without a query embedding"
+      ],
+      "effects": [
+        "Rows of directory_search_embedding, directory_query_embedding and directory_query_embedding_budget",
+        "Embedding requests to the configured provider"
+      ],
+      "authorization": "Public route, unchanged. The sweep runs in the API process with the application database role.",
+      "privacy": "Only text the public directory already shows is sent, after removing what looks like an e-mail address or telephone number; queries are sent as text and cached under a SHA-256 key without the text. Search is not personalised: no per-user signal is read, so every caller receives the non-personalised result. Hidden, private, blocked, unlisted and merged documents are neither embedded nor returned.",
+      "concurrency": "The provider is called outside any transaction; the write locks the document row and rechecks eligibility and the text hash; the hash covers the document's title, subtitle, summary, search text and source version; a trigger deletes the embedding when the document is hidden, expires by an update, or changes revision; the sweep purges what remains, including documents that expire with the clock. Several processes may sweep concurrently.",
+      "idempotency": "The write is an upsert by document; the migration and its rollback can be applied repeatedly.",
+      "failure": "Provider error, timeout, exhausted budget, unusable vector, missing tables or a failing semantic statement all yield today's statement and ranking.",
+      "recovery": "Set the flag to false; embeddings and cached query vectors are derived data and can be dropped (rollback file).",
+      "observability": "One fixed JSON line per failed sweep and one line with counts per sweep that did work; no document, query or provider text is logged.",
+      "implementation": [
+        "tdf-hq/src/TDF/Directory/SemanticSearch.hs",
+        "tdf-hq/src/TDF/Directory/SemanticIndex.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/sql/2026-11-21_directory_semantic_search.sql",
+        "tdf-hq/sql/2026-11-21_directory_semantic_search_rollback.sql",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs",
+        "docs/catalog-persistence/catalog-list-decisions.json",
+        "ops/hetzner/inspect-runtime.py"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/SemanticSearchSpec.hs",
+        "tdf-hq/test/TDF/Directory/SemanticSearchPostgresSpec.hs",
+        "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
+        "scripts/test-directory-semantic-search.sh",
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/test-hetzner-inspection.py"
+      ],
+      "formalModels": [
+        "formal/directory/semantic_rank.py",
+        "formal/directory/DirectoryEmbeddingIndex.tla",
+        "formal/directory/DirectoryEmbeddingIndex.cfg",
+        "formal/directory/DirectoryEmbeddingIndexUnguardedWrite.cfg",
+        "formal/directory/DirectoryEmbeddingIndexNoTrigger.cfg",
+        "formal/directory/DirectoryEmbeddingIndexEmbeddingAdmits.cfg",
+        "formal/directory/DirectoryEmbeddingIndexNoHashCheck.cfg",
+        "scripts/verify-inductive-proofs.sh"
+      ],
+      "verification": "Three strengths of evidence, kept apart. PROVED (Z3 4.13.3, formal/directory/semantic_rank.py, real-number model of the formula with six-decimal rounding, constants parsed from the pinned SQL text): P1 an exact title match outranks every other match for all components in range and any semantic term in [0, 1], likewise the prefix and contains tiers; the P3 formula part (similarity 0 leaves the weighted sum equal to the alias-only sum); P4 score in [0, 1]; monotonicity in the similarity; three necessity controls (unclamped similarity, doubled semantic weight, doubled image boost) each break P1. PROVED (Apalache 0.62.4 inductive invariant, formal/directory/DirectoryEmbeddingIndex.tla, any nonempty set of up to three documents and up to three edits each, executions of any length): P2 as NeverServed, NeverIndexed, NeverStale and SentOnlyPublic, with one reachable-violation control. BOUNDED (TLC 1.7.2): two documents and three versions without violation; four negative controls (unguarded write, no trigger, search driven from the embedding table, no hash check) each violate the named invariant. TESTED (Hspec and QuickCheck on the pure core): P1 and the tiers, P3 plan and statement identity for a lexical plan, P4, P5 comparator totality, redaction, vector admission, and that the semantic statement differs from today's in exactly the input row and the alias term. TESTED (PostgreSQL 16 with pgvector on the migrated production schema fixture, provider replaced by a recording function): sweep embeds public documents only and without e-mail or telephone patterns; provider failure and unusable vectors write nothing; the trigger deletes on hide and rewrite; the guarded write refuses after hide or rewrite; the purge removes what the trigger did not; rows of the semantic statement equal today's rows without a usable pair (no embedding, other provider, stale hash, zero vector); similarity reorders inside a tier and never passes an exact title; a hidden document with an embedding is not returned; paging neither repeats nor skips; query cache, budget and fallback; the migration applies twice, rolls back twice and applies again, and the 263-migration production batch with its schema verification passes.",
+      "evidence": "Runs of formal/directory/semantic_rank.py, scripts/verify-inductive-proofs.sh, the tdf-hq-test groups 'directory semantic search', 'directory semantic index' and 'directory-semantic-search-postgresql' (scripts/test-directory-semantic-search.sh), and scripts/test-automatic-migrations-production-schema.sh on the candidate; hosted CI receipts for the same commands are required and are not inherited from the author's local runs.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the ranking envelope and the index invariants within their stated models; medium for the correspondence between those models and PostgreSQL, which is by review and test; the usefulness of the ranking change is not assessed, and nothing here says an embedding is a good one.",
+      "ambiguity": [
+        "The Z3 model is over real numbers; agreement with PostgreSQL float8 and numeric evaluation is tested on examples, not proved.",
+        "The TLA+ model treats each statement as atomic; that FOR SHARE on the document row makes the guarded write atomic against a concurrent update is assumed PostgreSQL behaviour.",
+        "The model's public state is the search document's own columns; a profile hidden without a refresh of its search document, and a document whose expiry passes with the clock, are excluded by the read predicate at once and by the sweep within a minute, not by the trigger.",
+        "The range proofs assume quality, availability and reputation in [0, 1] (CHECK constraints) and source_updated_at not in the future; a future timestamp already takes the activity term out of range in the unmodified statement.",
+        "Similarity only reorders documents that pass the text filter; the owner decided on 2026-11-22 that it does not admit documents, so the visible effect is small by design.",
+        "If the query embedding is available for one page and not the next, an item can repeat or be skipped between pages; the cache makes this rare and does not exclude it.",
+        "The redaction of contact details is a pattern match on words containing @ and on runs with seven or more digits.",
+        "The profile branch of the claim statement is validated by PostgreSQL as part of the statement but no test claims a profile row; the fixtures are classified documents.",
+        "No HTTP-level test drives GET /directory/search with the flag on, and no test calls the real provider.",
+        "A model with another dimension than 1536 leaves the feature inert until a migration changes the columns."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Ranking envelope and index invariants proved for their models and exercised on PostgreSQL with a stand-in provider; HTTP-level checks with the flag on, a profile-row fixture and hosted CI receipts remain; the owner set the flag in the production environment file on 2026-11-23; it takes effect only once production runs a build with this change and the migration is applied."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "AUTH-LOGOUT-001",
       "title": "Retain explicit browser logout intent through network failure and reload",
       "statement": "Explicit browser logout must suppress automatic cookie and descriptor restoration until fresh interactive authentication, distinguish unconfirmed server revocation, and reject stale session adoption callbacks.",
@@ -15324,7 +15435,6 @@
         "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
         "tdf-hq-ui/src/components/ArtistFansList.tsx",
-        "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
         "tdf-hq-ui/src/components/MarkdownText.tsx",
         "tdf-hq-ui/src/components/NotificationBell.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
@@ -19417,6 +19527,98 @@
       "historicalStatus": null
     },
     {
+      "id": "COMMUNITY-ARTIST-SIMILARITY-001",
+      "title": "Multi-signal artist similarity for fan recommendations, stored nightly",
+      "statement": "With FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED on, GET /fans/me/recommendations ranks the publicly listed artists a fan does not follow and may follow by the cosine similarity of weighted fan vectors built from follows (8), favourited recordings (8), accepted RSVPs to public events (4) and eligible plays of the last 180 days (1 to 3), for pairs supported by at least two distinct fans, completed with the follows-only popularity fallback. The similarity is stored by a nightly job and read by requests; the per-request computation from live signals is kept as the reference. A fan who switched personalisation off receives exactly the fallback. With the flag off the route behaves as COMMUNITY-FAN-RECOMMENDATION-001.",
+      "domain": "COMMUNITY",
+      "authority": "Owner approval of 2026-11-21 of the rule and constants proposed in formal/system/artist-similarity.md, including the restated monotonicity property. The opt-out reuses social_v2_preference.personalized by the implementer's default; its reachability is an open rollout precondition.",
+      "source": "formal/system/artist-similarity.md",
+      "contract": "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
+      "property": "w(f,a) = 8*follow + [f personalised](8*favourite + 4*rsvp + playPoints(plays)) for listed a # f; sim(a,b) = dot(a,b)/sqrt(norm2(a)*norm2(b)) if support(a,b) >= 2 else 0; score(c) = SUM over listed seeds s of min(w(fan,s),8)/8 * sim(s,c). For every returned artist a: listed(a) /\\ a \\notin followed(fan) /\\ a # fan /\\ (policyInstalled => followable(fan,a)); every named or contributing seed is listed, is not the fan, and is followed by the fan or (policyInstalled => followable(fan,s)). similar_fans entries are strictly ordered by (score desc, followers desc, id asc) and precede the fallback. For every stored generation g: table(g) = similarityFromWeights(weights at snapshot_at(g)); a request uses g only while now - snapshot_at(g) <= 48 h. personalised(fan) = false => result = fallback.",
+      "actors": [
+        "Fan",
+        "Scheduler"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect)",
+        "FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED=true",
+        "tdf-hq/sql/2026-11-21_artist_similarity.sql applied"
+      ],
+      "inputs": [
+        "GET /fans/me/recommendations",
+        "limit (optional; default 6, clamped to 1..24)",
+        "fan_follow, music_favorite, event_rsvp, music_playback_event and social_v2_preference rows"
+      ],
+      "state": {
+        "initial": "No generation",
+        "terminal": [
+          "Newest generation stored",
+          "Run failed, previous generation kept",
+          "Ranked list",
+          "Refusal without read"
+        ]
+      },
+      "allowedTransitions": [
+        "A run inserts one complete generation and deletes all but the two newest",
+        "A request reads; it never writes"
+      ],
+      "forbiddenTransitions": [
+        "Returning an artist that is not publicly listed, is already followed by the caller, is the caller, or may not be followed under the installed follow policy",
+        "Naming or using a hidden artist as evidence",
+        "Serving a generation whose snapshot is older than 48 hours",
+        "Publishing a generation computed from reads at different instants",
+        "A similar_fans entry for a fan who switched personalisation off",
+        "Any write by a request"
+      ],
+      "effects": [
+        "Rows in artist_similarity_generation, artist_similarity_norm and artist_similarity_pair, written by the job only"
+      ],
+      "authorization": "requireFanAccess for the route; the job runs inside the backend with no caller.",
+      "privacy": "The job reads signal rows and stores only per-pair and per-artist aggregates; a pair is stored only with at least two distinct fans. A request reads the caller's own signals and aggregates; no other fan's identity is read or returned. Favourites, RSVPs and plays of a fan who switched personalisation off are not evidence from the next run. Hidden artists are neither returned nor used as evidence, at request time on live data.",
+      "concurrency": "The job runs in one REPEATABLE READ transaction under a session advisory lock; generation and rows commit together. A request reads the table with one statement. Follows and unfollows committed after the snapshot change the caller's seeds and exclusions at once and the similarity at the next run.",
+      "idempotency": "Requests are read-only. A repeated run stores a new generation of the same content for unchanged signals.",
+      "failure": "401 without a session; 403 without Fan or Customer access. Without a usable generation the result is the popularity fallback. A failed run rolls back, is logged and leaves the previous generation.",
+      "recovery": "The next daily run or a restart stores a new generation.",
+      "observability": "[Cron][ArtistSimilarity] log lines with the generation id, artist count and pair count, or the failure; artist_similarity_generation rows.",
+      "implementation": [
+        "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
+        "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Cron.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/sql/2026-11-21_artist_similarity.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Fans/ArtistSimilaritySpec.hs",
+        "tdf-hq/test/ArtistSimilarityProbe.hs",
+        "scripts/test-artist-similarity-postgres.sh",
+        "scripts/artist-similarity-fixture.sql"
+      ],
+      "formalModels": [
+        "formal/fans/ArtistSimilarity.tla",
+        "formal/fans/artist_similarity_ranking.py"
+      ],
+      "verification": "PROVED (Z3, on a hand translation pinned by source hash, with witnesses and guard-necessity controls): exclusions of results and seeds, including that a named seed is followed or followable under the policy; the sort keys are strict total orders on distinct ids over non-NaN doubles; contributions and their sums are not NaN. PROVED (Apalache inductive invariant, for the TLA+ model): the stored relation is the reference on its snapshot, a request uses it only within the age limit, and without failing runs it is at most one period and one run old. MODEL-CHECKED (TLC, bounded): the same invariants, with two negative controls that violate them. TESTED (Hspec and QuickCheck): weight bounds, similarity in 0..1 and symmetric, score bounds, exclusions, ordering, row-order independence, opt-out and missing similarity equal the fallback, stored subset ranks like the whole relation, restated monotonicity and its counterexample. TESTED (PostgreSQL fixture through the real loaders): stored rows, stored read equals reference for every fan after each run, opt-out, a blocked favourited artist neither returned nor named (stored and live), later follow and hiding, pruning, age limit, per-fan queries equal the global ones.",
+      "evidence": "formal/fans/artist_similarity_ranking.py output; scripts/verify-inductive-proofs.sh output; tdf-hq-test ArtistSimilaritySpec run; scripts/test-artist-similarity-postgres.sh output.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the pure core (tested) and for the model and translation properties (proved). Medium for the step from model and translation to the running code: by review, plus the PostgreSQL probe on a fixture. The handler and scheduler wiring is covered by compilation and review only.",
+      "ambiguity": [
+        "The proofs are about a TLA+ model with one abstract signal and about a hand translation; neither is mechanically refined to the Haskell and SQL.",
+        "No test runs a concurrent write during a real job run on PostgreSQL; the snapshot is PostgreSQL's documented REPEATABLE READ behaviour.",
+        "The fixture uses stand-ins for directory_public_rsvp_event and social_v2_preference with the migrated column types, not a fully migrated database; no HTTP-level test runs the route.",
+        "Opt-out reachability: the switch is writable only where social v2 is enabled; enabling the flag elsewhere needs a dedicated control.",
+        "Weighted cosine is not monotone in one weight; only the restated properties hold and are tested.",
+        "The staleness bound is one period plus one run duration while runs succeed, and 48 hours otherwise, not one period exactly."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Pure core, model and translation verified as stated; refinement of the running code to them is by review and a fixture probe; opt-out reachability and HTTP-level checks on the migrated schema remain."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "COMMUNITY-FAN-NOTIFICATION-001",
       "title": "Marking own notifications read",
       "statement": "A signed-in party marks one or all of their own notifications read. Routes: POST /fans/me/notifications/{notifId}/read; POST /fans/me/notifications/read-all.",
@@ -19769,6 +19971,99 @@
         "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "COMMUNITY-FEED-AFFINITY-001",
+      "title": "Personal hot order of a fan-club feed from the viewer's affinity to each author",
+      "statement": "With the runtime gate FAN_FEED_AFFINITY_ENABLED on, a viewer who has not switched personalisation off and who reacted or replied to items of the club feed in the last 90 days receives the hot sort ordered by affinity * (reactions + 1) / max(1, ageHours)^0.8, where the affinity to an author is 1 + min(reactions + 2 * replies, 20) / 10. In every other case the hot sort keeps the previous score reactions / max(1, ageHours)^0.8. Pinned items, the top and chronological sorts, the returned items and the response shape do not change. Route: GET /fan-clubs/{artistId}/feed.",
+      "property": "For every request: returned(mode) is a permutation of returned(fallback); gate off \\/ optedOut \\/ no usable evidence => order = previous hot order (wherever that was determined); the unpinned order is the strict total order (score desc, kind, created_at desc, id desc); personalised /\\ y precedes x => 3 * (reactions(y) + 1) / decay(y) >= (reactions(x) + 1) / decay(x); evidence \\subseteq items of the served feed that the viewer may read and that are not hidden; optedOut => no behaviour read.",
+      "domain": "COMMUNITY",
+      "authority": "Owner request of 2026-11-21 for affinity-based feed ranking; rule and constants approved by the owner on 2026-11-21 (club feed only, reactions + 1 in personalised mode, type weight 1, hidden items excluded from evidence only). formal/system/feed-affinity-ranking.md.",
+      "source": "formal/system/feed-affinity-ranking.md",
+      "contract": "tdf-hq/src/TDF/Fans/FeedAffinity.hs",
+      "actors": [
+        "Fan"
+      ],
+      "preconditions": [
+        "Authenticated bearer session and the existing guards of the club feed route",
+        "FAN_FEED_AFFINITY_ENABLED set at startup for any personalised order (default off)"
+      ],
+      "inputs": [
+        "GET /fan-clubs/{artistId}/feed?sort=hot",
+        "social_v2_preference.personalized of the viewer",
+        "The viewer's reactions and replies to items of the served feed in the last 90 days"
+      ],
+      "state": {
+        "initial": "Stored feed items, reactions, replies and the viewer's personalisation preference",
+        "terminal": [
+          "Ordered feed in personalised mode",
+          "Ordered feed in fallback mode"
+        ]
+      },
+      "allowedTransitions": [
+        "None; ranking reads and never writes."
+      ],
+      "forbiddenTransitions": [
+        "Adding or dropping a feed item because of ranking",
+        "A personalised order with the gate off, for a viewer who opted out, or where the preference table is not installed",
+        "Reading the behaviour of a viewer who opted out",
+        "Counting an interaction with a hidden item, an item the viewer may not read, an item outside the served feed, or the viewer's own item as evidence",
+        "Changing the top or chronological sort, or the position of pinned items",
+        "Returning a score, an affinity or the mode"
+      ],
+      "effects": [
+        "None; read-only."
+      ],
+      "implementation": [
+        "tdf-hq/src/TDF/Fans/FeedAffinity.hs",
+        "tdf-hq/src/TDF/ServerFanClub.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/config/default.env.example"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Fans/FeedAffinitySpec.hs",
+        "scripts/test-feed-affinity-sql.py",
+        "scripts/test-feed-affinity-postgres.sh",
+        "scripts/verify-inductive-proofs.sh",
+        "formal/social/feed_affinity_arithmetic.py"
+      ],
+      "formalModels": [
+        "formal/social/FeedAffinity.tla",
+        "formal/social/FeedAffinity.cfg",
+        "formal/social/FeedAffinityGateOff.cfg",
+        "formal/social/FeedAffinityFloorZero.cfg",
+        "formal/social/FeedAffinityNoTieBreak.cfg",
+        "formal/social/FeedAffinityUnfilteredEvidence.cfg",
+        "formal/social/FeedAffinityOptOutIgnored.cfg",
+        "formal/social/feed_affinity_arithmetic.py"
+      ],
+      "verification": "PROVED on the model (Apalache inductive invariant: initiation, consecution, implication; four candidate items of which any subset is visible, three authors, abstract scores 0..6 and 1..12, any affinity in 1..3): permutation, exclusion of non-visible items and of hidden or unreadable evidence, fallback order and no behaviour read when the gate is off or the viewer opted out or has no usable evidence, order fixed by the key, displacement bound. PROVED over exact real and integer arithmetic (Z3, unsat of the negation, any positive decay): affinity in [1, 3] and monotone, displacement bound 3 and its tightness, the key is a strict total order, the tie-break keeps the previous stable order, score monotone in reactions and affinity and anti-monotone in decay. BOUNDED (TLC, three items, two authors, two score values): the same invariants, plus four negative controls that must fail (floor 0, no tie-break, evidence read before the visibility filter, opt-out ignored) and three Z3 witnesses (zero floor, unequal type weights, key without id). TESTED (Hspec and QuickCheck on the Haskell code): permutation, pinned first, fallback equal to a copy of the previous sort, top and chronological sorts unchanged, input-order independence, displacement bound, monotonicity on Double, evidence tally and hidden-item exclusion, the loader on SQLite (gate off reads nothing, opt-out reads no behaviour, window, visibility and own-item filters). TESTED on PostgreSQL: the canonical-interaction and preference SQL extracted from the Haskell source against a fixture.",
+      "evidence": "scripts/verify-inductive-proofs.sh output; formal/social/feed_affinity_arithmetic.py output; tdf-hq-test FeedAffinitySpec run; scripts/test-feed-affinity-postgres.sh output.",
+      "historicalStatus": "new",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for the rule as modelled and for the pure ranking function. The step from the model to the Haskell sort, the Double arithmetic, the SQL against the migrated schema and the handler wiring rest on tests, compilation and review, not on proof.",
+      "ambiguity": [
+        "The models abstract the sort as emitting the item whose key precedes all waiting items; that Data.List.sortBy realises this is tested, not proved.",
+        "Double arithmetic, including the exponent 0.8, is tested only; the Z3 lemmas are over exact arithmetic with an arbitrary positive decay.",
+        "The Apalache proof is for at most four items and three affinity levels; larger feeds are covered by the Z3 pairwise lemmas and by tests.",
+        "The canonical-interaction SQL runs against a fixture with the columns it reads, not the migrated schema, and no HTTP-level test serves a personalised feed.",
+        "Which items a viewer may read is decided by Interactions.visible and is outside this requirement; hidden items are still returned flagged, as before.",
+        "The constants (90 days, reply weight 2, cap 20, affinity 1 to 3) were approved without usage data.",
+        "The discovery feed (GET /fans/discovery) is not personalised; the owner deferred it.",
+        "Before this change the order of two items of one kind with equal created_at was left to the database; it is now by id descending."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Rule proved on the model and over exact arithmetic and tested on the implementation; correspondence of the Haskell code to the model, the migrated-schema SQL and an HTTP-level personalised response are not established."
+      },
+      "authorization": "Unchanged: the existing guards of the club feed route; the viewer is taken from the session.",
+      "privacy": "Reads only the viewer's own reactions and replies, nothing with the gate off and no behaviour for a viewer whose social_v2_preference.personalized is false. Only the order of the response depends on them; no score, affinity or mode is returned. Hidden or unreadable items are never evidence.",
+      "concurrency": "Items and evidence are read in the handler's transaction at the pool's default isolation. The order properties hold for any evidence values, so a concurrent reaction can change one response's order and nothing else.",
+      "idempotency": "Read-only.",
+      "failure": "Where social_v2_preference is not installed the request is served in fallback mode. Any other database error fails the request as for the rest of the handler.",
+      "recovery": "Unset FAN_FEED_AFFINITY_ENABLED and restart: every viewer returns to the previous order.",
+      "observability": "HTTP status only; the mode is not logged or returned."
     },
     {
       "id": "SCHOOL-PUBLIC-INTAKE-001",
@@ -29026,7 +29321,7 @@
     {
       "id": "UX-COGLOAD-001",
       "title": "Purchase, sign-in, booking and navigation screens ask for less reading and fewer decisions",
-      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The healthy booking introduction keeps its short instruction and native practical-details disclosure within three visible text lines in the tested viewports. Studio hours, physical Quito timezone, visitor timezone and currency context remain available by keyboard in the disclosure; schedule-field guidance remains visible at the scheduling step. Price estimates, readiness warnings and catalog retry controls remain outside the collapsed details. Opening/closing details does not change contact, service, availability, quote, consent or idempotency and never starts a write. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell. Checkout contact and required invoice errors appear beside their fields; focus moves to the first invalid field only on submission, and invalid input or quantities exceeding remaining stock never start checkout. Booking combines schedule and confirmation in one second step, retaining the current quote, deposit, terms acceptance, schedule validation and idempotency. Submission cannot bypass an in-flight availability/price check. Optional analytics failures do not reload forms; required route failures recover with at most one automatic reload per deployed commit in the browser session and retain manual recovery when storage is unavailable. Optional suggested booking times are initially collapsed behind a native keyboard-accessible disclosure; opening it and choosing a suggestion preserves the chosen physical Quito date. Transfer reference errors and receipt validation messages are associated with their respective fields; invalid transfer input never submits evidence. PayPhone country/number errors appear beside the invalid fields and focus the first invalid one without starting a payment or altering exact-recovery data. Service prices are entered in currency units with at most two decimals (dot or comma) and converted exactly to the unchanged integer rateCents wire field; empty means price on request, zero remains explicit and invalid/unsafe amounts cannot silently disappear from a draft. Event ticket-tier prices, budgets, contract commitments and finance-entry amounts use the same exact currency-unit conversion; quantity remains a count. Free tickets and zero budgets remain valid, while contracts and accounting entries require a positive amount. Invalid, fractional-cent and unsafe amounts produce field errors and never reach a mutation API. Rental deposit deductions, merchandise refund requests, variant prices and delivery fees also accept exact currency amounts with inline errors. Refund blank means the server-resolved remaining balance; deductions preserve blank/no-change versus explicit zero; delivery can be free, merchandise prices must be positive. Amounts exceeding verified balances or unsafe stored values cannot authorize financial mutations. Display retains exact safe cents. Existing refund review/execution boundaries, retry keys, custody transitions, stock units and publication rules remain unchanged. While correcting refund or deduction errors, the verified balance or maximum remains beside the input. Music release authoring accepts USD decimal units while preserving the full existing positive signed-64-bit minor-unit text range; no whole-price Number conversion occurs. Malformed price text stays local and pauses autosave before metadata/content writes; blank and zero purchase prices remain saveable in progressive drafts but cannot proceed to offer validation or review, and publication authority and transitions remain enforced. Operations amount filters retain signed exact safe integers, explicit zero, typed comma/dot text, the last valid applied range during correction and cleared/loaded-view distinctions. Invalid or inverted bounds never reach a query or saved view; unsafe saved amounts are rejected rather than silently omitted. Temporary operations drawers sit above the radio bar so actions remain reachable without bypassing pointer or keyboard behavior. Merchandise support, order, refund and settlement states use plain Spanish/English labels for existing server values, keeping requested, approved, paid, partial refund and completed refund distinct; unknown values and CSV machine codes retain their existing behavior. Refund preparation and empty-state text avoid canonical-system jargon while retaining request-only warnings, independent review and execution boundaries. The public Live Session form starts with the email-shaped username returned by its own successful access-code validation, never the ambient staff session. Owned draft values, including intentionally empty email, and subsequent edits take precedence; another verified owner remounts the form. Consent and musician identity are never inferred from that contact default. Leaving an already verified access-code field does not redundantly revalidate and disable the intake form, so the next contact edit is preserved; changed codes still require successful validation. Payment choices for tickets, studio deposits, courses, mixing and Domo quote deposits share one visual and accessible group, with the payment type prominent and its processor shown as secondary text. Only existing server-offered methods and existing local eligibility checks supply choices; all retain their original handlers and disabled conditions. The client does not invent a recommended provider from list order. Unknown outcomes continue to lock local and hosted alternatives, retain exact retry keys and permit original-attempt recovery even when new payment is disabled or no method is offered. PayPhone still requests its number only after selection and does not send a request on that first selection. For signed-in booking visitors, a complete valid contact is summarized with an explicit edit control; guests, incomplete contacts and in-progress edits remain expanded. Editing and returning to the summary move keyboard focus to the appropriate control without advancing a step, overwriting manual input or accepting terms. Course authoring preserves decimal currency prices as exact safe integer cents when loading legacy cent drafts, editing with dot/comma and writing CourseUpsert.priceCents. Its public major-unit numeric metadata is accepted only when a cent can be recovered unambiguously; invalid, fractional-cent, missing and unsafe prices cannot become a free course or reach publication. Zero remains an explicit valid free price. Drafts preserve raw invalid/blank price text separately from the API payload, retain explicit empty lists/descriptive fields, and are restored before local writes. A successful save clears the draft only if its edit revision still matches; newer edits remain local and do not show an outdated published status. Booking bank-transfer reference errors appear beside the bounded3–120-character field with an accessible helper and focus in the opened dialog. Invalid input never submits evidence; a failed request retains the reference, and the field is disabled while evidence is in flight. Submission remains review-only and never confirms payment. Before clearing a saved course draft, cleanup compares the stored snapshot with the one observed when saving; a replacement observed at response time is preserved. Marketplace rental terms show daily/optional weekly rates, refundable deposit and late fee in USD units with exact dot/comma conversion to their existing 32-bit cent fields. Daily and present weekly rates must be positive; deposit and late fee require explicit nonnegative amounts. Blank weekly rate remains null. Field-associated errors block malformed or out-of-range prices before the existing authorized version update; failed updates preserve entered prices for deliberate retry. Duration, cancellation, version, summary, activation and timezone retain the server contract. Browser contrast checks wait for the field floating-label/color transitions to finish while retaining every WCAG rule. Manual staff payments parse the entire decimal amount as positive safe integer cents, reject trailing text/exponents/excess decimals instead of rounding or truncating, show an accessible field error, retain raw owned drafts and preserve exact copied amounts. Existing owner/revision recovery guards and payment recording authority remain unchanged. Work-account report hourly prices also parse exact nonnegative cents with explicit zero distinct from blank. Invalid rate text stays visible and labels the preview as retaining the last valid rate; it cannot generate a PDF or save a template. Legacy cent templates load without a floating-point round trip. Unsafe or fractional derived cent totals block template/PDF export without changing the existing hours or discount calculation policy. The shared work-report currency formatter preserves the final cent of safe integer amounts by formatting integer major units and exact fractional cents, retaining the same locale/sign presentation for ordinary amounts. The work-report cutoff and new block dates default to the browser local calendar day rather than the UTC day, including evenings when UTC has already advanced. Loaded explicit template dates remain unchanged. Merchandise draft weights and stock, and existing variant stock/alert quantities, retain raw text and require whole integers rather than coercing blank to zero. Weights follow the existing 1–100000 gram contract; stock/threshold quantities follow nonnegative database INTEGER limits with explicit zero. Local invalid values cannot reach authoring or stock update APIs. Rejection and newer background snapshots preserve a mounted stock editor's raw draft, active state and original version. A newer snapshot blocks saving until the operator explicitly keeps the draft against the displayed current values or uses those values instead; neither review action writes stock. Invalid drafts remain blocked after review, and a separate save sends the reviewed version. Clean editors follow newer snapshots without remounting. Pending fields and review choices are disabled; accepted responses cannot be rolled back by older query data. Errors refresh the current snapshot without automatically retrying a write. Store/variant changes reset the draft and session scope retains principal isolation. This is mounted-editor recovery, not reload or disk persistence. Stock permissions, reserved/sold constraints, active state, optimistic version guards and product idempotency keys remain authoritative. Existing merch categories have shared Spanish/English display labels in seller, discovery filters, product badges and admin review; selections and requests keep canonical category codes, and unknown categories have a neutral display fallback. Merchandise delivery contact starts from the mounted signed-in account and remains editable, including deliberate clears. Required name/email/city/address and optional recipient text have localized field errors after blur or submit; focus moves only on submit to the first invalid field. Text stays raw until the unchanged trimmed request is built, with existing recipient bounds and control-character restrictions. A direct form submit cannot bypass local validation, unavailable stock or delivery, disabled checkout capability, in-flight reads, removal or checkout. Pending checkout locks recipient, delivery, reminder and removal controls; unchanged retries retain payload, private cart capability and idempotency key. The preview total is labelled estimated; final total, availability, order creation and payment status remain server authoritative. The reminder never becomes account-creation consent. Merchandise order cancellation and support-report forms retain raw text and show associated localized bounds/control-character errors after blur or submit, focusing the field only on submit. The existing client ten-character minimum, cancellation2000/report5000 API limits and selected request codes remain. Invalid or overlapping direct submissions never start a write. Unpaid cancellation first shows a dialog naming the order and captured reason, with an explicit keep-order action; review/dismissal does not cancel. Confirmation rechecks current eligibility, read freshness and pending writes. Refreshed paid state disables confirmation, while server checkout/payment guards remain authoritative for races. Pending operations lock message/type/reason and competing actions. Rejection retains text and unchanged retries retain the same key/private access; a support request never implies cancellation, refund or confirmed payment. Accepted cancellation keeps visible confirmation after its form disappears. Background read failure retains drafts and last loaded data with a stale warning, blocks writes and offers read-only retry. Changing order resets drafts/confirmation; a response for a previous order cannot clear a new order draft. Tracking/recovery copy uses ordinary words and localized Updates; private access stays out of visible text. Long order messages retain their full text in bounded, scrollable textareas so the input remains reachable. Danger confirmation buttons retain the theme's red palette with a contrasting label in normal/hover states and distinct disabled styling. Booking service selection displays the complete catalog name inside its column, with wrapping menu names and separate rate labels. Spanish display translations of seeded billing units preserve original catalog units, unknown text, service IDs, order and existing estimate/quote/deposit/consent behavior. Zero and missing rates remain distinct. Selected menu rate labels meet text contrast requirements, and nested spacing keeps the form inside its column. Marketplace bank-transfer references show associated field errors for the existing 3–120 Unicode-character bounds and unsupported characters, retain complete invalid/rejected text, and focus only on invalid submission. Pending sends capture and lock the reference with a synchronous duplicate-submit guard. Unchanged explicit retry preserves the same trimmed reference and private order access; evidence receipt is never payment confirmation. A new order owns a fresh mounted view and drafts; late reads or evidence responses from the previous order cannot replace them. Full order identifiers wrap inside the phone card. Marketplace customer requests associate type/reason/date errors with their fields and focus the first invalid control. Existing 3–1000 Unicode-character/control bounds and extension dates strictly later than the persisted return date are validated without truncation. Pending request data is captured and locked, with immediate duplicate guards. An uncertain attempt retains its original key and payload; edited drafts cannot post until the original attempt is explicitly restored, which sends no request. A separate explicit submit retries the same attempt under the existing server eligibility and idempotency guards. Request receipt does not change payment, delivery or rental dates. Matching artist option nodes remain mounted across the empty-data gap of same-principal search refreshes so a still-matching pointer target survives between down/up; previous-principal options are never used as placeholders. Marketplace order fulfillment and deposit labels are display-only: sale and rental states share the existing localized labels across staff and customer views. Pending/partial deposit returns remain distinct from verified terminal settlement, missing data is not inferred as payment pending, and unknown codes remain visible unchanged. History labels wrap within the narrow card; no state, permission, key, request or server guard changes. Staff marketplace order details use the shared deposit display labels and localize the existing settlement evidence statuses and methods. Evidence under review is distinct from verified evidence and never implies an automatic provider refund. Missing and unknown data retain the same explicit fallback. Record labels wrap within the dialog. Existing method codes/order, submitted-only review controls, note requirements, action payloads, independent server review, idempotency and settlement guards remain unchanged. Customer-request type/status display wording is shared across customer and staff views, preserving every existing selection code, option order and eligibility rule. Manual-evidence statuses and the existing bank-transfer/cash/POS payment methods have Spanish display labels; evidence approval never substitutes for canonical paid status. Staff declared amounts use the existing exact cents/currency formatter: missing is distinct from zero, and unsafe/noninteger/negative amounts or absent/invalid currency are not shown as a precise amount or free. Pending/quote-only review controls, notes, action codes, permissions, idempotency and server payment/fulfillment authority remain unchanged. Unknown codes remain complete and record labels wrap.",
+      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The healthy booking introduction keeps its short instruction and native practical-details disclosure within three visible text lines in the tested viewports. Studio hours, physical Quito timezone, visitor timezone and currency context remain available by keyboard in the disclosure; schedule-field guidance remains visible at the scheduling step. Price estimates, readiness warnings and catalog retry controls remain outside the collapsed details. Opening/closing details does not change contact, service, availability, quote, consent or idempotency and never starts a write. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell. Checkout contact and required invoice errors appear beside their fields; focus moves to the first invalid field only on submission, and invalid input or quantities exceeding remaining stock never start checkout. Booking combines schedule and confirmation in one second step, retaining the current quote, deposit, terms acceptance, schedule validation and idempotency. Submission cannot bypass an in-flight availability/price check. Optional analytics failures do not reload forms; required route failures recover with at most one automatic reload per deployed commit in the browser session and retain manual recovery when storage is unavailable. Optional suggested booking times are initially collapsed behind a native keyboard-accessible disclosure; opening it and choosing a suggestion preserves the chosen physical Quito date. Transfer reference errors and receipt validation messages are associated with their respective fields; invalid transfer input never submits evidence. PayPhone country/number errors appear beside the invalid fields and focus the first invalid one without starting a payment or altering exact-recovery data. Service prices are entered in currency units with at most two decimals (dot or comma) and converted exactly to the unchanged integer rateCents wire field; empty means price on request, zero remains explicit and invalid/unsafe amounts cannot silently disappear from a draft. Event ticket-tier prices, budgets, contract commitments and finance-entry amounts use the same exact currency-unit conversion; quantity remains a count. Free tickets and zero budgets remain valid, while contracts and accounting entries require a positive amount. Invalid, fractional-cent and unsafe amounts produce field errors and never reach a mutation API. Rental deposit deductions, merchandise refund requests, variant prices and delivery fees also accept exact currency amounts with inline errors. Refund blank means the server-resolved remaining balance; deductions preserve blank/no-change versus explicit zero; delivery can be free, merchandise prices must be positive. Amounts exceeding verified balances or unsafe stored values cannot authorize financial mutations. Display retains exact safe cents. Existing refund review/execution boundaries, retry keys, custody transitions, stock units and publication rules remain unchanged. While correcting refund or deduction errors, the verified balance or maximum remains beside the input. Music release authoring accepts USD decimal units while preserving the full existing positive signed-64-bit minor-unit text range; no whole-price Number conversion occurs. Malformed price text stays local and pauses autosave before metadata/content writes; blank and zero purchase prices remain saveable in progressive drafts but cannot proceed to offer validation or review, and publication authority and transitions remain enforced. Operations amount filters retain signed exact safe integers, explicit zero, typed comma/dot text, the last valid applied range during correction and cleared/loaded-view distinctions. Invalid or inverted bounds never reach a query or saved view; unsafe saved amounts are rejected rather than silently omitted. Temporary operations drawers sit above the radio bar so actions remain reachable without bypassing pointer or keyboard behavior. Merchandise support, order, refund and settlement states use plain Spanish/English labels for existing server values, keeping requested, approved, paid, partial refund and completed refund distinct; unknown values and CSV machine codes retain their existing behavior. Refund preparation and empty-state text avoid canonical-system jargon while retaining request-only warnings, independent review and execution boundaries. The public Live Session form starts with the email-shaped username returned by its own successful access-code validation, never the ambient staff session. Owned draft values, including intentionally empty email, and subsequent edits take precedence; another verified owner remounts the form. Consent and musician identity are never inferred from that contact default. Leaving an already verified access-code field does not redundantly revalidate and disable the intake form, so the next contact edit is preserved; changed codes still require successful validation. Payment choices for tickets, studio deposits, courses, mixing and Domo quote deposits share one visual and accessible group, with the payment type prominent and its processor shown as secondary text. Only existing server-offered methods and existing local eligibility checks supply choices; all retain their original handlers and disabled conditions. The client does not invent a recommended provider from list order. Unknown outcomes continue to lock local and hosted alternatives, retain exact retry keys and permit original-attempt recovery even when new payment is disabled or no method is offered. PayPhone still requests its number only after selection and does not send a request on that first selection. For signed-in booking visitors, a complete valid contact is summarized with an explicit edit control; guests, incomplete contacts and in-progress edits remain expanded. Editing and returning to the summary move keyboard focus to the appropriate control without advancing a step, overwriting manual input or accepting terms. Course authoring preserves decimal currency prices as exact safe integer cents when loading legacy cent drafts, editing with dot/comma and writing CourseUpsert.priceCents. Its public major-unit numeric metadata is accepted only when a cent can be recovered unambiguously; invalid, fractional-cent, missing and unsafe prices cannot become a free course or reach publication. Zero remains an explicit valid free price. Drafts preserve raw invalid/blank price text separately from the API payload, retain explicit empty lists/descriptive fields, and are restored before local writes. A successful save clears the draft only if its edit revision still matches; newer edits remain local and do not show an outdated published status. Booking bank-transfer reference errors appear beside the bounded3–120-character field with an accessible helper and focus in the opened dialog. Invalid input never submits evidence; a failed request retains the reference, and the field is disabled while evidence is in flight. Submission remains review-only and never confirms payment. Before clearing a saved course draft, cleanup compares the stored snapshot with the one observed when saving; a replacement observed at response time is preserved. Marketplace rental terms show daily/optional weekly rates, refundable deposit and late fee in USD units with exact dot/comma conversion to their existing 32-bit cent fields. Daily and present weekly rates must be positive; deposit and late fee require explicit nonnegative amounts. Blank weekly rate remains null. Field-associated errors block malformed or out-of-range prices before the existing authorized version update; failed updates preserve entered prices for deliberate retry. Duration, cancellation, version, summary, activation and timezone retain the server contract. Browser contrast checks wait for the field floating-label/color transitions to finish while retaining every WCAG rule. Manual staff payments parse the entire decimal amount as positive safe integer cents, reject trailing text/exponents/excess decimals instead of rounding or truncating, show an accessible field error, retain raw owned drafts and preserve exact copied amounts. Existing owner/revision recovery guards and payment recording authority remain unchanged. Work-account report hourly prices also parse exact nonnegative cents with explicit zero distinct from blank. Invalid rate text stays visible and labels the preview as retaining the last valid rate; it cannot generate a PDF or save a template. Legacy cent templates load without a floating-point round trip. Unsafe or fractional derived cent totals block template/PDF export without changing the existing hours or discount calculation policy. The shared work-report currency formatter preserves the final cent of safe integer amounts by formatting integer major units and exact fractional cents, retaining the same locale/sign presentation for ordinary amounts. The work-report cutoff and new block dates default to the browser local calendar day rather than the UTC day, including evenings when UTC has already advanced. Loaded explicit template dates remain unchanged. Merchandise draft weights and stock, and existing variant stock/alert quantities, retain raw text and require whole integers rather than coercing blank to zero. Weights follow the existing 1–100000 gram contract; stock/threshold quantities follow nonnegative database INTEGER limits with explicit zero. Local invalid values cannot reach authoring or stock update APIs. Rejection and newer background snapshots preserve a mounted stock editor's raw draft, active state and original version. A newer snapshot blocks saving until the operator explicitly keeps the draft against the displayed current values or uses those values instead; neither review action writes stock. Invalid drafts remain blocked after review, and a separate save sends the reviewed version. Clean editors follow newer snapshots without remounting. Pending fields and review choices are disabled; accepted responses cannot be rolled back by older query data. Errors refresh the current snapshot without automatically retrying a write. Store/variant changes reset the draft and session scope retains principal isolation. This is mounted-editor recovery, not reload or disk persistence. Stock permissions, reserved/sold constraints, active state, optimistic version guards and product idempotency keys remain authoritative. Existing merch categories have shared Spanish/English display labels in seller, discovery filters, product badges and admin review; selections and requests keep canonical category codes, and unknown categories have a neutral display fallback. Merchandise delivery contact starts from the mounted signed-in account and remains editable, including deliberate clears. Required name/email/city/address and optional recipient text have localized field errors after blur or submit; focus moves only on submit to the first invalid field. Text stays raw until the unchanged trimmed request is built, with existing recipient bounds and control-character restrictions. A direct form submit cannot bypass local validation, unavailable stock or delivery, disabled checkout capability, in-flight reads, removal or checkout. Pending checkout locks recipient, delivery, reminder and removal controls; unchanged retries retain payload, private cart capability and idempotency key. The preview total is labelled estimated; final total, availability, order creation and payment status remain server authoritative. The reminder never becomes account-creation consent. Merchandise order cancellation and support-report forms retain raw text and show associated localized bounds/control-character errors after blur or submit, focusing the field only on submit. The existing client ten-character minimum, cancellation2000/report5000 API limits and selected request codes remain. Invalid or overlapping direct submissions never start a write. Unpaid cancellation first shows a dialog naming the order and captured reason, with an explicit keep-order action; review/dismissal does not cancel. Confirmation rechecks current eligibility, read freshness and pending writes. Refreshed paid state disables confirmation, while server checkout/payment guards remain authoritative for races. Pending operations lock message/type/reason and competing actions. Rejection retains text and unchanged retries retain the same key/private access; a support request never implies cancellation, refund or confirmed payment. Accepted cancellation keeps visible confirmation after its form disappears. Background read failure retains drafts and last loaded data with a stale warning, blocks writes and offers read-only retry. Changing order resets drafts/confirmation; a response for a previous order cannot clear a new order draft. Tracking/recovery copy uses ordinary words and localized Updates; private access stays out of visible text. Long order messages retain their full text in bounded, scrollable textareas so the input remains reachable. Danger confirmation buttons retain the theme's red palette with a contrasting label in normal/hover states and distinct disabled styling. Booking service selection displays the complete catalog name inside its column, with wrapping menu names and separate rate labels. Spanish display translations of seeded billing units preserve original catalog units, unknown text, service IDs, order and existing estimate/quote/deposit/consent behavior. Zero and missing rates remain distinct. Selected menu rate labels meet text contrast requirements, and nested spacing keeps the form inside its column. Marketplace bank-transfer references show associated field errors for the existing 3–120 Unicode-character bounds and unsupported characters, retain complete invalid/rejected text, and focus only on invalid submission. Pending sends capture and lock the reference with a synchronous duplicate-submit guard. Unchanged explicit retry preserves the same trimmed reference and private order access; evidence receipt is never payment confirmation. A new order owns a fresh mounted view and drafts; late reads or evidence responses from the previous order cannot replace them. Full order identifiers wrap inside the phone card. Marketplace customer requests associate type/reason/date errors with their fields and focus the first invalid control. Existing 3–1000 Unicode-character/control bounds and extension dates strictly later than the persisted return date are validated without truncation. Pending request data is captured and locked, with immediate duplicate guards. An uncertain attempt retains its original key and payload; edited drafts cannot post until the original attempt is explicitly restored, which sends no request. A separate explicit submit retries the same attempt under the existing server eligibility and idempotency guards. Request receipt does not change payment, delivery or rental dates. Matching artist option nodes remain mounted across the empty-data gap of same-principal search refreshes so a still-matching pointer target survives between down/up; previous-principal options are never used as placeholders. Marketplace order fulfillment and deposit labels are display-only: sale and rental states share the existing localized labels across staff and customer views. Pending/partial deposit returns remain distinct from verified terminal settlement, missing data is not inferred as payment pending, and unknown codes remain visible unchanged. History labels wrap within the narrow card; no state, permission, key, request or server guard changes. Staff marketplace order details use the shared deposit display labels and localize the existing settlement evidence statuses and methods. Evidence under review is distinct from verified evidence and never implies an automatic provider refund. Missing and unknown data retain the same explicit fallback. Record labels wrap within the dialog. Existing method codes/order, submitted-only review controls, note requirements, action payloads, independent server review, idempotency and settlement guards remain unchanged. Customer-request type/status display wording is shared across customer and staff views, preserving every existing selection code, option order and eligibility rule. Manual-evidence statuses and the existing bank-transfer/cash/POS payment methods have Spanish display labels; evidence approval never substitutes for canonical paid status. Staff declared amounts use the existing exact cents/currency formatter: missing is distinct from zero, and unsafe/noninteger/negative amounts or absent/invalid currency are not shown as a precise amount or free. Pending/quote-only review controls, notes, action codes, permissions, idempotency and server payment/fulfillment authority remain unchanged. Unknown codes remain complete and record labels wrap. On wide screens the public header row shows five destinations (events, TDF, community, shop, booking) and a search icon; every public destination stays listed under \"Más opciones\", with the TDF Mobile entry keeping its surface attribution. On the event page the plain public link field appears only after sharing or copying fails; the share, copy and WhatsApp actions are unchanged. Owner-approved removals of 2026-11-16, scoped by viewer: the sign-in page replaces its three persona cards with two text links (artist, internships) that keep their signup intent. Each public page shows at most one TDF Mobile invitation: the footer link appears only where the page has no invitation of its own and, on banner routes, only on desktop. Event sharing shows one share control where the browser has a share sheet, and copy plus WhatsApp where it does not or after the sheet fails. By default the sidebar shows one entry for each page family (contacts, companies and leads; activity, logs, status, diagnostics and payment events; admin users and roles; calendar and session list) with a tab strip on those pages listing only the members the viewer may open; it leaves out the directory entry that duplicates home; manual, documentation, about, security, WhatsApp preferences and account deletion are reached from the avatar menu; and internal studio pages are listed for studio team roles, the session pages for engineers and only the calendar for other accounts with the scheduling module. None of these rules changes route access: every destination remains reachable by URL and by the menu search under its own name, and is listed while open.",
       "authority": "Owner request 2026-11-10: implement the fixes and improvements from the cognitive-load audit of the same date, within its guardrails (legal and consent, payment and security steps, accessibility and brand identity are not weakened; feature removals remain owner decisions).",
       "domain": "UX",
       "source": "Cognitive-load audit 2026-11-10, prioritized plan items 1-6, 9-12, 14-16, 18, 22 and25; continuation 2026-11-11.",
@@ -29082,7 +29377,9 @@
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
         "tdf-hq-ui/src/components/ConfirmDialog.tsx",
+        "tdf-hq-ui/src/components/MenuFamilyTabs.tsx",
         "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/components/SessionMenu.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
@@ -29090,11 +29387,17 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
         "tdf-hq-ui/src/components/payments/PaymentMethodChoices.tsx",
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx",
+        "tdf-hq-ui/src/components/sidebarMenuRules.ts",
         "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/de.ts",
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/fr.ts",
+        "tdf-hq-ui/src/i18n/locales/pt.ts",
+        "tdf-hq-ui/src/mobile/MobilePromo.tsx",
+        "tdf-hq-ui/src/mobile/MobilePromoContent.tsx",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
         "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
@@ -29131,6 +29434,7 @@
         "tdf-hq-ui/src/pages/TeacherPortalPage.tsx",
         "tdf-hq-ui/src/pages/TrialsPage.tsx",
         "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.tsx",
+        "tdf-hq-ui/src/routes/AppShell.tsx",
         "tdf-hq-ui/src/session/sessionContactDefaults.ts",
         "tdf-hq-ui/src/utils/bookingBillingUnitLabel.ts",
         "tdf-hq-ui/src/utils/bookingStatusLabel.ts",
@@ -29188,6 +29492,7 @@
         "tdf-hq-ui/src/api/musicReleases.money.test.ts",
         "tdf-hq-ui/src/api/operations.test.ts",
         "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx",
+        "tdf-hq-ui/src/components/MenuFamilyTabs.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
         "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx",
@@ -29196,6 +29501,7 @@
         "tdf-hq-ui/src/components/merch/VariantStockEditor.test.tsx",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx",
+        "tdf-hq-ui/src/components/sidebarMenuRules.test.ts",
         "tdf-hq-ui/src/features/finance/davidCelayaReport.test.ts",
         "tdf-hq-ui/src/features/finance/workAccountReport.test.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
@@ -29228,6 +29534,7 @@
         "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.money-input.test.tsx",
         "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.money.test.tsx",
+        "tdf-hq-ui/src/routes/AppShell.test.tsx",
         "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx",
         "tdf-hq-ui/src/session/sessionContactDefaults.test.ts",
         "tdf-hq-ui/src/utils/bookingBillingUnitLabel.test.ts",
@@ -29336,6 +29643,463 @@
       "property": "fromPrice = min price over tiers that are active, priced, in window, in stock and single-currency, for an event that has not ended; soldOut = on-sale tiers exist and none is in stock; the card renders only these.",
       "verification": "Hspec summary and boundary cases, focused React suites, seven configured browser projects, and the compiled-server HTTP fixture in the backend CI lane.",
       "evidence": "tdf-hq/test/Spec.hs; tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx"
+    },
+    {
+      "id": "EVT-VENUE-SEARCH-001",
+      "title": "Venue search filters in SQL without a row cap, equal to the in-memory specification",
+      "statement": "Behind the runtime flag social_venues.sql_search the venue list applies its city, text and distance filters, its ordering and its page in one PostgreSQL statement over every venue. Its answer is the pure specification venueSearchSpec applied to all venues ordered by name and then id, except that a venue whose specified distance is within 0.000001 km of the radius may be answered either way and a stored coordinate above 1e300 never matches. With the flag off, or without the migration, the former path runs: the same specification over the first 2,000 venues by name. Route: GET /social-events/venues.",
+      "domain": "EVT",
+      "authority": "Owner task of 2026-11-21 to move venue search to indexed SQL; the owner approved the rule and its constants the same day (exact fold function, 1 mm tolerance, ordering by name then id, fewer than 10,000 venues expected in two years). formal/system/venue-search.md.",
+      "source": "formal/system/venue-search.md",
+      "contract": "tdf-hq/src/TDF/Venues/Search.hs",
+      "property": "Let R be all venues ordered by (name, id) and keep(v) = city(v) /\\ text(v) /\\ near(v) as in venueSearchSpec. Flag on: answer = Page(SelectSeq(R, m)) where m(v) = keep(v) for every v with |distance(v) - radius| > 0.000001 km and coordinates of magnitude at most 1e300. Box soundness: for coordinates in -90..90 and -180..180, haversine(v) <= radius => inVenueBoundingBox(venueBoundingBox(query), v). Fold: venue_search_fold(s) = toCaseFold(s) for every string s. Flag off: answer = Page(SelectSeq(first 2000 of venues ordered by name, keep)).",
+      "actors": [
+        "Any caller of the venue list"
+      ],
+      "preconditions": [
+        "revenue_feature_flag row social_venues.sql_search enabled for the environment, and venue_search_fold(text) installed, for the SQL path"
+      ],
+      "inputs": [
+        "GET /social-events/venues",
+        "city, q, near (lat,lng[,radiusKm]), limit (1..500, default 200), offset (0..10000)"
+      ],
+      "state": {
+        "initial": "Stored venue rows",
+        "terminal": [
+          "Venue page",
+          "Refusal without search"
+        ]
+      },
+      "allowedTransitions": [
+        "None; the route reads and never writes."
+      ],
+      "forbiddenTransitions": [
+        "Dropping a matching venue because of its position in the table while the flag is on",
+        "A bounding box that excludes an in-range venue the haversine test accepts",
+        "A database error for a stored coordinate or a query the specification answers",
+        "Any write"
+      ],
+      "effects": [
+        "None; read-only."
+      ],
+      "authorization": "Unchanged; the venue list applies no caller-specific rule.",
+      "privacy": "Venues carry no per-user data and have no hidden, private or unlisted state. The answer is the same for every caller, so there is no personalised result, opt-out state or fallback.",
+      "concurrency": "One statement and one snapshot at the pool's default isolation. The flag is read before the search in separate statements.",
+      "idempotency": "Read-only.",
+      "failure": "Invalid input is refused with 400 before the search. Arithmetic the specification evaluates to NaN is a non-match in SQL, not an error. A database error is a 500.",
+      "recovery": "Disabling the flag row restores the in-memory path without a deploy; tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql removes the function, indexes and flag rows.",
+      "observability": "HTTP status only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Venues/Search.hs",
+        "tdf-hq/src/TDF/Venues/SearchFold.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
+        "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql",
+        "scripts/render-venue-search-fold.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Venues/SearchSpec.hs",
+        "scripts/test-venue-search.sh"
+      ],
+      "formalModels": [
+        "formal/social/venue_search_bounding_box.py",
+        "formal/event-operations/VenueSearch.tla",
+        "formal/event-operations/VenueSearch.cfg",
+        "formal/event-operations/VenueSearchNoWrap.cfg",
+        "formal/event-operations/VenueSearchNoPoleGuard.cfg",
+        "formal/event-operations/VenueSearchCapped.cfg"
+      ],
+      "verification": "PROVED (Z3 4.13.3, real arithmetic over algebraic stand-ins for sine and cosine): the haversine term is the central angle, the latitude bound, and the longitude bound outside the pole case; two witnesses and three negative controls. BOUNDED MODEL (TLC 1.7.2, 576,000 states on a discrete globe): the boxed search equals the specification, the box is sound, the capped path equals the specification when the cap is not exceeded; negative controls without the wrap, without the pole guard and with an exceeded cap each violate the named invariant. TESTED (Hspec and QuickCheck): the SQL answer equals the specification outside the tolerance on generated venue tables on PostgreSQL through the statement the server sends, and exactly on 2,000 and 2,500 venues; the bounding box of the real function on 20,000 generated cases and boundary examples; venue_search_fold equals Data.Text.toCaseFold on all 1,112,063 Unicode scalar values through each branch; the handler with the flag off, on and off again. NOT PROVED: equivalence of the SQL and the specification, floating-point soundness of the box, the 1 mm tolerance, index use.",
+      "evidence": "formal/social/venue_search_bounding_box.py output; scripts/verify-event-operations-formal.sh VenueSearch runs; tdf-hq-test venue-search sections; scripts/test-venue-search.sh output.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for text matching (exhaustive fold comparison and generated tables) and for the real-arithmetic box. Medium for distance at the radius edge: the tolerance is supported by tests on one platform pair, not by an error analysis. The local runs used PostgreSQL 16 with the macOS mathematics library; PostgreSQL 17 on Linux is exercised by CI only.",
+      "ambiguity": [
+        "Production was not queried: the venue count is the owner's figure, and whether any stored coordinate is out of range or not finite is unknown.",
+        "For finite out-of-range stored coordinates the two sides may differ when the haversine term rounds to the edge of its domain; no tolerance is argued for those rows.",
+        "A finite stored coordinate above 1e300 never matches in SQL although the specification computes a distance for it.",
+        "With the flag on, venues sharing a name are ordered by id; with it off their relative order stays undefined, as before.",
+        "Index use by the planner is not asserted by any test.",
+        "A text upgrade that changes Data.Text.toCaseFold requires a new migration; the test detects it but nothing applies it."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Specification, SQL, fold and handler tested; box proved in real arithmetic and model-checked; the flag is disabled, and enabling it and confirming production data are owner steps."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MEDIA-MUSIC-LOUDNESS-001",
+      "title": "Advisory loudness check of delivered masters, bound to one file",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "Behind music_releases.loudness_check (disabled by default), the music worker measures the integrated loudness and maximum true peak of every inspected master with FFmpeg's ebur128 filter through a total wrapper, and records the outcome in music_audio_measurement against the asset and its SHA-256. GET /music/releases/{releaseId}/versions/{versionId}/loudness reports, per track, a pass or warning against -14.0 LUFS +/- 2.0 LU and -1.0 dBTP, computed on read. A track is shown as checked only from a measurement of its newest master file. The result is advisory: it never blocks inspection, validation, approval or publication.",
+      "authority": "Owner request of 2026-11-21 (FFT audio features, phase 1) and owner answers of the same day: run inside inspect_audio, current inputs with a 900 s limit, -14.0 LUFS and -1.0 dBTP, warn only. The +/- 2.0 LU two-sided band, the silent-file rule, the newest-master rule and the accepted measured range were proposed by the implementer and accepted by the owner on 2026-11-22 (\"Continue with recommended defaults\"). AUTHORITY-099. formal/system/music-loudness-check.md.",
+      "source": "formal/system/music-loudness-check.md",
+      "contract": "formal/system/music-loudness-check.md",
+      "property": "L1: checked(track) => exists a measured row r with r.asset = newestMaster(track) /\\ r.sha256 = newestMaster(track).sha256 /\\ usable(newestMaster(track)). L2: measured and failed rows change only to superseded. L3: the wrapper prints exactly one result within limit + grace and leaves no child. L4: each flag is monotone in its value. L5: with the flag off no row is written and the route answers 404.",
+      "actors": [
+        "Music worker",
+        "Verified artist or team member with release.read",
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "music_releases.loudness_check enabled for the environment (revenue_feature_flag); seeded disabled",
+        "music_releases.authoring enabled for the read route",
+        "An inspect_audio job whose master passed the checksum and the audio pipeline"
+      ],
+      "inputs": [
+        "The verified master file of an inspect_audio job",
+        "GET /music/releases/{releaseId}/versions/{versionId}/loudness"
+      ],
+      "state": {
+        "states": [
+          "pending",
+          "measured",
+          "failed",
+          "superseded"
+        ],
+        "initial": "pending",
+        "terminal": [
+          "superseded"
+        ],
+        "transitions": {
+          "pending": [
+            "measured",
+            "failed",
+            "superseded"
+          ],
+          "measured": [
+            "superseded"
+          ],
+          "failed": [
+            "superseded"
+          ],
+          "superseded": []
+        },
+        "authority": "music_audio_measurement.state; transitions are enforced by the trigger function music_audio_measurement_guard and mirrored by TDF.MusicRelease.Loudness.stepMeasurement"
+      },
+      "allowedTransitions": [
+        "(none) -> pending when the worker opens an attempt for a master and its SHA-256 (music_begin_audio_measurement)",
+        "pending -> measured with two in-range integers in tenths, by the attempt that opened the row",
+        "pending -> failed with one reason (timeout, decode_error, no_summary, unparseable, out_of_range, silent, tool_unavailable, interrupted)",
+        "pending | measured | failed -> superseded when a later attempt opens for the same asset, or the asset is re-pointed before promotion"
+      ],
+      "forbiddenTransitions": [
+        "Showing a track as checked from a measurement of another asset or another SHA-256",
+        "Storing a checked mark on a track or version",
+        "Rewriting or deleting a measured or failed row",
+        "Closing a pending row from another job attempt",
+        "A measurement outcome failing inspect_audio or changing assets_valid",
+        "Any measurement write while the flag is off"
+      ],
+      "effects": [
+        "One music_audio_measurement row per attempt",
+        "An advisory line per track in the web release editor"
+      ],
+      "authorization": "The route requires a bearer session and release.read on the release (owner, team or strict administrator), as GET /music/releases/{releaseId}/versions/{versionId}. Worker writes run under the job's lease guard.",
+      "privacy": "No personal data and no per-user behaviour: the result is a function of the file bytes and the constants, so there is nothing to personalise or opt out of. Measurements are returned only to parties who can read the draft version; nothing is added to public responses.",
+      "concurrency": "Rows are keyed by asset and SHA-256; at most one row per asset and kind is not superseded (partial unique index). music_begin_audio_measurement locks the asset row; music_finish_audio_measurement closes only a pending row of the same job and attempt; both run after the worker's lease guard. Checked is derived on every read from the newest master's open row, so a concurrent re-upload cannot leave a stale mark.",
+      "idempotency": "A later attempt supersedes the earlier row and measures again; identical bytes give identical values with the same FFmpeg build.",
+      "failure": "Any input ends in one recorded reason within the time limit plus the kill grace; the inspection continues. 404 when the flag is off or the version is missing, 403 without release.read, 503 when authoring is disabled.",
+      "recovery": "A new upload or a re-queued inspection measures again. A pending row left by a killed worker stays pending until the next attempt supersedes it.",
+      "observability": "music_audio_measurement rows (tool, FFmpeg version, job and attempt); worker timing stage loudness_measurement.",
+      "implementation": [
+        "scripts/measure-music-loudness.pl",
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq/Dockerfile.music-worker",
+        "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
+        "tdf-hq/sql/2026-11-21_music_audio_measurement_rollback.sql",
+        "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq-ui/src/api/musicLoudness.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/features/releases/TrackLoudnessCheck.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicRelease/LoudnessSpec.hs",
+        "scripts/test-music-loudness-wrapper.mjs",
+        "scripts/test-music-loudness-query.mjs",
+        "scripts/test-music-release-worker-runtime.mjs",
+        "tdf-hq-ui/src/api/musicLoudness.test.ts",
+        "tdf-hq-ui/src/features/releases/TrackLoudnessCheck.test.tsx"
+      ],
+      "formalModels": [
+        "formal/music/MusicLoudnessBinding.tla",
+        "formal/music/MusicLoudnessBinding.cfg",
+        "formal/music/MusicLoudnessBindingUnbound.cfg",
+        "formal/music/MusicLoudnessBindingStoredMark.cfg",
+        "formal/music/MusicLoudnessBindingUnfenced.cfg",
+        "formal/music/MusicLoudnessSupervision.tla",
+        "formal/music/MusicLoudnessSupervision.cfg",
+        "formal/music/MusicLoudnessSupervisionNoKill.cfg",
+        "formal/music/MusicLoudnessSupervisionNoReap.cfg",
+        "formal/music/MusicLoudnessSupervisionTrusting.cfg",
+        "formal/music/loudness_decision.py"
+      ],
+      "verification": "Proved (Apalache inductive invariants, unbounded in steps, parameters up to 4 files, 3 workers, 6 attempts; and limit 1..900 s, grace 1..60 s): L1 and L2 on formal/music/MusicLoudnessBinding.tla, L3 on formal/music/MusicLoudnessSupervision.tla. Proved (Z3, all integers): L4 flag monotonicity and the exact pass set, formal/music/loudness_decision.py, pinned to the source region. These proofs are about the models and a hand translation, not about the SQL, the Perl wrapper or FFmpeg. Bounded (TLC): both models with three negative configurations each. Tested: QuickCheck properties of the pure core; the wrapper on EBU Tech 3341 cases 1-6 and 15-19 and on malformed, truncated, silent and never-ending input; the worker, trigger, functions and flag on PostgreSQL 16; the handler query extracted from the Haskell source; web parsing and rendering by Jest.",
+      "evidence": "scripts/verify-inductive-proofs.sh (music block); formal/music/loudness_decision.py; LoudnessSpec in tdf-hq-test; node scripts/test-music-loudness-wrapper.mjs; node scripts/test-music-loudness-query.mjs; node scripts/test-music-release-worker-runtime.mjs; Jest musicLoudness and TrackLoudnessCheck.",
+      "status": "specified and implemented",
+      "confidence": "High for the decision rule and the lifecycle (proved on models, tested on PostgreSQL). Medium for accuracy: the conformance signals pass on FFmpeg 7.0.1 locally and were not run on the worker image's FFmpeg. The handler is covered by compilation, the extracted query and review, not by an HTTP test.",
+      "ambiguity": [
+        "Pass/warn is not monotone across the whole loudness axis because the band is two-sided; each flag is.",
+        "EBU Tech 3341 cases 7-8 (programme material) and 20-23 (filtered impulses) are not tested; they exist only as EBU downloads.",
+        "A version may hold several master files for one recording and nothing else in the platform names a current one; this requirement uses the newest undeleted master.",
+        "A pending row left by a killed worker is shown as pending until another attempt runs.",
+        "A 192 kHz multichannel master of several hours exceeds the 900 s limit and is recorded as failed: timeout.",
+        "The proofs cover TLA+ models and a hand-translated decision; correspondence to the SQL and the wrapper is by tests.",
+        "Production has no music worker, so the check cannot run there yet.",
+        "No HTTP-level test calls the route on a migrated database."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Critical properties proved on models and tested on PostgreSQL and the real FFmpeg; accuracy on the worker image, the untested EBU cases, and an HTTP-level route test remain."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "TAX-FILTER-001",
+      "title": "Shared country, region, city and genre filters across community search, radio, music and events",
+      "statement": "Community and global directory search, radio stations, public music releases and track search, and signed-in event listings accept repeatable countryIds, regionIds, cityIds and genreIds referencing the persisted taxonomy. Values inside a dimension are ORed, dimensions are ANDed, a genre includes its active subgenres, a region and missing country derive from the item's city, and an item without a value for an active dimension is not returned. Each surface reports per-value counts that apply every other active filter but not the counted dimension. The web keeps one shared selection per browser, overridable per surface, mirrored in namespaced URL keys so links reproduce the view, shows removable chips and a clear-all action, names options in the viewer's language with fallback to the other, and pre-selects the profile city once; device location is used only after an explicit tap.",
+      "domain": "TAX",
+      "critical": false,
+      "actors": [
+        "Visitor",
+        "Signed-in user",
+        "Fan",
+        "Artist"
+      ],
+      "preconditions": [
+        "2026-11-21_location_genre_filters.sql applied (shared predicates, Ecuador provinces and cities, bilingual subgenres)",
+        "Existing surface visibility, territory and authorization rules remain authoritative"
+      ],
+      "inputs": [
+        "GET /taxonomy/filter-options",
+        "GET /directory/search countryIds/regionIds/cityIds/genreIds",
+        "GET /radio/streams and /radio/streams/facets",
+        "GET /music/releases, /music/search and /music/facets/releases",
+        "GET /social-events/events and /social-events/events/facets",
+        "URL keys f.country, f.region, f.city, f.genre, f.scope"
+      ],
+      "state": {
+        "boundary": "formal/system/taxonomy-filters.md",
+        "selection": [
+          "shared",
+          "surface override"
+        ]
+      },
+      "allowedTransitions": [
+        "unfiltered -> filtered",
+        "shared -> surface override (only here, or a link that differs)",
+        "surface override -> shared (use general filters)",
+        "surface override -> shared set (use everywhere)",
+        "filtered -> cleared"
+      ],
+      "forbiddenTransitions": [
+        "A filter widening the authorized result set",
+        "An item without a value matching an active dimension",
+        "Changing directory saved-search alert semantics",
+        "Requesting device location without an explicit tap or when a profile city exists",
+        "Overriding a viewer's existing selection with the profile-city default"
+      ],
+      "effects": [
+        "Parameterized predicates before pagination on every surface",
+        "Per-dimension facet counts",
+        "Shared browser selection and URL state"
+      ],
+      "authorization": "No new authority: each list keeps its existing public or authenticated check; filter options are public reference data.",
+      "privacy": "Only public reference ids travel in URLs; the profile city is read from the viewer's own profile and never sent elsewhere; device coordinates stay in the browser and become a city id.",
+      "concurrency": "Query keys include the selection; superseded requests are cancelled or ignored as before.",
+      "idempotency": "Selections are deduplicated sets; repeating a parameter has no effect; at most 50 values per dimension.",
+      "failure": "Malformed ids return 400; unknown ids match nothing; failed option or facet reads leave the list usable without counts.",
+      "recovery": "Clear filters, use the general filters, or remove a chip.",
+      "observability": "Visible chips, counts and override notice; existing API telemetry.",
+      "source": "tdf-hq/src/TDF/Taxonomy/Filter.hs and tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+      "contract": "formal/system/taxonomy-filters.md",
+      "implementation": [
+        "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+        "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
+        "tdf-hq/sql/2026-11-21_location_genre_filters_rollback.sql",
+        "tdf-hq/src/TDF/Taxonomy/Filter.hs",
+        "tdf-hq/src/TDF/API/Taxonomy.hs",
+        "tdf-hq/src/TDF/Server/Taxonomy.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/API/Radio.hs",
+        "tdf-hq/src/TDF/ServerRadio.hs",
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsTaxonomy.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/docs/openapi/taxonomy.yaml",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/docs/openapi/music-search.yaml",
+        "tdf-hq-ui/src/api/taxonomy.ts",
+        "tdf-hq-ui/src/api/directory.ts",
+        "tdf-hq-ui/src/api/radio.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterStore.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/useTaxonomyFilters.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/useProfileCityDefault.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/TaxonomyFilterBar.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/taxonomyFilters.es.ts",
+        "tdf-hq-ui/src/i18n/locales/taxonomyFilters.en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+        "playwright.discovery.config.mjs",
+        "tdf-mobile/src/api/taxonomy.ts",
+        "tdf-mobile/src/features/taxonomyFilters/TaxonomyFilterBar.tsx",
+        "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterModel.ts",
+        "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterStore.ts",
+        "tdf-mobile/src/features/taxonomyFilters/useSharedCityDefault.ts",
+        "tdf-mobile/src/features/taxonomyFilters/useTaxonomyFilters.ts"
+      ],
+      "tests": [
+        "scripts/test-community-search.py",
+        "scripts/test-music-catalog-search.mjs",
+        "tdf-hq/test/TDF/Taxonomy/FilterSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
+        "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+        "e2e/web/taxonomy-filters.spec.mjs",
+        "e2e/web/community-discovery.spec.mjs",
+        "tdf-mobile/__tests__/DirectoryTaxonomyFilters.test.tsx",
+        "tdf-mobile/__tests__/taxonomyFilterModel.test.ts",
+        "tdf-mobile/__tests__/taxonomyFilterStore.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Directory SQL executed on migrated PostgreSQL 16 with OR/AND, closure, region and missing-value assertions; radio, music, events and suggestions exercised against a locally built server; React unit and Playwright fixture coverage. Hosted CI and production verification pending.",
+      "ambiguity": [
+        "Regions and cities outside Ecuador are not curated yet.",
+        "Marketplace listings and studio storefront packages carry no location or genre and are reached only through directory classifieds and services.",
+        "Native radio and music screens do not exist; mobile covers directory and events."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local PostgreSQL, compiled-server, React and Playwright fixture evidence; hosted CI and production verification pending."
+      },
+      "authority": "approved by user",
+      "property": "Result = visible items AND each active dimension (OR of its values, genres expanded to descendants, location derived from city); counts per dimension omit only that dimension's own selection.",
+      "verification": "scripts/test-community-search.py on migrated PostgreSQL; Hspec FilterSpec (including literal directory facet SQL equality); React model, discovery and radio tests; Playwright taxonomy-filters spec in Spanish and English.",
+      "evidence": "scripts/test-community-search.py; tdf-hq/test/TDF/Taxonomy/FilterSpec.hs; tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts; e2e/web/taxonomy-filters.spec.mjs"
+    },
+    {
+      "id": "TAX-GENRE-SUGGESTION-001",
+      "title": "Artists suggest bilingual genres checked for casing, spelling and duplicates; administrators settle the rest",
+      "statement": "An artist proposes a genre or subgenre with Spanish and English names and an optional parent. The names are cleaned, cased for their language and compared with every existing genre in both languages ignoring case, accents, spacing and punctuation. An equal name is refused with the existing genre; a near name is refused with the existing name unless the artist confirms it is different; a name whose words all appear in existing genre names is published at once and added to the artist's profile; anything else waits for a strict administrator, who approves with reviewed names, merges into an existing genre or rejects with a note. Pending suggestions are visible to their author.",
+      "domain": "TAX",
+      "critical": false,
+      "actors": [
+        "Artist",
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "genre_suggestion table and guard trigger from 2026-11-21_location_genre_filters.sql",
+        "Artist or administrator role with coherent grants"
+      ],
+      "inputs": [
+        "POST /genres/suggestions/check",
+        "POST /genres/suggestions",
+        "GET /genres/suggestions/mine",
+        "GET /admin/genre-suggestions",
+        "POST /admin/genre-suggestions/{suggestionId}/approve",
+        "POST /admin/genre-suggestions/{suggestionId}/reject",
+        "POST /admin/genre-suggestions/{suggestionId}/merge"
+      ],
+      "state": {
+        "boundary": "formal/system/taxonomy-filters.md",
+        "genre_suggestion.status": [
+          "pending",
+          "approved",
+          "rejected",
+          "merged"
+        ]
+      },
+      "allowedTransitions": [
+        "new -> approved (automatic, all checks pass)",
+        "new -> pending",
+        "pending -> approved",
+        "pending -> rejected",
+        "pending -> merged"
+      ],
+      "forbiddenTransitions": [
+        "approved/rejected/merged -> any",
+        "Creating a genre whose normalized name equals an existing one",
+        "Changing a suggestion's author or submitted name",
+        "Two pending suggestions with the same normalized key",
+        "Rejecting without a note"
+      ],
+      "effects": [
+        "Published genre row with both names",
+        "Membership on the suggesting artist's profile when approved or merged"
+      ],
+      "authorization": "Suggestions require Artist, Artista or Admin with coherent grants; the queue and decisions require strict administrator access.",
+      "privacy": "The queue shows the suggesting artist's public display name only.",
+      "concurrency": "Decisions lock the suggestion row; the partial unique index shares a concurrent identical pending suggestion; the trigger rejects late transitions.",
+      "idempotency": "A repeated identical suggestion returns the pending one; repeated decisions are refused with 409.",
+      "failure": "Unsafe or out-of-range names 400; duplicates and probable typos 409 with the existing genre; more than 10 pending or 20 per day 429.",
+      "recovery": "Use the offered existing genre, confirm a distinct genre for review, or suggest again after rejection.",
+      "observability": "Verdict, cleaned names and corrections before submission; pending chips; admin queue with reasons.",
+      "source": "tdf-hq/src/TDF/Taxonomy/GenreSuggestion.hs and tdf-hq/src/TDF/Server/Taxonomy.hs",
+      "contract": "formal/system/taxonomy-filters.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Taxonomy/GenreSuggestion.hs",
+        "tdf-hq/src/TDF/Server/Taxonomy.hs",
+        "tdf-hq/src/TDF/API/Taxonomy.hs",
+        "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+        "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq-ui/src/components/taxonomyFilters/GenreSuggestionDialog.tsx",
+        "tdf-hq-ui/src/pages/GenreSuggestionsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-mobile/app/editArtistProfile.tsx",
+        "tdf-mobile/src/features/taxonomyFilters/GenreSuggestionModal.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs",
+        "scripts/test-community-search.py",
+        "tdf-hq/test/Spec.hs",
+        "e2e/web/taxonomy-filters.spec.mjs",
+        "tdf-mobile/__tests__/GenreSuggestionModal.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Hspec cases for casing, duplicates, typos, review and approval; every endpoint exercised against a locally built server on migrated PostgreSQL 16 including the transition trigger; Playwright admin approval fixture.",
+      "ambiguity": [
+        "Unknown words always go to review: there is no external dictionary, so the vocabulary is the existing genre names.",
+        "Translation quality between the two names is judged by the same vocabulary check."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local compiled-server and PostgreSQL evidence; hosted CI and production verification pending."
+      },
+      "authority": "approved by user",
+      "property": "No two published genres share a normalized name; a suggestion is decided at most once; only checked or reviewed names are published.",
+      "verification": "Hspec GenreSuggestionSpec; local HTTP smoke of check/submit/mine/approve/reject/merge and trigger refusal; Playwright admin approval.",
+      "evidence": "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs; e2e/web/taxonomy-filters.spec.mjs; formal/system/taxonomy-filters.md"
     }
   ]
 }

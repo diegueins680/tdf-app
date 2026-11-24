@@ -78,6 +78,7 @@ import TDF.Cron (
     startEventDiscoveryJob,
     startEventLogisticsRecheckJob,
     startArtistEnrichmentJob,
+    startArtistSimilarityJob,
     startInstagramSyncJob,
     startSocialAutoReplyJob,
   )
@@ -93,6 +94,7 @@ import TDF.Models (
   )
 import TDF.Models.SocialEventsModels (migrateSocialEvents)
 import TDF.ModelsExtra (migrateExtra)
+import TDF.Directory.SemanticIndex (startDirectorySemanticIndexWorker)
 import TDF.Operations.Worker (startOperationsWorker)
 import TDF.Reputation.Worker (startReputationWorker)
 import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
@@ -160,6 +162,7 @@ runBootServer = do
         startEventDiscoveryJob env
         startEventLogisticsRecheckJob env
         startArtistEnrichmentJob env
+        startArtistSimilarityJob env
         startInstagramSyncJob env
         startSocialAutoReplyJob env
         startCampaignAutomationJob env
@@ -170,6 +173,7 @@ runBootServer = do
         startTicketConfirmationWorker env
         startTaxInvoiceWorker env
         startReputationWorker env
+        startDirectorySemanticIndexWorker env
 
   serverResult <- newEmptyMVar
   _ <-
