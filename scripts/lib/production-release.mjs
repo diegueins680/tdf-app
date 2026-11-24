@@ -556,6 +556,8 @@ ROLLBACK;
 // as undefined_function at request time. The release test derives the called set
 // from source and fails if a newly called function is missing here.
 export const MUSIC_RUNTIME_FUNCTION_SIGNATURES = Object.freeze([
+  'music_begin_audio_measurement(uuid,text,text,text,uuid,integer)',
+  'music_finish_audio_measurement(uuid,uuid,integer,jsonb)',
   'music_media_eligible(text,text)',
   'music_media_reconcile(integer)',
   'music_media_claim(uuid)',

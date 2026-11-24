@@ -38,7 +38,7 @@ for(const id of storagePrerequisites) {
 // current runtime guard with the independent, actual featured-track migration.
 // Its manifest entry supplies the canonical SQL and checksum; no dummy schema.
 const prerequisites=manifest.migrations.filter(entry=>
- ['2026-10-30_artist_featured_track','2026-11-06_music_media_health','2026-11-06_music_legacy_source_compatibility','2026-11-07_music_featured_source_health','2026-11-07_artist_featured_identity_guard'].includes(entry.id)&&!prefix.some(prior=>prior.id===entry.id));
+ ['2026-10-30_artist_featured_track','2026-11-06_music_media_health','2026-11-06_music_legacy_source_compatibility','2026-11-07_music_featured_source_health','2026-11-07_artist_featured_identity_guard','2026-11-21_music_audio_measurement'].includes(entry.id)&&!prefix.some(prior=>prior.id===entry.id));
 const migrations=await Promise.all([...prefix,...prerequisites].map(async entry=>{
  const content=await expandMigrationIncludes({...entry,content:await fs.readFile(path.join(root,entry.path),'utf8')},p=>fs.readFile(path.join(root,p),'utf8'));
  return {...entry,content,checksum:createHash('sha256').update(content).digest('hex')};

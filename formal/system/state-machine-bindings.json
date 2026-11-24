@@ -218,6 +218,13 @@
         "renderer": "parseAgreementPaymentStatus",
         "rendererFile": "tdf-hq/src/TDF/Server/Directory.hs"
       }
+    },
+    "MEDIA-MUSIC-LOUDNESS-001": {
+      "source": "formal/system/requirements.json",
+      "table": "music_audio_measurement",
+      "column": "state",
+      "transitionFunction": "music_audio_measurement_guard",
+      "decision": "AUTHORITY-099"
     }
   },
   "unbound": {

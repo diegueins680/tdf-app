@@ -99,6 +99,8 @@ type MusicReleaseProtectedAPI = "music" :>
          :> "revalidate" :> Post '[JSON] (Headers '[Header "Cache-Control" Text] Value)
   :<|> "releases" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] MusicReleaseCreateRequest :> PostCreated '[JSON] Value
   :<|> "releases" :> Capture "releaseId" UUID :> "versions" :> Capture "versionId" UUID :> Get '[JSON] Value
+  :<|> "releases" :> Capture "releaseId" UUID :> "versions" :> Capture "versionId" UUID :> "loudness"
+         :> Get '[JSON] Value
   :<|> "releases" :> Capture "releaseId" UUID :> "versions" :> Capture "versionId" UUID :> "corrections"
          :> Header "Idempotency-Key" Text :> PostCreated '[JSON] Value
   :<|> "releases" :> Capture "releaseId" UUID :> "versions" :> Capture "versionId" UUID :> "draft"

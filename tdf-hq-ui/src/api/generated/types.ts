@@ -9639,6 +9639,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/music/releases/{releaseId}/versions/{versionId}/loudness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Loudness check of each track's newest master file
+         * @description Read-only, requires release.read. For every track, reports the loudness measurement of its newest master file against the approved limits. A track is checked only when the measurement was taken from that exact file (same asset and SHA-256). The result is advisory and never blocks validation, approval or publication (MEDIA-MUSIC-LOUDNESS-001).
+         */
+        get: operations["getMusicReleaseVersionLoudness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/music/releases/{releaseId}/versions/{versionId}/validate": {
         parameters: {
             query?: never;
@@ -16428,6 +16448,33 @@ export interface components {
             occurredAt: string;
             /** @description JSON metadata limited to 16 KiB when encoded. */
             metadata: unknown;
+        };
+        MusicLoudnessCheck: {
+            /** @description Approved limits in tenths (-140 is -14.0 LUFS). */
+            limits: {
+                integratedLufsTenths: number;
+                toleranceTenths: number;
+                truePeakCeilingDbtpTenths: number;
+            };
+            tracks: components["schemas"]["MusicLoudnessTrack"][];
+        };
+        MusicLoudnessTrack: {
+            /** Format: uuid */
+            recordingId: string;
+            /**
+             * Format: uuid
+             * @description Newest master file of the track that was not deleted.
+             */
+            masterAssetId: string | null;
+            /** @enum {string} */
+            status: "pass" | "warn" | "failed" | "pending" | "not_measured";
+            /** @description True only for pass and warn, from a measurement of exactly this master file. */
+            checked: boolean;
+            flags: ("too_loud" | "too_quiet" | "true_peak_over")[];
+            integratedLufsTenths: number | null;
+            truePeakDbtpTenths: number | null;
+            /** @enum {string|null} */
+            failureReason: "timeout" | "decode_error" | "no_summary" | "unparseable" | "out_of_range" | "silent" | "tool_unavailable" | "interrupted" | null;
         };
         MusicValidationIssue: {
             fieldPath: string;
@@ -40610,6 +40657,57 @@ export interface operations {
             };
             /** @description Explicit service failure; not an empty catalog. */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMusicReleaseVersionLoudness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                releaseId: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Limits and one entry per track, in track order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicLoudnessCheck"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Verified artist ownership or team permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Release version not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authoring disabled */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
