@@ -6592,28 +6592,41 @@ async function integrationSource(ref, file) {
 // Retain both original published parents and additionally guard latest published main.
 const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1", "5a81672285dc9c03130fc9fd8355e2b4c58e9e12"];
 
-// EVT-VENUE-SEARCH-001 appends one migration after the directory semantic search entry.
-// Earlier reviews are verified over the manifest without that entry.
-const VENUE_SEARCH_ENTRY = '2026-11-21_venue_search_sql';
+// EVT-VENUE-SEARCH-001 appends two migrations after the directory semantic search
+// entry: the venue search SQL, then the venue coordinate constraint. Earlier
+// reviews are verified over the manifest without them.
+const VENUE_SEARCH_ENTRIES = ['2026-11-21_venue_search_sql', '2026-11-24_venue_coordinate_constraint'];
+const VENUE_SEARCH_REVIEWS = ['venue-coordinate-constraint-20261124', 'venue-search-sql-20261121'];
 const withoutVenueSearch = manifest => (
-  { ...manifest, migrations: manifest.migrations.filter(row => row.id !== VENUE_SEARCH_ENTRY) });
+  { ...manifest, migrations: manifest.migrations.filter(row => !VENUE_SEARCH_ENTRIES.includes(row.id)) });
+// The manifest review before the venue search appends.
+const beforeVenueSearchReviews = decision => {
+  let current = decision;
+  while (VENUE_SEARCH_REVIEWS.includes(current.reviewBatch)) current = current.previousDecision;
+  return current;
+};
 
-test('venue search appends its migration last, unchanged since its introduction, with the previous review nested', async () => {
+test('venue search appends its two migrations last, unchanged since their introduction, each review nesting the previous', async () => {
   const file = 'scripts/production-migrations.json';
   const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
-  const entry = manifest.migrations.at(-1);
-  assert.equal(entry.id, VENUE_SEARCH_ENTRY);
-  assert.equal(manifest.migrations.filter(row => row.id === VENUE_SEARCH_ENTRY).length, 1);
-  await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
-  const { stdout } = await integrationExec('git', ['show', entry.introducedBy + ':' + entry.path], { cwd: integrationRoot });
-  assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), stdout);
+  const appended = manifest.migrations.slice(-VENUE_SEARCH_ENTRIES.length);
+  assert.deepEqual(appended.map(row => row.id), VENUE_SEARCH_ENTRIES);
+  for (const entry of appended) {
+    assert.equal(manifest.migrations.filter(row => row.id === entry.id).length, 1);
+    await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
+    const { stdout } = await integrationExec('git', ['show', entry.introducedBy + ':' + entry.path], { cwd: integrationRoot });
+    assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), stdout);
+  }
   const decisions = readExpandedDecisions(integrationRoot).decisions;
-  const tip = decisions.find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
-  assert.equal(tip.reviewBatch, 'venue-search-sql-20261121');
-  assert.equal(tip.evidence.valueCount, manifest.migrations.length);
-  assert.equal(tip.previousDecision.evidence.valueCount, manifest.migrations.length - 1);
-  assert.equal(tip.classification, tip.previousDecision.classification);
-  assert.equal(tip.disposition, tip.previousDecision.disposition);
+  let review = decisions.find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
+  for (const [index, batch] of VENUE_SEARCH_REVIEWS.entries()) {
+    assert.equal(review.reviewBatch, batch);
+    assert.equal(review.evidence.valueCount, manifest.migrations.length - index);
+    assert.equal(review.previousDecision.evidence.valueCount, manifest.migrations.length - index - 1);
+    assert.equal(review.classification, review.previousDecision.classification);
+    assert.equal(review.disposition, review.previousDecision.disposition);
+    review = review.previousDecision;
+  }
 });
 
 // Course follow-up reminders append one migration after the studio gallery.
@@ -6719,8 +6732,8 @@ test('directory semantic search appends its migration after the chat delivery mi
   const previous = JSON.parse(published.stdout).decisions
     .find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
   const tip = decisions.find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
-  // EVT-VENUE-SEARCH-001 reviews the next append and nests this review unchanged.
-  const successor = tip.reviewBatch === 'venue-search-sql-20261121' ? tip.previousDecision : tip;
+  // EVT-VENUE-SEARCH-001 reviews the next appends and nests this review unchanged.
+  const successor = beforeVenueSearchReviews(tip);
   assert.equal(successor.evidence.valueCount, before.migrations.length + 1);
   assert.deepEqual(successor.previousDecision, previous);
 });
