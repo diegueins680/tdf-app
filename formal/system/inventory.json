@@ -19584,7 +19584,7 @@
     {
       "id": "SURFACE-6c3db359769435d9",
       "path": "tdf-hq/src/TDF/Taxonomy/GenreSuggestion.hs",
-      "sha256": "d4ba03730eb6d690340c64ff4dbd5c326a1a7522f894e562d67870f0790b53f1",
+      "sha256": "857a4c94e03668d33dddd0fc644e4aed669ba1c9773d49236cc0dcd0fdaab1ca",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20400,7 +20400,7 @@
     {
       "id": "SURFACE-f596e7af18f762d5",
       "path": "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs",
-      "sha256": "3e6590c46c015318f0152b0cd30020d269bbdf32e3dac07215d81740f0a5107d",
+      "sha256": "89182563f1b1e76db33e3004500b198197fe828aea30f1faccad5738ed7d4471",
       "semanticConformance": "not-established-by-discovery"
     },
     {

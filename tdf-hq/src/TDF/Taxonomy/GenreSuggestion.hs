@@ -248,7 +248,7 @@ checkGenreSuggestion existing confirmedDistinct rawEs rawEn = do
               [ part
               | part <- parts
               , let key = genreKey part
-              , T.length key > 1
+              , not (T.null key)
               , not (Map.member key vocabulary)
               , not (isJoining key)
               ]

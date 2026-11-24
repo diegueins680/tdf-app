@@ -105,6 +105,9 @@ spec = describe "TAX-GENRE-SUGGESTION-001 genre suggestion checks" $ do
       verdict (check "pop rock" "pop rock") `shouldBe` Just AutoApprove
       verdict (check "rock latino" "latin rock") `shouldSatisfy` (/= Just AutoApprove)
       verdict (check "cumbia pop" "cumbia pop") `shouldBe` Just AutoApprove
+    it "reviews unfamiliar single letters in either language and allows known joining words" $ do
+      verdict (check "X Q" "X Q") `shouldBe` Just (NeedsReview ["unknown_word:x", "unknown_word:q"])
+      verdict (check "cumbia y pop" "cumbia and pop") `shouldBe` Just AutoApprove
     it "sends new words to review, listing each once" $
       verdict (check "Cumbia villera" "Cumbia Villera") `shouldBe` Just (NeedsReview ["unknown_word:villera"])
     it "suggests a known word for a misspelled one" $
