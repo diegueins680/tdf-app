@@ -106,7 +106,7 @@ const publicError = (english: boolean, potentiallyAmbiguous: boolean): string =>
     : 'No pudimos iniciar este método. No mostramos ningún cobro como exitoso.';
 };
 
-const stateCopy = (session: ProviderPaymentSession, english: boolean): {
+const stateCopy = (session: ProviderPaymentSession, english: boolean, redirect: string | null): {
   severity: 'success' | 'info' | 'warning' | 'error';
   message: string;
 } => {
@@ -149,6 +149,11 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
           : 'Todavía no sabemos si el pago se completó y lo estamos revisando. No vuelvas a intentar ni uses otro método.',
       };
     case 'requires_customer_action':
+      if (!redirect) {
+        return { severity: 'warning', message: english
+          ? 'The payment link is unavailable. Refresh the status here. Do not pay again while confirmation is pending. Contact TDF if you need help.'
+          : 'El enlace de pago ya no está disponible. Actualiza el estado aquí. No vuelvas a pagar mientras la confirmación esté pendiente. Si necesitas ayuda, contacta a TDF.' };
+      }
       return {
         severity: 'info',
         message: english
@@ -499,13 +504,7 @@ export default function HostedProviderCheckout({
           return;
         }
         const redirect = safeProviderRedirect(next.provider, next.redirectUrl);
-        if (!redirect) {
-          setError(english
-            ? 'The provider returned an unsafe redirect. Do not retry with another method; support must reconcile this attempt.'
-            : 'El procesador devolvió un enlace que no es seguro. No intentes con otro método; contacta a soporte para revisar este intento.');
-          return;
-        }
-        navigate(next.provider, redirect);
+        if (redirect) navigate(next.provider, redirect);
       }
     } catch (startError) {
       if (recoveryScopeRef.current !== requestScope) return;
@@ -552,8 +551,8 @@ export default function HostedProviderCheckout({
   // earlier PayPhone attempt is being recovered.
   const payphoneFieldsVisible = payphoneRequested || selected?.paymentMethod === 'payphone_wallet'
     || pendingCreation?.paymentMethod === 'payphone_wallet';
-  const copy = session ? stateCopy(session, english) : null;
   const existingRedirect = safeProviderRedirect(session?.provider, session?.redirectUrl);
+  const copy = session ? stateCopy(session, english, existingRedirect) : null;
   const showAlternatives = session?.state !== 'succeeded' && (
     (Boolean(error) || Boolean(paymentFailure))
     || session?.state === 'failed' || session?.state === 'confirmed_no_charge'
