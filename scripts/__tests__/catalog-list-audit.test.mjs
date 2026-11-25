@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
+import { isDeepStrictEqual, promisify } from 'node:util';
 import { DECISIONS_FILE, expandAtRevision, readExpandedDecisions } from '../lib/catalog-decision-history.mjs';
 
 // Complete retained parent assertions; dated inputs are explicitly projected.
@@ -6523,20 +6523,30 @@ const integrationFiles = new Map([
   ['docs/catalog-persistence/event-catalog-current-successors.json', 'successors'],
   ['docs/catalog-persistence/event-integration-retirements.json', 'retirements'],
 ]);
-const integrationCanonical = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
-  ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
+// Index small object shapes so each lookup compares only plausible matches.
+// Serializing each entire subtree here duplicates the expanded review history.
+function integrationLookupKey(node) {
+  if (Array.isArray(node)) return `array/${node.length}`;
+  return JSON.stringify([Object.keys(node).sort(), node.id ?? null, node.name ?? null]);
+}
+
 function integrationFind(value, expected) {
-  if (!value || typeof value !== 'object') return undefined;
+  if (!value || typeof value !== 'object' || !expected || typeof expected !== 'object') return undefined;
   if (!integrationIndexes.has(value)) {
     const index = new Map();
     const visit = node => {
       if (!node || typeof node !== 'object') return;
-      index.set(integrationCanonical(node), node);
+      const key = integrationLookupKey(node);
+      const bucket = index.get(key);
+      if (bucket) bucket.push(node);
+      else index.set(key, [node]);
       for (const child of Object.values(node)) visit(child);
     };
-    visit(value); integrationIndexes.set(value, index);
+    visit(value);
+    integrationIndexes.set(value, index);
   }
-  return integrationIndexes.get(value).get(integrationCanonical(expected));
+  const candidates = integrationIndexes.get(value).get(integrationLookupKey(expected)) ?? [];
+  return candidates.find(node => isDeepStrictEqual(node, expected));
 }
 async function integrationParent(ref, file) {
   const key = `${ref}:${file}`;
