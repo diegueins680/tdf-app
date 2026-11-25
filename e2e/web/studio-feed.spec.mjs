@@ -20,6 +20,7 @@ test('el editor confirma seis fotos en la ficha del estudio', async ({ page }) =
       expect(body).toContain('private');
       const name = body.match(/filename="([^"]+)"/)[1];
       const key = body.match(/name="idempotencyKey"\r\n\r\n([^\r]+)/)[1];
+      expect(key).toMatch(/^[0-9a-f]{64}$/);
       if (uploadKeys.has(name)) expect(key).toBe(uploadKeys.get(name));
       else { uploadKeys.set(name, key); files.push(name); }
       return route.fulfill({ json: { duFileId: 'fixture-' + (files.indexOf(name) + 1) } });

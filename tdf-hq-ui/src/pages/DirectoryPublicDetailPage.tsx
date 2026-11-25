@@ -443,7 +443,7 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                 </Stack>
               )}
 
-              {kind === 'profile' && profileKind === 'studio' && targetId && <StudioFeed key={targetId} profile={targetId} slug={identifier} name={title} signedIn={Boolean(session)}
+              {kind === 'profile' && profileKind === 'studio' && Array.isArray(value['feed']) && targetId && <StudioFeed key={targetId} profile={targetId} slug={identifier} name={title} signedIn={Boolean(session)}
                 posts={rows(value['feed']).flatMap(p => typeof p['id'] === 'string' && typeof p['caption'] === 'string' && Array.isArray(p['images']) && p['images'].every((id): id is string => typeof id === 'string') ? [{ id: p['id'], caption: p['caption'], images: p['images'] }] : [])}
                 refresh={() => detail.refetch()} />}
               {kind !== 'venue' && targetId && <InteractionPanel kind={kind === 'profile' ? 'directory_profile' : kind} entityKey={targetId} />}

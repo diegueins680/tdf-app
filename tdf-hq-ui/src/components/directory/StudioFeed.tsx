@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
 import { Directory } from '../../api/directory';
 import { get, patch, put } from '../../api/client';
+import { newUploadKey } from '../../api/uploadFailure';
 import { uploadToDrive } from '../../api/drive';
 
 type Post = { id: string; caption: string; images: string[] };
@@ -56,7 +57,7 @@ export function StudioFeed({ profile, slug, name, signedIn, posts, refresh }: {
           setMessage('Elige hasta 12 imágenes JPG, PNG, GIF o WebP de hasta 8 MiB cada una.'); return;
         }
         setMessage('');
-        setPhotos(files.map(file => ({ file, key: crypto.randomUUID(), preview: URL.createObjectURL(file) })));
+        setPhotos(files.map(file => ({ file, key: newUploadKey(), preview: URL.createObjectURL(file) })));
       }} />}
       {photos.map((photo, i) => <div key={photo.key}><img width={100} src={photo.preview} alt={`Foto ${i + 1}`} /> {i + 1}. {photo.file.name}
         {!preview && i > 0 && <Button onClick={() => {
