@@ -13,6 +13,8 @@ module TDF.Server.Directory
   , directoryTaxonomyFacetsSql
   ) where
 
+import qualified Data.ByteString.Base64 as B64
+import TDF.ContentStorage (readFeedRaster)
 import Control.Applicative ((<|>))
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Exception (SomeException, try)
@@ -97,6 +99,7 @@ directoryPublicServer =
   :<|> suggestDirectory
   :<|> directoryTaxonomies
   :<|> publicProfile
+  :<|> feedImage
   :<|> publicProfileByParty
   :<|> publicProfileReviews
   :<|> publicClassified
@@ -393,6 +396,7 @@ publicProfile slugValue =
     $ "SELECT jsonb_build_object('id',profile.id,'kind',profile.profile_kind,'name',profile.public_name,"
    <> "'slug',profile.slug,'bio',profile.bio,'experience',profile.experience_summary,"
    <> "'creditsSummary',profile.credits_summary,'portfolio',profile.portfolio,'links',profile.links,"
+   <> "'feed',coalesce((SELECT jsonb_agg(jsonb_build_object('id',post.id,'caption',post.caption,'images',post.images) ORDER BY post.created_at DESC,post.id) FROM (SELECT * FROM directory_public_feed WHERE profile_id=profile.id ORDER BY created_at DESC,id LIMIT 30) post),'[]'::jsonb),"
    <> "'equipment',profile.equipment_summary,'rates',CASE WHEN profile.rate_min_minor IS NULL THEN NULL "
    <> "ELSE jsonb_build_object('minMinor',profile.rate_min_minor,'maxMinor',profile.rate_max_minor,'currencyId',profile.currency_id) END,"
    <> "'availability',jsonb_build_object('status',profile.availability_status,'onsite',profile.onsite,'remote',profile.remote,'travel',profile.available_to_travel,'radiusKm',profile.travel_radius_km),"
@@ -469,6 +473,8 @@ directoryProtectedServer :: AuthedUser -> ServerT DirectoryProtectedAPI AppM
 directoryProtectedServer user =
        notificationContext user
   :<|> setAgeAssurance user
+  :<|> publishFeed user
+  :<|> editFeed user
   :<|> listManagedProfiles user
   :<|> createProfile user
   :<|> updateProfile user
@@ -512,6 +518,39 @@ directoryProtectedServer user =
   :<|> listModerationQueue user
   :<|> createModerationDecision user
   :<|> mergeProfiles user
+
+feedImage slug file = do
+  rows <- runDB $ rawSql
+    "SELECT f.media_type,f.byte_size,f.sha256 FROM directory_public_profile_resolution p JOIN directory_public_feed post ON post.profile_id=p.id JOIN content_storage_upload f ON f.id=ANY(post.images) WHERE p.requested_slug=? AND f.id=? AND f.destination='tdf' AND f.visibility='private' AND f.status='completed'"
+    [PersistText slug,toPersistValue file]
+  case rows of
+    [(Single mime, Single size, Single checksum)] -> do
+      bytes <- readFeedRaster file mime size checksum
+      pure (addHeader ("no-store" :: Text) ("data:" <> mime <> ";base64," <> TE.decodeUtf8 (B64.encode bytes)))
+    _ -> throwError err404
+
+publishFeed user profile post FeedPublish{caption,images} = do
+  requireProfileCapability user profile "edit"
+  requireProfileCapability user profile "publish"
+  unless (not (null images) && length images <= 12 && length images == Set.size (Set.fromList images)
+          && not (T.null (T.strip caption)) && T.length caption <= 2000) (throwError err400)
+  forM_ images $ \file -> do
+    rows <- runDB $ rawSql "SELECT media_type,byte_size,sha256 FROM content_storage_upload WHERE id=? AND owner_party_id=? AND destination='tdf' AND visibility='private' AND status='completed'"
+      [toPersistValue file,toPersistValue (auPartyId user)]
+    case rows of
+      [(Single mime,Single size,Single checksum)] -> void (readFeedRaster file mime size checksum)
+      _ -> throwError err404
+  result <- runDB $ rawSql "SELECT directory_publish_feed(?,?,?,string_to_array(?,',')::uuid[],?)"
+    [toPersistValue profile,toPersistValue post,PersistText caption,PersistText (T.intercalate "," (map UUID.toText images)),toPersistValue (auPartyId user)]
+  unless (result == [Single True]) (throwError err409)
+  pure NoContent
+
+editFeed user profile post FeedEdit{caption,published} = do
+  unless (not (T.null (T.strip caption)) && T.length caption <= 2000) (throwError err400)
+  result <- runDB $ rawSql "UPDATE directory_feed_post p SET caption=?,published=? FROM directory_profile_manager m WHERE p.profile_id=? AND p.id=? AND m.profile_id=p.profile_id AND m.account_party_id=? AND m.active AND m.can_edit AND m.can_publish RETURNING p.id"
+    [PersistText caption,PersistBool published,toPersistValue profile,toPersistValue post,toPersistValue (auPartyId user)]
+  unless (result == [Single post]) (throwError err404)
+  pure NoContent
 
 setAgeAssurance user AgeAssuranceRequest{adultAttestation,guardianPartyId} = do
   when (not adultAttestation && guardianPartyId == Nothing) $
