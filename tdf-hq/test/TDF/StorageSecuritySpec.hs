@@ -38,6 +38,11 @@ import qualified Data.Text.Encoding as TE
 
 spec :: Spec
 spec = do
+  describe "studio feed raster validation" $ do
+    it "requires the raster signature to match the declared MIME" $ do
+      managedImageExtension "image/png" "<svg/>" `shouldBe` Nothing
+      managedImageExtension "text/html" (BS.pack [137,80,78,71,13,10,26,10]) `shouldBe` Nothing
+      managedImageExtension "image/jpeg" (BS.pack [255,216,255,224]) `shouldBe` Just ".jpg"
   describe "storage-security authenticated encryption" $ do
     let key = BS.replicate 32 42
         nonce = BS.replicate 12 7

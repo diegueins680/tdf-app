@@ -307,6 +307,8 @@ instance FromJSON FeedPublish
 data FeedEdit = FeedEdit { caption :: Text, published :: Bool } deriving (Show, Generic)
 instance FromJSON FeedEdit
 
+type FeedImageResponse = Headers '[Header "Cache-Control" Text] Text
+
 type DirectoryPublicAPI = "directory" :>
        ( "search"
            :> QueryParam "q" Text
@@ -339,7 +341,7 @@ type DirectoryPublicAPI = "directory" :>
     :<|> "suggestions" :> QueryParam "q" Text :> QueryParam "cityId" UUID :> Get '[JSON] [DirectorySuggestion]
     :<|> "taxonomies" :> QueryParam "locale" Text :> Get '[JSON] Value
     :<|> "profiles" :> Capture "slug" Text :> Get '[JSON] Value
-    :<|> "profiles" :> Capture "slug" Text :> "feed" :> Capture "file" UUID :> Get '[JSON] (Headers '[Header "Cache-Control" Text] Text)
+    :<|> "profiles" :> Capture "slug" Text :> "feed" :> Capture "file" UUID :> Get '[JSON] FeedImageResponse
     :<|> "party-profiles" :> Capture "partyId" Int64 :> Get '[JSON] Value
     :<|> "profiles" :> Capture "slug" Text :> "reviews" :> QueryParam "cursor" UUID :> QueryParam "limit" Int :> Get '[JSON] DirectoryReviewPage
     :<|> "classifieds" :> Capture "slug" Text :> Get '[JSON] Value

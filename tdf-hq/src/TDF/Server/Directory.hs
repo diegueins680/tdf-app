@@ -519,6 +519,7 @@ directoryProtectedServer user =
   :<|> createModerationDecision user
   :<|> mergeProfiles user
 
+feedImage :: Text -> UUID -> AppM FeedImageResponse
 feedImage slug file = do
   rows <- runDB $ rawSql
     "SELECT f.media_type,f.byte_size,f.sha256 FROM directory_public_profile_resolution p JOIN directory_public_feed post ON post.profile_id=p.id JOIN content_storage_upload f ON f.id=ANY(post.images) WHERE p.requested_slug=? AND f.id=? AND f.destination='tdf' AND f.visibility='private' AND f.status='completed'"
