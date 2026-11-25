@@ -89,9 +89,15 @@ if [ -n "${server_bin}" ]; then
   query "INSERT INTO party(id,display_name,is_org,created_at) VALUES (930001,'HTTP Artist Owner',false,now());
     INSERT INTO api_token(token,party_id,label,active) VALUES ('synthetic-artist-listing-token',930001,'artist listing http test',true);
     INSERT INTO directory_age_assurance(account_party_id,assurance_status,verified_at,updated_at) VALUES (930001,'adult_attested',now(),now());" >/dev/null
-  DATABASE_URL="${database_url}" APP_PORT="${server_port}" RUN_MIGRATIONS=false AUTO_APPLY_PRODUCTION_MIGRATIONS=false \
+  node --input-type=module - "$database_url" <<'JS'
+import { disposablePostgresUrl } from './scripts/lib/disposable-postgres-url.mjs';
+disposablePostgresUrl(process.argv[2], {ci: process.env.CI === 'true'});
+JS
+  server_bin=$(realpath "$server_bin")
+  mkdir -p "$work_dir/public"
+  (cd "$work_dir" && exec env CONTENT_STORAGE_UPLOADS_ENABLED=true HQ_ASSETS_DIR="$work_dir/public" HQ_ASSETS_BASE_URL="$api/assets/serve" DATABASE_URL="${database_url}" APP_PORT="${server_port}" RUN_MIGRATIONS=false AUTO_APPLY_PRODUCTION_MIGRATIONS=false \
     RESET_DB=false SEED_DB=false DEFAULT_LOCALE=es EVENT_DISCOVERY_ENABLED=false \
-    "${server_bin}" > "${work_dir}/api.log" 2>&1 &
+    "${server_bin}") > "${work_dir}/api.log" 2>&1 &
   server_pid=$!
   trap 'kill "${server_pid}" >/dev/null 2>&1 || true; rm -rf "${work_dir}"' EXIT INT TERM
   for _ in $(seq 1 120); do
@@ -122,6 +128,12 @@ if [ -n "${server_bin}" ]; then
   test "$(curl -fsS "${api}/directory/suggestions?q=http%20test%20band" | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>{const i=JSON.parse(s);console.log(i.filter(x=>x.suggestionKind==="profile").length+"/"+i.filter(x=>x.suggestionKind==="classified").length)})')" = "1/0"
   # A cross-origin http cover is refused by the API, not stored and hidden later.
   test "$(curl -s -o /dev/null -w '%{http_code}' -H "${auth}" -H 'Content-Type: application/json' -X PUT "${api}/directory/profiles/${profile_id}" -d "${body/https:\/\/cdn.example.test\/http-band.jpg/http://cdn.example.test/http-band.jpg}")" = "400"
+  query "INSERT INTO party(id,display_name,is_org,created_at) VALUES(930002,'Synthetic other studio editor',false,now());
+    INSERT INTO api_token(token,party_id,label,active) VALUES('synthetic-studio-other',930002,'isolated test',true);
+    INSERT INTO content_storage_account(party_id,legacy_usage_verified) VALUES(930001,true),(930002,true) ON CONFLICT(party_id) DO UPDATE SET legacy_usage_verified=true;
+    INSERT INTO directory_profile_manager(profile_id,account_party_id,can_edit,can_publish)
+      VALUES('a0000000-0000-4000-8000-000000000003',930001,true,true);" >/dev/null
+  node "$repo_root/scripts/__tests__/studio-feed-http.mjs" "$api"
   kill "${server_pid}" >/dev/null 2>&1 || true
 fi
 

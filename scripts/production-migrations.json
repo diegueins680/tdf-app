@@ -1378,6 +1378,11 @@
       "id": "2026-11-24_preserve_selected_genre_ids",
       "path": "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
       "introducedBy": "670482f551c6e366040a20cf7f72117aa6df4ab5"
+    },
+    {
+      "id": "2026-11-25_directory_studio_feed",
+      "path": "tdf-hq/sql/2026-11-25_directory_studio_feed.sql",
+      "introducedBy": "a3bdfca09a9b08a7e8a71d71ccefd8b6f64e294a"
     }
   ]
 }

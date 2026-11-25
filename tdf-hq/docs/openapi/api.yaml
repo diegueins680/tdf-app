@@ -8803,6 +8803,7 @@ paths:
   /radio/streams/facets: { $ref: './taxonomy.yaml#/paths/~1radio~1streams~1facets' }
   /music/facets/releases: { $ref: './taxonomy.yaml#/paths/~1music~1facets~1releases' }
   /social-events/events/facets: { $ref: './taxonomy.yaml#/paths/~1social-events~1events~1facets' }
+  /directory/profiles/{profile}/feed/{resource}: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{profile}~1feed~1{resource}' }
   /directory/profiles/{slug}: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{slug}' }
   /directory/party-profiles/{partyId}: { $ref: './directory.yaml#/paths/~1directory~1party-profiles~1{partyId}' }
   /directory/profiles/{slug}/reviews: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{slug}~1reviews' }

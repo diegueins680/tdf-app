@@ -2,7 +2,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleContexts #-}
 module TDF.ContentStorage
-  ( contentStorageServer, storeManagedUpload, storageError, managedImageExtension
+  ( readFeedRaster, contentStorageServer, storeManagedUpload, storageError, managedImageExtension
   , bindExternalDriveAttempt, requireUploadsEnabled, bindReference
   , storageFileIdFromUrl, publicObjectAllowed, runReferenceMutation, requireReference
   , publicRootSafe, publicRequestSafe ) where
@@ -250,7 +250,7 @@ contentStorageServer user = account :<|> setDestination :<|> listFiles :<|> read
         case found of
           [(Single sharing,Single mime,Single False)] -> do
             references <- rawSql
-              ("SELECT 1::bigint FROM content_storage_upload file WHERE file.id=?::uuid AND " <> liveReferenceSql)
+              ("SELECT 1::bigint FROM content_storage_upload file WHERE file.id=?::uuid AND (" <> liveReferenceSql <> " OR EXISTS(SELECT 1 FROM directory_feed_image image WHERE image.file_id=file.id))")
               [PersistText identifier] :: SqlPersistT IO [Single Int64]
             if not (null references) then pure (Left (storageError err409 "storage_file_in_use")) else do
               -- Persist intent before bytes; an uncertain deletion retains quota.
@@ -278,6 +278,24 @@ contentStorageServer user = account :<|> setDestination :<|> listFiles :<|> read
           runDB (rawExecute "UPDATE content_storage_upload SET deleted_at=COALESCE(deleted_at,clock_timestamp()) WHERE id=?::uuid AND owner_party_id=? AND status='cancelled'"
             [PersistText identifier,PersistInt64 owner])
           pure NoContent
+
+-- The caller authorizes a specific storage row before requesting its private bytes.
+readFeedRaster :: UUID -> Text -> Int64 -> Text -> AppM BS.ByteString
+readFeedRaster identifier mime expectedSize expectedHash = do
+  unless (expectedSize > 0 && expectedSize <= 8388608) (throwError err413)
+  cfg <- asks envConfig
+  let root = assetsRootDir cfg
+      path = storedFilePath root (UUID.toText identifier) "private" mime
+  outcome <- liftIO $ Safe.tryAny $ do
+    validateRoots root
+    symbolic <- pathIsSymbolicLink path
+    actualSize <- getFileSize path
+    unless (not symbolic && actualSize == fromIntegral expectedSize) (fail "Invalid feed asset")
+    BS.readFile path
+  bytes <- either (const (throwError err404)) pure outcome
+  unless (digest (BL.fromStrict bytes) == expectedHash && managedImageExtension mime bytes /= Nothing)
+    (throwError err415)
+  pure bytes
 
 privateRoot :: FilePath
 privateRoot = "uploads/content-storage"

@@ -32341,26 +32341,39 @@
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "2fbe85dc2eccf49b01cd",
+      "id": "2187c9c773f0aba54279",
       "reviewed": true,
-      "justification": "Keep the reviewed migration sequence from main 228ab63e and append the location and genre filters migration followed by the Unicode suggestion-key and unavailable-genre corrections. Retain the independent parent review histories of the loudness and taxonomy lists.",
+      "justification": "Append the studio feed schema after the reviewed directory migrations. The source revision contains the tested publication and withdrawal functions.",
       "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "taxonomy-filters-main-integration-20261124",
+      "reviewBatch": "studio-feed-20261125",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 271
+        "valueCount": 272
       },
       "previousDecision": {
-        "$historyRef": "sha256:4c0c7a51f06d9355e78bcc8e1538bb9d25b9e24e627cf34811767d530cee55ea"
+        "$historyRef": "sha256:5c2ed3f8ba488e82825dae4662cc0bf3b42279d79414556834d75a33a8637a8a"
+      }
+    },
+    {
+      "id": "eee5b0e5cd3f01d6df5f",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "content storage raster signatures",
+      "priority": "P3-retain",
+      "risk": "An unsupported image type could be selected and rejected during publication.",
+      "justification": "The profile editor accepts the four raster MIME types validated by managedImageExtension in TDF.ContentStorage.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/directory/StudioFeed.tsx",
+        "line": 10,
+        "kind": "array",
+        "name": "types",
+        "valueCount": 4
       },
-      "concurrentReviewHistory": [
-        {
-          "$historyRef": "sha256:e534c249ba5da74ebc4b96cce59f58fc3a0ea3c3b199b711fab0d31544167562"
-        }
-      ]
+      "reviewBatch": "studio-feed-20261125"
     }
   ],
   "sourceContextHistory": [

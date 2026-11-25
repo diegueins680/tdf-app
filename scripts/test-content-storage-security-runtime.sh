@@ -15,6 +15,8 @@ else
   for migration in 2026-11-04_content_storage 2026-11-04_content_storage_drive 2026-11-04_content_storage_deletion 2026-11-04_content_storage_accounting 2026-11-04_content_storage_delete_capacity 2026-11-06_content_storage_security; do
     tdf_test_psql < "$repo_root/tdf-hq/sql/$migration.sql" >/dev/null
   done
+  # This reduced fixture models the reference checked by storage deletion.
+  tdf_test_psql -c 'CREATE TABLE directory_feed_image(file_id uuid REFERENCES content_storage_upload(id))' >/dev/null
   tdf_test_psql -c 'INSERT INTO content_storage_account(party_id,legacy_usage_verified) SELECT id,true FROM party' >/dev/null
 fi
 cd "$repo_root/tdf-hq"

@@ -13,6 +13,7 @@ module TDF.Server.Directory
   , directoryTaxonomyFacetsSql
   ) where
 
+import qualified TDF.Server.DirectoryFeed as Feed
 import Control.Applicative ((<|>))
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Exception (SomeException, try)
@@ -97,6 +98,7 @@ directoryPublicServer =
   :<|> suggestDirectory
   :<|> directoryTaxonomies
   :<|> publicProfile
+  :<|> Feed.feedImage
   :<|> publicProfileByParty
   :<|> publicProfileReviews
   :<|> publicClassified
@@ -393,6 +395,7 @@ publicProfile slugValue =
     $ "SELECT jsonb_build_object('id',profile.id,'kind',profile.profile_kind,'name',profile.public_name,"
    <> "'slug',profile.slug,'bio',profile.bio,'experience',profile.experience_summary,"
    <> "'creditsSummary',profile.credits_summary,'portfolio',profile.portfolio,'links',profile.links,"
+   <> "'feed',coalesce((SELECT jsonb_agg(jsonb_build_object('id',post.id,'caption',post.caption,'images',post.images) ORDER BY post.created_at DESC,post.id) FROM (SELECT * FROM directory_public_feed WHERE profile_id=profile.id ORDER BY created_at DESC,id LIMIT 30) post),'[]'::jsonb),"
    <> "'equipment',profile.equipment_summary,'rates',CASE WHEN profile.rate_min_minor IS NULL THEN NULL "
    <> "ELSE jsonb_build_object('minMinor',profile.rate_min_minor,'maxMinor',profile.rate_max_minor,'currencyId',profile.currency_id) END,"
    <> "'availability',jsonb_build_object('status',profile.availability_status,'onsite',profile.onsite,'remote',profile.remote,'travel',profile.available_to_travel,'radiusKm',profile.travel_radius_km),"
@@ -469,6 +472,8 @@ directoryProtectedServer :: AuthedUser -> ServerT DirectoryProtectedAPI AppM
 directoryProtectedServer user =
        notificationContext user
   :<|> setAgeAssurance user
+  :<|> Feed.publishFeed requireProfileCapability user
+  :<|> Feed.editFeed user
   :<|> listManagedProfiles user
   :<|> createProfile user
   :<|> updateProfile user

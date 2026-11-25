@@ -301,6 +301,14 @@ data AgeAssuranceRequest = AgeAssuranceRequest
 instance FromJSON AgeAssuranceRequest
 instance ToJSON AgeAssuranceRequest
 
+data FeedPublish = FeedPublish { caption :: Text, images :: [UUID] } deriving (Show, Generic)
+instance FromJSON FeedPublish
+
+data FeedEdit = FeedEdit { caption :: Text, published :: Bool } deriving (Show, Generic)
+instance FromJSON FeedEdit
+
+type FeedImageResponse = Headers '[Header "Cache-Control" Text] Text
+
 type DirectoryPublicAPI = "directory" :>
        ( "search"
            :> QueryParam "q" Text
@@ -333,6 +341,7 @@ type DirectoryPublicAPI = "directory" :>
     :<|> "suggestions" :> QueryParam "q" Text :> QueryParam "cityId" UUID :> Get '[JSON] [DirectorySuggestion]
     :<|> "taxonomies" :> QueryParam "locale" Text :> Get '[JSON] Value
     :<|> "profiles" :> Capture "slug" Text :> Get '[JSON] Value
+    :<|> "profiles" :> Capture "slug" Text :> "feed" :> Capture "file" UUID :> Get '[JSON] FeedImageResponse
     :<|> "party-profiles" :> Capture "partyId" Int64 :> Get '[JSON] Value
     :<|> "profiles" :> Capture "slug" Text :> "reviews" :> QueryParam "cursor" UUID :> QueryParam "limit" Int :> Get '[JSON] DirectoryReviewPage
     :<|> "classifieds" :> Capture "slug" Text :> Get '[JSON] Value
@@ -346,6 +355,8 @@ type DirectoryProtectedAPI =
        "directory" :>
        ( "notification-context" :> Capture "kind" Text :> Capture "targetId" UUID :> Get '[JSON] Value
     :<|> "age-assurance" :> ReqBody '[JSON] AgeAssuranceRequest :> Put '[JSON] Value
+    :<|> "profiles" :> Capture "profile" UUID :> "feed" :> Capture "post" UUID :> ReqBody '[JSON] FeedPublish :> Put '[JSON] NoContent
+    :<|> "profiles" :> Capture "profile" UUID :> "feed" :> Capture "post" UUID :> ReqBody '[JSON] FeedEdit :> Patch '[JSON] NoContent
     :<|> "profiles" :> Get '[JSON] [Value]
     :<|> "profiles" :> RequiredIdempotency :> ReqBody '[JSON] DirectoryProfileUpsert :> PostCreated '[JSON] Value
     :<|> "profiles" :> Capture "profileId" UUID :> ReqBody '[JSON] DirectoryProfileUpsert :> Put '[JSON] Value

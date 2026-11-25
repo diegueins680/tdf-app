@@ -79,6 +79,12 @@ export const Directory = {
   venue: (id: string) => get<components['schemas']['PublicDirectoryVenue']>(`/directory/venues/${encodeURIComponent(id)}`),
   setAgeAssurance: (adultAttestation: boolean, guardianPartyId?: number) =>
     put<{ status: string; guardianConsentStatus?: string | null }>('/directory/age-assurance', { adultAttestation, guardianPartyId }),
+  feedImage: (slug: string, file: string) =>
+    get<string>(`/directory/profiles/${encodeURIComponent(slug)}/feed/${encodeURIComponent(file)}`),
+  publishFeed: (profile: string, postId: string, caption: string, images: string[]) =>
+    put<void>(`/directory/profiles/${encodeURIComponent(profile)}/feed/${encodeURIComponent(postId)}`, { caption, images }),
+  editFeed: (profile: string, postId: string, caption: string, published: boolean) =>
+    patch<void>(`/directory/profiles/${encodeURIComponent(profile)}/feed/${encodeURIComponent(postId)}`, { caption, published }),
   managedProfiles: () => get<ManagedDirectoryProfile[]>('/directory/profiles'),
   createProfile: (body: components['schemas']['DirectoryProfileUpsert'], idempotencyKey?: string) =>
     post<ManagedDirectoryProfile>('/directory/profiles', body, idempotencyHeaders(idempotencyKey)),

@@ -130,6 +130,13 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
     jest.restoreAllMocks();
   });
 
+  it('shows the studio profile with the previous API response', async () => {
+    profileMock.mockResolvedValue({ ...profile, kind: 'studio', name: 'Estudio anterior' });
+    renderPage('/directorio/tdf-records-estudio');
+    expect(await screen.findByText('Estudio anterior')).toBeTruthy();
+    expect(screen.queryByRole('region', { name: 'Feed' })).toBeNull();
+  });
+
   it('routes a public moment discussion to the existing media page', async () => {
     const view = renderPage('/eventos/121?moment=987');
     expect((await screen.findByLabelText('Destino protegido')).textContent).toBe('/social/eventos/121?moment=987');
