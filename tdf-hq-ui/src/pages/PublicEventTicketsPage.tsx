@@ -1,3 +1,4 @@
+import { isPastEvent } from './eventDiscoveryFilters';
 import PaymentMethodChoices, { PaymentMethodButton } from '../components/payments/PaymentMethodChoices';
 import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import MarkdownText from '../components/MarkdownText';
@@ -163,6 +164,9 @@ export default function PublicEventTicketsPage() {
     enabled: validEventId,
     retry: false,
   });
+  const pastEvent = storefront.data && isPastEvent({
+    eventStart: storefront.data.startsAt, eventEnd: storefront.data.endsAt,
+  }, Date.now());
   const externalTickets = useMemo(() => findExternalTicketLink(storefront.data?.description), [storefront.data?.description]);
 
   useEffect(() => {
@@ -619,7 +623,7 @@ export default function PublicEventTicketsPage() {
             </Box>
           </Stack> : <Typography component="h1" variant="h4">{english ? 'Your ticket order' : 'Tu orden de entradas'}</Typography>}
 
-          {!checkout && storefront.data && !storefront.data.checkoutAvailable && (
+          {!checkout && storefront.data && !storefront.data.checkoutAvailable && !pastEvent && (
             <Card variant="outlined" data-testid="ticket-checkout-unavailable">
               <CardContent>
                 <Stack spacing={2}>

@@ -385,10 +385,27 @@ describe('canonical public event authentication fallback', () => {
     expect(link.getAttribute('href')).toBe('/social/eventos/141?utm_source=invitation&memoryInvite=synthetic&compose=1#momentos');
   });
 
+  it.each([
+    ['completed', '2026-11-24T05:00:00Z', null, false],
+    ['published', '2026-11-24T05:00:00Z', null, false],
+    ['published', '2026-11-24T05:00:00Z', '2026-11-25T01:00:00Z', false],
+    ['published', '2026-11-24T05:00:00Z', '2026-11-26T01:00:00Z', true],
+    ['published', '2026-11-26T05:00:00Z', null, true],
+  ] as const)('gates the external CTA and retains Momentos for %s, %s to %s', async (workflowStateCode, startTime, endTime, canBuy) => {
+    jest.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-11-25T18:00:00Z'));
+    profileMock.mockResolvedValueOnce({ ...event, id: 261, title: 'The Strokes en Quito',
+      description: 'Fuente: https://www.livenation.lat/event/the-strokes-reality-awaits-quito-tickets-edp1687929',
+      workflowStateCode, startTime, endTime });
+    renderPage('/eventos/261');
+    const moments = await screen.findByRole('link', { name: 'Compartir mis momentos' });
+    expect(moments.getAttribute('href')).toBe('/social/eventos/261?compose=1#momentos');
+    expect(Boolean(screen.queryByRole('link', { name: 'Comprar entradas en Live Nation' }))).toBe(canBuy);
+  });
+
   it('sends buyers to the external vendor when TDF has no storefront for the event', async () => {
     profileMock.mockResolvedValueOnce({
       ...event,
-      id: 211,
+      id: 211, workflowStateCode: 'published', startTime: '2099-08-20T22:00:00Z', endTime: null,
       description: 'Verde 70 en Miami.\nEntradas y detalles: https://www.eventbrite.com/e/verde-70-en-miami-tickets-2001152275325',
     });
     storefrontMock.mockResolvedValueOnce({ eventId: 211, checkoutAvailable: false, tiers: [], policy: null,

@@ -1,3 +1,4 @@
+import { isPastEvent } from './eventDiscoveryFilters';
 import MarkdownText from '../components/MarkdownText';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import {
@@ -125,7 +126,11 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
   const english = displayLocale.toLowerCase().startsWith('en');
   const title = text(value['name']) ?? text(value['title']) ?? 'Directorio musical';
   const description = text(value['bio']) ?? text(value['description']) ?? text(value['creditsSummary']) ?? 'Perfil público en TDF.';
-  const externalTickets = kind === 'event' ? findExternalTicketLink(text(value['description'])) : null;
+  const pastEvent = kind === 'event' && (value['workflowStateCode'] === 'completed' || isPastEvent({
+    eventStart: text(value['startTime']) ?? '',
+    eventEnd: text(value['endTime']),
+  }, Date.now()));
+  const externalTickets = kind === 'event' && !pastEvent ? findExternalTicketLink(text(value['description'])) : null;
   const checkoutOpen = storefront.data?.checkoutAvailable === true;
   // The backend resolves the canonical preview image for every entity kind.
   const absolutePreviewImage = resolveDirectoryPreviewImage(

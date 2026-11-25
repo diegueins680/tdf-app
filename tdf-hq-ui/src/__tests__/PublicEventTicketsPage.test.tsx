@@ -487,6 +487,15 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(vendorCta?.getAttribute('target')).toBe('_blank');
   });
 
+  it('omits the external purchase block for a past event with no recorded end', async () => {
+    getStorefrontMock.mockResolvedValue({ ...storefrontFixture, startsAt: '2000-11-24T05:00:00Z', endsAt: null,
+      description: 'Fuente: https://www.livenation.lat/event/the-strokes-reality-awaits-quito-tickets-edp1687929',
+      policy: null, tiers: [], checkoutAvailable: false });
+    await renderTracking('/eventos/41/entradas');
+    await waitForExpectation(() => expect(container.textContent).toContain('Festival TDF'));
+    expect(container.textContent).not.toContain('Comprar entradas en Live Nation');
+  });
+
   it('reports a bank transfer as pending staff verification, never as paid', async () => {
     const bankTransfer = {
       instructions: 'Banco Internacional ahorros 440781141',
