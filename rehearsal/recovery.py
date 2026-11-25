@@ -9,6 +9,7 @@ import sys
 import tempfile
 import time
 import urllib.request
+import urllib.error
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -164,6 +165,33 @@ def hook(work, server_pid):
                       private_file_count=len(files), source_stopped=True, fresh_database_container=True,
                       checks=["initial-anonymous", "replacement-process-same-bind", "restored-anonymous",
                               "previous-backend-public-profile", "candidate-after-previous"])
+        # Normal owner action on the restored synthetic copy only, after the clean round trip.
+        image = first["post"]["images"][0]
+        def owner_delete():
+            request = urllib.request.Request(API + "/storage/files/" + image, method="DELETE",
+                      headers={"Authorization": "Bearer synthetic-artist-listing-token"})
+            try:
+                with urllib.request.urlopen(request, timeout=8) as response:
+                    return response.status
+            except urllib.error.HTTPError as error:
+                return error.code
+        with backend(CANDIDATE, 19328, restored, scratch / "current-delete-check"):
+            current_code = owner_delete()
+            assert current_code == 409
+            assert inspect() == first
+        with backend(PREVIOUS, 19328, restored, scratch / "previous-delete-check"):
+            previous_code = owner_delete()
+            assert previous_code in (204, 409)
+        with backend(CANDIDATE, 19328, restored, scratch / "after-delete-check"):
+            try:
+                get(PROFILE + "/feed/" + image)
+                read_code = 200
+            except urllib.error.HTTPError as error:
+                read_code = error.code
+            assert (previous_code, read_code) in ((204, 404), (409, 200))
+        result["owner_storage_delete_on_restored_copy"] = {
+            "candidate_status": current_code, "previous_status": previous_code,
+            "anonymous_image_after_previous": read_code}
         evidence = json.dumps(result, ensure_ascii=False, indent=2)
         (ROOT / "studio-feed-recovery-result.json").write_text(evidence + "\n")
         print(evidence, flush=True)
