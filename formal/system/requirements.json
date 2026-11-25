@@ -30185,6 +30185,91 @@
         "classification": "PARTIAL",
         "reason": "The model covers planning invariants. Jest exercises the loader and the player, and the browser test verifies native playback with synthetic catalog metadata. Release visibility changes between the two server reads remain unverified."
       }
+    },
+    {
+      "id": "DIR-STUDIO-FEED-001",
+      "title": "Ordered photo posts on public studio profiles",
+      "domain": "DIR",
+      "authority": "Studio profile feed delivery request",
+      "source": "tdf-hq/docs/openapi/directory.yaml",
+      "contract": "tdf-hq/docs/openapi/directory.yaml",
+      "statement": "An editor can confirm a captioned, ordered studio photo post from the directory profile. Guests can read the published post and its raster bytes on a listable profile.",
+      "property": "A file becomes readable through this route only while it belongs to a visible published post.",
+      "actors": [
+        "Studio editor",
+        "Guest"
+      ],
+      "preconditions": [
+        "Active managed storage for uploads",
+        "Studio directory profile"
+      ],
+      "inputs": [
+        "Caption and one to twelve distinct ordered private TDF image identifiers",
+        "Stable upload keys and client-generated post UUID"
+      ],
+      "state": {
+        "initial": "Private editor preview",
+        "published": "Visible through a listable studio",
+        "withdrawn": "Hidden"
+      },
+      "allowedTransitions": [
+        "Confirm private preview",
+        "Edit caption",
+        "Withdraw publication"
+      ],
+      "forbiddenTransitions": [
+        "Bind another account’s upload",
+        "Write under a profile without both editor and publisher grants",
+        "Read unpublished photo bytes anonymously"
+      ],
+      "effects": [
+        "Ordered feed membership and public read projection"
+      ],
+      "authorization": "Publication and edits require an active studio manager with edit and publish grants. New file membership requires the current uploader.",
+      "privacy": "Public post descriptors contain only the post ID, caption and ordered media IDs. Anonymous media retrieval rechecks listing and publication.",
+      "concurrency": "A unique profile/post key and unique file binding serialize conflicting publications. The transaction locks qualifying permissions and storage rows.",
+      "idempotency": "Identical repeated confirmation returns the original membership; conflicting content is refused.",
+      "failure": "Invalid content, missing authority or unavailable private files prevent confirmation.",
+      "recovery": "Retry using unchanged keys; authorized editors can withdraw a published post.",
+      "observability": "HTTP status, six synthetic image byte comparisons and public post counts in the disposable CI run.",
+      "verification": "Chromium fixture, real PostgreSQL assertions and isolated backend HTTP gate.",
+      "evidence": "scripts/__tests__/studio-feed-http.mjs and e2e/web/studio-feed.spec.mjs",
+      "status": "specified and implemented",
+      "confidence": "Runtime assurance depends on the exact-candidate backend gate.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repository mappings describe the contract. The HTTP gate records runtime evidence separately."
+      },
+      "implementation": [
+        "scripts/production-migrations.json",
+        "tdf-hq-ui/src/api/directory.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/components/directory/StudioFeed.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/sql/2026-11-25_directory_studio_feed.sql",
+        "tdf-hq/sql/2026-11-25_directory_studio_feed_rollback.sql",
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/src/TDF/ContentStorage.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Server/DirectoryFeed.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "tests": [
+        "e2e/web/studio-feed.spec.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/__tests__/studio-feed-http.mjs",
+        "scripts/test-content-storage-security-runtime.sh",
+        "scripts/test-directory-artist-listings.sh",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
+        "tdf-hq/test/TDF/StorageSecuritySpec.hs",
+        "tdf-hq/test/integration/directory_studio_feed.sql",
+        "tdf-hq/test/integration/directory_studio_feed_fixture.sql"
+      ],
+      "formalModels": []
     }
   ]
 }

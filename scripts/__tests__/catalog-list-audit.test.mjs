@@ -6595,6 +6595,11 @@ const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26
 // Qualify the new append against both published parents before running their historical assertions.
 async function manifestBeforeTaxonomy(file) {
   const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const feed = current.migrations.pop();
+  assert.equal(feed.id, '2026-11-25_directory_studio_feed');
+  assert.equal(feed.path, `tdf-hq/sql/${feed.id}.sql`);
+  assert.equal(await fs.readFile(path.join(integrationRoot, feed.path), 'utf8'), await integrationSource(feed.introducedBy, feed.path));
+  await integrationExec('git', ['merge-base', '--is-ancestor', feed.introducedBy, 'HEAD'], { cwd: integrationRoot });
   const original = (await integrationParent('be996410572a72f8f787b2cd5d345b30523ba1ea', file)).migrations.at(-1);
   assert.equal(original.id, '2026-11-21_location_genre_filters');
   assert.deepEqual(current.migrations.at(-3), original);
@@ -6626,7 +6631,10 @@ async function manifestBeforeLoudness(file) {
 }
 
 function decisionBeforeLoudness(decisions) {
-  const taxonomy = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations');
+  const feed = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations');
+  assert.equal(feed.reviewBatch, 'studio-feed-20261125');
+  const taxonomy = feed.previousDecision;
+  assert.equal(feed.evidence.valueCount, taxonomy.evidence.valueCount + 1);
   assert.equal(taxonomy.reviewBatch, 'taxonomy-filters-main-integration-20261124');
   assert.equal(taxonomy.evidence.valueCount, taxonomy.previousDecision.evidence.valueCount + 3);
   assert.equal(taxonomy.concurrentReviewHistory[0].evidence.file, 'scripts/production-migrations.json');

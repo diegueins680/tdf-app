@@ -2,16 +2,15 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
 import { Directory } from '../../api/directory';
-import { get, patch, put } from '../../api/client';
 import { newUploadKey } from '../../api/uploadFailure';
 import { uploadToDrive } from '../../api/drive';
 
-type Post = { id: string; caption: string; images: string[] };
-type Photo = { file: File; key: string; preview: string };
+interface Post { id: string; caption: string; images: string[] }
+interface Photo { file: File; key: string; preview: string }
 const types = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
-function FeedPhoto({ path, label }: { path: string; label: string }) {
-  const photo = useQuery({ queryKey: ['studio-feed-image', path], queryFn: () => get<string>(path), gcTime: 0 });
+function FeedPhoto({ slug, file, label }: { slug: string; file: string; label: string }) {
+  const photo = useQuery({ queryKey: ['studio-feed-image', slug, file], queryFn: () => Directory.feedImage(slug, file), gcTime: 0 });
   return photo.data ? <img src={photo.data} alt={label} style={{ maxWidth: '100%', maxHeight: 440 }} /> : null;
 }
 
@@ -28,7 +27,6 @@ export function StudioFeed({ profile, slug, name, signedIn, posts, refresh }: {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [editing, setEditing] = useState<Post | null>(null);
-  const path = '/directory/profiles/' + encodeURIComponent(profile) + '/feed/';
   useEffect(() => () => photos.forEach(photo => URL.revokeObjectURL(photo.preview)), [photos]);
   async function perform(action: () => Promise<void>) {
     setBusy(true);
@@ -43,7 +41,7 @@ export function StudioFeed({ profile, slug, name, signedIn, posts, refresh }: {
       const stored = await uploadToDrive(photo.file, { destination: 'tdf', visibility: 'private', idempotencyKey: photo.key });
       images.push(stored.id);
     }
-    await put(path + postId, { caption: caption.trim(), images });
+    await Directory.publishFeed(profile, postId, caption.trim(), images);
     setCaption(''); setPhotos([]); setPreview(false); setPostId(crypto.randomUUID());
   }
   return <Stack component="section" spacing={2} aria-label="Feed">
@@ -71,12 +69,12 @@ export function StudioFeed({ profile, slug, name, signedIn, posts, refresh }: {
     {!posts.length && <Typography>Aún no hay publicaciones.</Typography>}
     {posts.map(post => <Stack component="article" key={post.id} spacing={1}>
       <Typography>{post.caption}</Typography>
-      {post.images.map((file,i) => <FeedPhoto key={file} path={'/directory/profiles/' + encodeURIComponent(slug) + '/feed/' + encodeURIComponent(file)} label={`Foto ${i + 1} de ${name}`} />)}
+      {post.images.map((file,i) => <FeedPhoto key={file} slug={slug} file={file} label={`Foto ${i + 1} de ${name}`} />)}
       {editor && (editing?.id === post.id ? <>
         <TextField label="Editar texto" value={editing.caption} onChange={e => setEditing({ ...editing, caption: e.target.value })} />
-        <Button disabled={busy || !editing.caption.trim()} onClick={() => void perform(async () => { await patch(path + post.id, { caption: editing.caption, published: true }); setEditing(null); })}>Guardar texto</Button>
+        <Button disabled={busy || !editing.caption.trim()} onClick={() => void perform(async () => { await Directory.editFeed(profile, post.id, editing.caption, true); setEditing(null); })}>Guardar texto</Button>
         <Button onClick={() => setEditing(null)}>Cancelar</Button></> : <Button onClick={() => setEditing(post)}>Editar publicación</Button>)}
-      {editor && <Button disabled={busy} onClick={() => void perform(async () => { await patch(path + post.id, { caption: post.caption, published: false }); })}>Retirar publicación</Button>}
+      {editor && <Button disabled={busy} onClick={() => void perform(async () => { await Directory.editFeed(profile, post.id, post.caption, false); })}>Retirar publicación</Button>}
     </Stack>)}
   </Stack>;
 }

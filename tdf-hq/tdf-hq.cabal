@@ -244,6 +244,7 @@ library
     TDF.Server.EventResearch
     TDF.Server.DDEX
     TDF.Server.Directory
+    TDF.Server.DirectoryFeed
     TDF.Server.Taxonomy
     TDF.Taxonomy.Filter
     TDF.Taxonomy.GenreSuggestion
