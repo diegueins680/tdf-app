@@ -73,7 +73,8 @@ def backend(binary, port, data, working):
     assets.mkdir()
     run("sudo", "mount", "--bind", data, mount)
     try:
-        assert os.path.ismount(mount) and os.path.samefile(mount, data)
+        assert sp.check_output(["findmnt", "--noheadings", "--mountpoint", mount, "--output", "TARGET"], text=True).strip() == str(mount)
+        assert os.path.samefile(mount, data)
         env = dict(os.environ, CONTENT_STORAGE_UPLOADS_ENABLED="true", HQ_ASSETS_DIR=str(assets),
                    HQ_ASSETS_BASE_URL=API + "/assets/serve", DATABASE_URL=db_url(port),
                    APP_PORT=str(PORT), RUN_MIGRATIONS="false", AUTO_APPLY_PRODUCTION_MIGRATIONS="false",
