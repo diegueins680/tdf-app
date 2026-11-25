@@ -1,0 +1,69 @@
+name: Isolated studio Feed recovery
+on:
+  push:
+    branches: [verify/studio-feed-cold-restore-20261125]
+permissions:
+  contents: read
+jobs:
+  binary:
+    strategy:
+      matrix:
+        include:
+          - {name: candidate, sha: 4af7ed9427ca52a56efef261e4991319fa62595e}
+          - {name: previous, sha: 4699f8327f6e565cc164081b0192249cab56a076}
+    runs-on: ubuntu-latest
+    container: haskell:9.10.3-bookworm
+    env:
+      STACK_ROOT: ${{ github.workspace }}/.stack-root
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ matrix.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - run: |
+          apt-get update -qq
+          apt-get install -y --no-install-recommends git libpq-dev pkg-config
+          git config --global --add safe.directory "$(pwd -P)"
+          test "$(git rev-parse HEAD)" = "${{ matrix.sha }}"
+      - uses: actions/cache/restore@v6
+        with:
+          path: .stack-root
+          key: stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
+          restore-keys: stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-
+      - uses: actions/cache/restore@v6
+        with:
+          path: tdf-hq/.stack-work
+          key: stack-work-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
+          restore-keys: stack-work-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-
+      - working-directory: tdf-hq
+        run: stack --no-terminal build --force-dirty tdf-hq:exe:tdf-hq-exe --copy-bins --local-bin-path "$GITHUB_WORKSPACE/executable"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: studio-test-${{ matrix.name }}
+          path: executable/tdf-hq-exe
+          retention-days: 1
+  recovery:
+    needs: binary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: studio-test-*
+          path: executable
+      - run: |
+          chmod +x executable/*/tdf-hq-exe
+          npm ci --ignore-scripts
+          python3 rehearsal/recovery.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: studio-feed-recovery-result
+          path: studio-feed-recovery-result.json
+          if-no-files-found: error
+          retention-days: 30
