@@ -166,6 +166,62 @@ def hook(work, server_pid):
                       private_file_count=len(files), source_stopped=True, fresh_database_container=True,
                       checks=["initial-anonymous", "replacement-process-same-bind", "restored-anonymous",
                               "previous-backend-public-profile", "candidate-after-previous"])
+        # Exercise the real maintenance response and a directly addressed origin.
+        # Keep the historical executable stopped throughout the hold.
+        import runpy
+        import socket
+        launch = runpy.run_path(str(ROOT / "ops/hetzner/guarded-release.py"))
+        config = scratch / "Caddyfile"
+        config.write_bytes(launch["MAINTENANCE_CADDYFILE"].replace(b"api.tdfrecords.net {", b":18981 {"))
+        run("docker", "run", "--detach", "--name", "studio-maintenance", "--network", "host",
+            "--mount", f"type=bind,src={config},dst=/etc/caddy/Caddyfile,readonly", "caddy:2")
+        def edge(method, path):
+            req = urllib.request.Request("http://127.0.0.1:18981" + path, method=method,
+                      headers={"Authorization":"Bearer synthetic-artist-listing-token"})
+            try:
+                with urllib.request.urlopen(req, timeout=3) as response:
+                    return response.status, response.headers.get("X-TDF-Maintenance")
+            except urllib.error.HTTPError as e:
+                return e.code, e.headers.get("X-TDF-Maintenance")
+        def closed(port):
+            with socket.socket() as sock:
+                sock.settimeout(2)
+                import errno
+                return sock.connect_ex(("127.0.0.1", port)) == errno.ECONNREFUSED
+        for _ in range(30):
+            try:
+                if edge("GET","/health") == (503, "tdf-release-maintenance"):
+                    break
+            except OSError:
+                pass
+            time.sleep(1)
+        image_path = "/storage/files/" + first["post"]["images"][0]
+        cases = [("GET","/health"),("DELETE",image_path),("DELETE","/api"+image_path),
+                 ("POST","/drive/upload"),("PUT","/storage/me/destination"),
+                 ("PUT","/directory/profiles/a0000000-0000-4000-8000-000000000003/feed/"+first["post"]["id"]),
+                 ("PATCH","/directory/profiles/a0000000-0000-4000-8000-000000000003/feed/"+first["post"]["id"])]
+        for method, resource in cases:
+            assert edge(method, resource) == (503,"tdf-release-maintenance")
+        with backend(CANDIDATE, 19328, restored, scratch / "edge-only-negative-control"):
+            assert not closed(PORT) and get("/health")["db"] == "ok"
+            assert edge("DELETE", image_path)[0] == 503
+        run("docker","stop","studio-restored")
+        assert closed(PORT) and closed(19328)
+        assert manifest(restored) == files
+        for method, resource in cases:
+            assert edge(method, resource) == (503,"tdf-release-maintenance")
+        run("docker","start","studio-restored")
+        for _ in range(45):
+            if sp.run(["psql",db_url(19328),"-XAtqc","SELECT 1"],capture_output=True).returncode==0:
+                break
+            time.sleep(1)
+        with backend(CANDIDATE,19328,restored,scratch/"verified-forward-recovery"):
+            assert inspect() == first
+            assert edge("GET","/health")[0] == 503
+        result["maintenance_proof"] = {"edge_status":503, "tested_requests":cases,
+            "edge_alone_direct_health":200,"origin_during_hold":"connection refused",
+            "database_during_hold":"connection refused","private_manifest_preserved":True,
+            "six_hashes_verified_after_forward_recovery":True}
         # Normal owner action on the restored synthetic copy only, after the clean round trip.
         image = first["post"]["images"][0]
         def owner_delete():
