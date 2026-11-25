@@ -1,3 +1,4 @@
+import { QuitoStadiumAgendaLink } from './QuitoStadiumAgendaLink';
 import { Taxonomy } from '../api/taxonomy';
 import TaxonomyFilterBar from '../components/taxonomyFilters/TaxonomyFilterBar';
 import { isTaxonomySelectionEmpty } from '../components/taxonomyFilters/taxonomyFilterModel';
@@ -1238,6 +1239,7 @@ export default function SocialEventsPage() {
         )}
       </Stack>
 
+      <QuitoStadiumAgendaLink city={cityFilter} />
       {eventsQuery.error ? (
         <Alert severity="error">No pudimos cargar los eventos. Intenta de nuevo.</Alert>
       ) : eventsQuery.isLoading || city.trim() !== cityFilter ? (

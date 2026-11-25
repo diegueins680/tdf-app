@@ -74,6 +74,28 @@ The venue JSON contract accepts either an array or `{ "events": [...] }`:
 Venue feeds reject non-HTTPS/private-looking URLs, do not follow redirects, and
 have response-size and timeout limits.
 
+## Quito stadium coverage
+
+For the Olímpico Atahualpa, the public Quito city filter and the source administration
+page link to the promoter’s [venue agenda](https://www.livenation.lat/atahualpa-olympic-stadium-tickets-vdp1687928).
+The link works even when the TDF catalogue has no matching published event.
+Treat concert and ticketing HTML as human-readable evidence. Use the existing JSON or
+iCalendar adapters only for official structured feeds whose operator permits ingestion.
+
+During Quito editorial review, compare the venue agenda with TDF's upcoming events.
+For a missing show, check the promoter's event page and the artist's tour or official
+sale, and record the stable provider ID, URLs, consultation time, local date and venue.
+Check existing candidates and canonical events before adding evidence. If a seller
+requires login or presents a queue or bot check, stop there. Keep conflicting facts
+and unconfirmed start times in review. Follow the [research workflow](../tdf-hq/docs/Event_Research_Ingestion.md)
+for private candidate intake and separate publication approval. After approval check
+the public city filter before the event starts.
+
+Regression evidence: [Live Nation event edp1687929](https://www.livenation.lat/event/the-strokes-reality-awaits-quito-tickets-edp1687929)
+lists The Strokes on 24 November 2026 in Quito at the Atahualpa and links Feel The Tickets.
+The [artist homepage](https://www.thestrokes.com/) alone does not establish a start time.
+The concert is historical evidence and must not be seeded as an upcoming event.
+
 ## Canonical events and purchase options
 
 Provider IDs remain the idempotency key within each source. When a new source

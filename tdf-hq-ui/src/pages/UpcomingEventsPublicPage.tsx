@@ -1,3 +1,4 @@
+import { QuitoStadiumAgendaLink } from './QuitoStadiumAgendaLink';
 import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -113,9 +114,10 @@ export default function UpcomingEventsPublicPage() {
         sx={{ mb: 4, maxWidth: 520 }}
       />
 
+      <QuitoStadiumAgendaLink city={cityFilter} />
       {eventsQuery.isLoading && <CircularProgress aria-label="Cargando próximos eventos" />}
       {eventsQuery.isError && <Alert severity="error">No pudimos cargar los próximos eventos. Intenta de nuevo.</Alert>}
-      {eventsQuery.isSuccess && events.length === 0 && <Alert severity="info">No hay eventos próximos para esa ciudad.</Alert>}
+      {eventsQuery.isSuccess && events.length === 0 && <Alert severity="info">No hay eventos próximos publicados en la agenda TDF para esa ciudad.</Alert>}
       <Stack spacing={2}>
         {events.map((event) => <EventCard key={event.publicUpcomingEventId} event={event} />)}
       </Stack>

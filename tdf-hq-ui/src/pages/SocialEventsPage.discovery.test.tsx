@@ -163,6 +163,7 @@ it('resolves only referenced venues across a 250-venue catalog, cities and event
   // Both calendar and cards use the same resolved name. Shared venues are fetched once;
   // the lookahead row's venue is not fetched until that page is displayed.
   await waitFor(() => expect(screen.getAllByText('Sala 225')).toHaveLength(40));
+  expect(screen.getByRole('link', { name: /Olímpico Atahualpa en Live Nation/ })).toBeTruthy();
   expect(getVenue.mock.calls.map(([id]) => id)).toEqual(['225']);
   expect(getVenue.mock.calls[0]?.[1]).toBeInstanceOf(AbortSignal);
   fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));

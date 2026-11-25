@@ -87,6 +87,19 @@ describe('UpcomingEventsPublicPage', () => {
     }
   });
 
+  it('offers the official Atahualpa listing when the Quito catalogue misses a stadium show', async () => {
+    // The Strokes, 24 Nov 2026: the promoter listed the show but TDF had no public record.
+    renderPage();
+    const city = screen.getByRole('textbox', { name: 'Filtrar próximos eventos por ciudad' });
+    fireEvent.change(city, { target: { value: '  QUITO ' } });
+    const name = 'Conciertos del Olímpico Atahualpa en Live Nation';
+    const link = await screen.findByRole('link', { name });
+    expect(link.getAttribute('href')).toBe('https://www.livenation.lat/atahualpa-olympic-stadium-tickets-vdp1687928');
+    expect(screen.queryByText(/The Strokes/)).toBeNull();
+    fireEvent.change(city, { target: { value: 'Cuenca' } });
+    await waitFor(() => expect(screen.queryByRole('link', { name })).toBeNull());
+  });
+
   it('renders each event with its poster or the event fallback', async () => {
     listPublicUpcomingEventsMock.mockResolvedValue([
       {

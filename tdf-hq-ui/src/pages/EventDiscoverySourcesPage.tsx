@@ -1,3 +1,4 @@
+import { atahualpaAgendaUrl } from './quitoStadiumSource';
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -8,6 +9,7 @@ import {
   Chip,
   FormControlLabel,
   MenuItem,
+  Link,
   Stack,
   Switch,
   TextField,
@@ -127,8 +129,11 @@ export default function EventDiscoverySourcesPage() {
     >
       <Stack spacing={2}>
         <Alert severity="info">
-          El cron consulta únicamente ciudades seguidas por usuarios. Desactivar una fuente no elimina eventos:
-          sólo detiene nuevas importaciones y conserva las referencias existentes.
+          El cron incluye las ciudades registradas de Ecuador y los destinos seguidos compatibles.
+          Para conciertos de estadio en Quito, revisa la{' '}
+          <Link href={atahualpaAgendaUrl}>agenda del Olímpico Atahualpa en Live Nation</Link>.
+          Contrasta cada anuncio con el artista o la venta oficial. Si falta la hora o la venta
+          exige acceso, conserva la evidencia disponible y deja el candidato en revisión.
         </Alert>
         {(sourcesQuery.isError || citiesQuery.isError) && (
           <Alert severity="error">
