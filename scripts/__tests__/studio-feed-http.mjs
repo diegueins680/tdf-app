@@ -63,4 +63,10 @@ assert.equal((await feed())[0].caption,'editado');
 await expectStatus(await request(write,'PATCH',owner,{caption:'editado',published:false}), [200,204]);
 assert.deepEqual(await feed(), []);
 for (const id of ids) await expectStatus(await request(image(id)), [404]);
-console.log('Studio feed HTTP passed: six real private uploads, retries, permission and media checks, anonymous read, edit, and withdrawal.');
+// Keep the post published while making only this isolated fixture profile unlistable.
+await expectStatus(await request(write, 'PATCH', owner, {caption: 'editado', published: true}), [200, 204]);
+assert.equal((await feed()).length, 1);
+await expectStatus(await request('/directory/profiles/' + profileId + '/status', 'PATCH', owner, {status: 'paused'}), [200]);
+await expectStatus(await request(resource), [404]);
+for (const id of ids) await expectStatus(await request(image(id)), [404]);
+console.log('Studio feed HTTP passed: six real private uploads, retries, permission and media checks, anonymous read, edit, withdrawal, and unlistable-profile privacy.');
