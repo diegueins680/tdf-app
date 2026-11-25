@@ -6,7 +6,8 @@ test('el editor confirma seis fotos en la ficha del estudio', async ({ page }) =
   const slug = 'tdf-records-estudio';
   const session = { username: 'synthetic', displayName: 'Editor de prueba', partyId: 10, roles: ['Artist'], modules: [], apiToken: 'fixture' };
   await page.addInitScript(s => localStorage.setItem('tdf-hq-ui/session', JSON.stringify(s)), session);
-  const files = [], feed = [];
+  const files = [], feed = [], confirmations = [];
+  const uploadKeys = new Map();
   const photos = Array.from({ length: 6 }, (_, i) => readFileSync(new URL('./fixtures/studio-feed/' + (i + 1) + '.png', import.meta.url)));
   await page.route('**/*', async route => {
     const req = route.request(), url = new URL(req.url()), p = url.pathname;
@@ -17,10 +18,16 @@ test('el editor confirma seis fotos en la ficha del estudio', async ({ page }) =
     if (p === '/drive/upload') {
       const body = req.postDataBuffer().toString('latin1');
       expect(body).toContain('private');
-      files.push(body.match(/filename="([^"]+)"/)[1]);
-      return route.fulfill({ json: { duFileId: 'fixture-' + files.length } });
+      const name = body.match(/filename="([^"]+)"/)[1];
+      const key = body.match(/name="idempotencyKey"\r\n\r\n([^\r]+)/)[1];
+      if (uploadKeys.has(name)) expect(key).toBe(uploadKeys.get(name));
+      else { uploadKeys.set(name, key); files.push(name); }
+      return route.fulfill({ json: { duFileId: 'fixture-' + (files.indexOf(name) + 1) } });
     }
     if (p.includes('/feed/') && req.method() === 'PUT') {
+      confirmations.push([p, req.postDataJSON()]);
+      if (confirmations.length === 1) return route.fulfill({ status: 503, json: { message: 'Reintentar' } });
+      expect(confirmations[1]).toEqual(confirmations[0]);
       feed.push({ ...req.postDataJSON(), id: p.split('/').pop() });
       return route.fulfill({ status: 204 });
     }
@@ -41,6 +48,8 @@ test('el editor confirma seis fotos en la ficha del estudio', async ({ page }) =
   await page.getByRole('button', { name: 'Mover antes' }).first().click();
   await page.getByRole('button', { name: 'Vista previa' }).click();
   expect(files).toHaveLength(0);
+  await page.getByRole('button', { name: 'Confirmar publicación' }).click();
+  await expect(page.getByRole('region', { name: 'Feed' }).getByRole('alert')).toBeVisible();
   await page.getByRole('button', { name: 'Confirmar publicación' }).click();
   await expect(page.getByRole('article').getByRole('img')).toHaveCount(6);
   expect(files).toEqual([2,1,3,4,5,6].map(i => 'foto-' + i + '.png'));
