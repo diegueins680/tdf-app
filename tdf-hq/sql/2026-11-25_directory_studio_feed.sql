@@ -31,7 +31,7 @@ BEGIN
   IF NOT FOUND THEN RETURN false; END IF;
   SELECT count(*) INTO owned_count FROM (SELECT id FROM content_storage_upload
     WHERE id=ANY(files) AND owner_party_id=actor AND destination='tdf' AND status='completed'
-      AND visibility='private' AND byte_size BETWEEN 1 AND 8388608 FOR SHARE) owned;
+      AND visibility='private' AND media_type IN ('image/png','image/jpeg','image/gif','image/webp') AND byte_size BETWEEN 1 AND 8388608 FOR SHARE) owned;
   IF owned_count <> cardinality(files) OR owned_count NOT BETWEEN 1 AND 12 THEN RETURN false; END IF;
   INSERT INTO directory_feed_post(profile_id,id,caption) VALUES(profile,post,body)
     ON CONFLICT DO NOTHING;
@@ -44,6 +44,16 @@ BEGIN
     SELECT profile,post,n,file FROM unnest(files) WITH ORDINALITY AS input(file,n);
   RETURN true;
 EXCEPTION WHEN unique_violation THEN RETURN false;
+END;
+$$;
+CREATE FUNCTION directory_edit_feed(profile uuid, post uuid, body text, visible boolean, actor bigint)
+RETURNS boolean LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM 1 FROM directory_profile_manager WHERE profile_id=profile AND account_party_id=actor
+    AND active AND can_edit AND can_publish FOR SHARE;
+  IF NOT FOUND THEN RETURN false; END IF;
+  UPDATE directory_feed_post SET caption=body,published=visible WHERE profile_id=profile AND id=post;
+  RETURN FOUND;
 END;
 $$;
 COMMIT;

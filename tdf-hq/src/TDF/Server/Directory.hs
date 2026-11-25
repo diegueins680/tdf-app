@@ -547,9 +547,9 @@ publishFeed user profile post FeedPublish{caption,images} = do
 
 editFeed user profile post FeedEdit{caption,published} = do
   unless (not (T.null (T.strip caption)) && T.length caption <= 2000) (throwError err400)
-  result <- runDB $ rawSql "UPDATE directory_feed_post p SET caption=?,published=? FROM directory_profile_manager m WHERE p.profile_id=? AND p.id=? AND m.profile_id=p.profile_id AND m.account_party_id=? AND m.active AND m.can_edit AND m.can_publish RETURNING p.id"
-    [PersistText caption,PersistBool published,toPersistValue profile,toPersistValue post,toPersistValue (auPartyId user)]
-  unless (result == [Single post]) (throwError err404)
+  result <- runDB $ rawSql "SELECT directory_edit_feed(?,?,?,?,?)"
+    [toPersistValue profile,toPersistValue post,PersistText caption,PersistBool published,toPersistValue (auPartyId user)]
+  unless (result == [Single True]) (throwError err404)
   pure NoContent
 
 setAgeAssurance user AgeAssuranceRequest{adultAttestation,guardianPartyId} = do

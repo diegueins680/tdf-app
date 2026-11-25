@@ -8,7 +8,7 @@ BEGIN
   INSERT INTO directory_profile_manager VALUES(studio,11,true,true,true),(other_profile,22,true,true,true);
   FOR i IN 1..6 LOOP
     id := gen_random_uuid();
-    INSERT INTO content_storage_upload VALUES(id,11,'tdf','completed','private',64);
+    INSERT INTO content_storage_upload VALUES(id,11,'tdf','completed','private',64,'image/png');
     files := array_append(files,id);
   END LOOP;
   IF directory_publish_feed(other_profile,post,'fixture',files,11) OR
@@ -18,13 +18,21 @@ BEGIN
   UPDATE content_storage_upload SET byte_size=8388609 WHERE content_storage_upload.id=files[1];
   IF directory_publish_feed(studio,post,'fixture',files,11) THEN RAISE EXCEPTION 'oversized'; END IF;
   UPDATE content_storage_upload SET byte_size=64;
+  UPDATE content_storage_upload SET media_type='text/html' WHERE content_storage_upload.id=files[1];
+  IF directory_publish_feed(studio,post,'fixture',files,11) THEN RAISE EXCEPTION 'unapproved MIME'; END IF;
+  UPDATE content_storage_upload SET media_type='image/png';
   IF NOT directory_publish_feed(studio,post,'fixture',files,11) OR NOT directory_publish_feed(studio,post,'fixture',files,11)
     THEN RAISE EXCEPTION 'publish/retry failed'; END IF;
   IF directory_publish_feed(studio,post,'changed',files,11) THEN RAISE EXCEPTION 'conflicting retry'; END IF;
   IF EXISTS(SELECT FROM directory_public_feed) THEN RAISE EXCEPTION 'unlisted leak'; END IF;
   INSERT INTO directory_public_profile VALUES(studio);
   IF (SELECT images FROM directory_public_feed) IS DISTINCT FROM files THEN RAISE EXCEPTION 'ordering'; END IF;
-  UPDATE directory_feed_post SET published=false;
+  IF directory_edit_feed(other_profile,post,'bad',false,22) OR directory_edit_feed(studio,post,'bad',false,22)
+    OR directory_edit_feed(studio,gen_random_uuid(),'bad',false,11) THEN RAISE EXCEPTION 'unauthorized edit'; END IF;
+  IF NOT directory_edit_feed(studio,post,'edited',true,11) THEN RAISE EXCEPTION 'edit rejected'; END IF;
+  IF (SELECT caption FROM directory_public_feed) <> 'edited'
+    THEN RAISE EXCEPTION 'edit failed'; END IF;
+  IF NOT directory_edit_feed(studio,post,'edited',false,11) THEN RAISE EXCEPTION 'withdraw failed'; END IF;
   IF EXISTS(SELECT FROM directory_public_feed) THEN RAISE EXCEPTION 'withdrawn leak'; END IF;
 END;
 $$;
