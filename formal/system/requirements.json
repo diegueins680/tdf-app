@@ -19528,6 +19528,8 @@
         "scripts/test-friend-suggestions-postgres.sh",
         "scripts/verify-friend-suggestion-pagerank.py",
         "tdf-hq-ui/src/api/social.test.ts",
+        "scripts/social/preview.mjs",
+        "scripts/social/verify-preview.mjs",
         "tdf-hq-ui/src/features/social/suggestionReason.test.ts",
         "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx"
       ],

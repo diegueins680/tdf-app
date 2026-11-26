@@ -19529,6 +19529,8 @@
         "scripts/test-friend-suggestions-postgres.sh",
         "scripts/verify-friend-suggestion-pagerank.py",
         "tdf-hq-ui/src/api/social.test.ts",
+        "scripts/social/preview.mjs",
+        "scripts/social/verify-preview.mjs",
         "tdf-hq-ui/src/features/social/suggestionReason.test.ts",
         "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx"
       ],
@@ -31031,8 +31033,10 @@
     "scripts/social/chat-notifications.sql": "1bb1b293aabacbeede286dba05911f20f8a85b59faf18f12d1b399288a32a734",
     "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
     "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
+    "scripts/social/preview.mjs": "1851e7acc7da1e189a057ddfcb43352c766fc82a8804e70905116cbf6e710c2f",
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
     "scripts/social/test-http.sh": "79cb3fc47fc8b191182fbe21dd8294acce64697796bdd12a753f7da7821ba457",
+    "scripts/social/verify-preview.mjs": "aa23ed7741df51fb66e1d9df5ae347a2db46b2e144e70cc8bfc56ad63b50074d",
     "scripts/specification-conformance.py": "2c9aa59e5ae08fb6357d1fed83e2591e45d7e6fd1791ebfb6dc52dccab5e0fb0",
     "scripts/specification-inventory.py": "0ce276017ebb1e0ab2a01ed08fb36dae0ad8173c935edef5819d5690eec74b7f",
     "scripts/start-continuous-improvement-loop.sh": "f36c33ec0d9767180c2543c3596964794e02c3e943efa72b3fbb2e970ec81850",
@@ -50417,6 +50421,18 @@
         "relationship": "tests"
       }
     ],
+    "scripts/social/preview.mjs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/social/verify-preview.mjs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq-ui/src/features/social/suggestionReason.test.ts": [
       {
         "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
@@ -61008,9 +61024,14 @@
     {
       "id": "SURFACE-07a18534c1eba4e0",
       "path": "scripts/social/preview.mjs",
-      "sha256": "24a8ab3d7fb8c2ea5b9ac58404b4d6ec2c85a91456b3976751a8b9e8b2ae1da2",
+      "sha256": "1851e7acc7da1e189a057ddfcb43352c766fc82a8804e70905116cbf6e710c2f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-9d90d2a0c5c0f9cf",
@@ -61123,9 +61144,14 @@
     {
       "id": "SURFACE-328feb70fab0c3c6",
       "path": "scripts/social/verify-preview.mjs",
-      "sha256": "3e9e26c263a5b9a8e2143a654eb2183ccf691087e81ca596453f4dccf095968c",
+      "sha256": "aa23ed7741df51fb66e1d9df5ae347a2db46b2e144e70cc8bfc56ad63b50074d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-13021813fc894ba2",
@@ -95906,7 +95932,6 @@
     "SURFACE-a260a4a6fd4f39a3",
     "SURFACE-01bb675b4714c01a",
     "SURFACE-b20e839e84948280",
-    "SURFACE-07a18534c1eba4e0",
     "SURFACE-9d90d2a0c5c0f9cf",
     "SURFACE-7169f7ecb8e097e8",
     "SURFACE-5be6afa63f600b22",
@@ -95919,7 +95944,6 @@
     "SURFACE-15c82649896acb3b",
     "SURFACE-d043b92d718bcc7b",
     "SURFACE-16d8def719a85cfa",
-    "SURFACE-328feb70fab0c3c6",
     "SURFACE-2f7dfeebba9005ba",
     "SURFACE-a7f318be5cea52e5",
     "SURFACE-35cee8013045146d",
@@ -98407,7 +98431,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0c53361ffe719c7bd897c36eaef53887a7d56e28774a8582eabfdb5ce3864e40",
+      "sourceSha256": "a5b32938e50b521a1bdb27348410dadc757e0b8ac59fa88ceea9f98a02916a07",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -98435,7 +98459,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0c53361ffe719c7bd897c36eaef53887a7d56e28774a8582eabfdb5ce3864e40",
+      "sourceSha256": "a5b32938e50b521a1bdb27348410dadc757e0b8ac59fa88ceea9f98a02916a07",
       "definition": {
         "states": [
           "absent",
@@ -98465,7 +98489,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0c53361ffe719c7bd897c36eaef53887a7d56e28774a8582eabfdb5ce3864e40",
+      "sourceSha256": "a5b32938e50b521a1bdb27348410dadc757e0b8ac59fa88ceea9f98a02916a07",
       "definition": {
         "export": [
           "queued",
@@ -98522,7 +98546,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0c53361ffe719c7bd897c36eaef53887a7d56e28774a8582eabfdb5ce3864e40",
+      "sourceSha256": "a5b32938e50b521a1bdb27348410dadc757e0b8ac59fa88ceea9f98a02916a07",
       "definition": {
         "states": [
           "pending",

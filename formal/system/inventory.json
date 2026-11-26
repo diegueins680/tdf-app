@@ -6347,7 +6347,7 @@
     {
       "id": "SURFACE-07a18534c1eba4e0",
       "path": "scripts/social/preview.mjs",
-      "sha256": "24a8ab3d7fb8c2ea5b9ac58404b4d6ec2c85a91456b3976751a8b9e8b2ae1da2",
+      "sha256": "1851e7acc7da1e189a057ddfcb43352c766fc82a8804e70905116cbf6e710c2f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6437,7 +6437,7 @@
     {
       "id": "SURFACE-328feb70fab0c3c6",
       "path": "scripts/social/verify-preview.mjs",
-      "sha256": "3e9e26c263a5b9a8e2143a654eb2183ccf691087e81ca596453f4dccf095968c",
+      "sha256": "aa23ed7741df51fb66e1d9df5ae347a2db46b2e144e70cc8bfc56ad63b50074d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -33522,7 +33522,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "0c53361ffe719c7bd897c36eaef53887a7d56e28774a8582eabfdb5ce3864e40",
+      "sha256": "a5b32938e50b521a1bdb27348410dadc757e0b8ac59fa88ceea9f98a02916a07",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
