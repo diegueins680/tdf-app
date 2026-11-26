@@ -53,9 +53,13 @@ library
     TDF.Social.FanEffects
     TDF.Fans.ArtistRecommendations
     TDF.Fans.ArtistSimilarity
+    TDF.Fans.EventAffinity
     TDF.API.FanFollowing
     TDF.Social.RelationshipWrites
     TDF.Social.RelationshipReads
+    TDF.Auth.EmailVerification
+    TDF.Social.SuggestionRank
+    TDF.Social.SuggestionStore
     TDF.Social.Chat
     TDF.Social.Session
     TDF.API.Calendar
@@ -499,6 +503,7 @@ test-suite tdf-hq-test
     TDF.Fans.FeedAffinitySpec
     TDF.Fans.ArtistRecommendationsSpec
     TDF.Fans.ArtistSimilaritySpec
+    TDF.Fans.EventAffinitySpec
     TDF.ServerSpec
     TDF.StartupResponseSpec
     TDF.ServerAdminSpec
@@ -507,6 +512,8 @@ test-suite tdf-hq-test
     TDF.Server.EventRelationsSpec
     TDF.Server.PublicBookingNotificationsSpec
     TDF.Social.FollowSpec
+    TDF.Social.SuggestionRankSpec
+    TDF.Social.SuggestionStoreSpec
     TDF.Services.EventDiscoverySpec
     TDF.Services.YouTubeSpec
     TDF.Services.RecordsIngestionSpec

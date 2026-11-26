@@ -34,7 +34,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PublicIcon from '@mui/icons-material/Public';
 import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined';
 import { DateTime } from 'luxon';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
 import { Catalogs } from '../api/catalogs';
 import {
@@ -48,6 +48,7 @@ import EventPublishControl from '../components/events/EventPublishControl';
 import TicketPricePreview from '../components/events/TicketPricePreview';
 import { UserSelector } from '../components/party-selector/PartySelector';
 import { useSession } from '../session/SessionContext';
+import { jamCircuitName, mentionsJamCircuit } from '../utils/jamCircuit';
 import { canAccessPath } from '../utils/accessControl';
 import { useLocalePreferences, wasTimezoneChosenOnThisDevice } from '../contexts/LocalePreferencesContext';
 import {
@@ -75,12 +76,12 @@ const DURATION_OPTIONS = [
   { value: 480, label: '8 horas' },
 ];
 
-const loadDraft = (timezone: string): CollaborativeEventDraft => {
+const loadDraft = (timezone: string, draftKey: string): CollaborativeEventDraft => {
   const initial = buildInitialCollaborativeEventDraft(DateTime.now().setZone(timezone));
   if (typeof window === 'undefined') return initial;
   try {
     const stored = JSON.parse(
-      window.localStorage.getItem(EVENT_CREATOR_DRAFT_KEY) ?? 'null',
+      window.localStorage.getItem(draftKey) ?? 'null',
     ) as Partial<CollaborativeEventDraft> | null;
     if (!stored || typeof stored !== 'object') return initial;
     return {
@@ -134,6 +135,13 @@ const roleLabel = (role: EventCollaboratorDraft['role']) =>
   role === 'editor' ? 'Puede editar' : 'Solo lectura';
 
 export default function CollaborativeEventCreatorPage() {
+  const [search] = useSearchParams();
+  const jam = search.get('circuito') === 'jams';
+  return <EventCreator key={String(jam)} jam={jam} />;
+}
+
+function EventCreator({ jam }: { jam: boolean }) {
+  const draftKey = jam ? `${EVENT_CREATOR_DRAFT_KEY}:jams` : EVENT_CREATOR_DRAFT_KEY;
   const { session } = useSession();
   const { locale, timezone: preferredTimezone, currency } = useLocalePreferences();
   const timezone = useMemo(
@@ -146,7 +154,7 @@ export default function CollaborativeEventCreatorPage() {
   );
   const canPlanLogistics = canAccessPath('/social/eventos/0/logistica', session?.roles, session?.modules, session?.featureFlags);
   const qc = useQueryClient();
-  const [draft, setDraft] = useState<CollaborativeEventDraft>(() => loadDraft(timezone));
+  const [draft, setDraft] = useState<CollaborativeEventDraft>(() => loadDraft(timezone, draftKey));
   const [creationResult, setCreationResult] =
     useState<CollaborativeEventCreationResult | null>(null);
   const [collaboratorCandidate, setCollaboratorCandidate] = useState<PartySelectorOption | null>(null);
@@ -206,14 +214,17 @@ export default function CollaborativeEventCreatorPage() {
   useEffect(() => {
     if (typeof window === 'undefined' || creationResult) return;
     try {
-      window.localStorage.setItem(EVENT_CREATOR_DRAFT_KEY, JSON.stringify(draft));
+      window.localStorage.setItem(draftKey, JSON.stringify(draft));
     } catch {
       // Draft persistence is a convenience; storage restrictions must not block creation.
     }
-  }, [creationResult, draft]);
+  }, [creationResult, draft, draftKey]);
 
+  const eventDraft = jam && !mentionsJamCircuit(draft.description)
+    ? { ...draft, description: [draft.description.trim(), jamCircuitName].filter(Boolean).join('\n\n') }
+    : draft;
   const creationMutation = useMutation({
-    mutationFn: () => createCollaborativeEvent(draft, {
+    mutationFn: () => createCollaborativeEvent(eventDraft, {
       createEvent: SocialEventsAPI.createEvent,
       addCollaborator: (eventId, collaborator) =>
         SocialEventsAPI.createLogisticsMember(eventId, {
@@ -226,7 +237,7 @@ export default function CollaborativeEventCreatorPage() {
     onSuccess: (result) => {
       setCreationResult(result);
       try {
-        window.localStorage.removeItem(EVENT_CREATOR_DRAFT_KEY);
+        window.localStorage.removeItem(draftKey);
       } catch {
         // Ignore storage restrictions after the server has accepted the event.
       }
@@ -302,7 +313,7 @@ export default function CollaborativeEventCreatorPage() {
     mutationFn: async () => {
       const eventId = creationResult?.event.eventId?.trim();
       if (!eventId) throw new Error('El evento no tiene un identificador válido.');
-      return saveNamedLineup(eventId, draft, SocialEventsAPI.updateEvent);
+      return saveNamedLineup(eventId, eventDraft, SocialEventsAPI.updateEvent);
     },
     onSuccess: () => {
       setCreationResult((current) => current && { ...current, pendingArtists: [], lineupError: null });
@@ -553,8 +564,8 @@ export default function CollaborativeEventCreatorPage() {
 
   return (
     <PageShell
-      title="Crear evento"
-      subtitle="Empieza con lo esencial, suma al equipo y completa los detalles después."
+      title={jam ? 'Registrar una jam' : 'Crear evento'}
+      subtitle={jam ? 'Registra el lugar y la fecha de tu evento en el Circuito de Jams.' : 'Empieza con lo esencial, suma al equipo y completa los detalles después.'}
       actions={(
         <Button
           component={RouterLink}
