@@ -695,9 +695,11 @@ export const SocialEventsAPI = {
     const path = `/social-events/upcoming${qs}`;
     return await (opts?.signal ? getUnknown(path, { signal: opts.signal }) : getUnknown(path)) as PublicUpcomingEventDTO[];
   },
-  listEvents: async (opts?: { city?: string; startAfter?: string; eventTypeId?: string; workflowStateId?: string; artistId?: string; artistIds?: readonly string[]; venueId?: string; limit?: number; offset?: number; signal?: AbortSignal; taxonomy?: Partial<TaxonomySelection> }) => {
+  listEvents: async (opts?: { city?: string; startAfter?: string; eventTypeId?: string; workflowStateId?: string; artistId?: string; artistIds?: readonly string[]; venueId?: string; limit?: number; offset?: number; forYou?: boolean; signal?: AbortSignal; taxonomy?: Partial<TaxonomySelection> }) => {
     const qs = buildQuery({
       city: opts?.city,
+      // EVT-AFFINITY-ORDER-001: the same page, ordered by the caller's affinity.
+      scope: opts?.forYou ? 'for_you' : undefined,
       start_after: opts?.startAfter,
       event_type_id: opts?.eventTypeId,
       workflow_state_id: opts?.workflowStateId,

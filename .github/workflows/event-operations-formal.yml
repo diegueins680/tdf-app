@@ -115,6 +115,9 @@ jobs:
         run: python formal/directory/semantic_rank.py
       - name: Prove artist similarity ranking exclusions and total order
         run: python formal/fans/artist_similarity_ranking.py
+
+      - name: Prove event affinity evidence and page order
+        run: python formal/fans/event_affinity_order.py
       - name: Prove music loudness decision monotonicity and controls
         run: python formal/music/loudness_decision.py
       - name: Generate formal assurance and release decision

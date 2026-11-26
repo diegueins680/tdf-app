@@ -30294,6 +30294,98 @@
         "classification": "PARTIAL",
         "reason": "The model covers planning invariants. Jest exercises the loader and the player, and the browser test verifies native playback with synthetic catalog metadata. Release visibility changes between the two server reads remain unverified."
       }
+    },
+    {
+      "id": "EVT-AFFINITY-ORDER-001",
+      "title": "Events page ordered by the caller's affinity to the lineups",
+      "statement": "With EVENT_AFFINITY_ORDER_ENABLED on, GET /social-events/events?scope=for_you returns the page that scope=all returns for the same parameters, ordered by event affinity, largest first, keeping the date order among equal affinities. The affinity of an event is the largest affinity among the artists of its lineup; an artist the caller has a signal for (follow, favourite, accepted RSVP or play) has affinity 1 + min(weight, 8)/8, and any other usable artist the mean over the caller's usable seeds of strength times the stored similarity of COMMUNITY-ARTIST-SIMILARITY-001, capped at 1. Usable artists are publicly listed, are not the caller, and are followed by the caller or followable under the installed follow policy. A caller without affinities, a caller who switched personalisation off, and every caller while the flag is off receive exactly the page of scope=all.",
+      "domain": "EVT",
+      "authority": "Owner instruction of 2026-11-22 to continue with the recommended defaults. The rule (permutation inside one page, own signals above inferred ones, mean over seeds) is the implementer's default and was not approved item by item.",
+      "source": "formal/system/event-affinity.md",
+      "contract": "tdf-hq/src/TDF/Fans/EventAffinity.hs",
+      "property": "result = orderByAffinity(affinities, lineup, page) where page is the result of scope=all. result is a permutation of page. For positions p < q in result: eventAffinity(result[p]) > eventAffinity(result[q]), or they are equal and result[p] precedes result[q] in page. affinity(a) is defined only for usable a: 1 + min(w(caller,a),8)/8 if w(caller,a) > 0, else min(1, (SUM over usable seeds s of min(w(caller,s),8)/8 * sim(s,a)) / |usable seeds|) when positive. usable(a) = listed(a) /\\ a # caller /\\ (followed(a) \\/ ~excluded(a)). personalised(caller) = false \\/ flag off => result = page.",
+      "actors": [
+        "Fan",
+        "Customer",
+        "Artist",
+        "Admin"
+      ],
+      "preconditions": [
+        "Authenticated session",
+        "EVENT_AFFINITY_ORDER_ENABLED=true",
+        "scope=for_you"
+      ],
+      "inputs": [
+        "GET /social-events/events with scope=for_you and the filters, limit and offset of scope=all",
+        "fan_follow, music_favorite, event_rsvp, music_playback_event and social_v2_preference rows of the caller",
+        "event_artist and social_artist_profile rows of the page",
+        "The stored similarity (artist_similarity_pair, artist_similarity_norm)"
+      ],
+      "state": {
+        "initial": "Page chosen by the date-ordered query",
+        "terminal": [
+          "Page ordered by affinity",
+          "Page unchanged"
+        ]
+      },
+      "allowedTransitions": [
+        "Permute the rows of one page",
+        "A request reads; it never writes"
+      ],
+      "forbiddenTransitions": [
+        "Returning an event the page of scope=all does not contain, or dropping one it contains",
+        "Giving an affinity to, or taking a contribution from, an artist that is not publicly listed, is the caller, or is neither followed nor followable",
+        "Reading the favourites, RSVPs or plays of a caller who switched personalisation off",
+        "Changing the order of events with equal affinity",
+        "Any write by the request"
+      ],
+      "effects": [
+        "None; read-only"
+      ],
+      "authorization": "That of GET /social-events/events; event visibility is decided by the existing query and is not changed.",
+      "privacy": "The response has the shape and the events of scope=all; only the order inside the page depends on the caller's own signals. No other person's identity or behaviour is read at request time; the stored similarity holds aggregates supported by at least two fans. Hidden artists are neither evidence nor contributors, as of the request's own read of the listing.",
+      "concurrency": "The page query and the affinity reads are separate statements at READ COMMITTED. The page set is fixed by the first; listing, follows, policy, signals and lineups are seen as of their own read.",
+      "idempotency": "Read-only.",
+      "failure": "scope outside all, subscribed, for_you: 400 as before. No usable stored generation: only own signals order the page. A lineup entry whose profile has no canonical party id is not evidence.",
+      "recovery": "None needed.",
+      "observability": "None added.",
+      "implementation": [
+        "tdf-hq/src/TDF/Fans/EventAffinity.hs",
+        "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts",
+        "tdf-hq-ui/src/config/eventAffinityRollout.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Fans/EventAffinitySpec.hs",
+        "tdf-hq/test/ArtistSimilarityProbe.hs",
+        "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts"
+      ],
+      "formalModels": [
+        "formal/fans/EventAffinity.tla",
+        "formal/fans/event_affinity_order.py"
+      ],
+      "verification": "PROVED (Z3, on a hand translation pinned by source hash, with witnesses and guard-necessity controls): an artist with an affinity and a seed contributing to one are usable; own-signal affinities are numbers in (1, 2], inferred ones in [0, 1], event affinities numbers that are not negative; the page key is a strict total order on distinct positions. PROVED (Apalache inductive invariant, for the TLA+ model, three artists and two events, artists hidden and shown, signals changing and the job running at any time): no artist hidden at the request's read is evidence, the response holds exactly the events of the page, a promoted event has a listed lineup artist that is evidence. MODEL-CHECKED (TLC, two artists and two events): the same, with a negative control (listing taken from the stored relation's snapshot) that violates it, also reproduced by Apalache. TESTED (Hspec and QuickCheck): permutation, identity without affinity, order by key, stability, idempotence, bounds, non-usable artists never evidence, fixed values; (PostgreSQL probe on a fixture) lineups, stored affinities equal to the reference, range, opt-out; (Jest) the web page-size and flag helpers. NOT VERIFIED: the handler wiring beyond compilation and review; no HTTP-level test of scope=for_you; the web switch beyond typecheck, lint and helper tests.",
+      "evidence": "formal/fans/event_affinity_order.py output; scripts/verify-inductive-proofs.sh output; tdf-hq-test EventAffinitySpec run; scripts/test-artist-similarity-postgres.sh output; tdf-hq-ui jest run of src/pages/eventDiscoveryFilters.test.ts.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the pure core (tested) and for the model and translation properties (proved). Medium for the step from model and translation to the running code: review plus the PostgreSQL probe. Low for the handler wiring and the web switch: compilation, typecheck and review only.",
+      "ambiguity": [
+        "The task names TDF.Services.EventDiscovery, which is ingestion; the order a person sees is decided in listEvents, so the rule was specified there by the implementer.",
+        "The order is a permutation inside one page; a global order across pages was not attempted and would need its own pagination contract.",
+        "An artist the caller follows that later becomes unfollowable under the policy still counts, because the recommendation frame does not distinguish it from a followed artist.",
+        "The inferred affinity is a mean over the caller's seeds, so many unrelated seeds dilute it.",
+        "The proofs are about a TLA+ model without weights and about a hand translation; neither is mechanically refined to the Haskell and SQL.",
+        "The web page asks for exactly one page when ordered for the listener, so a last page that is exactly full offers an empty next page."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Pure core, model and translation verified as stated; the handler wiring and the web switch have no HTTP-level or browser test."
+      },
+      "historicalStatus": null
     }
   ]
 }
