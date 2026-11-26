@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "cc9216eab473f4d00841e20bcef9428642898f44",
+  "mobileRevision": "442c8d23c203cf13775644280adc151bba042ca4",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -621,6 +621,8 @@
       "scripts/test-invoice-worker.sh",
       "scripts/test-isolated-application-canary.py",
       "scripts/test-ledger-posting.sh",
+      "scripts/test-lesson-slot-suggestions-postgres.sh",
+      "scripts/test-lesson-slot-suggestions-sql.py",
       "scripts/test-live-intake-identity.sh",
       "scripts/test-marketplace-contact-identity.sh",
       "scripts/test-marketplace-operations-migration.sh",
@@ -748,6 +750,7 @@
       "scripts/verify-inductive-proofs.sh",
       "scripts/verify-invoice-receipt-api.mjs",
       "scripts/verify-invoice-receipts.py",
+      "scripts/verify-lesson-slot-suggestions.py",
       "scripts/verify-music-money-wire.py",
       "scripts/verify-payment-arithmetic.py",
       "scripts/verify-payment-intent-expiry.py",
@@ -1350,6 +1353,10 @@
       "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
       "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
       "tdf-hq-ui/src/features/releases/useReleaseFeed.ts",
+      "tdf-hq-ui/src/features/school/LessonSlotSuggestions.test.tsx",
+      "tdf-hq-ui/src/features/school/LessonSlotSuggestions.tsx",
+      "tdf-hq-ui/src/features/school/slotSuggestionHelpers.test.ts",
+      "tdf-hq-ui/src/features/school/slotSuggestionHelpers.ts",
       "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
       "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
       "tdf-hq-ui/src/hooks/useAutoSave.test.ts",
@@ -1908,6 +1915,7 @@
       "tdf-hq/app/Main.hs",
       "tdf-hq/app/MusicDdexRenderMain.hs",
       "tdf-hq/app/SeedCatalogFoundation.hs",
+      "tdf-hq/app/SlotSuggestionsOracle.hs",
       "tdf-hq/app/gen-migration.hs",
       "tdf-hq/assets/feature-registry.json",
       "tdf-hq/db/init.sh",
@@ -2440,6 +2448,8 @@
       "tdf-hq/sql/2026-11-21_location_genre_filters_rollback.sql",
       "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
       "tdf-hq/sql/2026-11-21_music_audio_measurement_rollback.sql",
+      "tdf-hq/sql/2026-11-21_school_schedule_occupancy.sql",
+      "tdf-hq/sql/2026-11-21_school_schedule_occupancy_rollback.sql",
       "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
       "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql",
       "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
@@ -2746,6 +2756,7 @@
       "tdf-hq/src/TDF/Trials/Models.hs",
       "tdf-hq/src/TDF/Trials/Seed.hs",
       "tdf-hq/src/TDF/Trials/Server.hs",
+      "tdf-hq/src/TDF/Trials/SlotSuggestions.hs",
       "tdf-hq/src/TDF/UUIDInstances.hs",
       "tdf-hq/src/TDF/UserActivity.hs",
       "tdf-hq/src/TDF/Venues/Search.hs",
@@ -2877,6 +2888,7 @@
       "tdf-hq/test/TDF/TicketPaymentReceiptSpec.hs",
       "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
+      "tdf-hq/test/TDF/Trials/SlotSuggestionsSpec.hs",
       "tdf-hq/test/TDF/Venues/SearchSpec.hs",
       "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
       "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
@@ -3431,7 +3443,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "60a98a18c206a9def1ef19cc22d40f6db2f08ac3975b05fc18905b91729c2741",
+      "sha256": "39c26107571ac9833fcb3dcf8292fc70a0bfa8e64ab91dce6812b64d3cd52ee7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3455,7 +3467,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "044469d2096c41b0ad222178b33f6a59bce6ffb3b0d09d285004ab516e7f1253",
+      "sha256": "18202e0b90448c8649abf9a6f2e5e9bcc5cea9dc10a453bf9f536a97e824e0e2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4133,7 +4145,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "aa8b292471211812512d33a405cad8ac2c69a0b6eae9efbe4560d0593d6cee55",
+      "sha256": "c7d9b02f6ed2d24b118789f598df3f60bfa932301b81076bd156b82580e5e633",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4295,7 +4307,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "956a681904c0a8260a1c10254d82f5f4df71e241af0d1d198a37d266a1698385",
+      "sha256": "2f9b115b4bb72be6bb1073b672cbc27ba315f91869a3e0ec6e1a29c1e6e41826",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5909,7 +5921,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "5ccb34dfbdfacff9439eb32392d7771d97aa689475ad97d9467bfe18b73eb1a8",
+      "sha256": "99cee12f20d72d7971cefc598cdf3bfff4abcd1be6a75d2b99b8c88975363b5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7005,6 +7017,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-20c062bcdab0419a",
+      "path": "scripts/test-lesson-slot-suggestions-postgres.sh",
+      "sha256": "1dbc042b8a93e2aafaccf96d0b155b205cbc6ab571a50c075cfecfb6317bc215",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-530d963172e49838",
+      "path": "scripts/test-lesson-slot-suggestions-sql.py",
+      "sha256": "5e5f58361c28d5dde4382fbeb1b56b95c51b3355ffce39823235ed9e7dd72509",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-6c0e76dafbb5a45f",
       "path": "scripts/test-live-intake-identity.sh",
       "sha256": "00362c34ed01b182a825ec767a0dfaaa8e1d65a5792592c9bd978364b702bd45",
@@ -7751,7 +7775,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "853ac6885bfa0ee962bd879554718187f135b18e9d5a702c9142f8e656235f6d",
+      "sha256": "abbb590339bc082a42b7f33fc1b08e108a3be232a9f5566a3afbb6ac4b55224e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7764,6 +7788,12 @@
       "id": "SURFACE-02ec8e917a623acf",
       "path": "scripts/verify-invoice-receipts.py",
       "sha256": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1fa60e8e102a61f0",
+      "path": "scripts/verify-lesson-slot-suggestions.py",
+      "sha256": "5f008ce192e3caa0076d1e48b8f6c265a598a0600ac2ffcc05dcc747020e145e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9035,7 +9065,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "7b4aad3c3bb66710a99d6923957ba96512c948b765488ac8e37e2e7788994104",
+      "sha256": "1dfe80e226eb8c8d73167e5225a52a9e231ab15c17970cda9df7ef28c6b9c337",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9491,7 +9521,7 @@
     {
       "id": "SURFACE-356a0fb82dec0531",
       "path": "tdf-hq-ui/src/api/trials.ts",
-      "sha256": "fca9409feb0bf923e58c3d814bfa9ad3390855c417898415d769d3da054b1da6",
+      "sha256": "81a2d1a7b1df340c1c7f9e624750de8e1c1dfc7fa286d6055c459077f00d75fa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11331,6 +11361,30 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c967a1b6522860dc",
+      "path": "tdf-hq-ui/src/features/school/LessonSlotSuggestions.test.tsx",
+      "sha256": "ad2de9e441d17789ef86cdff091a4e875a80d8a4af4a5182e696a331e038443c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e54f738b76dabce0",
+      "path": "tdf-hq-ui/src/features/school/LessonSlotSuggestions.tsx",
+      "sha256": "806d4fff84767b75a900119c3e73eb13603bd011de5d65a956ab218abee691cb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e63de345c7d87dc7",
+      "path": "tdf-hq-ui/src/features/school/slotSuggestionHelpers.test.ts",
+      "sha256": "11be4018fd68595eae9ffb15bc413f6c685d4bd2e4631795db5e518438320175",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3849f5e53c738672",
+      "path": "tdf-hq-ui/src/features/school/slotSuggestionHelpers.ts",
+      "sha256": "c8da45b4ce7d4e8453689d8abcbcc4dea0972321f3d1151e0b9ce470aa63c224",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-becf808f14372711",
       "path": "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
       "sha256": "d6419557dc90a2248dc8560cfc5a8260e0297fc3354e7b652fd6f11098bc67e5",
@@ -11831,7 +11885,7 @@
     {
       "id": "SURFACE-79ffba0a412d33ff",
       "path": "tdf-hq-ui/src/pages/ClassesPage.tsx",
-      "sha256": "2c4c084a7e9287144589b96f3ac9a2ff6c3775bc854c0df027f3717bfa85c203",
+      "sha256": "b7fa2258a340e6d6e2df21893fd6c594d53625866450c693cce6941722afa516",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14667,6 +14721,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-378298bad2ee1dcb",
+      "path": "tdf-hq/app/SlotSuggestionsOracle.hs",
+      "sha256": "6c7c97b7d3b575418900067593200e497a7457e14ad487794cc3997e162bac7d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-33d7f13a443a2699",
       "path": "tdf-hq/app/gen-migration.hs",
       "sha256": "c2498fec18b3d1f5a4bf4d65accf95635a4a78712b29c4b598655c5048019da6",
@@ -14735,7 +14795,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "7c68cfaf150744efc741868d5d859e1cac2d2f04827c48796ef3c5354d420053",
+      "sha256": "14e8d8910832aa79004fcca1a719d7274b0b5e052cb552725003c5a00e1b1d37",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17859,6 +17919,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-64f0d33241d88cb0",
+      "path": "tdf-hq/sql/2026-11-21_school_schedule_occupancy.sql",
+      "sha256": "c45efc93521da8da94082adbf13eda6c2ed43b4e42dc7c111afd39acf09a582d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1f2783ae92290923",
+      "path": "tdf-hq/sql/2026-11-21_school_schedule_occupancy_rollback.sql",
+      "sha256": "bbc6bb3811f0d04b74287aaf9617e4527d102fbf222e3c0495b83c87afde8ab8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f6e8cdde78c53f0d",
       "path": "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
       "sha256": "da5184b2f8a2ac0aa7f421e2e44882fa9e040143e1222f386dc4080035ef9450",
@@ -18575,7 +18647,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "72c952cfb3abf1b4286c44e382735f70d933cf43a660f3eb658252c84663d4fb",
+      "sha256": "9ee7b4b4ba38fd6da52a83981c2dba9314d542f93e720e932b1017c4287c94e0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19415,7 +19487,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
+      "sha256": "2215624a3c8dc69a0ab7bc24d176cf93a6b3af33e3340916ebfda012fc4552e2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19667,13 +19739,13 @@
     {
       "id": "SURFACE-4d1393b620b6aed0",
       "path": "tdf-hq/src/TDF/Trials/API.hs",
-      "sha256": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
+      "sha256": "e6a73b9a2999e95f713b34620fefb9217027c505acbe6f2dab6703f359c4f0ec",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-981d668b9e163412",
       "path": "tdf-hq/src/TDF/Trials/DTO.hs",
-      "sha256": "38d67a2f72bb7f574fa2ba47b748dc3dde2a1dd87d12a329a31d011519d7dfbf",
+      "sha256": "151f8670f041102883d6c4aeb25bdeb2b445d180de61f55a75b9c48d389771b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19691,7 +19763,13 @@
     {
       "id": "SURFACE-f9d35ff622573006",
       "path": "tdf-hq/src/TDF/Trials/Server.hs",
-      "sha256": "c617719d5173d354e462ee6d64fc334243313958beeaa69a6cd911d69743d4a0",
+      "sha256": "63fb60b4ade0b1638b9e327f381fca1bcc25b00f074ab7959f37e70f4865af52",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7319ba3beaa31203",
+      "path": "tdf-hq/src/TDF/Trials/SlotSuggestions.hs",
+      "sha256": "fd1f7fae54b51c6795ff2baa375c1ccb7eff4fc013778c52cd50dae9b6d6ea3c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19769,7 +19847,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "903875f4791eb97ba37309de7e409343fab2dc5757ebb604ee815c862ca071bb",
+      "sha256": "435a5e48d0981f98c94497f536a672eecdaea8f8f014324466ad8ac699d71d26",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19853,7 +19931,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "9653cd26ab2c58692e03ea1b82df464b14da614ed330d96c0abd71e19e26509c",
+      "sha256": "42ac303bc44a14652e31d95759b301c657f69ab1d781628b4dd028bb2b65074b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20105,7 +20183,7 @@
     {
       "id": "SURFACE-6a2ebecd249230c2",
       "path": "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
-      "sha256": "e229b3f69902e4bd06ea424433d6e4be2d0cb1cd2309d22a19b8d4b7afdd255b",
+      "sha256": "707369bbabb4c2388e22e7372676a0952176861fa664eddbd7955fbc7fabfae5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20369,7 +20447,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "834535c78a3c09542515107cb4c5da7ea6f4077ec7e7093535339539220324dd",
+      "sha256": "c8ec4e4d31489f8d69b761708371530665fc9b0ea05032341638fc4924d1c457",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20471,13 +20549,19 @@
     {
       "id": "SURFACE-6a608596a0a41e90",
       "path": "tdf-hq/test/TDF/TrialIdentitySpec.hs",
-      "sha256": "b0aedc327dffadf0a90fa678a2a1baa4a5a619175585c0a8ad469c37fa4a2f63",
+      "sha256": "0396689e05f550caa0dd75909cf0536bca39bc3ed64f0c50ff780750b530511b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-15bc343962df8561",
       "path": "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
-      "sha256": "eebde69c59c367555188cf00435c64dadb9b0c0c99fa724f58cade0c427b2242",
+      "sha256": "f74f8ac1026283bf624373db16161741794f20a0e8305328709e7dd6ff55fb3a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7017451c6e1e194d",
+      "path": "tdf-hq/test/TDF/Trials/SlotSuggestionsSpec.hs",
+      "sha256": "78cf6987131f09f5618277304b9dd11766bcde27d6bb6df807b3c8bc12f3989e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22445,7 +22529,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "7b4aad3c3bb66710a99d6923957ba96512c948b765488ac8e37e2e7788994104",
+      "sha256": "1dfe80e226eb8c8d73167e5225a52a9e231ab15c17970cda9df7ef28c6b9c337",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23519,7 +23603,7 @@
     },
     {
       "path": "DEPLOYMENT_GUIDE.md",
-      "sha256": "56a959b5ff095100964f4952bb7969c89f30f93d3a60d33c54cb0eb068a74c0a",
+      "sha256": "214ffb541bfe9292adcaaf418edae35edff9307554f3b9c66664569e6df7b8b4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31820,6 +31904,34 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/school/LessonSlotAdvice.cfg",
+      "sha256": "f83534e525e77eaa87a74160592fa2c54f5a466dd724cf482aed95ee90947c80",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/school/LessonSlotAdvice.tla",
+      "sha256": "2751061fea96c2604aded38d5eee2138fef820ba3a1b5832fb1b38e9a101856a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/school/LessonSlotAdviceLegacy.cfg",
+      "sha256": "5f4e1afee825f830b3a7a1eea6718e0718a43d92ffed35786b0ba3cf771c6582",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/school/LessonSlotAdviceStale.cfg",
+      "sha256": "efb90d931c25586f205bacda14417d2570745c52befcbfed4b64d3eca8108d3d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/social/ConsentTraces.cfg",
       "sha256": "877abff564403e4e64fdb1823551971b68d34813f49c75c02f00b0b0b996f716",
       "authority": "inferred",
@@ -32975,6 +33087,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/lesson-slot-suggestions.md",
+      "sha256": "4d64380ed0e399efd9285d6ebac846c29615cbeac905f3d77d9853ae5fd1ac77",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/logical-backup.md",
       "sha256": "6e9a051e06010386e846bfbce451fa3f229c273cb10f7f9953423c0be77779ac",
       "authority": "inferred",
@@ -33424,7 +33543,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "17281cb573e7d84c1373257434fa0c3eb47fadd204159cc89b1e9105d611dcbc",
+      "sha256": "26b838559f5739f3b27548a4be8522c27d19ad7ae7c6f949695837ac91c1560e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33872,7 +33991,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "7c68cfaf150744efc741868d5d859e1cac2d2f04827c48796ef3c5354d420053",
+      "sha256": "14e8d8910832aa79004fcca1a719d7274b0b5e052cb552725003c5a00e1b1d37",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -50041,6 +50160,51 @@
         "INIT Init",
         "NEXT Next",
         "INVARIANTS NoRepeat",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/school/LessonSlotAdvice.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Exclusion = TRUE",
+        "  Clients = {1, 2, 3}",
+        "  Slots = {1, 2}",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/school/LessonSlotAdviceLegacy.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Exclusion = FALSE",
+        "  Clients = {1, 2}",
+        "  Slots = {1}",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/school/LessonSlotAdviceStale.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Exclusion = TRUE",
+        "  Clients = {1, 2}",
+        "  Slots = {1}",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK AdviceNeverStale",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
