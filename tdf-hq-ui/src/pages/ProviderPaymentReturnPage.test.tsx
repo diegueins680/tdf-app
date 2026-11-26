@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import { jest } from '@jest/globals';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
@@ -14,6 +14,7 @@ import {
 const checkoutId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const attemptId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const getMock = jest.fn();
+const returnMock = jest.fn(async () => ({ Response: true, ErrorCode: "000" }));
 const alternativesMock = jest.fn<() => Promise<string[]>>();
 let paypalClientId = '';
 
@@ -26,6 +27,7 @@ jest.unstable_mockModule('../utils/env', () => ({
 
 jest.unstable_mockModule('../api/providerPaymentSessions', () => ({
   getProviderPaymentSession: getMock,
+  submitPayPhoneButtonReturn: returnMock,
   safeProviderRedirect: () => null,
 }));
 
@@ -74,12 +76,25 @@ const renderPage = (entry = '/pagos/retorno') => {
 
 describe('ProviderPaymentReturnPage', () => {
   beforeEach(() => {
+    returnMock.mockClear();
     window.sessionStorage.clear();
     getMock.mockReset();
     alternativesMock.mockReset().mockResolvedValue([]);
     paypalClientId = '';
     Object.defineProperty(window, 'paypal', { configurable: true, writable: true, value: undefined });
     resume();
+  });
+
+  it.each(['&', '?'])('forwards a Button return with separator %s even without local recovery', async (separator) => {
+    window.sessionStorage.clear();
+    renderPage('/pagos/retorno?tdf_checkout=' + checkoutId + separator + 'id=12345&clientTransactionId=TDFC-fixture');
+    await waitFor(() => expect(returnMock).toHaveBeenCalledWith(12345, 'TDFC-fixture'));
+    expect(getMock).not.toHaveBeenCalled();
+  });
+
+  it('ignores ambiguous provider return parameters', () => {
+    renderPage('/pagos/retorno?id=12345&id=12346&clientTransactionId=TDFC-fixture');
+    expect(returnMock).not.toHaveBeenCalled();
   });
 
   it('uses the server-bound checkout selector even after another checkout starts', async () => {

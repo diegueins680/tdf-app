@@ -1,11 +1,11 @@
 import { Alert, Box, Button, Card, CardContent, CircularProgress, Container, Stack, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { Link as RouterLink, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { loadCheckoutPaymentAlternatives } from '../api/checkoutPaymentAlternatives';
 import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 
-import { getProviderPaymentSession, safeProviderRedirect } from '../api/providerPaymentSessions';
+import { getProviderPaymentSession, safeProviderRedirect, submitPayPhoneButtonReturn } from '../api/providerPaymentSessions';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { env } from '../utils/env';
 import {
@@ -27,10 +27,24 @@ const POLLABLE_STATES = new Set([
 export default function ProviderPaymentReturnPage() {
   const { locale } = useLocalePreferences();
   const english = locale.toLowerCase().startsWith('en');
-  const [searchParams] = useSearchParams();
-  // PayPhone appends its own query (id, clientTransactionId) to the response
-  // URL and may do so with a second '?', so keep only the checkout id itself.
-  const checkoutId = searchParams.get('tdf_checkout')?.split('?')[0] ?? null;
+  const { search } = useLocation();
+  // The redirect can append its parameters with '?' after the checkout ID.
+  const params = new URLSearchParams(search.replace(/([?&]tdf_checkout=[0-9a-f-]{36})\?/i, '$1&'));
+  const checkoutId = params.get('tdf_checkout');
+  const ids = params.getAll('id');
+  const refs = params.getAll('clientTransactionId');
+  const transactionId = Number(ids[0]);
+  const clientReference = refs[0] ?? '';
+  const hasButtonReturn = ids.length === 1 && /^[1-9]\d*$/.test(ids[0] ?? '')
+    && Number.isSafeInteger(transactionId) && refs.length === 1 && /^TDFC-[A-Za-z0-9._-]{1,45}$/.test(clientReference);
+  // The inbox deduplicates these hints. Only the server's confirmation can
+  // change the order, including when the buyer returns in another browser.
+  useQuery({
+    queryKey: ['payphone-button-return', transactionId, clientReference],
+    queryFn: () => submitPayPhoneButtonReturn(transactionId, clientReference),
+    enabled: hasButtonReturn,
+    staleTime: Infinity,
+  });
   const resume = loadProviderPaymentResume(checkoutId ?? undefined);
   const status = useQuery({
     queryKey: ['provider-payment-session-return', resume?.checkoutId, resume?.attemptId],

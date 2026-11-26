@@ -3253,119 +3253,61 @@ main = hspec $ do
             build ptp buttonPayment { ProviderAdapter.cpReference = "TDF-payment-001" }
               `shouldSatisfy` isLeft
 
-        it "finds a PayPhone Button charge by its reference and confirms it before applying it (ADR 0136)" $ do
-            let buttonLocator = locator
-                  { ProviderAdapter.plExternalId = "GSizecyUkIAkxTj3SQ"
-                  , ProviderAdapter.plExpected = expected
-                      { ProviderAdapter.epReference = "TDFC-0123456789abcdef0123456789a" }
-                  }
-                status transactionId statusCode amount = A.object
-                  [ "transactionId" .= (transactionId :: Int)
-                  , "clientTransactionId" .= ("TDFC-0123456789abcdef0123456789a" :: Text)
-                  , "amount" .= (amount :: Int)
-                  , "currency" .= ("USD" :: Text)
-                  , "statusCode" .= (statusCode :: Int)
-                  , "transactionStatus" .= ("Approved" :: Text)
-                  ]
-                followUp = ProviderAdapter.adapterQueryFollowUp payPhoneSplit adapterContext
-                summary = fmap (fmap (ProviderAdapter.safeRequestSummary . ProviderAdapter.followUpRequest))
-            -- The preparation ID is not a transaction: the status read uses the reference.
-            fmap ProviderAdapter.arUrl
-              (ProviderAdapter.adapterBuildQuery payPhoneSplit adapterContext buttonLocator)
-              `shouldBe` Right
-                "https://pay.payphonetodoesposible.com/api/Sale/client/TDFC-0123456789abcdef0123456789a"
-            -- An approved, matching answer is confirmed with its transaction ID first.
-            confirm <- case followUp buttonLocator (status 23178284 3 12515) of
-              Right (Just step) -> pure step
-              _ -> fail "Expected a PayPhone confirmation request for the approved status"
-            let request = ProviderAdapter.followUpRequest confirm
-            ProviderAdapter.arUrl request
-              `shouldBe` "https://pay.payphonetodoesposible.com/api/button/V2/Confirm"
-            ProviderAdapter.arBody request `shouldBe` Just (A.object
-              [ "id" .= (23178284 :: Int)
-              , "clientTxId" .= ("TDFC-0123456789abcdef0123456789a" :: Text) ])
-            -- A Sale lookup alone cannot authorize retrying a Button payment.
-            cancelled <- case followUp buttonLocator (status 23178284 2 12515) of
-              Right (Just step) -> pure step
-              _ -> fail "Expected Button confirmation before releasing the attempt"
-            ProviderAdapter.arBody (ProviderAdapter.followUpRequest cancelled)
-              `shouldBe` ProviderAdapter.arBody request
-            fmap ProviderAdapter.adapterResultState
-              (ProviderAdapter.parseFollowUpResponse cancelled (status 23178284 3 12515))
-              `shouldBe` Right ProviderAdapter.AdapterSucceeded
-            summary (followUp buttonLocator (status 23178284 3 100)) `shouldSatisfy` isLeft
-            -- API Sale answers are final as they are.
-            summary (followUp locator (status 23178284 3 12515)) `shouldBe` Right Nothing
-            -- The confirmation answer settles the Button binding by its preparation ID.
-            let settled transactionId code =
-                  ProviderAdapter.parseFollowUpResponse confirm (status transactionId code 12515)
-            fmap ProviderAdapter.adapterResultState (settled 23178284 3)
-              `shouldBe` Right ProviderAdapter.AdapterSucceeded
-            fmap ProviderAdapter.adapterResultExternalId (settled 23178284 3)
-              `shouldBe` Right "GSizecyUkIAkxTj3SQ"
-            fmap ProviderAdapter.adapterResultState (settled 23178284 2)
-              `shouldBe` Right ProviderAdapter.AdapterCancelled
-            -- Even with the same merchant reference, amount and currency, a different
-            -- transaction can neither settle this order nor release it for another charge.
-            forM_ [2, 3] $ \code ->
-              settled 23178285 code `shouldSatisfy` isLeft
-            ProviderAdapter.parseFollowUpResponse confirm (status 23178284 3 100)
-              `shouldSatisfy` isLeft
-            ProviderAdapter.adapterParseResponse payPhoneSplit ProviderAdapter.AdapterQuery
-              buttonLocator (status 23178284 3 12515) `shouldSatisfy` isLeft
-            -- A Button charge is never cancelled through API Sale.
-            (ProviderAdapter.safeRequestSummary
-              <$> ProviderAdapter.adapterBuildCancel payPhoneSplit adapterContext buttonLocator)
-              `shouldSatisfy` isLeft
-            -- API Sale references keep the API Sale status query.
-            fmap ProviderAdapter.arUrl (ProviderAdapter.adapterBuildQuery payPhoneSplit adapterContext locator)
-              `shouldSatisfy` either (const False) ("/api/Sale/client/" `Data.Text.isInfixOf`)
-
-        it "reads the JSON array PayPhone returns for a Button status query" $ do
-            -- Shape observed in the PayPhone sandbox on 2026-11-17: the status read
-            -- of a Button payment is a list, not an object.
+        it "confirms a Button transaction using the returned ID and its original reference" $ do
             let reference = "TDFC-0123456789abcdef0123456789a" :: Text
                 buttonLocator = locator
-                  { ProviderAdapter.plExternalId = "GSizecyUkIAkxTj3SQ"
+                  { ProviderAdapter.plExternalId = "opaque-prepare-id"
                   , ProviderAdapter.plExpected = expected { ProviderAdapter.epReference = reference }
                   }
-                transaction ref transactionId statusCode = A.object
-                  [ "transactionId" .= (transactionId :: Int)
-                  , "clientTransactionId" .= (ref :: Text)
-                  , "amount" .= (12515 :: Int)
-                  , "currency" .= ("USD" :: Text)
-                  , "statusCode" .= (statusCode :: Int)
-                  ]
-                followUp = ProviderAdapter.adapterQueryFollowUp payPhone adapterContext buttonLocator
-                query = ProviderAdapter.adapterParseResponse payPhone ProviderAdapter.AdapterQuery buttonLocator
-                followUpUrl = fmap (fmap (ProviderAdapter.arUrl . ProviderAdapter.followUpRequest))
-            -- An approved single-item list is confirmed with its transaction ID.
-            followUpUrl (followUp (A.toJSON [transaction reference 93776650 3]))
-              `shouldBe` Right (Just "https://pay.payphonetodoesposible.com/api/button/V2/Confirm")
-            -- Pending keeps the attempt open. Neither terminal status is final from Sale.
-            fmap ProviderAdapter.adapterResultState (query (A.toJSON [transaction reference 93776650 1]))
-              `shouldBe` Right ProviderAdapter.AdapterPending
-            query (A.toJSON [transaction reference 93776650 2]) `shouldSatisfy` isLeft
-            followUpUrl (followUp (A.toJSON [transaction reference 93776650 2]))
-              `shouldBe` Right (Just "https://pay.payphonetodoesposible.com/api/button/V2/Confirm")
-            query (A.toJSON [transaction reference 93776650 3]) `shouldSatisfy` isLeft
-            -- Entries for other references are ignored; an empty or ambiguous list is rejected.
-            fmap ProviderAdapter.adapterResultState
-              (query (A.toJSON [transaction "TDFC-other" 1 3, transaction reference 93776650 1]))
-              `shouldBe` Right ProviderAdapter.AdapterPending
-            query (A.toJSON ([] :: [A.Value])) `shouldSatisfy` isLeft
-            query (A.toJSON [transaction reference 93776650 2, transaction reference 93776651 1])
-              `shouldSatisfy` isLeft
-            followUpUrl (followUp (A.toJSON [transaction reference 93776650 3, transaction reference 93776651 3]))
-              `shouldSatisfy` isLeft
-            -- The Button no longer needs the coding password when there is no split.
-            fmap ProviderAdapter.arUrl (ProviderAdapter.adapterBuildCreate payPhone adapterContext
-              createPayment
-                { ProviderAdapter.cpReference = reference
-                , ProviderAdapter.cpPaymentMethod = ProviderCapabilities.MethodCard })
-              `shouldBe` Right "https://pay.payphonetodoesposible.com/api/button/Prepare"
+                query = ProviderAdapter.adapterBuildQuery payPhoneSplit adapterContext buttonLocator
+                notice = ProviderAdapter.NotificationAssessment "12345" (Just reference) Nothing False True
+                response tx ref amount currency code = A.object
+                  [ "transactionId" .= (tx :: Int), "clientTransactionId" .= (ref :: Text)
+                  , "amount" .= (amount :: Int), "currency" .= (currency :: Text)
+                  , "statusCode" .= (code :: Int) ]
+                valid code = response 12345 reference 12515 "USD" code
+            fmap (fmap (ProviderAdapter.arUrl . ProviderAdapter.statusRequest)) (query Nothing) `shouldBe` Right Nothing
+            confirm <- case query (Just notice) of
+              Right (Just plan) -> pure plan
+              _ -> fail "Expected Button Confirm"
+            let request = ProviderAdapter.statusRequest confirm
+                parse = ProviderAdapter.parseStatusResponse confirm
+            ProviderAdapter.arMethod request `shouldBe` ProviderAdapter.AdapterPost
+            ProviderAdapter.arUrl request `shouldBe` "https://pay.payphonetodoesposible.com/api/button/V2/Confirm"
+            ProviderAdapter.arBody request `shouldBe` Just (A.object ["id" .= (12345 :: Int), "clientTxId" .= reference])
+            forM_ [(2, ProviderAdapter.AdapterCancelled), (3, ProviderAdapter.AdapterSucceeded)] $ \(code, result) -> do
+              fmap ProviderAdapter.adapterResultState (parse (valid code)) `shouldBe` Right result
+              fmap ProviderAdapter.adapterResultExternalId (parse (valid code)) `shouldBe` Right "opaque-prepare-id"
+              forM_ [ response 12346 reference 12515 "USD" code
+                    , response 12345 "TDFC-other" 12515 "USD" code
+                    , response 12345 reference 1 "USD" code
+                    , response 12345 reference 12515 "EUR" code
+                    , A.toJSON [valid code] ] $ \mismatch -> parse mismatch `shouldSatisfy` isLeft
+              ProviderAdapter.adapterParseResponse payPhoneSplit ProviderAdapter.AdapterQuery
+                buttonLocator (valid code) `shouldSatisfy` isLeft
+            forM_ [ notice { ProviderAdapter.notificationExternalId = "0" }
+                  , notice { ProviderAdapter.notificationExternalId = "opaque-prepare-id" }
+                  , notice { ProviderAdapter.notificationMerchantReference = Just "TDFC-other" } ] $ \invalid ->
+              fmap (fmap (ProviderAdapter.arUrl . ProviderAdapter.statusRequest)) (query (Just invalid)) `shouldSatisfy` isLeft
+            fmap ProviderAdapter.safeRequestSummary
+              (ProviderAdapter.adapterBuildCancel payPhoneSplit adapterContext buttonLocator) `shouldSatisfy` isLeft
 
-        it "confirms a PayPhone Button charge every minute instead of backing off (ADR 0136)" $ do
+        it "keeps wallet queries on API Sale and binds the response to the stored sale" $ do
+            plan <- case ProviderAdapter.adapterBuildQuery payPhone adapterContext locator Nothing of
+              Right (Just value) -> pure value
+              _ -> fail "Expected wallet Sale query"
+            ProviderAdapter.arUrl (ProviderAdapter.statusRequest plan)
+              `shouldBe` "https://pay.payphonetodoesposible.com/api/Sale/client/TDF-payment-001"
+            let transaction tx = A.object
+                  [ "transactionId" .= (tx :: Int), "clientTransactionId" .= ("TDF-payment-001" :: Text)
+                  , "amount" .= (12515 :: Int), "currency" .= ("USD" :: Text), "statusCode" .= (2 :: Int) ]
+                parse = ProviderAdapter.parseStatusResponse plan
+            fmap ProviderAdapter.adapterResultState (parse (A.toJSON [transaction 45441137]))
+              `shouldBe` Right ProviderAdapter.AdapterCancelled
+            parse (transaction 1) `shouldSatisfy` isLeft
+            parse (A.toJSON [transaction 45441137, transaction 45441137]) `shouldSatisfy` isLeft
+
+        it "checks for an outstanding Button return every minute before manual review" $ do
             let delay = ProviderExecutionStore.providerQueryRetryDelaySeconds
             map (delay "TDFC-0123456789abcdef0123456789a") [1, 8, 24] `shouldBe` [60, 60, 60]
             -- 24 attempts a minute apart outlast the ten-minute form plus the

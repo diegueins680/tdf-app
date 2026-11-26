@@ -35,6 +35,7 @@ import           System.IO (hPutStrLn, stderr)
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.PaymentIntentStore as Intent
 import           TDF.Commerce.ProviderAdapter
+import           TDF.Commerce.ProviderAdapter.PayPhone (payPhoneButtonReferencePrefix)
 import           TDF.Commerce.ProviderAdapter.Http
   ( AdapterTransportError(..), executeAdapterRequest, sharedProviderManager )
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
@@ -95,7 +96,7 @@ processProviderEventWith fetch appliedAt env@Env{envPool} payload now =
                 Left problem -> pure (deadLetter problem Nothing)
                 Right () -> do
                   boundResult <- runSqlPool
-                    (Execution.loadBoundProviderPayment
+                    (Execution.loadNotificationPayment
                       provider environment (ProviderEvent.pepMerchantRef payload)
                       (notificationExternalId assessment)
                       (notificationMerchantReference assessment))
@@ -107,8 +108,17 @@ processProviderEventWith fetch appliedAt env@Env{envPool} payload now =
                     -- application keeps the binding: an event that runs out of
                     -- retries this way still leaves its review exception.
                     Right payment ->
-                      either (const (retry "Hosted provider reconciliation failed" (Just payment))) id
-                        <$> tryAny (queryAndApply fetch appliedAt env rpaAdapter payload payment now)
+                      either (const (retry "Hosted provider reconciliation failed" (preConfirmationReview payment))) id
+                        <$> tryAny (queryAndApply fetch appliedAt env rpaAdapter payload assessment payment now)
+
+-- The returned Button ID is only a hint until PayPhone confirms the pair.
+-- An unrelated ID must not open an exception against the referenced order.
+-- Its scheduled job still escalates a genuinely unresolved attempt.
+preConfirmationReview :: Execution.BoundProviderPayment -> Maybe Execution.BoundProviderPayment
+preConfirmationReview payment
+  | Execution.bppProvider payment == Checkout.ProviderPayPhone
+  , payPhoneButtonReferencePrefix `T.isPrefixOf` Execution.bppProviderReference payment = Nothing
+  | otherwise = Just payment
 
 queryAndApply
   :: (AdapterRequest -> IO (Either AdapterTransportError A.Value))
@@ -116,25 +126,30 @@ queryAndApply
   -> Env
   -> ProviderAdapter
   -> ProviderEvent.ProviderEventPayload
+  -> NotificationAssessment
   -> Execution.BoundProviderPayment
   -> UTCTime
   -> IO ProviderReconciliationResult
-queryAndApply fetch appliedAt Env{envPool} adapter payload payment now = do
+queryAndApply fetch appliedAt Env{envPool} adapter payload assessment payment now = do
+  let review = preConfirmationReview payment
   granted <- runSqlPool (Execution.reserveProviderQueryBudget
     (Execution.bppProvider payment) (Execution.bppEnvironment payment)) envPool
   if not granted
-    then pure (retry "Authoritative query budget is temporarily unavailable" (Just payment))
+    then pure (retry "Authoritative query budget is temporarily unavailable" review)
     else do
-      queried <- queryProviderWith fetch adapter payment now
+      queried <- queryProviderWith fetch adapter payment (Just assessment) now
       observedAt <- appliedAt
       case queried of
+        Left QueryBindingMismatch | Nothing <- review ->
+          pure (deadLetter "Button confirmation did not match the returned transaction" Nothing)
         Left QueryBindingMismatch -> do
           runSqlPool (recordQueryMismatch payment observedAt) envPool
           -- The mismatch exception was just recorded; no second one is needed.
           pure (deadLetter "Authoritative query did not match its immutable binding" (Just payment))
             { prrReview = Nothing }
-        Left QueryUnsupported -> pure (deadLetter "Stored binding cannot form a safe query" (Just payment))
-        Left QueryUnavailable -> pure (retry "Authoritative provider query is temporarily unavailable" (Just payment))
+        Left QueryAwaitingReturn -> pure (retry "Waiting for a provider transaction ID" review)
+        Left QueryUnsupported -> pure (deadLetter "Stored binding cannot form a safe query" review)
+        Left QueryUnavailable -> pure (retry "Authoritative provider query is temporarily unavailable" review)
         Right result -> do
           applied <- runSqlPool (applyQueryResult payment result
             (ProviderEvent.providerEventReferenceId (ProviderEvent.pepReference payload)) observedAt) envPool
@@ -146,13 +161,13 @@ queryAndApply fetch appliedAt Env{envPool} adapter payload payment now = do
             (\disposition -> (resultFor disposition (Just payment))
               { prrReview = if disposition == ReconciliationRetry then Just payment else Nothing }) applied
 
-data QueryFailure = QueryUnsupported | QueryUnavailable | QueryBindingMismatch
+data QueryFailure = QueryUnsupported | QueryUnavailable | QueryBindingMismatch | QueryAwaitingReturn
 
 queryProviderWith
   :: (AdapterRequest -> IO (Either AdapterTransportError A.Value))
-  -> ProviderAdapter -> Execution.BoundProviderPayment -> UTCTime
+  -> ProviderAdapter -> Execution.BoundProviderPayment -> Maybe NotificationAssessment -> UTCTime
   -> IO (Either QueryFailure AdapterResult)
-queryProviderWith fetch adapter payment now = do
+queryProviderWith fetch adapter payment assessment now = do
   nonce <- getEntropy 32
   let locator = PaymentLocator
         { plExternalId = Execution.bppProviderResourceId payment
@@ -163,25 +178,15 @@ queryProviderWith fetch adapter payment now = do
             }
         }
       context = AdapterContext now nonce
-      parse value = either (const (Left QueryBindingMismatch)) Right
-        (adapterParseResponse adapter AdapterQuery locator value)
-  case adapterBuildQuery adapter context locator of
+  case adapterBuildQuery adapter context locator assessment of
     Left _ -> pure (Left QueryUnsupported)
-    Right request -> do
-      response <- fetch request
-      case response of
-        Left AdapterTransportError{} -> pure (Left QueryUnavailable)
-        Right value -> case adapterQueryFollowUp adapter context locator value of
-          Left _ -> pure (Left QueryBindingMismatch)
-          Right Nothing -> pure (parse value)
-          -- The provider's own follow-up (PayPhone's Button confirmation)
-          -- answers for the payment; the first answer is never applied.
-          Right (Just followUp) -> do
-            confirmed <- fetch (followUpRequest followUp)
-            pure $ case confirmed of
-              Left AdapterTransportError{} -> Left QueryUnavailable
-              Right answer -> either (const (Left QueryBindingMismatch)) Right
-                (parseFollowUpResponse followUp answer)
+    Right Nothing -> pure (Left QueryAwaitingReturn)
+    Right (Just query) -> do
+      response <- fetch (statusRequest query)
+      pure $ case response of
+        Left AdapterTransportError{} -> Left QueryUnavailable
+        Right value -> either (const (Left QueryBindingMismatch)) Right
+          (parseStatusResponse query value)
 
 -- No thread is started by default. The process switch is also reread each
 -- tick; the database gate and account qualification remain independently required.
@@ -245,7 +250,7 @@ processQueryClaimWith fetch Env{envPool} adapter claim = do
     Nothing -> pure ()
     Just payment -> do
       now <- getCurrentTime
-      queried <- queryProviderWith fetch adapter payment now
+      queried <- queryProviderWith fetch adapter payment Nothing now
       observedAt <- getCurrentTime
       processEnabled <- queryWorkerEnabled
       runSqlPool (do
@@ -256,6 +261,7 @@ processQueryClaimWith fetch Env{envPool} adapter claim = do
             | not processEnabled -> finish "retry" "process_switch_disabled"
             | bound /= payment -> finish "dead_letter" "binding_changed"
             | otherwise -> case queried of
+                Left QueryAwaitingReturn -> finish "retry" "awaiting_provider_return"
                 Left QueryUnavailable -> finish "retry" "query_unavailable"
                 Left QueryUnsupported -> finish "dead_letter" "query_unsupported"
                 Left QueryBindingMismatch -> finish "dead_letter" "query_binding_mismatch"

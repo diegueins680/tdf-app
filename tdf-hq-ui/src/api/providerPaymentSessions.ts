@@ -81,6 +81,12 @@ export const getProviderPaymentSession = (
   { headers: checkoutHeaders(lookupToken) },
 );
 
+export const submitPayPhoneButtonReturn = (transactionId: number, clientReference: string) =>
+  post<{ Response: boolean; ErrorCode: string }>('/commerce/provider-notifications/payphone', {
+    TransactionId: transactionId,
+    ClientTransactionId: clientReference,
+  });
+
 export const paymentMethodDefinition = (
   label: string,
 ): HostedPaymentMethodDefinition | null =>

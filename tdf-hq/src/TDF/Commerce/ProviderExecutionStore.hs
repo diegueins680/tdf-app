@@ -24,6 +24,7 @@ module TDF.Commerce.ProviderExecutionStore
   , loadAuthorizedCreateReplay
   , providerCreateRequestFingerprint
   , loadBoundProviderPayment
+  , loadNotificationPayment
   , recordReconciledCreateResult
   , reviewClosedCheckoutApproval
   , validateNoChargeObservation
@@ -258,7 +259,9 @@ claimProviderQuery provider environment = do
     :: SqlPersistT IO [(Single Text, Single Int, Single Text, Single Text, Single Text)]
   case rows of
     [(Single operationId, Single attempts, Single merchantRef, Single resource, Single reference)] -> do
-      granted <- if attempts >= 24 then pure True else reserveProviderQueryBudget provider environment
+      -- A scheduled Button check without a return ID makes no provider request.
+      let awaitsReturn = provider == Checkout.ProviderPayPhone && payPhoneButtonReferencePrefix `T.isPrefixOf` reference
+      granted <- if attempts >= 24 || awaitsReturn then pure True else reserveProviderQueryBudget provider environment
       if not granted then pure Nothing else do
         lease <- liftIO (toText <$> nextRandom)
         let nextAttempt = min 24 (attempts + 1)
@@ -302,16 +305,8 @@ providerQueryOperationTerminal claim = do
     \ WHERE id=?::uuid FOR UPDATE" [PersistText (pqcOperationId claim)]
   pure (rows == [Single True])
 
--- | Seconds until the next authenticated query of an operation, given the
--- attempt just made. The generic schedule backs off from 30 seconds to an hour.
--- A PayPhone Button query is its confirmation, and PayPhone reverses a Button
--- payment that is not confirmed within five minutes of the payment; its form
--- lives ten minutes from load (ADR 0136). Button references are therefore
--- confirmed every minute for the whole budget of 24 attempts (about 24
--- minutes, past the form's life). The shared budget of one query per provider
--- every ten seconds keeps the minute for six concurrent jobs and stays inside
--- the five-minute deadline for about 25; a confirmation that still misses it is
--- reversed by PayPhone, so the buyer is not charged.
+-- Button jobs wait locally for a return or notification. The inbox worker
+-- confirms the returned transaction. An exhausted wait opens a manual review.
 providerQueryRetryDelaySeconds :: Text -> Int -> Int
 providerQueryRetryDelaySeconds reference attempt
   | payPhoneButtonReferencePrefix `T.isPrefixOf` reference = 60
@@ -791,6 +786,27 @@ providerCreateRequestFingerprint checkout provider method reference amount curre
       , T.toUpper currency, fromMaybe "" (T.strip <$> phone), fromMaybe "" (T.strip <$> country)
       ]
 
+-- A Button notification carries a transaction ID, whereas its immutable
+-- binding stores the opaque preparation ID. Resolve that existing binding
+-- by the merchant's original reference, scoped to the account and environment.
+loadNotificationPayment
+  :: Checkout.PaymentProvider -> Checkout.CheckoutEnvironment -> Text -> Text -> Maybe Text
+  -> SqlPersistT IO (Either Text BoundProviderPayment)
+loadNotificationPayment provider environment merchantRef externalId reference
+  | provider == Checkout.ProviderPayPhone
+  , Just ref <- reference
+  , payPhoneButtonReferencePrefix `T.isPrefixOf` ref = do
+      rows <- rawSql
+        "SELECT provider_resource_id FROM commerce_provider_binding\
+        \ WHERE provider = 'payphone' AND environment = ? AND merchant_account_ref = ?\
+        \ AND resource_type = 'sale' AND merchant_reference = ? LIMIT 2"
+        [ PersistText (Checkout.checkoutEnvironmentText environment)
+        , PersistText merchantRef, PersistText ref ] :: SqlPersistT IO [Single Text]
+      case rows of
+        [Single prepareId] -> loadBoundProviderPayment provider environment merchantRef prepareId reference
+        _ -> pure (Left "PayPhone Button callback does not identify a unique payment")
+  | otherwise = loadBoundProviderPayment provider environment merchantRef externalId reference
+
 loadBoundProviderPayment
   :: Checkout.PaymentProvider
   -> Checkout.CheckoutEnvironment
@@ -1087,14 +1103,8 @@ loadOperationByPreparation ProviderOperationPreparation{..} = do
     [] -> Left "Provider operation idempotency key conflicts with immutable fields"
     _ -> Left "Provider operation idempotency lookup was ambiguous"
 
--- A PayPhone Button page is handed out (again) only for ten minutes after the
--- preparation (ADR 0136). Its form lives ten minutes from load, so a payment
--- happens at most twenty minutes after preparation and must be confirmed five
--- minutes later; the query worker reads the reference every minute for 24
--- attempts (about 24 minutes), which covers that horizon. A session read past
--- the window gets no page, so TDF never reopens a form whose payment the worker
--- could no longer confirm. An attempt nobody paid ends in review when the
--- worker's attempts run out.
+-- Stop handing out the Button page ten minutes after preparation. A link
+-- withheld locally does not prove provider expiry or authorize another charge.
 loadOperation
   :: ProviderOperationReference
   -> Text

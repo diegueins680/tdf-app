@@ -36,6 +36,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char (isDigit)
 import           Data.Int (Int64)
+import           Text.Read (readMaybe)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -76,7 +77,6 @@ payPhoneAdapter config = do
     , adapterBuildSameDayReverse = buildSameDayReverse config
     , adapterParseResponse = parseResponse
     , adapterAssessNotification = assessCallback config
-    , adapterQueryFollowUp = buttonConfirmation config
     }
 
 buildCreate
@@ -250,71 +250,44 @@ safePayPhoneRedirect url = do
     then Just url
     else Nothing
 
--- | The authenticated status read by the merchant's client reference. A
--- Button charge has no transaction ID until the buyer pays (Prepare answers
--- only an opaque preparation ID), so it is found by its @TDFC-@ reference too;
--- until the buyer pays, PayPhone answers with an error status, which
--- reconciliation treats as unavailable and retries. This legacy lookup can
--- identify a transaction to confirm but cannot establish Button finality.
+-- API Sale and Button each have a separate status contract. Button Prepare
+-- supplies an opaque page ID. Only the buyer return or notification supplies
+-- the numeric transaction ID required to confirm that payment.
 buildQuery
-  :: PayPhoneConfig
-  -> AdapterContext
-  -> PaymentLocator
-  -> Either AdapterError AdapterRequest
-buildQuery config _ = buildSaleQuery config
-
-buildSaleQuery
-  :: PayPhoneConfig
-  -> PaymentLocator
-  -> Either AdapterError AdapterRequest
-buildSaleQuery config locator = do
-  validateClientReference (epReference (plExpected locator))
-  pure AdapterRequest
-    { arProvider = ProviderPayPhone
-    , arOperation = AdapterQuery
-    , arMethod = AdapterGet
-    , arUrl = payPhoneBaseUrl <> "/api/Sale/client/" <> epReference (plExpected locator)
-    , arHeaders = payPhoneHeaders config
-    , arBody = Nothing
-    , arRetryPolicy = SafeReadRetry
-    }
-
--- | PayPhone reverses a Button payment that is not confirmed within five
--- minutes (ADR 0136). When the status read shows an approved or cancelled
--- Button payment whose reference, amount and currency match the
--- binding, only Button Confirm can settle the payment or release it for retry.
-buttonConfirmation
-  :: PayPhoneConfig
-  -> AdapterContext
-  -> PaymentLocator
-  -> Value
-  -> Either AdapterError (Maybe QueryFollowUp)
-buttonConfirmation config _ locator value
-  | not (isButtonReference reference) = Right Nothing
-  | otherwise = do
-      validateClientReference reference
-      (transactionId, result) <- parsePayPhoneValue (parseTransaction locator) value
-      pure $ if buttonRequiresConfirmation result
-        then Just (confirmation transactionId)
-        else Nothing
+  :: PayPhoneConfig -> AdapterContext -> PaymentLocator -> Maybe NotificationAssessment
+  -> Either AdapterError (Maybe ProviderStatusQuery)
+buildQuery config _ locator notice = do
+  validateClientReference reference
+  if isButtonReference reference
+    then traverse confirm notice
+    else pure (Just (ProviderStatusQuery sale (parsePayPhoneValue (parseQuery locator))))
   where
     reference = epReference (plExpected locator)
-    confirmation transactionId = QueryFollowUp
-      { followUpRequest = AdapterRequest
-          { arProvider = ProviderPayPhone
-          , arOperation = AdapterQuery
-          , arMethod = AdapterPost
-          , arUrl = payPhoneBaseUrl <> "/api/button/V2/Confirm"
-          , arHeaders = payPhoneHeaders config
-          , arBody = Just (A.object ["id" .= transactionId, "clientTxId" .= reference])
-          , arRetryPolicy = SafeReadRetry
-          }
-      , parseFollowUpResponse = parsePayPhoneValue $ \answer -> do
-          (confirmedId, result) <- parseTransaction locator answer
-          unless (confirmedId == transactionId)
-            (fail "PayPhone confirmation returned a different transaction ID")
-          pure result
+    sale = AdapterRequest
+      { arProvider = ProviderPayPhone, arOperation = AdapterQuery, arMethod = AdapterGet
+      , arUrl = payPhoneBaseUrl <> "/api/Sale/client/" <> reference
+      , arHeaders = payPhoneHeaders config, arBody = Nothing, arRetryPolicy = SafeReadRetry
       }
+    confirm assessment = do
+      unless (notificationMerchantReference assessment == Just reference)
+        (Left (AdapterError "PayPhone callback reference differs from the stored payment."))
+      case readMaybe (T.unpack (notificationExternalId assessment)) :: Maybe Int64 of
+        Just txId | txId > 0 && T.pack (show txId) == notificationExternalId assessment ->
+          pure ProviderStatusQuery
+            { statusRequest = AdapterRequest
+                { arProvider = ProviderPayPhone, arOperation = AdapterQuery, arMethod = AdapterPost
+                , arUrl = payPhoneBaseUrl <> "/api/button/V2/Confirm"
+                , arHeaders = payPhoneHeaders config
+                , arBody = Just (A.object ["id" .= txId, "clientTxId" .= reference])
+                , arRetryPolicy = SafeReadRetry
+                }
+            , parseStatusResponse = parsePayPhoneValue $ \answer -> do
+                (confirmedId, result) <- parseTransactionObject locator answer
+                unless (confirmedId == txId)
+                  (fail "PayPhone confirmation returned a different transaction ID")
+                pure result
+            }
+        _ -> Left (AdapterError "PayPhone callback needs a positive transaction ID.")
 
 buildCancel
   :: PayPhoneConfig
@@ -416,25 +389,10 @@ parseSaleCreate object = do
 
 parseQuery :: PaymentLocator -> Value -> Parser AdapterResult
 parseQuery locator value = do
-  (_, result) <- parseTransaction locator value
-  when (isButtonReference (epReference (plExpected locator))
-      && buttonRequiresConfirmation result)
-    (fail "A terminal PayPhone Button result requires confirmation")
-  pure result
+  when (isButtonReference (epReference (plExpected locator)))
+    (fail "PayPhone Button verification requires the returned transaction ID")
+  snd <$> parseTransaction locator value
 
-buttonRequiresConfirmation :: AdapterResult -> Bool
-buttonRequiresConfirmation result =
-  adapterResultState result `elem` [AdapterSucceeded, AdapterCancelled]
-
--- | Check the financial binding and keep the transaction identity distinct
--- from the stored resource (the preparation ID for Button payments).
---
--- Observed in the PayPhone sandbox (2026-11-17): @GET /api/Sale/client/{ref}@
--- answers a Button payment with a JSON array of transactions, not an object.
--- Only an array holding exactly one transaction for this reference is read;
--- an empty array, or several transactions for one reference, is ambiguous and
--- rejected, so nothing is applied from it. The Button confirmation answers
--- with a single object.
 parseTransaction :: PaymentLocator -> Value -> Parser (Int64, AdapterResult)
 parseTransaction locator value = case value of
   A.Array transactions ->

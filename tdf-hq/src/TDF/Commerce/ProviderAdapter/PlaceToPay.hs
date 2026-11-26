@@ -55,7 +55,9 @@ placeToPayAdapter config = do
   pure ProviderAdapter
     { adapterProvider = ProviderPlaceToPay
     , adapterBuildCreate = buildCreate config
-    , adapterBuildQuery = buildQuery config
+    , adapterBuildQuery = \context locator _ -> do
+        request <- buildQuery config context locator
+        pure (Just (ProviderStatusQuery request (parseResponse config AdapterQuery locator)))
     , adapterBuildCancel = buildCancel config
     , adapterBuildCapture = \_ _ -> unsupportedOperation
     , adapterBuildVoid = \_ _ -> unsupportedOperation
@@ -63,7 +65,6 @@ placeToPayAdapter config = do
     , adapterBuildSameDayReverse = \_ _ -> unsupportedOperation
     , adapterParseResponse = parseResponse config
     , adapterAssessNotification = verifyPlaceToPayNotification config
-    , adapterQueryFollowUp = noQueryFollowUp
     }
 
 placeToPayReference :: Text -> Text
