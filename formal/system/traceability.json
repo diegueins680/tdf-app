@@ -19451,6 +19451,115 @@
       "historicalStatus": null
     },
     {
+      "id": "COMMUNITY-FRIEND-SUGGESTION-001",
+      "title": "Friend suggestions ranked by personalized PageRank over follows",
+      "statement": "Behind FRIEND_SUGGESTIONS_PAGERANK_ENABLED (off by default), GET /social/suggestions returns the stored result of a nightly personalized PageRank over actor-confirmed social_v2_pair.follow_a and follow_b directions for the signed-in viewer: a random walk with restart at the viewer (damping 0.85, 100 iterations, dead ends return to the viewer) over live people with a verified email (provider-bound credential or completed password reset) at least seven days old with an open profile and no block with the viewer, ordered by score and then party id, at most 20 of the 50 stored. With the flag off, for a viewer who opted out of personalization, without the schema or social-v2 policy, without a stored result younger than 48 hours, when any party that carried score for the viewer is no longer eligible, or on any read failure, the route returns exactly the previous second-degree count answer.",
+      "domain": "COMMUNITY",
+      "authority": "Owner request and approval of 2026-11-21: the rule, its constants and the nine decisions of the proposal in formal/system/friend-suggestions-pagerank.md. On 24 November the owner approved actor-confirmed canonical follows for rollout.",
+      "source": "formal/system/friend-suggestions-pagerank.md",
+      "contract": "tdf-hq/src/TDF/Social/SuggestionRank.hs",
+      "property": "For every viewer v and step t: p_t >= 0 /\\ SUM p_t = 1 /\\ (a \\notin nodes(G_v) => p_t(a) = 0); p_t depends only on v and the follows between nodes of G_v; norm1(p_100 - p*) <= 2 * 0.85^100 < 2e-7. For every returned personalized entry a: a # v /\\ a stored for v /\\ eligibleNow(v, a) /\\ no follow between v and a /\\ every party in support(v) is eligible now. flagOff \\/ optedOut(v) => response = fallback(v).",
+      "actors": [
+        "Authenticated party",
+        "Nightly run (one API replica under an advisory lock)"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect), revalidated in the read transaction",
+        "Migration tdf-hq/sql/2026-11-21_social_friend_suggestions.sql applied and the social-v2 policy installed; otherwise the fallback is returned",
+        "FRIEND_SUGGESTIONS_PAGERANK_ENABLED=true when the API starts, for the run to be scheduled"
+      ],
+      "inputs": [
+        "GET /social/suggestions?networkReason=true for capable clients; other clients receive the fallback",
+        "party, user_credential, auth_provider_identity, party_email_verification, social_v2_preference and social_v2_pair rows at the run's snapshot"
+      ],
+      "state": {
+        "initial": "No stored result",
+        "terminal": [
+          "Stored result of the latest run",
+          "Fallback answer"
+        ]
+      },
+      "allowedTransitions": [
+        "Run: snapshot -> scores for every eligible viewer that did not opt out -> replace all stored results in one transaction",
+        "Read: stored result usable -> personalized entries; otherwise -> fallback"
+      ],
+      "forbiddenTransitions": [
+        "A blocked, closed, deactivated, organisation, too new or unverified party holding score or passing score to another party",
+        "Returning a party the installed follow policy refuses for the viewer, the viewer, or a party connected to the viewer by a follow",
+        "Serving a stored result while any party of its support is no longer eligible for the viewer",
+        "Returning a personalized entry to a viewer who opted out, or while the flag is off",
+        "Returning a score or a count derived from other parties' follows",
+        "A reader observing a mixture of two runs"
+      ],
+      "effects": [
+        "Run: one social_suggestion_run row, one social_suggestion_viewer row per computed viewer and up to 50 social_suggestion_score rows each; every earlier run is deleted.",
+        "Read: none.",
+        "Completed password reset: one party_email_verification row for the party, once the table exists, whether or not the flag is on."
+      ],
+      "authorization": "The caller's own party only, taken from the session. Stored rows are read only for their viewer.",
+      "privacy": "Follows are used as evidence without being disclosed: a personalized entry carries a party id and the reason code only, no score, no count and no third party. Hidden, closed, blocked and deactivated parties are neither returned nor used as evidence at the run, and a later exclusion of any evidence party sends the viewer to the fallback. A viewer with personalized=false receives exactly the fallback and has no stored rows after the next run.",
+      "concurrency": "The run reads one REPEATABLE READ snapshot and replaces all results in one transaction; a PostgreSQL advisory lock admits one replica. Reads run at the pool's default isolation and re-apply eligibility and connection checks at request time.",
+      "idempotency": "The read is read-only. A repeated run replaces the stored results with the results of the later snapshot.",
+      "failure": "Any refusal, missing schema, stale or missing result, invalid session or database error on the personalized path leads to the fallback, which applies its own checks and errors. A failed run leaves the previous results, which stop being served 48 hours after their run.",
+      "recovery": "Turn the flag off: the route returns the fallback without touching the tables. tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql drops the three derived tables.",
+      "observability": "One log line per run with viewer and candidate counts, or the failure.",
+      "implementation": [
+        "tdf-hq/src/TDF/API/SocialRelationships.hs",
+        "tdf-hq-ui/src/api/social.ts",
+        "tdf-hq/src/TDF/Social/SuggestionRank.hs",
+        "tdf-hq/src/TDF/Social/SuggestionStore.hs",
+        "tdf-hq/src/TDF/Auth/EmailVerification.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/src/TDF/Social/RelationshipReads.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql",
+        "tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql",
+        "tdf-hq-ui/src/features/social/suggestionReason.ts",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
+        "tdf-hq-ui/src/pages/SocialPage.tsx",
+        "tdf-hq-ui/src/api/types.ts"
+      ],
+      "tests": [
+        "scripts/social/RelationshipReadSpec.hs",
+        "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs",
+        "tdf-hq/test/TDF/Social/SuggestionStoreSpec.hs",
+        "scripts/test-friend-suggestions-sql.py",
+        "scripts/test-friend-suggestions-postgres.sh",
+        "scripts/verify-friend-suggestion-pagerank.py",
+        "tdf-hq-ui/src/api/social.test.ts",
+        "scripts/social/preview.mjs",
+        "scripts/social/verify-preview.mjs",
+        "tdf-hq-ui/src/features/social/suggestionReason.test.ts",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx"
+      ],
+      "formalModels": [
+        "formal/event-operations/FriendSuggestionGraph.als",
+        "scripts/verify-friend-suggestion-pagerank.py"
+      ],
+      "verification": "PROVED (Z3, exact reals, one step, every viewer, node set and follow relation up to 4 accounts; negative control for each): a step keeps a distribution on the viewer's graph a distribution, dead ends included; an account outside the graph holds no score and follow rows touching it do not change the step; a step contracts the L1 distance by the damping (symbolic up to 3 accounts, per follow relation with the viewer fixed and all accounts nodes at 4); 2 * 0.85^100 < 2e-7. The induction over iterations and the fixed-point argument are a hand proof in the contract. BOUNDED MODEL (Alloy 6.2.0, up to 5 accounts, six mutation controls): follows by or to accounts failing the age or email filter leave every viewer's graph unchanged; only live, aged, verified accounts are reachable; a block in either direction removes the account. TESTED (Hspec + QuickCheck): the Haskell ranking over exact Rational and over Double (sum within 1e-9), exclusions, ordering, limits, input-order independence, the run's per-viewer computation, the flag and the fallback JSON. TESTED (PostgreSQL 16): the statements extracted from the Haskell source and the migration, 13 accounts and 16 read scenarios including opt-out, staleness and each evidence exclusion, plus the password-reset verification write. TESTED (Jest): the web label.",
+      "evidence": "scripts/verify-friend-suggestion-pagerank.py --max-nodes 4 output; scripts/verify-alloy-controls.mjs result for FriendSuggestionGraph.als; tdf-hq-test SuggestionRankSpec and SuggestionStoreSpec runs; scripts/test-friend-suggestions-sql.py output; Jest suggestionReason run.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the one-step walk properties on bounded graphs (machine-checked) and for the Haskell ranking and the SQL on the fixture (tested). Medium for convergence at any size, which rests on a hand proof whose step is machine-checked only on bounded graphs. The handler and job wiring are covered by compilation, the flag-off and no-session tests and review only.",
+      "ambiguity": [
+        "The Z3 step is a hand translation of walkStep; correspondence with the Haskell and SQL text is not machine-checked, and Double rounding is outside the proof.",
+        "A verified email is an auth_provider_identity binding or a completed password reset; neither is withdrawn when the party later changes its address, and the reset write is covered by the SQL test and a no-op test, not by an HTTP-level reset.",
+        "The follow-policy filter is exercised against a stand-in with the migrated signature, not the migrated social_v2_profile_eligible itself; no HTTP-level test runs the route or the run against a fully migrated database.",
+        "Account age is party.created_at; credentials have no creation time.",
+        "The graph uses actor-confirmed follow directions. Legacy friendship and fan-club mirrors cannot contribute score.",
+        "Clients request networkReason=true only if they support sfReason. Older clients receive the existing fallback.",
+        "The manifest successor review for the new migration is an author review, not independent approval; the migration has not been rehearsed on a production-shaped database.",
+        "Production activation state of social-v2 and the number of actor-confirmed follows were not observed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Core properties proved on bounded graphs and tested; SQL tested on a fixture; HTTP-level checks on the migrated schema, the Mobile presentation and production observations remain."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "COMMUNITY-FAN-RECOMMENDATION-001",
       "title": "Artist recommendations for a fan from shared followers",
       "statement": "A signed-in fan reads the publicly listed artists they do not follow yet and are allowed to follow, ordered by how strongly the followers of the artists they follow also follow each one (sum of cosine similarities of follower sets), completed with the most followed artists when the evidence gives fewer than the requested number. Route: GET /fans/me/recommendations.",
@@ -30186,6 +30295,98 @@
         "classification": "PARTIAL",
         "reason": "The model covers planning invariants. Jest exercises the loader and the player, and the browser test verifies native playback with synthetic catalog metadata. Release visibility changes between the two server reads remain unverified."
       }
+    },
+    {
+      "id": "EVT-AFFINITY-ORDER-001",
+      "title": "Events page ordered by the caller's affinity to the lineups",
+      "statement": "With EVENT_AFFINITY_ORDER_ENABLED on, GET /social-events/events?scope=for_you returns the page that scope=all returns for the same parameters, ordered by event affinity, largest first, keeping the date order among equal affinities. The affinity of an event is the largest affinity among the artists of its lineup; an artist the caller has a signal for (follow, favourite, accepted RSVP or play) has affinity 1 + min(weight, 8)/8, and any other usable artist the mean over the caller's usable seeds of strength times the stored similarity of COMMUNITY-ARTIST-SIMILARITY-001, capped at 1. Usable artists are publicly listed, are not the caller, and are followed by the caller or followable under the installed follow policy. A caller without affinities, a caller who switched personalisation off, and every caller while the flag is off receive exactly the page of scope=all.",
+      "domain": "EVT",
+      "authority": "Owner instruction of 2026-11-22 to continue with the recommended defaults. The rule (permutation inside one page, own signals above inferred ones, mean over seeds) is the implementer's default and was not approved item by item.",
+      "source": "formal/system/event-affinity.md",
+      "contract": "tdf-hq/src/TDF/Fans/EventAffinity.hs",
+      "property": "result = orderByAffinity(affinities, lineup, page) where page is the result of scope=all. result is a permutation of page. For positions p < q in result: eventAffinity(result[p]) > eventAffinity(result[q]), or they are equal and result[p] precedes result[q] in page. affinity(a) is defined only for usable a: 1 + min(w(caller,a),8)/8 if w(caller,a) > 0, else min(1, (SUM over usable seeds s of min(w(caller,s),8)/8 * sim(s,a)) / |usable seeds|) when positive. usable(a) = listed(a) /\\ a # caller /\\ (followed(a) \\/ ~excluded(a)). personalised(caller) = false \\/ flag off => result = page.",
+      "actors": [
+        "Fan",
+        "Customer",
+        "Artist",
+        "Admin"
+      ],
+      "preconditions": [
+        "Authenticated session",
+        "EVENT_AFFINITY_ORDER_ENABLED=true",
+        "scope=for_you"
+      ],
+      "inputs": [
+        "GET /social-events/events with scope=for_you and the filters, limit and offset of scope=all",
+        "fan_follow, music_favorite, event_rsvp, music_playback_event and social_v2_preference rows of the caller",
+        "event_artist and social_artist_profile rows of the page",
+        "The stored similarity (artist_similarity_pair, artist_similarity_norm)"
+      ],
+      "state": {
+        "initial": "Page chosen by the date-ordered query",
+        "terminal": [
+          "Page ordered by affinity",
+          "Page unchanged"
+        ]
+      },
+      "allowedTransitions": [
+        "Permute the rows of one page",
+        "A request reads; it never writes"
+      ],
+      "forbiddenTransitions": [
+        "Returning an event the page of scope=all does not contain, or dropping one it contains",
+        "Giving an affinity to, or taking a contribution from, an artist that is not publicly listed, is the caller, or is neither followed nor followable",
+        "Reading the favourites, RSVPs or plays of a caller who switched personalisation off",
+        "Changing the order of events with equal affinity",
+        "Any write by the request"
+      ],
+      "effects": [
+        "None; read-only"
+      ],
+      "authorization": "That of GET /social-events/events; event visibility is decided by the existing query and is not changed.",
+      "privacy": "The response has the shape and the events of scope=all; only the order inside the page depends on the caller's own signals. No other person's identity or behaviour is read at request time; the stored similarity holds aggregates supported by at least two fans. Hidden artists are neither evidence nor contributors, as of the request's own read of the listing.",
+      "concurrency": "The page query and the affinity reads are separate statements at READ COMMITTED. The page set is fixed by the first; listing, follows, policy, signals and lineups are seen as of their own read.",
+      "idempotency": "Read-only.",
+      "failure": "scope outside all, subscribed, for_you: 400 as before. No usable stored generation: only own signals order the page. A lineup entry whose profile has no canonical party id is not evidence.",
+      "recovery": "None needed.",
+      "observability": "None added.",
+      "implementation": [
+        "tdf-hq/src/TDF/Fans/EventAffinity.hs",
+        "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts",
+        "tdf-hq-ui/src/config/eventAffinityRollout.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Fans/EventAffinitySpec.hs",
+        "tdf-hq/test/ArtistSimilarityProbe.hs",
+        "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts"
+      ],
+      "formalModels": [
+        "formal/fans/EventAffinity.tla",
+        "formal/fans/event_affinity_order.py"
+      ],
+      "verification": "PROVED (Z3, on a hand translation pinned by source hash, with witnesses and guard-necessity controls): an artist with an affinity and a seed contributing to one are usable; own-signal affinities are numbers in (1, 2], inferred ones in [0, 1], event affinities numbers that are not negative; the page key is a strict total order on distinct positions. PROVED (Apalache inductive invariant, for the TLA+ model, three artists and two events, artists hidden and shown, signals changing and the job running at any time): no artist hidden at the request's read is evidence, the response holds exactly the events of the page, a promoted event has a listed lineup artist that is evidence. MODEL-CHECKED (TLC, two artists and two events): the same, with a negative control (listing taken from the stored relation's snapshot) that violates it, also reproduced by Apalache. TESTED (Hspec and QuickCheck): permutation, identity without affinity, order by key, stability, idempotence, bounds, non-usable artists never evidence, fixed values; (PostgreSQL probe on a fixture) lineups, stored affinities equal to the reference, range, opt-out; (Jest) the web page-size and flag helpers. NOT VERIFIED: the handler wiring beyond compilation and review; no HTTP-level test of scope=for_you; the web switch beyond typecheck, lint and helper tests.",
+      "evidence": "formal/fans/event_affinity_order.py output; scripts/verify-inductive-proofs.sh output; tdf-hq-test EventAffinitySpec run; scripts/test-artist-similarity-postgres.sh output; tdf-hq-ui jest run of src/pages/eventDiscoveryFilters.test.ts.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the pure core (tested) and for the model and translation properties (proved). Medium for the step from model and translation to the running code: review plus the PostgreSQL probe. Low for the handler wiring and the web switch: compilation, typecheck and review only.",
+      "ambiguity": [
+        "The task names TDF.Services.EventDiscovery, which is ingestion; the order a person sees is decided in listEvents, so the rule was specified there by the implementer.",
+        "The order is a permutation inside one page; a global order across pages was not attempted and would need its own pagination contract.",
+        "An artist the caller follows that later becomes unfollowable under the policy still counts, because the recommendation frame does not distinguish it from a followed artist.",
+        "The inferred affinity is a mean over the caller's seeds, so many unrelated seeds dilute it.",
+        "The proofs are about a TLA+ model without weights and about a hand translation; neither is mechanically refined to the Haskell and SQL.",
+        "The web page asks for exactly one page when ordered for the listener, so a last page that is exactly full offers an empty next page."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Pure core, model and translation verified as stated; the handler wiring and the web switch have no HTTP-level or browser test."
+      },
+      "historicalStatus": null
     }
   ],
   "sourceFingerprints": {
@@ -30200,7 +30401,7 @@
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/domo-refund-validation.yml": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
-    ".github/workflows/event-operations-formal.yml": "044469d2096c41b0ad222178b33f6a59bce6ffb3b0d09d285004ab516e7f1253",
+    ".github/workflows/event-operations-formal.yml": "7f8d14c5c33fab9fe02c55f1c8718bff300987597c432abcee0f431bb17dbbd5",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -30208,7 +30409,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "05624eee63a7de0ce576d1192dc0e1e8704404a2724e18917b18819558fa18fe",
+    "docs/catalog-persistence/catalog-list-decisions.json": "4de8821ef8e4d226b650eb42e814bdf87c6aaeecef98f1b6d12c8fd2c86f3a23",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -30356,6 +30557,7 @@
     "formal/event-operations/EventOrganizerTrustEarlierRead.cfg": "55781bffd01b28268c218fe896d026901db6ad84803b38c89359a5e290f2b430",
     "formal/event-operations/EventOrganizerUnconditionalWrite.cfg": "f735a2ec461f4995718cd73d66940e3e81e74cb166498b239100051de506e479",
     "formal/event-operations/FanHubOnboarding.tla": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
+    "formal/event-operations/FriendSuggestionGraph.als": "0a6e2144f1ecda7b587a05db77922c6a1238bdef7bf6bb91c6d6940f0396fc78",
     "formal/event-operations/HostedServicePayment.cfg": "29663fa3078459cb0abf5de479b7206aa840c6779fc9522f2eefa9d1592d2227",
     "formal/event-operations/HostedServicePayment.tla": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
     "formal/event-operations/HostedServicePaymentAtomic.cfg": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
@@ -30595,7 +30797,9 @@
     "formal/event-operations/WorkerCompletionEvidenceFailed.cfg": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e",
     "formal/event-operations/WorkerCompletionEvidenceUnacknowledged.cfg": "ba3fc2fb73be56b89e38433e40dc8fac8689b85330203528ff8b50c9b0575860",
     "formal/fans/ArtistSimilarity.tla": "2e6cd2c074613097a15164d9d4ba8a53cdcf113e745ccb02ceffe72c2815340f",
-    "formal/fans/artist_similarity_ranking.py": "516c19158e76a6e0983787808c9cb57aeabd6e95f9c643c6c3946838aee34bc4",
+    "formal/fans/EventAffinity.tla": "ae4de7deb4f1668aa6535e375fdd40dde7824406d90352bf473af88890431a27",
+    "formal/fans/artist_similarity_ranking.py": "1c14d50afca7e97410a0e43430f2cde3ab35af1fefac78fa00d1f4bed071d098",
+    "formal/fans/event_affinity_order.py": "d0814edcf219b2ecaa3e4c6680847aa419e074df9d99c3d7b80105c919a4e52c",
     "formal/music/MusicLoudnessBinding.cfg": "19ea840b31851ce7df505d4a6ad580835464a31133cd5d6a510205a9b7e8baba",
     "formal/music/MusicLoudnessBinding.tla": "277dd0eb625e06ca27260da40bac2ebc318439b3bd2ad33290da0b325646d384",
     "formal/music/MusicLoudnessBindingStoredMark.cfg": "420439a854303cc8651f0e809020445425296d9a3b8a02f0babacb5a3c89d2a9",
@@ -30646,13 +30850,13 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
-    "formal/system/compiled-api-surface.json": "038a08950d7dedbed7505f24d69c5e5177bffe849a5a7d1af753146741de91d3",
+    "formal/system/compiled-api-surface.json": "3ad36b07a7b78fcae33832aea36f641be1208cdc156194a80fb1b19af844e8e9",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
     "formal/system/public-routes.json": "c2c6ccb156e5aec42bfecf84f6a248ccd5cae1a6c49790b5db11098e6c6274ee",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "d90be2576131e4c25b9d7993c58485299ca5cbc405e4912d2d0b4ca52d9214d3",
+    "formal/system/recovery-expiry-arithmetic.json": "1ed1aa5473947e00de45c39f9465f66b38cfc33124597fa695cfe5d5a6515327",
     "formal/system/route-requirements.json": "fae2eeeb651f354a6535deed3d643e05a564a0cd2a5f2e1803f39ebeb7ca01a0",
     "formal/system/state-machine-bindings.json": "6af96259b546588349a4cbc421d22a749ec4bb5faa5997f2ca7926d4fadc602c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -30674,7 +30878,7 @@
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
     "ops/hetzner/guarded-release.py": "4551cec5f09215463ad98ea7a4dc3e3c47417b02fc5ccbd50fad63c20e15239b",
-    "ops/hetzner/inspect-runtime.py": "aa8b292471211812512d33a405cad8ac2c69a0b6eae9efbe4560d0593d6cee55",
+    "ops/hetzner/inspect-runtime.py": "a91956a44021902210ea5937552a19323ea12a829acd35199b4dffebb49e7650",
     "ops/hetzner/isolated-application-canary.py": "a21c2ad244d0c2b5a340c6f51b867a3f5b4c1551340e0953836a1c46375ed83f",
     "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
@@ -30695,7 +30899,7 @@
     "playwright.torrent-audio.config.mjs": "1ee4d97fa640cc439eedd07660dd242774c9adad9de8ac614d40a26ea63f202b",
     "screencast/meta-app-review/review.env.example": "6103b9dd02e37ab7539735007924ca02f31b67e40d2d8efbdf88a69abcd91100",
     "screencast/meta-app-review/run.mjs": "0b93f134c01aca678981255a0a6e25bb139c183361bb621c67a95f255e1dbaaa",
-    "scripts/__tests__/alloy-controls.test.mjs": "1f1b6904444f5c7e47a71c00f37d332da956b885d2746b2a1dcc2b342742c873",
+    "scripts/__tests__/alloy-controls.test.mjs": "402f6bd9d15a8250845cb0294c05772f2da4f5225ee58b3cebb8006ac2595f11",
     "scripts/__tests__/app-smart-link.test.mjs": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
     "scripts/__tests__/architecture-boundaries.test.mjs": "536a8b583458acc1dcf511caf2ca9ea307eaea3d58ef39a5235f7cd61ab62cb6",
     "scripts/__tests__/artist-enrichment.test.mjs": "045b26e1fbb6697cf16314850fd71df4896aa647f5b90036ddc8f908929c303f",
@@ -30705,7 +30909,7 @@
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
     "scripts/__tests__/catalog-decision-history.test.mjs": "90eb66416f6dd3a92c936aeced40dd23e0d8592026ecbd128430679a93e003b0",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "956a681904c0a8260a1c10254d82f5f4df71e241af0d1d198a37d266a1698385",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "3a2bc4f9fb86c8ce5b42f194ec5931565121854a0b23338b882d9921c8df51a2",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -30846,7 +31050,7 @@
     "scripts/install-recovery-tools.py": "87e21bcbbf08076148d6b5d0aca5464afedad77ec209a5cf95439ab440e286a0",
     "scripts/interactions/test-api.py": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
     "scripts/interactions/test-http.sh": "087ac80166a5381eff9e60417685428c462721533324a7dd7c96cf6b7968a41a",
-    "scripts/lib/alloy-controls.mjs": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
+    "scripts/lib/alloy-controls.mjs": "3ad4f0250f2b7f5a20ce66ecf3af55c40f9eace18e5d816d9a061be75eeb10b0",
     "scripts/lib/auth_throttle_http.py": "c30b34ba0e5057b013ffd601421ed462c61a71e61e51e25f233e130d3c915989",
     "scripts/lib/catalog-decision-history.mjs": "57c2b822b62515f22aaf324db783d46a0a83229b5ec3c32fe403da7444f383f7",
     "scripts/lib/compiled-api-surface.mjs": "71831644e36c3e2d5e2a51309d701aab8b08f5b3a43ca9ff4ea085b30aef1437",
@@ -30898,7 +31102,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "5ccb34dfbdfacff9439eb32392d7771d97aa689475ad97d9467bfe18b73eb1a8",
+    "scripts/production-migrations.json": "9a5b6d14b3ba511b75ead533b561b695b95215b34b718e76b008c03b6c79522d",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "e497d1ce41e8b1bdc3ae776a164b0cb3c6317b5c799ecce85205ef9c79602729",
@@ -30917,13 +31121,16 @@
     "scripts/scan-music-legacy-releases.sh": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
     "scripts/seal-event-report.mjs": "2c7087ccb785b9a725a5c1e9e23582236d76a40be28f62e08b0f2124d4fa4764",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
+    "scripts/social/RelationshipReadSpec.hs": "9d3dcfa8dfde6b721ec45727cdf9b2fcb05c254f9127741fe6ab4763f3b7e3ea",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
     "scripts/social/chat-delivery.sql": "41cbcdb64b815cd034bb14c96da007e18d80a4208f7b5ce22d5e151e399c1636",
     "scripts/social/chat-notifications.sql": "1bb1b293aabacbeede286dba05911f20f8a85b59faf18f12d1b399288a32a734",
     "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
     "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
+    "scripts/social/preview.mjs": "1851e7acc7da1e189a057ddfcb43352c766fc82a8804e70905116cbf6e710c2f",
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
     "scripts/social/test-http.sh": "79cb3fc47fc8b191182fbe21dd8294acce64697796bdd12a753f7da7821ba457",
+    "scripts/social/verify-preview.mjs": "aa23ed7741df51fb66e1d9df5ae347a2db46b2e144e70cc8bfc56ad63b50074d",
     "scripts/specification-conformance.py": "2c9aa59e5ae08fb6357d1fed83e2591e45d7e6fd1791ebfb6dc52dccab5e0fb0",
     "scripts/specification-inventory.py": "0ce276017ebb1e0ab2a01ed08fb36dae0ad8173c935edef5819d5690eec74b7f",
     "scripts/start-continuous-improvement-loop.sh": "f36c33ec0d9767180c2543c3596964794e02c3e943efa72b3fbb2e970ec81850",
@@ -30977,6 +31184,8 @@
     "scripts/test-fan-recommendations-sql.py": "e8e7bac3b429385c1225d7aa8d9a9709031606b978380770e43c4403c02a2690",
     "scripts/test-feed-affinity-postgres.sh": "70f9150eeb1bb45a6cb541fc383b5eefee1597eb19c0d3659addbea65cb3e1b0",
     "scripts/test-feed-affinity-sql.py": "1a0f4449c9ab3e4650ab47879188559c59087389499ac1c0914e7a1ec9f3a63b",
+    "scripts/test-friend-suggestions-postgres.sh": "475a761847eb4abcd395f68d65a852de2ac280d8b7f93d70bb150df4185600c9",
+    "scripts/test-friend-suggestions-sql.py": "8d123cd5c8ad8138ed4aa141f3f89b14fb10e30a28aa3a3e0908e5b14292356c",
     "scripts/test-google-account-name-verifier.py": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
     "scripts/test-guarded-release.py": "072a3aea42d088aac1cb00825bf34c7f3d08ff9fff21c630017f2ee5c9977a74",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
@@ -31088,8 +31297,9 @@
     "scripts/verify-datafast-reference.py": "8c5d503657b82ab6d5508a281ca61d416f76d89c2a15a00f746b9a3718019c9f",
     "scripts/verify-event-operations-formal.sh": "91570f8c9cafbbc39a6fec16d0d6537c2c0141b3bea70e575f1858a5ea889370",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
+    "scripts/verify-friend-suggestion-pagerank.py": "5c14674955a43f1874dda45b41f3ab3142187b8527132672ed59fe1cb4aba38a",
     "scripts/verify-google-account-name.py": "db797f61655c32d3df0c6737a18514ea8d49312bfa245253e7c45e521d9ce4e9",
-    "scripts/verify-inductive-proofs.sh": "853ac6885bfa0ee962bd879554718187f135b18e9d5a702c9142f8e656235f6d",
+    "scripts/verify-inductive-proofs.sh": "f4ee5f279051c223cc05285467c731286e7dc815f7e855f261bdfbc0e3871b8e",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
@@ -31289,11 +31499,13 @@
     "tdf-hq-ui/src/api/reviews.ts": "8fc0a3b74789b159185572e537899ad62139fd8b784a32ec8639d3c6da792dcb",
     "tdf-hq-ui/src/api/session.test.ts": "b00e52d37736c2f913029b4ebd6d327b488b4fb00515e7be468f4788c0bf775e",
     "tdf-hq-ui/src/api/session.ts": "6eda870f29bab94f61c66905b79eece8247a242f66d8a1b4b9e56a055b81b0a9",
+    "tdf-hq-ui/src/api/social.test.ts": "6d99f9d9e33af5b4015a8926e6a21997f1a67affb3d8bfa047645acf247ec4bd",
+    "tdf-hq-ui/src/api/social.ts": "4b0b41b5d150e80746f6e5bb4c18354f32819c9786e51b608888f509fa3e7ee5",
     "tdf-hq-ui/src/api/socialEvents.test.ts": "94e606bd6901c34bcf460a614294be9f4eb027c39b9ef2110e55df65aef5962b",
-    "tdf-hq-ui/src/api/socialEvents.ts": "f81dd3da13df4da52a1e908416bf6de4e34bae73e1fb6804b62d70c0070a1501",
+    "tdf-hq-ui/src/api/socialEvents.ts": "e42d404435c06419ecee6debf7b935b8de322e1afb26de72ad1290cc54fbc103",
     "tdf-hq-ui/src/api/socialV2.test.ts": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
     "tdf-hq-ui/src/api/taxonomy.ts": "11edf7bd4d206c3a546d88969c3624078c10b16575e208c7b81d605e3d3f2ae3",
-    "tdf-hq-ui/src/api/types.ts": "0879b24ae1ff60ef60de657be2ee774de2f4bcf89c804a251857e3bf14175114",
+    "tdf-hq-ui/src/api/types.ts": "cb9e4040eb1054466158552ac2a7bc0ed2a0f7f60db50f7f758dffede67d9c21",
     "tdf-hq-ui/src/api/uploadFailure.test.ts": "f1000f520cc6cfdc88fad9fbb03329ed4b58f93bc15d8b07928f54c90a69bb6e",
     "tdf-hq-ui/src/api/uploadFailure.ts": "634dd14ff7c3b25258bc4017cc6a82929675e517518170bd390877342313cfd1",
     "tdf-hq-ui/src/api/uploadQueue.test.ts": "64a4197e7bcbf2c1c9e4a180453c4ebffbf5c109a8c9b1967f186752ff8b0e8f",
@@ -31444,6 +31656,7 @@
     "tdf-hq-ui/src/config/accountDeletionRollout.test.ts": "a32b108366282c451878b0a95dd4c9efb1cdfba44ea779d0069cd03f3b5c913f",
     "tdf-hq-ui/src/config/accountDeletionRollout.ts": "c55e82bd8e87288e48b3ac05b86a9fe1335e4400be3e105d2f4fee71534af911",
     "tdf-hq-ui/src/config/appConfig.ts": "29f5c5e8d461756baa2d66118623a4b7841affeb08ce5f38d0a07a62b664213e",
+    "tdf-hq-ui/src/config/eventAffinityRollout.ts": "4d6dbb1df1072d059ed60817912fe59a1a56ef76c60c08e0ea660e722268a791",
     "tdf-hq-ui/src/config/queueContinuationRollout.ts": "a00f9304705090f7cb786113f14f44ce3c4c7670d8486ba442be69c7ca37b68a",
     "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts": "40724d6817e05d242a914760487fd7494cef3847d35229a0b78ab1d16f02615d",
     "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx": "1dc11b1cece10e40c193f15225f92e5b02a5b880c6e7b24239cdb574a64ca06b",
@@ -31513,7 +31726,10 @@
     "tdf-hq-ui/src/features/releases/catalogQueries.test.ts": "0abd74326e5225fed06e81cf01921d6247cb41b23b0c1f33932c43b8a513a2d2",
     "tdf-hq-ui/src/features/releases/catalogQueries.ts": "ab1ac999aeac0c22d337184124e83e5d4f3817d4ba6a242445a877b68ee0113d",
     "tdf-hq-ui/src/features/releases/useReleaseFeed.ts": "d14328c34a608a3748610ffb35448acf5beed529601883f3f5077b70d445ff49",
-    "tdf-hq-ui/src/features/social/SocialWorkspace.tsx": "82492087c813de1f062dd59680c17fd9320142073e3dc96e8737fade9b0660a6",
+    "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx": "f51a44e85dedfb110f2df206367c5a2124827522af413bed1876ff2086b4790c",
+    "tdf-hq-ui/src/features/social/SocialWorkspace.tsx": "94480b73ee96a50de9b174cec1e74fbfea0cb4c8aeb112f107ad0c744c550cad",
+    "tdf-hq-ui/src/features/social/suggestionReason.test.ts": "49de92d7b4710a2574f0b8f4776984d0586daec223bc1c4bce3e61c35bc76336",
+    "tdf-hq-ui/src/features/social/suggestionReason.ts": "f0c6a9b9fc8b8de2250e617a5361c695f57817be069b15fc7bc067337dd1e472",
     "tdf-hq-ui/src/hooks/useChatKitScript.ts": "9709e7772a436e059b6444328e7aa82b24f19619e5fca3ee012931c1f0745cb0",
     "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx": "32ce9ba81961dd9e313c85e4b1f83624faea1ce96374a6eda593916f11e55f8d",
     "tdf-hq-ui/src/hooks/useGoogleDriveAuth.ts": "04bcbfd3e8aef525f943efd6c2aa626cda020d844e517f561f184ad7ee15a498",
@@ -31696,9 +31912,9 @@
     "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx": "3b1d354f528573cf26410dfab9fe532c51597e870c03fbc30c9480af457a8818",
     "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": "13ec4b6a28c24f5ba26105dd09c2b865b99540404e959c1319d1b54782fe77ae",
     "tdf-hq-ui/src/pages/SocialEventsPage.money-input.test.tsx": "308861d9cb4ad9908aa6c1f8e0f0498f7ab1eaa2319869ad40bd8390689b7e1b",
-    "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "3b91dba43e5f59ad64e0a04fa3e28678c6e60e4c6af8593129f741886688cdb5",
+    "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "d3a5d7daff89cf0d1063de1c97989a4d7e6dac8d2bbe3d5f6dea320590843014",
     "tdf-hq-ui/src/pages/SocialInboxPage.tsx": "df7168e2986e8eab0e85a8ce46a3bfa29fcbc033c95ae43fefef228d47e1bb18",
-    "tdf-hq-ui/src/pages/SocialPage.tsx": "eb1162e3cc9418ef3aef29a2a85842aaaaa96f32079062d48a88522912fc4d9d",
+    "tdf-hq-ui/src/pages/SocialPage.tsx": "ff5f02cc3712386460da4957865800857f880e10b828e55c2b36de0a858432f7",
     "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx": "6ba4f8f777f72fe88da87c5e4f0730a353132d7812eaec2b957e1ebed5c4d38e",
     "tdf-hq-ui/src/pages/TdfPlatformPage.tsx": "9a8e4993313f12a39537882a555efffc12d698d5d13abb487c8eda1b64dc2210",
     "tdf-hq-ui/src/pages/TeacherPortalPage.tsx": "bd6b1b8c0510f54d06b90a5575933a5bb1cb8c0eca5f11884d2252a5c6cacd60",
@@ -31714,8 +31930,8 @@
     "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.tsx": "187d95f6a6a60fdc65e175109dcb89fb96c086d37febc810b055c5ea031f351a",
     "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts": "aab1e9d9166e505604242c195235695eae9720b08f4e311220368f52bf283940",
     "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": "c7d5c4f0b3f4d557d090935fdefb8b757af401dbe440ede7e4334640a61d7413",
-    "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts": "12d0b8e2c66e11b30784646892d3d97f9d6762032243c2f97819b292630b4c7a",
-    "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts": "7e4b0da542f427fb13d49fa972d760d093096e1077c19cfbaa6f9a7fa0b9d251",
+    "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts": "69fa315b9b052118f56ace97aee84a3e9d615003da1bc87c6bcb3e0e8dbbeb97",
+    "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts": "2238077e25bf2dafea607c0dcbc740fac66475579b73bc47fefadcdbd3d68abc",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
     "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "ef8f21d27fda31ce8fad31623a62845bb2dd8816ff333844ed50a33492103727",
     "tdf-hq-ui/src/player/PlayerProvider.continuation.test.tsx": "0690e32cc4f75788ef70f16ca077102949ff9db4f51b10c6be730faafa112c49",
@@ -31874,7 +32090,7 @@
     "tdf-hq-ui/src/utils/videoWatch.test.ts": "2a39fa6986883d674162a323039841cd3632b715c789423bd996e1d75c3f6db3",
     "tdf-hq-ui/src/utils/videoWatch.ts": "cdd77bc2ebca7c28f41954b8b43233d60f9bfe563355ed2d2365b328d607632c",
     "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
-    "tdf-hq-ui/src/vite-env.d.ts": "bdcf33c62f1bba0ff2fbfefdbb277caa0aac378e636068de90065b5ad6d3786d",
+    "tdf-hq-ui/src/vite-env.d.ts": "3b9627cd4112fe1afe32c0677dc67c322794c789b369bc2739373be63b37e76f",
     "tdf-hq/.env.example": "52c6e873ba21c44a10f7fd7fb1bdb44c0234a806dde3b019cf383a850b06b77a",
     "tdf-hq/Dockerfile": "505fa666dbdcc1247d871369bc84557d79dc0fca947897d6ab7f3d4aa807af5e",
     "tdf-hq/Dockerfile.music-worker": "b83f69866518d84af03d96948996c821ec4ffdf5f00d60009ac7454ed79b28a2",
@@ -32085,6 +32301,8 @@
     "tdf-hq/sql/2026-11-21_location_genre_filters_rollback.sql": "0428f90dd75f8088b7a9fa36e1f2abee0e01eaec5b9aca9a51a8d514047abf6a",
     "tdf-hq/sql/2026-11-21_music_audio_measurement.sql": "504e94c2cb73ee03e3c9aa2dd98ad536d33de2b2d9e5001383293316c9a1888a",
     "tdf-hq/sql/2026-11-21_music_audio_measurement_rollback.sql": "5b2ea6d7ce1ad395773f06b955721531c5ce4d7640432ac02389dcd55a2aec25",
+    "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql": "9f7f0aaaad1716d95ac3180368e72e3765e24b5c130cac7452cd7082a34c8e71",
+    "tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql": "8f791208d65a900560525c4a6415aa5004a9e7d60c8d02ee6b2ee41fe4240c05",
     "tdf-hq/sql/2026-11-21_venue_search_sql.sql": "da5184b2f8a2ac0aa7f421e2e44882fa9e040143e1222f386dc4080035ef9450",
     "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql": "a6b9391b61df6a98c08cb049be75aa4c1fe53dbad6acb2df1b57981f8b931e55",
     "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql": "361a542eccf5b1d225686b116d11e82c857ef1dda39dfe915070d39a222ec689",
@@ -32110,9 +32328,10 @@
     "tdf-hq/src/TDF/API/Radio.hs": "3b01c772d15c8798d929bb0cfab1619bee8d58a363b8399cac3e5cf58b1e4906",
     "tdf-hq/src/TDF/API/ServiceStorefront.hs": "9695a49d51f2b9c62f4c9703f09266daa50698dfab767dc473e6e2e7186d8d25",
     "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "518bbefbe360e85da7e0f0daf6f669d83e62a17a533193afec7d5177acbbb197",
+    "tdf-hq/src/TDF/API/SocialRelationships.hs": "81b3b72e6087fe5fd3b708969dc32ee1a7290aec2aae89510c7fb7e7ba9069be",
     "tdf-hq/src/TDF/API/Taxonomy.hs": "b9087285c746dcc9195326e759aebaf6a3bb32ecd94f3751efa62c12404e0b49",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
-    "tdf-hq/src/TDF/App/Boot.hs": "e57a6f76c7f9a007a042f39016b0805d8ea5eb2285f9d8aa8f492c4419fbdd07",
+    "tdf-hq/src/TDF/App/Boot.hs": "7260323ae062fc41f078e3b3aaa46b4afcf1f1491515d141da8de8add3acd807",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "158b961935c20e95aa6a43637e1ede2f078bb8ecb594de1d5f8abbf91764004f",
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
@@ -32122,6 +32341,7 @@
     "tdf-hq/src/TDF/Auth.hs": "cbf9a2642b4e43acf65afc04812816703020981198d6e9cf8f090dac7e69b4fb",
     "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
     "tdf-hq/src/TDF/Auth/ClientAddress.hs": "9520084fa6710848f47c40efbf35133af4d889720d9b7806bf5136adf60e904c",
+    "tdf-hq/src/TDF/Auth/EmailVerification.hs": "f1db99d3b61729b461a03c105530e49692fdcd8110bfea9c861f39f5f0109b60",
     "tdf-hq/src/TDF/Auth/Throttle.hs": "32444975e77373416fec2c1c379e5975713cc0857123d82930752bca5b0ef43f",
     "tdf-hq/src/TDF/CMS/Models.hs": "7cbd5b8e31dd3214114c63b162408af2438d674759e1ec3c528fe8a66bf7484f",
     "tdf-hq/src/TDF/Calendar/Models.hs": "ade52945cff1553e3e6e88edbd3a67457bda196364df216a62a8d1d69e8bcee8",
@@ -32164,7 +32384,7 @@
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "7b33d92413ab2ef23d3f4064257448e8ff87109da4098308b752828b679a6edc",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Commerce/TicketBuyerContact.hs": "f0ddbaf6649a0830f2743a520e5e7cd00e989a049e7d85eb65b08dd3fb3892ac",
-    "tdf-hq/src/TDF/Config.hs": "72c952cfb3abf1b4286c44e382735f70d933cf43a660f3eb658252c84663d4fb",
+    "tdf-hq/src/TDF/Config.hs": "63b4437393fbe93ef8a5db568436f500f7761257f7941860ccf10102743dc5be",
     "tdf-hq/src/TDF/ContentStorage.hs": "9b09965c48bd8fa4f240cb157fb24c76e073cd329741440c46c7adc267ee4cbb",
     "tdf-hq/src/TDF/Contracts/API.hs": "5030fec3414c8afbc5fb71895609ad035be9bdbd0fa95d448f788fc50ac82540",
     "tdf-hq/src/TDF/Contracts/Server.hs": "874d4fd54c05dc35103a2182a8793d3b8277f845803cc963e41582b5a403538d",
@@ -32177,7 +32397,7 @@
     "tdf-hq/src/TDF/Cron.hs": "92a29eaf9af2e36ee7d9051d581543fd3ef5b43e7e367fb20caeec2390fa4575",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
-    "tdf-hq/src/TDF/DTO.hs": "3887fd05051d11801dfde029a84502f51538e0562b43ba334f6b29f7a2cfadff",
+    "tdf-hq/src/TDF/DTO.hs": "edbc8deaf065d3b975ed365ab552038c43b89197d90100517fcf6afcf02b2dfc",
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "2e0495d75a099784e39a7cc793d57b3e90183c7892ff475de6cf22b16da81a92",
     "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs": "79047936e9a4fff6cbf15767563a68cba32c1d4eaff754a2e6f18046615d3a43",
     "tdf-hq/src/TDF/Directory/Policy.hs": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
@@ -32189,7 +32409,8 @@
     "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs": "1b3937abe97b188d3dcd1f330485332651295a5e75e65d14702091c193245d27",
     "tdf-hq/src/TDF/EventOperations/Server.hs": "52efa5b303a134cf22fdbe5df9240b6c53620664b9283982e4e29c4ee7cfeed6",
     "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs": "e6713f11b2332969c4808e196ba6b118b043674d1103a11deee0dfe45aa2edfc",
-    "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs": "ee3b22433ff275cecfc976765b3549a1175921337f7605cb9b50237b8e84e173",
+    "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs": "45afa0833f03e525d7297346695ca7f22ad51ff81695a5e0ae9a52723c04027a",
+    "tdf-hq/src/TDF/Fans/EventAffinity.hs": "f3fce134bccd5fa9f2280b74568265f3006a4861085889530027ed41b127312d",
     "tdf-hq/src/TDF/Fans/FeedAffinity.hs": "e425e6a441bef168bbf96811276309fffaf5866ef89d8310ad36c90c5cd255af",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
     "tdf-hq/src/TDF/Handlers/InputList.hs": "57565241bce5f077ef7703008e3dba09686952c804b5fee0910326f47cad42e3",
@@ -32229,7 +32450,7 @@
     "tdf-hq/src/TDF/Routes/DomoRefunds.hs": "b30e9a615d9ea754e2ffe29a257e272d4fc7342d17ec919e1235a199aeff34fd",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "c5b5eac3f58fbb0a24651c2bb2e57664720a6526ac25a69d2bf9f49acfdcc438",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "f77ccecb6f638d2d116a9aef62649f3cc227124e719c3f4570a88c0da69bafad",
+    "tdf-hq/src/TDF/Server.hs": "a866a4fce309f11c4b993979ce2497f85f9329042783cfd1d48b4a1ea5a36b67",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
@@ -32263,7 +32484,7 @@
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "315ba0aaff4bfa27d20e6f22758289a1524a65d3f64d882f541a5192006397ed",
     "tdf-hq/src/TDF/Server/SocialArtistOwnership.hs": "d6900b5226644c608988dc840a8138ee85973add27284f5763092d39ea50835f",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "98fb8e6c25922d1bf96a5068ab3267704962cfd71a240e0526ba5e8bc84197ec",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "61600306501b0bb961d4ef0008569119915af36d062bdaf698d2771b91865c92",
     "tdf-hq/src/TDF/Server/SocialEventsTaxonomy.hs": "b0ded6258823c504b7d298b649ab4dfed2e5919cca74c44d5b337009b05c15df",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/StripeTicketCapture.hs": "b2a93b8ef71726410abeb79ec0ec07ef8e96d845ada7d7c0a401fda9b5b7c842",
@@ -32274,7 +32495,7 @@
     "tdf-hq/src/TDF/Server/TicketSalesWindow.hs": "fd215386f1396fb5dc12414bae565889b31f196de8efcc431037df4f9517fa9a",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "275d926b7861b10ac4022f8d6f3ddf7d1348fcce214ec9416938cf6e2c43f645",
-    "tdf-hq/src/TDF/ServerAuth.hs": "b20db383c88a651a9112b53cab02b5ff0f8241fb71953107ad23eb6bc69e78a4",
+    "tdf-hq/src/TDF/ServerAuth.hs": "48972a479cae7bb55ef55842ea33683cd5c49ebaacd54dead9ff6896dcdc2121",
     "tdf-hq/src/TDF/ServerExtra.hs": "8d687b85c57102a16614ec245ba96c2d1d53f8a9ac2e63ac61d3a5ad1d5cd892",
     "tdf-hq/src/TDF/ServerFanClub.hs": "33f33ace3dea49738921abd7dc4b09b84bca0d1b0d7556300d8050f5eb3a4300",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
@@ -32292,9 +32513,12 @@
     "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs": "9cb6b2f5d808ce531655c3aa7fdff67fc64026c2a419067313e7805c6317df2f",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
     "tdf-hq/src/TDF/Social/FanEffects.hs": "a55587dcef94c2f5efe35da182a3cd934ca705dc5a685b5ab15eccb89f3a7b26",
+    "tdf-hq/src/TDF/Social/RelationshipReads.hs": "c483e2673f057b8d969b11714e391821b4c4c5edc2b3865a16c9236a5f72f924",
     "tdf-hq/src/TDF/Social/RelationshipWrites.hs": "fbe2ab38e7a2730ed13ad065859dffe186646a35d04ff99268597a0ac0fcec7c",
     "tdf-hq/src/TDF/Social/Server.hs": "3b1b4af11566dd037bf44c8fd89b2c198a085171ee23d5d2b4d1f11ab630a731",
     "tdf-hq/src/TDF/Social/Session.hs": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
+    "tdf-hq/src/TDF/Social/SuggestionRank.hs": "5e9e231e34f9693c0a09a9f580420285037aa9c69512bee291fc220b21b0c860",
+    "tdf-hq/src/TDF/Social/SuggestionStore.hs": "622b599910cb41abc3e20233c13b7d6f544eb5334d3933e40bfbe7dc923f017a",
     "tdf-hq/src/TDF/StorageVault.hs": "7f5d13cfc664291e3d23044322859c95f359b1e4bb00fbc82a87794e5da1849b",
     "tdf-hq/src/TDF/Taxonomy/Filter.hs": "003e84d79f0d69122fc45414fc71bef213e520312a73a7a26310b75c5f132fd2",
     "tdf-hq/src/TDF/Taxonomy/GenreSuggestion.hs": "857a4c94e03668d33dddd0fc644e4aed669ba1c9773d49236cc0dcd0fdaab1ca",
@@ -32315,8 +32539,8 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "903875f4791eb97ba37309de7e409343fab2dc5757ebb604ee815c862ca071bb",
-    "tdf-hq/test/ArtistSimilarityProbe.hs": "3ec4f5ba3547477e75ed6cff02b735cb3cb852720ffa20fcbdc5bec8f0352efe",
+    "tdf-hq/tdf-hq.cabal": "3bb5b85e0130e579eb3b7bc6d3992731634e70432d823024370381229dcbc2d3",
+    "tdf-hq/test/ArtistSimilarityProbe.hs": "7cbbd2d3fadfb1890eee7ae27f838ce237dab93f317893926c9418248714a74a",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -32324,7 +32548,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "9653cd26ab2c58692e03ea1b82df464b14da614ed330d96c0abd71e19e26509c",
+    "tdf-hq/test/Spec.hs": "1d36a7609fa687c8eabd80bc02b57f5ed5872145ef44bc501d855ba703996590",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -32363,13 +32587,14 @@
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "3fac72c8e53e52a81933aeba58c908980c90b6db398eb17716dea7d70b0d3f7c",
     "tdf-hq/test/TDF/EventAdminDelegationSpec.hs": "73b13ff14472e7f3df54cbc44718263313bf255244a71bc9534326998ca63f20",
     "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs": "01a1bacba4c441d49e68162267f0e590b39e2db57f94a29818a7057423ff1065",
-    "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "e229b3f69902e4bd06ea424433d6e4be2d0cb1cd2309d22a19b8d4b7afdd255b",
+    "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "c5b8518cba6ed23bb90620e9a5a7e84848730f399b712db55e3d70cf60a81580",
     "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs": "65bdfb6d20e33eb7a062cebdeef4c1e3dbb48e83b10eda578a9dcdeddd9249dc",
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
     "tdf-hq/test/TDF/EventTicketSaleSpec.hs": "c0645218656951aee61012df54df63ec2f9128b8d787d6899fcd323bc90294dd",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
     "tdf-hq/test/TDF/Fans/ArtistRecommendationsSpec.hs": "5d5b8fccdd5f61ce7fdd84f8f342cea0463752abb8e330708a9d212b7dae9cfd",
     "tdf-hq/test/TDF/Fans/ArtistSimilaritySpec.hs": "8f66e214623969c9884ca71c920e406c4dd500d03a6bf758a660e1e781a98d96",
+    "tdf-hq/test/TDF/Fans/EventAffinitySpec.hs": "f643e7321948d47018b0110e9cc4c062ea205c19796c34fa388f44ffd15e527b",
     "tdf-hq/test/TDF/Fans/FeedAffinitySpec.hs": "89825280858d72c075ef489fb90d96d4c7bcad69c137251595518a4b54876f2d",
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
@@ -32402,12 +32627,14 @@
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "4746db879d19f0d2387b5198f6d402b7262b7ed2f50b4ec7772b6585172ae474",
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "0cff8f4196afbd1c7247802a051a70a720eb53ef135d2bc5f5f789efd37f1162",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
-    "tdf-hq/test/TDF/ServerSpec.hs": "834535c78a3c09542515107cb4c5da7ea6f4077ec7e7093535339539220324dd",
+    "tdf-hq/test/TDF/ServerSpec.hs": "e86514c17e9b0ca7a5310767d6294bd8a4a4a0c998ae4128c27bf0a9c6a531ab",
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "b7e084839124ff880822e8264211fbadebf88190bd18d2fbd904e1848bdbe9b9",
     "tdf-hq/test/TDF/Social/FollowSpec.hs": "fb6640d2e4e415809328254799fc89c884e1f08e75a4678ef6996f0805c7867b",
+    "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs": "f85567f40ae2e3e2b8bee19e37362fe683594fb7de3a28c4c4f009c9002b5ee4",
+    "tdf-hq/test/TDF/Social/SuggestionStoreSpec.hs": "4805590f663514fca48b384f87ee2e5357c88ff09a525244adcf853d9376698d",
     "tdf-hq/test/TDF/StorageSecuritySpec.hs": "3358d870189320cab3387e054111df56893fbdb826b5ea09741579207a71d300",
     "tdf-hq/test/TDF/Taxonomy/FilterSpec.hs": "7f07c9ad5fb4ac7bd1727f36c408f2c2cde0aa264fd540e4e40dc48476a0405b",
     "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs": "89182563f1b1e76db33e3004500b198197fe828aea30f1faccad5738ed7d4471",
@@ -33616,6 +33843,10 @@
       },
       {
         "requirement": "COMMUNITY-FAN-FOLLOW-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
         "relationship": "implementation"
       },
       {
@@ -34831,6 +35062,10 @@
       {
         "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AFFINITY-ORDER-001",
+        "relationship": "implementation"
       }
     ],
     "ops/hetzner/compose.production.yaml": [
@@ -35116,6 +35351,10 @@
       },
       {
         "requirement": "AUTH-ENTRY-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
         "relationship": "implementation"
       },
       {
@@ -38989,6 +39228,10 @@
       {
         "requirement": "TAX-FILTER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AFFINITY-ORDER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/lib/liveBroadcastsRepository.ts": [
@@ -40101,6 +40344,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
         "relationship": "implementation"
       },
@@ -40430,6 +40677,10 @@
       },
       {
         "requirement": "AUTH-ARTIST-INVITE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
         "relationship": "implementation"
       },
       {
@@ -41571,6 +41822,10 @@
       {
         "requirement": "PRIV-INTAKE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/AccountDeletionQueue.tsx": [
@@ -41999,6 +42254,10 @@
       {
         "requirement": "TAX-FILTER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AFFINITY-ORDER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/utils/externalTicketing.ts": [
@@ -42142,6 +42401,10 @@
       },
       {
         "requirement": "TAX-FILTER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AFFINITY-ORDER-001",
         "relationship": "implementation"
       }
     ],
@@ -49337,6 +49600,10 @@
       {
         "requirement": "MEDIA-ARTIST-CATALOG-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx": [
@@ -49586,6 +49853,10 @@
     "tdf-hq-ui/src/pages/SocialPage.tsx": [
       {
         "requirement": "WEB-CONTENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
         "relationship": "implementation"
       }
     ],
@@ -50163,6 +50434,136 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/src/TDF/API/SocialRelationships.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/social.ts": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Social/SuggestionRank.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Social/SuggestionStore.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Auth/EmailVerification.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Social/RelationshipReads.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/features/social/suggestionReason.ts": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/social/RelationshipReadSpec.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/Social/SuggestionStoreSpec.hs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-friend-suggestions-sql.py": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-friend-suggestions-postgres.sh": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/verify-friend-suggestion-pagerank.py": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq-ui/src/api/social.test.ts": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/social/preview.mjs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/social/verify-preview.mjs": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/features/social/suggestionReason.test.ts": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/FriendSuggestionGraph.als": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "formalModels"
+      }
+    ],
     "tdf-hq/src/TDF/Fans/ArtistRecommendations.hs": [
       {
         "requirement": "COMMUNITY-FAN-RECOMMENDATION-001",
@@ -50219,6 +50620,10 @@
       {
         "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AFFINITY-ORDER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/sql/2026-11-21_artist_similarity.sql": [
@@ -50236,6 +50641,10 @@
     "tdf-hq/test/ArtistSimilarityProbe.hs": [
       {
         "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-AFFINITY-ORDER-001",
         "relationship": "tests"
       }
     ],
@@ -52591,6 +53000,10 @@
       {
         "requirement": "EVT-DISCOVERY-FILTER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-AFFINITY-ORDER-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx": [
@@ -52606,6 +53019,10 @@
     "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts": [
       {
         "requirement": "EVT-DISCOVERY-FILTER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-AFFINITY-ORDER-001",
         "relationship": "tests"
       }
     ],
@@ -54514,6 +54931,36 @@
         "requirement": "MEDIA-MUSIC-CONTINUATION-001",
         "relationship": "formalModels"
       }
+    ],
+    "tdf-hq/src/TDF/Fans/EventAffinity.hs": [
+      {
+        "requirement": "EVT-AFFINITY-ORDER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/config/eventAffinityRollout.ts": [
+      {
+        "requirement": "EVT-AFFINITY-ORDER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Fans/EventAffinitySpec.hs": [
+      {
+        "requirement": "EVT-AFFINITY-ORDER-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/fans/EventAffinity.tla": [
+      {
+        "requirement": "EVT-AFFINITY-ORDER-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/fans/event_affinity_order.py": [
+      {
+        "requirement": "EVT-AFFINITY-ORDER-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -54760,7 +55207,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "044469d2096c41b0ad222178b33f6a59bce6ffb3b0d09d285004ab516e7f1253",
+      "sha256": "7f8d14c5c33fab9fe02c55f1c8718bff300987597c432abcee0f431bb17dbbd5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56183,7 +56630,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "aa8b292471211812512d33a405cad8ac2c69a0b6eae9efbe4560d0593d6cee55",
+      "sha256": "a91956a44021902210ea5937552a19323ea12a829acd35199b4dffebb49e7650",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56398,7 +56845,7 @@
     {
       "id": "SURFACE-92421f4c198ed166",
       "path": "scripts/__tests__/alloy-controls.test.mjs",
-      "sha256": "1f1b6904444f5c7e47a71c00f37d332da956b885d2746b2a1dcc2b342742c873",
+      "sha256": "402f6bd9d15a8250845cb0294c05772f2da4f5225ee58b3cebb8006ac2595f11",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56551,7 +56998,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "956a681904c0a8260a1c10254d82f5f4df71e241af0d1d198a37d266a1698385",
+      "sha256": "3a2bc4f9fb86c8ce5b42f194ec5931565121854a0b23338b882d9921c8df51a2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58995,7 +59442,7 @@
     {
       "id": "SURFACE-348e3d2bac6fc15e",
       "path": "scripts/lib/alloy-controls.mjs",
-      "sha256": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
+      "sha256": "3ad4f0250f2b7f5a20ce66ecf3af55c40f9eace18e5d816d9a061be75eeb10b0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59870,7 +60317,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "5ccb34dfbdfacff9439eb32392d7771d97aa689475ad97d9467bfe18b73eb1a8",
+      "sha256": "9a5b6d14b3ba511b75ead533b561b695b95215b34b718e76b008c03b6c79522d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60475,9 +60922,14 @@
     {
       "id": "SURFACE-750774099dae3f98",
       "path": "scripts/social/RelationshipReadSpec.hs",
-      "sha256": "8094406fe42352a4d387feff8395dfdfdf06a0e0a33312ccb6b7da45e73f3a99",
+      "sha256": "9d3dcfa8dfde6b721ec45727cdf9b2fcb05c254f9127741fe6ab4763f3b7e3ea",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-e3d0d4ee0253885f",
@@ -60731,9 +61183,14 @@
     {
       "id": "SURFACE-07a18534c1eba4e0",
       "path": "scripts/social/preview.mjs",
-      "sha256": "24a8ab3d7fb8c2ea5b9ac58404b4d6ec2c85a91456b3976751a8b9e8b2ae1da2",
+      "sha256": "1851e7acc7da1e189a057ddfcb43352c766fc82a8804e70905116cbf6e710c2f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-9d90d2a0c5c0f9cf",
@@ -60846,9 +61303,14 @@
     {
       "id": "SURFACE-328feb70fab0c3c6",
       "path": "scripts/social/verify-preview.mjs",
-      "sha256": "3e9e26c263a5b9a8e2143a654eb2183ccf691087e81ca596453f4dccf095968c",
+      "sha256": "aa23ed7741df51fb66e1d9df5ae347a2db46b2e144e70cc8bfc56ad63b50074d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-13021813fc894ba2",
@@ -61923,6 +62385,30 @@
       "requirements": [
         {
           "requirement": "COMMUNITY-FEED-AFFINITY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-af1c9a8a744055e3",
+      "path": "scripts/test-friend-suggestions-postgres.sh",
+      "sha256": "475a761847eb4abcd395f68d65a852de2ac280d8b7f93d70bb150df4185600c9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b8aeb29dd33939a7",
+      "path": "scripts/test-friend-suggestions-sql.py",
+      "sha256": "8d123cd5c8ad8138ed4aa141f3f89b14fb10e30a28aa3a3e0908e5b14292356c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "tests"
         }
       ]
@@ -63733,6 +64219,22 @@
       ]
     },
     {
+      "id": "SURFACE-0cc1d90a7ac978a7",
+      "path": "scripts/verify-friend-suggestion-pagerank.py",
+      "sha256": "5c14674955a43f1874dda45b41f3ab3142187b8527132672ed59fe1cb4aba38a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "formalModels"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-0c79563c67a4f75d",
       "path": "scripts/verify-google-account-name.py",
       "sha256": "db797f61655c32d3df0c6737a18514ea8d49312bfa245253e7c45e521d9ce4e9",
@@ -63754,7 +64256,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "853ac6885bfa0ee962bd879554718187f135b18e9d5a702c9142f8e656235f6d",
+      "sha256": "f4ee5f279051c223cc05285467c731286e7dc815f7e855f261bdfbc0e3871b8e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67021,16 +67523,26 @@
     {
       "id": "SURFACE-58348bbc9ffe221b",
       "path": "tdf-hq-ui/src/api/social.test.ts",
-      "sha256": "7c2e11b1e52e7cd15e4e79aeab2e76ad269a8c6a4fd6c6a2a8ac7251c1db8d19",
+      "sha256": "6d99f9d9e33af5b4015a8926e6a21997f1a67affb3d8bfa047645acf247ec4bd",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-56d69609ed44245e",
       "path": "tdf-hq-ui/src/api/social.ts",
-      "sha256": "baa97853bbf238a668c76fd01b4cd2bd4507ea0cea663280bb4ccf0de0a312cc",
+      "sha256": "4b0b41b5d150e80746f6e5bb4c18354f32819c9786e51b608888f509fa3e7ee5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-0996ea3719ee9457",
@@ -67070,7 +67582,7 @@
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "f81dd3da13df4da52a1e908416bf6de4e34bae73e1fb6804b62d70c0070a1501",
+      "sha256": "e42d404435c06419ecee6debf7b935b8de322e1afb26de72ad1290cc54fbc103",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67115,6 +67627,10 @@
         },
         {
           "requirement": "TAX-FILTER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AFFINITY-ORDER-001",
           "relationship": "implementation"
         }
       ]
@@ -67181,11 +67697,15 @@
     {
       "id": "SURFACE-9bac22f287db5deb",
       "path": "tdf-hq-ui/src/api/types.ts",
-      "sha256": "0879b24ae1ff60ef60de657be2ee774de2f4bcf89c804a251857e3bf14175114",
+      "sha256": "cb9e4040eb1054466158552ac2a7bc0ed2a0f7f60db50f7f758dffede67d9c21",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         }
       ]
@@ -69729,6 +70249,18 @@
       ]
     },
     {
+      "id": "SURFACE-a00145896370f04b",
+      "path": "tdf-hq-ui/src/config/eventAffinityRollout.ts",
+      "sha256": "4d6dbb1df1072d059ed60817912fe59a1a56ef76c60c08e0ea660e722268a791",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AFFINITY-ORDER-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-b1906b4035a9fd41",
       "path": "tdf-hq-ui/src/config/queueContinuationRollout.ts",
       "sha256": "a00f9304705090f7cb786113f14f44ce3c4c7670d8486ba442be69c7ca37b68a",
@@ -70823,14 +71355,19 @@
     {
       "id": "SURFACE-becf808f14372711",
       "path": "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
-      "sha256": "d6419557dc90a2248dc8560cfc5a8260e0297fc3354e7b652fd6f11098bc67e5",
+      "sha256": "f51a44e85dedfb110f2df206367c5a2124827522af413bed1876ff2086b4790c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-fd02ef36057b6b05",
       "path": "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
-      "sha256": "82492087c813de1f062dd59680c17fd9320142073e3dc96e8737fade9b0660a6",
+      "sha256": "94480b73ee96a50de9b174cec1e74fbfea0cb4c8aeb112f107ad0c744c550cad",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -70839,6 +71376,34 @@
         },
         {
           "requirement": "MEDIA-ARTIST-CATALOG-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-78dcbc3cd8f072e5",
+      "path": "tdf-hq-ui/src/features/social/suggestionReason.test.ts",
+      "sha256": "49de92d7b4710a2574f0b8f4776984d0586daec223bc1c4bce3e61c35bc76336",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2f51101da513c0be",
+      "path": "tdf-hq-ui/src/features/social/suggestionReason.ts",
+      "sha256": "f0c6a9b9fc8b8de2250e617a5361c695f57817be069b15fc7bc067337dd1e472",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         }
       ]
@@ -74730,7 +75295,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "3b91dba43e5f59ad64e0a04fa3e28678c6e60e4c6af8593129f741886688cdb5",
+      "sha256": "d3a5d7daff89cf0d1063de1c97989a4d7e6dac8d2bbe3d5f6dea320590843014",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74776,6 +75341,10 @@
         {
           "requirement": "TAX-FILTER-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AFFINITY-ORDER-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -74801,11 +75370,15 @@
     {
       "id": "SURFACE-ab3dd253ad980d5f",
       "path": "tdf-hq-ui/src/pages/SocialPage.tsx",
-      "sha256": "eb1162e3cc9418ef3aef29a2a85842aaaaa96f32079062d48a88522912fc4d9d",
+      "sha256": "ff5f02cc3712386460da4957865800857f880e10b828e55c2b36de0a858432f7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         }
       ]
@@ -75183,11 +75756,15 @@
     {
       "id": "SURFACE-6cbe7c311d07b3f3",
       "path": "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts",
-      "sha256": "12d0b8e2c66e11b30784646892d3d97f9d6762032243c2f97819b292630b4c7a",
+      "sha256": "69fa315b9b052118f56ace97aee84a3e9d615003da1bc87c6bcb3e0e8dbbeb97",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-DISCOVERY-FILTER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-AFFINITY-ORDER-001",
           "relationship": "tests"
         }
       ]
@@ -75195,11 +75772,15 @@
     {
       "id": "SURFACE-a310967cb09cdd87",
       "path": "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts",
-      "sha256": "7e4b0da542f427fb13d49fa972d760d093096e1077c19cfbaa6f9a7fa0b9d251",
+      "sha256": "2238077e25bf2dafea607c0dcbc740fac66475579b73bc47fefadcdbd3d68abc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-DISCOVERY-FILTER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AFFINITY-ORDER-001",
           "relationship": "implementation"
         }
       ]
@@ -77809,7 +78390,7 @@
     {
       "id": "SURFACE-2f83dbcb131f448c",
       "path": "tdf-hq-ui/src/vite-env.d.ts",
-      "sha256": "bdcf33c62f1bba0ff2fbfefdbb277caa0aac378e636068de90065b5ad6d3786d",
+      "sha256": "3b9627cd4112fe1afe32c0677dc67c322794c789b369bc2739373be63b37e76f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83034,6 +83615,30 @@
       ]
     },
     {
+      "id": "SURFACE-fdcf4dd42241601b",
+      "path": "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql",
+      "sha256": "9f7f0aaaad1716d95ac3180368e72e3765e24b5c130cac7452cd7082a34c8e71",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2bbd98190d25a1d9",
+      "path": "tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql",
+      "sha256": "8f791208d65a900560525c4a6415aa5004a9e7d60c8d02ee6b2ee41fe4240c05",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-f6e8cdde78c53f0d",
       "path": "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
       "sha256": "da5184b2f8a2ac0aa7f421e2e44882fa9e040143e1222f386dc4080035ef9450",
@@ -83696,9 +84301,14 @@
     {
       "id": "SURFACE-224511e286675674",
       "path": "tdf-hq/src/TDF/API/SocialRelationships.hs",
-      "sha256": "9ea909370a55c985f2b7e5fdf5a62eaea4a3b77438e52fd3371e2299afbc54dd",
+      "sha256": "81b3b72e6087fe5fd3b708969dc32ee1a7290aec2aae89510c7fb7e7ba9069be",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c9bd1bcf315011ee",
@@ -83745,7 +84355,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "e57a6f76c7f9a007a042f39016b0805d8ea5eb2285f9d8aa8f492c4419fbdd07",
+      "sha256": "7260323ae062fc41f078e3b3aaa46b4afcf1f1491515d141da8de8add3acd807",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83770,6 +84380,10 @@
         },
         {
           "requirement": "DIR-SEMANTIC-SEARCH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         },
         {
@@ -83938,6 +84552,18 @@
       "requirements": [
         {
           "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1b4be5f3209901fd",
+      "path": "tdf-hq/src/TDF/Auth/EmailVerification.hs",
+      "sha256": "f1db99d3b61729b461a03c105530e49692fdcd8110bfea9c861f39f5f0109b60",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         }
       ]
@@ -84720,7 +85346,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "72c952cfb3abf1b4286c44e382735f70d933cf43a660f3eb658252c84663d4fb",
+      "sha256": "63b4437393fbe93ef8a5db568436f500f7761257f7941860ccf10102743dc5be",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84757,6 +85383,10 @@
         },
         {
           "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AFFINITY-ORDER-001",
           "relationship": "implementation"
         }
       ]
@@ -85053,7 +85683,7 @@
     {
       "id": "SURFACE-70ca6d20ed6232ae",
       "path": "tdf-hq/src/TDF/DTO.hs",
-      "sha256": "3887fd05051d11801dfde029a84502f51538e0562b43ba334f6b29f7a2cfadff",
+      "sha256": "edbc8deaf065d3b975ed365ab552038c43b89197d90100517fcf6afcf02b2dfc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85062,6 +85692,10 @@
         },
         {
           "requirement": "AUTH-ARTIST-INVITE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         },
         {
@@ -85353,11 +85987,27 @@
     {
       "id": "SURFACE-a4bb3744c2240160",
       "path": "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
-      "sha256": "ee3b22433ff275cecfc976765b3549a1175921337f7605cb9b50237b8e84e173",
+      "sha256": "45afa0833f03e525d7297346695ca7f22ad51ff81695a5e0ae9a52723c04027a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AFFINITY-ORDER-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-8c54b046912b7ed4",
+      "path": "tdf-hq/src/TDF/Fans/EventAffinity.hs",
+      "sha256": "f3fce134bccd5fa9f2280b74568265f3006a4861085889530027ed41b127312d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AFFINITY-ORDER-001",
           "relationship": "implementation"
         }
       ]
@@ -86091,7 +86741,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "f77ccecb6f638d2d116a9aef62649f3cc227124e719c3f4570a88c0da69bafad",
+      "sha256": "a866a4fce309f11c4b993979ce2497f85f9329042783cfd1d48b4a1ea5a36b67",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86204,6 +86854,10 @@
         },
         {
           "requirement": "COMMUNITY-FAN-FOLLOW-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         },
         {
@@ -87150,7 +87804,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "98fb8e6c25922d1bf96a5068ab3267704962cfd71a240e0526ba5e8bc84197ec",
+      "sha256": "61600306501b0bb961d4ef0008569119915af36d062bdaf698d2771b91865c92",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87311,6 +87965,10 @@
         },
         {
           "requirement": "TAX-FILTER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-AFFINITY-ORDER-001",
           "relationship": "implementation"
         }
       ]
@@ -87506,7 +88164,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "b20db383c88a651a9112b53cab02b5ff0f8241fb71953107ad23eb6bc69e78a4",
+      "sha256": "48972a479cae7bb55ef55842ea33683cd5c49ebaacd54dead9ff6896dcdc2121",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87539,6 +88197,10 @@
         },
         {
           "requirement": "AUTH-ENTRY-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         },
         {
@@ -87957,9 +88619,14 @@
     {
       "id": "SURFACE-5f3c565954968d6a",
       "path": "tdf-hq/src/TDF/Social/RelationshipReads.hs",
-      "sha256": "fa198d4316f33858346b9fced5c97084577dd6c67faa7bdfb1d468d1d24716ca",
+      "sha256": "c483e2673f057b8d969b11714e391821b4c4c5edc2b3865a16c9236a5f72f924",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-effe2030880b0cfd",
@@ -88005,6 +88672,30 @@
         },
         {
           "requirement": "SOCIAL-RELATIONSHIP-WRITES-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6188be4360fef16d",
+      "path": "tdf-hq/src/TDF/Social/SuggestionRank.hs",
+      "sha256": "5e9e231e34f9693c0a09a9f580420285037aa9c69512bee291fc220b21b0c860",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-824227145b08a710",
+      "path": "tdf-hq/src/TDF/Social/SuggestionStore.hs",
+      "sha256": "622b599910cb41abc3e20233c13b7d6f544eb5334d3933e40bfbe7dc923f017a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         }
       ]
@@ -88372,7 +89063,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "903875f4791eb97ba37309de7e409343fab2dc5757ebb604ee815c862ca071bb",
+      "sha256": "3bb5b85e0130e579eb3b7bc6d3992731634e70432d823024370381229dcbc2d3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -88448,11 +89139,15 @@
     {
       "id": "SURFACE-2358d533521ebfa4",
       "path": "tdf-hq/test/ArtistSimilarityProbe.hs",
-      "sha256": "3ec4f5ba3547477e75ed6cff02b735cb3cb852720ffa20fcbdc5bec8f0352efe",
+      "sha256": "7cbbd2d3fadfb1890eee7ae27f838ce237dab93f317893926c9418248714a74a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-AFFINITY-ORDER-001",
           "relationship": "tests"
         }
       ]
@@ -88583,7 +89278,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "9653cd26ab2c58692e03ea1b82df464b14da614ed330d96c0abd71e19e26509c",
+      "sha256": "1d36a7609fa687c8eabd80bc02b57f5ed5872145ef44bc501d855ba703996590",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -89444,7 +90139,7 @@
     {
       "id": "SURFACE-6a2ebecd249230c2",
       "path": "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
-      "sha256": "e229b3f69902e4bd06ea424433d6e4be2d0cb1cd2309d22a19b8d4b7afdd255b",
+      "sha256": "c5b8518cba6ed23bb90620e9a5a7e84848730f399b712db55e3d70cf60a81580",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -89532,6 +90227,18 @@
       "requirements": [
         {
           "requirement": "COMMUNITY-ARTIST-SIMILARITY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-134b8aa44cccb09a",
+      "path": "tdf-hq/test/TDF/Fans/EventAffinitySpec.hs",
+      "sha256": "f643e7321948d47018b0110e9cc4c062ea205c19796c34fa388f44ffd15e527b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-AFFINITY-ORDER-001",
           "relationship": "tests"
         }
       ]
@@ -90195,7 +90902,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "834535c78a3c09542515107cb4c5da7ea6f4077ec7e7093535339539220324dd",
+      "sha256": "e86514c17e9b0ca7a5310767d6294bd8a4a4a0c998ae4128c27bf0a9c6a531ab",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -90530,6 +91237,30 @@
       "requirements": [
         {
           "requirement": "SOCIAL-RELATIONSHIP-WRITES-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-91acfb74d71a1c29",
+      "path": "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs",
+      "sha256": "f85567f40ae2e3e2b8bee19e37362fe683594fb7de3a28c4c4f009c9002b5ee4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c38c57423312ecae",
+      "path": "tdf-hq/test/TDF/Social/SuggestionStoreSpec.hs",
+      "sha256": "4805590f663514fca48b384f87ee2e5357c88ff09a525244adcf853d9376698d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "tests"
         }
       ]
@@ -95401,7 +96132,6 @@
     "SURFACE-5d4cb8015e79dca2",
     "SURFACE-e42416493ea0dbea",
     "SURFACE-4516bcc170cbbb8d",
-    "SURFACE-750774099dae3f98",
     "SURFACE-e3d0d4ee0253885f",
     "SURFACE-9a5043de3e53e7e2",
     "SURFACE-c6d8995610ec7a67",
@@ -95429,7 +96159,6 @@
     "SURFACE-a260a4a6fd4f39a3",
     "SURFACE-01bb675b4714c01a",
     "SURFACE-b20e839e84948280",
-    "SURFACE-07a18534c1eba4e0",
     "SURFACE-9d90d2a0c5c0f9cf",
     "SURFACE-7169f7ecb8e097e8",
     "SURFACE-5be6afa63f600b22",
@@ -95442,7 +96171,6 @@
     "SURFACE-15c82649896acb3b",
     "SURFACE-d043b92d718bcc7b",
     "SURFACE-16d8def719a85cfa",
-    "SURFACE-328feb70fab0c3c6",
     "SURFACE-2f7dfeebba9005ba",
     "SURFACE-a7f318be5cea52e5",
     "SURFACE-35cee8013045146d",
@@ -95583,8 +96311,6 @@
     "SURFACE-f991c87eba806e21",
     "SURFACE-cbc3e7cf8a1ab0e0",
     "SURFACE-82d9be6dba61ff66",
-    "SURFACE-58348bbc9ffe221b",
-    "SURFACE-56d69609ed44245e",
     "SURFACE-0996ea3719ee9457",
     "SURFACE-5658ebb431d6a53d",
     "SURFACE-44b36f2b091d43e1",
@@ -95677,7 +96403,6 @@
     "SURFACE-e04a90610f08f69f",
     "SURFACE-27125889be0aa628",
     "SURFACE-28dd6664422e6d42",
-    "SURFACE-becf808f14372711",
     "SURFACE-f021d9128025632d",
     "SURFACE-baf39c06d4e5efdc",
     "SURFACE-42cfb414a229d911",
@@ -96224,7 +96949,6 @@
     "SURFACE-d6409fbc750d012c",
     "SURFACE-5f0cc56e954d47f0",
     "SURFACE-c1e9e07dfd2c941f",
-    "SURFACE-224511e286675674",
     "SURFACE-c9bd1bcf315011ee",
     "SURFACE-fe906347e07abbb3",
     "SURFACE-9655351d027b1acb",
@@ -96275,7 +96999,6 @@
     "SURFACE-4053a4f2498e072d",
     "SURFACE-dcd6c643453694a2",
     "SURFACE-85aae9756eda5339",
-    "SURFACE-5f3c565954968d6a",
     "SURFACE-24f8d92d510c1f2c",
     "SURFACE-981d668b9e163412",
     "SURFACE-8f34cfa4bb16ce16",
@@ -97935,7 +98658,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "17281cb573e7d84c1373257434fa0c3eb47fadd204159cc89b1e9105d611dcbc",
+      "sourceSha256": "70f8a8ad38308048550549c8d8d44e6ab08c2c1293f860d0c8996ee385cc3f83",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -97963,7 +98686,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "17281cb573e7d84c1373257434fa0c3eb47fadd204159cc89b1e9105d611dcbc",
+      "sourceSha256": "70f8a8ad38308048550549c8d8d44e6ab08c2c1293f860d0c8996ee385cc3f83",
       "definition": {
         "states": [
           "absent",
@@ -97993,7 +98716,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "17281cb573e7d84c1373257434fa0c3eb47fadd204159cc89b1e9105d611dcbc",
+      "sourceSha256": "70f8a8ad38308048550549c8d8d44e6ab08c2c1293f860d0c8996ee385cc3f83",
       "definition": {
         "export": [
           "queued",
@@ -98050,7 +98773,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "17281cb573e7d84c1373257434fa0c3eb47fadd204159cc89b1e9105d611dcbc",
+      "sourceSha256": "70f8a8ad38308048550549c8d8d44e6ab08c2c1293f860d0c8996ee385cc3f83",
       "definition": {
         "states": [
           "pending",
@@ -121760,7 +122483,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 241,
+    "PARTIAL": 243,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
