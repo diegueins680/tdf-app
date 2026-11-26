@@ -37,5 +37,6 @@ export const SocialAPI = {
   },
   getProfile: (partyId: number) =>
     get<SocialPartyProfileDTO>(`/social/profiles/${requirePositivePartyId(partyId, 'obtener perfil social')}`),
-  listSuggestions: () => get<SuggestedFriendDTO[]>('/social/suggestions?networkReason=true'),
+  listSuggestions: () => get<SuggestedFriendDTO[]>('/social/suggestions'),
+  listNetworkSuggestions: () => get<SuggestedFriendDTO[]>('/social/suggestions?networkReason=true'),
 };

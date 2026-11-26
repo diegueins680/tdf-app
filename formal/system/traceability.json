@@ -19517,6 +19517,7 @@
         "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql",
         "tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql",
         "tdf-hq-ui/src/features/social/suggestionReason.ts",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
         "tdf-hq-ui/src/pages/SocialPage.tsx",
         "tdf-hq-ui/src/api/types.ts"
       ],
@@ -19527,7 +19528,9 @@
         "scripts/test-friend-suggestions-sql.py",
         "scripts/test-friend-suggestions-postgres.sh",
         "scripts/verify-friend-suggestion-pagerank.py",
-        "tdf-hq-ui/src/features/social/suggestionReason.test.ts"
+        "tdf-hq-ui/src/api/social.test.ts",
+        "tdf-hq-ui/src/features/social/suggestionReason.test.ts",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx"
       ],
       "formalModels": [
         "formal/event-operations/FriendSuggestionGraph.als",
@@ -31398,7 +31401,8 @@
     "tdf-hq-ui/src/api/reviews.ts": "8fc0a3b74789b159185572e537899ad62139fd8b784a32ec8639d3c6da792dcb",
     "tdf-hq-ui/src/api/session.test.ts": "b00e52d37736c2f913029b4ebd6d327b488b4fb00515e7be468f4788c0bf775e",
     "tdf-hq-ui/src/api/session.ts": "6eda870f29bab94f61c66905b79eece8247a242f66d8a1b4b9e56a055b81b0a9",
-    "tdf-hq-ui/src/api/social.ts": "d088d9263aa314f305eea2ba6234b64918bbed38f37c20ddb400b77f99de06d0",
+    "tdf-hq-ui/src/api/social.test.ts": "6d99f9d9e33af5b4015a8926e6a21997f1a67affb3d8bfa047645acf247ec4bd",
+    "tdf-hq-ui/src/api/social.ts": "4b0b41b5d150e80746f6e5bb4c18354f32819c9786e51b608888f509fa3e7ee5",
     "tdf-hq-ui/src/api/socialEvents.test.ts": "94e606bd6901c34bcf460a614294be9f4eb027c39b9ef2110e55df65aef5962b",
     "tdf-hq-ui/src/api/socialEvents.ts": "f81dd3da13df4da52a1e908416bf6de4e34bae73e1fb6804b62d70c0070a1501",
     "tdf-hq-ui/src/api/socialV2.test.ts": "fe2b88bb9bd20e089e454b6aa661685b447d75e8c8a5dab94097091421cd2c14",
@@ -31623,7 +31627,8 @@
     "tdf-hq-ui/src/features/releases/catalogQueries.test.ts": "0abd74326e5225fed06e81cf01921d6247cb41b23b0c1f33932c43b8a513a2d2",
     "tdf-hq-ui/src/features/releases/catalogQueries.ts": "ab1ac999aeac0c22d337184124e83e5d4f3817d4ba6a242445a877b68ee0113d",
     "tdf-hq-ui/src/features/releases/useReleaseFeed.ts": "d14328c34a608a3748610ffb35448acf5beed529601883f3f5077b70d445ff49",
-    "tdf-hq-ui/src/features/social/SocialWorkspace.tsx": "82492087c813de1f062dd59680c17fd9320142073e3dc96e8737fade9b0660a6",
+    "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx": "f51a44e85dedfb110f2df206367c5a2124827522af413bed1876ff2086b4790c",
+    "tdf-hq-ui/src/features/social/SocialWorkspace.tsx": "94480b73ee96a50de9b174cec1e74fbfea0cb4c8aeb112f107ad0c744c550cad",
     "tdf-hq-ui/src/features/social/suggestionReason.test.ts": "49de92d7b4710a2574f0b8f4776984d0586daec223bc1c4bce3e61c35bc76336",
     "tdf-hq-ui/src/features/social/suggestionReason.ts": "f0c6a9b9fc8b8de2250e617a5361c695f57817be069b15fc7bc067337dd1e472",
     "tdf-hq-ui/src/hooks/useChatKitScript.ts": "9709e7772a436e059b6444328e7aa82b24f19619e5fca3ee012931c1f0745cb0",
@@ -49478,6 +49483,10 @@
       {
         "requirement": "MEDIA-ARTIST-CATALOG-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx": [
@@ -50402,7 +50411,19 @@
         "relationship": "formalModels"
       }
     ],
+    "tdf-hq-ui/src/api/social.test.ts": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq-ui/src/features/social/suggestionReason.test.ts": [
+      {
+        "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx": [
       {
         "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
         "relationship": "tests"
@@ -67317,14 +67338,19 @@
     {
       "id": "SURFACE-58348bbc9ffe221b",
       "path": "tdf-hq-ui/src/api/social.test.ts",
-      "sha256": "7c2e11b1e52e7cd15e4e79aeab2e76ad269a8c6a4fd6c6a2a8ac7251c1db8d19",
+      "sha256": "6d99f9d9e33af5b4015a8926e6a21997f1a67affb3d8bfa047645acf247ec4bd",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-56d69609ed44245e",
       "path": "tdf-hq-ui/src/api/social.ts",
-      "sha256": "d088d9263aa314f305eea2ba6234b64918bbed38f37c20ddb400b77f99de06d0",
+      "sha256": "4b0b41b5d150e80746f6e5bb4c18354f32819c9786e51b608888f509fa3e7ee5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71128,14 +71154,19 @@
     {
       "id": "SURFACE-becf808f14372711",
       "path": "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
-      "sha256": "d6419557dc90a2248dc8560cfc5a8260e0297fc3354e7b652fd6f11098bc67e5",
+      "sha256": "f51a44e85dedfb110f2df206367c5a2124827522af413bed1876ff2086b4790c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-fd02ef36057b6b05",
       "path": "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
-      "sha256": "82492087c813de1f062dd59680c17fd9320142073e3dc96e8737fade9b0660a6",
+      "sha256": "94480b73ee96a50de9b174cec1e74fbfea0cb4c8aeb112f107ad0c744c550cad",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71144,6 +71175,10 @@
         },
         {
           "requirement": "MEDIA-ARTIST-CATALOG-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
           "relationship": "implementation"
         }
       ]
@@ -96025,7 +96060,6 @@
     "SURFACE-f991c87eba806e21",
     "SURFACE-cbc3e7cf8a1ab0e0",
     "SURFACE-82d9be6dba61ff66",
-    "SURFACE-58348bbc9ffe221b",
     "SURFACE-0996ea3719ee9457",
     "SURFACE-5658ebb431d6a53d",
     "SURFACE-44b36f2b091d43e1",
@@ -96118,7 +96152,6 @@
     "SURFACE-e04a90610f08f69f",
     "SURFACE-27125889be0aa628",
     "SURFACE-28dd6664422e6d42",
-    "SURFACE-becf808f14372711",
     "SURFACE-f021d9128025632d",
     "SURFACE-baf39c06d4e5efdc",
     "SURFACE-42cfb414a229d911",
@@ -98374,7 +98407,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "92451949099fb6908208c2dfc37c149e77f3342795d42354d366d6d7735c89ff",
+      "sourceSha256": "0c53361ffe719c7bd897c36eaef53887a7d56e28774a8582eabfdb5ce3864e40",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -98402,7 +98435,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "92451949099fb6908208c2dfc37c149e77f3342795d42354d366d6d7735c89ff",
+      "sourceSha256": "0c53361ffe719c7bd897c36eaef53887a7d56e28774a8582eabfdb5ce3864e40",
       "definition": {
         "states": [
           "absent",
@@ -98432,7 +98465,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "92451949099fb6908208c2dfc37c149e77f3342795d42354d366d6d7735c89ff",
+      "sourceSha256": "0c53361ffe719c7bd897c36eaef53887a7d56e28774a8582eabfdb5ce3864e40",
       "definition": {
         "export": [
           "queued",
@@ -98489,7 +98522,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "92451949099fb6908208c2dfc37c149e77f3342795d42354d366d6d7735c89ff",
+      "sourceSha256": "0c53361ffe719c7bd897c36eaef53887a7d56e28774a8582eabfdb5ce3864e40",
       "definition": {
         "states": [
           "pending",

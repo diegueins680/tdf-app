@@ -146,7 +146,7 @@ later changes its address.
 - This reverses the retirement recorded in `docs/social/relationship-read-boundary.md`
   (2026-09-16) for viewers who are served a personalized result; that document still
   describes the fallback.
-- Clients that render the network reason request `?networkReason=true`. All other clients receive the existing fallback, including older Mobile releases.
+- Clients that render the network reason request `?networkReason=true`. On the web, Discover ranks only the eligible profiles on its current personalized page and keeps the relationship revision supplied by Discover for Follow and Connect. Profiles without a network match retain their order and reason. The legacy web panel and older Mobile releases request the existing fallback.
 - Account age is `party.created_at`; credentials have no creation time. A CRM contact
   created long ago that registers today counts as old.
 - Rule 5 is coarse: one account closing its profile sends every viewer it carried score

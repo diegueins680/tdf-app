@@ -19516,6 +19516,7 @@
         "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql",
         "tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql",
         "tdf-hq-ui/src/features/social/suggestionReason.ts",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
         "tdf-hq-ui/src/pages/SocialPage.tsx",
         "tdf-hq-ui/src/api/types.ts"
       ],
@@ -19526,7 +19527,9 @@
         "scripts/test-friend-suggestions-sql.py",
         "scripts/test-friend-suggestions-postgres.sh",
         "scripts/verify-friend-suggestion-pagerank.py",
-        "tdf-hq-ui/src/features/social/suggestionReason.test.ts"
+        "tdf-hq-ui/src/api/social.test.ts",
+        "tdf-hq-ui/src/features/social/suggestionReason.test.ts",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx"
       ],
       "formalModels": [
         "formal/event-operations/FriendSuggestionGraph.als",
