@@ -691,6 +691,8 @@ import qualified TDF.Fans.ArtistSimilaritySpec as ArtistSimilaritySpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
 import qualified TDF.Server.EventRelationsSpec as EventRelationsSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
+import qualified TDF.Social.SuggestionRankSpec as SuggestionRankSpec
+import qualified TDF.Social.SuggestionStoreSpec as SuggestionStoreSpec
 import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
 import qualified TDF.Trials.DTO as TrialsDTO
 import qualified TDF.WhatsApp.Client as WhatsAppClient
@@ -18602,6 +18604,8 @@ main = hspec $ do
     ArtistRecommendationsSpec.spec
     ArtistSimilaritySpec.spec
     FollowSpec.spec
+    SuggestionRankSpec.spec
+    SuggestionStoreSpec.spec
     FollowHandlerSpec.spec
     EventRelationsSpec.spec
     PublicLeadSpec.spec

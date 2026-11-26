@@ -56,6 +56,9 @@ library
     TDF.API.FanFollowing
     TDF.Social.RelationshipWrites
     TDF.Social.RelationshipReads
+    TDF.Auth.EmailVerification
+    TDF.Social.SuggestionRank
+    TDF.Social.SuggestionStore
     TDF.Social.Chat
     TDF.Social.Session
     TDF.API.Calendar
@@ -506,6 +509,8 @@ test-suite tdf-hq-test
     TDF.Social.FollowHandlerSpec
     TDF.Server.EventRelationsSpec
     TDF.Social.FollowSpec
+    TDF.Social.SuggestionRankSpec
+    TDF.Social.SuggestionStoreSpec
     TDF.Services.EventDiscoverySpec
     TDF.Services.YouTubeSpec
     TDF.Services.RecordsIngestionSpec
