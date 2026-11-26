@@ -359,7 +359,10 @@ nextRunAfter now
 withLeaderLock :: ConnectionPool -> IO a -> IO (Maybe a)
 withLeaderLock pool action =
   withResource pool $ \backend -> bracket
-    (runSqlConn (rawSql "SELECT pg_try_advisory_lock(8401320261121)" [] :: SqlPersistT IO [Single Bool]) backend)
+    (runSqlConn (rawSql "SELECT pg_try_advisory_lock(?)" lockParameters :: SqlPersistT IO [Single Bool]) backend)
     (\locked -> when (locked == [Single True]) $ void $
-      runSqlConn (rawSql "SELECT pg_advisory_unlock(8401320261121)" [] :: SqlPersistT IO [Single Bool]) backend)
+      runSqlConn (rawSql "SELECT pg_advisory_unlock(?)" lockParameters :: SqlPersistT IO [Single Bool]) backend)
     (\locked -> if locked == [Single True] then Just <$> action else pure Nothing)
+  where
+    -- Dedicated to friend suggestions across replicas. Artist similarity schedules independently.
+    lockParameters = [PersistInt64 8401320261125]
