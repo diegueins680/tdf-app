@@ -24,10 +24,12 @@ PAY-RETRY-001, PAY-ADAPTER-BINDING-001, PAY-PROVIDER-INBOX-001, PAY-INVOICE-001,
 ## Open behaviours for the owner to decide
 
 **Money (critical)**
+- **PayPhone Button, 2026-11-26.** The returned merchant reference identifies the original preparation. Only a matching authenticated Button Confirm response establishes the transaction binding. Until then, a mismatched callback can dead-letter without opening an exception against the order. The scheduled job still escalates unresolved checkouts.
 - **Decided 2026-11-10.** A bound hosted-provider event that ends as a dead letter without an exception of its own now leaves one open `provider_event_dead_letter` reconciliation exception, written in the dead-letter transaction behind the attempt fence. Still open: the worker admits money with `recordVerifiedPayment`, so a refused admission is recorded at the dead letter (up to eight attempts later), not in the refusing transaction; unbound events record nothing, by design.
 - Legacy payments, invoices and package purchases record money or entitlement with no canonical checkout, attempt or ledger linkage and no request idempotency.
 
 **Secrets**
+- **PayPhone Button, 2026-11-26.** The returned merchant reference identifies the original preparation. Only a matching authenticated Button Confirm response establishes the transaction binding. Until then, a mismatched callback can dead-letter without opening an exception against the order. The scheduled job still escalates unresolved checkouts.
 - **Decided 2026-11-10.** Google Calendar tokens are sealed with AES-256-GCM under `GOOGLE_CALENDAR_TOKEN_KEY`; nothing is written without the key. Still open: rows written earlier keep plaintext until their next refresh (no backfill), and key rotation is not supported.
 
 **Defaults and status codes**

@@ -28121,14 +28121,17 @@
       }
     },
     {
-      "id": "30c79af4e927f1a899d4",
+      "id": "158359a9f0c18e0e4c1f",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P0-security",
       "risk": "Conflating transport ambiguity with binding mismatch could authorize unsafe retry or suppress a required operator review.",
-      "justification": "This private Haskell sum type makes query construction, transport failure and binding validation exhaustive without persisting provider payloads. It is not an externally governed status catalog or a customer-editable setting; all failures preserve no-blind-fallback behavior.",
-      "reviewed": true
+      "justification": "QueryFailure enumerates private reconciliation results. QueryAwaitingReturn waits for an authenticated confirmation and preserves the checkout hold. Operators cannot configure these program states.",
+      "reviewed": true,
+      "previousDecision": {
+        "$historyRef": "sha256:592ddb7b97395dc15ccc094dbddf08b93fee89a6cae72bda6b4aef96eae1c894"
+      }
     },
     {
       "id": "66196051bb56eaae5750",

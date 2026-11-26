@@ -332,8 +332,9 @@ of any of those regions changes.
 
 | Obligation | Result |
 |---|---|
-| A bound event that the attempt turns into a dead letter leaves the review or the exception its own stage wrote | proved (UNSAT of the negation) |
+| A dead letter with an established binding leaves the review or the exception its own stage wrote | proved (UNSAT of the negation) |
 | The review is written only for a bound event that is a dead letter at this attempt, never for an unbound one | proved |
+| An unconfirmed PayPhone Button ID cannot open a financial exception against the order. A verified pending Button response may reach review when retries run out | proved with mismatch and pending witnesses |
 | The review never doubles a query-mismatch or closed-checkout exception | proved |
 | A processed event and an unexhausted retry write no review; a lost lease changes and records nothing | proved |
 | Review after an exhausted retry, an unsupported query and a throw on the last attempt; mismatch with its own exception only; unbound dead letter without exception | witnesses found |

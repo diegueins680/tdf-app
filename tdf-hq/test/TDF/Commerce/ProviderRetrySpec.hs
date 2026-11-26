@@ -3315,12 +3315,14 @@ buttonReturnSpec = it "reconciles a returned Button transaction through its orig
     readIORef calls `shouldReturn` 1
     assertPaymentPosted pool payment
   where
+    seedCard :: ConnectionPool -> IO [Single Text]
     seedCard pool = runSqlPool (rawSql
       "INSERT INTO commerce_provider_capability\
       \ (provider_account_id,payment_method,capability,verification_status,source_reference,verified_at)\
       \ SELECT id,'card','one_time','sandbox_verified','synthetic-button-test',NOW()\
       \ FROM commerce_provider_account WHERE environment='sandbox' AND provider='payphone'\
       \ ON CONFLICT DO NOTHING RETURNING id::text" [] :: SqlPersistT IO [Single Text]) pool
+    clearCard :: ConnectionPool -> [Single Text] -> IO ()
     clearCard pool rows = forM_ rows $ \(Single row) -> runSqlPool (rawExecute
       "DELETE FROM commerce_provider_capability WHERE id=?::uuid AND source_reference='synthetic-button-test'"
       [PersistText row]) pool

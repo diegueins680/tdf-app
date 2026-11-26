@@ -18297,7 +18297,7 @@
     {
       "id": "SURFACE-24ec334e6417bf04",
       "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-      "sha256": "6659c6b28bb07d8c4f4209b96cb491be083149249b52ad645748c7efb6b62a55",
+      "sha256": "0a8a92e68f627a0c70afb819717a85868d845fb587efc58f7929b9f457ffb36d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19719,7 +19719,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "5b9add208d4cc660f62a34807eacf95e73c5d65919be5498f634f5f8d01d9609",
+      "sha256": "e7da92b5ff6dd93c17dc8b2c229c901c71e965faa624cdae78e843237fda7185",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31317,7 +31317,7 @@
     },
     {
       "path": "formal/payments/README.md",
-      "sha256": "83a5b99dfe9f9316900121a07b47ce5fa3b5c6d19999697163c538d81a462367",
+      "sha256": "723a21580293fc61656edc466ecdf141d6419e2f846c613bc61ef6a8c481eaeb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32031,7 +32031,7 @@
     },
     {
       "path": "formal/system/commerce-integration-routes.md",
-      "sha256": "bd9f6e171801a42db72d6fa91439569fa27ada6c4acf229b3df02df885fb4892",
+      "sha256": "70c4f4d7bf95c495690155cacff85e75b1e01341fe37bbeba33f35e764eb8384",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32962,7 +32962,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "44b9d51a620d26f62d97ba46252f060016397b1e1468d180c74ca1a28882d7e9",
+      "sha256": "f1f6ef75369e18aca3770b467b52d1e9e14bb6a4b68d8ef296507199f7c127e2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
