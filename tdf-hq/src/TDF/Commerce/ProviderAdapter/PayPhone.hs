@@ -254,8 +254,8 @@ safePayPhoneRedirect url = do
 -- Button charge has no transaction ID until the buyer pays (Prepare answers
 -- only an opaque preparation ID), so it is found by its @TDFC-@ reference too;
 -- until the buyer pays, PayPhone answers with an error status, which
--- reconciliation treats as unavailable and retries. An approved Button answer
--- is not final: 'buttonConfirmation' confirms it first.
+-- reconciliation treats as unavailable and retries. This legacy lookup can
+-- identify a transaction to confirm but cannot establish Button finality.
 buildQuery
   :: PayPhoneConfig
   -> AdapterContext
@@ -280,10 +280,9 @@ buildSaleQuery config locator = do
     }
 
 -- | PayPhone reverses a Button payment that is not confirmed within five
--- minutes (ADR 0136). When the status read shows an approved Button payment
--- whose reference, amount and currency match the binding, the confirmation
--- with its transaction ID is the request that must answer before anything is
--- applied. Any other answer is final as it is.
+-- minutes (ADR 0136). When the status read shows an approved or cancelled
+-- Button payment whose reference, amount and currency match the
+-- binding, only Button Confirm can settle the payment or release it for retry.
 buttonConfirmation
   :: PayPhoneConfig
   -> AdapterContext
@@ -295,7 +294,7 @@ buttonConfirmation config _ locator value
   | otherwise = do
       validateClientReference reference
       (transactionId, result) <- parsePayPhoneValue (parseTransaction locator) value
-      pure $ if adapterResultState result == AdapterSucceeded
+      pure $ if buttonRequiresConfirmation result
         then Just (confirmation transactionId)
         else Nothing
   where
@@ -419,9 +418,13 @@ parseQuery :: PaymentLocator -> Value -> Parser AdapterResult
 parseQuery locator value = do
   (_, result) <- parseTransaction locator value
   when (isButtonReference (epReference (plExpected locator))
-      && adapterResultState result == AdapterSucceeded)
-    (fail "PayPhone Button approval requires confirmation")
+      && buttonRequiresConfirmation result)
+    (fail "A terminal PayPhone Button result requires confirmation")
   pure result
+
+buttonRequiresConfirmation :: AdapterResult -> Bool
+buttonRequiresConfirmation result =
+  adapterResultState result `elem` [AdapterSucceeded, AdapterCancelled]
 
 -- | Check the financial binding and keep the transaction identity distinct
 -- from the stored resource (the preparation ID for Button payments).

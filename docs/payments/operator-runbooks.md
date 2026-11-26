@@ -36,6 +36,8 @@ For terminal no-charge replay and PayPhone cancellation classification, follow
 Never bulk relabel historical failed PayPhone records or let an old attempt's
 no-charge result change a newer attempt's checkout. Drain old reconciliation
 consumers before rollout; an image rollback reintroduces that replay defect.
+For a PayPhone Button payment, review sandbox history in **PayPhone Developer → Probador → Transacciones**. PayPhone Support identified this view on 25 November 2026. Use the transaction ID returned by the Button and the original merchant reference for Button Confirm. Verify the response against the expected transaction ID, reference, amount and currency before settling the order or permitting another charge. The API Sale lookup used by the legacy worker can miss Button transactions. A 404, error 20, or a missing transaction in the merchant report leaves the interrupted attempt on hold. If the buyer left before submitting, ask PayPhone whether the original checkout can still be paid. The five-minute reversal window starts after payment. [PayPhone Button documentation](https://docs.payphone.app/boton-de-pago)
+
 For the strict-admin read-only query-job report, follow
 [ADR 0122](../adr/0122-read-only-payment-query-observability.md) and
 [query observability evidence](query-observability-2026-09-15.md). The payment

@@ -18255,7 +18255,7 @@
     {
       "id": "SURFACE-9038b2dbdf428e2c",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
-      "sha256": "f16b44bc57ffd1ab79b6d838ffdc604e39a6bdd3cfc195f56b48b0c245a9ad49",
+      "sha256": "04811cbbb81b9352eaba142ae73ad4d8836f11393223e87e3595743e659adf6d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19587,7 +19587,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "c7b13d94b00bd54768dd18652fd55165b510ed44c4ce18e6fc610f04be9f2427",
+      "sha256": "cb6510ce8b2b5045350525da7c1dff6ecc59af0d27e751176533d94838b666c3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25934,7 +25934,7 @@
     },
     {
       "path": "docs/payments/operator-runbooks.md",
-      "sha256": "93bb6d80efda7caa0e068d6a77757b6975c41e711475d75811027a774c339430",
+      "sha256": "5b2d8e824ebe60d5f9b2f3747d48a5095700ae10dccdbfc773d57c38b468b9f2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
