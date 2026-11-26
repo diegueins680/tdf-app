@@ -46,6 +46,12 @@ Admin role or purchase grants canonical communication rights.
 - Do not substitute zero "mutual" counts on unrelated Discover candidates: that
   would misuse the old UI's reason label. No new source signals or audience consent
   are invented. Discover remains the recommendation product, behind existing gates.
+- **Approved PageRank rollout (COMMUNITY-FRIEND-SUGGESTION-001).** A client that
+  requests `networkReason=true` can receive personalized suggestions when the flag
+  is enabled, the viewer permits personalization and a fresh result passes the
+  current read policy. Ranking uses each actor's explicit canonical follows.
+  The web client renders `sfReason = "network"` without displaying a count.
+  Older clients receive the existing suggestions response.
 
 ## Research to decision
 

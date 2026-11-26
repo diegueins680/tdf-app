@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "reviewedSources": {
-    "tdf-hq/src/TDF/ServerAuth.hs": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
+    "tdf-hq/src/TDF/ServerAuth.hs": "86e1570e7748f2a039b3d287c15c6ea0ff27242f51487539f80316a21ae838ad",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "5230045dba63cbf1202b9dcedea86036820863b891477f40218fe5c42f6fe39c",
+    "tdf-hq/tdf-hq.cabal": "3bb5b85e0130e579eb3b7bc6d3992731634e70432d823024370381229dcbc2d3",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -1089,12 +1089,39 @@
       "qualification": "This review covers the conditional solver source context."
     },
     {
+      "source": "tdf-hq/src/TDF/ServerAuth.hs",
+      "reviewedAgainst": "bddc0a2a6c18ef101db3c7750a4ec7fe7f01b4d8",
+      "previousSha256": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
+      "currentSha256": "86e1570e7748f2a039b3d287c15c6ea0ff27242f51487539f80316a21ae838ad",
+      "change": "Record a verified email fact after a password reset token is consumed (COMMUNITY-FRIEND-SUGGESTION-001).",
+      "semanticReview": "The file differs from protected main's by one added import, TDF.Auth.EmailVerification (recordVerifiedEmail), and by one call with its two-line comment in runPasswordResetConfirm, placed after revokeInteractiveSessions in the branch that has already consumed the token and stored the new password hash. The call does nothing outside PostgreSQL, when party_email_verification is absent or when the role lacks INSERT on it; otherwise it inserts the party's row with ON CONFLICT DO NOTHING inside the same transaction, so a later transactionUndo also removes it. recoveryWindowValid, createPasswordResetToken, the issuance expression, the recovery clock and every guard preceding token consumption are textually unchanged, so the extracted window, issuance and schema expressions and their translation context are unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "bddc0a2a6c18ef101db3c7750a4ec7fe7f01b4d8",
+      "previousSha256": "903875f4791eb97ba37309de7e409343fab2dc5757ebb604ee815c862ca071bb",
+      "currentSha256": "8dd7989ad8d25be33650d9a557f5db5fd8449ee04b149e78bdb1a9212b2e58f7",
+      "change": "Register the new TDF.Auth.EmailVerification, TDF.Social.SuggestionRank and TDF.Social.SuggestionStore library modules and the TDF.Social.SuggestionRankSpec and TDF.Social.SuggestionStoreSpec test modules on current protected main.",
+      "semanticReview": "The Cabal file differs from protected main's by exactly five added lines: the TDF.Auth.EmailVerification, TDF.Social.SuggestionRank and TDF.Social.SuggestionStore entries in the library's other-modules and the TDF.Social.SuggestionRankSpec and TDF.Social.SuggestionStoreSpec entries in the test suite's other-modules. EmailVerification holds one existence-and-privilege probe and one insert into party_email_verification; it imports only base, text and persistent, and is imported by TDF.ServerAuth and the test suite. SuggestionRank is a pure ranking module that imports only base and containers. SuggestionStore holds read queries, the nightly score replacement and the read adapter for GET /social/suggestions; from this package it imports TDF.Auth (the AuthedUser type only), TDF.DB, TDF.DTO, TDF.LogBuffer, TDF.Social.Session and TDF.Social.SuggestionRank, and is imported only by TDF.Server and TDF.App.Boot. They add no dependency, flag or build option, so the conditional authentication and recovery import, binding and translation context is unchanged apart from the separately reviewed TDF.ServerAuth edit.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
       "source": "tdf-hq/tdf-hq.cabal",
       "reviewedAgainst": "d3b32d1f591a143da12f0484b669a49eb2e070a2",
       "previousSha256": "903875f4791eb97ba37309de7e409343fab2dc5757ebb604ee815c862ca071bb",
       "currentSha256": "5230045dba63cbf1202b9dcedea86036820863b891477f40218fe5c42f6fe39c",
       "change": "Register the event affinity library and test modules.",
       "semanticReview": "The Cabal diff adds TDF.Fans.EventAffinity and TDF.Fans.EventAffinitySpec to their respective module lists. Dependencies, flags and build options are identical.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "922167fdb55f140c05ed8210ae572e7c7c420aca",
+      "previousSha256": "8dd7989ad8d25be33650d9a557f5db5fd8449ee04b149e78bdb1a9212b2e58f7",
+      "currentSha256": "3bb5b85e0130e579eb3b7bc6d3992731634e70432d823024370381229dcbc2d3",
+      "change": "Register the event affinity library and test modules alongside the friend suggestion modules.",
+      "semanticReview": "The changes from the reviewed friend suggestion revision add only TDF.Fans.EventAffinity and TDF.Fans.EventAffinitySpec in the library and test module lists. Dependencies, build flags, and all other pinned sources match that revision.",
       "qualification": "This review covers the conditional solver source context."
     }
   ]
