@@ -28308,7 +28308,9 @@
         "tdf-hq-ui/src/i18n/locales/es.ts",
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-        "tdf-hq-ui/src/utils/eventLineup.ts"
+        "tdf-hq-ui/src/utils/eventLineup.ts",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-hq-ui/src/utils/jamCircuit.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
@@ -28320,7 +28322,8 @@
         "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
         "tdf-hq/test/Spec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",

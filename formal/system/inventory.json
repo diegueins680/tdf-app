@@ -1837,6 +1837,7 @@
       "tdf-hq-ui/src/utils/instagramTraffic.ts",
       "tdf-hq-ui/src/utils/inventoryCheckout.ts",
       "tdf-hq-ui/src/utils/isoDate.ts",
+      "tdf-hq-ui/src/utils/jamCircuit.ts",
       "tdf-hq-ui/src/utils/lazyWithReload.test.ts",
       "tdf-hq-ui/src/utils/lazyWithReload.ts",
       "tdf-hq-ui/src/utils/logger.ts",
@@ -11900,13 +11901,13 @@
     {
       "id": "SURFACE-78d796fee86d9367",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
-      "sha256": "c3c495db7182a016a8d4ff2e119853f838157ef7f3892c9124be9131d13f613e",
+      "sha256": "549bfe9a5d49f6a9c86a092b536b3baad5f43bcb926f7f77fb215fc5c5eff63e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "da87c197bcc050c4415abd23fe1f7618052a85fa1cf3f4b65ae2f32acc830d37",
+      "sha256": "239f2b534e109456ab21354a367c494c6b3124a07823af366264625082d7a79d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12032,13 +12033,13 @@
     {
       "id": "SURFACE-814a4782598cab3d",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-      "sha256": "d2ad6d96fc939f96b50f658fe8d4ce07f9dabda36fb0a6e78d39649bf780001d",
+      "sha256": "a82390c0bda44353dfe0a910b1eb9976dbe0f8a4243d4259f10e89e2d7559e75",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "5b494fa55283cc129ee2a97c9368c8e20568a7e1d8c1a1fb72dc44cfbaadd021",
+      "sha256": "4d763cefb804af63ef3ad1627aedbef4befc42d41daeb48acdf9b668b5408ff9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14265,6 +14266,12 @@
       "id": "SURFACE-8fa9a54ebf13387d",
       "path": "tdf-hq-ui/src/utils/isoDate.ts",
       "sha256": "62db8fac9ea4951969cd0217a9867070258b609d1d00a35ac510e2aa5044c27b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-106bd22259e77a2c",
+      "path": "tdf-hq-ui/src/utils/jamCircuit.ts",
+      "sha256": "9037580926c00df4e86c302d1753ccdaaef9776a21c36ca59bb9aef76d226f30",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32766,7 +32773,7 @@
     },
     {
       "path": "formal/system/event-creation-entry.md",
-      "sha256": "2967fc0680609a0f8fc7d925c184aaec076a051188f9cb531da666959945f016",
+      "sha256": "0024b905fb4fb32c6933a290b2a683224066432a338adcc8f5df21f4ccdb3c30",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -33571,7 +33578,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "70f8a8ad38308048550549c8d8d44e6ab08c2c1293f860d0c8996ee385cc3f83",
+      "sha256": "67de580ab2b371f77fddbd76797ae5017eb1b896fc4cd8db05aee912ab2c4ff8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
