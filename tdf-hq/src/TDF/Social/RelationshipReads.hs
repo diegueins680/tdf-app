@@ -34,7 +34,7 @@ suggestions :: AuthedUser -> ReadM [SuggestedFriendDTO] -> ReadM [SuggestedFrien
 suggestions user legacy = choose legacy $ do
   rows <- currentRows user "SELECT * FROM social_v2_legacy_suggestions(?)" []
     :: ReadM [(Single Int64,Single Int)]
-  pure [SuggestedFriendDTO target count | (Single target,Single count) <- rows]
+  pure [SuggestedFriendDTO target count Nothing | (Single target,Single count) <- rows]
 
 currentRows :: RawSql a => AuthedUser -> Text -> [PersistValue] -> ReadM [a]
 currentRows user statement params = do
