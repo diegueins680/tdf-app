@@ -30103,6 +30103,91 @@
       "property": "No two published genres share a normalized name; a suggestion is decided at most once; only checked or reviewed names are published.",
       "verification": "Hspec GenreSuggestionSpec; local HTTP smoke of check/submit/mine/approve/reject/merge and trigger refusal; Playwright admin approval.",
       "evidence": "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs; e2e/web/taxonomy-filters.spec.mjs; formal/system/taxonomy-filters.md"
+    },
+    {
+      "id": "MEDIA-MUSIC-CONTINUATION-001",
+      "title": "Web player continues an ended queue with tracks of recommended artists",
+      "statement": "With VITE_PLAYER_SIMILAR_CONTINUATION_ENABLED set to true at build time, when playback reaches the end of a non-repeating queue of a signed-in listener the web player reads GET /fans/me/recommendations?limit=12 and, in the returned order, the newest public release of each artist, and appends at most five tracks: the first playable track of each artist whose recording is not already queued, one per artist. Playback moves to the first appended track. If nothing can be appended, a read fails, or the queue changed meanwhile, the player pauses at the end of the queue as before; if the listener paused, played, selected a track, went back, loaded a new track or started the radio while it loaded, the player stays as that intent left it. With the flag off or for an anonymous listener the player is unchanged.",
+      "domain": "MEDIA",
+      "authority": "On 2026-11-24 the feature owner approved the web player behavior tested at 2931f1306, including the default-off rollout, discovery-only recommendations, a request of up to 12 artists and a continuation of up to five tracks.",
+      "source": "formal/system/queue-continuation.md",
+      "contract": "tdf-hq-ui/src/player/queueContinuation.ts",
+      "property": "plan = planQueueContinuation(queue, candidates, 5) where candidates are in the server order. For every planned track t: t belongs to a candidate artist; the artists of plan are a subsequence of the candidate order without repetition; key(t) is not the key of a queued track and no two planned tracks share a key; |plan| <= 5; plan is a function of (queue, candidates). continue(queue, listener, flag) = flag /\\ listener signed in /\\ queue non-empty /\\ repeat = off /\\ nextQueueIndex(queue) < 0.",
+      "actors": [
+        "Fan",
+        "Customer"
+      ],
+      "preconditions": [
+        "Signed-in listener",
+        "VITE_PLAYER_SIMILAR_CONTINUATION_ENABLED=true in the web build",
+        "Playback reached the end of a queue whose repeat mode is off"
+      ],
+      "inputs": [
+        "The player queue",
+        "GET /fans/me/recommendations?limit=12",
+        "GET /music/releases?artistPartyId=<id>&limit=1",
+        "GET /music/releases/{slug}"
+      ],
+      "state": {
+        "initial": "Queue ended, player paused",
+        "terminal": [
+          "Continuation appended and playing",
+          "Player paused at the end of the queue"
+        ]
+      },
+      "allowedTransitions": [
+        "Append the planned tracks to the queue that ended and select the first of them",
+        "Discard a loaded continuation when the queue is no longer the one that ended",
+        "Abort a pending continuation on an explicit pause, play, track selection, previous, newly loaded track or radio takeover"
+      ],
+      "forbiddenTransitions": [
+        "Appending a track of an artist the recommendation response did not contain",
+        "Appending a recording that is already queued, or the same recording twice",
+        "Appending more than five tracks or two tracks of one artist",
+        "Changing the order the server returned",
+        "Starting a continuation for an anonymous listener, with the flag off, or while a repeat mode is on",
+        "Applying a continuation loaded for an earlier queue or an earlier listener",
+        "Selecting or starting a continuation after an explicit playback intent given while it loaded, in particular stopping a radio the listener just started"
+      ],
+      "effects": [
+        "Up to five tracks appended to the local queue; no server write"
+      ],
+      "authorization": "The recommendation read requires fan access on the server (COMMUNITY-FAN-RECOMMENDATION-001); the release reads are public. The client adds no authorization decision.",
+      "privacy": "The client reads no behaviour of its own and stores nothing new on the server. Appended tracks enter the locally persisted queue under the existing listener-ownership rule (MEDIA-MUSIC-PRIVACY-001). A listener who opted out of personalisation receives the server's popularity fallback and the continuation is built from that list.",
+      "concurrency": "One pending continuation per player session, bound to the queue object that ended; any later queue state, an abort, a listener change or an explicit playback intent (pause, play, select, previous, a newly loaded track, a radio takeover) discards it.",
+      "idempotency": "Read-only towards the server. Reaching the end again plans against the then-current queue, so earlier appended recordings are not appended again.",
+      "failure": "Recommendation read fails or is empty: no continuation. A release read fails, returns nothing or answers for another artist: that artist is skipped.",
+      "recovery": "The next time the queue ends the continuation is loaded again.",
+      "observability": "None added; the appended tracks emit the existing player analytics events.",
+      "implementation": [
+        "tdf-hq-ui/src/player/queueContinuation.ts",
+        "tdf-hq-ui/src/player/loadQueueContinuation.ts",
+        "tdf-hq-ui/src/config/queueContinuationRollout.ts",
+        "tdf-hq-ui/src/player/PlayerProvider.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/player/queueContinuation.test.ts",
+        "tdf-hq-ui/src/player/PlayerProvider.continuation.test.tsx",
+        "e2e/web/music-player-native.spec.mjs"
+      ],
+      "formalModels": [
+        "formal/player/QueueContinuation.tla"
+      ],
+      "verification": "PROVED (Apalache inductive invariant, for the TLA+ model, three artists, four recordings, every limit in 0..3, walks of any length): appended recordings belong to served artists, follow the served order, are neither queued nor repeated, and stay within the limit. MODEL-CHECKED (TLC, three artists and three recordings, limits 2 and 3): the same invariants, with a negative control (no check against the queue) that violates NoRepeat, also reproduced by Apalache. TESTED (Jest, 1,000 seeded random cases per property and fixed cases): the same four invariants on planQueueContinuation, determinism and purity, the decision function, the flag, and the loader's order, early stop and failure handling with a stubbed API. A Chromium browser test uses a synthetic signed-in session, catalog and real loopback audio to verify that the recommended track plays after the final native ended event.",
+      "evidence": "scripts/verify-inductive-proofs.sh, the queue continuation and PlayerProvider Jest suites, and the signed-in queue continuation case in e2e/web/music-player-native.spec.mjs.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the pure planning function (tested) and the model (proved). Medium for the correspondence between them: review plus random tests of the same invariants. Component tests cover disabled and anonymous listeners, unresolved identity, successful continuation and cancellation. Browser coverage includes the signed-in transition to a recommended recording.",
+      "ambiguity": [
+        "The exclusions of the server response hold as of that response; an artist hidden between the recommendation read and the release read is not re-checked by the client, and whether the release list route hides releases of an unlisted artist was not examined.",
+        "The model lets the client take any eligible recording of an artist; the code takes the first. Determinism is tested, not proved.",
+        "The web workspace has no property-testing library; the random cases come from a seeded generator, not QuickCheck.",
+        "The recommendation list excludes artists the listener already follows, so the continuation is discovery only."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The model covers planning invariants. Jest exercises the loader and the player, and the browser test verifies native playback with synthetic catalog metadata. Release visibility changes between the two server reads remain unverified."
+      }
     }
   ]
 }
