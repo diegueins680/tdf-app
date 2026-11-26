@@ -2,7 +2,7 @@
 import { jest } from '@jest/globals';
 import { useState } from 'react';
 import { PaymentMethodButton } from './PaymentMethodChoices';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 const checkoutId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const attemptId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
@@ -424,6 +424,91 @@ describe('HostedProviderCheckout', () => {
     expect(await screen.findByText(/No vuelvas a intentar ni uses otro método/)).toBeTruthy();
     expect(screen.getByRole('button', { name: /PayPhone/ }).hasAttribute('disabled')).toBe(true);
     expect(prepareCheckout).not.toHaveBeenCalled();
+  });
+
+  it('lets the buyer refresh when the initial session has no usable checkout link', async () => {
+    createMock.mockResolvedValueOnce({ ...succeeded, provider: 'payphone', state: 'requires_customer_action',
+      redirectUrl: null, outcomeCertainty: 'ambiguous', canRetryOrFallback: false });
+    const navigate = jest.fn();
+    render(<HostedProviderCheckout checkout={context} offeredMethods={['payphone_card']} english
+      navigateToProvider={navigate} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Card · PayPhone' }));
+    expect(await screen.findByText(/The payment link is unavailable/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Refresh verified status' })).toBeTruthy();
+    expect(screen.queryByText(/unsafe redirect/)).toBeNull();
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('keeps an expired hosted link in recovery until the original payment is verified', async () => {
+    saveProviderPaymentResume({ version: 1, ...context, attemptId, provider: 'payphone',
+      paymentMethod: 'card', createdAt: Date.now() });
+    getMock.mockResolvedValueOnce({ ...succeeded, provider: 'payphone', state: 'requires_customer_action',
+      redirectUrl: null, outcomeCertainty: 'ambiguous', canRetryOrFallback: false })
+      .mockResolvedValueOnce({ ...succeeded, provider: 'payphone' });
+    const navigate = jest.fn();
+    render(<HostedProviderCheckout checkout={context} offeredMethods={['payphone_card', 'placetopay_card']}
+      navigateToProvider={navigate} />);
+    expect(await screen.findByText(/El enlace de pago ya no está disponible/)).toBeTruthy();
+    expect(screen.queryByText(/Completa el pago en la página/)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Continuar con el pago' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Tarjeta · PlaceToPay' }).hasAttribute('disabled')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Actualizar estado del pago' }));
+    expect(await screen.findByText('Pago confirmado.')).toBeTruthy();
+    expect(getMock.mock.calls).toEqual(Array(2).fill([checkoutId, attemptId, context.lookupToken]));
+    expect(createMock).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('rechecks the original attempt after a temporary status error', async () => {
+    jest.useFakeTimers();
+    try {
+      const awaiting = { checkoutId, attemptId, provider: 'placetopay',
+        state: 'requires_customer_action', canRetryOrFallback: false,
+        redirectUrl: 'https://checkout-test.placetopay.ec/session/test' };
+      createMock.mockResolvedValue(awaiting);
+      getMock.mockRejectedValueOnce(new Error('temporary loss'))
+        .mockResolvedValueOnce({ ...awaiting, state: 'succeeded', redirectUrl: null });
+      render(<HostedProviderCheckout checkout={context} offeredMethods={['placetopay_card', 'payphone_wallet']}
+        navigateToProvider={jest.fn()} />);
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Tarjeta · PlaceToPay' })); });
+      await act(async () => { await jest.advanceTimersByTimeAsync(4_000); });
+      expect(screen.getByText(/No pudimos actualizar el estado/)).toBeTruthy();
+      expect(screen.queryByRole('button', { name: 'Continuar con el pago' })).toBeNull();
+      expect(screen.getByRole('button', { name: 'Billetera PayPhone' }).hasAttribute('disabled')).toBe(true);
+      await act(async () => { await jest.advanceTimersByTimeAsync(4_000); });
+      expect(screen.getByText('Pago confirmado.')).toBeTruthy();
+      expect(screen.queryByText(/No pudimos actualizar el estado/)).toBeNull();
+      expect(getMock.mock.calls).toEqual(Array(2).fill([checkoutId, attemptId, context.lookupToken]));
+      expect(createMock).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('shares one status request between repeated clicks and the polling timer', async () => {
+    jest.useFakeTimers();
+    try {
+      const processing = { checkoutId, attemptId, provider: 'placetopay', state: 'processing',
+        canRetryOrFallback: false };
+      createMock.mockResolvedValue(processing);
+      let finish!: (next: typeof processing) => void;
+      getMock.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+      const confirmed = jest.fn();
+      render(<HostedProviderCheckout checkout={context} offeredMethods={['placetopay_card']}
+        onPaymentConfirmed={confirmed} />);
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Tarjeta · PlaceToPay' })); });
+      const refresh = screen.getByRole('button', { name: 'Actualizar estado del pago' });
+      fireEvent.click(refresh);
+      fireEvent.click(refresh);
+      await act(async () => { await jest.advanceTimersByTimeAsync(8_000); });
+      expect(getMock).toHaveBeenCalledTimes(1);
+      await act(async () => { finish({ ...processing, state: 'succeeded' }); });
+      await act(async () => { await jest.advanceTimersByTimeAsync(8_000); });
+      expect(confirmed).toHaveBeenCalledTimes(1);
+      expect(getMock).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('ignores a late status response after navigation to a different checkout', async () => {

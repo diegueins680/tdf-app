@@ -30,7 +30,7 @@ jest.unstable_mockModule('../api/commerceOperations', () => ({
   },
 }));
 
-const { default: CommerceProviderEventsPage } = await import('./CommerceProviderEventsPage');
+const { default: CommerceProviderEventsPage, formatMinor } = await import('./CommerceProviderEventsPage');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -480,4 +480,14 @@ describe('CommerceProviderEventsPage', () => {
       expect(cards[2]?.textContent).toContain('3,00');
     });
   });
+});
+
+it('shows exact signed report amounts at the currency scale and withholds a rounded legacy number', () => {
+  expect(formatMinor('9223372036854775807', 'USD', 'en-US')).toBe('$92,233,720,368,547,758.07');
+  expect(formatMinor('-9223372036854775808', 'USD', 'en-US')).toBe('-$92,233,720,368,547,758.08');
+  expect(formatMinor(-1, 'USD', 'en-US')).toBe('-$0.01');
+  expect(formatMinor(321, 'JPY', 'en-US')).toBe('¥321');
+  expect(formatMinor(321, 'KWD', 'en-US')).toMatch(/0\.321/);
+  expect(formatMinor(Number.MAX_SAFE_INTEGER + 1, 'USD', 'en-US')).toBe('—');
+  expect(formatMinor('9223372036854775808', 'USD', 'en-US')).toBe('—');
 });

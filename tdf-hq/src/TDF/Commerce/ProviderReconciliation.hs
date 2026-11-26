@@ -22,12 +22,13 @@ import           Control.Concurrent (forkIO, threadDelay)
 import           Control.Exception.Safe (tryAny)
 import           Control.Monad (forever, void, when)
 import qualified Data.Aeson as A
+import           Data.Int (Int64)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime, getCurrentTime)
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Sql
-  ( Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool )
+  ( Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool, toSqlKey )
 import           System.Entropy (getEntropy)
 import           System.Environment (lookupEnv)
 import           System.IO (hPutStrLn, stderr)
@@ -45,6 +46,7 @@ import           TDF.Commerce.ProviderRuntimeConfig
   ( RuntimeProviderAdapter(..), loadRuntimeProviderAdapter, loadConfiguredCheckoutEnvironment )
 import           TDF.Commerce.StateMachine (PaymentEvent(..))
 import           TDF.DB (Env(..))
+import qualified TDF.Ticketing.Issuance as Issuance
 
 data ReconciliationDisposition
   = ReconciliationProcessed
@@ -383,7 +385,7 @@ applyUnheldQueryResult payment result eventId now = do
           }
         case verified of
           Left problem -> pure (Left problem)
-          Right _ -> synchronizeServiceOrder payment now
+          Right _ -> synchronizePaidOrder payment now
       AdapterDeclined -> confirmNoCharge payment PaymentFailureConfirmed
         "provider_declined" eventId now
       AdapterCancelled -> confirmNoCharge payment PaymentCancellationRequested
@@ -412,14 +414,29 @@ applyUnheldQueryResult payment result eventId now = do
 -- order rejects the entire capture, including its ledger, receipt and intent.
 -- The checkout/attempt locks serialize replays; the order lock also preserves
 -- fulfillment progress made by operators after the original payment.
-synchronizeServiceOrder
+synchronizePaidOrder
   :: Execution.BoundProviderPayment -> UTCTime
   -> SqlPersistT IO (Either Text ReconciliationDisposition)
-synchronizeServiceOrder payment now = do
-  domains <- rawSql "SELECT domain_type FROM commerce_checkout_session WHERE id=?::uuid"
-    [checkoutParam] :: SqlPersistT IO [Single Text]
+synchronizePaidOrder payment now = do
+  domains <- rawSql "SELECT domain_type,status FROM commerce_checkout_session WHERE id=?::uuid"
+    [checkoutParam] :: SqlPersistT IO [(Single Text, Single Text)]
   case domains of
-    [Single "mixing_mastering"] -> do
+    [(Single "event_ticket_order", Single "paid")] -> do
+      tickets <- rawSql
+        "SELECT order_id,fulfillment_status,issued_at FROM event_ticket_checkout_runtime\
+        \ WHERE checkout_id=?::uuid AND order_id::text=? AND checkout_total_minor=? AND currency=?\
+        \ AND payment_status='paid' FOR UPDATE"
+        [checkoutParam, orderParam, PersistInt64 (Execution.bppAmountMinor payment),
+          PersistText (Execution.bppCurrency payment)]
+        :: SqlPersistT IO [(Single Int64, Single Text, Single (Maybe UTCTime))]
+      case tickets of
+        [(Single orderId, Single "seat_held", Single Nothing)] -> do
+          void (Issuance.finalizePaidTicketOrder now (toSqlKey orderId))
+          pure (Right ReconciliationProcessed)
+        -- Delivery or transfer may have progressed since the first confirmation.
+        [(_, _, Single (Just _))] -> pure (Right ReconciliationProcessed)
+        _ -> pure (Left "Ticket order does not match an issuable verified checkout")
+    [(Single "mixing_mastering", _)] -> do
       orders <- rawSql
         "SELECT status,paid_at FROM service_storefront_order\
         \ WHERE id=?::uuid AND checkout_id=?::uuid AND price_usd_cents=? AND currency=? FOR UPDATE"

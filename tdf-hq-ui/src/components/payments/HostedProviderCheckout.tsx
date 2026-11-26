@@ -29,6 +29,7 @@ import {
   loadProviderPaymentPending,
   loadProviderPaymentResume,
   markProviderPaymentResumeCompleted,
+  paymentAttemptCanBeReleased,
   safePaymentReturnPath,
   saveProviderPaymentPending,
   saveProviderPaymentResume,
@@ -105,7 +106,7 @@ const publicError = (english: boolean, potentiallyAmbiguous: boolean): string =>
     : 'No pudimos iniciar este método. No mostramos ningún cobro como exitoso.';
 };
 
-const stateCopy = (session: ProviderPaymentSession, english: boolean): {
+const stateCopy = (session: ProviderPaymentSession, english: boolean, redirect: string | null): {
   severity: 'success' | 'info' | 'warning' | 'error';
   message: string;
 } => {
@@ -118,6 +119,11 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
           : 'Pago confirmado.',
       };
     case 'confirmed_no_charge':
+      if (!session.canRetryOrFallback) {
+        return { severity: 'warning', message: english
+          ? 'Contact TDF before making another payment.'
+          : 'Consulta con TDF antes de realizar otro pago.' };
+      }
       return {
         severity: 'info',
         message: english
@@ -143,6 +149,11 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
           : 'Todavía no sabemos si el pago se completó y lo estamos revisando. No vuelvas a intentar ni uses otro método.',
       };
     case 'requires_customer_action':
+      if (!redirect) {
+        return { severity: 'warning', message: english
+          ? 'The payment link is unavailable. Refresh the status here. Do not pay again while confirmation is pending. Contact TDF if you need help.'
+          : 'El enlace de pago ya no está disponible. Actualiza el estado aquí. No vuelvas a pagar mientras la confirmación esté pendiente. Si necesitas ayuda, contacta a TDF.' };
+      }
       return {
         severity: 'info',
         message: english
@@ -237,20 +248,6 @@ export default function HostedProviderCheckout({
     }
   }, []);
 
-  const refreshSession = useCallback(async (
-    context: HostedCheckoutContext,
-    attemptId: string,
-  ) => {
-    const requestScope = recoveryScopeRef.current;
-    const next = await getProviderPaymentSession(
-      context.checkoutId,
-      attemptId,
-      context.lookupToken,
-    );
-    if (recoveryScopeRef.current === requestScope) publishSession(next);
-    return next;
-  }, [publishSession]);
-
   useEffect(() => {
     let cancelled = false;
     setSession(null);
@@ -324,25 +321,47 @@ export default function HostedProviderCheckout({
     return undefined;
   }, [checkout?.checkoutId, english, pendingReturnPathPrefix, publishSession, recoveryRevision]);
 
+  const refreshStatus = useRef<(() => void) | null>(null);
+  const [statusCheck, setStatusCheck] = useState<'ready' | 'checking' | 'unavailable'>('ready');
+  const pollAttemptId = session && POLLABLE_STATES.has(session.state) ? session.attemptId : null;
+  const checkoutId = activeContext?.checkoutId;
+  const lookupToken = activeContext?.lookupToken;
   useEffect(() => {
-    if (!session || !activeContext || !POLLABLE_STATES.has(session.state)) return;
+    setStatusCheck('ready');
+    if (!pollAttemptId || !checkoutId || !lookupToken) return;
     let cancelled = false;
-    const timeout = window.setTimeout(() => {
-      refreshSession(activeContext, session.attemptId)
-        .catch(() => {
-          if (!cancelled) setError(english
-            ? 'Status could not be refreshed. The payment remains unconfirmed.'
-            : 'No pudimos actualizar el estado. El pago sigue sin confirmar.');
-        });
-    }, POLL_INTERVAL_MS);
+    let inFlight = false;
+    const check = async () => {
+      if (inFlight || cancelled) return;
+      inFlight = true;
+      window.clearTimeout(timer);
+      setStatusCheck('checking');
+      try {
+        const next = await getProviderPaymentSession(checkoutId, pollAttemptId, lookupToken);
+        if (cancelled || recoveryScopeRef.current !== recoveryScope) return;
+        setStatusCheck('ready');
+        publishSession(next);
+        if (!POLLABLE_STATES.has(next.state)) return;
+      } catch {
+        if (cancelled || recoveryScopeRef.current !== recoveryScope) return;
+        setStatusCheck('unavailable');
+      } finally {
+        inFlight = false;
+      }
+      timer = window.setTimeout(startCheck, POLL_INTERVAL_MS);
+    };
+    const startCheck = () => { void check(); };
+    let timer = window.setTimeout(startCheck, POLL_INTERVAL_MS);
+    refreshStatus.current = startCheck;
     return () => {
       cancelled = true;
-      window.clearTimeout(timeout);
+      refreshStatus.current = null;
+      window.clearTimeout(timer);
     };
-  }, [activeContext, english, refreshSession, session]);
+  }, [checkoutId, lookupToken, pollAttemptId, publishSession, recoveryScope]);
 
-  const safetyLocked = busy || potentiallyAmbiguous
-    || Boolean(session && !session.canRetryOrFallback);
+  const canReleaseAttempt = paymentAttemptCanBeReleased(session?.state, session?.canRetryOrFallback);
+  const safetyLocked = busy || potentiallyAmbiguous || Boolean(session && !canReleaseAttempt);
 
   useEffect(() => {
     onSafetyLockChangeRef.current?.(safetyLocked);
@@ -485,13 +504,7 @@ export default function HostedProviderCheckout({
           return;
         }
         const redirect = safeProviderRedirect(next.provider, next.redirectUrl);
-        if (!redirect) {
-          setError(english
-            ? 'The provider returned an unsafe redirect. Do not retry with another method; support must reconcile this attempt.'
-            : 'El procesador devolvió un enlace que no es seguro. No intentes con otro método; contacta a soporte para revisar este intento.');
-          return;
-        }
-        navigate(next.provider, redirect);
+        if (redirect) navigate(next.provider, redirect);
       }
     } catch (startError) {
       if (recoveryScopeRef.current !== requestScope) return;
@@ -519,7 +532,7 @@ export default function HostedProviderCheckout({
   };
 
   const resetKnownNoCharge = () => {
-    if (!session?.canRetryOrFallback || !selected || !activeContext) return;
+    if (!canReleaseAttempt || !selected || !activeContext) return;
     clearProviderPaymentResume(activeContext.checkoutId);
     clearProviderPaymentPending(activeContext.checkoutId);
     clearPaymentIdempotencyKey(
@@ -538,8 +551,8 @@ export default function HostedProviderCheckout({
   // earlier PayPhone attempt is being recovered.
   const payphoneFieldsVisible = payphoneRequested || selected?.paymentMethod === 'payphone_wallet'
     || pendingCreation?.paymentMethod === 'payphone_wallet';
-  const copy = session ? stateCopy(session, english) : null;
   const existingRedirect = safeProviderRedirect(session?.provider, session?.redirectUrl);
+  const copy = session ? stateCopy(session, english, existingRedirect) : null;
   const showAlternatives = session?.state !== 'succeeded' && (
     (Boolean(error) || Boolean(paymentFailure))
     || session?.state === 'failed' || session?.state === 'confirmed_no_charge'
@@ -560,12 +573,11 @@ export default function HostedProviderCheckout({
       {additionalMethods}
       {methods.map((method) => {
         const isSelected = selected?.label === method.label;
-        const blockedByAttempt = session?.canRetryOrFallback === false;
         return (
           <PaymentMethodButton
             key={method.label}
             busy={busy && isSelected}
-            disabled={disabled || availabilityUnknown || busy || ((safetyLocked || blockedByAttempt) && !isSelected) || (Boolean(session) && isSelected)}
+            disabled={disabled || availabilityUnknown || busy || (safetyLocked && !isSelected) || (Boolean(session) && isSelected)}
             onClick={() => {
               // The first tap on PayPhone only asks for the wallet number.
               if (method.paymentMethod === 'payphone_wallet' && !payphoneFieldsVisible) { setPayphoneRequested(true); return; }
@@ -615,23 +627,26 @@ export default function HostedProviderCheckout({
           {english ? 'Recover original payment' : 'Recuperar pago original'}
         </Button>
       )}
-      {copy && <Alert severity={copy.severity}>{copy.message}</Alert>}
+      {copy && statusCheck !== 'unavailable' && <Alert severity={copy.severity}>{copy.message}</Alert>}
       {error && <Alert severity="warning">{error}</Alert>}
-      {existingRedirect && session?.state === 'requires_customer_action' && (
-        <Button variant="contained" onClick={() => navigate(session.provider, existingRedirect)} disabled={disabled || busy}>
+      {statusCheck === 'unavailable' && <Alert severity="warning">{english
+        ? 'Status could not be refreshed. TDF will check this payment again.'
+        : 'No pudimos actualizar el estado. Volveremos a consultar este pago.'}</Alert>}
+      {statusCheck !== 'unavailable' && existingRedirect && session?.state === 'requires_customer_action' && (
+        <Button variant="contained" onClick={() => navigate(session.provider, existingRedirect)} disabled={disabled || busy || statusCheck === 'checking'}>
           {english ? 'Continue on the secure provider page' : 'Continuar con el pago'}
         </Button>
       )}
       {session && activeContext && POLLABLE_STATES.has(session.state) && (
         <Button
           variant="text"
-          disabled={busy}
-          onClick={() => void refreshSession(activeContext, session.attemptId)}
+          disabled={busy || statusCheck === 'checking'}
+          onClick={() => refreshStatus.current?.()}
         >
           {english ? 'Refresh verified status' : 'Actualizar estado del pago'}
         </Button>
       )}
-      {session?.canRetryOrFallback && (session.state === 'failed' || session.state === 'confirmed_no_charge') && (
+      {canReleaseAttempt && (
         <Button variant="outlined" onClick={resetKnownNoCharge} disabled={disabled || availabilityUnknown || busy}>
           {english ? 'Choose another payment method' : 'Elegir otro método de pago'}
         </Button>

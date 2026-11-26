@@ -56,6 +56,7 @@ import {
   type ServiceStorefrontOrderDTO,
   type ServiceStorefrontPackageDTO,
 } from '../api/serviceStorefront';
+import { formatPriceCentsInput } from '../utils/priceInput';
 import { loadAvailableCheckoutMethods } from '../api/paymentCapabilities';
 import { useSession } from '../session/SessionContext';
 import { sessionContactDefaults } from '../session/sessionContactDefaults';
@@ -99,7 +100,7 @@ const mapPackageDTO = (dto: ServiceStorefrontPackageDTO): ServicePackage => ({
 });
 
 const formatPrice = (cents: number): string => {
-  return `$${(cents / 100).toFixed(0)}`;
+  return `$${formatPriceCentsInput(cents)}`;
 };
 
 const serviceKindLabel = (kind: string): string => {

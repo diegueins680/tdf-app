@@ -3927,7 +3927,7 @@
     {
       "id": "SURFACE-d249a5ea8a3f2986",
       "path": "e2e/web/ticket-credential.spec.mjs",
-      "sha256": "4fee41226c9c47a9b6df64ad3b06e99c0ce4ccd8f05c14145935139cdcd59ba1",
+      "sha256": "94372443670cac97126e69171a72ffea5c26f3bc3382e8f8da3cad30c7bf0afe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8727,7 +8727,7 @@
     {
       "id": "SURFACE-2e3549439fba7b8e",
       "path": "tdf-hq-ui/src/api/client.ts",
-      "sha256": "341b56ac7ceead3b110e3fdb58181730a05c10dc0925a5824ad73815e2a5d323",
+      "sha256": "85285706aed397034d2bfd9797ae9661f2adfbbe9ed13f81e23d2ea685a4b155",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8745,13 +8745,13 @@
     {
       "id": "SURFACE-4f1a575585c3cc83",
       "path": "tdf-hq-ui/src/api/commerceOperations.test.ts",
-      "sha256": "24fb56c61fa897f389edf3d2efdf72020f3dd3f16ce53559d8113d3c072c20fa",
+      "sha256": "db89fb6aced78a08f9e13cdc47da3d97b27317be3adf6480e0322cfca0f41b57",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-53e830f66e47cd69",
       "path": "tdf-hq-ui/src/api/commerceOperations.ts",
-      "sha256": "ebbfafeaffec0931711e16124eb58d1f3772d8d0c9782d8d99405d4c16abb97c",
+      "sha256": "6d0add34e48749816dd4626dcb9c7b6923931e2a200ac53444afb6489c62fc66",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10479,13 +10479,13 @@
     {
       "id": "SURFACE-3b9b0b0c805d8c24",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
-      "sha256": "96285dd9f104f929731e47d6dee97f21834dddf9e01f79da642c3b2ec3350f85",
+      "sha256": "6827edfacd4e3545836bb1ec1e32246580a76455f520bf61e3d661f0d795d001",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8ff97ac79f9014bb",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
-      "sha256": "a454d3ef63cbd0e5ff763ee4accc326af004b95f28888193ce18515d16a59e8d",
+      "sha256": "c49d13005c7a40dca009a9bd00d62f4ab02f2d3c4643a11f26387cc163e2cf01",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11715,13 +11715,13 @@
     {
       "id": "SURFACE-39fe3c9e56197ba9",
       "path": "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
-      "sha256": "24b4e9da00d5f6f970774d2300d85e78b3b6364988106b64b7226efe19d91c9c",
+      "sha256": "5c237e12aeb8516505d7b504df4cde75d3aa7565cc26e957c464e59b448f6b5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4863f94a96956295",
       "path": "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
-      "sha256": "6f1e8487723dcc8da6f717139f89d71d2c4ffdba924a5709ec170a2a0634168c",
+      "sha256": "72be023b6167d16d705ca7231d9883f4a296f7a2b32d3d246a01306e6abdece3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12375,13 +12375,13 @@
     {
       "id": "SURFACE-bee40b89d7a09a1d",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
-      "sha256": "3dafbfa8fbbfdbd112b011cca5b6db49d3507f599277ae76527bb3cb23bda7a7",
+      "sha256": "f8f9ebafeae92cba1e64f21c5d1c93f1ff2fc19bb354bfd9b431f3557d0f8cb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4a562abbc0b9c284",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
-      "sha256": "71899b12b4b5a6cd8ed8c890670aa6b874aa0a34e4e34fb9f4551944b0c40022",
+      "sha256": "ec1e3f12362095f99138ba207e5363bc40191ecd2c156ba2a5f0a7d3df7ec7ab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12567,13 +12567,13 @@
     {
       "id": "SURFACE-57d71f490b9a0d52",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
-      "sha256": "f6912589667ee171f77d5fd21b4a1537a058cad686fb4c02dfbaa22e79af6d0e",
+      "sha256": "25315ecc3aab4a0da1992c74ba82862fea6904bafa4b70a95f6c075e75f078a2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6b97ed3a68e676f6",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-      "sha256": "172a87b98d4ebcc601f664ed6f152d13918a86db4dde0cb9e7af699d6a9c2350",
+      "sha256": "626c607aa3224b8f62d6ff51425fefa35b2e6868332fb934bf5a879ff70bcb7f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14181,13 +14181,13 @@
     {
       "id": "SURFACE-385779829756a659",
       "path": "tdf-hq-ui/src/utils/providerPaymentResume.test.ts",
-      "sha256": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
+      "sha256": "7021794baee4e86ad068acd0f5c69f1c4c00fc6d4b50a68eff0c8a0484eff49c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-02c8cdf3d4eb64fb",
       "path": "tdf-hq-ui/src/utils/providerPaymentResume.ts",
-      "sha256": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
+      "sha256": "ad8fbd9b88aa8b65b4928e8f6d756e1a6a8fbb78b3294f7563c7dcdd734ceca5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18297,7 +18297,7 @@
     {
       "id": "SURFACE-24ec334e6417bf04",
       "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-      "sha256": "6bba1c5c8fdb382993b70489342de55f67e9fdae513f7b6518f0b46ce50f49f2",
+      "sha256": "6659c6b28bb07d8c4f4209b96cb491be083149249b52ad645748c7efb6b62a55",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19719,7 +19719,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "8225af5b6d2cd1d2a2715f98abdbead8b1b61404f6ecf9c6bd81f38748a18c01",
+      "sha256": "5b9add208d4cc660f62a34807eacf95e73c5d65919be5498f634f5f8d01d9609",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25850,7 +25850,7 @@
     },
     {
       "path": "docs/payments/ecuador-payment-review-2026-11-24.md",
-      "sha256": "b2be8605ff19dfeed20daac31f6e194eec8a6c244dc3b3e5419cf7841d5b4586",
+      "sha256": "e39b8e77de5549f9ffabad3748ee9b869eb510421c1d6d251426d3d011a681f5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31191,7 +31191,7 @@
     },
     {
       "path": "formal/event-operations/refund-recovery-correspondence.md",
-      "sha256": "f0943b9df96f724b92825ea5b556ab9babbcece9dc3134368e033a17acb4611d",
+      "sha256": "252891f80c47f75ed53978d605e7abfee230d94b3aaf87b976a804e99c7d7d55",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32962,7 +32962,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "0f9001fca798b41f65baf49ecf14fe9fc9e73fb3a291b0d93e0af6e12944dd4b",
+      "sha256": "44b9d51a620d26f62d97ba46252f060016397b1e1468d180c74ca1a28882d7e9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

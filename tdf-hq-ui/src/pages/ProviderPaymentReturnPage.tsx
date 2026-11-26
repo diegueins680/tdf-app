@@ -54,7 +54,9 @@ export default function ProviderPaymentReturnPage() {
       resume!.lookupToken,
     ),
     enabled: Boolean(resume),
-    retry: false,
+    // Each return needs fresh evidence. The session query client retries
+    // transient read failures and stops on client errors.
+    staleTime: 0,
     refetchOnWindowFocus: true,
     refetchInterval: (query) => {
       const state = query.state.data?.state;
@@ -63,18 +65,19 @@ export default function ProviderPaymentReturnPage() {
   });
 
   const resumedCheckoutId = resume?.checkoutId;
+  const session = status.isSuccess && status.fetchStatus === 'idle' ? status.data : undefined;
+  const knownNoCharge = paymentAttemptCanBeReleased(session?.state, session?.canRetryOrFallback);
   const alternatives = useQuery({
     queryKey: ['payment-return-alternatives', resumedCheckoutId, resume?.attemptId, resume?.returnPath],
     queryFn: () => loadCheckoutPaymentAlternatives(resume!),
-    enabled: Boolean(resume && !status.isError && status.data?.canRetryOrFallback
-      && ['failed', 'confirmed_no_charge'].includes(status.data.state)),
+    enabled: Boolean(resume && knownNoCharge),
     retry: false,
   });
   useEffect(() => {
-    if (resumedCheckoutId && status.data?.state === 'succeeded') {
+    if (resumedCheckoutId && session?.state === 'succeeded') {
       markProviderPaymentResumeCompleted(resumedCheckoutId);
     }
-  }, [resumedCheckoutId, status.data?.state]);
+  }, [resumedCheckoutId, session?.state]);
 
   const returnDeliveryError = hasButtonReturn && buttonReturn.isError && (
     <Alert severity="warning" action={
@@ -101,31 +104,17 @@ export default function ProviderPaymentReturnPage() {
     );
   }
 
-  const session = status.data;
   const succeeded = session?.state === 'succeeded';
-  const knownNoCharge = session?.state === 'confirmed_no_charge'
-    || (session?.state === 'failed' && session.canRetryOrFallback);
-  const ambiguous = session?.state === 'ambiguous'
-    || Boolean(session && !session.canRetryOrFallback && !succeeded);
+  const ambiguous = Boolean(session && !knownNoCharge && !succeeded);
   const redirect = safeProviderRedirect(session?.provider, session?.redirectUrl);
-  const canReleaseAttempt = paymentAttemptCanBeReleased(
-    session?.state,
-    session?.canRetryOrFallback,
-  );
   const paypalConfigured = Boolean(env.read('VITE_PAYPAL_CLIENT_ID'));
   const paypalAvailable = paypalConfigured
     && typeof window !== 'undefined' && Boolean(window.paypal?.Buttons);
 
   const releaseAttemptIfAuthoritative = () => {
-    if (!canReleaseAttempt || status.isError || status.isFetching) return;
+    if (!knownNoCharge) return;
     clearProviderPaymentResume(resume.checkoutId);
-    if (knownNoCharge) {
-      clearPaymentIdempotencyKey(
-        resume.checkoutId,
-        resume.provider,
-        resume.paymentMethod,
-      );
-    }
+    clearPaymentIdempotencyKey(resume.checkoutId, resume.provider, resume.paymentMethod);
   };
 
   return (
@@ -143,6 +132,11 @@ export default function ProviderPaymentReturnPage() {
                   <CircularProgress size={24} />
                   <Typography>{english ? 'Confirming your payment…' : 'Confirmando tu pago…'}</Typography>
                 </Stack>
+              )}
+              {status.fetchStatus === 'paused' && (
+                <Alert severity="info">{english
+                  ? 'We’ll check this payment when your connection returns.'
+                  : 'Consultaremos este pago cuando vuelva la conexión.'}</Alert>
               )}
               {status.isError && (
                 <>
@@ -195,7 +189,8 @@ export default function ProviderPaymentReturnPage() {
                 </Alert>
               )}
               {session?.state === 'requires_customer_action' && !hasButtonReturn && redirect && (
-                <Button variant="contained" onClick={() => window.location.assign(redirect)}>
+                <Button component="a" href={redirect} variant="contained"
+                  referrerPolicy={session.provider === 'payphone' ? 'origin' : 'no-referrer'}>
                   {english ? 'Continue secure provider checkout' : 'Continuar con el pago'}
                 </Button>
               )}
