@@ -6594,7 +6594,9 @@ const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26
 
 // Qualify the new append against both published parents before running their historical assertions.
 async function manifestBeforeTaxonomy(file) {
-  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  assert.equal(manifest.migrations.at(-1).id, '2026-11-21_social_friend_suggestions');
+  const current = { ...manifest, migrations: manifest.migrations.slice(0, -1) };
   const original = (await integrationParent('be996410572a72f8f787b2cd5d345b30523ba1ea', file)).migrations.at(-1);
   assert.equal(original.id, '2026-11-21_location_genre_filters');
   assert.deepEqual(current.migrations.at(-3), original);
@@ -6626,7 +6628,9 @@ async function manifestBeforeLoudness(file) {
 }
 
 function decisionBeforeLoudness(decisions) {
-  const taxonomy = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations');
+  const suggestions = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations');
+  assert.equal(suggestions.reviewBatch, 'friend-suggestions-main-integration-20261124');
+  const taxonomy = suggestions.previousDecision;
   assert.equal(taxonomy.reviewBatch, 'taxonomy-filters-main-integration-20261124');
   assert.equal(taxonomy.evidence.valueCount, taxonomy.previousDecision.evidence.valueCount + 3);
   assert.equal(taxonomy.concurrentReviewHistory[0].evidence.file, 'scripts/production-migrations.json');
@@ -6913,4 +6917,24 @@ test('sidebar and tab lists retain their six individually reviewed decisions', a
   const reviewed = published.decisions.filter(row => row.reviewBatch === batch);
   assert.equal(reviewed.length, 6);
   assert.deepEqual(readExpandedDecisions(integrationRoot).decisions.filter(row => row.reviewBatch === batch), reviewed);
+});
+
+test('friend suggestions append one original migration and preserve the protected main review', async () => {
+  const base = 'bddc0a2a6c18ef101db3c7750a4ec7fe7f01b4d8';
+  const file = 'scripts/production-migrations.json';
+  const before = await integrationParent(base, file);
+  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const added = current.migrations.at(-1);
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, added] });
+  assert.equal(new Set(current.migrations.map(row => row.id)).size, current.migrations.length);
+  assert.equal(added.id, '2026-11-21_social_friend_suggestions');
+  assert.equal(added.path, 'tdf-hq/sql/2026-11-21_social_friend_suggestions.sql');
+  assert.equal(await fs.readFile(path.join(integrationRoot, added.path), 'utf8'), await integrationSource(added.introducedBy, added.path));
+  await integrationExec('git', ['merge-base', '--is-ancestor', added.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const published = await integrationParent(base, DECISIONS_FILE);
+  const readObject = objectPath => execFileSync('git', ['show', base + ':' + objectPath], { cwd: integrationRoot, encoding: 'utf8' });
+  const manifestDecision = document => document.decisions.find(row => row.evidence?.file === file);
+  const tip = manifestDecision(readExpandedDecisions(integrationRoot));
+  assert.equal(tip.evidence.valueCount, current.migrations.length);
+  assert.deepEqual(tip.previousDecision, manifestDecision(expandAtRevision(published, readObject)));
 });

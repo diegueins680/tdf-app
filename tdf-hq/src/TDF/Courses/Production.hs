@@ -50,7 +50,7 @@ productionCourseCapacity :: Int
 productionCourseCapacity = 16
 
 productionCourseSessionStartHour :: Int
-productionCourseSessionStartHour = 15
+productionCourseSessionStartHour = 8
 
 productionCourseSessionDurationHours :: Int
 productionCourseSessionDurationHours = 4
