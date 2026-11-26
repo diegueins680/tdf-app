@@ -3284,8 +3284,15 @@ main = hspec $ do
             ProviderAdapter.arBody request `shouldBe` Just (A.object
               [ "id" .= (23178284 :: Int)
               , "clientTxId" .= ("TDFC-0123456789abcdef0123456789a" :: Text) ])
-            -- A cancelled answer is final; a mismatched one is never confirmed.
-            summary (followUp buttonLocator (status 23178284 2 12515)) `shouldBe` Right Nothing
+            -- A Sale lookup alone cannot authorize retrying a Button payment.
+            cancelled <- case followUp buttonLocator (status 23178284 2 12515) of
+              Right (Just step) -> pure step
+              _ -> fail "Expected Button confirmation before releasing the attempt"
+            ProviderAdapter.arBody (ProviderAdapter.followUpRequest cancelled)
+              `shouldBe` ProviderAdapter.arBody request
+            fmap ProviderAdapter.adapterResultState
+              (ProviderAdapter.parseFollowUpResponse cancelled (status 23178284 3 12515))
+              `shouldBe` Right ProviderAdapter.AdapterSucceeded
             summary (followUp buttonLocator (status 23178284 3 100)) `shouldSatisfy` isLeft
             -- API Sale answers are final as they are.
             summary (followUp locator (status 23178284 3 12515)) `shouldBe` Right Nothing
@@ -3335,11 +3342,12 @@ main = hspec $ do
             -- An approved single-item list is confirmed with its transaction ID.
             followUpUrl (followUp (A.toJSON [transaction reference 93776650 3]))
               `shouldBe` Right (Just "https://pay.payphonetodoesposible.com/api/button/V2/Confirm")
-            -- Pending and canceled lists are read as they are, never as success.
+            -- Pending keeps the attempt open. Neither terminal status is final from Sale.
             fmap ProviderAdapter.adapterResultState (query (A.toJSON [transaction reference 93776650 1]))
               `shouldBe` Right ProviderAdapter.AdapterPending
-            fmap ProviderAdapter.adapterResultState (query (A.toJSON [transaction reference 93776650 2]))
-              `shouldBe` Right ProviderAdapter.AdapterCancelled
+            query (A.toJSON [transaction reference 93776650 2]) `shouldSatisfy` isLeft
+            followUpUrl (followUp (A.toJSON [transaction reference 93776650 2]))
+              `shouldBe` Right (Just "https://pay.payphonetodoesposible.com/api/button/V2/Confirm")
             query (A.toJSON [transaction reference 93776650 3]) `shouldSatisfy` isLeft
             -- Entries for other references are ignored; an empty or ambiguous list is rejected.
             fmap ProviderAdapter.adapterResultState
