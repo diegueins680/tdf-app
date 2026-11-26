@@ -39,7 +39,7 @@ export default function ProviderPaymentReturnPage() {
     && Number.isSafeInteger(transactionId) && refs.length === 1 && /^TDFC-[A-Za-z0-9._-]{1,45}$/.test(clientReference);
   // The inbox deduplicates these hints. Only the server's confirmation can
   // change the order, including when the buyer returns in another browser.
-  useQuery({
+  const buttonReturn = useQuery({
     queryKey: ['payphone-button-return', transactionId, clientReference],
     queryFn: () => submitPayPhoneButtonReturn(transactionId, clientReference),
     enabled: hasButtonReturn,
@@ -76,9 +76,22 @@ export default function ProviderPaymentReturnPage() {
     }
   }, [resumedCheckoutId, status.data?.state]);
 
+  const returnDeliveryError = hasButtonReturn && buttonReturn.isError && (
+    <Alert severity="warning" action={
+      <Button onClick={() => void buttonReturn.refetch()} disabled={buttonReturn.isFetching}>
+        {english ? 'Retry' : 'Reintentar'}
+      </Button>
+    }>
+      {english
+        ? 'TDF could not receive the PayPhone reference. Retry sending it so TDF can verify the payment.'
+        : 'TDF no pudo recibir la referencia de PayPhone. Reintenta el envío para que TDF pueda verificar el pago.'}
+    </Alert>
+  );
+
   if (!resume) {
     return (
       <Container maxWidth="sm" sx={{ py: 8 }}>
+        {returnDeliveryError}
         <Alert severity="warning">
           {english
             ? 'This tab does not have the private payment recovery capability. Return to the original order or contact support.'
@@ -121,6 +134,7 @@ export default function ProviderPaymentReturnPage() {
         <Card variant="outlined" sx={{ borderRadius: 4 }}>
           <CardContent sx={{ p: { xs: 3, md: 5 } }}>
             <Stack spacing={2.5}>
+              {returnDeliveryError}
               <Typography component="h1" variant="h4" fontWeight={900}>
                 {english ? 'Verifying payment' : 'Verificando el pago'}
               </Typography>
@@ -180,7 +194,7 @@ export default function ProviderPaymentReturnPage() {
                     : 'Todavía no sabemos si el pago se completó. No pagues otra vez ni uses otro método mientras lo revisamos.'}
                 </Alert>
               )}
-              {session?.state === 'requires_customer_action' && redirect && (
+              {session?.state === 'requires_customer_action' && !hasButtonReturn && redirect && (
                 <Button variant="contained" onClick={() => window.location.assign(redirect)}>
                   {english ? 'Continue secure provider checkout' : 'Continuar con el pago'}
                 </Button>

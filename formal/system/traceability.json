@@ -31179,8 +31179,8 @@
     "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts": "4941936bcbb954b17033773cc792520831a6219dd23009d834fcab18318de87d",
     "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx": "c3171aef58671769ae696fd2e76eeae0c6e1cfc4d5b8499398f52986e9b25715",
     "tdf-hq-ui/src/pages/PaymentsPage.tsx": "bd0c0f004588ffa15b6bebe83a66238ae54cb636f5053bb9c648cd4eac854c61",
-    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "1bffa96260ed3dd2dc8cf1c6e4f22591a7005423d875103722c2be509adb36c2",
-    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "6ba2689cfac48ba1afb89d1eb4d25f4c4b47756fedf47ccba97b347bac9b419b",
+    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "f6912589667ee171f77d5fd21b4a1537a058cad686fb4c02dfbaa22e79af6d0e",
+    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "172a87b98d4ebcc601f664ed6f152d13918a86db4dde0cb9e7af699d6a9c2350",
     "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": "9e3a1a9e16505da719971a9eb12fbe79a6436f3bb01317b5994b78e87f134b5a",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "d09b16d162a3ff525890d254da20b878e79b92d971011b8ca49cacce9293faaf",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "7544cf376e7c4721e85ae84341a98014cf0909cc8c8301ee2ec0c01b3beac179",
@@ -31836,7 +31836,7 @@
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "427e5e58f1441e7f898847f5c37ba3d23f1a6b997f468e03a62a892333d13c7a",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "ce2e92d25d8a46064d1cf88a9d46bc8825704f9fa5900cf0e6de0d49e85c479c",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "8225af5b6d2cd1d2a2715f98abdbead8b1b61404f6ecf9c6bd81f38748a18c01",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "135de88596c0230d902d294fcb47728f872f5a668d4bd51659c8f7b1e27ec425",
@@ -72645,7 +72645,7 @@
     {
       "id": "SURFACE-57d71f490b9a0d52",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
-      "sha256": "1bffa96260ed3dd2dc8cf1c6e4f22591a7005423d875103722c2be509adb36c2",
+      "sha256": "f6912589667ee171f77d5fd21b4a1537a058cad686fb4c02dfbaa22e79af6d0e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72665,7 +72665,7 @@
     {
       "id": "SURFACE-6b97ed3a68e676f6",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-      "sha256": "6ba2689cfac48ba1afb89d1eb4d25f4c4b47756fedf47ccba97b347bac9b419b",
+      "sha256": "172a87b98d4ebcc601f664ed6f152d13918a86db4dde0cb9e7af699d6a9c2350",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87291,7 +87291,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "ce2e92d25d8a46064d1cf88a9d46bc8825704f9fa5900cf0e6de0d49e85c479c",
+      "sha256": "8225af5b6d2cd1d2a2715f98abdbead8b1b61404f6ecf9c6bd81f38748a18c01",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

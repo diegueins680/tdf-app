@@ -14,7 +14,7 @@ import {
 const checkoutId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const attemptId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const getMock = jest.fn();
-const returnMock = jest.fn(async () => ({ Response: true, ErrorCode: "000" }));
+const returnMock = jest.fn(async () => ({ Response: true, ErrorCode: '000' }));
 const alternativesMock = jest.fn<() => Promise<string[]>>();
 let paypalClientId = '';
 
@@ -83,6 +83,17 @@ describe('ProviderPaymentReturnPage', () => {
     paypalClientId = '';
     Object.defineProperty(window, 'paypal', { configurable: true, writable: true, value: undefined });
     resume();
+  });
+
+  it('retries delivery of the same return after a network error without starting a new checkout', async () => {
+    window.sessionStorage.clear();
+    returnMock.mockRejectedValueOnce(new Error('offline'));
+    renderPage('/pagos/retorno?id=123&clientTransactionId=TDFC-order');
+    fireEvent.click(await screen.findByRole('button', { name: 'Reintentar' }));
+    await waitFor(() => expect(returnMock).toHaveBeenCalledTimes(2));
+    expect(returnMock).toHaveBeenNthCalledWith(2, 123, 'TDFC-order');
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Reintentar' })).toBeNull());
+    expect(getMock).not.toHaveBeenCalled();
   });
 
   it.each(['&', '?'])('forwards a Button return with separator %s even without local recovery', async (separator) => {

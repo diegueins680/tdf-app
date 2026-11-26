@@ -12567,13 +12567,13 @@
     {
       "id": "SURFACE-57d71f490b9a0d52",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
-      "sha256": "1bffa96260ed3dd2dc8cf1c6e4f22591a7005423d875103722c2be509adb36c2",
+      "sha256": "f6912589667ee171f77d5fd21b4a1537a058cad686fb4c02dfbaa22e79af6d0e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6b97ed3a68e676f6",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-      "sha256": "6ba2689cfac48ba1afb89d1eb4d25f4c4b47756fedf47ccba97b347bac9b419b",
+      "sha256": "172a87b98d4ebcc601f664ed6f152d13918a86db4dde0cb9e7af699d6a9c2350",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19719,7 +19719,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "ce2e92d25d8a46064d1cf88a9d46bc8825704f9fa5900cf0e6de0d49e85c479c",
+      "sha256": "8225af5b6d2cd1d2a2715f98abdbead8b1b61404f6ecf9c6bd81f38748a18c01",
       "semanticConformance": "not-established-by-discovery"
     },
     {

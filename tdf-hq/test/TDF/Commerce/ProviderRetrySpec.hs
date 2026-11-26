@@ -3256,7 +3256,7 @@ reconciliationTransactionSpec = describe "authoritative query transaction owners
 
 buttonReturnSpec :: SpecWith ConnectionPool
 buttonReturnSpec = it "reconciles a returned Button transaction through its original preparation exactly once" $ \pool ->
-  withNotificationEnvironment $ do
+  withNotificationEnvironment $ bracket (seedCard pool) (clearCard pool) $ \_ -> do
     let provider = Checkout.ProviderPayPhone
         env = Env pool (error "Sandbox Button test must not access AppConfig")
     resetQueryBudget pool provider
@@ -3301,6 +3301,16 @@ buttonReturnSpec = it "reconciles a returned Button transaction through its orig
     Reconciliation.prrDisposition result `shouldBe` Reconciliation.ReconciliationProcessed
     readIORef calls `shouldReturn` 1
     assertPaymentPosted pool payment
+  where
+    seedCard pool = runSqlPool (rawSql
+      "INSERT INTO commerce_provider_capability\
+      \ (provider_account_id,payment_method,capability,verification_status,source_reference,verified_at)\
+      \ SELECT id,'card','one_time','sandbox_verified','synthetic-button-test',NOW()\
+      \ FROM commerce_provider_account WHERE environment='sandbox' AND provider='payphone'\
+      \ ON CONFLICT DO NOTHING RETURNING id::text" [] :: SqlPersistT IO [Single Text]) pool
+    clearCard pool rows = forM_ rows $ \(Single row) -> runSqlPool (rawExecute
+      "DELETE FROM commerce_provider_capability WHERE id=?::uuid AND source_reference='synthetic-button-test'"
+      [PersistText row]) pool
 
 reconciliationPipelineSpec :: SpecWith ConnectionPool
 reconciliationPipelineSpec = describe "persisted callback to authoritative query" $
