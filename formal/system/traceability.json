@@ -31481,8 +31481,8 @@
     "tdf-hq-ui/src/pages/ClassesPage.tsx": "2c4c084a7e9287144589b96f3ac9a2ff6c3775bc854c0df027f3717bfa85c203",
     "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
     "tdf-hq-ui/src/pages/CmsAdminPage.tsx": "34d190a224e5011cc799fbb9c25c86d5a8cc98a56bfd01a4df7e718d728a5ec8",
-    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": "9c18cd02f3263a37a2be4452a4663712c3baa423186c071fee99e48605ca6827",
-    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "7d888c753e05305f012fc47629572aa62d843b909b0f0c5e835103c7f58b13c1",
+    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": "549bfe9a5d49f6a9c86a092b536b3baad5f43bcb926f7f77fb215fc5c5eff63e",
+    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "239f2b534e109456ab21354a367c494c6b3124a07823af366264625082d7a79d",
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CompaniesPage.tsx": "08964b25803284e26ecb3bafb8968a38b174a0cbd88772529a48cb0cfc951a9c",
     "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx": "e3038bcd8c6f70f1daf8acb8c148f2e7266cf1239aa1a6bbcb316f5dd75ef7d2",
@@ -71848,7 +71848,7 @@
     {
       "id": "SURFACE-78d796fee86d9367",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
-      "sha256": "9c18cd02f3263a37a2be4452a4663712c3baa423186c071fee99e48605ca6827",
+      "sha256": "549bfe9a5d49f6a9c86a092b536b3baad5f43bcb926f7f77fb215fc5c5eff63e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71860,7 +71860,7 @@
     {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "7d888c753e05305f012fc47629572aa62d843b909b0f0c5e835103c7f58b13c1",
+      "sha256": "239f2b534e109456ab21354a367c494c6b3124a07823af366264625082d7a79d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

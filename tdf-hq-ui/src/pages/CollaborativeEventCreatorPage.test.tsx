@@ -158,10 +158,15 @@ describe('CollaborativeEventCreatorPage', () => {
     expect(screen.getByText('1 artista')).toBeTruthy();
   });
 
-  it('keeps the event and offers retries when the art and the named artist are refused', async () => {
+  it.each([
+    ['/social/eventos/nuevo', 'Con músicos locales'],
+    ['/social/eventos/nuevo?circuito=jams', 'Con músicos locales\n\nCircuito de Jams'],
+  ])('keeps the event description when retrying art and lineup saves on %s', async (entry, expectedDescription) => {
     updateEvent.mockRejectedValueOnce(new Error('eventArtists[].artistId is required'));
     uploadEventImage.mockRejectedValueOnce(new Error('Sin conexión'));
-    renderPage();
+    renderPage(entry);
+    fireEvent.click(screen.getByRole('button', { name: /Detalles opcionales/ }));
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Descripción' }), { target: { value: 'Con músicos locales' } });
     chooseArt(art());
     fireEvent.change(screen.getByRole('textbox', { name: /Nombre del evento/ }), { target: { value: 'Noche Modular' } });
     const lineup = screen.getByRole('combobox', { name: 'Artistas que se presentan' });
@@ -181,6 +186,8 @@ describe('CollaborativeEventCreatorPage', () => {
     await waitFor(() => expect(screen.queryAllByRole('button', { name: 'Reintentar' })).toHaveLength(0));
     expect(uploadEventImage).toHaveBeenCalledTimes(2);
     expect(updateEvent).toHaveBeenCalledTimes(2);
+    expect(createEvent.mock.calls[0]?.[0].eventDescription).toBe(expectedDescription);
+    expect(updateEvent.mock.calls.map(([, event]) => event.eventDescription)).toEqual([expectedDescription, expectedDescription]);
     expect(screen.getByText('Arte cargado')).toBeTruthy();
   });
 

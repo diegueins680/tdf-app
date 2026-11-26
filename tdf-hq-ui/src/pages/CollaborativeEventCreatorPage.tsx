@@ -220,10 +220,11 @@ function EventCreator({ jam }: { jam: boolean }) {
     }
   }, [creationResult, draft, draftKey]);
 
+  const eventDraft = jam && !mentionsJamCircuit(draft.description)
+    ? { ...draft, description: [draft.description.trim(), jamCircuitName].filter(Boolean).join('\n\n') }
+    : draft;
   const creationMutation = useMutation({
-    mutationFn: () => createCollaborativeEvent(jam && !mentionsJamCircuit(draft.description)
-      ? { ...draft, description: [draft.description.trim(), jamCircuitName].filter(Boolean).join('\n\n') }
-      : draft, {
+    mutationFn: () => createCollaborativeEvent(eventDraft, {
       createEvent: SocialEventsAPI.createEvent,
       addCollaborator: (eventId, collaborator) =>
         SocialEventsAPI.createLogisticsMember(eventId, {
@@ -312,7 +313,7 @@ function EventCreator({ jam }: { jam: boolean }) {
     mutationFn: async () => {
       const eventId = creationResult?.event.eventId?.trim();
       if (!eventId) throw new Error('El evento no tiene un identificador válido.');
-      return saveNamedLineup(eventId, draft, SocialEventsAPI.updateEvent);
+      return saveNamedLineup(eventId, eventDraft, SocialEventsAPI.updateEvent);
     },
     onSuccess: () => {
       setCreationResult((current) => current && { ...current, pendingArtists: [], lineupError: null });
