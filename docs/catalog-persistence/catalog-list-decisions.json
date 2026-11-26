@@ -32341,24 +32341,24 @@
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "90f09a8bed9b8d7fae0d",
+      "id": "d1dfa5c895f157048c91",
       "reviewed": true,
-      "justification": "Preserve the 271 reviewed migrations on protected main and append the existing Datafast recovery ledger. The parent decisions retain the complete taxonomy and Datafast review histories.",
+      "justification": "Append the original Datafast recovery migration after the complete protected manifest, including friend suggestions. Preserve both earlier manifest reviews.",
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "datafast-recovery-2026-11-24",
+      "reviewBatch": "datafast-recovery-main-integration-20261126",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 272
+        "valueCount": 273
       },
       "previousDecision": {
-        "$historyRef": "sha256:5c2ed3f8ba488e82825dae4662cc0bf3b42279d79414556834d75a33a8637a8a"
+        "$historyRef": "sha256:622a2ae8a28302de76b608d225953bc979661a3b94513de7712c42b8e0497550"
       },
       "concurrentReviewHistory": [
         {
-          "$historyRef": "sha256:232cd1fa4f2753649a3cd9d524caa46f8a41f4c9d02ba99968cc26945a1cf74c"
+          "$historyRef": "sha256:33f89be3fbe8f7ec9d0bcfdf034dd8881135eb01623931eab2ea32a7ca674522"
         }
       ]
     },

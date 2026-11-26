@@ -19,6 +19,12 @@ describe('SocialAPI party id guards', () => {
     delMock.mockReset();
   });
 
+  it('opts in to network reasons only for the Discover client', async () => {
+    await SocialAPI.listSuggestions();
+    await SocialAPI.listNetworkSuggestions();
+    expect(getMock.mock.calls).toEqual([['/social/suggestions'], ['/social/suggestions?networkReason=true']]);
+  });
+
   it('rejects invalid party ids for add/remove/exchange calls', () => {
     expect(() => SocialAPI.addFriend(0)).toThrow('Party ID inválido para agregar amistad.');
     expect(() => SocialAPI.exchangeVCard(1.5)).toThrow('Party ID inválido para intercambio de vCard.');

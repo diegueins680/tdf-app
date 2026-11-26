@@ -101,6 +101,7 @@ import Data.Char
 import Data.Foldable (for_)
 import Data.Int (Int64)
 import GHC.Generics (Generic)
+import TDF.Auth.EmailVerification (recordVerifiedEmail)
 import Data.List (nub)
 import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
 import qualified Data.Set as Set
@@ -2767,6 +2768,9 @@ runPasswordResetConfirm ttl tokenVal passwordVal = do
                                   hashed <- liftIO (hashPasswordText passwordVal)
                                   update credId [UserCredentialPasswordHash =. hashed]
                                   revokeInteractiveSessions (userCredentialPartyId cred)
+                                  -- The token was delivered to the party's address, so
+                                  -- consuming it shows control of that address.
+                                  recordVerifiedEmail (fromSqlKey (userCredentialPartyId cred))
                                   sessionToken <- createSessionToken ttl (userCredentialPartyId cred) (userCredentialUsername cred)
                                   mUser <- loadAuthedUser sessionToken
                                   case mUser of

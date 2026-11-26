@@ -1380,6 +1380,11 @@
       "introducedBy": "670482f551c6e366040a20cf7f72117aa6df4ab5"
     },
     {
+      "id": "2026-11-21_social_friend_suggestions",
+      "path": "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql",
+      "introducedBy": "02d0da0d60de43834eefef060649d06b9e06b90a"
+    },
+    {
       "id": "2026-11-24_datafast_recovery",
       "path": "tdf-hq/sql/2026-11-24_datafast_recovery.sql",
       "introducedBy": "918c883d204b46fa6bf0ded53f3d854065e13bb4"

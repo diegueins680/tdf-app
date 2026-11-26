@@ -127,6 +127,7 @@ data AppConfig = AppConfig
   , eventLogisticsRecheckEnabled :: Bool
   , artistEnrichmentEnabled :: Bool
   , fanMultiSignalRecommendationsEnabled :: Bool
+  , eventAffinityOrderEnabled :: Bool
   , artistEnrichmentAutoPublish :: Bool
   , artistEnrichmentHourLocal :: Int
   , artistEnrichmentBatchSize :: Int
@@ -829,6 +830,8 @@ loadConfig = do
   artistEnrichmentEnabledEnv <- lookupEnv "ARTIST_ENRICHMENT_ENABLED"
   fanMultiSignalRecommendationsEnabledEnv <-
     lookupEnv "FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED"
+  eventAffinityOrderEnabledEnv <-
+    lookupEnv "EVENT_AFFINITY_ORDER_ENABLED"
   artistEnrichmentAutoPublishEnv <- lookupEnv "ARTIST_ENRICHMENT_AUTO_PUBLISH"
   artistEnrichmentHourEnv <- lookupEnv "ARTIST_ENRICHMENT_HOUR_LOCAL"
   artistEnrichmentBatchSizeEnv <- lookupEnv "ARTIST_ENRICHMENT_BATCH_SIZE"
@@ -976,6 +979,11 @@ loadConfig = do
       "FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED"
       False
       fanMultiSignalRecommendationsEnabledEnv
+  eventAffinityOrderEnabledVal <-
+    validateStartupBooleanFlag
+      "EVENT_AFFINITY_ORDER_ENABLED"
+      False
+      eventAffinityOrderEnabledEnv
   artistEnrichmentAutoPublishVal <-
     validateStartupBooleanFlag
       "ARTIST_ENRICHMENT_AUTO_PUBLISH"
@@ -1140,6 +1148,7 @@ loadConfig = do
     , eventLogisticsRecheckEnabled = eventLogisticsRecheckEnabledVal
     , artistEnrichmentEnabled = artistEnrichmentEnabledVal
     , fanMultiSignalRecommendationsEnabled = fanMultiSignalRecommendationsEnabledVal
+    , eventAffinityOrderEnabled = eventAffinityOrderEnabledVal
     , artistEnrichmentAutoPublish = artistEnrichmentAutoPublishVal
     , artistEnrichmentHourLocal = artistEnrichmentHourVal
     , artistEnrichmentBatchSize = artistEnrichmentBatchSizeVal
