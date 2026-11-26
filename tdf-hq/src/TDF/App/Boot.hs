@@ -72,6 +72,7 @@ import TDF.Catalog.Security (ensureBootstrapSecurityRole, validateSecurityRegist
 import TDF.Catalog.Seed (seedCatalogFoundation, validateCatalogRuntimeRegistries)
 import qualified TDF.DDEX.Models as Ddex
 import TDF.Server.Directory (startAgreementDepositExpiryJob)
+import TDF.Social.SuggestionStore (startFriendSuggestionJob)
 import TDF.Cron (
     startCoursePaymentReminderJob,
     startCourseFollowUpReminderJob,
@@ -160,6 +161,7 @@ runBootServer = do
         startInteractionNotifications (envPool env)
         startChatDeliveryWorker env
         startEventDiscoveryJob env
+        startFriendSuggestionJob env
         startEventLogisticsRecheckJob env
         startArtistEnrichmentJob env
         startArtistSimilarityJob env

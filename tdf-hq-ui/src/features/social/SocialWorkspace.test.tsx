@@ -2,14 +2,17 @@ import { jest } from '@jest/globals';
 import { render, screen, fireEvent, waitFor, cleanup, configure } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
-import type { SocialMe } from '../../api/socialV2';
+import type { SuggestedFriendDTO } from '../../api/types';
+import type { SocialMe, SocialV2 } from '../../api/socialV2';
 // MUI cold rendering on the shared development host can exceed the 1s default.
 configure({ asyncUtilTimeout: 5000 });
 jest.setTimeout(15000);
 let partyId = 1;
 const me = jest.fn<() => Promise<SocialMe>>();
 const following = jest.fn<() => Promise<{ items: never[]; nextCursor: null }>>();
-const discover = jest.fn<() => Promise<{ personalized: boolean; items: never[] }>>();
+const discover = jest.fn<typeof SocialV2.discover>();
+const network = jest.fn<() => Promise<SuggestedFriendDTO[]>>();
+jest.unstable_mockModule('../../api/social', () => ({ SocialAPI: { listNetworkSuggestions: network } }));
 const preferences = jest.fn<() => Promise<unknown>>();
 const command = jest.fn<() => Promise<unknown>>();
 const relationship = jest.fn<() => Promise<unknown>>();
@@ -26,6 +29,7 @@ beforeEach(() => {
   me.mockResolvedValue({ discoverable: false, personalized: true, revision: 0, relationships: [] });
   following.mockResolvedValue({ items: [], nextCursor: null });
   discover.mockResolvedValue({ personalized: true, items: [] });
+  network.mockResolvedValue([]);
   preferences.mockResolvedValue({ discoverable: false, personalized: false, revision: 1 });
 });
 afterEach(cleanup);
@@ -34,6 +38,7 @@ it('defaults to Following and explains its empty state without requesting Discov
   await screen.findByText('Sigue artistas o descubre personas para empezar.');
   expect(screen.getByRole('tab', { name: 'Siguiendo' }).getAttribute('aria-selected')).toBe('true');
   expect(discover).not.toHaveBeenCalled();
+  expect(network).not.toHaveBeenCalled();
 });
 it('provides a separate discover tab with an accessible panel and cold-start recovery', async () => {
   show();
@@ -82,4 +87,47 @@ it('does not fetch social resources for an anonymous session', () => {
   expect(me).not.toHaveBeenCalled();
   expect(following).not.toHaveBeenCalled();
   expect(discover).not.toHaveBeenCalled();
+  expect(network).not.toHaveBeenCalled();
+});
+
+function profileItem(partyId: number, displayName: string) {
+  return { partyId, displayName, reason: 'public_profile' as const, relationship: {
+    partyId, revision: 17, following: false, requested: false, incoming: false, connected: false,
+    blocked: false, muted: false, dismissed: false,
+  } };
+}
+
+it.each([['Conectar', 'request'], ['Seguir', 'follow']])('ranks eligible profiles and sends %s at the current revision', async (label, op) => {
+  discover.mockResolvedValue({ personalized: true, items: [profileItem(8, 'Primera'), profileItem(9, 'Segunda')] });
+  network.mockResolvedValue([
+    { sfPartyId: 7, sfReason: 'network', sfMutualCount: 0 },
+    { sfPartyId: 9, sfReason: 'network', sfMutualCount: 0 },
+  ]);
+  show();
+  fireEvent.click(screen.getByRole('tab', { name: 'Descubrir' }));
+  await screen.findByText('Cerca de tu red');
+  expect(screen.getAllByRole('button', { name: /^Conectar:/ }).map(b => b.getAttribute('aria-label')))
+    .toEqual(['Conectar: Segunda', 'Conectar: Primera']);
+  fireEvent.click(screen.getByRole('button', { name: label + ': Segunda' }));
+  await waitFor(() => expect(command).toHaveBeenCalledWith(9, op, 17, expect.any(String)));
+});
+
+it('preserves discovery order and reasons when the viewer opts out', async () => {
+  discover.mockResolvedValue({ personalized: false, items: [profileItem(8, 'Primera'), profileItem(9, 'Segunda')] });
+  show();
+  fireEvent.click(screen.getByRole('tab', { name: 'Descubrir' }));
+  await screen.findByRole('button', { name: 'Conectar: Segunda' });
+  expect(network).not.toHaveBeenCalled();
+  expect(screen.queryByText('Cerca de tu red')).toBeNull();
+});
+
+it('keeps Discover usable when the optional ranking fails', async () => {
+  discover.mockResolvedValue({ personalized: true, items: [profileItem(8, 'Primera')] });
+  network.mockRejectedValueOnce(new Error('unavailable'));
+  show();
+  fireEvent.click(screen.getByRole('tab', { name: 'Descubrir' }));
+  await waitFor(() => expect(network).toHaveBeenCalledTimes(1));
+  expect(screen.getByText('Perfil público de la comunidad')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Seguir: Primera' })).toBeTruthy();
+  expect(screen.queryByText('Cerca de tu red')).toBeNull();
 });

@@ -7,8 +7,9 @@ Hand translation of four pinned regions:
     (tdf-hq/src/TDF/Fans/ArtistSimilarity.hs): which artists become
     `similar_fans` results, which seeds are named, the sort key, and which
     artists may be seeds at all;
-  * loadSimilarityRecommendations (same module): the seed weights are
-    restricted to frameSeedEligible of the live frame;
+  * loadSimilarityRecommendations and loadFanSimilarity (same module), which
+    it calls and which the region includes: the seed weights are restricted
+    to frameSeedEligible of the live frame;
   * rankArtistRecommendations (tdf-hq/src/TDF/Fans/ArtistRecommendations.hs),
     called with no evidence rows: the popularity fallback and its sort key;
   * loadRecommendationFrame (same module): what the loader puts in the
@@ -67,7 +68,7 @@ REGIONS = (
     (SIMILARITY, 'rankBySimilarity\n  :: Int', '-- | Every follow as',
      '9668316445b1ed64663012e3e7f5bf5ba31c05b2d85c3619306b79a5dadfc37b'),
     (SIMILARITY, 'loadSimilarityRecommendations\n  :: MonadIO m', '-- | The stored rows a request',
-     'ba90a9d48213228146d1299e3c0a04afef7fbdcaa2fc4d4639bfc1908e00416a'),
+     'f63922a0db3dbf3bb2d1c3af5d1ccaa1258f72895a530da8ac0fd2dcec87f0d9'),
     (RECOMMENDATIONS, 'rankArtistRecommendations\n  :: Int', '-- | Artists followed by the fan',
      '58e3cad7967b0766b80f274be1437526d70611425b29eb252ea10546209068e8'),
     (RECOMMENDATIONS, 'loadRecommendationFrame :: MonadIO m', '-- | Recommendations for @fan@',
