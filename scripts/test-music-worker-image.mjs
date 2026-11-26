@@ -60,7 +60,8 @@ try {
 
   const scriptFiles = ['process-music-release-audio.sh', 'process-music-release-preview.sh',
     'music-preview-spec.jq', 'process-music-release-artwork.sh', 'build-ddex-ern432-package.sh',
-    'run-music-release-worker-once.sh', 'music-s3-upload.pl', 'run-music-release-worker.sh', 'music-media-health.py'];
+    'run-music-release-worker-once.sh', 'music-s3-upload.pl', 'run-music-release-worker.sh', 'music-media-health.py',
+    'measure-music-loudness.pl'];
   const hashesName = containerName('hashes');
   const actualHashes = await docker(['run', '--name', hashesName, '--label', label, ...limits,
     metadata.Id, '/bin/sh', '-c', 'sha256sum "$@" && cat /app/renderer-inputs.sha256',

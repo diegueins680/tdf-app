@@ -6638,6 +6638,202 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/taxonomy/filter-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every country, region, city and published genre a filter can offer
+         * @description Both names are returned so a shared link (taxonomy ids) renders in Spanish or English without another request.
+         */
+        get: operations["getTaxonomyFilterOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/genres/suggestions/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Normalize and check a genre suggestion without storing it */
+        post: operations["checkGenreSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/genres/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suggest a new genre or subgenre
+         * @description A suggestion whose words all appear in existing genre names is published at once and added to the artist's profile. One the checks cannot settle waits for an administrator. Duplicates and probable typos are refused with the existing genre unless confirmDistinct is true.
+         */
+        post: operations["submitGenreSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/genres/suggestions/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The artist's own suggestions, newest first */
+        get: operations["listMyGenreSuggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/genre-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Genre suggestion review queue (strict administrators) */
+        get: operations["listGenreSuggestionQueue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/genre-suggestions/{suggestionId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approveGenreSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/genre-suggestions/{suggestionId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rejectGenreSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/genre-suggestions/{suggestionId}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["mergeGenreSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/radio/streams/facets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Per-value counts for the radio filters
+         * @description Stations carry a country and a genre; a selected region or city narrows to its country.
+         */
+        get: operations["getRadioStreamFacets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/facets/releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-value counts for the public release filters */
+        get: operations["getPublicMusicReleaseFacets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/facets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Per-value counts for the event filters
+         * @description Counts the first 500 events the list would return for the same scope, date, type, artist and venue filters, without its own taxonomy selection.
+         */
+        get: operations["getSocialEventFacets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/directory/profiles/{slug}": {
         parameters: {
             query?: never;
@@ -9651,6 +9847,26 @@ export interface paths {
          *     search, not indexing of all historical, social, podcast or event sources.
          */
         get: operations["searchPublicMusicTracks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/releases/{releaseId}/versions/{versionId}/loudness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Loudness check of each track's newest master file
+         * @description Read-only, requires release.read. For every track, reports the loudness measurement of its newest master file against the approved limits. A track is checked only when the measurement was taken from that exact file (same asset and SHA-256). The result is advisory and never blocks validation, approval or publication (MEDIA-MUSIC-LOUDNESS-001).
+         */
+        get: operations["getMusicReleaseVersionLoudness"];
         put?: never;
         post?: never;
         delete?: never;
@@ -16449,6 +16665,33 @@ export interface components {
             /** @description JSON metadata limited to 16 KiB when encoded. */
             metadata: unknown;
         };
+        MusicLoudnessCheck: {
+            /** @description Approved limits in tenths (-140 is -14.0 LUFS). */
+            limits: {
+                integratedLufsTenths: number;
+                toleranceTenths: number;
+                truePeakCeilingDbtpTenths: number;
+            };
+            tracks: components["schemas"]["MusicLoudnessTrack"][];
+        };
+        MusicLoudnessTrack: {
+            /** Format: uuid */
+            recordingId: string;
+            /**
+             * Format: uuid
+             * @description Newest master file of the track that was not deleted.
+             */
+            masterAssetId: string | null;
+            /** @enum {string} */
+            status: "pass" | "warn" | "failed" | "pending" | "not_measured";
+            /** @description True only for pass and warn, from a measurement of exactly this master file. */
+            checked: boolean;
+            flags: ("too_loud" | "too_quiet" | "true_peak_over")[];
+            integratedLufsTenths: number | null;
+            truePeakDbtpTenths: number | null;
+            /** @enum {string|null} */
+            failureReason: "timeout" | "decode_error" | "no_summary" | "unparseable" | "out_of_range" | "silent" | "tool_unavailable" | "interrupted" | null;
+        };
         MusicValidationIssue: {
             fieldPath: string;
             code: string;
@@ -16677,6 +16920,18 @@ export interface components {
                 canonicalUrl: string;
             } | null;
         };
+        TaxonomyFacetCount: {
+            /** Format: uuid */
+            id: string;
+            count: number;
+        };
+        /** @description Each dimension's counts apply every other active filter but not that dimension's own selection. Genre counts include subgenre items. */
+        TaxonomyFacets: {
+            genres?: components["schemas"]["TaxonomyFacetCount"][];
+            countries?: components["schemas"]["TaxonomyFacetCount"][];
+            regions?: components["schemas"]["TaxonomyFacetCount"][];
+            cities?: components["schemas"]["TaxonomyFacetCount"][];
+        };
         DirectoryFacets: {
             entityTypes: {
                 [key: string]: number;
@@ -16688,6 +16943,7 @@ export interface components {
                 count: number;
             }[];
             total: number;
+            taxonomy?: components["schemas"]["TaxonomyFacets"];
         };
         DirectorySearchResponse: {
             items: components["schemas"]["DirectorySearchItem"][];
@@ -16738,6 +16994,127 @@ export interface components {
             genres: components["schemas"]["TaxonomyItem"][];
             languages: components["schemas"]["TaxonomyItem"][];
             cities: components["schemas"]["TaxonomyItem"][];
+        };
+        TaxonomyCountryOption: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            nameEs: string;
+            nameEn: string;
+        };
+        TaxonomyRegionOption: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            countryId: string;
+            code: string;
+            type?: string;
+            nameEs: string;
+            nameEn: string;
+        };
+        TaxonomyCityOption: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            countryId: string;
+            /** Format: uuid */
+            regionId?: string | null;
+            code: string;
+            nameEs: string;
+            nameEn: string;
+            latitude?: number | null;
+            longitude?: number | null;
+        };
+        TaxonomyGenreOption: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            parentId?: string | null;
+            code: string;
+            slug?: string | null;
+            nameEs: string;
+            nameEn: string;
+        };
+        TaxonomyFilterOptions: {
+            countries: components["schemas"]["TaxonomyCountryOption"][];
+            regions: components["schemas"]["TaxonomyRegionOption"][];
+            cities: components["schemas"]["TaxonomyCityOption"][];
+            genres: components["schemas"]["TaxonomyGenreOption"][];
+        };
+        GenreSuggestionRequest: {
+            nameEs: string;
+            nameEn: string;
+            /** Format: uuid */
+            parentGenreId?: string | null;
+            /** @description The artist saw the near match and confirms the genre is different; the suggestion goes to review. */
+            confirmDistinct?: boolean | null;
+        };
+        GenreSummary: {
+            /** Format: uuid */
+            id: string;
+            nameEs: string;
+            nameEn: string;
+            /** Format: uuid */
+            parentId?: string | null;
+        };
+        GenreSuggestionCheck: {
+            /** @enum {string} */
+            verdict: "duplicate" | "similar" | "review" | "approve";
+            /** @description Cleaned and cased Spanish name that would be stored */
+            nameEs: string;
+            /** @description Cleaned and cased English name that would be stored */
+            nameEn: string;
+            normalizedKey: string;
+            match?: components["schemas"]["GenreSummary"] | null;
+            corrections: {
+                word: string;
+                suggestion: string;
+            }[];
+            reviewReasons: string[];
+        };
+        GenreSuggestion: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "pending" | "approved" | "rejected" | "merged";
+            submittedName: string;
+            nameEs: string;
+            nameEn: string;
+            /** Format: uuid */
+            parentGenreId?: string | null;
+            parentGenre?: components["schemas"]["GenreSummary"] | null;
+            reviewReasons: string[];
+            resolvedGenre?: components["schemas"]["GenreSummary"] | null;
+            suggestedBy: {
+                /** Format: int64 */
+                partyId: number;
+                displayName?: string | null;
+            };
+            reviewNote?: string | null;
+            /** Format: date-time */
+            reviewedAt?: string | null;
+            automatic: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        GenreSuggestionSubmission: {
+            suggestion: components["schemas"]["GenreSuggestion"];
+            /** @description An identical suggestion was already pending; it is returned instead of a new one. */
+            alreadySuggested: boolean;
+            check: components["schemas"]["GenreSuggestionCheck"];
+        };
+        GenreSuggestionApproval: {
+            approvedNameEs: string;
+            approvedNameEn: string;
+            /** Format: uuid */
+            approvedParentGenreId?: string | null;
+        };
+        GenreSuggestionRejection: {
+            rejectionNote: string;
+        };
+        GenreSuggestionMerge: {
+            /** Format: uuid */
+            mergeIntoGenreId: string;
         };
         /** @enum {string} */
         DirectoryProfileKind: "person" | "artist" | "band" | "project" | "organization" | "company" | "venue" | "studio" | "agency" | "label" | "distributor" | "school";
@@ -17945,10 +18322,19 @@ export interface components {
         OrderLookupToken: string;
         /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
         IdempotencyKey: string;
+        /** @description Repeatable country UUIDs (ORed). At most 50. */
+        TaxonomyCountryIds: string[];
+        /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+        TaxonomyRegionIds: string[];
+        /** @description Repeatable city UUIDs (ORed). At most 50. */
+        TaxonomyCityIds: string[];
+        /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+        TaxonomyGenreIds: string[];
         SearchQuery: string;
         /** @description Opaque stable keyset cursor */
         Cursor: string;
         Limit: number;
+        SuggestionId: string;
         Slug: string;
         "parameters-IdempotencyKey": string;
         ProfileId: string;
@@ -22849,6 +23235,14 @@ export interface operations {
                 event_type_id?: string;
                 /** @description Stable UUID of an active state in the persisted `social-event-lifecycle` workflow. */
                 workflow_state_id?: string;
+                /** @description Repeatable country UUIDs (ORed). At most 50. */
+                countryIds?: components["parameters"]["TaxonomyCountryIds"];
+                /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+                regionIds?: components["parameters"]["TaxonomyRegionIds"];
+                /** @description Repeatable city UUIDs (ORed). At most 50. */
+                cityIds?: components["parameters"]["TaxonomyCityIds"];
+                /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+                genreIds?: components["parameters"]["TaxonomyGenreIds"];
             };
             header?: never;
             path?: never;
@@ -29295,6 +29689,14 @@ export interface operations {
                 countryId?: string;
                 /** @description Canonical persisted genre UUID; copied labels and slugs are not accepted. */
                 genreId?: string;
+                /** @description Repeatable country UUIDs (ORed). At most 50. */
+                countryIds?: components["parameters"]["TaxonomyCountryIds"];
+                /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+                regionIds?: components["parameters"]["TaxonomyRegionIds"];
+                /** @description Repeatable city UUIDs (ORed). At most 50. */
+                cityIds?: components["parameters"]["TaxonomyCityIds"];
+                /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+                genreIds?: components["parameters"]["TaxonomyGenreIds"];
             };
             header?: never;
             path?: never;
@@ -34480,6 +34882,14 @@ export interface operations {
                 /** @description Opaque stable keyset cursor */
                 cursor?: components["parameters"]["Cursor"];
                 limit?: components["parameters"]["Limit"];
+                /** @description Repeatable country UUIDs (ORed). At most 50. */
+                countryIds?: components["parameters"]["TaxonomyCountryIds"];
+                /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+                regionIds?: components["parameters"]["TaxonomyRegionIds"];
+                /** @description Repeatable city UUIDs (ORed). At most 50. */
+                cityIds?: components["parameters"]["TaxonomyCityIds"];
+                /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+                genreIds?: components["parameters"]["TaxonomyGenreIds"];
             };
             header?: never;
             path?: never;
@@ -34546,6 +34956,362 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DirectoryTaxonomies"];
+                };
+            };
+        };
+    };
+    getTaxonomyFilterOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Filter options */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyFilterOptions"];
+                };
+            };
+        };
+    };
+    checkGenreSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenreSuggestionRequest"];
+            };
+        };
+        responses: {
+            /** @description Normalized names and the verdict */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestionCheck"];
+                };
+            };
+            /** @description Unsafe or out-of-range name */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Only artists can suggest genres */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitGenreSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenreSuggestionRequest"];
+            };
+        };
+        responses: {
+            /** @description Stored or shared suggestion */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestionSubmission"];
+                };
+            };
+            /** @description Unsafe or out-of-range name */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Only artists can suggest genres */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Duplicate or probable typo of an existing genre (body is a GenreSuggestionCheck) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestionCheck"];
+                };
+            };
+            /** @description Ten pending or twenty suggestions in the last day */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMyGenreSuggestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Suggestions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestion"][];
+                };
+            };
+        };
+    };
+    listGenreSuggestionQueue: {
+        parameters: {
+            query?: {
+                status?: "pending" | "approved" | "rejected" | "merged" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Suggestions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestion"][];
+                };
+            };
+            /** @description Administrator access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    approveGenreSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestionId: components["parameters"]["SuggestionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenreSuggestionApproval"];
+            };
+        };
+        responses: {
+            /** @description Approved suggestion with its new genre */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestion"];
+                };
+            };
+            /** @description Already decided */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    rejectGenreSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestionId: components["parameters"]["SuggestionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenreSuggestionRejection"];
+            };
+        };
+        responses: {
+            /** @description Rejected suggestion */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestion"];
+                };
+            };
+            /** @description Already decided */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    mergeGenreSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestionId: components["parameters"]["SuggestionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenreSuggestionMerge"];
+            };
+        };
+        responses: {
+            /** @description Suggestion resolved to an existing genre */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestion"];
+                };
+            };
+            /** @description Already decided */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getRadioStreamFacets: {
+        parameters: {
+            query?: {
+                /** @description Repeatable country UUIDs (ORed). At most 50. */
+                countryIds?: components["parameters"]["TaxonomyCountryIds"];
+                /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+                regionIds?: components["parameters"]["TaxonomyRegionIds"];
+                /** @description Repeatable city UUIDs (ORed). At most 50. */
+                cityIds?: components["parameters"]["TaxonomyCityIds"];
+                /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+                genreIds?: components["parameters"]["TaxonomyGenreIds"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Counts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyFacets"];
+                };
+            };
+        };
+    };
+    getPublicMusicReleaseFacets: {
+        parameters: {
+            query?: {
+                q?: string;
+                artistPartyId?: number;
+                /** @description Repeatable country UUIDs (ORed). At most 50. */
+                countryIds?: components["parameters"]["TaxonomyCountryIds"];
+                /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+                regionIds?: components["parameters"]["TaxonomyRegionIds"];
+                /** @description Repeatable city UUIDs (ORed). At most 50. */
+                cityIds?: components["parameters"]["TaxonomyCityIds"];
+                /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+                genreIds?: components["parameters"]["TaxonomyGenreIds"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Counts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyFacets"];
+                };
+            };
+        };
+    };
+    getSocialEventFacets: {
+        parameters: {
+            query?: {
+                city?: string;
+                scope?: string;
+                start_after?: string;
+                event_type_id?: string;
+                workflow_state_id?: string;
+                artistId?: string;
+                venueId?: string;
+                /** @description Repeatable country UUIDs (ORed). At most 50. */
+                countryIds?: components["parameters"]["TaxonomyCountryIds"];
+                /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+                regionIds?: components["parameters"]["TaxonomyRegionIds"];
+                /** @description Repeatable city UUIDs (ORed). At most 50. */
+                cityIds?: components["parameters"]["TaxonomyCityIds"];
+                /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+                genreIds?: components["parameters"]["TaxonomyGenreIds"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Counts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyFacets"];
                 };
             };
         };
@@ -40682,6 +41448,14 @@ export interface operations {
                 q?: string;
                 limit?: number;
                 offset?: number;
+                /** @description Repeatable country UUIDs (ORed). At most 50. */
+                countryIds?: components["parameters"]["TaxonomyCountryIds"];
+                /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+                regionIds?: components["parameters"]["TaxonomyRegionIds"];
+                /** @description Repeatable city UUIDs (ORed). At most 50. */
+                cityIds?: components["parameters"]["TaxonomyCityIds"];
+                /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+                genreIds?: components["parameters"]["TaxonomyGenreIds"];
             };
             header?: {
                 /** @description Accepted only through the existing trusted-edge configuration. Absent, ignored or invalid values use the existing unknown-territory policy; the browser does not choose this value. */
@@ -40718,6 +41492,57 @@ export interface operations {
             };
             /** @description Explicit service failure; not an empty catalog. */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMusicReleaseVersionLoudness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                releaseId: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Limits and one entry per track, in track order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicLoudnessCheck"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Verified artist ownership or team permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Release version not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authoring disabled */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

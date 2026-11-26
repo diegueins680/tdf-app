@@ -557,6 +557,14 @@ jobs:
           createdb -h postgres -U postgres tdf_records_runtime_test
           ./scripts/test-records-ingestion-runtime.sh
 
+      - name: Verify artist similarity job, stored read and reference
+        env:
+          PGPASSWORD: postgres
+          TDF_ARTIST_SIMILARITY_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_artist_similarity_test
+        run: |
+          createdb -h postgres -U postgres tdf_artist_similarity_test
+          sh scripts/test-artist-similarity-postgres.sh
+
       - name: Verify shared event pilot and publication boundaries
         env:
           PGPASSWORD: postgres
@@ -606,7 +614,10 @@ jobs:
       - name: Verify community search ranking and privacy on PostgreSQL
         env:
           TDF_DISCOVERY_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
-        run: python3 scripts/test-community-search.py
+        run: |
+          python3 scripts/test-community-search.py
+          cd tdf-hq
+          "$(stack path --dist-dir)/build/tdf-hq-test/tdf-hq-test" --match="publishes one genre when artists submit" --fail-on=empty
 
       - name: Verify saved-search alert and public query parity
         env:
@@ -662,6 +673,7 @@ jobs:
           bash scripts/test-api-token-session-expiry-migration.sh
           sh scripts/test-meta-redelivery.sh
           sh scripts/test-rag-index-privacy.sh
+          sh scripts/test-directory-semantic-search.sh
           node scripts/__tests__/identity-http-runtime.mjs
           sh scripts/test-whatsapp-redelivery.sh
           sh scripts/test-credential-lifecycle.sh
@@ -671,6 +683,7 @@ jobs:
           sh scripts/test-music-publication.sh
           sh scripts/test-index-declarations.sh
           sh scripts/test-interaction-write-budget.sh
+          sh scripts/test-venue-search.sh
 
       - name: Verify single assignment of an event without an organizer
         env:

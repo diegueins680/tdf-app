@@ -1,0 +1,48 @@
+{
+  "id": "cff15f30aa13965e5729",
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "justification": "Preserve the complete221-entry protected main1c9c833 migration prefix and every SQL byte/introduction anchor, then append the four original event-memory invitation, source-moderation, NULL-authorization and permission-lock migrations unchanged. Retain both exact224- and221-entry review graphs, including financial and directory lineage. This225-entry execution-registry review grants no production action, campaign activation, permission, financial transaction or release waiver; fresh combined runtime/CI and independent protected review remain required.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "event-memory-current-main-1c9c833-20261026",
+  "sourceReviewReferences": [
+    {
+      "sourceRevision": "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "9201bfd098de5c87217d90ed3e7e13019fdc38e579dd8197d4501803fc63a34f",
+      "sourceEntry": {
+        "id": "79a6def1e91baee6e937"
+      },
+      "sourceEntryCanonicalSha256": "978e4a28b767ba92ef815fe45ac919ae7550742d9fd9b8cc1007e09e4d0291d9",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "1c9c833cc1ba62b47822fca3c20e14e86cf28daa",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "05793bdcb06612ca1a75fc8326ac01a8f0a59defe7c04aef4286889cf7aa6b95",
+      "sourceEntry": {
+        "id": "8229b8202552298c955e"
+      },
+      "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    }
+  ],
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 225
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:8c764ecd3ab41f03a537df53367456605a825b96184f04441fd7e49a483c73db"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:70835a01028fd516807888cef4501ee3ffa8afabb74d90754e6c7bb03b7bc0fc"
+    }
+  ]
+}

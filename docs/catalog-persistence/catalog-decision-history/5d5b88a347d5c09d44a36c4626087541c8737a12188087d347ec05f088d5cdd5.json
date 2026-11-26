@@ -1,0 +1,19 @@
+{
+  "id": "620eb81ffe787eca6636",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+  "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "ticket-credit-notes-2026-10-06",
+  "evidence": {
+    "file": "tdf-hq-ui/src/api/socialEvents.ts",
+    "line": 577
+  },
+  "mergedDecision": {
+    "$historyRef": "sha256:3a1c2216f13413ca6c4b7997fcc6a60b399f9df78bbfcd69e6e5c2f261b8f9cd"
+  }
+}

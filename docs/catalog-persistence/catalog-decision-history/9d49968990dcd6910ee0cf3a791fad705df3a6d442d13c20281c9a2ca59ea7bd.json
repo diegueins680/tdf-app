@@ -1,0 +1,29 @@
+{
+  "id": "91952765f2d528c2a6c6",
+  "classification": "dynamic-business-catalog",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+  "priority": "P1-cross-platform",
+  "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+  "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-hq-ui/src/api/socialEvents.ts",
+    "line": 136,
+    "kind": "literal-union",
+    "name": "SocialRsvpStatus",
+    "valueCount": 3,
+    "consumerCount": 74,
+    "exactDuplicateIds": [
+      "a36272e80e7d7145a46b",
+      "d2df22e8c9f29c516d07"
+    ],
+    "similarCandidateIds": [
+      "a36272e80e7d7145a46b",
+      "d2df22e8c9f29c516d07",
+      "00b90509097d4d414255"
+    ]
+  }
+}

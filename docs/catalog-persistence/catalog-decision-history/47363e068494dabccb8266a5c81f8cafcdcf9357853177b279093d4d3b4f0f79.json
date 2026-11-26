@@ -1,0 +1,19 @@
+{
+  "id": "dd2eff4609f15778c9c3",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Changing synthetic DTO keys can invalidate the real dispatch/engine regression without representing a persisted business catalog.",
+  "justification": "This eight-field synthetic ArtistReleaseDTO exists only in the controlled old-backend/player regression. It carries fake media.invalid data and expected transport fields, not selectable production values, permissions or rights; runtime source authorization is separately exercised.",
+  "reviewed": true,
+  "reviewMethod": "manual-source-review",
+  "reviewBatch": "artist-media-rollout-counterexample-20261107",
+  "evidence": {
+    "file": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
+    "line": 1000,
+    "kind": "object-registry",
+    "name": "release",
+    "valueCount": 8
+  }
+}

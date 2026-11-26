@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Unbounded safety proofs by inductive invariants (Apalache) plus bounded TLC
 # exploration and negative controls for formal/payments, formal/auth,
-# formal/school and formal/social/FeedAffinity.tla.
+# formal/school, formal/fans, formal/player, formal/directory and formal/social/FeedAffinity.tla.
 #
 # Requires the pinned official artifacts:
 #   APALACHE_TGZ   apalache.tgz from apalache-mc/apalache release v0.62.4
@@ -18,6 +18,9 @@ REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 MODEL_DIR="${REPO_DIR}/formal/payments"
 AUTH_MODEL_DIR="${REPO_DIR}/formal/auth"
 SCHOOL_MODEL_DIR="${REPO_DIR}/formal/school"
+FANS_MODEL_DIR="${REPO_DIR}/formal/fans"
+PLAYER_MODEL_DIR="${REPO_DIR}/formal/player"
+DIRECTORY_MODEL_DIR="${REPO_DIR}/formal/directory"
 SOCIAL_MODEL_DIR="${REPO_DIR}/formal/social"
 JAVA_BIN="${JAVA_BIN:-java}"
 APALACHE_TGZ="${APALACHE_TGZ:-}"
@@ -207,6 +210,91 @@ apalache_expect "${A}" CInitExclusion Init IndInv 0 NoError "LessonSlotAdvice-in
 apalache_expect "${A}" CInitExclusion IndInv IndInv 1 NoError "LessonSlotAdvice-consecution"
 apalache_expect "${A}" CInitExclusion IndInv Safe 0 NoError "LessonSlotAdvice-implication"
 apalache_expect "${A}" CInitLegacy Init Safe 6 Error "LessonSlotAdviceLegacy-reachable-violation"
+unset CURRENT_MODEL_DIR
+
+A=ArtistSimilarity.tla
+CURRENT_MODEL_DIR="${FANS_MODEL_DIR}"
+
+# COMMUNITY-ARTIST-SIMILARITY-001: the stored similarity is the reference on
+# the rows committed at its snapshot, a request uses it only while that
+# snapshot is recent, and without failing runs it is at most one period and
+# one run old. Controls: reads at different instants, and no age guard.
+tlc_expect "${A}" ArtistSimilarity.cfg pass
+tlc_expect "${A}" ArtistSimilarityFailures.cfg pass
+tlc_expect "${A}" ArtistSimilarityNoSnapshot.cfg violation
+tlc_expect "${A}" ArtistSimilarityNoAgeGuard.cfg violation
+apalache_expect "${A}" CInitImplementation Init IndInv 0 NoError "ArtistSimilarity-initiation"
+apalache_expect "${A}" CInitImplementation IndInv IndInv 1 NoError "ArtistSimilarity-consecution"
+apalache_expect "${A}" CInitImplementation IndInv Safe 0 NoError "ArtistSimilarity-implication"
+apalache_expect "${A}" CInitNoSnapshot Init TableRefinesReference 6 Error "ArtistSimilarityNoSnapshot-reachable-violation"
+apalache_expect "${A}" CInitNoAgeGuard Init ServedRefinesReference 7 Error "ArtistSimilarityNoAgeGuard-reachable-violation"
+unset CURRENT_MODEL_DIR
+
+Q=QueueContinuation.tla
+CURRENT_MODEL_DIR="${PLAYER_MODEL_DIR}"
+
+# MEDIA-MUSIC-CONTINUATION-001: the continuation appended to an ended queue
+# holds only recordings of served artists, in the served order, none of them
+# queued or repeated, within the limit. Control: no check against the queue.
+tlc_expect "${Q}" QueueContinuation.cfg pass
+tlc_expect "${Q}" QueueContinuationFullLimit.cfg pass
+tlc_expect "${Q}" QueueContinuationNoQueueFilter.cfg violation
+apalache_expect "${Q}" CInitImplementation Init IndInv 0 NoError "QueueContinuation-initiation"
+apalache_expect "${Q}" CInitImplementation IndInv IndInv 1 NoError "QueueContinuation-consecution"
+apalache_expect "${Q}" CInitImplementation IndInv Safe 0 NoError "QueueContinuation-implication"
+apalache_expect "${Q}" CInitNoQueueFilter Init NoRepeat 3 Error "QueueContinuationNoQueueFilter-reachable-violation"
+unset CURRENT_MODEL_DIR
+
+D=DirectoryEmbeddingIndex.tla
+CURRENT_MODEL_DIR="${DIRECTORY_MODEL_DIR}"
+
+# DIR-SEMANTIC-SEARCH-001: a hidden document is never returned, every
+# stored embedding belongs to a public document and its current text, stale
+# embeddings never rank, and only text that was public reaches the provider.
+tlc_expect "${D}" DirectoryEmbeddingIndex.cfg pass
+tlc_expect "${D}" DirectoryEmbeddingIndexUnguardedWrite.cfg violation
+tlc_expect "${D}" DirectoryEmbeddingIndexNoTrigger.cfg violation
+tlc_expect "${D}" DirectoryEmbeddingIndexEmbeddingAdmits.cfg violation
+tlc_expect "${D}" DirectoryEmbeddingIndexNoHashCheck.cfg violation
+apalache_expect "${D}" CInitGuarded Init IndInv 0 NoError "DirectoryEmbeddingIndex-initiation"
+apalache_expect "${D}" CInitGuarded IndInv IndInv 1 NoError "DirectoryEmbeddingIndex-consecution"
+apalache_expect "${D}" CInitGuarded IndInv Safe 0 NoError "DirectoryEmbeddingIndex-implication"
+apalache_expect "${D}" CInitUnguardedWrite Init Safe 5 Error "DirectoryEmbeddingIndexUnguardedWrite-reachable-violation"
+unset CURRENT_MODEL_DIR
+
+CURRENT_MODEL_DIR="${REPO_DIR}/formal/music"
+B=MusicLoudnessBinding.tla
+
+# MEDIA-MUSIC-LOUDNESS-001 L1/L2: a track is checked only from a measurement of
+# its newest usable file, and a recorded result is never overwritten, for every
+# subset of up to four files and three workers with concurrent re-uploads.
+tlc_expect "${B}" MusicLoudnessBinding.cfg pass
+tlc_expect "${B}" MusicLoudnessBindingUnbound.cfg violation
+tlc_expect "${B}" MusicLoudnessBindingStoredMark.cfg violation
+tlc_expect "${B}" MusicLoudnessBindingUnfenced.cfg violation
+apalache_expect "${B}" CInitGuarded Init IndInv 0 NoError "MusicLoudnessBinding-initiation"
+apalache_expect "${B}" CInitGuarded IndInv IndInv 1 NoError "MusicLoudnessBinding-consecution"
+apalache_expect "${B}" CInitGuarded IndInv Safe 0 NoError "MusicLoudnessBinding-implication"
+apalache_expect "${B}" CInitUnbound Init Safe 6 Error "MusicLoudnessBindingUnbound-reachable-violation"
+apalache_expect "${B}" CInitStoredMark Init Safe 5 Error "MusicLoudnessBindingStoredMark-reachable-violation"
+apalache_expect "${B}" CInitUnfenced Init Safe 6 Error "MusicLoudnessBindingUnfenced-reachable-violation"
+
+V=MusicLoudnessSupervision.tla
+
+# MEDIA-MUSIC-LOUDNESS-001 L3: the supervised run is bounded by the limit plus
+# the kill grace, prints one honest result after reaping the child and cannot
+# stall, for every limit up to 900 s and grace up to 60 s. The model covers the
+# supervision, not FFmpeg.
+tlc_expect "${V}" MusicLoudnessSupervision.cfg pass
+tlc_expect "${V}" MusicLoudnessSupervisionNoKill.cfg violation
+tlc_expect "${V}" MusicLoudnessSupervisionNoReap.cfg violation
+tlc_expect "${V}" MusicLoudnessSupervisionTrusting.cfg violation
+apalache_expect "${V}" CInitGuarded Init IndInv 0 NoError "MusicLoudnessSupervision-initiation"
+apalache_expect "${V}" CInitGuarded IndInv IndInv 1 NoError "MusicLoudnessSupervision-consecution"
+apalache_expect "${V}" CInitGuarded IndInv Safe 0 NoError "MusicLoudnessSupervision-implication"
+apalache_expect "${V}" CInitNoKill Init Safe 6 Error "MusicLoudnessSupervisionNoKill-reachable-violation"
+apalache_expect "${V}" CInitNoReap Init Safe 3 Error "MusicLoudnessSupervisionNoReap-reachable-violation"
+apalache_expect "${V}" CInitTrusting Init Safe 3 Error "MusicLoudnessSupervisionTrusting-reachable-violation"
 unset CURRENT_MODEL_DIR
 
 F=FeedAffinity.tla

@@ -1,0 +1,22 @@
+{
+  "id": "dba5e241ba7782bae73f",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Dropping or merging a case would show a generic message for a storage failure that needs a specific recovery step.",
+  "justification": "Exhaustive mapping from the backend's storage error codes (raised in TDF.Server and TDF.ContentStorage) to localized user messages. The codes are an API error contract owned by the backend, not an editable catalog.",
+  "reviewed": true,
+  "reviewMethod": "individual-source-review",
+  "reviewBatch": "storage-upload-recovery-2026-11-04",
+  "evidence": {
+    "file": "tdf-hq-ui/src/api/uploadFailure.ts",
+    "line": 35,
+    "kind": "switch-cases",
+    "name": "error.code",
+    "valueCount": 9,
+    "consumerCount": 29,
+    "exactDuplicateIds": [],
+    "similarCandidateIds": []
+  }
+}
