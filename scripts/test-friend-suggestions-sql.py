@@ -8,14 +8,16 @@ The statements are extracted from the Haskell source, never copied, so the test
 cannot drift from the implementation. The fixture reproduces only the columns
 the statements read; social_v2_profile_eligible is a stand-in with the migrated
 signature. Everything runs in a fresh schema inside one transaction that is
-always rolled back.
+always rolled back, except for the two-session check in its own disposable schema.
 
 Usage: test-friend-suggestions-sql.py DATABASE_URL   (a disposable database)
 """
 import re
+import select
 import subprocess
 import sys
 from pathlib import Path
+from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'tdf-hq/src/TDF/Social/SuggestionStore.hs'
@@ -113,32 +115,79 @@ EXPECTED_ELIGIBLE = [1, 2, 3, 9, 10, 11]  # 11 is exactly seven days old at the 
 EXPECTED_ELIGIBLE_AFTER_RESET = EXPECTED_ELIGIBLE + [13]
 SUPPORT = "'{1,2,3,11}'"
 SCENARIOS = (
-    # name, statements applied after the stored result, usable, served
-    ('baseline', '', 1, [3, 11]),
-    ('legacy mirror cannot suppress a candidate', 'INSERT INTO party_follow VALUES (1,3),(3,1);', 1, [3, 11]),
-    ('viewer now follows a candidate', 'INSERT INTO social_v2_pair (party_a,party_b,follow_a) VALUES (1,3,true);', 1, [11]),
-    ('a candidate now follows the viewer', 'INSERT INTO social_v2_pair (party_a,party_b,follow_b) VALUES (1,11,true);', 1, [3]),
-    ('policy refuses a candidate', 'INSERT INTO refused VALUES (1,3);', 1, [11]),
-    ('policy refuses for another viewer only', 'INSERT INTO refused VALUES (2,3);', 1, [3, 11]),
+    # name, statements applied after the stored result, served (None means fallback)
+    ('baseline', '', [3, 11]),
+    ('legacy mirror cannot suppress a candidate', 'INSERT INTO party_follow VALUES (1,3),(3,1);', [3, 11]),
+    ('viewer now follows a candidate', 'INSERT INTO social_v2_pair (party_a,party_b,follow_a) VALUES (1,3,true);', [11]),
+    ('a candidate now follows the viewer', 'INSERT INTO social_v2_pair (party_a,party_b,follow_b) VALUES (1,11,true);', [3]),
+    ('all candidates refused', 'INSERT INTO refused VALUES (1,3),(1,11);', []),
+    ('policy refuses a candidate', 'INSERT INTO refused VALUES (1,3);', [11]),
+    ('policy refuses for another viewer only', 'INSERT INTO refused VALUES (2,3);', [3, 11]),
     ('evidence closed its profile',
-     'INSERT INTO social_v2_preference (party_id, closed) VALUES (2, true);', 0, None),
+     'INSERT INTO social_v2_preference (party_id, closed) VALUES (2, true);', None),
     ('evidence blocked the viewer',
-     'INSERT INTO social_v2_pair VALUES (1,11,false,true);', 0, None),
-    ('viewer blocked evidence', 'UPDATE social_v2_pair SET block_a=true,follow_a=false WHERE party_a=1 AND party_b=2;', 0, None),
-    ('evidence was deactivated', 'UPDATE user_credential SET active = false WHERE party_id = 3;', 0, None),
+     'INSERT INTO social_v2_pair VALUES (1,11,false,true);', None),
+    ('viewer blocked evidence', 'UPDATE social_v2_pair SET block_a=true,follow_a=false WHERE party_a=1 AND party_b=2;', None),
+    ('evidence was deactivated', 'UPDATE user_credential SET active = false WHERE party_id = 3;', None),
     ('evidence lost its verified identity',
-     'DELETE FROM auth_provider_identity WHERE credential_id = 2;', 0, None),
-    ('evidence became an organisation', 'UPDATE party SET is_org = true WHERE id = 11;', 0, None),
+     'DELETE FROM auth_provider_identity WHERE credential_id = 2;', None),
+    ('evidence became an organisation', 'UPDATE party SET is_org = true WHERE id = 11;', None),
     ('viewer opted out',
-     'INSERT INTO social_v2_preference (party_id, personalized) VALUES (1, false);', 0, None),
-    ('viewer was deactivated', 'UPDATE user_credential SET active = false WHERE party_id = 1;', 0, None),
+     'INSERT INTO social_v2_preference (party_id, personalized) VALUES (1, false);', None),
+    ('viewer was deactivated', 'UPDATE user_credential SET active = false WHERE party_id = 1;', None),
     ('run is older than the maximum age',
      "UPDATE social_suggestion_run SET started_at = clock_timestamp() - interval '50 hours', "
-     "completed_at = clock_timestamp() - interval '49 hours';", 0, None),
+     "completed_at = clock_timestamp() - interval '49 hours';", None),
     ('run is just inside the maximum age',
      "UPDATE social_suggestion_run SET started_at = clock_timestamp() - interval '47 hours', "
-     "completed_at = clock_timestamp() - interval '47 hours';", 1, [3, 11]),
+     "completed_at = clock_timestamp() - interval '47 hours';", [3, 11]),
 )
+
+
+def check_replacement(url, read):
+    """Hold a production query open while a second connection replaces its run."""
+    schema = 'suggestion_overlap_' + uuid4().hex
+    psql = ['psql', '-XqAt', '-v', 'ON_ERROR_STOP=1', url]
+    path = f'SET search_path = {schema};\n'
+
+    def execute(sql):
+        return subprocess.run(psql, input=sql, text=True, stdout=subprocess.PIPE,
+                              check=True, timeout=30).stdout
+
+    def store(run, support, candidates):
+        statements = [bind(extract('insertRunSql', 4), 'clock_timestamp()', 0.85, 100, 1),
+                      bind(extract('deleteEarlierRunsSql', 1), run),
+                      bind(extract('insertViewerSql', 3), 1, run, support)]
+        for pos, candidate in enumerate(candidates, 1):
+            statements.append(bind(extract('insertScoreSql', 4), 1, candidate, pos, 0.1))
+        return ';\n'.join(statements) + ';\n'
+
+    # A unique committed fixture makes both real connections see the same data.
+    execute('BEGIN;\n' + FIXTURE.replace('friend_suggestions_test', schema)
+            + transactionless(MIGRATION) + store(1, SUPPORT, [3, 11]) + 'COMMIT;')
+    try:
+        with subprocess.Popen(psql, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True) as reader:
+            try:
+                reader.stdin.write(path + 'BEGIN ISOLATION LEVEL READ COMMITTED;\n'
+                                   + f'DECLARE suggestions CURSOR FOR {read};\nFETCH 1 FROM suggestions;\n')
+                reader.stdin.flush()
+                if not select.select([reader.stdout], [], [], 30)[0]:
+                    raise TimeoutError('Timed out opening the suggestion cursor')
+                if reader.stdout.readline().strip() != '3':
+                    raise AssertionError('Expected the first candidate of the original run')
+
+                # The replacement has a different candidate and includes a closed account in support.
+                execute('BEGIN;\n' + path + store(2, "'{1,7,10}'", [10]) + 'COMMIT;')
+                remaining, _ = reader.communicate(
+                    f'FETCH ALL FROM suggestions;\nSELECT count(*) FROM ({read}) fresh;\nCOMMIT;\n',
+                    timeout=30)
+                if reader.returncode or remaining.splitlines() != ['11', '0']:
+                    raise AssertionError(f'Expected the original tail, then fallback on the next read: {remaining!r}')
+            finally:
+                if reader.poll() is None:
+                    reader.kill()
+    finally:
+        execute(f'SET client_min_messages = warning; DROP SCHEMA {schema} CASCADE;')
 
 
 def main():
@@ -153,8 +202,7 @@ def main():
     delete_earlier = extract('deleteEarlierRunsSql', 1)
     insert_viewer = extract('insertViewerSql', 3)
     insert_score = extract('insertScoreSql', 4)
-    usable = extract('storedSuggestionsUsableSql', 2)
-    served = extract('servedSuggestionsSql', 6)
+    served = extract('servedSuggestionsSql', 3)
     probe = f"SELECT ({installed[len('SELECT '):]})::int;\n"
     verification = VERIFICATION_SOURCE.read_text()
     writable = extract('emailVerificationWritableSql', 0, verification)
@@ -181,13 +229,12 @@ def main():
     script += bind(delete_earlier, 1) + ";\n"
     script += bind(insert_viewer, 1, 1, SUPPORT) + ";\n"
     script += bind(insert_score, 1, 3, 1, 0.3) + ";\n" + bind(insert_score, 1, 11, 2, 0.2) + ";\n"
-    for index, (_, statements, _, _) in enumerate(SCENARIOS):
+    for index, (_, statements, _) in enumerate(SCENARIOS):
         script += f"SAVEPOINT scenario;\n{statements}\n"
-        script += f"\\echo USABLE {index}\nSELECT ({bind(usable, 1, 48)[len('SELECT '):]})::int;\n"
-        script += f"\\echo SERVED {index}\n{bind(served, 1, 1, 1, 1, 1, 20)};\n"
+        script += f"\\echo SERVED {index}\n{bind(served, 1, 48, 20)};\n"
         script += "ROLLBACK TO SAVEPOINT scenario;\n"
-    script += f"\\echo NOROW\nSELECT ({bind(usable, 2, 48)[len('SELECT '):]})::int;\n"
-    script += f"\\echo LIMIT\n{bind(served, 1, 1, 1, 1, 1, 1)};\n"
+    script += f"\\echo NOROW\n{bind(served, 2, 48, 20)};\n"
+    script += f"\\echo LIMIT\n{bind(served, 1, 48, 1)};\n"
     # A later run replaces everything stored by the earlier one.
     script += f"\\echo RUN2\n{bind(insert_run, 'clock_timestamp()', 0.85, 100, 0)};\n"
     script += bind(delete_earlier, 2) + ";\n"
@@ -196,17 +243,17 @@ def main():
     # Deleting a party removes what was stored about it.
     script += transactionless(ROLLBACK)
     script += f"\\echo ROLLEDBACK\n{probe}ROLLBACK;\n"
-    completed = subprocess.run(['psql', sys.argv[1], '-X', '-q', '-A', '-t', '-F', ','],
+    completed = subprocess.run(['psql', sys.argv[1], '-X', '-q', '-A', '-t', '-F', ',', '-P', 'null=NULL'],
                                input=script, text=True, capture_output=True)
     if completed.returncode != 0:
         raise SystemExit(f'psql failed:\n{completed.stderr}')
     observed, section = {}, None
     for line in completed.stdout.splitlines():
-        if re.fullmatch(r'[A-Z0-9]+(?: \d+)?', line) and not line.isdigit():
+        if re.fullmatch(r'[A-Z0-9]+(?: \d+)?', line) and not line.isdigit() and line != 'NULL':
             section = line
             observed[section] = []
         elif line.strip():
-            observed[section].append(tuple(int(value) for value in line.split(',')))
+            observed[section].append(tuple(None if value == 'NULL' else int(value) for value in line.split(',')))
     expected = {
         'BEFORE': [(0,)], 'INSTALLED': [(1,)], 'ROLLEDBACK': [(0,)],
         'ELIGIBLE': [(party,) for party in EXPECTED_ELIGIBLE],
@@ -214,24 +261,20 @@ def main():
         'VERIFIED': [(13,)],
         'ELIGIBLERESET': [(party,) for party in sorted(EXPECTED_ELIGIBLE_AFTER_RESET)],
         'FOLLOWS': [(1, 2), (2, 3), (2, 4), (2, 11), (3, 2), (4, 3), (9, 3)],
-        'RUN': [(1,)], 'RUN2': [(2,)], 'NOROW': [(0,)], 'LIMIT': [(3,)], 'LEFT': [(1, 0, 0)],
+        'RUN': [(1,)], 'RUN2': [(2,)], 'NOROW': [], 'LIMIT': [(3,)], 'LEFT': [(1, 0, 0)],
     }
-    for index, (_, _, usable_now, served_now) in enumerate(SCENARIOS):
-        expected[f'USABLE {index}'] = [(usable_now,)]
-        # The served statement is only run by the application when the result is usable.
-        if served_now is None:
-            observed.pop(f'SERVED {index}', None)
-        else:
-            expected[f'SERVED {index}'] = [(candidate,) for candidate in served_now]
+    for index, (_, _, candidates) in enumerate(SCENARIOS):
+        # No rows signal fallback. A single SQL NULL represents a valid empty list.
+        expected[f'SERVED {index}'] = [] if candidates is None else [(c,) for c in candidates or [None]]
     if observed != expected:
         differing = {key: (expected.get(key), observed.get(key))
                      for key in sorted(set(expected) | set(observed)) if expected.get(key) != observed.get(key)}
-        names = {f'{kind} {index}': name for index, (name, _, _, _) in enumerate(SCENARIOS)
-                 for kind in ('USABLE', 'SERVED')}
+        names = {f'SERVED {index}': name for index, (name, _, _) in enumerate(SCENARIOS)}
         raise SystemExit('Friend suggestion SQL differs (expected, observed): '
                          + '; '.join(f'{key} [{names.get(key, "")}]: {value}' for key, value in differing.items()))
+    check_replacement(sys.argv[1], bind(served, 1, 48, 20))
     print(f'Friend suggestion SQL checked: migration applied twice and rolled back, '
-          f'{len(EXPECTED_ELIGIBLE)} of 13 accounts eligible (7 after a password reset), {len(SCENARIOS)} read scenarios')
+          f'{len(EXPECTED_ELIGIBLE)} of 13 accounts eligible (7 after a password reset), {len(SCENARIOS)} read scenarios and concurrent run replacement')
 
 
 if __name__ == '__main__':

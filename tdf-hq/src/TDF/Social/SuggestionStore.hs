@@ -23,7 +23,6 @@ module TDF.Social.SuggestionStore
   , deleteEarlierRunsSql
   , insertViewerSql
   , insertScoreSql
-  , storedSuggestionsUsableSql
   , servedSuggestionsSql
   , RunSummary (..)
   , runSuggestionScores
@@ -150,14 +149,13 @@ insertScoreSql :: Text
 insertScoreSql =
   "INSERT INTO social_suggestion_score(viewer_id, candidate_id, position, score) VALUES (?, ?, ?, ?)"
 
--- | Whether the viewer's stored result may be served now. Two parameters: the
--- viewer and the maximum run age in hours. False when there is no stored row,
--- the run is too old, the viewer opted out of personalization, or any account
--- that carried score for the viewer is no longer a live verified account or
--- has a block with the viewer.
-storedSuggestionsUsableSql :: Text
-storedSuggestionsUsableSql =
-  "SELECT EXISTS (SELECT 1 FROM social_suggestion_viewer w \
+-- | Validate support and select candidates in one PostgreSQL statement so both
+-- use the same run snapshot during nightly replacement. No row means fallback.
+-- A valid run with no eligible candidate returns one NULL via the left join.
+-- Parameters: viewer, maximum run age in hours, candidate limit.
+servedSuggestionsSql :: Text
+servedSuggestionsSql =
+  "WITH usable AS (SELECT w.viewer_id FROM social_suggestion_viewer w \
   \JOIN social_suggestion_run r ON r.id = w.run_id \
   \WHERE w.viewer_id = ? \
   \AND r.completed_at > clock_timestamp() - make_interval(hours => ?) \
@@ -169,22 +167,15 @@ storedSuggestionsUsableSql =
     <> ") OR EXISTS (SELECT 1 FROM social_v2_pair e \
        \WHERE e.party_a = least(w.viewer_id, member.id) \
        \AND e.party_b = greatest(w.viewer_id, member.id) \
-       \AND (e.block_a OR e.block_b))))"
-
--- | The stored candidates the viewer may be offered now, in stored order.
--- Parameters: the viewer five times, then the limit. A candidate the follow
--- policy refuses for this viewer, or that is connected to the viewer by a
--- follow in either direction, is left out before the limit.
-servedSuggestionsSql :: Text
-servedSuggestionsSql =
-  "SELECT c.candidate_id FROM social_suggestion_score c \
-  \WHERE c.viewer_id = ? \
-  \AND c.candidate_id IN (SELECT profile_id FROM social_v2_profile_eligible(?, \
-  \ARRAY(SELECT s.candidate_id FROM social_suggestion_score s WHERE s.viewer_id = ?))) \
+       \AND (e.block_a OR e.block_b)))) "
+    <> "SELECT candidate.candidate_id FROM usable w LEFT JOIN LATERAL (SELECT c.candidate_id, c.position FROM social_suggestion_score c \
+  \WHERE c.viewer_id = w.viewer_id \
+  \AND c.candidate_id IN (SELECT profile_id FROM social_v2_profile_eligible(w.viewer_id, \
+  \ARRAY(SELECT s.candidate_id FROM social_suggestion_score s WHERE s.viewer_id = w.viewer_id))) \
   \AND NOT EXISTS (SELECT 1 FROM social_v2_pair f \
-  \WHERE f.party_a = least(?::bigint, c.candidate_id) AND f.party_b = greatest(?::bigint, c.candidate_id) \
+  \WHERE f.party_a = least(w.viewer_id, c.candidate_id) AND f.party_b = greatest(w.viewer_id, c.candidate_id) \
   \AND (f.follow_a OR f.follow_b)) \
-  \ORDER BY c.position LIMIT ?"
+  \ORDER BY c.position LIMIT ?) candidate ON true ORDER BY candidate.position"
 
 data RunSummary = RunSummary
   { runViewers    :: !Int
@@ -296,18 +287,13 @@ readStoredSuggestions viewer = do
       if installed /= [Single True]
         then pure Nothing
         else do
-          usable <- rawSql storedSuggestionsUsableSql
-            [viewerValue, PersistInt64 (fromIntegral maximumRunAgeHours)]
-          if usable /= [Single True]
-            then pure Nothing
-            else do
-              rows <- rawSql servedSuggestionsSql
-                [ viewerValue, viewerValue, viewerValue, viewerValue, viewerValue
-                , PersistInt64 (fromIntegral servedSuggestionLimit)
-                ]
-              pure (Just [candidate | Single candidate <- rows])
-  where
-    viewerValue = PersistInt64 viewer
+          rows <- rawSql servedSuggestionsSql
+            [ PersistInt64 viewer, PersistInt64 (fromIntegral maximumRunAgeHours)
+            , PersistInt64 (fromIntegral servedSuggestionLimit)
+            ]
+          pure $ case rows of
+            [] -> Nothing
+            _  -> Just [candidate | Single (Just candidate) <- rows]
 
 -- | The route's answer. With the flag off this is @fallback@ and nothing else
 -- runs. With it on, the stored candidates are served when

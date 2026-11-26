@@ -6953,7 +6953,7 @@
     {
       "id": "SURFACE-b8aeb29dd33939a7",
       "path": "scripts/test-friend-suggestions-sql.py",
-      "sha256": "7ec0e742339e8b64732b2c3922f52cecf29900abb9c09fe391cac942d28d149a",
+      "sha256": "8d123cd5c8ad8138ed4aa141f3f89b14fb10e30a28aa3a3e0908e5b14292356c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19667,7 +19667,7 @@
     {
       "id": "SURFACE-824227145b08a710",
       "path": "tdf-hq/src/TDF/Social/SuggestionStore.hs",
-      "sha256": "b299ef0cb3c24ac9b64d7049b5daa3df0ff762807248601795c757603c2a1603",
+      "sha256": "1f457ba45aad11b33e94f805a4ab6771e11c48000198debee75006ccd3e15efc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32864,7 +32864,7 @@
     },
     {
       "path": "formal/system/friend-suggestions-pagerank.md",
-      "sha256": "b2f3ab8e9c30274cb16dd767f1a4273ffefb1d24b6a37f974791d13dedd273b8",
+      "sha256": "5a901fd0117bc96aef3ba16f67bf110e11a55d007da10382564fe74eeac878ae",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
