@@ -145,6 +145,8 @@
       "ops/hetzner/recovery-tools.json",
       "ops/hetzner/rehearse-postgres-restore.py",
       "ops/hetzner/release-journal.py",
+      "ops/hetzner/tdf-android-beta-email.service",
+      "ops/hetzner/tdf-android-beta-email.timer",
       "ops/hetzner/tdf-postgres-backup.service",
       "ops/hetzner/tdf-postgres-backup.timer",
       "ops/privacy/request-workflow.json"
@@ -283,6 +285,7 @@
       "scripts/__tests__/video-campaign-access.test.mjs",
       "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
       "scripts/ai-workflow-doctor.mjs",
+      "scripts/android-beta-email.py",
       "scripts/archive/backfill-meta-inbox.sh",
       "scripts/archive/change-venue-to-domo.py",
       "scripts/archive/create-manual-shows.py",
@@ -730,6 +733,7 @@
       "scripts/test-weekly-platform-metrics.py",
       "scripts/test-whatsapp-consent.sh",
       "scripts/test-whatsapp-redelivery.sh",
+      "scripts/test_android_beta_email.py",
       "scripts/test_mail_deliverability_monitor.py",
       "scripts/test_production_access.py",
       "scripts/ui-static-audit.mjs",
@@ -4205,6 +4209,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-4c9e65087e7bdc29",
+      "path": "ops/hetzner/tdf-android-beta-email.service",
+      "sha256": "aee35653165f468ab8123b6550a6661b2265184458eb5c25f2988bf37b595638",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b22cd92b352ffeb9",
+      "path": "ops/hetzner/tdf-android-beta-email.timer",
+      "sha256": "2f8579e2d164151db93c09d2473429fbe122efb774f0741f8c261e37aa223c47",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8b539014a90ca8b5",
       "path": "ops/hetzner/tdf-postgres-backup.service",
       "sha256": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
@@ -4994,6 +5010,12 @@
       "id": "SURFACE-743d6ba1991f20d7",
       "path": "scripts/ai-workflow-doctor.mjs",
       "sha256": "3324e70ac7fde43e30edd5f3c325c919363426b1764ffc7dd8a85a96933723e1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0e466a59b4752a9d",
+      "path": "scripts/android-beta-email.py",
+      "sha256": "9f440f634cd91e08ce3e3eed5fb069d34783401f5eeb0c1d68eeec522a4f8b35",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7676,6 +7698,12 @@
       "id": "SURFACE-ee9a013c20ac0030",
       "path": "scripts/test-whatsapp-redelivery.sh",
       "sha256": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8bd1e496c6893f83",
+      "path": "scripts/test_android_beta_email.py",
+      "sha256": "f13a989fb6c0eb45331df7e25cece16dbd1488a1a4b66ad2d79fc15d4825e8b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -26677,6 +26705,13 @@
     {
       "path": "docs/records-ingestion/youtube-provider.md",
       "sha256": "58f7f33b656c8c5b042bd2be4a46380ce95bf6ca28cc1f38098ffee07486a17b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/release/android-beta-crm-email.md",
+      "sha256": "382ceec4a4f4feca5ef1be050e1f053a488430b08d5dffc08e70003c2472ade3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
