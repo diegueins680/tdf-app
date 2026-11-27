@@ -1,3 +1,4 @@
+import { directoryStatusLabel } from '../utils/directoryStatusLabel';
 import MarkdownText from '../components/MarkdownText';
 import { useTranslation } from 'react-i18next';
 import {
@@ -169,7 +170,7 @@ function ProfilePanel({ profiles, loading, onCreate, onEdit, onRefresh }: { prof
     <Button variant="contained" startIcon={<AddIcon />} onClick={onCreate} sx={{ alignSelf: 'flex-start' }}>Crear perfil</Button>
     {profiles.length === 0 && <Alert severity="info">Crea tu primer perfil profesional. Una misma cuenta puede administrar varios perfiles autorizados.</Alert>}
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2,minmax(0,1fr))' }, gap: 2 }}>
-      {profiles.map((profile) => <Card key={profile.id} variant="outlined"><CardContent><Stack direction="row" justifyContent="space-between" gap={2}><Box><Typography variant="h5" fontWeight={800}>{profile.name}</Typography><Typography color="text.secondary">{profile.kind} · /directorio/{profile.slug}</Typography><Typography variant="body2" color="text.secondary" mt={0.5}>{profile.professionIds.length} profesiones · {profile.serviceAreas.length} áreas de servicio</Typography></Box><Chip label={profile.status} color={profile.status === 'published' ? 'success' : 'default'} /></Stack></CardContent><CardActions><Button component={RouterLink} to={`/directorio/${profile.slug}`}>Vista pública</Button>{profile.capabilities['edit'] && <Button startIcon={<EditIcon />} onClick={() => onEdit(profile)}>Editar</Button>}{profile.status !== 'published' && profile.capabilities['publish'] && <Button startIcon={<PublishIcon />} onClick={() => status.mutate({ id: profile.id, value: 'published' })}>Publicar</Button>}{profile.status === 'published' && profile.capabilities['publish'] && <Button onClick={() => status.mutate({ id: profile.id, value: 'paused' })}>Pausar</Button>}</CardActions></Card>)}
+      {profiles.map((profile) => <Card key={profile.id} variant="outlined"><CardContent><Stack direction="row" justifyContent="space-between" gap={2}><Box><Typography variant="h5" fontWeight={800}>{profile.name}</Typography><Typography color="text.secondary">{profile.kind} · /directorio/{profile.slug}</Typography><Typography variant="body2" color="text.secondary" mt={0.5}>{profile.professionIds.length} profesiones · {profile.serviceAreas.length} áreas de servicio</Typography></Box><Chip label={directoryStatusLabel(profile.status)} color={profile.status === 'published' ? 'success' : 'default'} /></Stack></CardContent><CardActions><Button component={RouterLink} to={`/directorio/${profile.slug}`}>Vista pública</Button>{profile.capabilities['edit'] && <Button startIcon={<EditIcon />} onClick={() => onEdit(profile)}>Editar</Button>}{profile.status !== 'published' && profile.capabilities['publish'] && <Button startIcon={<PublishIcon />} onClick={() => status.mutate({ id: profile.id, value: 'published' })}>Publicar</Button>}{profile.status === 'published' && profile.capabilities['publish'] && <Button onClick={() => status.mutate({ id: profile.id, value: 'paused' })}>Pausar</Button>}</CardActions></Card>)}
     </Box>
   </Stack>;
 }
@@ -193,7 +194,7 @@ function ClassifiedPanel({ classifieds, loading, taxonomies, onCreate, onRefresh
           {!item.sourceProfileId && <Typography variant="body2" color="text.secondary" mt={0.5}>{t('marketplace.board.slots', { remaining: item.slotsRemaining, total: item.slots })} · {t('marketplace.managed.offers', { count: item.offerCount, open: item.openOfferCount })}</Typography>}
         </Box>
         <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
-          <Chip label={item.status} color={item.status === 'published' ? 'success' : 'default'} />
+          <Chip label={directoryStatusLabel(item.status)} color={item.status === 'published' ? 'success' : 'default'} />
           {!item.sourceProfileId && item.status === 'draft' && <Button onClick={() => status.mutate({ id: item.id, value: 'published' })}>Publicar</Button>}
           {!item.sourceProfileId && item.status === 'published' && <Button startIcon={<CheckCircleIcon />} onClick={() => status.mutate({ id: item.id, value: 'filled' })}>Marcar cubierto</Button>}
           {!item.sourceProfileId && <Button onClick={() => setSelected(selected === item.id ? null : item.id)}>{selected === item.id ? 'Ocultar ofertas' : `Ofertas (${item.offerCount})`}</Button>}
@@ -241,7 +242,7 @@ function InvitationCard({ invitation }: { invitation: DirectoryInvitation }) {
   return <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}><Stack spacing={1.5}>
     <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
       <Box><Typography variant="h6" fontWeight={800}>{invitation.participantRole === 'sender' ? `Invitaste a ${other.name}` : `${other.name} te invitó`}</Typography><Typography color="text.secondary">Actúas como {mine.name}{invitation.classified ? ` · ${invitation.classified.title}` : ' · invitación general'}</Typography></Box>
-      <Chip label={invitation.status} color={invitation.status === 'accepted' || invitation.status === 'conversation_open' ? 'success' : 'default'} />
+      <Chip label={directoryStatusLabel(invitation.status)} color={invitation.status === 'accepted' || invitation.status === 'conversation_open' ? 'success' : 'default'} />
     </Stack>
     <MarkdownText>{invitation.message}</MarkdownText>
     {canConverse && <TextField label="Mensaje para abrir la conversación" value={conversationMessage} onChange={(event) => setConversationMessage(event.target.value)} multiline minRows={2} inputProps={{ minLength: 1, maxLength: 5000 }} />}

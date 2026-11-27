@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { advanceAuthSessionEpoch } from './authEvents';
+import { advanceAuthSessionEpoch } from '../auth/authEvents';
 import { useOwnedTabDraft } from './useOwnedTabDraft';
 
 const empty = { bio: '' };

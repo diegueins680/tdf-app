@@ -165,7 +165,11 @@ describe('getMarketplacePaymentProviderLabel', () => {
     expect(getMarketplacePaymentProviderLabel('stripe')).toBe('Stripe');
     expect(getMarketplacePaymentProviderLabel('datafast')).toBe('Tarjeta (Datafast)');
     expect(getMarketplacePaymentProviderLabel('contact')).toBe('Manual/otros');
+    expect(getMarketplacePaymentProviderLabel(' BANK_TRANSFER ')).toBe('Transferencia bancaria');
+    expect(getMarketplacePaymentProviderLabel('cash')).toBe('Efectivo');
+    expect(getMarketplacePaymentProviderLabel('pos')).toBe('POS');
     expect(getMarketplacePaymentProviderLabel(' wire_transfer ')).toBe('wire_transfer');
+    expect(getMarketplacePaymentProviderLabel('')).toBe('');
   });
 });
 

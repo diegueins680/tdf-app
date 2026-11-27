@@ -723,6 +723,18 @@ export interface FanFollowDTO {
   ffStartedAt: string;
 }
 
+export type ArtistRecommendationReason = 'similar_fans' | 'popular';
+
+/** One artist recommended to the signed-in fan by GET /fans/me/recommendations. */
+export interface ArtistRecommendationDTO {
+  arecArtistId: number;
+  arecReason: ArtistRecommendationReason;
+  /** Sum of cosine similarities to the followed artists; 0 for `popular`. */
+  arecScore: number;
+  /** Followed artists behind a `similar_fans` entry, strongest first. */
+  arecSeedArtistIds: number[];
+}
+
 export interface ArtistFanDTO {
   afFanId: number;
   afDisplayName: string;
@@ -747,6 +759,11 @@ export interface PartyFollowDTO {
 export interface SuggestedFriendDTO {
   sfPartyId: number;
   sfMutualCount: number;
+  /**
+   * Present only on entries ranked by the follow network
+   * (COMMUNITY-FRIEND-SUGGESTION-001); their sfMutualCount is 0 and means nothing.
+   */
+  sfReason?: string;
 }
 
 export interface ChatThreadDTO {

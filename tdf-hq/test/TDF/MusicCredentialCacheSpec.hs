@@ -91,11 +91,12 @@ cacheHeaders = map (BL.fromStrict . snd) . filter ((== hCacheControl) . fst) . r
 -- route parsing, GET/HEAD and decoded path semantics are the shipped Servant API.
 publicRouter :: Application
 publicRouter = serve (Proxy :: Proxy MusicReleasePublicAPI)
-  ((\_ _ _ _ _ -> pure [])
+  ((\_ _ _ _ _ _ _ _ _ -> pure [])
+    :<|> (\_ _ _ _ _ _ _ -> pure Null)
     :<|> (\_ _ -> pure Null)
     :<|> (\_ _ -> pure (object ["url" .= ("https://storage.example.test/test" :: Text)]))
     :<|> (\_ _ -> pure NoContent)
-    :<|> (\_ _ _ _ -> pure (noHeader []))
+    :<|> (\_ _ _ _ _ _ _ _ -> pure (noHeader []))
     :<|> (\_ _ -> pure (noHeader Null))
     :<|> (\_ -> pure (noHeader Null)))
 

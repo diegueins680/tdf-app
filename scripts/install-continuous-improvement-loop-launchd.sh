@@ -12,7 +12,14 @@ CHILD_PID_FILE="${CONTINUOUS_LOOP_CHILD_PID_FILE:-$STATE_DIR/child.pid}"
 STATUS_FILE="${CONTINUOUS_LOOP_STATUS_FILE:-$STATE_DIR/status.json}"
 STOP_FILE="${CONTINUOUS_LOOP_STOP_FILE:-$STATE_DIR/stop}"
 HEARTBEAT_FILE="${CONTINUOUS_LOOP_HEARTBEAT_FILE:-$STATE_DIR/heartbeat.txt}"
+WORKTREE="${CONTINUOUS_LOOP_WORKTREE:-}"
 SUPERVISOR="$ROOT/scripts/continuous-improvement-loop-supervisor.sh"
+
+if [ -z "$WORKTREE" ] || [ ! -d "$WORKTREE" ]; then
+  echo "CONTINUOUS_LOOP_WORKTREE must point at the loop's dedicated linked git worktree." >&2
+  exit 1
+fi
+WORKTREE="$(cd "$WORKTREE" && pwd)"
 GUI_DOMAIN="gui/$(id -u)"
 PATH_VALUE="${PATH:-/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin}"
 NODE_BIN_VALUE="${CONTINUOUS_LOOP_NODE_BIN:-$(command -v node 2>/dev/null || true)}"
@@ -45,6 +52,8 @@ cat > "$PLIST_PATH" <<EOF
   <dict>
     <key>PATH</key>
     <string>${PATH_VALUE}</string>
+    <key>CONTINUOUS_LOOP_WORKTREE</key>
+    <string>${WORKTREE}</string>
     <key>CONTINUOUS_LOOP_CONFIG</key>
     <string>${CONFIG}</string>
     <key>CONTINUOUS_LOOP_LOG_FILE</key>
@@ -76,6 +85,7 @@ launchctl kickstart -k "${GUI_DOMAIN}/${LABEL}"
 echo "Installed and started launchd runner."
 echo "Label: ${LABEL}"
 echo "Plist: ${PLIST_PATH}"
+echo "Worktree: ${WORKTREE}"
 echo "Log: ${LOG_FILE}"
 echo "PID file: ${PID_FILE}"
 echo "Child PID file: ${CHILD_PID_FILE}"

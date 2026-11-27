@@ -6,8 +6,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 let authenticated = true;
 let loading = false;
+const readSession = () => ({ session: authenticated ? { username: 'listener', partyId: 42 } : null, loading });
 jest.unstable_mockModule('../session/SessionContext', () => ({
-  useSession: () => ({ session: authenticated ? { username: 'listener' } : null, loading }),
+  useSession: readSession,
+  useOptionalSession: readSession,
 }));
 jest.unstable_mockModule('../api/radio', () => ({ RadioAPI: {
   search: jest.fn(async () => [{ rsId: 'fixture', rsName: 'Navigation radio', rsStreamUrl: 'https://radio.test/live' }]),
@@ -16,10 +18,15 @@ jest.unstable_mockModule('../api/radio', () => ({ RadioAPI: {
   nowPlaying: jest.fn(async () => ({})),
   listAutoStopOptions: jest.fn(async () => ({ options: [] })),
 } }));
+jest.unstable_mockModule('../api/taxonomy', () => ({
+  Taxonomy: { filterOptions: jest.fn(async () => ({ countries: [], regions: [], cities: [], genres: [] })), radioFacets: jest.fn(async () => ({})) },
+  appendTaxonomyParams: (params: URLSearchParams) => params,
+}));
+jest.unstable_mockModule('../api/fans', () => ({ Fans: { getProfile: jest.fn(async () => ({})) } }));
 jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: {
   listItems: jest.fn(async () => ({ items: [], total: 0 })),
 } }));
-jest.unstable_mockModule('../utils/tidalAgent', () => ({ generateTidalCode: jest.fn() }));
+jest.unstable_mockModule('../services/tidalAgent', () => ({ generateTidalCode: jest.fn() }));
 const { default: RoutedRadioWidget } = await import('./RoutedRadioWidget');
 
 const destinations = ['/inicio', '/marketplace', '/musica', '/configuracion/inscripciones-curso', '/records', '/fans', '/solicitudes-acceso/revision'];

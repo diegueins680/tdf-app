@@ -4,9 +4,11 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Alert, Button, Chip, Divider, Paper, Stack, TextField, Typography } from '@mui/material';
 import HandshakeIcon from '@mui/icons-material/Handshake';
+import PaymentAlternativesNotice from '../../components/payments/PaymentAlternativesNotice';
 
 import { Directory, type AgreementStatus, type DirectoryTaxonomyItem, type MarketplaceAgreement } from '../../api/directory';
 import { agreementActions, agreementChargeDue, bpsToPercent, visibleAgreementPayments } from './agreements';
+import { agreementPayableByBuyer, startAgreementPayment } from './agreementPayment';
 import { describeTerms, formatMinor } from './offers';
 
 interface AgreementCardProps {
@@ -33,6 +35,9 @@ export default function AgreementCard({ agreement, currencies }: AgreementCardPr
       await queryClient.invalidateQueries({ queryKey: ['directory'] });
     },
   });
+  // ADR 0136: the buyer pays the charge the agreement waits for on PayPhone.
+  const pay = useMutation({ mutationFn: () => startAgreementPayment(agreement) });
+  const payable = agreementPayableByBuyer(agreement);
   const actions = agreementActions(agreement.status, agreement.participantRole);
   const terms = describeTerms(agreement.terms, t);
   const counterpart = agreement.participantRole === 'provider' ? agreement.buyerProfile : agreement.providerProfile;
@@ -73,6 +78,25 @@ export default function AgreementCard({ agreement, currencies }: AgreementCardPr
             {t(`marketplace.agreement.chargeDue.${chargeDue}.${agreement.participantRole === 'buyer' ? 'buyer' : 'other'}`)}
             {depositDeadline ? ` ${t('marketplace.agreement.depositDeadline', { date: depositDeadline })}` : ''}
           </Alert>
+        )}
+        {chargeDue && payable && (
+          <Stack spacing={1} alignItems="flex-start">
+            <Button variant="contained" disabled={pay.isPending || pay.data?.redirected === true} onClick={() => pay.mutate()} data-testid="agreement-pay">
+              {t(`marketplace.agreement.pay.${chargeDue}`)}
+            </Button>
+            {pay.data?.notEnabled === true && <Alert severity="info">{t('marketplace.agreement.pay.notEnabled')}</Alert>}
+            {pay.data?.inProgress === true && <Alert severity="info">{t('marketplace.agreement.pay.inProgress')}</Alert>}
+            {pay.data?.recoveryUnavailable === true && <Alert severity="warning">{t('marketplace.agreement.pay.recoveryUnavailable')}</Alert>}
+            {pay.data !== undefined && !pay.data.redirected && !pay.data.notEnabled && !pay.data.inProgress && !pay.data.recoveryUnavailable && <Alert severity="warning">{t('marketplace.agreement.pay.noPage')}</Alert>}
+            {pay.error && <Alert severity="error">{pay.error.message}</Alert>}
+            {(pay.isError || (pay.data && !pay.data.redirected)) && <PaymentAlternativesNotice
+              methods={[]}
+              failedMethod="payphone_card"
+              availabilityUnknown={Boolean(pay.isError || pay.data?.notEnabled)}
+              blocked={Boolean(pay.isError || pay.data?.inProgress)}
+              english={i18n.language.toLowerCase().startsWith('en')}
+            />}
+          </Stack>
         )}
         {payments.length > 0 && (
           <Stack spacing={0.75} data-testid="agreement-payments">

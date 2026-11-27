@@ -1,0 +1,75 @@
+{
+  "checkedAt": "2026-11-15T20:05:00Z",
+  "source": "Play Console (Dashboard and Latest releases pages) in the operator's signed-in Chrome, read-only; public TestFlight invite page fetched anonymously; App Store Connect opened in the same Chrome and found signed out (login page, authResult=FAILED), not signed in by the agent; no store API, no tester identities or credentials retained",
+  "decision": "Seven-day renewal of both channels after the manifest lapsed on 2026-10-20, on the same evidence standard the product owner accepted on 2026-10-11 to 2026-10-13 (iOS verified only from the public invite page). The owner approves or rejects it when reviewing the pull request that carries this file.",
+  "previousEvidence": "distribution-2026-10-13.json",
+  "ios": {
+    "checkedAt": "2026-11-15T19:40:00Z",
+    "method": "Anonymous HTTPS request; no account",
+    "testFlightUrl": "https://testflight.apple.com/join/7k3VE2JJ",
+    "httpStatus": 200,
+    "pageTitle": "Join the TDF Records Mobile beta - TestFlight - Apple",
+    "joinActionPresent": true,
+    "fullOrClosedNoticePresent": false,
+    "appStoreListing": {
+      "url": "https://apps.apple.com/app/id6779786470",
+      "httpStatus": 404,
+      "lookupApiResultCount": 0,
+      "meaning": "no public App Store listing"
+    },
+    "appStoreConnectChecked": false,
+    "appStoreConnectSessionState": "signed out in the operator's Chrome (login page with authResult=FAILED); not signed in by the agent",
+    "notVerified": [
+      "which build the public link currently serves (31 is the last one recorded as assigned, on 2026-10-05; TestFlight builds expire 90 days after upload)",
+      "build 32 Beta App Review state",
+      "external group tester count",
+      "App Store review state (REJECTED per the 2026-10-05 record)"
+    ],
+    "version": "1.0.1",
+    "build": "31"
+  },
+  "android": {
+    "checkedAt": "2026-11-15T20:00:00Z",
+    "method": "Authenticated Google Play Console, read-only; nothing changed",
+    "packageName": "com.tdf.records",
+    "accountType": "Personal account",
+    "appStatus": "Closed testing",
+    "productionTrack": "Inactive",
+    "activeTrack": "Closed testing - Alpha",
+    "release": "1.0.1 (24) - TDF tester analytics",
+    "releaseStatus": "Available to testers on Google Play, full rollout",
+    "releaseLastUpdated": "2026-10-05",
+    "countries": "178 of 178",
+    "highestUploadedVersionCode": 24,
+    "productionAccessChecklist": {
+      "closedTestingReleasePublished": true,
+      "testersOptedIn": 5,
+      "testersRequired": 12,
+      "continuousDaysRequired": 14,
+      "applyForProductionEnabled": false
+    },
+    "accountNotice": "Console shows 'Declare your trader status by February, 2027' as action required; not acted on",
+    "storeListing": {
+      "url": "https://play.google.com/store/apps/details?id=com.tdf.records",
+      "httpStatus": 404,
+      "meaning": "no public Play listing"
+    },
+    "admission": "approval_required",
+    "notVerified": [
+      "tester email-list sizes",
+      "opt-in page as an eligible tester"
+    ],
+    "version": "1.0.1",
+    "build": "24"
+  },
+  "artifacts": {
+    "latestSignedRuns": {
+      "ios": "https://github.com/diegueins680/TDF-mobile/actions/runs/37325937942",
+      "android": "https://github.com/diegueins680/TDF-mobile/actions/runs/37325943662",
+      "commit": "6ebe6c5fee3efb8712c673f102c44ec4913710e2",
+      "date": "2026-10-05"
+    },
+    "mobileMainHead": "2e9752e53835697ff6c17c25ef03a030251e2768",
+    "commitsOnMobileMainSinceLastSignedBuild": 241
+  }
+}

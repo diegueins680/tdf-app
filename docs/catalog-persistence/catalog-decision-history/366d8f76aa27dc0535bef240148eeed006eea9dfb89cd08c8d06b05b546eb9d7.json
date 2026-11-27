@@ -1,0 +1,24 @@
+{
+  "id": "0bd23196640f34d2ea12",
+  "classification": "security-system-registry",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "navigation_item, navigation_item_permission",
+  "priority": "P0-security",
+  "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+  "justification": "The160-entry mirror combines the newly shipped147ec8bc Mobile tester program (public.mobile) with strict-admin video-source discovery. It preserves governed payment return behavior and the complete new shipped lineage per explicit product decision. Generated discovery is not backend authorization. Both prior review histories are retained.",
+  "reviewed": true,
+  "reviewMethod": "source-review-2026-10-04",
+  "reviewBatch": "booking-conformance-2026-10-05",
+  "evidence": {
+    "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+    "line": 55
+  },
+  "previousDecisions": [
+    {
+      "$historyRef": "sha256:9c2c8c4e7e1171d29e0a5d38252b44c9b49c897a426ffa492310f1aa20e6f7e6"
+    },
+    {
+      "$historyRef": "sha256:7b16b2dc0a81ec57385d04f1b6139de02e42ca8170e5def2dc60e5dc12e56053"
+    }
+  ]
+}

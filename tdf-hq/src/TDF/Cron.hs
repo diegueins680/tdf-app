@@ -3,11 +3,14 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module TDF.Cron
   ( startCoursePaymentReminderJob
+  , startCourseFollowUpReminderJob
+  , courseFollowUpReminderBody
   , startEventDiscoveryJob
   , startInstagramSyncJob
   , startSocialAutoReplyJob
   , startEventLogisticsRecheckJob
   , startArtistEnrichmentJob
+  , startArtistSimilarityJob
   , Directive(..)
   , parseDirective
   , selectInstagramSyncAccessToken
@@ -54,6 +57,7 @@ import           Data.Time               ( LocalTime(..)
                                          , zonedTimeToUTC
                                          )
 import           Database.Persist        ( (!=.)
+                                         , (<=.)
                                          , (==.)
                                          , (>=.)
                                          , Entity(..)
@@ -67,18 +71,24 @@ import           Database.Persist        ( (!=.)
                                          , insert_
                                          , insertEntity
                                          , insertUnique
+                                         , toPersistValue
                                          , delete
                                          , update
                                          , (=.)
                                          , (+=.)
                                           )
 import           Database.Persist.Sql    (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlConn, runSqlPool)
+import           Database.Persist.Sql    (IsolationLevel (RepeatableRead), runSqlConnWithIsolation)
 import           System.Random           (randomRIO)
 import           System.IO               (hPutStrLn, stderr)
 
 import           TDF.DB                  (Env(..), ConnectionPool)
 import           TDF.API.Admin           (ArtistEnrichmentRunRequest(..))
 import           TDF.Artists.Enrichment  (runArtistEnrichmentWithKey)
+import           TDF.Fans.ArtistSimilarity
+  ( GenerationSummary (..)
+  , runSimilarityGeneration
+  )
 import qualified TDF.Email.Service       as EmailSvc
 import qualified TDF.LogBuffer           as LogBuf
 import qualified TDF.ModelsExtra         as ME
@@ -113,15 +123,16 @@ import           TDF.Services.EventLogisticsRoutes
   )
 import qualified TDF.Models.SocialEventsModels as Social
 import           TDF.Routes.Courses      (CourseMetadata(..))
-import           TDF.Server              ( buildLandingUrl
-                                         , loadAdExamples
-                                         , runRagChatWithStatus
+import           TDF.Courses.Metadata    ( buildLandingUrl
                                          , courseMetadataFor
                                          , toCourseMetadata
                                          , normalizeSlug
                                          , productionCourseSlug
                                          , productionCoursePrice
                                          , productionCourseCapacity
+                                         )
+import           TDF.Services.LlmChat    ( loadAdExamples
+                                         , runRagChatWithStatus
                                          )
 import           TDF.RagStore            (ensureRagIndex, retrieveRagContext)
 import qualified TDF.Trials.Models       as Trials
@@ -135,6 +146,7 @@ import           TDF.Config
   , ticketmasterApiKey
   , eventLogisticsRecheckEnabled
   , artistEnrichmentEnabled
+  , fanMultiSignalRecommendationsEnabled
   , artistEnrichmentAutoPublish
   , artistEnrichmentHourLocal
   , artistEnrichmentBatchSize
@@ -148,6 +160,7 @@ import           Web.PathPieces          (fromPathPiece)
 import           TDF.WhatsApp.Client     (SendTextResult)
 import           TDF.WhatsApp.History    (OutgoingWhatsAppRecord(..), recordOutgoingWhatsAppMessage)
 import           TDF.WhatsApp.Transport  (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTextIO)
+import qualified TDF.CampaignAutomation as CampaignAutomation
 
 -- Auto-reply directive parsing
 data Directive = Send Text | Hold Text (Maybe Text) deriving (Show, Eq)
@@ -224,6 +237,95 @@ cronLoop env = forever $ do
     Right () ->
       LogBuf.addLog LogBuf.LogInfo "[Cron][CoursePayment] Reminder job finished."
 
+-- | Every five minutes, put each due course follow-up reminder in the bell of
+-- the admin who scheduled it. Reminders older than two days are skipped so a
+-- restart never floods the bell with stale alarms.
+startCourseFollowUpReminderJob :: Env -> IO ()
+startCourseFollowUpReminderJob env = do
+  void . forkIO $ do
+    threadDelay (30 * 1000000)
+    forever $ do
+      result <- tryNonAsync (runCourseFollowUpRemindersWithLeaderLock env)
+      case result of
+        Left err -> LogBuf.addLog LogBuf.LogError ("[Cron][CourseFollowUp] Reminder run failed: " <> T.pack (displayException err))
+        Right () -> pure ()
+      threadDelay (5 * 60 * 1000000)
+  LogBuf.addLog LogBuf.LogInfo "[Cron][CourseFollowUp] Scheduled follow-up reminders every 5 minutes."
+
+runCourseFollowUpRemindersWithLeaderLock :: Env -> IO ()
+runCourseFollowUpRemindersWithLeaderLock env@Env{envPool} =
+  withResource envPool $ \backend -> do
+    lockRows <- runSqlConn (rawSql "SELECT pg_try_advisory_lock(8401320250714)" [] :: SqlPersistT IO [Single Bool]) backend
+    case lockRows of
+      [Single True] -> sendDueCourseFollowUpReminders env
+        `finally` void (runSqlConn (rawSql "SELECT pg_advisory_unlock(8401320250714)" [] :: SqlPersistT IO [Single Bool]) backend)
+      _ -> pure ()
+
+sendDueCourseFollowUpReminders :: Env -> IO ()
+sendDueCourseFollowUpReminders Env{envPool} = do
+  now <- getCurrentTime
+  let oldestDue = addUTCTime (-(2 * 24 * 60 * 60)) now
+  -- Only reminders that can still be delivered take a batch slot: delivered,
+  -- authorless and cancelled-registration rows are excluded before the limit,
+  -- so a busy two-day window cannot starve later reminders.
+  rows <- runSqlPool
+    (rawSql
+      "SELECT ?? FROM course_registration_follow_up \
+      \JOIN course_registration ON course_registration.id = course_registration_follow_up.registration_id \
+      \WHERE course_registration_follow_up.next_follow_up_at <= ? \
+      \AND course_registration_follow_up.next_follow_up_at >= ? \
+      \AND course_registration_follow_up.created_by IS NOT NULL \
+      \AND lower(course_registration.status) <> 'cancelled' \
+      \AND NOT EXISTS (SELECT 1 FROM course_follow_up_reminder_delivery d \
+      \WHERE d.follow_up_id = course_registration_follow_up.id \
+      \AND d.due_at = course_registration_follow_up.next_follow_up_at \
+      \AND d.recipient_party_id = CAST(course_registration_follow_up.created_by AS text)) \
+      \ORDER BY course_registration_follow_up.next_follow_up_at ASC, course_registration_follow_up.id ASC \
+      \LIMIT 500"
+      [toPersistValue now, toPersistValue oldestDue]
+      :: SqlPersistT IO [Entity ME.CourseRegistrationFollowUp])
+    envPool
+  for_ rows $ \(Entity followUpKey followUp) ->
+    case (ME.courseRegistrationFollowUpNextFollowUpAt followUp, ME.courseRegistrationFollowUpCreatedBy followUp) of
+      -- The claim and its notification commit together: a failed notification
+      -- rolls the claim back, so the next run retries the reminder.
+      (Just dueAt, Just recipient) -> flip runSqlPool envPool $ do
+        mReg <- get (ME.courseRegistrationFollowUpRegistrationId followUp)
+        for_ mReg $ \reg ->
+          when (T.toLower (ME.courseRegistrationStatus reg) /= "cancelled") $ do
+            claim <- insertUnique ME.CourseFollowUpReminderDelivery
+              { ME.courseFollowUpReminderDeliveryFollowUpId = followUpKey
+              , ME.courseFollowUpReminderDeliveryDueAt = dueAt
+              , ME.courseFollowUpReminderDeliveryRecipientPartyId = T.pack (show (fromSqlKey recipient))
+              , ME.courseFollowUpReminderDeliveryDeliveredAt = now
+              }
+            for_ claim $ \_ -> insert_ Notification
+              { notificationRecipientPartyId = recipient
+              , notificationNotifType = "course_follow_up_reminder"
+              , notificationTitle = "Recordatorio de seguimiento · " <> courseFollowUpReminderName reg
+              , notificationBody = courseFollowUpReminderBody followUp
+              , notificationTargetType = Just "course_registration"
+              , notificationTargetId = Just (fromIntegral (fromSqlKey (ME.courseRegistrationFollowUpRegistrationId followUp)))
+              , notificationTargetKey = Just (ME.courseRegistrationCourseSlug reg)
+              , notificationIsRead = False
+              , notificationCreatedAt = now
+              }
+      _ -> pure ()
+
+courseFollowUpReminderName :: ME.CourseRegistration -> Text
+courseFollowUpReminderName reg =
+  fromMaybe "Inscripción" $
+    listToMaybe (filter (not . T.null) (map T.strip (catMaybes [ME.courseRegistrationFullName reg, ME.courseRegistrationEmail reg])))
+
+-- | Subject first, then the note, trimmed to a bell-sized line.
+courseFollowUpReminderBody :: ME.CourseRegistrationFollowUp -> Text
+courseFollowUpReminderBody followUp =
+  let subject = T.strip (fromMaybe "" (ME.courseRegistrationFollowUpSubject followUp))
+      notes = T.strip (ME.courseRegistrationFollowUpNotes followUp)
+      combined = T.intercalate " · " (filter (not . T.null) [subject, notes])
+      body = if T.null combined then "Es momento de retomar esta inscripción." else combined
+  in if T.length body > 280 then T.take 279 body <> "…" else body
+
 -- | Compute the next 09:00 in UTC, based on the server's local timezone.
 nextNineAMUtc :: IO UTCTime
 nextNineAMUtc = nextLocalTimeUtc (TimeOfDay 9 0 0)
@@ -297,6 +399,65 @@ runArtistEnrichmentWithLeaderLock Env{envPool, envConfig} =
             ("[Cron][ArtistEnrichment] Completed " <> runKey <> " in " <> mode <> " mode.")
       _ -> LogBuf.addLog LogBuf.LogInfo
         "[Cron][ArtistEnrichment] Another API replica owns this run; skipping."
+
+-- | Hour of the local day at which the artist similarity is recomputed.
+artistSimilarityHourLocal :: Int
+artistSimilarityHourLocal = 3
+
+-- | Store the multi-signal artist similarity once at start and then once per
+-- local day (COMMUNITY-ARTIST-SIMILARITY-001). Every replica starts the
+-- scheduler; a session advisory lock lets one of them run.
+startArtistSimilarityJob :: Env -> IO ()
+startArtistSimilarityJob env@Env{envConfig}
+  | not (fanMultiSignalRecommendationsEnabled envConfig) =
+      LogBuf.addLog LogBuf.LogInfo "[Cron][ArtistSimilarity] Disabled by configuration."
+  | otherwise = do
+      void (forkIO (artistSimilarityLoop env))
+      LogBuf.addLog LogBuf.LogInfo
+        ("[Cron][ArtistSimilarity] Scheduled at start and daily at local hour "
+          <> T.pack (show artistSimilarityHourLocal) <> ".")
+
+artistSimilarityLoop :: Env -> IO ()
+artistSimilarityLoop env = do
+  runOnce
+  forever $ do
+    target <- nextLocalTimeUtc (TimeOfDay artistSimilarityHourLocal 0 0)
+    waitUntil target
+    runOnce
+  where
+    runOnce = do
+      result <- tryNonAsync (runArtistSimilarityWithLeaderLock env)
+      case result of
+        Left err -> LogBuf.addLog LogBuf.LogError
+          ("[Cron][ArtistSimilarity] Run failed; the previous generation stays in use: "
+            <> T.pack (displayException err))
+        Right () -> pure ()
+
+-- | One generation in one REPEATABLE READ transaction: all signal reads see a
+-- single snapshot and the generation becomes visible complete or not at all.
+runArtistSimilarityWithLeaderLock :: Env -> IO ()
+runArtistSimilarityWithLeaderLock Env{envPool} =
+  withResource envPool $ \backend -> do
+    lockRows <- runSqlConn
+      (rawSql "SELECT pg_try_advisory_lock(8401320261121)" [] :: SqlPersistT IO [Single Bool])
+      backend
+    case lockRows of
+      [Single True] -> do
+        outcome <- tryNonAsync
+          (runSqlConnWithIsolation runSimilarityGeneration backend RepeatableRead)
+          `finally` void
+            (runSqlConn
+              (rawSql "SELECT pg_advisory_unlock(8401320261121)" [] :: SqlPersistT IO [Single Bool])
+              backend)
+        case outcome of
+          Left err -> throwIO err
+          Right summary -> LogBuf.addLog LogBuf.LogInfo
+            ("[Cron][ArtistSimilarity] Stored generation "
+              <> T.pack (show (gsGeneration summary)) <> ": "
+              <> T.pack (show (gsArtists summary)) <> " artists, "
+              <> T.pack (show (gsPairs summary)) <> " similar pairs.")
+      _ -> LogBuf.addLog LogBuf.LogInfo
+        "[Cron][ArtistSimilarity] Another API replica owns this run; skipping."
 
 -- | Import external events for cities with active subscriptions. Every API
 -- replica starts the loop, while a PostgreSQL advisory lock and per-source
@@ -1660,8 +1821,20 @@ replyWhatsAppConversation cfg pool waEnv acc senderId = do
       ]
       [Desc ME.WhatsAppMessageCreatedAt])
     pool
+  withdrawn <- runSqlPool (CampaignAutomation.whatsAppRecipientConsentWithdrawn senderId) pool
   case mLatestPending of
     Nothing -> pure acc
+    -- No automated reply to a contact who withdrew consent, including the
+    -- STOP message itself (MSG-STAFF-OUTBOUND-001).
+    Just (Entity key _) | withdrawn -> do
+      runSqlPool
+        (update key
+          [ ME.WhatsAppMessageReplyStatus =. "error"
+          , ME.WhatsAppMessageReplyError =. Just "Contact withdrew WhatsApp consent; no automatic reply"
+          , ME.WhatsAppMessageLastAttemptAt =. Just now
+          ])
+        pool
+      pure acc
     Just (Entity key msg) -> do
       recent <- runSqlPool
         (selectList

@@ -1,0 +1,287 @@
+openapi: 3.0.0
+info: { title: TDF Shared Location and Genre Filters, version: 1.0.0 }
+# TAX-FILTER-001 and TAX-GENRE-SUGGESTION-001. Every filterable surface takes
+# the same four repeatable parameters: values inside one dimension are ORed,
+# dimensions are ANDed, a genre includes its subgenres, and an item without a
+# value for an active dimension is not returned.
+paths:
+  /taxonomy/filter-options:
+    get:
+      tags: [Taxonomy]
+      operationId: getTaxonomyFilterOptions
+      summary: Every country, region, city and published genre a filter can offer
+      description: Both names are returned so a shared link (taxonomy ids) renders in Spanish or English without another request.
+      security: []
+      responses:
+        '200': { description: Filter options, content: { application/json: { schema: { $ref: '#/components/schemas/TaxonomyFilterOptions' } } } }
+  /genres/suggestions/check:
+    post:
+      tags: [Taxonomy]
+      operationId: checkGenreSuggestion
+      summary: Normalize and check a genre suggestion without storing it
+      security: [{ bearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/GenreSuggestionRequest' } } } }
+      responses:
+        '200': { description: Normalized names and the verdict, content: { application/json: { schema: { $ref: '#/components/schemas/GenreSuggestionCheck' } } } }
+        '400': { description: Unsafe or out-of-range name, or unknown parent genre }
+        '403': { description: Only artists can suggest genres }
+  /genres/suggestions:
+    post:
+      tags: [Taxonomy]
+      operationId: submitGenreSuggestion
+      summary: Suggest a new genre or subgenre
+      description: A suggestion whose words all appear in existing genre names is published at once and added to the artist's profile. One the checks cannot settle waits for an administrator. Duplicates and probable typos are refused with the existing genre unless confirmDistinct is true.
+      security: [{ bearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/GenreSuggestionRequest' } } } }
+      responses:
+        '200': { description: Stored or shared suggestion, content: { application/json: { schema: { $ref: '#/components/schemas/GenreSuggestionSubmission' } } } }
+        '400': { description: Unsafe or out-of-range name, or unknown parent genre }
+        '403': { description: Only artists can suggest genres }
+        '409': { description: Duplicate or probable typo of an existing genre (body is a GenreSuggestionCheck), content: { application/json: { schema: { $ref: '#/components/schemas/GenreSuggestionCheck' } } } }
+        '429': { description: Ten pending or twenty suggestions in the last day }
+  /genres/suggestions/mine:
+    get:
+      tags: [Taxonomy]
+      operationId: listMyGenreSuggestions
+      summary: The artist's own suggestions, newest first
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Suggestions, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/GenreSuggestion' } } } } }
+  /admin/genre-suggestions:
+    get:
+      tags: [Taxonomy]
+      operationId: listGenreSuggestionQueue
+      summary: Genre suggestion review queue (strict administrators)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [pending, approved, rejected, merged, all], default: pending } }
+      responses:
+        '200': { description: Suggestions, pending oldest first, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/GenreSuggestion' } } } } }
+        '403': { description: Administrator access required }
+  /admin/genre-suggestions/{suggestionId}/approve:
+    post:
+      tags: [Taxonomy]
+      operationId: approveGenreSuggestion
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/SuggestionId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/GenreSuggestionApproval' } } } }
+      responses:
+        '200': { description: Approved suggestion with its new genre, content: { application/json: { schema: { $ref: '#/components/schemas/GenreSuggestion' } } } }
+        '409': { description: Already decided, or the names duplicate an existing genre }
+  /admin/genre-suggestions/{suggestionId}/reject:
+    post:
+      tags: [Taxonomy]
+      operationId: rejectGenreSuggestion
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/SuggestionId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/GenreSuggestionRejection' } } } }
+      responses:
+        '200': { description: Rejected suggestion, content: { application/json: { schema: { $ref: '#/components/schemas/GenreSuggestion' } } } }
+        '409': { description: Already decided }
+  /admin/genre-suggestions/{suggestionId}/merge:
+    post:
+      tags: [Taxonomy]
+      operationId: mergeGenreSuggestion
+      security: [{ bearerAuth: [] }]
+      parameters: [{ $ref: '#/components/parameters/SuggestionId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/GenreSuggestionMerge' } } } }
+      responses:
+        '200': { description: Suggestion resolved to an existing genre, content: { application/json: { schema: { $ref: '#/components/schemas/GenreSuggestion' } } } }
+        '409': { description: Already decided }
+  /radio/streams/facets:
+    get:
+      tags: [Radio]
+      operationId: getRadioStreamFacets
+      summary: Per-value counts for the radio filters
+      description: Stations carry a country and a genre; a selected region or city narrows to its country.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/TaxonomyCountryIds' }
+        - { $ref: '#/components/parameters/TaxonomyRegionIds' }
+        - { $ref: '#/components/parameters/TaxonomyCityIds' }
+        - { $ref: '#/components/parameters/TaxonomyGenreIds' }
+      responses:
+        '200': { description: Counts, content: { application/json: { schema: { $ref: '#/components/schemas/TaxonomyFacets' } } } }
+  /music/facets/releases:
+    get:
+      tags: [Music]
+      operationId: getPublicMusicReleaseFacets
+      summary: Per-value counts for the public release filters
+      security: []
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: artistPartyId, in: query, schema: { type: integer, format: int64 } }
+        - { $ref: '#/components/parameters/TaxonomyCountryIds' }
+        - { $ref: '#/components/parameters/TaxonomyRegionIds' }
+        - { $ref: '#/components/parameters/TaxonomyCityIds' }
+        - { $ref: '#/components/parameters/TaxonomyGenreIds' }
+      responses:
+        '200': { description: Counts, content: { application/json: { schema: { $ref: '#/components/schemas/TaxonomyFacets' } } } }
+  /social-events/events/facets:
+    get:
+      tags: [Social events]
+      operationId: getSocialEventFacets
+      summary: Per-value counts for the event filters
+      description: Counts the first 500 events the list would return for the same scope, date, type, artist and venue filters, without its own taxonomy selection.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: city, in: query, schema: { type: string } }
+        - { name: scope, in: query, schema: { type: string } }
+        - { name: start_after, in: query, schema: { type: string } }
+        - { name: event_type_id, in: query, schema: { type: string, format: uuid } }
+        - { name: workflow_state_id, in: query, schema: { type: string, format: uuid } }
+        - { name: artistId, in: query, schema: { type: string } }
+        - { name: venueId, in: query, schema: { type: string } }
+        - { $ref: '#/components/parameters/TaxonomyCountryIds' }
+        - { $ref: '#/components/parameters/TaxonomyRegionIds' }
+        - { $ref: '#/components/parameters/TaxonomyCityIds' }
+        - { $ref: '#/components/parameters/TaxonomyGenreIds' }
+      responses:
+        '200': { description: Counts, content: { application/json: { schema: { $ref: '#/components/schemas/TaxonomyFacets' } } } }
+components:
+  parameters:
+    SuggestionId: { name: suggestionId, in: path, required: true, schema: { type: string, format: uuid } }
+    TaxonomyCountryIds:
+      name: countryIds
+      in: query
+      description: Repeatable country UUIDs (ORed). At most 50.
+      style: form
+      explode: true
+      schema: { type: array, maxItems: 50, items: { type: string, format: uuid } }
+    TaxonomyRegionIds:
+      name: regionIds
+      in: query
+      description: Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50.
+      style: form
+      explode: true
+      schema: { type: array, maxItems: 50, items: { type: string, format: uuid } }
+    TaxonomyCityIds:
+      name: cityIds
+      in: query
+      description: Repeatable city UUIDs (ORed). At most 50.
+      style: form
+      explode: true
+      schema: { type: array, maxItems: 50, items: { type: string, format: uuid } }
+    TaxonomyGenreIds:
+      name: genreIds
+      in: query
+      description: Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50.
+      style: form
+      explode: true
+      schema: { type: array, maxItems: 50, items: { type: string, format: uuid } }
+  schemas:
+    TaxonomyFacetCount:
+      type: object
+      required: [id, count]
+      properties:
+        id: { type: string, format: uuid }
+        count: { type: integer, minimum: 0 }
+    TaxonomyFacets:
+      type: object
+      description: Each dimension's counts apply every other active filter but not that dimension's own selection. Genre counts include subgenre items.
+      properties:
+        genres: { type: array, items: { $ref: '#/components/schemas/TaxonomyFacetCount' } }
+        countries: { type: array, items: { $ref: '#/components/schemas/TaxonomyFacetCount' } }
+        regions: { type: array, items: { $ref: '#/components/schemas/TaxonomyFacetCount' } }
+        cities: { type: array, items: { $ref: '#/components/schemas/TaxonomyFacetCount' } }
+    TaxonomyCountryOption:
+      type: object
+      required: [id, code, nameEs, nameEn]
+      properties: { id: { type: string, format: uuid }, code: { type: string }, nameEs: { type: string }, nameEn: { type: string } }
+    TaxonomyRegionOption:
+      type: object
+      required: [id, countryId, code, nameEs, nameEn]
+      properties: { id: { type: string, format: uuid }, countryId: { type: string, format: uuid }, code: { type: string }, type: { type: string }, nameEs: { type: string }, nameEn: { type: string } }
+    TaxonomyCityOption:
+      type: object
+      required: [id, countryId, code, nameEs, nameEn]
+      properties:
+        id: { type: string, format: uuid }
+        countryId: { type: string, format: uuid }
+        regionId: { type: string, format: uuid, nullable: true }
+        code: { type: string }
+        nameEs: { type: string }
+        nameEn: { type: string }
+        latitude: { type: number, nullable: true }
+        longitude: { type: number, nullable: true }
+    TaxonomyGenreOption:
+      type: object
+      required: [id, code, nameEs, nameEn]
+      properties:
+        id: { type: string, format: uuid }
+        parentId: { type: string, format: uuid, nullable: true }
+        code: { type: string }
+        slug: { type: string, nullable: true }
+        nameEs: { type: string }
+        nameEn: { type: string }
+    TaxonomyFilterOptions:
+      type: object
+      required: [countries, regions, cities, genres]
+      properties:
+        countries: { type: array, items: { $ref: '#/components/schemas/TaxonomyCountryOption' } }
+        regions: { type: array, items: { $ref: '#/components/schemas/TaxonomyRegionOption' } }
+        cities: { type: array, items: { $ref: '#/components/schemas/TaxonomyCityOption' } }
+        genres: { type: array, items: { $ref: '#/components/schemas/TaxonomyGenreOption' } }
+    GenreSuggestionRequest:
+      type: object
+      required: [nameEs, nameEn]
+      properties:
+        nameEs: { type: string, minLength: 2, maxLength: 60 }
+        nameEn: { type: string, minLength: 2, maxLength: 60 }
+        parentGenreId: { type: string, format: uuid, nullable: true }
+        confirmDistinct: { type: boolean, nullable: true, description: The artist saw the near match and confirms the genre is different; the suggestion goes to review. }
+    GenreSummary:
+      type: object
+      required: [id, nameEs, nameEn]
+      properties: { id: { type: string, format: uuid }, nameEs: { type: string }, nameEn: { type: string }, parentId: { type: string, format: uuid, nullable: true } }
+    GenreSuggestionCheck:
+      type: object
+      required: [verdict, nameEs, nameEn, normalizedKey, corrections, reviewReasons]
+      properties:
+        verdict: { type: string, enum: [duplicate, similar, review, approve] }
+        nameEs: { type: string, description: Cleaned and cased Spanish name that would be stored }
+        nameEn: { type: string, description: Cleaned and cased English name that would be stored }
+        normalizedKey: { type: string }
+        match: { allOf: [{ $ref: '#/components/schemas/GenreSummary' }], nullable: true }
+        corrections: { type: array, items: { type: object, required: [word, suggestion], properties: { word: { type: string }, suggestion: { type: string } } } }
+        reviewReasons: { type: array, items: { type: string } }
+    GenreSuggestion:
+      type: object
+      required: [id, status, submittedName, nameEs, nameEn, reviewReasons, suggestedBy, automatic, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [pending, approved, rejected, merged] }
+        submittedName: { type: string }
+        nameEs: { type: string }
+        nameEn: { type: string }
+        parentGenreId: { type: string, format: uuid, nullable: true }
+        parentGenre: { allOf: [{ $ref: '#/components/schemas/GenreSummary' }], nullable: true }
+        reviewReasons: { type: array, items: { type: string } }
+        resolvedGenre: { allOf: [{ $ref: '#/components/schemas/GenreSummary' }], nullable: true }
+        suggestedBy: { type: object, required: [partyId], properties: { partyId: { type: integer, format: int64 }, displayName: { type: string, nullable: true } } }
+        reviewNote: { type: string, nullable: true }
+        reviewedAt: { type: string, format: date-time, nullable: true }
+        automatic: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    GenreSuggestionSubmission:
+      type: object
+      required: [suggestion, alreadySuggested, check]
+      properties:
+        suggestion: { $ref: '#/components/schemas/GenreSuggestion' }
+        alreadySuggested: { type: boolean, description: An identical suggestion was already pending; it is returned instead of a new one. }
+        check: { $ref: '#/components/schemas/GenreSuggestionCheck' }
+    GenreSuggestionApproval:
+      type: object
+      required: [approvedNameEs, approvedNameEn]
+      properties:
+        approvedNameEs: { type: string }
+        approvedNameEn: { type: string }
+        approvedParentGenreId: { type: string, format: uuid, nullable: true }
+    GenreSuggestionRejection:
+      type: object
+      required: [rejectionNote]
+      properties: { rejectionNote: { type: string, minLength: 1, maxLength: 500 } }
+    GenreSuggestionMerge:
+      type: object
+      required: [mergeIntoGenreId]
+      properties: { mergeIntoGenreId: { type: string, format: uuid } }

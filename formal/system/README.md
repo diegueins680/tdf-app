@@ -9,11 +9,16 @@ Historical green results are not current-candidate evidence.
 
 - [desktop-shell.md](desktop-shell.md): Electron shell boundary over the hosted TDF origin, one system playback session shared by release player and radio, reproducible installers with a fail-closed shell update channel (SYS-DESKTOP-001..003); Linux Electron and unit evidence, installed macOS/Windows acceptance pending.
 
+- [artist-similarity.md](artist-similarity.md): multi-signal artist similarity for fan recommendations (follows, favourites, RSVPs, plays), a nightly stored relation and its per-request reference behind a flag that is off by default (COMMUNITY-ARTIST-SIMILARITY-001); Z3 proofs of exclusions and order on a pinned translation, Apalache inductive proof and TLC controls for the job model, PostgreSQL probe; refinement of the code to the model by review.
+- [event-affinity.md](event-affinity.md): `GET /social-events/events?scope=for_you` returns the page of `all` ordered by the caller's affinity to the lineups, from own signals and the stored artist similarity, behind a flag that is off by default (EVT-AFFINITY-ORDER-001); Z3 proofs of evidence and order on a pinned translation, Apalache inductive proof and TLC control for hidden artists, QuickCheck of the pure core.
+- [queue-continuation.md](queue-continuation.md): the web player continues an ended queue with tracks of the artists the fan recommendations return, in that order, behind a build flag that is off by default (MEDIA-MUSIC-CONTINUATION-001); Apalache inductive proof and TLC control for the planning model, seeded random tests of the TypeScript function; no backend or contract change.
+
 - [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
 
 - [event-planning-ux.md](event-planning-ux.md): explicit event clocks, standard ticket fee estimates and bounded poster retry/session checks; delegated management is specified separately below.
 
 - [event-admin-delegation.md](event-admin-delegation.md): organizer-issued single-use links that make one account administrator of one event, what that administrator can and cannot do, and courtesy tickets (EVT-ADMIN-DELEGATION-001); PostgreSQL tests, no model, owner confirmation of the limits pending.
+- [event-ticket-sale-approval.md](event-ticket-sale-approval.md): an event manager's request to sell paid tickets under fixed standard terms and its approval or decline by a strict administrator (EVT-TICKET-SALE-001); PostgreSQL tests, no model.
 
 - [assurance-report.md](assurance-report.md): generated four-state proof matrix, replayable source-derived SMT evidence (including payment-validator preconditions) and explicit blocked release decision.
 - [receipt-admission.md](receipt-admission.md): source-bound consumer replay for every SMT suite, false-proof/refutation controls and an auditable synthetic counterexample.
@@ -52,6 +57,9 @@ These checks make drift fail CI; run them before changing a mapped surface.
   after checkout locking, actual PostgreSQL lock-wait counterexamples, three
   compiled source controls and a bounded model with four negative configurations.
 
+- [music-loudness-check.md](music-loudness-check.md): advisory loudness and
+  true-peak check of delivered masters, bound to one file; two inductive
+  proofs on models, a solver obligation for the decision and their limits.
 - [music-money-wire.md](music-money-wire.md): exact Int64 transport, confirmed
   purchase price, source-bound numeric SMT obligation and compatible clients.
 - [music-test-entrypoint.md](music-test-entrypoint.md): canonical execution of
@@ -136,10 +144,12 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [music-purchase-entitlement.md](music-purchase-entitlement.md): music order payment record, single entitlement, download limit and request replay window; bounded model, six negative controls and PostgreSQL tests.
 - [music-payment-outcome.md](music-payment-outcome.md): separate money and fulfillment outcomes, locked failed-retry quarantine, closed-order reconciliation, SQL mutations and a bounded outcome model; provider recovery and activation remain open.
 - [manual-bank-transfer.md](manual-bank-transfer.md): staff-verified ticket transfer review on the production schema, approval and ticket issuance in one transaction, bounded model with eight mutation controls and explicit bank exclusions.
+- [feed-affinity-ranking.md](feed-affinity-ranking.md): personal hot order of the fan-club feed behind `FAN_FEED_AFFINITY_ENABLED` (`COMMUNITY-FEED-AFFINITY-001`). Permutation, exclusion, refinement of the previous order, determinism and a displacement bound are proved on a small model by an Apalache inductive invariant and over exact arithmetic by Z3, with bounded TLC runs and negative controls; the Haskell sort, `Double` arithmetic, SQL and handler wiring are tested, not proved.
 - [payment-retry.md](payment-retry.md): serialized retry admission, immutable evidence, bounded mutation controls and retirement of the conflicting non-runtime checkout table.
 - [operations-failure-replay.md](operations-failure-replay.md): a manager's retry of a dead-lettered Operations projection re-queues it; the failure follows the projection to resolved or back to dead letter.
 - [ticket-manual-review.md](ticket-manual-review.md): staff review of a ticket bank transfer keeps its row locks to commit; bounded model, three negative controls and PostgreSQL race tests.
 - [index-declarations.md](index-declarations.md): nine uniqueness constraints created from index declarations become plain indexes; bounded model, three negative controls and PostgreSQL tests.
+- [directory-semantic-search.md](directory-semantic-search.md): embedding similarity in the semantic term of directory search behind a default-off flag; ranking envelope proved with Z3, index interleavings with an Apalache inductive invariant, bounded model with four negative controls and PostgreSQL tests.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)
 - [ledger-posting.md](ledger-posting.md): commerce ledger posting rules in PostgreSQL (SYS-MONEY-003)
 - [ledger-header.md](ledger-header.md): immutable posted source/audit headers,

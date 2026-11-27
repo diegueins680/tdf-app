@@ -1,0 +1,21 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "a663473f208da6516f1f",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "venue-coordinate-constraint-20261124",
+  "justification": "Append 2026-11-24_venue_coordinate_constraint (EVT-VENUE-SEARCH-001) after the venue search entry, leaving the 266 reviewed migration objects of protected main 1184f9ffeffa2fd5f280fad2f026c12ab7224f4d in their exact order with unchanged introduction metadata and SQL. The new migration adds one CHECK constraint on venue coordinates, refusing without change if any stored row violates it, and drops the partial index that only out-of-range rows used. The complete previous review is nested unchanged. This review does not authorize deployment.",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 267
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:0002218d6522d63ad815bee808b1d4dac1e41a652108ab940c104ad6a4edb17c"
+  }
+}

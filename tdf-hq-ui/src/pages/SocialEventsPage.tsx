@@ -1,8 +1,15 @@
+import { Taxonomy } from '../api/taxonomy';
+import TaxonomyFilterBar from '../components/taxonomyFilters/TaxonomyFilterBar';
+import { isTaxonomySelectionEmpty } from '../components/taxonomyFilters/taxonomyFilterModel';
+import { useProfileCityDefault } from '../components/taxonomyFilters/useProfileCityDefault';
+import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from '../components/taxonomyFilters/useTaxonomyFilters';
+import ArtistProfileLink from '../components/ArtistProfileLink';
 import { formatEventMoney as formatMoney } from '../utils/eventFinanceMoney';
+import { parseOptionalPriceCents } from '../utils/priceInput';
 import { buildEventFinanceCsvRows } from '../utils/eventFinanceCsv';
 import { serializeCsvCell, type CsvCell } from '../utils/csv';
 import MarkdownText from '../components/MarkdownText';
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import {
@@ -68,12 +75,16 @@ import { UserSelector } from '../components/party-selector/PartySelector';
 import type { PartySelectorOption } from '../api/partySelector';
 import { formatDateForUser, resolveRuntimeCurrency } from '../utils/formatters';
 import { hasStrictAdminAccess } from '../utils/accessControl';
+import { useSaveTicketTier } from '../components/events/useSaveTicketTier';
+import EventTicketSaleRequestsQueue from '../components/events/EventTicketSaleRequestsQueue';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventManualPaymentsPanel from '../components/events/EventManualPaymentsPanel';
 import EventTaxDocumentsPanel from '../components/events/EventTaxDocumentsPanel';
 import { RefundManagementPanel } from '../components/RefundManagementPanel';
+import ConfirmDialog from '../components/ConfirmDialog';
 import EventArtistSelector from '../components/events/EventArtistSelector';
-import { EVENT_PAGE_SIZE, eventArtistIds, eventPage, isPastEvent } from './eventDiscoveryFilters';
+import { EVENT_PAGE_SIZE, eventArtistIds, eventForYouOrder, eventHasNextPage, eventPage, eventPageLimit, isPastEvent } from './eventDiscoveryFilters';
+import { isEventAffinityOrderEnabled } from '../config/eventAffinityRollout';
 
 interface InvitationState {
   party: PartySelectorOption | null;
@@ -108,7 +119,7 @@ interface BudgetLineFormState {
   name: string;
   type: 'income' | 'expense';
   category: string;
-  plannedCents: string;
+  plannedAmount: string;
   notes: string;
 }
 
@@ -118,7 +129,7 @@ interface FinanceEntryFormState {
   source: string;
   category: string;
   concept: string;
-  amountCents: string;
+  amount: string;
   currency: string;
   status: 'draft' | 'posted' | 'pending' | 'void';
   externalRef: string;
@@ -130,7 +141,7 @@ interface ContractDraftState {
   kind: string;
   counterparty: string;
   concept: string;
-  amountCents: string;
+  amount: string;
   currency: string;
   status: 'draft' | 'pending' | 'posted';
   notes: string;
@@ -245,6 +256,15 @@ const parseOptionalUnsignedInt = (value: string): number | null => {
   return parseUnsignedSafeInt(trimmed);
 };
 
+const currencyAmountError = (raw: string, positive = false): string | null => {
+  try {
+    const cents = parseOptionalPriceCents(raw);
+    return positive && cents === 0 ? 'El monto debe ser mayor que cero.' : null;
+  } catch (error) {
+    return error instanceof Error ? error.message : 'Ingresa un monto válido.';
+  }
+};
+
 const dateKeyFromIso = (iso: string) => DateTime.fromISO(iso).toISODate() ?? '';
 
 const downloadCsvFile = (filename: string, rows: CsvCell[][]) => {
@@ -284,11 +304,6 @@ export default function SocialEventsPage() {
     if (key !== 'page') next.delete('page');
     return next;
   }, { replace: key === 'city' });
-  const clearFilters = () => setSearchParams(previous => {
-    const next = new URLSearchParams(previous);
-    ['city', 'type', 'state', 'artists', 'past', 'page'].forEach(key => next.delete(key));
-    return next;
-  });
   const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
   const [invites, setInvites] = useState<Record<string, InvitationState>>({});
   const [ticketPurchases, setTicketPurchases] = useState<Record<string, TicketPurchaseState>>({});
@@ -304,7 +319,16 @@ export default function SocialEventsPage() {
   const sessionPartyId = session?.partyId != null ? String(session.partyId) : null;
   const hasSession = Boolean(sessionPartyId);
   const hasAdminAccess = hasStrictAdminAccess(session?.roles, session?.modules);
-  const eventsQueryKey = ['social-events', sessionPartyId, cityFilter, eventTypeFilter, eventWorkflowStateFilter, artistIds.join(','), includePast, page] as const;
+  const forYouAvailable = isEventAffinityOrderEnabled() && hasSession;
+  const forYou = eventForYouOrder(searchParams.get('order'), isEventAffinityOrderEnabled(), hasSession);
+  // TAX-FILTER-001: events follow the shared location (venue) and genre
+  // (lineup) filters; the free-text city search above stays as it was.
+  const taxonomyOptions = useTaxonomyFilterOptions();
+  const profileCity = useProfileCityDefault(taxonomyOptions.data);
+  const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true });
+  const taxonomySelection = taxonomyFilters.selection;
+  const taxonomyKey = JSON.stringify(taxonomySelection);
+  const eventsQueryKey = ['social-events', sessionPartyId, cityFilter, eventTypeFilter, eventWorkflowStateFilter, artistIds.join(','), includePast, page, forYou, taxonomyKey] as const;
 
   const eventsQuery = useQuery({
     queryKey: eventsQueryKey,
@@ -315,9 +339,11 @@ export default function SocialEventsPage() {
         workflowStateId: eventWorkflowStateFilter || undefined,
         artistIds,
         startAfter: includePast ? undefined : new Date().toISOString(),
-        limit: EVENT_PAGE_SIZE + 1,
+        limit: eventPageLimit(forYou),
         offset: (page - 1) * EVENT_PAGE_SIZE,
+        forYou,
         signal,
+        taxonomy: taxonomySelection,
       }),
     enabled: city.trim() === cityFilter,
     // This page already exposes an explicit refresh action. Retrying a failed
@@ -376,8 +402,22 @@ export default function SocialEventsPage() {
   ]));
   const hasVenueError = venueQueries.some((query) => query.isError);
 
-  const hasNextPage = (eventsQuery.data?.length ?? 0) > EVENT_PAGE_SIZE;
-  const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventWorkflowStateFilter !== '' || artistIds.length > 0 || includePast || page > 1;
+  const hasNextPage = eventHasNextPage(forYou, eventsQuery.data?.length ?? 0);
+  const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventWorkflowStateFilter !== '' || artistIds.length > 0 || includePast || forYou || page > 1
+    || !isTaxonomySelectionEmpty(taxonomySelection);
+  const eventFacets = useQuery({
+    queryKey: ['social-events', 'facets', sessionPartyId, cityFilter, eventTypeFilter, eventWorkflowStateFilter, artistIds.join(','), includePast, taxonomyKey],
+    queryFn: ({ signal }) => Taxonomy.eventFacets(taxonomySelection, {
+      city: cityFilter || undefined,
+      eventTypeId: eventTypeFilter || undefined,
+      workflowStateId: eventWorkflowStateFilter || undefined,
+      artistIds,
+      startAfter: includePast ? undefined : new Date().toISOString(),
+    }, signal),
+    enabled: hasSession && city.trim() === cityFilter,
+    retry: false,
+    staleTime: 60_000,
+  });
   const eventOverviewUiState = getSocialEventsOverviewUiState({
     canCreateEvent: hasSession,
     eventCount: events.length,
@@ -592,8 +632,8 @@ export default function SocialEventsPage() {
     },
   });
 
-  const createTierMutation = useMutation({
-    mutationFn: ({ eventId }: { eventId: string }) => {
+  const createTierMutation = useSaveTicketTier(
+    ({ eventId }) => {
       const draft = ticketTierForms[eventId] ?? {
         code: '',
         name: '',
@@ -601,12 +641,12 @@ export default function SocialEventsPage() {
         quantity: '',
         currency: preferredCurrency,
       };
-      const priceCents = parseOptionalUnsignedInt(draft.price);
+      const priceCents = parseOptionalPriceCents(draft.price);
       const quantity = parseOptionalUnsignedInt(draft.quantity);
       if (!draft.name.trim()) throw new Error('Nombre del ticket requerido.');
-      if (priceCents === null) throw new Error('Precio inválido (usa centavos).');
+      if (priceCents === null) throw new Error('Ingresa un precio; usa 0 para una entrada gratis.');
       if (quantity === null || quantity <= 0) throw new Error('Cantidad inválida.');
-      const payload: SocialTicketTierDTO = {
+      return {
         ticketTierCode: draft.code.trim() || draft.name,
         ticketTierName: draft.name.trim(),
         ticketTierDescription: null,
@@ -619,19 +659,21 @@ export default function SocialEventsPage() {
         ticketTierActive: true,
         ticketTierPosition: null,
       };
-      return SocialEventsAPI.createTicketTier(eventId, payload);
     },
-    onSuccess: (_resp, { eventId }) => {
-      setTicketTierForms((prev) => ({
-        ...prev,
-        [eventId]: { code: '', name: '', price: '', quantity: '', currency: preferredCurrency },
-      }));
-      void qc.invalidateQueries({ queryKey: ['social-ticket-tiers', eventId] });
-      setFeedback({ kind: 'success', message: 'Tipo de ticket creado.' });
+    {
+      onSuccess: (_resp, { eventId }) => {
+        setTicketTierForms((prev) => ({
+          ...prev,
+          [eventId]: { code: '', name: '', price: '', quantity: '', currency: preferredCurrency },
+        }));
+        setFeedback({ kind: 'success', message: 'Tipo de ticket creado.' });
+      },
+      onError: (err) => setFeedback({ kind: 'error', message: err.message }),
     },
-    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
-  });
+  );
 
+  // Cancelling or refunding a paid order cannot be undone, so each asks first and names the order.
+  const [pendingOrderAction, setPendingOrderAction] = useState<{ eventId: string; orderId: string; status: 'cancelled' | 'refunded' } | null>(null);
   const updateOrderStatusMutation = useMutation({
     mutationFn: ({ eventId, orderId, status }: { eventId: string; orderId: string; status: 'cancelled' | 'refunded' }) =>
       SocialEventsAPI.updateTicketOrderStatus(eventId, orderId, status),
@@ -678,12 +720,12 @@ export default function SocialEventsPage() {
         name: '',
         type: 'expense',
         category: 'general',
-        plannedCents: '',
+        plannedAmount: '',
         notes: '',
       };
-      const plannedCents = parseOptionalUnsignedInt(draft.plannedCents);
+      const plannedCents = parseOptionalPriceCents(draft.plannedAmount);
       if (!draft.name.trim()) throw new Error('Nombre de línea presupuestaria requerido.');
-      if (plannedCents === null) throw new Error('Presupuesto inválido (usa centavos).');
+      if (plannedCents === null) throw new Error('Ingresa un presupuesto; usa 0 si aún no hay un monto previsto.');
       const payload: SocialEventBudgetLineDTO = {
         eblCode: draft.code.trim() || draft.name,
         eblName: draft.name.trim(),
@@ -698,7 +740,7 @@ export default function SocialEventsPage() {
     onSuccess: (_line, { eventId }) => {
       setBudgetLineForms((prev) => ({
         ...prev,
-        [eventId]: { code: '', name: '', type: 'expense', category: 'general', plannedCents: '', notes: '' },
+        [eventId]: { code: '', name: '', type: 'expense', category: 'general', plannedAmount: '', notes: '' },
       }));
       void qc.invalidateQueries({ queryKey: ['social-budget-lines', eventId] });
       void qc.invalidateQueries({ queryKey: ['social-finance-summary', eventId] });
@@ -746,14 +788,14 @@ export default function SocialEventsPage() {
         kind: 'event_vendor_contract',
         counterparty: '',
         concept: '',
-        amountCents: '',
+        amount: '',
         currency: preferredCurrency,
         status: 'pending' as const,
         notes: '',
       };
-      const amountCents = parseOptionalUnsignedInt(draft.amountCents);
+      const amountCents = parseOptionalPriceCents(draft.amount);
       if (!draft.concept.trim()) throw new Error('Concepto de contrato requerido.');
-      if (amountCents === null || amountCents <= 0) throw new Error('Monto de contrato inválido (usa centavos).');
+      if (amountCents === null || amountCents <= 0) throw new Error('El monto del contrato debe ser mayor que cero.');
       const currency = draft.currency.trim().toUpperCase() || preferredCurrency;
       const contractResponse = await ContractsAPI.create({
         kind: draft.kind.trim() || 'event_vendor_contract',
@@ -791,7 +833,7 @@ export default function SocialEventsPage() {
           kind: 'event_vendor_contract',
           counterparty: '',
           concept: '',
-          amountCents: '',
+          amount: '',
           currency: preferredCurrency,
           status: 'pending',
           notes: '',
@@ -830,16 +872,16 @@ export default function SocialEventsPage() {
         source: 'manual',
         category: 'general',
         concept: '',
-        amountCents: '',
+        amount: '',
         currency: preferredCurrency,
         status: 'posted',
         externalRef: '',
         notes: '',
         occurredAt: toDateTimeInputValue(),
       };
-      const amountCents = parseOptionalUnsignedInt(draft.amountCents);
+      const amountCents = parseOptionalPriceCents(draft.amount);
       if (!draft.concept.trim()) throw new Error('Concepto contable requerido.');
-      if (amountCents === null || amountCents <= 0) throw new Error('Monto inválido (usa centavos).');
+      if (amountCents === null || amountCents <= 0) throw new Error('El monto debe ser mayor que cero.');
       const payload: SocialEventFinanceEntryDTO = {
         efeBudgetLineId: draft.budgetLineId.trim() || null,
         efeDirection: draft.direction,
@@ -864,7 +906,7 @@ export default function SocialEventsPage() {
           source: 'manual',
           category: 'general',
           concept: '',
-          amountCents: '',
+          amount: '',
           currency: preferredCurrency,
           status: 'posted',
           externalRef: '',
@@ -949,7 +991,7 @@ export default function SocialEventsPage() {
                     size="small"
                     variant="outlined"
                     color="warning"
-                    onClick={() => updateOrderStatusMutation.mutate({ eventId, orderId: oid, status: 'cancelled' })}
+                    onClick={() => setPendingOrderAction({ eventId, orderId: oid, status: 'cancelled' })}
                     disabled={updateOrderStatusMutation.isPending}
                   >
                     Cancelar
@@ -958,11 +1000,25 @@ export default function SocialEventsPage() {
                     size="small"
                     variant="outlined"
                     color="error"
-                    onClick={() => updateOrderStatusMutation.mutate({ eventId, orderId: oid, status: 'refunded' })}
+                    onClick={() => setPendingOrderAction({ eventId, orderId: oid, status: 'refunded' })}
                     disabled={updateOrderStatusMutation.isPending}
                   >
                     Reembolsar
                   </Button>
+                  {pendingOrderAction?.eventId === eventId && pendingOrderAction.orderId === oid && (
+                    <ConfirmDialog
+                      open
+                      severity="danger"
+                      title={pendingOrderAction.status === 'refunded' ? '¿Reembolsar esta orden?' : '¿Cancelar esta orden?'}
+                      description={`Orden ${oid.slice(0, 8)} · ${formatMoney(order.ticketOrderAmountCents, order.ticketOrderCurrency)} · ${order.ticketOrderTickets.length} ${order.ticketOrderTickets.length === 1 ? 'entrada' : 'entradas'}. Esta acción no se puede deshacer.`}
+                      confirmLabel={pendingOrderAction.status === 'refunded' ? 'Reembolsar orden' : 'Cancelar orden'}
+                      onClose={() => setPendingOrderAction(null)}
+                      onConfirm={() => {
+                        updateOrderStatusMutation.mutate(pendingOrderAction);
+                        setPendingOrderAction(null);
+                      }}
+                    />
+                  )}
                 </Stack>
               )}
             </Box>
@@ -976,6 +1032,7 @@ export default function SocialEventsPage() {
     <Box>
       <Stack spacing={2} sx={{ mb: 3 }}>
         <Typography variant="h4" fontWeight={800}>Eventos</Typography>
+        {hasStrictAdminAccess(session?.roles, session?.modules) && <EventTicketSaleRequestsQueue />}
         <Typography color="text.secondary">
           Descubre eventos, confirma asistencia y gestiona operación completa: tickets, presupuesto y contabilidad por evento.
         </Typography>
@@ -1023,7 +1080,19 @@ export default function SocialEventsPage() {
           <FormControlLabel label="Incluir eventos pasados" control={
             <Switch checked={includePast} onChange={(_event, checked) => updateFilter('past', checked ? '1' : '')} />
           } />
-          {eventFiltersActive && <Button onClick={clearFilters}>Limpiar filtros</Button>}
+          {forYouAvailable && (
+            <FormControlLabel label="Ordenar según mis artistas" control={
+              <Switch checked={forYou} onChange={(_event, checked) => updateFilter('order', checked ? 'for_you' : '')} />
+            } />
+          )}
+          {eventFiltersActive && (
+            <Button
+              sx={{ width: { xs: '100%', md: 'auto' } }}
+              onClick={() => taxonomyFilters.clearAll(['city', 'type', 'state', 'artists', 'past', 'order'])}
+            >
+              Limpiar filtros
+            </Button>
+          )}
           {showRefreshAction && (
             <Button
               variant="outlined"
@@ -1053,6 +1122,8 @@ export default function SocialEventsPage() {
             </Alert>
           )}
         </Stack>
+        <TaxonomyFilterBar profileCity={profileCity} idPrefix="events" filters={taxonomyFilters} options={taxonomyOptions.data} optionsError={taxonomyOptions.isError}
+          facets={eventFacets.data} />
         {eventCreateUiState.showCreateWelcome && (
           <Card
             variant="outlined"
@@ -1229,7 +1300,7 @@ export default function SocialEventsPage() {
               name: '',
               type: 'expense' as const,
               category: 'general',
-              plannedCents: '',
+              plannedAmount: '',
               notes: '',
             };
             const financeDraft = financeEntryForms[eventId] ?? {
@@ -1238,7 +1309,7 @@ export default function SocialEventsPage() {
               source: 'manual',
               category: 'general',
               concept: '',
-              amountCents: '',
+              amount: '',
               currency: ev.eventCurrency ?? preferredCurrency,
               status: 'posted' as const,
               externalRef: '',
@@ -1249,11 +1320,15 @@ export default function SocialEventsPage() {
               kind: 'event_vendor_contract',
               counterparty: '',
               concept: '',
-              amountCents: '',
+              amount: '',
               currency: ev.eventCurrency ?? preferredCurrency,
               status: 'pending' as const,
               notes: '',
             };
+            const tierPriceError = currencyAmountError(tierDraft.price);
+            const budgetAmountError = currencyAmountError(budgetDraft.plannedAmount);
+            const contractAmountError = currencyAmountError(contractDraft.amount, true);
+            const financeAmountError = currencyAmountError(financeDraft.amount, true);
             const contractRefs = Array.from(
               new Set(
                 financeEntries
@@ -1330,7 +1405,12 @@ export default function SocialEventsPage() {
                     )}
                     {ev.eventArtists?.length ? (
                       <Typography variant="body2" color="text.secondary">
-                        Artistas: {ev.eventArtists.map((a) => a.artistName).join(', ')}
+                        Artistas: {ev.eventArtists.map((artist, index) => (
+                          <Fragment key={artist.artistId ?? index}>
+                            {index > 0 && ', '}
+                            <ArtistProfileLink partyId={artist.artistPartyId}>{artist.artistName}</ArtistProfileLink>
+                          </Fragment>
+                        ))}
                       </Typography>
                     ) : null}
                     {typeof ev.eventPriceCents === 'number' && (
@@ -1602,9 +1682,11 @@ export default function SocialEventsPage() {
                               sx={{ width: 140 }}
                             />
                             <TextField
-                              label="Precio (centavos)"
+                              label={`Precio (${tierDraft.currency.trim().toUpperCase() || preferredCurrency})`}
                               size="small"
-                              type="number"
+                              inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+                              error={Boolean(tierPriceError)}
+                              helperText={tierPriceError ?? 'Hasta dos decimales, por ejemplo 25,50.'}
                               value={tierDraft.price}
                               onChange={(e) => setTicketTierForms((prev) => ({
                                 ...prev,
@@ -1804,13 +1886,15 @@ export default function SocialEventsPage() {
                                 ))}
                               </TextField>
                               <TextField
-                                label="Plan (centavos)"
+                                label={`Plan (${ev.eventCurrency ?? preferredCurrency})`}
                                 size="small"
-                                type="number"
-                                value={budgetDraft.plannedCents}
+                                inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+                                error={Boolean(budgetAmountError)}
+                                helperText={budgetAmountError ?? 'Hasta dos decimales, por ejemplo 25,50.'}
+                                value={budgetDraft.plannedAmount}
                                 onChange={(e) => setBudgetLineForms((prev) => ({
                                   ...prev,
-                                  [eventId]: { ...budgetDraft, plannedCents: e.target.value },
+                                  [eventId]: { ...budgetDraft, plannedAmount: e.target.value },
                                 }))}
                                 sx={{ width: 150 }}
                               />
@@ -1917,14 +2001,16 @@ export default function SocialEventsPage() {
 
                             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                               <TextField
-                                label="Monto (centavos)"
+                                label={`Monto (${contractDraft.currency.trim().toUpperCase() || preferredCurrency})`}
                                 size="small"
-                                type="number"
-                                value={contractDraft.amountCents}
+                                inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+                                error={Boolean(contractAmountError)}
+                                helperText={contractAmountError ?? 'Hasta dos decimales, por ejemplo 25,50.'}
+                                value={contractDraft.amount}
                                 onChange={(e) =>
                                   setContractDrafts((prev) => ({
                                     ...prev,
-                                    [eventId]: { ...contractDraft, amountCents: e.target.value },
+                                    [eventId]: { ...contractDraft, amount: e.target.value },
                                   }))
                                 }
                                 sx={{ width: 170 }}
@@ -2121,13 +2207,15 @@ export default function SocialEventsPage() {
                             </Stack>
                             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                               <TextField
-                                label="Monto (centavos)"
+                                label={`Monto (${financeDraft.currency.trim().toUpperCase() || preferredCurrency})`}
                                 size="small"
-                                type="number"
-                                value={financeDraft.amountCents}
+                                inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+                                error={Boolean(financeAmountError)}
+                                helperText={financeAmountError ?? 'Hasta dos decimales, por ejemplo 25,50.'}
+                                value={financeDraft.amount}
                                 onChange={(e) => setFinanceEntryForms((prev) => ({
                                   ...prev,
-                                  [eventId]: { ...financeDraft, amountCents: e.target.value },
+                                  [eventId]: { ...financeDraft, amount: e.target.value },
                                 }))}
                                 sx={{ width: 160 }}
                               />

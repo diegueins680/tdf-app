@@ -39,7 +39,7 @@ function affectsMigrations(file) {
     || file === 'tdf-hq/production-entrypoint.sh'
     || file === 'tdf-hq/Dockerfile'
     || file === 'tdf-hq/Dockerfile.runtime'
-    || file === 'fly.toml'
+    || file === 'ops/hetzner/compose.production.yaml'
     || file === 'scripts/production-migrations.json'
     || file === 'scripts/production-release.mjs'
     || file === 'scripts/lib/production-release.mjs'
@@ -106,7 +106,6 @@ export function classifyChangedFiles(files, options = {}) {
       || pipelineChanged
       || changed.some(affectsLedgerRuntime)
       || changed.some((file) => isPathOrChild(file, 'tdf-hq')
-        || file === 'fly.toml'
         || file === '.dockerignore'
         || file === 'scripts/test-public-booking-http-concurrency.sh'
         || file === 'scripts/test-music-catalog-search.mjs'
@@ -116,6 +115,9 @@ export function classifyChangedFiles(files, options = {}) {
         || file === 'scripts/run-music-release-worker.sh'
         || file === 'scripts/run-music-release-worker-once.sh'
         || file === 'scripts/music-s3-upload.pl'
+        || file === 'scripts/measure-music-loudness.pl'
+        || file === 'scripts/test-music-loudness-wrapper.mjs'
+        || file === 'scripts/test-music-loudness-query.mjs'
         || /^scripts\/(?:process-music-release-|build-ddex-)/.test(file)
         || file === 'scripts/music-preview-spec.jq'
         || file === 'scripts/test-music-purchase-asset-query.py'

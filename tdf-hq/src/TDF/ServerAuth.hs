@@ -77,6 +77,7 @@ module TDF.ServerAuth
 import Control.Applicative ((<|>))
 import TDF.Auth.AccountName (initialAccountName)
 import qualified TDF.Auth.Throttle as Throttle
+import qualified TDF.Auth.ClientAddress as ClientAddress
 import Control.Exception.Safe (SomeException, try)
 import TDF.App.FailureBoundary (bestEffortActivity)
 import Control.Monad (forM, forM_, guard, join, unless, void, when)
@@ -100,6 +101,7 @@ import Data.Char
 import Data.Foldable (for_)
 import Data.Int (Int64)
 import GHC.Generics (Generic)
+import TDF.Auth.EmailVerification (recordVerifiedEmail)
 import Data.List (nub)
 import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
 import qualified Data.Set as Set
@@ -118,6 +120,7 @@ import Database.Persist.SqlBackend (getRDBMS)
 import Network.HTTP.Client (Manager, Response, httpLbs, parseRequest, responseBody, responseStatus)
 import Network.HTTP.Types.Status (statusCode)
 import Network.HTTP.Types.URI (urlEncode)
+import Network.Socket (SockAddr)
 import Servant
 import System.IO (hPutStrLn, stderr)
 import System.IO.Unsafe (unsafePerformIO)
@@ -1597,27 +1600,32 @@ recordAccountCreationConsent actorId signupMethod acceptedTermsVersion marketing
       , "marketingOptIn" .= marketingConsent
       ]))
 
-login :: LoginRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
-login rawRequest = do
+login :: Maybe Text -> SockAddr -> LoginRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
+login forwardedFor peer rawRequest = do
   LoginRequest{..} <- either throwError pure (validateLoginRequest rawRequest)
   Env pool cfg <- ask
-  -- Temporary lockout: once the failures recorded for this identifier use up
+  address <- liftIO (ClientAddress.clientAddressKey peer forwardedFor)
+  -- Temporary lockout: once the failures recorded on any of the three
+  -- counters (identifier at this address, this address, identifier) use up
   -- the window's limit, nothing is checked until the window ends.
   -- The count check, the password check and the failure count run in one
-  -- transaction under a per-identifier advisory lock, so concurrent attempts
-  -- cannot all pass a count read before any of them recorded its failure.
+  -- transaction under the three counters' advisory locks, taken in a fixed
+  -- order, so concurrent attempts cannot all pass a count read before any of
+  -- them recorded its failure.
   attemptedAt <- liftIO getCurrentTime
+  let counters = [minBound .. maxBound] :: [Throttle.LoginCounter]
   outcome <- liftIO $ flip runSqlPool pool $ do
-    Throttle.lockAuthThrottleSubject Throttle.ThrottleLoginFailure username
-    recordedFailures <-
-      Throttle.readAuthThrottleCount Throttle.ThrottleLoginFailure username attemptedAt
-    if Throttle.authThrottleLockedOut Throttle.ThrottleLoginFailure recordedFailures
+    mapM_ (\counter -> Throttle.lockLoginCounter counter username address) counters
+    recordedFailures <- mapM
+      (\counter -> (,) counter <$> Throttle.readLoginCounter counter username address attemptedAt)
+      counters
+    if Throttle.loginCountersLockedOut recordedFailures
       then pure Nothing
       else do
         attempt <- runLogin (sessionTokenTtlFromConfig cfg) username password
         case attempt of
           Left msg | msg == loginInvalidMessage ->
-            void (Throttle.consumeAuthThrottle Throttle.ThrottleLoginFailure username attemptedAt)
+            mapM_ (\counter -> void (Throttle.consumeLoginCounter counter username address attemptedAt)) counters
           _ -> pure ()
         pure (Just attempt)
   result <- maybe (throwError (authThrottleRefusal Throttle.ThrottleLoginFailure attemptedAt)) pure outcome
@@ -2321,8 +2329,7 @@ validateGoogleIdTokenInfo :: Maybe Text -> GoogleIdTokenInfo -> Either Text Goog
 validateGoogleIdTokenInfo mExpectedClientId info
   | not (gitEmailVerified info) =
       Left "Tu correo de Google debe estar verificado."
-  | Just expected <- mExpectedClientId
-  , gitAud info /= expected =
+  | gitAud info `notElem` acceptedAudiences =
       Left "El token de Google no coincide con el cliente configurado."
   | not (issuerAllowed (gitIss info)) =
       Left "El token de Google proviene de un emisor no permitido."
@@ -2346,6 +2353,14 @@ validateGoogleIdTokenInfo mExpectedClientId info
                 }
            in Right profile
   where
+    -- The released mobile apps request a Google ID token for their own web client.
+    -- Trust that audience only alongside the corresponding TDF production web client.
+    acceptedAudiences = case mExpectedClientId of
+      Just web | web == tdfWebClient -> [web, tdfMobileWebClient]
+      Just configured -> [configured]
+      Nothing -> []
+    tdfWebClient = "3700622137-4mvs5oc77n07e09pk32hk6n4ol07cjpl.apps.googleusercontent.com"
+    tdfMobileWebClient = "1016946267087-mvr22vuc8dql37fem7aa1msdnatjvhh4.apps.googleusercontent.com"
     subject = T.strip (gitSub info)
 
 issuerAllowed :: Maybe Text -> Bool
@@ -2760,6 +2775,9 @@ runPasswordResetConfirm ttl tokenVal passwordVal = do
                                   hashed <- liftIO (hashPasswordText passwordVal)
                                   update credId [UserCredentialPasswordHash =. hashed]
                                   revokeInteractiveSessions (userCredentialPartyId cred)
+                                  -- The token was delivered to the party's address, so
+                                  -- consuming it shows control of that address.
+                                  recordVerifiedEmail (fromSqlKey (userCredentialPartyId cred))
                                   sessionToken <- createSessionToken ttl (userCredentialPartyId cred) (userCredentialUsername cred)
                                   mUser <- loadAuthedUser sessionToken
                                   case mUser of

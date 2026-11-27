@@ -23,6 +23,7 @@ module TDF.API.SocialEventsAPI (
     FinanceRoutes,
     LogisticsRoutes,
     EventAdminRoutes,
+    EventTicketSaleRoutes,
     IdParam,
     EventImageUploadForm (..),
     EventMemoryMediaUploadForm (..),
@@ -31,6 +32,7 @@ module TDF.API.SocialEventsAPI (
     validateEventImageUploadForm,
 ) where
 
+import Data.Int (Int64)
 import Data.Aeson (FromJSON, ToJSON, Value)
 import Data.Char (
     GeneralCategory (Format, LineSeparator, ParagraphSeparator, Space),
@@ -58,7 +60,7 @@ import Servant.Multipart (
  )
 import System.FilePath (takeExtension)
 
-import TDF.Server.TicketPaymentReceipt (TicketPaymentReceipt)
+import TDF.DTO.TicketPaymentReceipt (TicketPaymentReceipt)
 
 import TDF.API.EventResearchAPI (EventResearchRoutes)
 
@@ -70,6 +72,8 @@ import TDF.DTO.SocialEventsDTO (
     EventAdminInvitationTokenDTO,
     EventAdminRosterDTO,
     EventCourtesyTicketDTO,
+    EventTicketSaleDTO,
+    EventTicketSaleRequestDTO,
     ArtistDTO,
     ArtistFollowRequest,
     ArtistFollowerDTO,
@@ -437,7 +441,26 @@ type EventsRoutes =
         :> QueryParam "venueId" Text
         :> QueryParam "limit" Int
         :> QueryParam "offset" Int
+        -- TAX-FILTER-001: the venue's location and the lineup's genres.
+        :> QueryParams "countryIds" UUID
+        :> QueryParams "regionIds" UUID
+        :> QueryParams "cityIds" UUID
+        :> QueryParams "genreIds" UUID
         :> Get '[JSON] [EventDTO]
+        -- Kept ahead of "events/:id" so "facets" is never read as an id.
+        :<|> "events" :> "facets"
+        :> QueryParam "city" Text
+        :> QueryParam "scope" Text
+        :> QueryParam "start_after" Text
+        :> QueryParam "event_type_id" Text
+        :> QueryParam "workflow_state_id" Text
+        :> QueryParam "artistId" Text
+        :> QueryParam "venueId" Text
+        :> QueryParams "countryIds" UUID
+        :> QueryParams "regionIds" UUID
+        :> QueryParams "cityIds" UUID
+        :> QueryParams "genreIds" UUID
+        :> Get '[JSON] Value
         :<|> "events" :> ReqBody '[JSON] EventDTO :> Post '[JSON] EventDTO
         :<|> "events" :> IdParam :> Get '[JSON] EventDTO
         :<|> "events" :> IdParam :> ReqBody '[JSON] EventUpdateDTO :> Put '[JSON] EventDTO
@@ -485,6 +508,7 @@ type RsvpRoutes =
         :<|> "events" :> Capture "eventId" Text :> "rsvp" :> ReqBody '[JSON] RsvpCreateDTO :> Put '[JSON] RsvpDTO
         :<|> "events" :> Capture "eventId" Text :> "rsvp" :> DeleteNoContent
         :<|> "events" :> Capture "eventId" Text :> "rsvp-summary" :> Get '[JSON] RsvpSummaryDTO
+        :<|> "events" :> Capture "eventId" Text :> "attendees" :> QueryParam' '[Required, Strict] "status" Text :> QueryParam "after" Int64 :> Get '[JSON] Value
         :<|> "events" :> Capture "eventId" Text :> "rsvps" :> QueryParam "cursor" Text :> QueryParam "limit" Int :> Get '[JSON] RsvpAdminPageDTO
         :<|> "profiles" :> Capture "partyId" Text :> "rsvp-feed" :> QueryParam "cursor" Text :> QueryParam "limit" Int :> Get '[JSON] RsvpFeedPageDTO
         :<|> "directory-profiles" :> Capture "slug" Text :> "rsvp-feed" :> QueryParam "cursor" Text :> QueryParam "limit" Int :> Get '[JSON] RsvpFeedPageDTO
@@ -669,6 +693,15 @@ type EventAdminRoutes =
         :<|> "admin-invitations" :> "accept" :> ReqBody '[JSON] EventAdminInvitationTokenDTO :> Post '[JSON] EventAdminAccessDTO
         :<|> "events" :> Capture "eventId" Text :> "courtesy-tickets" :> ReqBody '[JSON] EventCourtesyTicketDTO :> Post '[JSON] TicketOrderDTO
 
+-- EVT-TICKET-SALE-001: an event manager asks to sell paid tickets under the
+-- standard terms; a strict administrator approves or declines the request.
+type EventTicketSaleRoutes =
+    "events" :> Capture "eventId" Text :> "ticket-sale" :> Get '[JSON] EventTicketSaleDTO
+        :<|> "events" :> Capture "eventId" Text :> "ticket-sale" :> "request" :> Post '[JSON] EventTicketSaleDTO
+        :<|> "ticket-sale-requests" :> Get '[JSON] [EventTicketSaleRequestDTO]
+        :<|> "ticket-sale-requests" :> Capture "requestId" Text :> "approve" :> Post '[JSON] EventTicketSaleDTO
+        :<|> "ticket-sale-requests" :> Capture "requestId" Text :> "decline" :> Post '[JSON] EventTicketSaleDTO
+
 type SocialEventsAPI =
     EventsRoutes
         :<|> EventCitiesRoutes
@@ -686,3 +719,4 @@ type SocialEventsAPI =
         :<|> LogisticsRoutes
         :<|> EventAdminRoutes
         :<|> MemoryInvitationRoutes
+        :<|> EventTicketSaleRoutes

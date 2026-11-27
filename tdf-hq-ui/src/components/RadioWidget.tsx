@@ -34,10 +34,16 @@ import RadioIcon from '@mui/icons-material/Radio';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { generateTidalCode } from '../utils/tidalAgent';
+import { generateTidalCode } from '../services/tidalAgent';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { RadioAPI, type RadioStreamDTO, type RadioTransmissionInfo } from '../api/radio';
+import { Taxonomy } from '../api/taxonomy';
+import { useTranslation } from 'react-i18next';
+import { useProfileCityDefault } from './taxonomyFilters/useProfileCityDefault';
+import TaxonomyFilterBar from './taxonomyFilters/TaxonomyFilterBar';
+import { isTaxonomySelectionEmpty, toggleTaxonomyValue } from './taxonomyFilters/taxonomyFilterModel';
+import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from './taxonomyFilters/useTaxonomyFilters';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
@@ -205,8 +211,13 @@ export default function RadioWidget() {
   const [customStations, setCustomStations] = useState<Station[]>([]);
   const [newStationCountryId, setNewStationCountryId] = useState('');
   const [newStationGenreId, setNewStationGenreId] = useState('');
-  const [searchCountryId, setSearchCountryId] = useState('');
-  const [searchGenreId, setSearchGenreId] = useState('');
+  // TAX-FILTER-001: the radio follows the shared location and genre filters;
+  // as an overlay on every page it keeps its own override in memory, not the URL.
+  const { t } = useTranslation();
+  const taxonomyOptions = useTaxonomyFilterOptions();
+  const profileCity = useProfileCityDefault(taxonomyOptions.data);
+  const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: false });
+  const taxonomySelection = taxonomyFilters.selection;
   const [favoriteKeys, setFavoriteKeys] = useState<string[]>([]);
   const [hiddenKeys, setHiddenKeys] = useState<string[]>([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -349,8 +360,8 @@ export default function RadioWidget() {
     isPlayingRef.current = isPlaying;
   }, [isPlaying]);
   const keyFor = useCallback((station: Station) => station.streamUrl.toLowerCase(), []);
-  const countryIdQuery = searchCountryId.trim();
-  const genreIdQuery = searchGenreId.trim();
+  const taxonomyKey = JSON.stringify(taxonomySelection);
+  const taxonomyActive = !isTaxonomySelectionEmpty(taxonomySelection);
   const countriesQuery = useQuery({
     queryKey: ['catalog', 'countries', 'es', 'radio'],
     queryFn: () => Catalogs.listItems('countries', { locale: 'es', page: 1, pageSize: 500 }),
@@ -502,10 +513,16 @@ export default function RadioWidget() {
   }, [mediaDevicesSupported, refreshAudioInputs]);
 
   const radioSearch = useQuery<RadioStreamDTO[], Error>({
-    queryKey: ['radio-streams', countryIdQuery, genreIdQuery],
-    queryFn: () => RadioAPI.search({ countryId: countryIdQuery, genreId: genreIdQuery }),
+    queryKey: ['radio-streams', taxonomyKey],
+    queryFn: () => RadioAPI.search(taxonomySelection),
     staleTime: 60_000,
     gcTime: 5 * 60_000,
+    retry: false,
+  });
+  const radioFacets = useQuery({
+    queryKey: ['radio-streams', 'facets', taxonomyKey],
+    queryFn: ({ signal }) => Taxonomy.radioFacets(taxonomySelection, signal),
+    staleTime: 60_000,
     retry: false,
   });
   const refetchStreams = radioSearch.refetch;
@@ -1241,10 +1258,8 @@ export default function RadioWidget() {
     return trimmed === '' ? undefined : trimmed;
   }, []);
   const clearFilters = useCallback(() => {
-    setSearchCountryId('');
-    setSearchGenreId('');
-    void refetchStreams();
-  }, [refetchStreams]);
+    taxonomyFilters.clearAll();
+  }, [taxonomyFilters]);
   const handleImportClick = useCallback(() => {
     void (async () => {
       setImporting(true);
@@ -2532,54 +2547,33 @@ export default function RadioWidget() {
               <Collapse in={showAdvanced && showCatalogSection} timeout="auto">
                 <Stack spacing={1.5}>
                   <Stack spacing={1}>
-                    <Typography variant="caption" color="text.secondary">
-                      Busca por país o género en el catálogo guardado:
-                    </Typography>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center">
-                      <TextField
-                        select
+                    <TaxonomyFilterBar
+                      profileCity={profileCity}
+                      idPrefix="radio"
+                      filters={taxonomyFilters}
+                      options={taxonomyOptions.data}
+                      optionsError={taxonomyOptions.isError}
+                      facets={radioFacets.data}
+                      note={t('taxonomyFilters.radioScope')}
+                      defaultExpanded
+                    />
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Button
+                        variant="contained"
                         size="small"
-                        label="País"
-                        value={searchCountryId}
-                        onChange={(e) => setSearchCountryId(e.target.value)}
-                        fullWidth
+                        onClick={() => {
+                          void refetchStreams();
+                        }}
+                        disabled={streamsFetching}
+                        data-no-drag
                       >
-                        <MenuItem value="">Todos los países</MenuItem>
-                        {countryOptions.map((country) => (
-                          <MenuItem key={country.id} value={country.id}>{country.name}</MenuItem>
-                        ))}
-                      </TextField>
-                      <TextField
-                        select
-                        size="small"
-                        label="Género"
-                        value={searchGenreId}
-                        onChange={(e) => setSearchGenreId(e.target.value)}
-                        fullWidth
-                      >
-                        <MenuItem value="">Todos los géneros</MenuItem>
-                        {genreOptions.map((genre) => (
-                          <MenuItem key={genre.id} value={genre.id}>{genre.name}</MenuItem>
-                        ))}
-                      </TextField>
-                      <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: { sm: 220 } }}>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          onClick={() => {
-                            void refetchStreams();
-                          }}
-                          disabled={streamsFetching}
-                          data-no-drag
-                        >
-                          {streamsFetching ? 'Buscando...' : 'Buscar'}
+                        {streamsFetching ? 'Buscando...' : 'Actualizar'}
+                      </Button>
+                      {taxonomyActive && (
+                        <Button variant="text" size="small" onClick={clearFilters} data-no-drag>
+                          Limpiar
                         </Button>
-                        {(countryIdQuery || genreIdQuery) && (
-                          <Button variant="text" size="small" onClick={clearFilters} data-no-drag>
-                            Limpiar
-                          </Button>
-                        )}
-                      </Stack>
+                      )}
                     </Stack>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
                       <FormControlLabel
@@ -2957,7 +2951,7 @@ export default function RadioWidget() {
                                 key={`country-${country.id}`}
                                 size="small"
                                 label={country.name}
-                                onClick={() => setSearchCountryId(country.id)}
+                                onClick={() => taxonomyFilters.setSelection(toggleTaxonomyValue(taxonomySelection, 'countryIds', country.id))}
                               />
                             ))}
                           </Stack>
@@ -2972,7 +2966,7 @@ export default function RadioWidget() {
                                 key={`genre-${genre.id}`}
                                 size="small"
                                 label={genre.name}
-                                onClick={() => setSearchGenreId(genre.id)}
+                                onClick={() => taxonomyFilters.setSelection(toggleTaxonomyValue(taxonomySelection, 'genreIds', genre.id))}
                               />
                             ))}
                           </Stack>
@@ -3003,9 +2997,9 @@ export default function RadioWidget() {
                       <Typography variant="caption" color="text.secondary">
                         {streamsFetching
                           ? 'Buscando estaciones...'
-                          : `Catálogo: ${sortedVisibleStations.length} coincidencias${countryIdQuery || genreIdQuery ? ' (filtrado)' : ''}`}
+                          : `Catálogo: ${sortedVisibleStations.length} coincidencias${taxonomyActive ? ' (filtrado)' : ''}`}
                       </Typography>
-                      {(countryIdQuery || genreIdQuery) && sortedVisibleStations.length === 0 ? (
+                      {taxonomyActive && sortedVisibleStations.length === 0 ? (
                         <Typography variant="caption" color="text.secondary">
                           Sin resultados con estos filtros.
                         </Typography>
@@ -3031,7 +3025,7 @@ export default function RadioWidget() {
                         itemLabel: 'estaciones',
                         initialRowsPerPage: RADIO_STATION_INITIAL_ROWS_PER_PAGE,
                         rowsPerPageOptions: RADIO_STATION_ROWS_PER_PAGE_OPTIONS,
-                        resetKey: [countryIdQuery, genreIdQuery, showHidden, showFavoritesOnly].join('|'),
+                        resetKey: [taxonomyKey, showHidden, showFavoritesOnly].join('|'),
                       }}
                       renderItems={(visibleStationsPage) => (
                         <Stack direction="row" spacing={1} flexWrap="wrap">

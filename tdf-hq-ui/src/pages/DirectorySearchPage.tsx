@@ -1,3 +1,13 @@
+import TaxonomyFilterBar from '../components/taxonomyFilters/TaxonomyFilterBar';
+import {
+  hasTaxonomyUrlState,
+  readTaxonomySelectionFromUrl,
+  TAXONOMY_LOCAL_SCOPE_KEY,
+  TAXONOMY_LOCAL_SCOPE_VALUE,
+  writeTaxonomySelectionToUrl,
+} from '../components/taxonomyFilters/taxonomyFilterModel';
+import { useProfileCityDefault } from '../components/taxonomyFilters/useProfileCityDefault';
+import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from '../components/taxonomyFilters/useTaxonomyFilters';
 import MarkdownText from '../components/MarkdownText';
 import { directoryResultPath, useDebouncedSearch, useDirectorySearch } from '../features/discovery/useDirectorySearch';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +25,7 @@ import {
   FormControl,
   FormControlLabel,
   InputLabel,
+  Link,
   MenuItem,
   Paper,
   Select,
@@ -89,7 +100,6 @@ interface SearchUrlState {
   professionId: string;
   serviceId: string;
   instrumentId: string;
-  genreId: string;
   remote: boolean;
   available: boolean;
   radiusKm: number;
@@ -110,15 +120,17 @@ const parseSearchUrl = (search: string): SearchUrlState => {
     professionId: params.get('professionId') ?? '',
     serviceId: params.get('serviceId') ?? '',
     instrumentId: params.get('instrumentId') ?? '',
-    genreId: params.get('genreId') ?? '',
     remote: params.get('remote') === 'true',
     available: params.get('available') === 'true',
     radiusKm: Number.isFinite(radius) ? Math.min(500, Math.max(1, radius)) : 25,
   };
 };
 
-const buildSearchUrl = (state: SearchUrlState, nearby: boolean) => {
-  const params = new URLSearchParams();
+// TAX-FILTER-001: the shared location and genre filters keep their own URL
+// keys; rebuilding the search URL carries them over unchanged.
+const buildSearchUrl = (state: SearchUrlState, nearby: boolean, currentSearch = '') => {
+  const params = writeTaxonomySelectionToUrl(new URLSearchParams(), null);
+  const current = new URLSearchParams(currentSearch);
   if (state.q) params.set('q', state.q);
   if (state.profileKind) params.set('profileKind', state.profileKind);
   if (state.entityType !== 'all') params.set('entityType', state.entityType);
@@ -127,11 +139,12 @@ const buildSearchUrl = (state: SearchUrlState, nearby: boolean) => {
   if (state.professionId) params.set('professionId', state.professionId);
   if (state.serviceId) params.set('serviceId', state.serviceId);
   if (state.instrumentId) params.set('instrumentId', state.instrumentId);
-  if (state.genreId) params.set('genreId', state.genreId);
   if (state.remote) params.set('remote', 'true');
   if (state.available) params.set('available', 'true');
   if (nearby) params.set('radiusKm', String(state.radiusKm));
-  return params.toString();
+  const taxonomy = readTaxonomySelectionFromUrl(current);
+  const local = current.get(TAXONOMY_LOCAL_SCOPE_KEY) === TAXONOMY_LOCAL_SCOPE_VALUE;
+  return writeTaxonomySelectionToUrl(params, hasTaxonomyUrlState(current) ? taxonomy : null, local).toString();
 };
 
 const formatEventDate = (value: string | null | undefined, language: string) => {
@@ -160,7 +173,7 @@ export default function DirectorySearchPage() {
     && getActiveSession() === session && occurrence.current.generation === generation;
   const urlState = useMemo(() => parseSearchUrl(location.search), [location.search]);
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
-  const { q: query, entityType, professionId, serviceId, instrumentId, genreId, remote, available, radiusKm } = urlState;
+  const { q: query, entityType, professionId, serviceId, instrumentId, remote, available, radiusKm } = urlState;
   const taxonomies = useQuery({
     queryKey: ['directory', 'taxonomies', language],
     queryFn: () => Directory.taxonomies(language),
@@ -190,7 +203,7 @@ export default function DirectorySearchPage() {
   // nearby mode every change replaces: the consented coordinates live only in
   // memory, so a nearby entry restored by Back could never show its results.
   const updateSearch = (patch: Partial<SearchUrlState>, mode: 'push' | 'replace' = 'push', nearby = Boolean(coordinates)) => {
-    const next = buildSearchUrl({ ...urlState, cityId, ...patch }, nearby);
+    const next = buildSearchUrl({ ...urlState, cityId, ...patch }, nearby, location.search);
     if (location.search.replace(/^\?/, '') === next) return;
     navigate({ pathname: location.pathname, search: next }, { replace: mode === 'replace' || Boolean(coordinates) });
   };
@@ -200,9 +213,10 @@ export default function DirectorySearchPage() {
     if (previousQuery.current !== query) { previousQuery.current = query; return; }
     if (debouncedQuery !== query && debouncedQuery === draftQuery.trim().replace(/\s+/gu, ' ')) updateSearch({ q: debouncedQuery });
   }, [debouncedQuery, draftQuery, query]); // eslint-disable-line react-hooks/exhaustive-deps
-  const canonicalSearch = buildSearchUrl({ ...urlState, cityId }, Boolean(coordinates));
+  const canonicalSearch = buildSearchUrl({ ...urlState, cityId }, Boolean(coordinates), location.search);
   useEffect(() => {
-    if (location.search.replace(/^\?/, '') === canonicalSearch) return;
+    // The filter hook canonicalizes old genre links before ordinary defaults.
+    if (new URLSearchParams(location.search).has('genreId') || location.search.replace(/^\?/, '') === canonicalSearch) return;
     navigate({ pathname: location.pathname, search: canonicalSearch }, { replace: true });
   }, [canonicalSearch, location.pathname, location.search, navigate]);
 
@@ -221,6 +235,10 @@ export default function DirectorySearchPage() {
 
 
 
+  const taxonomyOptions = useTaxonomyFilterOptions();
+  const profileCity = useProfileCityDefault(taxonomyOptions.data);
+  const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true, legacyFilters: 'genre' });
+  const taxonomySelection = taxonomyFilters.selection;
   const searchBase: DirectorySearchQuery = {
     q: query || undefined,
     profileKind: entityType === 'profile' || entityType === 'artist' ? urlState.profileKind : undefined,
@@ -231,7 +249,10 @@ export default function DirectorySearchPage() {
     professionId: professionId || undefined,
     serviceId: serviceId || undefined,
     instrumentId: instrumentId || undefined,
-    genreId: genreId || undefined,
+    countryIds: taxonomySelection.countryIds,
+    regionIds: taxonomySelection.regionIds,
+    cityIds: taxonomySelection.cityIds,
+    genreIds: taxonomySelection.genreIds,
     remote: remote || undefined,
     available: available || undefined,
     latitude: coordinates?.latitude,
@@ -416,13 +437,6 @@ export default function DirectorySearchPage() {
                   </FormControl>
                 </>
               )}
-              <FormControl size="small" sx={{ minWidth: 190 }}>
-                <InputLabel id="directory-genre-label">{t('directorySearch.genre')}</InputLabel>
-                <Select labelId="directory-genre-label" label={t('directorySearch.genre')} value={genreId} onChange={(event) => updateSearch({ genreId: event.target.value })}>
-                  <MenuItem value="">{t('directorySearch.allMasculine')}</MenuItem>
-                  {(taxonomies.data?.genres ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
-                </Select>
-              </FormControl>
               {coordinates && <TextField size="small" type="number" label={t('directorySearch.radius')} value={radiusKm} onChange={(event) => updateSearch({ radiusKm: Math.min(500, Math.max(1, Number(event.target.value))) }, 'replace')} inputProps={{ min: 1, max: 500 }} sx={{ width: 140 }} />}
               {personFilters && (
                 <>
@@ -431,8 +445,13 @@ export default function DirectorySearchPage() {
                 </>
               )}
               {!personFilters && <Typography variant="body2" color="text.secondary">{t('directorySearch.placeFiltersHint')}</Typography>}
-              <Button onClick={() => updateSearch({ profileKind: undefined, professionId: '', serviceId: '', instrumentId: '', genreId: '', remote: false, available: false })}>{t('directorySearch.clearFilters')}</Button>
+              <Button onClick={() => updateSearch({ profileKind: undefined, professionId: '', serviceId: '', instrumentId: '', remote: false, available: false })}>{t('directorySearch.clearFilters')}</Button>
             </Stack>
+            <Box sx={{ mt: 1.5 }}>
+              {/* TAX-FILTER-001: country, region and genre (with subgenres); the city control above keeps its proximity search. */}
+              <TaxonomyFilterBar profileCity={profileCity} idPrefix="directory" filters={taxonomyFilters} options={taxonomyOptions.data} optionsError={taxonomyOptions.isError}
+                facets={facets?.taxonomy} dimensions={['countryIds', 'regionIds', 'genreIds']} />
+            </Box>
           </Paper>
 
           {favorites.isError && session?.partyId ? (
@@ -475,7 +494,7 @@ export default function DirectorySearchPage() {
             </Box>
           )}
 
-          {showMusic && <MusicSearchResults query={query} changingQuery={draftQuery.trim().replace(/\s+/gu, ' ') !== query.trim().replace(/\s+/gu, ' ')} />}
+          {showMusic && <MusicSearchResults query={query} taxonomy={taxonomySelection} changingQuery={draftQuery.trim().replace(/\s+/gu, ' ') !== query.trim().replace(/\s+/gu, ' ')} />}
 
           <Typography component="h2" variant="h5" fontWeight={800}>{t('directorySearch.organicResults', { count: facets?.total ?? items.length })}</Typography>
 
@@ -527,6 +546,11 @@ function ResultCard({
   const { t, i18n } = useTranslation();
   const path = resultPath(item);
   const sourceProfile = item.sourceProfile ?? null;
+  const profilePath = sourceProfile
+    ? `/directorio/${encodeURIComponent(sourceProfile.slug)}`
+    : item.type === 'profile' && (item.id.startsWith('artist-') || ['artist', 'band', 'project'].includes(item.profileKind ?? ''))
+      ? path
+      : null;
   const eventDate = item.type === 'event' ? formatEventDate(item.effectiveAt, i18n.resolvedLanguage ?? 'es') : null;
   const favorite = useMutation({
     mutationFn: async ({ ownerPartyId, saved }: { ownerPartyId: number; saved: boolean }) => {
@@ -574,6 +598,25 @@ function ResultCard({
       shareBusy.current = false;
     }
   };
+  const preview = (
+    <DirectoryPreviewImage
+      profileName={item.type === 'profile' ? item.title : undefined}
+      kind={item.type}
+      imageUrl={item.imageUrl}
+      alt={t('directorySearch.photo', { title: item.title })}
+      fallbackAlt={t('directorySearch.fallbackPhoto', { title: item.title })}
+      width={440}
+      height={440}
+      sizes={layout === 'grid' ? '(min-width: 900px) 33vw, 100vw' : '(min-width: 600px) 220px, 100vw'}
+      sx={{
+        width: layout === 'grid' ? '100%' : { xs: '100%', sm: 220 },
+        height: layout === 'grid' ? 220 : { xs: 240, sm: 220 },
+        aspectRatio: 'auto',
+        alignSelf: layout === 'list' ? { sm: 'stretch' } : undefined,
+        minHeight: layout === 'list' ? { sm: 220 } : undefined,
+      }}
+    />
+  );
   return (
     <Card
       variant="outlined"
@@ -584,23 +627,11 @@ function ResultCard({
         overflow: 'hidden',
       }}
     >
-      <DirectoryPreviewImage
-        profileName={item.type === 'profile' ? item.title : undefined}
-        kind={item.type}
-        imageUrl={item.imageUrl}
-        alt={t('directorySearch.photo', { title: item.title })}
-        fallbackAlt={t('directorySearch.fallbackPhoto', { title: item.title })}
-        width={440}
-        height={440}
-        sizes={layout === 'grid' ? '(min-width: 900px) 33vw, 100vw' : '(min-width: 600px) 220px, 100vw'}
-        sx={{
-          width: layout === 'grid' ? '100%' : { xs: '100%', sm: 220 },
-          height: layout === 'grid' ? 220 : { xs: 240, sm: 220 },
-          aspectRatio: 'auto',
-          alignSelf: layout === 'list' ? { sm: 'stretch' } : undefined,
-          minHeight: layout === 'list' ? { sm: 220 } : undefined,
-        }}
-      />
+      {profilePath ? (
+        <Box component={RouterLink} to={profilePath} sx={{ display: 'block', flexShrink: 0 }}>
+          {preview}
+        </Box>
+      ) : preview}
       <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', minWidth: 0 }}>
         <CardContent sx={{ flex: 1 }}>
           <Stack direction="row" justifyContent="space-between" gap={2}>
@@ -616,7 +647,11 @@ function ResultCard({
                   />
                 )}
               </Stack>
-              <Typography component="h2" variant="h5" fontWeight={850} mt={1}>{item.title}</Typography>
+              <Typography component="h2" variant="h5" fontWeight={850} mt={1}>
+                {profilePath ? (
+                  <Link component={RouterLink} to={profilePath} color="inherit" underline="hover">{item.title}</Link>
+                ) : item.title}
+              </Typography>
               {item.subtitle && <Typography color="text.secondary">{item.subtitle}</Typography>}
             </Box>
             {item.location.distanceKm != null && <Chip label={`≈ ${item.location.distanceKm} km`} color="primary" variant="outlined" />}
@@ -629,8 +664,8 @@ function ResultCard({
           </Stack>
         </CardContent>
         <CardActions sx={{ px: 2, pb: 2, flexWrap: 'wrap' }}>
-          {sourceProfile ? (
-            <Button component={RouterLink} to={sourceProfile.canonicalUrl} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: 'profile', entity_id: sourceProfile.id, sponsored: item.sponsored, via: 'artist_listing' })}>{t('directorySearch.viewProfile')}</Button>
+          {sourceProfile && profilePath ? (
+            <Button component={RouterLink} to={profilePath} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: 'profile', entity_id: sourceProfile.id, sponsored: item.sponsored, via: 'artist_listing' })}>{t('directorySearch.viewProfile')}</Button>
           ) : (
             <Button component={RouterLink} to={path} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: item.type, entity_id: item.id, sponsored: item.sponsored })}>{t('directorySearch.detail')}</Button>
           )}

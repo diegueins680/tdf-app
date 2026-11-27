@@ -75,6 +75,19 @@ jest.unstable_mockModule('../api/client', () => ({ API_BASE_URL: 'https://api.td
 
 await i18n.use(initReactI18next).init({ lng: 'es', fallbackLng: 'es', interpolation: { escapeValue: false }, resources: { es: { translation: { directorySearch: esDirectory } }, en: { translation: { directorySearch: enDirectory } } } });
 
+// TAX-FILTER-001: shared filter options and the profile-city default are not under test here.
+jest.unstable_mockModule('../api/taxonomy', () => ({
+  Taxonomy: {
+    filterOptions: jest.fn(async () => ({ countries: [], regions: [], cities: [], genres: [] })),
+    radioFacets: jest.fn(async () => ({})), musicReleaseFacets: jest.fn(async () => ({})), eventFacets: jest.fn(async () => ({})),
+    myGenreSuggestions: jest.fn(async () => []), checkGenreSuggestion: jest.fn(), submitGenreSuggestion: jest.fn(),
+  },
+  appendTaxonomyParams: (params: URLSearchParams, selection?: Record<string, string[]>) => {
+    Object.entries(selection ?? {}).forEach(([key, values]) => (values ?? []).forEach((value) => params.append(key, value)));
+    return params;
+  },
+}));
+jest.unstable_mockModule('../components/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
 const { default: DirectorySearchPage } = await import('./DirectorySearchPage');
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -205,6 +218,8 @@ describe('DirectorySearchPage', () => {
       expect(link.getAttribute('href')).toBe('/directorio/synthetic-band');
       const image = container.querySelector<HTMLImageElement>('img[alt="Foto de Synthetic Band"]');
       expect(image?.getAttribute('src')).toBe('https://cdn.example.test/synthetic-band.jpg');
+      expect(image?.closest('a')?.getAttribute('href')).toBe('/directorio/synthetic-band');
+      expect(container.querySelector('h2 a')?.getAttribute('href')).toBe('/directorio/synthetic-band');
       expect(image?.getAttribute('loading')).toBe('lazy');
     } finally {
       await act(async () => root.unmount());
@@ -542,9 +557,10 @@ describe('DirectorySearchPage', () => {
       expect(container.querySelector('a[href="/eventos/42"]')).not.toBeNull();
       // The city select shows Quito once the taxonomy has loaded.
       await waitFor(() => expect(container.querySelector('#directory-city-label + div')?.textContent).toContain('Quito'));
-      // People-only filters are not offered for events; the genre filter stays.
+      // People-only filters are not offered for events; the shared location and
+      // genre filters (TAX-FILTER-001) stay.
       expect(container.querySelector('#directory-profession-label')).toBeNull();
-      expect(container.querySelector('#directory-genre-label')).not.toBeNull();
+      expect(container.querySelector('[data-testid="directory-taxonomy-filters"]')).not.toBeNull();
       expect(container.textContent).toContain('no aplican a eventos ni venues');
     } finally {
       await act(async () => root.unmount());

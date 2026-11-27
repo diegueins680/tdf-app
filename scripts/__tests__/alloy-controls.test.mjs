@@ -21,7 +21,7 @@ test('every checked assertion has a mutation that preserves assertions and comma
     assert.throws(() => validateAlloyCoverage(source, controls.slice(1)), /coverage drift/);
     assert.throws(() => validateAlloyCoverage(source, [...controls, controls[0]]), /coverage drift/);
   }
-  assert.equal(count, 15);
+  assert.equal(count, 21);
 });
 
 test('mutations reject missing, duplicate, no-op, assertion, comment-only and unclosed targets', () => {

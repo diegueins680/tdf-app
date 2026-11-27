@@ -37,6 +37,19 @@ jest.unstable_mockModule('@mui/x-date-pickers/DateCalendar', () => ({
     <button type="button" onClick={() => onChange({ toISODate: () => '2099-05-10' })}>Elegir 2099-05-10</button>
   ),
 }));
+// TAX-FILTER-001: shared filter options and the profile-city default are not under test here.
+jest.unstable_mockModule('../api/taxonomy', () => ({
+  Taxonomy: {
+    filterOptions: jest.fn(async () => ({ countries: [], regions: [], cities: [], genres: [] })),
+    radioFacets: jest.fn(async () => ({})), musicReleaseFacets: jest.fn(async () => ({})), eventFacets: jest.fn(async () => ({})),
+    myGenreSuggestions: jest.fn(async () => []), checkGenreSuggestion: jest.fn(), submitGenreSuggestion: jest.fn(),
+  },
+  appendTaxonomyParams: (params: URLSearchParams, selection?: Record<string, string[]>) => {
+    Object.entries(selection ?? {}).forEach(([key, values]) => (values ?? []).forEach((value) => params.append(key, value)));
+    return params;
+  },
+}));
+jest.unstable_mockModule('../components/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
 const { default: SocialEventsPage } = await import('./SocialEventsPage');
 
 const future = (id: number, artist = artists[0]): SocialEventDTO => ({ eventId: String(id), eventTitle: `Evento ${id}`, eventStart: '2099-05-03T20:00:00Z', eventArtists: [artist] });
@@ -212,8 +225,9 @@ it.each([{ initial: [] }, { initial: ['7'] }])('searches past the first fifty ar
   act(() => input.focus());
   fireEvent.change(input, { target: { value: 'Beyond' } });
   expect(input.value).toBe('Beyond');
+  // Wait for the debounced request before scanning the full initial option list.
+  await waitFor(() => expect(listArtistOptions).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'Beyond', signal: expect.any(AbortSignal) })));
   await screen.findByRole('option', { name: 'Beyond initial fifty · #51' });
-  expect(listArtistOptions).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'Beyond', signal: expect.any(AbortSignal) }));
   expect(input.value).toBe('Beyond');
   fireEvent.click(screen.getByRole('option', { name: 'Beyond initial fifty · #51' }));
   await waitFor(() => expect(listEvents).toHaveBeenLastCalledWith(expect.objectContaining({ artistIds: [...initial, '51'] })));

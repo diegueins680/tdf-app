@@ -5,6 +5,8 @@
 
 module TDF.Server.EventTicketCheckout
   ( publicEventTicketsServer
+  , ApprovedTicketPolicy(..)
+  , loadApprovedTicketPolicy
   , deriveTicketLookupToken
   , ticketCheckoutAwaitsPayment
   , ticketPaymentAllowed
@@ -17,6 +19,8 @@ module TDF.Server.EventTicketCheckout
   , ticketCaptureUnverified
   , ticketUnverifiedCaptureRefusal
   ) where
+
+import qualified TDF.Commerce.DatafastClientIP as ClientIP
 
 import           Control.Exception
   ( SomeAsyncException, SomeException, fromException, throwIO, try )
@@ -63,6 +67,7 @@ import qualified TDF.Models as Models
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Routes.EventTickets as Routes
 import qualified TDF.Ticketing.Inventory as Inventory
+import           TDF.Ticketing.LookupToken (deriveTicketLookupToken)
 import qualified TDF.Ticketing.Transfer as Transfer
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Server.PaymentAvailability as PaymentAvailability
@@ -112,6 +117,9 @@ data TicketRuntimeView = TicketRuntimeView
   , trvCheckoutTotalMinor :: Int64
   , trvOrganizerPayable   :: Int64
   , trvPlatformFeeMinor   :: Int64
+  , trvTierName           :: Maybe Text
+  , trvTermsSummary       :: Text
+  , trvRefundPolicy       :: Text
   , trvTermsVersion       :: Text
   } deriving (Eq, Show)
 
@@ -179,12 +187,6 @@ loadTicketLookupTokenSecret = do
     Just secret | BS.length secret >= 32 -> pure secret
     _ -> throwError err503
       { errBody = "Secure guest ticket lookup is not configured in this environment" }
-
-deriveTicketLookupToken :: BS.ByteString -> Text -> Int64 -> Either Text Text
-deriveTicketLookupToken secret idempotencyKey eventId
-  | BS.length secret < 32 = Left "Ticket lookup secret must contain at least 32 bytes"
-  | otherwise = Right $ hmacSha256Text secret
-      ("event-ticket-order-lookup:" <> idempotencyKey <> ":" <> T.pack (show eventId))
 
 validatePositiveKey :: Text -> Int64 -> Either ServerError Int64
 validatePositiveKey fieldName value
@@ -811,8 +813,11 @@ loadTicketRuntimeView orderKey = do
     \ runtime.unit_price_minor, runtime.gross_face_value_minor,\
     \ runtime.discount_minor, runtime.net_face_value_minor, runtime.buyer_fee_minor,\
     \ runtime.organizer_fee_minor, runtime.tax_minor, runtime.checkout_total_minor,\
-    \ runtime.organizer_payable_minor, runtime.platform_fee_minor, runtime.terms_version, runtime.tax_included\
+    \ runtime.organizer_payable_minor, runtime.platform_fee_minor, runtime.terms_version, runtime.tax_included,\
+    \ item.snapshot->>'tier_name', policy.terms_summary, policy.refund_policy\
     \ FROM event_ticket_checkout_runtime runtime\
+    \ JOIN event_ticket_checkout_policy policy ON policy.id = runtime.policy_id\
+    \ LEFT JOIN commerce_checkout_line_item item ON item.checkout_id = runtime.checkout_id AND item.line_number = 1\
     \ JOIN commerce_checkout_session checkout ON checkout.id = runtime.checkout_id\
     \ WHERE runtime.order_id = ? AND checkout.domain_type = 'event_ticket_order'\
     \ AND checkout.domain_order_id = runtime.order_id::text\
@@ -823,7 +828,7 @@ loadTicketRuntimeView orderKey = do
       [( Single Int64, Single Int64, Single Text, Single Text, Single Text
        , Single UTCTime, Single (Maybe UTCTime), Single Text, Single Text, Single Int, Single Int64
        , Single Int64, Single Int64, Single Int64, Single Int64, Single Int64
-       , Single Int64, Single Int64, Single Int64, Single Int64, Single Text, Single Bool
+       , Single Int64, Single Int64, Single Int64, Single Int64, Single Text, (Single Bool, Single (Maybe Text), Single Text, Single Text)
        )])
   pure $ case rows of
     [( Single trvOrderId, Single trvEventId, Single trvCheckoutId
@@ -833,7 +838,7 @@ loadTicketRuntimeView orderKey = do
      , Single trvDiscountMinor, Single trvNetMinor, Single trvBuyerFeeMinor
      , Single trvOrganizerFeeMinor, Single trvTaxMinor
      , Single trvCheckoutTotalMinor, Single trvOrganizerPayable
-     , Single trvPlatformFeeMinor, Single trvTermsVersion, Single trvTaxIncluded
+     , Single trvPlatformFeeMinor, Single trvTermsVersion, (Single trvTaxIncluded, Single trvTierName, Single trvTermsSummary, Single trvRefundPolicy)
      )] -> Just TicketRuntimeView{..}
     _ -> Nothing
 
@@ -873,6 +878,9 @@ loadTicketCheckoutDTO orderKey lookupToken = do
         , Routes.checkoutTotalMinor = trvCheckoutTotalMinor runtime
         , Routes.organizerPayableMinor = trvOrganizerPayable runtime
         , Routes.platformFeeMinor = trvPlatformFeeMinor runtime
+        , Routes.tierName = trvTierName runtime
+        , Routes.termsSummary = trvTermsSummary runtime
+        , Routes.refundPolicy = trvRefundPolicy runtime
         , Routes.termsVersion = trvTermsVersion runtime
         }
     , Routes.paymentMethods = paymentMethods
@@ -1359,8 +1367,9 @@ createPublicEventTicketDatafastCheckout
   :: Int64
   -> Int64
   -> Maybe Text
+  -> ClientIP.DatafastClientRequest
   -> AppM APITypes.DatafastCheckoutDTO
-createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken = do
+createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken clientRequest = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
   requireTicketSalesOpen context
   when (tpcCheckoutStatus context == "paid") $
@@ -1369,18 +1378,24 @@ createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken = do
   (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireTicketProvider context
     (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
-  attempt <- beginSalesGatedTicketPaymentAttempt context Checkout.ProviderDatafast
-    Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"
   existing <- loadTicketProviderBinding context Checkout.ProviderDatafast
     (ServiceStorefront.sdfEntityId datafast) "checkout"
-  (checkoutId, widgetUrl) <- case existing of
-    Just (storedCheckoutId, _) -> pure
+  preflight <- maybe
+    (Right <$> ServiceStorefront.loadDatafastClientIP clientRequest) (pure . Left) existing
+  attempt <- beginSalesGatedTicketPaymentAttempt context Checkout.ProviderDatafast
+    Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"
+  checkoutRequest <- ServiceStorefront.recheckDatafastCheckout
+    (loadTicketProviderBinding context Checkout.ProviderDatafast
+      (ServiceStorefront.sdfEntityId datafast) "checkout") preflight
+  (checkoutId, widgetUrl) <- case checkoutRequest of
+    Left (storedCheckoutId, _) -> pure
       ( storedCheckoutId
       , stripTrailingSlash (ServiceStorefront.sdfBaseUrl datafast)
           <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
       )
-    Nothing -> ServiceStorefront.requestDatafastCheckoutForService
-      (ticketReference context)
+    Right clientIP -> ServiceStorefront.requestDatafastCheckoutForService
+      (tpcCheckout context)
+      attempt clientIP
       (fromIntegral (tpcAmountMinor context))
       (tpcCurrency context)
       (tpcBuyerName context)
@@ -1450,9 +1465,11 @@ confirmPublicEventTicketDatafastStatus rawEventId rawOrderId mLookupToken rawRes
             (ServiceStorefront.sdfEnvironment datafast) resultCode
           pending = resultCode == "000.200.000"
       if success then do
-        case ServiceStorefront.validateDatafastSuccessfulPayment
-            (ticketReference context) (fromIntegral (tpcAmountMinor context))
-            (tpcCurrency context) providerStatus of
+        validation <- ServiceStorefront.validateBoundDatafastSuccessfulPayment
+          (tpcCheckout context) (ServiceStorefront.sdfEnvironment datafast)
+          (ServiceStorefront.sdfEntityId datafast) checkoutId
+          (fromIntegral (tpcAmountMinor context)) (tpcCurrency context) providerStatus
+        case validation of
           Left validationMessage -> do
             let actualAmount = ServiceStorefront.sdfpsAmount providerStatus
                   >>= either (const Nothing) (Just . fromIntegral)

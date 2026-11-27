@@ -1,0 +1,98 @@
+name: Domo refund validation
+on:
+  pull_request:
+    paths:
+      - 'tdf-hq/src/TDF/Commerce/Domo*'
+      - 'tdf-hq/src/TDF/Server/Domo*'
+      - 'tdf-hq/src/TDF/Routes/Domo*'
+      - 'tdf-hq/src/TDF/Commerce/Refund*'
+      - 'tdf-hq/test/TDF/Commerce/Domo*'
+      - 'tdf-hq/sql/*domo*'
+      - 'formal/payments/domo_refund_lifecycle.py'
+      - 'scripts/test-provider-retry-runtime.sh'
+      - '.github/workflows/domo-refund-validation.yml'
+permissions:
+  contents: read
+concurrency:
+  group: domo-refund-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  isolated-refund-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    container:
+      image: haskell:9.10.3-bookworm
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: tdf_provider_retry_test
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tdf_provider_retry_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      STACK_ROOT: ${{ github.workspace }}/.stack-root
+      TDF_PROVIDER_RETRY_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_provider_retry_test
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+      - run: |
+          apt-get update
+          apt-get install -y --no-install-recommends libpq-dev postgresql-client python3 python3-psycopg2 pkg-config git curl ca-certificates jq
+          git config --global --add safe.directory "$(pwd -P)"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - uses: actions/cache@v6
+        id: stack-deps
+        with:
+          path: .stack-root
+          key: stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
+          restore-keys: |
+            stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-
+      - uses: actions/cache@v6
+        id: stack-objects
+        with:
+          path: tdf-hq/.stack-work
+          key: stack-work-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
+          restore-keys: |
+            stack-work-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-
+      - name: Compile backend and test executables
+        working-directory: tdf-hq
+        run: stack test --no-run-tests
+      # Successful compilation is reusable even when a later runtime assertion
+      # fails. This preserves compiled objects, never a test-pass declaration.
+      - uses: actions/cache/save@v6
+        if: steps.stack-deps.outputs.cache-hit != 'true'
+        with:
+          path: .stack-root
+          key: stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
+      - uses: actions/cache/save@v6
+        if: steps.stack-objects.outputs.cache-hit != 'true'
+        with:
+          path: tdf-hq/.stack-work
+          key: stack-work-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
+      - name: Check Domo unit and authorization tests without a database
+        working-directory: tdf-hq
+        # Only the runtime gate below supplies its database to the test process.
+        run: env -u TDF_PROVIDER_RETRY_DATABASE_URL stack test --test-arguments='--match=Domo --fail-on=empty +RTS -N2 -RTS'
+      - name: Exercise the complete reviewed PostgreSQL schema and all provider refund domains
+        run: |
+          status=0
+          sh scripts/test-provider-retry-runtime.sh > "$RUNNER_TEMP/domo-refund-runtime.log" 2>&1 || status=$?
+          cat "$RUNNER_TEMP/domo-refund-runtime.log"
+          exit "$status"
+      - name: Retain isolated synthetic runtime logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: domo-refund-runtime-${{ github.sha }}
+          path: ${{ runner.temp }}/domo-refund-runtime.log
+          if-no-files-found: ignore
+          retention-days: 7

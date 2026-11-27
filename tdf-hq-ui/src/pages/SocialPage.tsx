@@ -33,6 +33,7 @@ import { Fans } from '../api/fans';
 import { EmptyState } from '../components/PageShell';
 import GroupIcon from '@mui/icons-material/Group';
 import { SocialAPI } from '../api/social';
+import { suggestionReasonLabel } from '../features/social/suggestionReason';
 import type { PartyFollowDTO, SocialPartyProfileDTO } from '../api/types';
 import type { PartySelectorOption } from '../api/partySelector';
 import { UserSelector } from '../components/party-selector/PartySelector';
@@ -586,7 +587,7 @@ function LegacySocialPage() {
                           ID #{suggestion.sfPartyId}
                         </Typography>
                         <Chip
-                          label={`${suggestion.sfMutualCount} conexión${suggestion.sfMutualCount === 1 ? '' : 'es'} en común`}
+                          label={suggestionReasonLabel(suggestion)}
                           size="small"
                           color="info"
                           sx={{ mt: 0.5 }}
