@@ -32341,24 +32341,24 @@
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "d1dfa5c895f157048c91",
+      "id": "03614141201ef3733794",
       "reviewed": true,
-      "justification": "Append the original Datafast recovery migration after the complete protected manifest, including friend suggestions. Preserve both earlier manifest reviews.",
+      "justification": "Append the original Datafast recovery migration after the protected venue coordinate constraint. Preserve the complete protected and Datafast review histories.",
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "datafast-recovery-main-integration-20261126",
+      "reviewBatch": "datafast-after-venue-coordinates",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 273
+        "valueCount": 274
       },
       "previousDecision": {
-        "$historyRef": "sha256:622a2ae8a28302de76b608d225953bc979661a3b94513de7712c42b8e0497550"
+        "$historyRef": "sha256:3b42872026a6cb8dd7840cf348c950ab7136fc038fc6ce538662f521d5c153d5"
       },
       "concurrentReviewHistory": [
         {
-          "$historyRef": "sha256:33f89be3fbe8f7ec9d0bcfdf034dd8881135eb01623931eab2ea32a7ca674522"
+          "$historyRef": "sha256:1917fda2f25576b0fe50dc2154572cf83b4e8c1b3f1fc1a52e975cdac911cb78"
         }
       ]
     },

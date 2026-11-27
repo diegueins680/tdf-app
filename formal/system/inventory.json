@@ -1837,6 +1837,7 @@
       "tdf-hq-ui/src/utils/instagramTraffic.ts",
       "tdf-hq-ui/src/utils/inventoryCheckout.ts",
       "tdf-hq-ui/src/utils/isoDate.ts",
+      "tdf-hq-ui/src/utils/jamCircuit.ts",
       "tdf-hq-ui/src/utils/lazyWithReload.test.ts",
       "tdf-hq-ui/src/utils/lazyWithReload.ts",
       "tdf-hq-ui/src/utils/logger.ts",
@@ -2453,6 +2454,8 @@
       "tdf-hq/sql/2026-11-24_datafast_recovery.sql",
       "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
       "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql",
+      "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql",
+      "tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2869,6 +2872,7 @@
       "tdf-hq/test/TDF/Server/EventResearchSpec.hs",
       "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
       "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs",
+      "tdf-hq/test/TDF/Server/PublicBookingNotificationsSpec.hs",
       "tdf-hq/test/TDF/ServerAdminSpec.hs",
       "tdf-hq/test/TDF/ServerAuthSpec.hs",
       "tdf-hq/test/TDF/ServerExtraSpec.hs",
@@ -4313,7 +4317,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "97b38edf5a553e6ea8601ffc721ffe8755a966edc97d53f86d92e9f86d84e912",
+      "sha256": "7c7c018e949ff0e28fe732bb024f0b254d71ec3f83ca0f186d12ee629dc1951f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5927,7 +5931,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "4537378f2d542a60a767714f705e88c28528260eba1484de6a620cc852a89e58",
+      "sha256": "e43904645016e803690f27376d1eaf3d0ddeaa7f277b3595762b407b4e04dc06",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7631,7 +7635,7 @@
     {
       "id": "SURFACE-86a1f24a716c11ec",
       "path": "scripts/test-venue-search.sh",
-      "sha256": "2d1f31d1f4f6ffdd6a8346f44ea6bf5f42684b3b9d49d0242b7af1e669bdf144",
+      "sha256": "97c29a16abdd3b3bfc3a104ae5ed22c64069bb314efa2365cd41af8c9f832bcc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11903,13 +11907,13 @@
     {
       "id": "SURFACE-78d796fee86d9367",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
-      "sha256": "c3c495db7182a016a8d4ff2e119853f838157ef7f3892c9124be9131d13f613e",
+      "sha256": "549bfe9a5d49f6a9c86a092b536b3baad5f43bcb926f7f77fb215fc5c5eff63e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "da87c197bcc050c4415abd23fe1f7618052a85fa1cf3f4b65ae2f32acc830d37",
+      "sha256": "239f2b534e109456ab21354a367c494c6b3124a07823af366264625082d7a79d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11957,25 +11961,25 @@
     {
       "id": "SURFACE-d380d4ada9543610",
       "path": "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx",
-      "sha256": "e3038bcd8c6f70f1daf8acb8c148f2e7266cf1239aa1a6bbcb316f5dd75ef7d2",
+      "sha256": "06d84ebd880bafa2d0e4087d15dd7febe8dffa5b7c5d9b0d0516e66ae90dbd90",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-86468d4e75140c87",
       "path": "tdf-hq-ui/src/pages/CourseBuilderPage.tsx",
-      "sha256": "8becae891de1375f77aee74823def67a63453f1fb89f9d116c59c9bbead1d986",
+      "sha256": "d136014790ece9fe7e06bf511d7f44e6472f0004cb7fc672c097aa546fd3c5a1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-fd4d2654b87334c2",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
-      "sha256": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
+      "sha256": "660c582d2f99ca5a46e2e87ecce07b5321007a0fbc7f671a89051fe7ec86c8f5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "c1e638d0ff65572119237c8c4112d832fe1bdef8e41b1c93824a07b1b95c7122",
+      "sha256": "c5dc98227b5515c78e8d3364dd2613dad59ccd78aa566cb8815121bd9765d8f1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12035,13 +12039,13 @@
     {
       "id": "SURFACE-814a4782598cab3d",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-      "sha256": "d2ad6d96fc939f96b50f658fe8d4ce07f9dabda36fb0a6e78d39649bf780001d",
+      "sha256": "a82390c0bda44353dfe0a910b1eb9976dbe0f8a4243d4259f10e89e2d7559e75",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "5b494fa55283cc129ee2a97c9368c8e20568a7e1d8c1a1fb72dc44cfbaadd021",
+      "sha256": "4d763cefb804af63ef3ad1627aedbef4befc42d41daeb48acdf9b668b5408ff9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14268,6 +14272,12 @@
       "id": "SURFACE-8fa9a54ebf13387d",
       "path": "tdf-hq-ui/src/utils/isoDate.ts",
       "sha256": "62db8fac9ea4951969cd0217a9867070258b609d1d00a35ac510e2aa5044c27b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-106bd22259e77a2c",
+      "path": "tdf-hq-ui/src/utils/jamCircuit.ts",
+      "sha256": "9037580926c00df4e86c302d1753ccdaaef9776a21c36ca59bb9aef76d226f30",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17955,6 +17965,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-10ce780b0e3bba7b",
+      "path": "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql",
+      "sha256": "b8b072a0c8c62431c6795e13309e740501af4f5ef90f497396eb15f84477869c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-def3a20cbc135f56",
+      "path": "tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql",
+      "sha256": "10ed3efcf7e1cb08659689bde7e0114f58f0899090eeab164c63da99b59ee55d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -18713,7 +18735,7 @@
     {
       "id": "SURFACE-b5ed9df91b31bc61",
       "path": "tdf-hq/src/TDF/Courses/Production.hs",
-      "sha256": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
+      "sha256": "b2aa7b7febedf047bde371ee19114ecac6111b831da3bbbdf9b72f77f42ef756",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19229,7 +19251,7 @@
     {
       "id": "SURFACE-6076c182710c4ad6",
       "path": "tdf-hq/src/TDF/Seed.hs",
-      "sha256": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
+      "sha256": "ca67f75f5e7408961b3baa9c273df119259bcd0fe3a55225050879d0fb17df4c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19403,7 +19425,7 @@
     {
       "id": "SURFACE-e6a81cd4686d612d",
       "path": "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs",
-      "sha256": "e0716a47f555d27e774694ebe97ca81593b4a1b4a9f12f6e3b86adf257f246b9",
+      "sha256": "2febaf5e9291240b45ed6c2a0d29ef6bcc2bd2276e6f280eb3acfab18c5c999d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19817,7 +19839,7 @@
     {
       "id": "SURFACE-0233f07ad8ee305f",
       "path": "tdf-hq/src/TDF/Venues/Search.hs",
-      "sha256": "c0352e27e14fdb7ec8fd49c83214053bc0c65853cc5183a0ee7ed11a384a2967",
+      "sha256": "4f3965259bc43dc51b9e01276299a42f16fcd2c715fce32a3c9695af7fc57f57",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19877,7 +19899,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "1513749bad4e43fe58db9e4fd3f845466611dfca8390bc1a8ca83f5b8a9a665a",
+      "sha256": "353808e96b8b95472153fb591befb4e27804ff0dfeb06e5a6928a172d7e75ae8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19961,7 +19983,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "1d36a7609fa687c8eabd80bc02b57f5ed5872145ef44bc501d855ba703996590",
+      "sha256": "3407a89b9b0005143e0233c261abd7eb747a1e56a371a930def7a8d4c8ab2cd6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20451,6 +20473,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d7671e17d5e5026c",
+      "path": "tdf-hq/test/TDF/Server/PublicBookingNotificationsSpec.hs",
+      "sha256": "020dd1d269b9c5841f390dd1e60767a824af1846a18e130a99394d39cf3d70ef",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9c08dc84fc4d951b",
       "path": "tdf-hq/test/TDF/ServerAdminSpec.hs",
       "sha256": "e7a0734ee48ad1e74fd70aae7b82928001c36512bc1de5f6aebaa2c80bc283b8",
@@ -20609,7 +20637,7 @@
     {
       "id": "SURFACE-4564ae309b51c027",
       "path": "tdf-hq/test/TDF/Venues/SearchSpec.hs",
-      "sha256": "a31e06c160bb0aac3509150e0111e29e9fd94314d994ff11eeda885cb1a4afc9",
+      "sha256": "304834b92f4acfa749c1c88b4f0e3760a0958268c3189fcbcd36f5375c837cfe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32549,7 +32577,7 @@
     },
     {
       "path": "formal/system/bookings-routes.md",
-      "sha256": "b93488923ec5cb199938c933d5d6c31843c9f3636a394c877a847e39b8c9e902",
+      "sha256": "cae573b63e36538ebf6c22b27af1018b51364bd738bf8563789ff1c865ad0e01",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32787,7 +32815,7 @@
     },
     {
       "path": "formal/system/event-creation-entry.md",
-      "sha256": "2967fc0680609a0f8fc7d925c184aaec076a051188f9cb531da666959945f016",
+      "sha256": "0024b905fb4fb32c6933a290b2a683224066432a338adcc8f5df21f4ccdb3c30",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -33592,7 +33620,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "154103ea3c35536c66c1f03a1552daa9804adfadd64293b0e06ce6d1e3bcb88d",
+      "sha256": "c76c4bea1f73e1581b152065a7e8378cd30bb983d23a98683d16cc8aa0074cb9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33739,7 +33767,7 @@
     },
     {
       "path": "formal/system/venue-search.md",
-      "sha256": "8106a62e8657a5741f67190edd31e2b47e084e30f89b76de0f3c9a1a042b80f1",
+      "sha256": "3c4d8cb5179123732c68184f2b5fe4558e125767f58830d924a4779dacab0cd1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

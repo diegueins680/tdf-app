@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "1513749bad4e43fe58db9e4fd3f845466611dfca8390bc1a8ca83f5b8a9a665a"
+    "tdf-hq/tdf-hq.cabal": "353808e96b8b95472153fb591befb4e27804ff0dfeb06e5a6928a172d7e75ae8"
   },
   "obligations": [
     {
@@ -1067,6 +1067,15 @@
     },
     {
       "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "be46f18b2a17312ed36d75b99a2e50f8d59b71a9",
+      "previousSha256": "3bb5b85e0130e579eb3b7bc6d3992731634e70432d823024370381229dcbc2d3",
+      "currentSha256": "55f2c7d188e98985c1122ec9841e4dac50964a53a152404ea1c338efd64fc780",
+      "change": "Register TDF.Server.PublicBookingNotificationsSpec in the Haskell test suite.",
+      "semanticReview": "The Cabal diff adds one booking test module. The other pinned authorization and recovery sources match the protected revision.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
       "reviewedAgainst": "bddc0a2a6c18ef101db3c7750a4ec7fe7f01b4d8",
       "previousSha256": "903875f4791eb97ba37309de7e409343fab2dc5757ebb604ee815c862ca071bb",
       "currentSha256": "a73b58dbb8b8aa87db14a3338d01887b07ed35b7f6eae2dbc1118f4152f1dd3b",
@@ -1079,6 +1088,15 @@
       "reviewedAgainst": "f69535c5e0fe80938e54475cc6079599ab7715f2",
       "previousSha256": "3bb5b85e0130e579eb3b7bc6d3992731634e70432d823024370381229dcbc2d3",
       "currentSha256": "1513749bad4e43fe58db9e4fd3f845466611dfca8390bc1a8ca83f5b8a9a665a",
+      "change": "Register the two Datafast payment modules.",
+      "semanticReview": "Compared with protected main, the Cabal diff adds only DatafastRecovery and DatafastStatus to the library module list. Dependencies, flags, compiler options and other reviewed sources are identical.",
+      "qualification": "Source-bound solver and mutation checks cover this composition."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "64ec5907337e4c1c1fea22760eac2f1b1a73bddb",
+      "previousSha256": "55f2c7d188e98985c1122ec9841e4dac50964a53a152404ea1c338efd64fc780",
+      "currentSha256": "353808e96b8b95472153fb591befb4e27804ff0dfeb06e5a6928a172d7e75ae8",
       "change": "Register the two Datafast payment modules.",
       "semanticReview": "Compared with protected main, the Cabal diff adds only DatafastRecovery and DatafastStatus to the library module list. Dependencies, flags, compiler options and other reviewed sources are identical.",
       "qualification": "Source-bound solver and mutation checks cover this composition."
