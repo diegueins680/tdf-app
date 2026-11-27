@@ -12555,22 +12555,6 @@
       "reviewMethod": "manual-source-review"
     },
     {
-      "id": "a54bc30988f056e6d713",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "Typed API-client method dispatch gains searchTracks while every inherited method remains unchanged. These protocol function names are not selectable/reportable domain values.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/api/musicReleases.ts",
-        "line": 518
-      },
-      "reviewBatch": "music-track-search-2026-10-26",
-      "reviewMethod": "manual-source-review"
-    },
-    {
       "id": "6c09847d52c099763024",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -28121,14 +28105,17 @@
       }
     },
     {
-      "id": "30c79af4e927f1a899d4",
+      "id": "158359a9f0c18e0e4c1f",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P0-security",
       "risk": "Conflating transport ambiguity with binding mismatch could authorize unsafe retry or suppress a required operator review.",
-      "justification": "This private Haskell sum type makes query construction, transport failure and binding validation exhaustive without persisting provider payloads. It is not an externally governed status catalog or a customer-editable setting; all failures preserve no-blind-fallback behavior.",
-      "reviewed": true
+      "justification": "QueryFailure enumerates private reconciliation results. QueryAwaitingReturn waits for an authenticated confirmation and preserves the checkout hold. Operators cannot configure these program states.",
+      "reviewed": true,
+      "previousDecision": {
+        "$historyRef": "sha256:592ddb7b97395dc15ccc094dbddf08b93fee89a6cae72bda6b4aef96eae1c894"
+      }
     },
     {
       "id": "66196051bb56eaae5750",
@@ -31133,34 +31120,6 @@
       }
     },
     {
-      "id": "105fd7b2786498f6bb56",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Individually reviewed the canonical generator output against protected main a4851729d1ca6816edb3fa535e4b65b7ea5b32dd: the 165-entry mirror changes only social.tickets webRoute to /mis-entradas, its Spanish/English description, and requiredAuth from authenticated to optional. The compatible mobile snapshot is a35aa28c0a51799a18888ae36e01e051de19460f. Native ticket routing and caller-scoped API authorization are unchanged. Optional discovery grants no ticket access: guest reads still require the saved private lookup key and account reads remain authenticated. No agreement feature or permission vocabulary is imported. Both complete prior reviews are retained, including the original owner review whose fingerprint recurs for this generated list.",
-      "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "web-my-tickets-completion-20261121",
-      "evidence": {
-        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-        "line": 55,
-        "kind": "array",
-        "name": "mobileFeatureRegistry",
-        "valueCount": 165
-      },
-      "previousDecision": {
-        "$historyRef": "sha256:01ed16ddee0ecb2dbd4c6ab7079804ae2631863efff8ed2417d176071028e603"
-      },
-      "concurrentReviewHistory": [
-        {
-          "$historyRef": "sha256:5ea8a924c4c83db5e9d0a732746d44dc02c31232e46e94523877478bca915bce"
-        }
-      ],
-      "sourceContextReview": "Actual fingerprint and classification are unchanged from an already reviewed active parent. Both complete parent review objects are retained; this author composition correspondence is not independent approval or a new runtime authority."
-    },
-    {
       "id": "7f17ed1ba8f1b06b59bb",
       "classification": "genuine-technical-constant",
       "disposition": "retain-reviewed-protocol-mirror",
@@ -31404,27 +31363,6 @@
         "name": "INTEGRATION_EXTRA_IDS",
         "line": 1318,
         "valueCount": 2
-      }
-    },
-    {
-      "classification": "security-system-registry",
-      "disposition": "retain-reviewed-deployment-manifest",
-      "specializedModel": "production migration manifest and applied migration ledger",
-      "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "2817f4536be296b99f44",
-      "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "artist-similarity-2026-11-21",
-      "justification": "Preserve all 266 reviewed migration objects in their exact order, paths and introduction commits, and append only 2026-11-21_artist_similarity (COMMUNITY-ARTIST-SIMILARITY-001: three additive similarity tables and two partial indexes), introduced by 89d467302501d47ce53c1551b031c46cb7bb1162. The complete parent review graph remains in previousDecision. This author review does not authorize deployment or feature activation and is not independent approval.",
-      "evidence": {
-        "file": "scripts/production-migrations.json",
-        "line": 3,
-        "kind": "json-array",
-        "name": "migrations",
-        "valueCount": 267
-      },
-      "previousDecision": {
-        "$historyRef": "sha256:0002218d6522d63ad815bee808b1d4dac1e41a652108ab940c104ad6a4edb17c"
       }
     },
     {
@@ -31869,6 +31807,563 @@
           "scheduling"
         ]
       }
+    },
+    {
+      "id": "5f829ca52758751904ec",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Renaming a method breaks its callers at compile time; no runtime authority depends on the names.",
+      "justification": "Typed API-client method names of the music release client, with getLoudness added for the loudness route; implementation mechanics, not selectable catalog values.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicReleases.ts",
+        "line": 614,
+        "kind": "object-registry",
+        "name": "musicReleases",
+        "valueCount": 43,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001",
+        "predecessorDecision": "a54bc30988f056e6d713"
+      },
+      "previousDecision": {
+        "$historyRef": "sha256:13a3c178663d54b685b829c7fae3b78ac269166879757cdad1903aa4c1448d4c"
+      }
+    },
+    {
+      "id": "5366d3bfbc5f235d3536",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A status outside this list would be rendered as a loudness result the server never produced.",
+      "justification": "The five check statuses the loudness route may answer; the client rejects any other value before rendering.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicLoudness.ts",
+        "line": 8,
+        "kind": "array",
+        "name": "STATUSES",
+        "valueCount": 5,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "ac289f588a35d1b3b7fc",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the Haskell type would let generated clients accept or miss a result state.",
+      "justification": "Contract enumeration of TDF.MusicRelease.Loudness.CheckStatus, the closed result of the pure check, not reference data.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 19484,
+        "kind": "openapi-enum",
+        "name": "status",
+        "valueCount": 5,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "c9e48e74824b84cb7207",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the Haskell type would let generated clients accept or miss a warning.",
+      "justification": "Contract enumeration of TDF.MusicRelease.Loudness.LoudnessFlag, the three comparisons of the approved decision rule.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 19492,
+        "kind": "openapi-enum",
+        "name": "items",
+        "valueCount": 3,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "a0b5a2f81a33c9e734f5",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the database CHECK would let generated clients mislabel a failed measurement.",
+      "justification": "Contract enumeration of the failure reasons the measurement wrapper and the database function can record.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/api.yaml",
+        "line": 19498,
+        "kind": "openapi-enum",
+        "name": "failureReason",
+        "valueCount": 9,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "b2ab8f23cab6f7fdb0fb",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the set without the trigger, the Haskell lifecycle and the TLA+ model would let a stale or rewritten measurement mark a track as checked.",
+      "justification": "Lifecycle states of music_audio_measurement, bound in formal/system/state-machine-bindings.json and enforced by the trigger music_audio_measurement_guard; a closed technical state machine, not business catalog data.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
+        "line": 16,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 4,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "1134f4f8cb4efac65b9a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A reason outside the set would be refused by the CHECK and the attempt would stay pending.",
+      "justification": "Failure reasons a measurement attempt can record; each is produced by one branch of scripts/measure-music-loudness.pl or music_finish_audio_measurement.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
+        "line": 21,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 8,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "a221b2060a68339301f2",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Adding or dropping a flag changes the pass/warn decision proved in formal/music/loudness_decision.py.",
+      "justification": "Closed sum of the three comparisons of the approved loudness decision, matched exhaustively by the compiler.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "line": 54,
+        "kind": "haskell-sum-type",
+        "name": "LoudnessFlag",
+        "valueCount": 3,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "faeda2e53127ecb3b026",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the column CHECK would make stored rows unreadable or misread as another state.",
+      "justification": "Haskell mirror of the music_audio_measurement lifecycle states, parsed from the column and matched exhaustively.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "line": 71,
+        "kind": "haskell-sum-type",
+        "name": "MeasurementState",
+        "valueCount": 4,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "c11f0f75e8345464756b",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Diverging from the trigger would make the tested lifecycle differ from the enforced one.",
+      "justification": "The three events of the measurement lifecycle used by the pure transition function and its tests.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "line": 85,
+        "kind": "haskell-sum-type",
+        "name": "MeasurementEvent",
+        "valueCount": 3,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "2be7224fad3893f06d5f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Adding a status without the contract and the web parser would hide or misreport a result.",
+      "justification": "Closed result of the pure per-track check, rendered to the route and matched exhaustively by the compiler.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-loudness-check-20261121",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "line": 122,
+        "kind": "haskell-sum-type",
+        "name": "CheckStatus",
+        "valueCount": 5,
+        "requirement": "MEDIA-MUSIC-LOUDNESS-001"
+      }
+    },
+    {
+      "id": "d2149b0cbd417238e171",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Individually reviewed the canonical generator output against protected main a63ab09f54ff0828e5e33c61a5152de9ba6b0922: the 166-entry mirror keeps the 165 reviewed entries unchanged and appends only the root taxonomy.genre-suggestions metadata (web-only /admin/generos genre suggestion review, Admin role and module, child of directory.admin). The compatible mobile snapshot is bca80397683abdd0d65d0abbdc3ec9212353bd3e. It is regenerated byte-for-byte from the canonical root registry. This is navigation/security dispatch metadata, not a permission grant, native destination, provider activation or independent approval. The complete prior review is retained.",
+      "reviewed": true,
+      "reviewMethod": "successor-of-reviewed-decision",
+      "reviewBatch": "taxonomy-filters-2026-11-21",
+      "evidence": {
+        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "line": 55,
+        "kind": "array",
+        "name": "mobileFeatureRegistry",
+        "valueCount": 166
+      },
+      "previousDecision": {
+        "$historyRef": "sha256:3165586ef77dd32e0eee24670f569252178622a28c88914ea8d62f10057768ff"
+      }
+    },
+    {
+      "id": "10a606ac993d726fd179",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture drift could hide a shared genre filter regression in tests.",
+      "justification": "Synthetic genre options (a parent and one subgenre) in the CommunityDiscovery regression fixture mirror the GET /taxonomy/filter-options contract; the authoritative genres are the persisted genre catalog (TAX-FILTER-001), not this list.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
+        "line": 15
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "2c604b4f31baaf57c719",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Drift between a technical constant and its single consumer could break a request or label.",
+      "justification": "Query filter values of GET /admin/genre-suggestions (the database lifecycle states plus the 'all' view); a typed mirror of the OpenAPI enum, not a catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/taxonomy.ts",
+        "line": 15
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "12c2658300408e875642",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Drift between a technical constant and its single consumer could break a request or label.",
+      "justification": "React Query cache key for the artist's own genre suggestions; a technical identifier.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/taxonomyFilters/GenreSuggestionDialog.tsx",
+        "line": 28
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "16c6215f9f0e594cec2d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Drift between a technical constant and its single consumer could break a request or label.",
+      "justification": "React Query cache key for GET /taxonomy/filter-options; a technical identifier.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/taxonomyFilters/useTaxonomyFilters.ts",
+        "line": 25
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "62b50ad67849e61dd7b1",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Drift between a technical constant and its single consumer could break a request or label.",
+      "justification": "The two name columns (name_es, name_en) every taxonomy row carries; choosing which to show is a rendering switch, not a language catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.ts",
+        "line": 14
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "9356f1906e3596e1e78f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Drift between a technical constant and its single consumer could break a request or label.",
+      "justification": "The two name columns of the genre table selected for casing rules; a rendering switch bound to the schema, not a language catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Taxonomy/GenreSuggestion.hs",
+        "line": 51
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "58477e3a36b6123f7a3a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Drift between a technical constant and its single consumer could break a request or label.",
+      "justification": "Mobile mirror of the two taxonomy name columns (name_es, name_en); a rendering switch, not a language catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterModel.ts",
+        "line": 15
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "928c3e6c2712b3a6b219",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Drift between a technical constant and its single consumer could break a request or label.",
+      "justification": "Mobile React Query cache key for the artist's own genre suggestions; a technical identifier.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-mobile/src/features/taxonomyFilters/GenreSuggestionModal.tsx",
+        "line": 33
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "bb3a6ae2b035b1c44adb",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Drift between a technical constant and its single consumer could break a request or label.",
+      "justification": "Mobile React Query cache key for GET /taxonomy/filter-options; a technical identifier.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-mobile/src/features/taxonomyFilters/useTaxonomyFilters.ts",
+        "line": 24
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "ea378e7f70714ec1a6be",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Drift between a technical constant and its single consumer could break a request or label.",
+      "justification": "The three administrator decisions offered by the review UI, one per POST /admin/genre-suggestions/{id}/approve|merge|reject route.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/GenreSuggestionsAdminPage.tsx",
+        "line": 105
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "6aa88e6080d2e29be1f2",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture drift could hide a shared filter regression in tests.",
+      "justification": "Synthetic taxonomy fixture in a unit test mirroring the GET /taxonomy/filter-options or facet contract; the authoritative values are the persisted catalogs (TAX-FILTER-001).",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts",
+        "line": 32
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "753b832b089227760ad9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture drift could hide a shared filter regression in tests.",
+      "justification": "Synthetic taxonomy fixture in a unit test mirroring the GET /taxonomy/filter-options or facet contract; the authoritative values are the persisted catalogs (TAX-FILTER-001).",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts",
+        "line": 33
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "947cce3c5ed3e4b5f23b",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture drift could hide a shared filter regression in tests.",
+      "justification": "Synthetic taxonomy fixture in a unit test mirroring the GET /taxonomy/filter-options or facet contract; the authoritative values are the persisted catalogs (TAX-FILTER-001).",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts",
+        "line": 46
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "2e947a9dcbd8133d6024",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Fixture drift could hide a shared filter regression in tests.",
+      "justification": "Synthetic taxonomy fixture in a unit test mirroring the GET /taxonomy/filter-options or facet contract; the authoritative values are the persisted catalogs (TAX-FILTER-001).",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts",
+        "line": 99
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "1d69ae00fdb56607693d",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-database-authoritative-state-machine",
+      "specializedModel": "genre_suggestion lifecycle (pending -> approved|rejected|merged) guarded by genre_suggestion_guard_transition",
+      "priority": "P2-integrity",
+      "risk": "A client or server mirror that drifts from the database lifecycle could offer impossible decisions or hide a pending suggestion.",
+      "justification": "The authoritative genre_suggestion lifecycle; the CHECK and the transition trigger are the state machine, decided rows are immutable.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+        "line": 277
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "c450af39edac00c7973f",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-database-authoritative-state-machine",
+      "specializedModel": "genre_suggestion lifecycle (pending -> approved|rejected|merged) guarded by genre_suggestion_guard_transition",
+      "priority": "P2-integrity",
+      "risk": "A client or server mirror that drifts from the database lifecycle could offer impossible decisions or hide a pending suggestion.",
+      "justification": "Review-queue status filter mirroring the database lifecycle plus the 'all' view accepted by GET /admin/genre-suggestions.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/GenreSuggestionsAdminPage.tsx",
+        "line": 30
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "859483f39045cac2882b",
+      "classification": "security-system-registry",
+      "disposition": "retain-as-database-authoritative-state-machine",
+      "specializedModel": "genre_suggestion lifecycle (pending -> approved|rejected|merged) guarded by genre_suggestion_guard_transition",
+      "priority": "P2-integrity",
+      "risk": "A client or server mirror that drifts from the database lifecycle could offer impossible decisions or hide a pending suggestion.",
+      "justification": "Translation keys for the same lifecycle states; labels only.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/GenreSuggestionsAdminPage.tsx",
+        "line": 31
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "4303a9274b0c214cb8aa",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "taxonomy_backfill_review",
+      "priority": "P3-retain",
+      "risk": "A review row naming an unknown table could never be resolved.",
+      "justification": "The source tables whose free-text location the 2026-11-21 backfill could not resolve; schema-bound to existing tables, not a business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+        "line": 229
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "id": "e84fdee5ca2e5b4efc61",
+      "classification": "security-system-registry",
+      "disposition": "retain-authoritative-schema",
+      "specializedModel": "taxonomy_backfill_review",
+      "priority": "P3-retain",
+      "risk": "A review row naming an unknown field could never be resolved.",
+      "justification": "The taxonomy dimensions a backfill review row can concern (city, country, genre); schema-bound to TAX-FILTER-001, not a business catalog.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+        "line": 231
+      },
+      "reviewBatch": "taxonomy-filters-2026-11-21"
+    },
+    {
+      "classification": "security-system-registry",
+      "disposition": "retain-reviewed-deployment-manifest",
+      "specializedModel": "production migration manifest and applied migration ledger",
+      "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+      "id": "89377f884fff9f9d8d25",
+      "reviewed": true,
+      "justification": "Preserve the 272 migrations through friend suggestions and append the original venue coordinate constraint. Retain the complete reviews of both migration lists.",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "reviewBatch": "venue-coordinate-after-friend-suggestions",
+      "evidence": {
+        "file": "scripts/production-migrations.json",
+        "line": 3,
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 273
+      },
+      "previousDecision": {
+        "$historyRef": "sha256:622a2ae8a28302de76b608d225953bc979661a3b94513de7712c42b8e0497550"
+      },
+      "concurrentReviewHistory": [
+        {
+          "$historyRef": "sha256:f9a114d476fe61417a93aa8abf8ae43cca8a0095661af15de0948654efc5b2fc"
+        }
+      ]
     }
   ],
   "sourceContextHistory": [

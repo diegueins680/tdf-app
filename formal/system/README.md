@@ -10,6 +10,8 @@ Historical green results are not current-candidate evidence.
 - [desktop-shell.md](desktop-shell.md): Electron shell boundary over the hosted TDF origin, one system playback session shared by release player and radio, reproducible installers with a fail-closed shell update channel (SYS-DESKTOP-001..003); Linux Electron and unit evidence, installed macOS/Windows acceptance pending.
 
 - [artist-similarity.md](artist-similarity.md): multi-signal artist similarity for fan recommendations (follows, favourites, RSVPs, plays), a nightly stored relation and its per-request reference behind a flag that is off by default (COMMUNITY-ARTIST-SIMILARITY-001); Z3 proofs of exclusions and order on a pinned translation, Apalache inductive proof and TLC controls for the job model, PostgreSQL probe; refinement of the code to the model by review.
+- [event-affinity.md](event-affinity.md): `GET /social-events/events?scope=for_you` returns the page of `all` ordered by the caller's affinity to the lineups, from own signals and the stored artist similarity, behind a flag that is off by default (EVT-AFFINITY-ORDER-001); Z3 proofs of evidence and order on a pinned translation, Apalache inductive proof and TLC control for hidden artists, QuickCheck of the pure core.
+- [queue-continuation.md](queue-continuation.md): the web player continues an ended queue with tracks of the artists the fan recommendations return, in that order, behind a build flag that is off by default (MEDIA-MUSIC-CONTINUATION-001); Apalache inductive proof and TLC control for the planning model, seeded random tests of the TypeScript function; no backend or contract change.
 
 - [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
 
@@ -55,6 +57,9 @@ These checks make drift fail CI; run them before changing a mapped surface.
   after checkout locking, actual PostgreSQL lock-wait counterexamples, three
   compiled source controls and a bounded model with four negative configurations.
 
+- [music-loudness-check.md](music-loudness-check.md): advisory loudness and
+  true-peak check of delivered masters, bound to one file; two inductive
+  proofs on models, a solver obligation for the decision and their limits.
 - [music-money-wire.md](music-money-wire.md): exact Int64 transport, confirmed
   purchase price, source-bound numeric SMT obligation and compatible clients.
 - [music-test-entrypoint.md](music-test-entrypoint.md): canonical execution of

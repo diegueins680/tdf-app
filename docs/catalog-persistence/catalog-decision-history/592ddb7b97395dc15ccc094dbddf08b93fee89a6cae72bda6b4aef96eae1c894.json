@@ -1,0 +1,10 @@
+{
+  "id": "30c79af4e927f1a899d4",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P0-security",
+  "risk": "Conflating transport ambiguity with binding mismatch could authorize unsafe retry or suppress a required operator review.",
+  "justification": "This private Haskell sum type makes query construction, transport failure and binding validation exhaustive without persisting provider payloads. It is not an externally governed status catalog or a customer-editable setting; all failures preserve no-blind-fallback behavior.",
+  "reviewed": true
+}

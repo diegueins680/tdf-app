@@ -340,7 +340,7 @@ payPhoneNotification rawBody = do
       && notificationRequiresQuery assessment) $
     throwError (badRequest "PayPhone notification trust classification is invalid")
   bound <- liftIO (runSqlPool
-      (Store.loadBoundProviderPayment
+      (Store.loadNotificationPayment
         Checkout.ProviderPayPhone environment merchantRef
         (notificationExternalId assessment)
         (notificationMerchantReference assessment)) envPool)
@@ -352,7 +352,10 @@ payPhoneNotification rawBody = do
       , ProviderEvent.pecEnvironment = environment
       , ProviderEvent.pecMerchantRef = merchantRef
       , ProviderEvent.pecProviderEventId =
-          "payphone-" <> notificationExternalId assessment
+          case notificationMerchantReference assessment of
+            Just ref | PayPhone.payPhoneButtonReferencePrefix `T.isPrefixOf` ref ->
+              "payphone-button-" <> sha256Text (ref <> ":" <> notificationExternalId assessment)
+            _ -> "payphone-" <> notificationExternalId assessment
       , ProviderEvent.pecEventType = "PAYMENT_NOTIFICATION"
       , ProviderEvent.pecProviderCreatedAt = Nothing
       , ProviderEvent.pecProviderResource =

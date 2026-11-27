@@ -24,6 +24,7 @@ import qualified TDF.Social.FanEffects as FanEffects
 import qualified TDF.Fans.ArtistRecommendations as ArtistRecommendations
 import qualified TDF.Fans.ArtistSimilarity as ArtistSimilarity
 import qualified TDF.Social.RelationshipReads as SocialReads
+import qualified TDF.Social.SuggestionStore as SocialSuggestions
 import qualified TDF.Social.RelationshipWrites as SocialWrites
 import qualified TDF.Social.Profiles as SocialProfiles
 import TDF.Social.Server (socialV2Server)
@@ -226,6 +227,7 @@ import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Server.Directory as DirectoryServer
+import qualified TDF.Server.Taxonomy as TaxonomyServer
 import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MusicRelease as MusicReleaseServer
 import TDF.MusicRelease.CredentialCache (musicCredentialCache)
@@ -783,6 +785,7 @@ server env =
   :<|> CatalogServer.publicCatalogServer
   :<|> InteractionsServer.publicInteractionsServer
   :<|> DirectoryServer.directoryPublicServer
+  :<|> TaxonomyServer.taxonomyPublicServer
   :<|> MerchServer.merchPublicServer
   :<|> publicUpcomingEventsServer
   :<|> ReviewsServer.reviewsPublicServer
@@ -3252,7 +3255,8 @@ socialServer user =
   :<|> socialRemoveFriend user
   :<|> SocialProfiles.profileList user (socialListProfiles user)
   :<|> SocialProfiles.profileGet user (socialGetProfile user)
-  :<|> SocialReads.suggestions user (socialListSuggestedFriends user)
+  :<|> SocialSuggestions.suggestions user
+         (SocialReads.suggestions user (socialListSuggestedFriends user))
   :<|> socialV2Server user
 
 chatServer :: AuthedUser -> ServerT ChatAPI AppM
@@ -4001,6 +4005,7 @@ protectedServer user =
   :<|> AuthServer.artistInvitationsServer user
   :<|> navigationPreferencesServer user
   :<|> DirectoryServer.directoryProtectedServer user
+  :<|> TaxonomyServer.taxonomyProtectedServer user
   :<|> MerchServer.merchProtectedServer user
   :<|> OperationsServer.operationsServer user
   :<|> EventOperationsServer.eventOperationsServer user
@@ -8229,6 +8234,7 @@ socialListSuggestedFriends user = do
           [ SuggestedFriendDTO
               { sfPartyId = fromSqlKey candidateId
               , sfMutualCount = mutuals
+              , sfReason = Nothing
               }
           | (candidateId, mutuals) <- ordered
           ]

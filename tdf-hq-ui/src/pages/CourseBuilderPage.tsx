@@ -131,7 +131,7 @@ export default function CourseBuilderPage() {
   }, [price, priceLoadError]);
   const [currency, setCurrency] = useState(resolveRuntimeCurrency);
   const [capacity, setCapacity] = useState('16');
-  const [sessionStartHour, setSessionStartHour] = useState('15');
+  const [sessionStartHour, setSessionStartHour] = useState('8');
   const [sessionDurationHours, setSessionDurationHours] = useState('4');
   const [locationLabel, setLocationLabel] = useState('TDF Records');
   const [locationMapUrl, setLocationMapUrl] = useState(COURSE_DEFAULTS.mapUrl);

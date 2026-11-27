@@ -77,7 +77,7 @@ import qualified TDF.Commerce.RefundReconciliation as TicketRecovery
 import qualified TDF.Commerce.ProviderAdapter.PayPalRefund as TicketQuery
 import qualified TDF.Server.TicketRefunds as TicketRefundAPI
 import           TDF.Commerce.StateMachine (PaymentEvent(..))
-import           TDF.Server.ProviderExecution (providerReference, providerExecutionServer, providerReturnUrl)
+import           TDF.Server.ProviderExecution (providerReferenceFor, providerReference, providerExecutionServer, providerReturnUrl)
 import qualified TDF.Ticketing.Refund as TicketRefund
 import qualified TDF.Ticketing.Admission as Admission
 import qualified TDF.Ticketing.Inventory as TicketInventory
@@ -441,6 +441,7 @@ spec = do
         noChargeReplaySpec
         notificationInboxSpec
         notificationIdentityInboxSpec
+        buttonReturnSpec
         reconciliationTransactionSpec
         fullDomainQuerySpec
         hostedServiceOrderSpec
@@ -3266,6 +3267,66 @@ reconciliationTransactionSpec = describe "authoritative query transaction owners
         "unsupported-query" notificationTime) pool >>= (`shouldSatisfy` isLeft)
     runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
 
+buttonReturnSpec :: SpecWith ConnectionPool
+buttonReturnSpec = it "reconciles a returned Button transaction through its original preparation exactly once" $ \pool ->
+  withNotificationEnvironment $ bracket (seedCard pool) (clearCard pool) $ \_ -> do
+    let provider = Checkout.ProviderPayPhone
+        env = Env pool (error "Sandbox Button test must not access AppConfig")
+    resetQueryBudget pool provider
+    seed <- newCheckoutForDomain "service_booking" pool
+    let creation = seed { Checkout.pacProvider = provider
+                        , Checkout.pacMerchantRef = "synthetic-provider-retry-merchant" }
+        reference = providerReferenceFor provider MethodCard (Checkout.checkoutReferenceId (Checkout.pacCheckout creation))
+    (_, operation, _) <- prepareReplayForMethod pool creation MethodCard
+    payment <- bindReconciliationFixture pool creation operation reference
+    let txId = 98765432 :: Int64
+        raw = A.encode (A.object ["TransactionId" A..= txId, "ClientTransactionId" A..= reference])
+        _ :<|> _ :<|> _ :<|> receive :<|> _ = providerExecutionServer
+        receiveHint = runHandler (runReaderT (receive raw) env) >>= requireRight
+        eventKey = "payphone-button-" <> digestText (reference <> ":" <> T.pack (show txId))
+    _ <- receiveHint
+    _ <- receiveHint
+    [Single rowId] <- runSqlPool (rawSql
+      "SELECT id::text FROM commerce_provider_event_inbox WHERE provider_event_id=?"
+      [PersistText eventKey]) pool
+    event <- requireRight (Event.parseProviderEventReference rowId)
+    now <- getCurrentTime
+    runSqlPool (Event.claimProviderEvent event now) pool `shouldReturn` Event.ProviderEventClaimed 1
+    payload <- runSqlPool (Event.loadProviderEventPayload event recoveryEncryptionKey) pool >>= requireRight
+    calls <- newIORef (0 :: Int)
+    let fetch request = do
+          modifyIORef' calls (+1)
+          Adapter.arUrl request `shouldBe` "https://pay.payphonetodoesposible.com/api/button/V2/Confirm"
+          Adapter.arBody request `shouldBe` Just (A.object ["id" A..= txId, "clientTxId" A..= reference])
+          pure (Right (A.object [ "transactionId" A..= txId, "clientTransactionId" A..= reference
+                                , "amount" A..= Execution.bppAmountMinor payment
+                                , "currency" A..= Execution.bppCurrency payment, "statusCode" A..= (3 :: Int) ]))
+    before <- runSqlPool (paymentSnapshot payment) pool
+    let wrong = A.object [ "transactionId" A..= txId, "clientTransactionId" A..= ("TDFC-other" :: Text)
+                         , "amount" A..= Execution.bppAmountMinor payment, "currency" A..= ("USD" :: Text)
+                         , "statusCode" A..= (2 :: Int) ]
+    mismatch <- Reconciliation.processProviderEventWith (const (pure (Right wrong))) getCurrentTime env payload now
+    Reconciliation.prrDisposition mismatch `shouldBe` Reconciliation.ReconciliationDeadLetter
+    Reconciliation.prrReview mismatch `shouldBe` Nothing
+    runSqlPool (paymentSnapshot payment) pool `shouldReturn` before
+    resetQueryBudget pool provider
+    result <- Reconciliation.processProviderEventWith fetch getCurrentTime env payload now
+    Reconciliation.prrDisposition result `shouldBe` Reconciliation.ReconciliationProcessed
+    readIORef calls `shouldReturn` 1
+    assertPaymentPosted pool payment
+  where
+    seedCard :: ConnectionPool -> IO [Single Text]
+    seedCard pool = runSqlPool (rawSql
+      "INSERT INTO commerce_provider_capability\
+      \ (provider_account_id,payment_method,capability,verification_status,source_reference,verified_at)\
+      \ SELECT id,'card','one_time','sandbox_verified','synthetic-button-test',NOW()\
+      \ FROM commerce_provider_account WHERE environment='sandbox' AND provider='payphone'\
+      \ ON CONFLICT DO NOTHING RETURNING id::text" [] :: SqlPersistT IO [Single Text]) pool
+    clearCard :: ConnectionPool -> [Single Text] -> IO ()
+    clearCard pool rows = forM_ rows $ \(Single row) -> runSqlPool (rawExecute
+      "DELETE FROM commerce_provider_capability WHERE id=?::uuid AND source_reference='synthetic-button-test'"
+      [PersistText row]) pool
+
 reconciliationPipelineSpec :: SpecWith ConnectionPool
 reconciliationPipelineSpec = describe "persisted callback to authoritative query" $
   forM_ [Checkout.ProviderPlaceToPay, Checkout.ProviderPayPhone] $ \provider ->
@@ -3445,12 +3506,14 @@ bindReconciliationFixture pool creation operation reference = do
   let checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
       attempt = Execution.porAttempt operation
       provider = Checkout.pacProvider creation
-      state = if provider == Checkout.ProviderPlaceToPay
+      state = if provider == Checkout.ProviderPlaceToPay || "TDFC-" `T.isPrefixOf` reference
         then Adapter.AdapterRequiresCustomerAction else Adapter.AdapterPending
   resourceUuid <- toText <$> nextRandom
-  resource <- case readHex (T.unpack (T.take 12 (T.filter (/= '-') resourceUuid))) of
-    [(number, "")] -> pure (T.pack (show (number + 1 :: Int64)))
-    _ -> fail "Expected synthetic numeric provider resource"
+  resource <- if "TDFC-" `T.isPrefixOf` reference
+    then pure ("prepare-" <> resourceUuid)
+    else case readHex (T.unpack (T.take 12 (T.filter (/= '-') resourceUuid))) of
+      [(number, "")] -> pure (T.pack (show (number + 1 :: Int64)))
+      _ -> fail "Expected synthetic numeric provider resource"
   checkout <- runSqlPool (Execution.loadAuthorizedCheckout checkoutId (digestText checkoutId)
     (Checkout.pacCreatedAt creation)) pool >>= requireRight
   _ <- runSqlPool (Execution.claimProviderOperation (Execution.porReference operation)
@@ -3581,16 +3644,19 @@ checkoutCreation pool provider checkoutId = do
 
 prepareReplayCreation :: ConnectionPool -> Checkout.PaymentAttemptCreation
   -> IO (Checkout.PaymentAttemptCreation, Execution.ProviderOperationRecord, PaymentSessionCreateDTO)
-prepareReplayCreation pool creation = do
+prepareReplayCreation pool creation = prepareReplayForMethod pool creation
+  (if Checkout.pacProvider creation == Checkout.ProviderPayPhone then MethodPayPhoneWallet else MethodCard)
+
+prepareReplayForMethod :: ConnectionPool -> Checkout.PaymentAttemptCreation -> PaymentMethod
+  -> IO (Checkout.PaymentAttemptCreation, Execution.ProviderOperationRecord, PaymentSessionCreateDTO)
+prepareReplayForMethod pool creation method = do
   let provider = Checkout.pacProvider creation
       checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
-      method = if provider == Checkout.ProviderPayPhone then MethodPayPhoneWallet else MethodCard
-      phone = if provider == Checkout.ProviderPayPhone then Just "991234567" else Nothing
-      country = if provider == Checkout.ProviderPayPhone then Just "593" else Nothing
+      phone = if method == MethodPayPhoneWallet then Just "991234567" else Nothing
+      country = if method == MethodPayPhoneWallet then Just "593" else Nothing
       request = PaymentSessionCreateDTO (Checkout.paymentProviderText provider)
-        (if provider == Checkout.ProviderPayPhone then "payphone_wallet" else "card") phone country
-      -- Exercise pre-upgrade checkout-derived references, not only new UUID refs.
-      reference = providerReference provider checkoutId
+        (if method == MethodPayPhoneWallet then "payphone_wallet" else "card") phone country
+      reference = providerReferenceFor provider method checkoutId
   runSqlPool (rawExecute
     "UPDATE commerce_checkout_session SET lookup_token_hash=? WHERE id=?::uuid"
     [PersistText (digestText checkoutId), PersistText checkoutId]) pool
@@ -5218,7 +5284,7 @@ ticketEligibilityUpdate pool eventKey change = do
 ticketEligibilityEventUpdate :: AuthedUser -> Text -> TD.EventUpdateDTO -> ReaderT Env Handler TD.EventDTO
 ticketEligibilityEventUpdate user = case Social.socialEventsServer user of
   events :<|> _ -> case events of
-    _ :<|> _ :<|> _ :<|> updateEvent :<|> _ -> updateEvent
+    _ :<|> _ :<|> _ :<|> _ :<|> updateEvent :<|> _ -> updateEvent
 
 ticketTierCapacitySpec :: SpecWith ConnectionPool
 ticketTierCapacitySpec = describe "legacy ticket inventory mutation concurrency" $ do

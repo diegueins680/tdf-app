@@ -17,12 +17,13 @@ ends, whether this worker still holds the lease when it writes, and whether
 the attempt is the last allowed one.
 
 Proofs (UNSAT of the negation):
-  - a bound event that this attempt turns into a dead letter always leaves an
+  - an event with an established binding that becomes a dead letter leaves an
     open exception: the dead-letter review, or the exception its own stage
     wrote (query mismatch, verified payment on a closed checkout);
   - the review is written only for a bound event whose inbox row is a dead
     letter at this attempt, never for an unbound one and never together with
     the stage's own exception;
+  - a provisional Button ID cannot open a financial exception before Confirm;
   - a processed event and a retry that is not exhausted write no review;
   - a worker that lost its lease changes nothing and records nothing;
   - the inbox row ends as a dead letter exactly for a dead-letter result or
@@ -59,7 +60,7 @@ ROOT = Path(__file__).resolve().parents[2]
 RECON = 'tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs'
 WORKER = 'tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs'
 REGIONS = (
-    (RECON, 'processProviderEventWith\n', 'data QueryFailure = ', '4f78c29cce2f41ca090f01ff14a203563e6c12c18719164e9dd6627f429c1d16'),
+    (RECON, 'processProviderEventWith\n', 'data QueryFailure = ', 'cf797fcb1a2f1213cbff4fb884559705ab7a8970061c4c170be5f19d3326ebfb'),
     (RECON, 'recordDeadLetterReview\n  :: ProviderEvent.ProviderEventReference', 'retry :: Text -> Maybe', '4670eec7367b0788b5baf10781a98c187354eceaf06a057ef746f168421a4344'),
     (WORKER, 'processHostedPayload\n', 'applyOutcome\n', '81960ddfcba3a796c05ea7024444fae914be0fd5ca8da17d79452d4a4d0cfbc2'),
     (WORKER, 'markRetry\n', 'validateStoredPaypalEvent\n', '2ad6c5d3c190880f77235206412c98d8bef6dc61010d8a39792c2bc03a21d7aa'),
@@ -70,14 +71,18 @@ STAGES = (
     'envelope-invalid', 'runtime-unavailable', 'callback-invalid', 'assessment-invalid',
     'binding-unavailable', 'threw-unbound',
     'threw-bound', 'budget-denied', 'query-mismatch', 'query-unsupported', 'query-unavailable',
+    'query-awaiting-return',
     'apply-refused', 'processed', 'nonterminal', 'closed-checkout-held',
 )
 IX = {name: index for index, name in enumerate(STAGES)}
 BOUND = STAGES[STAGES.index('threw-bound'):]
+BEFORE_CONFIRMATION = ('threw-bound', 'budget-denied', 'query-mismatch', 'query-unsupported',
+                       'query-unavailable', 'query-awaiting-return')
 PROCESSED, RETRY, DEAD = 0, 1, 2          # ReconciliationDisposition
 ROW_LEASED, ROW_PROCESSED, ROW_RETRY, ROW_DEAD = 0, 1, 2, 3
 GUARDS = ('throw-keeps-binding', 'refused-keeps-binding', 'nonterminal-keeps-binding',
-          'direct-dead-letter-review', 'exhausted-retry-review', 'fence', 'own-exception-clears-review')
+          'direct-dead-letter-review', 'exhausted-retry-review', 'fence', 'own-exception-clears-review',
+          'provisional-button-has-no-review')
 
 
 def sources_are_current():
@@ -108,13 +113,16 @@ class Attempt:
         stage = self.stage
         self.wellformed = z3.And(stage >= 0, stage < len(STAGES))
         self.bound = one_of(stage, BOUND)
+        self.button = z3.Bool(f'button_{tag}')
+        self.provisional = z3.And(self.button, one_of(stage, BEFORE_CONFIRMATION))
+        review_allowed = z3.Or(z3.Not(self.provisional), dropped == 'provisional-button-has-no-review')
 
         # processProviderEventWith / queryAndApply, and the worker's outer tryAny
         self.disposition = z3.If(
             stage == IX['processed'], PROCESSED,
             z3.If(one_of(stage, ('envelope-invalid', 'callback-invalid', 'assessment-invalid',
                                  'query-mismatch', 'query-unsupported', 'closed-checkout-held')), DEAD, RETRY))
-        carries = ['budget-denied', 'query-unsupported', 'query-unavailable']
+        carries = ['budget-denied', 'query-unsupported', 'query-unavailable', 'query-awaiting-return']
         if dropped != 'throw-keeps-binding':
             carries.append('threw-bound')
         if dropped != 'refused-keeps-binding':
@@ -123,9 +131,9 @@ class Attempt:
             carries.append('nonterminal')
         if dropped == 'own-exception-clears-review':
             carries += ['query-mismatch', 'closed-checkout-held']
-        self.review_carried = one_of(stage, carries)
+        self.review_carried = z3.And(review_allowed, one_of(stage, carries))
         # recordQueryMismatch / reviewClosedCheckoutApproval (assumed to write)
-        self.own_exception = one_of(stage, ('query-mismatch', 'closed-checkout-held'))
+        self.own_exception = z3.And(review_allowed, one_of(stage, ('query-mismatch', 'closed-checkout-held')))
 
         # processHostedPayload / markRetry: fenced inbox write
         exhausted = z3.And(self.disposition == RETRY, self.last_attempt)
@@ -145,8 +153,10 @@ class Attempt:
 def properties(dropped=None):
     a = Attempt('a', dropped)
     claims = {
-        'a-bound-dead-letter-always-leaves-an-exception': z3.Implies(
-            z3.And(a.bound, a.row == ROW_DEAD), z3.Or(a.review_written, a.own_exception)),
+        'a-dead-letter-with-established-binding-leaves-an-exception': z3.Implies(
+            z3.And(a.bound, z3.Not(a.provisional), a.row == ROW_DEAD), z3.Or(a.review_written, a.own_exception)),
+        'unconfirmed-button-id-cannot-open-a-financial-exception': z3.Implies(
+            a.provisional, z3.Not(z3.Or(a.review_written, a.own_exception))),
         'review-only-for-a-bound-dead-letter-at-this-attempt': z3.Implies(
             a.review_written, z3.And(a.bound, a.row == ROW_DEAD, a.lease_held)),
         'review-never-doubles-the-stage-exception': z3.Not(z3.And(a.review_written, a.own_exception)),
@@ -183,6 +193,11 @@ def witnesses():
         'review-after-reconciliation-throws-on-the-last-attempt': (a.stage == IX['threw-bound'], a.review_written),
         'mismatch-keeps-only-its-own-exception': (
             a.stage == IX['query-mismatch'], a.row == ROW_DEAD, z3.Not(a.review_written), a.own_exception),
+        'button-mismatch-without-order-exception': (
+            a.button, a.stage == IX['query-mismatch'], a.row == ROW_DEAD,
+            z3.Not(a.review_written), z3.Not(a.own_exception)),
+        'confirmed-button-pending-can-reach-review': (
+            a.button, a.stage == IX['nonterminal'], a.review_written),
         'unbound-dead-letter-without-exception': (
             a.stage == IX['envelope-invalid'], a.row == ROW_DEAD, z3.Not(a.review_written), z3.Not(a.own_exception)),
     }

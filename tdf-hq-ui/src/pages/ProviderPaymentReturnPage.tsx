@@ -1,11 +1,11 @@
 import { Alert, Box, Button, Card, CardContent, CircularProgress, Container, Stack, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { Link as RouterLink, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { loadCheckoutPaymentAlternatives } from '../api/checkoutPaymentAlternatives';
 import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 
-import { getProviderPaymentSession, safeProviderRedirect } from '../api/providerPaymentSessions';
+import { getProviderPaymentSession, safeProviderRedirect, submitPayPhoneButtonReturn } from '../api/providerPaymentSessions';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { env } from '../utils/env';
 import {
@@ -27,10 +27,24 @@ const POLLABLE_STATES = new Set([
 export default function ProviderPaymentReturnPage() {
   const { locale } = useLocalePreferences();
   const english = locale.toLowerCase().startsWith('en');
-  const [searchParams] = useSearchParams();
-  // PayPhone appends its own query (id, clientTransactionId) to the response
-  // URL and may do so with a second '?', so keep only the checkout id itself.
-  const checkoutId = searchParams.get('tdf_checkout')?.split('?')[0] ?? null;
+  const { search } = useLocation();
+  // The redirect can append its parameters with '?' after the checkout ID.
+  const params = new URLSearchParams(search.replace(/([?&]tdf_checkout=[0-9a-f-]{36})\?/i, '$1&'));
+  const checkoutId = params.get('tdf_checkout');
+  const ids = params.getAll('id');
+  const refs = params.getAll('clientTransactionId');
+  const transactionId = Number(ids[0]);
+  const clientReference = refs[0] ?? '';
+  const hasButtonReturn = ids.length === 1 && /^[1-9]\d*$/.test(ids[0] ?? '')
+    && Number.isSafeInteger(transactionId) && refs.length === 1 && /^TDFC-[A-Za-z0-9._-]{1,45}$/.test(clientReference);
+  // The inbox deduplicates these hints. Only the server's confirmation can
+  // change the order, including when the buyer returns in another browser.
+  const buttonReturn = useQuery({
+    queryKey: ['payphone-button-return', transactionId, clientReference],
+    queryFn: () => submitPayPhoneButtonReturn(transactionId, clientReference),
+    enabled: hasButtonReturn,
+    staleTime: Infinity,
+  });
   const resume = loadProviderPaymentResume(checkoutId ?? undefined);
   const status = useQuery({
     queryKey: ['provider-payment-session-return', resume?.checkoutId, resume?.attemptId],
@@ -65,9 +79,22 @@ export default function ProviderPaymentReturnPage() {
     }
   }, [resumedCheckoutId, session?.state]);
 
+  const returnDeliveryError = hasButtonReturn && buttonReturn.isError && (
+    <Alert severity="warning" action={
+      <Button onClick={() => void buttonReturn.refetch()} disabled={buttonReturn.isFetching}>
+        {english ? 'Retry' : 'Reintentar'}
+      </Button>
+    }>
+      {english
+        ? 'TDF could not receive the PayPhone reference. Retry sending it so TDF can verify the payment.'
+        : 'TDF no pudo recibir la referencia de PayPhone. Reintenta el envío para que TDF pueda verificar el pago.'}
+    </Alert>
+  );
+
   if (!resume) {
     return (
       <Container maxWidth="sm" sx={{ py: 8 }}>
+        {returnDeliveryError}
         <Alert severity="warning">
           {english
             ? 'This tab does not have the private payment recovery capability. Return to the original order or contact support.'
@@ -96,6 +123,7 @@ export default function ProviderPaymentReturnPage() {
         <Card variant="outlined" sx={{ borderRadius: 4 }}>
           <CardContent sx={{ p: { xs: 3, md: 5 } }}>
             <Stack spacing={2.5}>
+              {returnDeliveryError}
               <Typography component="h1" variant="h4" fontWeight={900}>
                 {english ? 'Verifying payment' : 'Verificando el pago'}
               </Typography>
@@ -160,7 +188,7 @@ export default function ProviderPaymentReturnPage() {
                     : 'Todavía no sabemos si el pago se completó. No pagues otra vez ni uses otro método mientras lo revisamos.'}
                 </Alert>
               )}
-              {session?.state === 'requires_customer_action' && redirect && (
+              {session?.state === 'requires_customer_action' && !hasButtonReturn && redirect && (
                 <Button component="a" href={redirect} variant="contained"
                   referrerPolicy={session.provider === 'payphone' ? 'origin' : 'no-referrer'}>
                   {english ? 'Continue secure provider checkout' : 'Continuar con el pago'}

@@ -27,7 +27,7 @@ module TDF.Commerce.ProviderAdapter
   , PaymentMutation(..)
   , AdapterResult(..)
   , NotificationAssessment(..)
-  , QueryFollowUp(..)
+  , ProviderStatusQuery(..)
   , ProviderAdapter(..)
   , minorToDecimal
   , decimalToMinor
@@ -36,7 +36,6 @@ module TDF.Commerce.ProviderAdapter
   , validVisibleCredential
   , validProviderIdentifier
   , unsupportedOperation
-  , noQueryFollowUp
   , refuseSplitTransfers
   ) where
 
@@ -218,9 +217,9 @@ data NotificationAssessment = NotificationAssessment
   } deriving (Eq, Show)
 
 -- | Keep the parser paired with the particular request it needs to verify.
-data QueryFollowUp = QueryFollowUp
-  { followUpRequest :: AdapterRequest
-  , parseFollowUpResponse :: Value -> Either AdapterError AdapterResult
+data ProviderStatusQuery = ProviderStatusQuery
+  { statusRequest :: AdapterRequest
+  , parseStatusResponse :: Value -> Either AdapterError AdapterResult
   }
 
 -- | A closed adapter value captures validated provider configuration. The
@@ -228,7 +227,9 @@ data QueryFollowUp = QueryFollowUp
 data ProviderAdapter = ProviderAdapter
   { adapterProvider           :: PaymentProvider
   , adapterBuildCreate        :: AdapterContext -> CreatePayment -> Either AdapterError AdapterRequest
-  , adapterBuildQuery         :: AdapterContext -> PaymentLocator -> Either AdapterError AdapterRequest
+    -- Nothing means a provider-issued transaction ID has not arrived yet.
+  , adapterBuildQuery         :: AdapterContext -> PaymentLocator -> Maybe NotificationAssessment
+                              -> Either AdapterError (Maybe ProviderStatusQuery)
   , adapterBuildCancel        :: AdapterContext -> PaymentLocator -> Either AdapterError AdapterRequest
   , adapterBuildCapture       :: AdapterContext -> PaymentMutation -> Either AdapterError AdapterRequest
   , adapterBuildVoid          :: AdapterContext -> PaymentLocator -> Either AdapterError AdapterRequest
@@ -236,16 +237,7 @@ data ProviderAdapter = ProviderAdapter
   , adapterBuildSameDayReverse :: AdapterContext -> PaymentMutation -> Either AdapterError AdapterRequest
   , adapterParseResponse      :: AdapterOperation -> PaymentLocator -> Value -> Either AdapterError AdapterResult
   , adapterAssessNotification :: Value -> Either AdapterError NotificationAssessment
-    -- | A provider-specific confirmation and its bound response parser, or
-    -- 'Nothing' when the initial query may be parsed directly.
-  , adapterQueryFollowUp      :: AdapterContext -> PaymentLocator -> Value
-                              -> Either AdapterError (Maybe QueryFollowUp)
   }
-
--- | A provider whose status query answer is final.
-noQueryFollowUp
-  :: AdapterContext -> PaymentLocator -> Value -> Either AdapterError (Maybe QueryFollowUp)
-noQueryFollowUp _ _ _ = Right Nothing
 
 minorToDecimal :: Int64 -> Scientific
 minorToDecimal amountMinor = scientific (fromIntegral amountMinor) (-2)

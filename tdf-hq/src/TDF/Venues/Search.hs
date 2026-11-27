@@ -18,7 +18,6 @@ module TDF.Venues.Search
   , BoundingBox (..)
   , earthRadiusKm
   , venueSearchToleranceKm
-  , venueSearchCoordinateCeiling
   , haversineDistanceKm
   , matchesVenueText
   , matchesVenueNear
@@ -77,12 +76,6 @@ earthRadiusKm = 6371
 -- specified distance is within this many kilometres (1 mm) of the radius.
 venueSearchToleranceKm :: Double
 venueSearchToleranceKm = 1.0e-6
-
--- | A stored coordinate above this magnitude never matches in SQL. Such a
--- value cannot be written through the API; the guard keeps the SQL arithmetic
--- inside the range where PostgreSQL does not raise.
-venueSearchCoordinateCeiling :: Double
-venueSearchCoordinateCeiling = 1.0e300
 
 haversineDistanceKm :: Double -> Double -> Double -> Double -> Double
 haversineDistanceKm lat1 lng1 lat2 lng2 =
@@ -158,7 +151,7 @@ venueBoundingBox lat lng radiusKm =
         | otherwise = (-180, 180)
    in BoundingBox (lat - latHalf) (lat + latHalf) lngMin lngMax
 
--- | The box test the SQL applies to a venue with in-range coordinates.
+-- | The box test the SQL applies to every venue with both coordinates.
 inVenueBoundingBox :: BoundingBox -> Double -> Double -> Bool
 inVenueBoundingBox box venueLat venueLng =
   bbLatMin box <= venueLat
@@ -189,34 +182,27 @@ venueSearchTextClauseSql =
   \ OR venue_search_fold(venue.city) LIKE ? ESCAPE '!'\
   \ OR venue_search_fold(venue.address) LIKE ? ESCAPE '!')"
 
--- | Fourteen parameters: the latitude bounds; the latitude bounds again and
--- the longitude bounds three times; the radius; the query latitude and
--- longitude; the query latitude.
+-- | Twelve parameters: the latitude bounds; the longitude bounds three times;
+-- the radius; the query latitude and longitude; the query latitude.
 --
--- The first condition repeats the latitude bounds outside the CASE so an index
--- can serve it. The CASE decides: no coordinates or a non-finite or absurd
--- coordinate never matches; an in-range venue outside the box does not match;
--- anything else gets the haversine test. CASE is used because it fixes the
--- order of evaluation, so no guarded expression is computed for a row its
--- guard excludes.
+-- The constraint @venue_coordinates_in_range@ keeps every stored coordinate
+-- NULL or inside -90..90 / -180..180, and 'venueSqlSearchEnabled' requires
+-- it, so every row the statement reads is one the bounding box covers. A row
+-- without both coordinates fails the box tests (NULL) and never matches.
 --
 -- PostgreSQL raises on floating-point underflow where Haskell returns zero or
 -- a subnormal. A difference below 1e-290 degrees is taken as zero, which gives
 -- the value Haskell computes, and a squared sine below 1e-240 is dropped, which
--- moves the distance by far less than the stated tolerance.
+-- moves the distance by far less than the stated tolerance. With in-range
+-- coordinates nothing else can raise, so the order in which PostgreSQL
+-- evaluates the conditions does not matter.
 venueSearchNearClauseSql :: Text
 venueSearchNearClauseSql =
-  " AND (venue.latitude BETWEEN ?::float8 AND ?::float8\
-  \ OR NOT (venue.latitude BETWEEN -90 AND 90 AND venue.longitude BETWEEN -180 AND 180))\
-  \ AND CASE\
-  \ WHEN venue.latitude IS NULL OR venue.longitude IS NULL THEN FALSE\
-  \ WHEN NOT (abs(venue.latitude) <= 1e300 AND abs(venue.longitude) <= 1e300) THEN FALSE\
-  \ WHEN venue.latitude BETWEEN -90 AND 90 AND venue.longitude BETWEEN -180 AND 180\
-  \ AND NOT (venue.latitude BETWEEN ?::float8 AND ?::float8\
+  " AND venue.latitude BETWEEN ?::float8 AND ?::float8\
   \ AND (venue.longitude BETWEEN ?::float8 AND ?::float8\
   \ OR venue.longitude + 360 BETWEEN ?::float8 AND ?::float8\
-  \ OR venue.longitude - 360 BETWEEN ?::float8 AND ?::float8)) THEN FALSE\
-  \ ELSE (SELECT CASE WHEN h.a >= 0 AND h.a <= 1\
+  \ OR venue.longitude - 360 BETWEEN ?::float8 AND ?::float8)\
+  \ AND (SELECT CASE WHEN h.a >= 0 AND h.a <= 1\
   \ THEN 6371 * (2 * atan2(sqrt(h.a), sqrt(1 - h.a))) <= ?::float8 ELSE FALSE END\
   \ FROM (SELECT (CASE WHEN abs(s.slat) < 1e-120 THEN 0 ELSE s.slat * s.slat END)\
   \ + (CASE WHEN abs(s.slng) < 1e-120 THEN 0 ELSE s.c1 * s.c2 * s.slng * s.slng END) AS a\
@@ -230,8 +216,7 @@ venueSearchNearClauseSql =
   \ CASE WHEN abs(q.lat1) < 1e-290 THEN 0 ELSE q.lat1 * pi() / 180 END AS lat1,\
   \ CASE WHEN abs(venue.latitude) < 1e-290 THEN 0\
   \ ELSE venue.latitude * pi() / 180 END AS lat2\
-  \ FROM (SELECT ?::float8 AS lat, ?::float8 AS lng, ?::float8 AS lat1) q) r) s) h)\
-  \ END"
+  \ FROM (SELECT ?::float8 AS lat, ?::float8 AS lng, ?::float8 AS lat1) q) r) s) h)"
 
 -- | Two parameters: limit and offset.
 venueSearchPageSql :: Text
@@ -259,7 +244,7 @@ venueSearchStatement query =
             lngBounds = [bbLngMin box, bbLngMax box]
          in ( venueSearchNearClauseSql
             , map PersistDouble
-                (latBounds <> latBounds <> lngBounds <> lngBounds <> lngBounds
+                (latBounds <> lngBounds <> lngBounds <> lngBounds
                   <> [radiusKm, lat, lng, lat])
             )
       Nothing -> ("", [])
@@ -284,12 +269,16 @@ venueSqlSearchEnvironment raw =
     Just "prod"       -> "production"
     _                 -> "sandbox"
 
--- | Whether the flag table and the fold function exist. A database that has
--- not received the migration keeps the in-memory path instead of failing.
+-- | Whether the flag table, the fold function and a validated coordinate
+-- constraint on the venue table the statement reads all exist. A database
+-- without both migrations keeps the in-memory path instead of failing.
 venueSqlSearchInstalledSql :: Text
 venueSqlSearchInstalledSql =
   "SELECT to_regclass('revenue_feature_flag') IS NOT NULL\
-  \ AND to_regprocedure('venue_search_fold(text)') IS NOT NULL"
+  \ AND to_regprocedure('venue_search_fold(text)') IS NOT NULL\
+  \ AND EXISTS (SELECT 1 FROM pg_constraint\
+  \ WHERE conname = 'venue_coordinates_in_range'\
+  \ AND conrelid = to_regclass('venue') AND contype = 'c' AND convalidated)"
 
 -- | Two parameters: the flag key and the environment.
 venueSqlSearchEnabledSql :: Text

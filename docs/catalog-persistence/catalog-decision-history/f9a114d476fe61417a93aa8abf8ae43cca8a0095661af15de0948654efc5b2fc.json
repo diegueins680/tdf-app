@@ -1,0 +1,26 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "18a46eb2d68dbcc0ffaa",
+  "reviewed": true,
+  "justification": "Append the venue coordinate constraint to the 271 migrations on main at bddc0a2a6. The original migration entry and SQL are retained from the venue change. Both parent reviews are preserved.",
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "venue-coordinate-constraint-main-integration-20261124",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 272
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:5c2ed3f8ba488e82825dae4662cc0bf3b42279d79414556834d75a33a8637a8a"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:d6c8d6b5890ffaab3bbe0ae8197571df8bacc32d28df6e5c96779e105f854b28"
+    }
+  ]
+}
