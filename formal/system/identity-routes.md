@@ -4,6 +4,7 @@ Derived on 2026-11-07 by reading `tdf-hq/src/TDF/ServerAuth.hs`, `Auth.hs`, `Ser
 
 **Guards**
 - Login, Google login, signup and password reset are public (`credential-intake`); password change is registered `handler-session` but reads only the Authorization header or a username in the body; access requests, referrals, parties and bands are behind `AuthProtect`.
+- For Google login, the TDF production web client and the web client used by the signed mobile apps are trusted by exact audience ID. Deployments configured with another Google client trust only their configured audience. Google token verification, expiry, issuer, verified email and subject checks apply to both TDF clients.
 - Since 2026-11-10 password login locks an identifier out for the rest of a 15-minute window after ten failures, and signup and reset requests are limited to five per email per hour (`TDF.Auth.Throttle`, `auth_rate_limit`). There is no per-address limit: the backend has no trusted client address.
 - Sessions are database-clock windows (ID-SESSION-004); password replacement revokes interactive tokens (ID-SESSION-001); reset tokens are single-use within 900 seconds (ID-SESSION-002/003).
 

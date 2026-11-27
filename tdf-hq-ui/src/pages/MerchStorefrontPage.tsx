@@ -11,7 +11,8 @@ import { MerchReputationSummary } from '../components/merch/MerchReputationSumma
 import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { getAnalyticsClient } from '../analytics/posthog';
-import { formatMerchMoney, merchLanguage, resolveMerchImageUrl } from '../utils/merch';
+import { formatMerchMoney, merchLanguage } from '../utils/merch';
+import { resolveMerchImageUrl } from '../services/merchImage';
 
 export default function MerchStorefrontPage() {
   const { storeSlug = '' } = useParams();

@@ -13,6 +13,7 @@ const {
   getProviderPaymentSession,
   paymentMethodDefinition,
   safePlaceToPayRedirect,
+  safeProviderRedirect,
 } = await import('./providerPaymentSessions');
 
 describe('provider payment-session client', () => {
@@ -83,5 +84,18 @@ describe('provider payment-session client', () => {
       .toBeNull();
     expect(safePlaceToPayRedirect('http://checkout.placetopay.ec/session/42'))
       .toBeNull();
+  });
+
+  it('redirects PayPhone buyers only to PayPhone hosted pages', () => {
+    const card = 'https://pay.payphonetodoesposible.com/Anonymous/Index?paymentId=Pay-1';
+    const app = 'https://pay.payphonetodoesposible.com/PayPhone/Index?paymentId=Pay-1';
+    expect(safeProviderRedirect('payphone', card)).toBe(card);
+    expect(safeProviderRedirect('payphone', app)).toBe(app);
+    expect(safeProviderRedirect('payphone', 'https://pay.payphonetodoesposible.com.evil.example/Anonymous/Index')).toBeNull();
+    expect(safeProviderRedirect('payphone', 'http://pay.payphonetodoesposible.com/Anonymous/Index')).toBeNull();
+    expect(safeProviderRedirect('payphone', 'https://pay.payphonetodoesposible.com:8443/Anonymous/Index')).toBeNull();
+    expect(safeProviderRedirect('placetopay', card)).toBeNull();
+    expect(safeProviderRedirect('payphone', 'https://checkout.placetopay.ec/session/42')).toBeNull();
+    expect(safeProviderRedirect('datafast', card)).toBeNull();
   });
 });

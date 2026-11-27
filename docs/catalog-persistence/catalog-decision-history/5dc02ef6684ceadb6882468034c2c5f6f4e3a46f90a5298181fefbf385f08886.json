@@ -1,0 +1,22 @@
+{
+  "id": "720d867f7e9dfc6e3a88",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+  "justification": "The object keys are strict typed wire-payload fields, not selectable business values or reference data.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+    "line": 767,
+    "kind": "object-registry",
+    "name": "bookingPayload",
+    "valueCount": 10,
+    "consumerCount": 1,
+    "exactDuplicateIds": [],
+    "similarCandidateIds": []
+  }
+}

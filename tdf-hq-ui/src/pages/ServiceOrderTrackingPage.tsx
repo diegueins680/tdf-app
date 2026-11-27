@@ -58,13 +58,14 @@ export default function ServiceOrderTrackingPage() {
       amountMinor: orderQuery.data!.ssoPriceUsdCents,
       productFlow: 'professional_service',
     }),
-    enabled: orderQuery.data?.ssoStatus === 'awaiting_payment',
+    enabled: ['awaiting_payment', 'payment_failed'].includes(orderQuery.data?.ssoStatus ?? ''),
     retry: false,
   });
   const hostedPaymentMethods = useMemo(() => [
     ...(paymentMethodsQuery.data?.placeToPayCard ? ['placetopay_card'] : []),
     ...(paymentMethodsQuery.data?.placeToPayBankRedirect ? ['placetopay_bank_redirect'] : []),
     ...(paymentMethodsQuery.data?.placeToPayDeunaQr ? ['placetopay_deuna_qr'] : []),
+    ...(paymentMethodsQuery.data?.payPhoneCard ? ['payphone_card'] : []),
     ...(paymentMethodsQuery.data?.payPhoneWallet ? ['payphone_wallet'] : []),
   ], [paymentMethodsQuery.data]);
 
@@ -124,6 +125,9 @@ export default function ServiceOrderTrackingPage() {
                     returnPath: `/mezcla-mastering/pedido/${encodeURIComponent(order.ssoOrderNumber)}`,
                   }}
                   offeredMethods={order.ssoStatus === 'awaiting_payment' ? hostedPaymentMethods : []}
+                  alternativeMethods={order.ssoStatus === 'awaiting_payment' ? hostedPaymentMethods : []}
+                  availabilityUnknown={!paymentMethodsQuery.isSuccess}
+                  paymentFailure={order.ssoStatus === 'payment_failed' ? { needsVerification: true } : null}
                   disabled={order.ssoStatus !== 'awaiting_payment' || paymentMethodsQuery.isLoading}
                   initialBuyerPhone={order.ssoBuyerPhone}
                   onSafetyLockChange={setHostedPaymentLocked}

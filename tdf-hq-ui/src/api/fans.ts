@@ -1,4 +1,5 @@
 import { get, post, put, del } from './client';
+import { saveArtistProfileMedia, type ArtistProfileMediaOptions } from './artistProfileMedia';
 import type {
   ArtistProfileDTO,
   ArtistReleaseDTO,
@@ -7,6 +8,7 @@ import type {
   FanProfileDTO,
   FanProfileUpdate,
   FanFollowDTO,
+  ArtistRecommendationDTO,
   ArtistFansResponse,
   FanClubDTO,
   FanClubPostDTO,
@@ -80,6 +82,10 @@ export const Fans = {
     (await send('/fans/me/role-request', payload)) as SecurityGrantRevision,
   updateProfile: async (payload: FanProfileUpdate) => (await update('/fans/me/profile', payload)) as FanProfileDTO,
   listFollows: async () => (await read('/fans/me/follows')) as FanFollowDTO[],
+  listRecommendations: async (limit?: number) => {
+    const qs = limit === undefined ? '' : `?limit=${limit}`;
+    return (await read(`/fans/me/recommendations${qs}`)) as ArtistRecommendationDTO[];
+  },
   follow: async (artistId: number) => (await send(`/fans/me/follows/${artistId}`, {})) as FanFollowDTO,
   unfollow: async (artistId: number) => {
     await remove(`/fans/me/follows/${artistId}`);
@@ -87,14 +93,14 @@ export const Fans = {
   activateMyArtistProfile: async () =>
     (await send('/artists/me/activate', {})) as ArtistProfileDTO,
   getMyArtistProfile: async () => (await read('/fans/me/artist-profile')) as ArtistProfileDTO,
-  updateMyArtistProfile: async (payload: ArtistProfileUpsert) =>
-    (await update('/fans/me/artist-profile', payload)) as ArtistProfileDTO,
-  createMyArtistProfile: async (payload: ArtistProfileUpsert) =>
-    (await send('/artists/me/profile', payload)) as ArtistProfileDTO,
-  updateMyArtistProfileAlias: async (payload: ArtistProfileUpsert) =>
-    (await update('/artists/me/profile', payload)) as ArtistProfileDTO,
-  updateMyArtistPhoto: async (payload: ArtistProfilePhotoUpdate) =>
-    (await send('/artists/me/photo', payload)) as ArtistProfileDTO,
+  updateMyArtistProfile: async (payload: ArtistProfileUpsert, options?: ArtistProfileMediaOptions) =>
+    (await saveArtistProfileMedia(payload, prepared => put<ArtistProfileDTO>('/fans/me/artist-profile', prepared), options)),
+  createMyArtistProfile: async (payload: ArtistProfileUpsert, options?: ArtistProfileMediaOptions) =>
+    (await saveArtistProfileMedia(payload, prepared => post<ArtistProfileDTO>('/artists/me/profile', prepared), options)),
+  updateMyArtistProfileAlias: async (payload: ArtistProfileUpsert, options?: ArtistProfileMediaOptions) =>
+    (await saveArtistProfileMedia(payload, prepared => put<ArtistProfileDTO>('/artists/me/profile', prepared), options)),
+  updateMyArtistPhoto: async (payload: ArtistProfilePhotoUpdate, options?: ArtistProfileMediaOptions) =>
+    (await saveArtistProfileMedia(payload, prepared => post<ArtistProfileDTO>('/artists/me/photo', prepared), options)),
 
   // Fan Club
   getClub: async (artistId: number) => (await read(`/fans/clubs/${artistId}`)) as FanClubDTO,

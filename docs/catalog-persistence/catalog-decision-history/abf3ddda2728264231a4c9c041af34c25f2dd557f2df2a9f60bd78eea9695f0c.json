@@ -1,0 +1,10 @@
+{
+  "id": "cbfb2e7629209b469aeb",
+  "classification": "governed-reference-data",
+  "disposition": "consumer-update",
+  "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
+  "priority": "P1-cross-platform",
+  "risk": "A stale public label could disconnect the server-offered method from its client executor or permit an unsafe implicit provider substitution.",
+  "justification": "The labels are exact client consumers of server routing output; availability remains owned by the provider account, method, flow, operation, and environment capability rows.",
+  "reviewed": true
+}

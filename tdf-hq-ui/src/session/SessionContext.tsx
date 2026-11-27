@@ -1,14 +1,15 @@
-import { beginLogoutIntent, clearLogoutIntent, finishLogoutIntent, getLogoutRevision, hasLogoutIntent, subscribeLogoutIntent, trackLogoutRequest } from './logoutIntent';
+import { beginLogoutIntent, clearLogoutIntent, finishLogoutIntent, getLogoutRevision, hasLogoutIntent, subscribeLogoutIntent, trackLogoutRequest } from '../auth/logoutIntent';
 import { logger } from '../utils/logger';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { loadSessionSnapshot, logoutSessionRequest, reconcileOnboardingProgress } from '../api/session';
 import { captureReconciledFirstValue } from '../analytics/onboardingCompletionAnalytics';
-import { advanceAuthSessionEpoch, AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
+import { advanceAuthSessionEpoch, AUTH_SESSION_EXPIRED_EVENT } from '../auth/authEvents';
 import { reportClientError } from '../analytics/errorReporting';
 import type { LocalePreferences } from '../api/preferences';
 import { reconcileSessionPersonalData } from '../utils/sessionPersonalData';
+import { retireLegacyDriveCredentials } from '../services/storageCredentials';
 
 export interface SessionUser {
   username: string;
@@ -218,7 +219,10 @@ interface SessionProviderProps {
 export const SESSION_BOOTSTRAP_TIMEOUT_MS = 12_000;
 
 export function SessionProvider({ children }: SessionProviderProps) {
-  const [initialStoredState] = useState(readStoredSession);
+  const [initialStoredState] = useState(() => {
+    retireLegacyDriveCredentials();
+    return readStoredSession();
+  });
   const [session, setSession] = useState<SessionUser | null>(initialStoredState.session);
   const [loading, setLoading] = useState(true);
   const [persistScope, setPersistScope] = useState<SessionStorageScope>(initialStoredState.scope);

@@ -2,9 +2,12 @@ import { Alert, Box, Button, Card, CardContent, CircularProgress, Container, Sta
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
+import { loadCheckoutPaymentAlternatives } from '../api/checkoutPaymentAlternatives';
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 
-import { getProviderPaymentSession, safePlaceToPayRedirect } from '../api/providerPaymentSessions';
+import { getProviderPaymentSession, safeProviderRedirect } from '../api/providerPaymentSessions';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { env } from '../utils/env';
 import {
   clearPaymentIdempotencyKey,
   clearProviderPaymentResume,
@@ -25,7 +28,9 @@ export default function ProviderPaymentReturnPage() {
   const { locale } = useLocalePreferences();
   const english = locale.toLowerCase().startsWith('en');
   const [searchParams] = useSearchParams();
-  const checkoutId = searchParams.get('tdf_checkout');
+  // PayPhone appends its own query (id, clientTransactionId) to the response
+  // URL and may do so with a second '?', so keep only the checkout id itself.
+  const checkoutId = searchParams.get('tdf_checkout')?.split('?')[0] ?? null;
   const resume = loadProviderPaymentResume(checkoutId ?? undefined);
   const status = useQuery({
     queryKey: ['provider-payment-session-return', resume?.checkoutId, resume?.attemptId],
@@ -44,6 +49,13 @@ export default function ProviderPaymentReturnPage() {
   });
 
   const resumedCheckoutId = resume?.checkoutId;
+  const alternatives = useQuery({
+    queryKey: ['payment-return-alternatives', resumedCheckoutId, resume?.attemptId, resume?.returnPath],
+    queryFn: () => loadCheckoutPaymentAlternatives(resume!),
+    enabled: Boolean(resume && !status.isError && status.data?.canRetryOrFallback
+      && ['failed', 'confirmed_no_charge'].includes(status.data.state)),
+    retry: false,
+  });
   useEffect(() => {
     if (resumedCheckoutId && status.data?.state === 'succeeded') {
       markProviderPaymentResumeCompleted(resumedCheckoutId);
@@ -56,7 +68,7 @@ export default function ProviderPaymentReturnPage() {
         <Alert severity="warning">
           {english
             ? 'This tab does not have the private payment recovery capability. Return to the original order or contact support.'
-            : 'Esta pestaña no tiene la capacidad privada para recuperar el pago. Vuelve a la orden original o contacta a soporte.'}
+            : 'Desde esta pestaña no podemos consultar el pago. Vuelve a la orden original o contacta a soporte.'}
         </Alert>
       </Container>
     );
@@ -68,16 +80,17 @@ export default function ProviderPaymentReturnPage() {
     || (session?.state === 'failed' && session.canRetryOrFallback);
   const ambiguous = session?.state === 'ambiguous'
     || Boolean(session && !session.canRetryOrFallback && !succeeded);
-  const redirect = session?.provider === 'placetopay'
-    ? safePlaceToPayRedirect(session.redirectUrl)
-    : null;
+  const redirect = safeProviderRedirect(session?.provider, session?.redirectUrl);
   const canReleaseAttempt = paymentAttemptCanBeReleased(
     session?.state,
     session?.canRetryOrFallback,
   );
+  const paypalConfigured = Boolean(env.read('VITE_PAYPAL_CLIENT_ID'));
+  const paypalAvailable = paypalConfigured
+    && typeof window !== 'undefined' && Boolean(window.paypal?.Buttons);
 
   const releaseAttemptIfAuthoritative = () => {
-    if (!canReleaseAttempt) return;
+    if (!canReleaseAttempt || status.isError || status.isFetching) return;
     clearProviderPaymentResume(resume.checkoutId);
     if (knownNoCharge) {
       clearPaymentIdempotencyKey(
@@ -100,7 +113,7 @@ export default function ProviderPaymentReturnPage() {
               {(status.isLoading || status.isFetching) && !session && (
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <CircularProgress size={24} />
-                  <Typography>{english ? 'Reading the durable server status…' : 'Consultando el estado durable del servidor…'}</Typography>
+                  <Typography>{english ? 'Confirming your payment…' : 'Confirmando tu pago…'}</Typography>
                 </Stack>
               )}
               {status.isError && (
@@ -108,10 +121,10 @@ export default function ProviderPaymentReturnPage() {
                   <Alert severity="warning">
                     {english
                       ? 'The verified status is temporarily unavailable. This attempt stays locked and no payment is shown as successful.'
-                      : 'El estado verificado no está disponible temporalmente. Este intento permanece bloqueado y no mostramos el pago como exitoso.'}
+                      : 'No pudimos consultar el estado del pago en este momento. Este intento sigue en espera y todavía no lo damos por pagado.'}
                   </Alert>
                   <Button variant="outlined" onClick={() => void status.refetch()} disabled={status.isFetching}>
-                    {english ? 'Retry verified status' : 'Reintentar estado verificado'}
+                    {english ? 'Retry verified status' : 'Volver a consultar'}
                   </Button>
                 </>
               )}
@@ -119,31 +132,48 @@ export default function ProviderPaymentReturnPage() {
                 <Alert severity="success">
                   {english
                     ? 'The server verified the provider payment. Return to the order for its current fulfillment status.'
-                    : 'El servidor verificó el pago del proveedor. Vuelve a la orden para consultar el estado de cumplimiento.'}
+                    : 'Pago confirmado. Vuelve a la orden para ver el siguiente paso.'}
                 </Alert>
               )}
               {knownNoCharge && (
                 <Alert severity="info">
                   {english
                     ? 'The server confirmed that no charge completed. Return to the order to choose an available method.'
-                    : 'El servidor confirmó que no se completó un cobro. Vuelve a la orden para elegir un método disponible.'}
+                    : 'No se realizó ningún cobro. Vuelve a la orden para elegir un método disponible.'}
                 </Alert>
+              )}
+              {knownNoCharge && alternatives.isSuccess && (
+                <PaymentAlternativesNotice
+                  methods={alternatives.data.filter((method) => method !== 'paypal' || paypalAvailable)}
+                  availabilityUnknown={status.isError || status.isFetching}
+                  methodsToCheck={paypalConfigured && !paypalAvailable
+                    ? alternatives.data.filter((method) => method === 'paypal') : []}
+                  failedMethod={resume.paymentMethod === 'payphone_wallet'
+                    ? 'payphone_wallet' : `${resume.provider}_${resume.paymentMethod}`}
+                  blocked={status.isError || status.isFetching}
+                  english={english}
+                />
+              )}
+              {knownNoCharge && alternatives.isError && (
+                <Alert severity="info">{english
+                  ? 'Return to the original order to refresh its available payment methods.'
+                  : 'Vuelve a la orden original para consultar sus medios de pago disponibles.'}</Alert>
               )}
               {ambiguous && (
                 <Alert severity="warning">
                   {english
                     ? 'The result is pending or ambiguous. Do not pay again or use another provider while TDF reconciles it.'
-                    : 'El resultado está pendiente o es ambiguo. No pagues otra vez ni uses otro proveedor mientras TDF lo concilia.'}
+                    : 'Todavía no sabemos si el pago se completó. No pagues otra vez ni uses otro método mientras lo revisamos.'}
                 </Alert>
               )}
               {session?.state === 'requires_customer_action' && redirect && (
                 <Button variant="contained" onClick={() => window.location.assign(redirect)}>
-                  {english ? 'Continue secure provider checkout' : 'Continuar checkout seguro del proveedor'}
+                  {english ? 'Continue secure provider checkout' : 'Continuar con el pago'}
                 </Button>
               )}
               {session && POLLABLE_STATES.has(session.state) && (
                 <Button variant="outlined" onClick={() => void status.refetch()} disabled={status.isFetching}>
-                  {english ? 'Refresh verified status' : 'Actualizar estado verificado'}
+                  {english ? 'Refresh verified status' : 'Actualizar estado del pago'}
                 </Button>
               )}
               <Button
@@ -156,7 +186,7 @@ export default function ProviderPaymentReturnPage() {
               <Typography variant="caption" color="text.secondary">
                 {english
                   ? 'Returning from a provider never proves payment by itself. TDF trusts only verified server-side evidence.'
-                  : 'Volver desde un proveedor nunca prueba el pago por sí solo. TDF confía únicamente en evidencia verificada del servidor.'}
+                  : 'Un pago solo cuenta cuando lo confirmamos aquí, no por haber vuelto desde el procesador.'}
               </Typography>
             </Stack>
           </CardContent>

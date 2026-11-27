@@ -77,6 +77,7 @@ payPhone :: ProviderAdapter
 payPhone = either (error . show) id $ payPhoneAdapter PayPhoneConfig
   { payPhoneToken = "token-value"
   , payPhoneStoreId = "store-1"
+  , payPhoneCodingPassword = Nothing
   }
 
 amountJson :: T.Text -> Int64 -> Value

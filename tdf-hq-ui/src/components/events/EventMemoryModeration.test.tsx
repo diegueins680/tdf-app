@@ -93,7 +93,7 @@ it('does not dispatch a captured moderation decision after credentials change be
   const view = mount(<EventMemorySourceActions targetId={target} version={1} controls={controls} />);
   fireEvent.click(screen.getByRole('button', { name: 'Denunciar recuerdo' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Motivo' }), { target: { value: 'Prior account decision' } });
-  const { advanceAuthSessionEpoch } = await import('../../session/authEvents');
+  const { advanceAuthSessionEpoch } = await import('../../auth/authEvents');
   advanceAuthSessionEpoch();
   fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
   await waitFor(() => expect(commandMock.mock.calls.length > 0 || Boolean(screen.queryByText(/No se pudo confirmar|sesión cambió/))).toBe(true));

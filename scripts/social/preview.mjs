@@ -11,6 +11,10 @@ const relation = { partyId:2, revision:0, following:false, requested:false, inco
  connected:false, blocked:false, muted:false, dismissed:false };
 const profile = { discoverable:false, personalized:true, revision:0,
  relationships:[{...relation,displayName:'Lucía — guitarra y producción'}] };
+export const SocialAPI = {
+ listNetworkSuggestions: async()=>new URLSearchParams(window.location.search).has('network')
+   ? [{sfPartyId:2,sfMutualCount:0,sfReason:'network'}] : []
+};
 export const SocialV2 = {
  me: async()=>structuredClone(profile),
  following:async()=>({items:[{postId:1,position:'1',publishedAt:'2026-09-14T12:00:00Z',
@@ -34,8 +38,9 @@ const server = await createServer({
     name: 'synthetic-social-preview',
     enforce: 'pre',
     resolveId(id) {
-      if (id.replace(/\.(tsx?|jsx?)$/, '').endsWith('/session/SessionContext')) return '\0social-preview-session';
-      if (id.replace(/\.(tsx?|jsx?)$/, '').endsWith('/api/socialV2')) return '\0social-preview-api';
+      const modulePath = id.replace(/\.(tsx?|jsx?)$/, '');
+      if (modulePath.endsWith('/session/SessionContext')) return '\0social-preview-session';
+      if (modulePath.endsWith('/api/socialV2') || modulePath.endsWith('/api/social')) return '\0social-preview-api';
     },
     load(id) {
       if (id === '\0social-preview-session') return mocks.session;

@@ -69,3 +69,9 @@ it('retains an event-memory invitation identity through login without accepting 
   expect(resolvePostAuthPath(null, ['Customer'], [], redirect)).toBe(path);
   expect(notificationTargetPath(notification({ nTargetType: 'event_memories', nTargetId: 141, nTargetKey: 'https://bad.test' }))).toBeNull();
 });
+
+it('opens a public booking request notification in the studio calendar', () => {
+  expect(notificationTargetPath(notification({ nType: 'public_booking_request', nTargetType: 'booking', nTargetId: 12 }))).toBe('/estudio/calendario');
+  expect(notificationTargetPath(notification({ nType: 'public_booking_request', nTargetType: 'booking', nTargetId: 0 }))).toBeNull();
+  expect(notificationFallbackPath(notification({ nTargetType: 'booking' }))).toBe('/estudio/calendario');
+});

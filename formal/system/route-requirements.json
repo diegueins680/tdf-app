@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 528,
-    "named": 446,
+    "total": 549,
+    "named": 467,
     "path-named": 0,
     "reviewed": 82,
     "unspecified": 0,
-    "covered": 528
+    "covered": 549
   },
   "routes": [
     {
@@ -325,6 +325,54 @@
     },
     {
       "method": "POST",
+      "path": "/admin/domo/quotes/{quoteId}/refund/approve",
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/domo/quotes/{quoteId}/refund/confirm-manual",
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/domo/quotes/{quoteId}/refund/execute",
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/domo/quotes/{quoteId}/refund/manual-evidence",
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/domo/quotes/{quoteId}/refund/provider-reference",
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/domo/quotes/{quoteId}/refund/reconcile",
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
+    },
+    {
+      "method": "POST",
       "path": "/admin/dropdowns/{category}",
       "basis": "named",
       "requirements": [
@@ -345,6 +393,30 @@
       "basis": "named",
       "requirements": [
         "MSG-ADMIN-EMAIL-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/genre-suggestions/{suggestionId}/approve",
+      "basis": "named",
+      "requirements": [
+        "TAX-GENRE-SUGGESTION-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/genre-suggestions/{suggestionId}/merge",
+      "basis": "named",
+      "requirements": [
+        "TAX-GENRE-SUGGESTION-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/genre-suggestions/{suggestionId}/reject",
+      "basis": "named",
+      "requirements": [
+        "TAX-GENRE-SUGGESTION-001"
       ]
     },
     {
@@ -933,6 +1005,14 @@
     },
     {
       "method": "POST",
+      "path": "/chat/threads/{threadId}/read",
+      "basis": "named",
+      "requirements": [
+        "MSG-DELIVERY-001"
+      ]
+    },
+    {
+      "method": "POST",
       "path": "/chatkit/sessions",
       "basis": "named",
       "requirements": [
@@ -968,7 +1048,8 @@
       "path": "/commerce/checkouts/{checkoutId}/payment-sessions",
       "basis": "named",
       "requirements": [
-        "PAY-HOSTED-SESSION-001"
+        "PAY-HOSTED-SESSION-001",
+        "PAY-PAYPHONE-CARD-001"
       ]
     },
     {
@@ -1292,6 +1373,14 @@
       "basis": "named",
       "requirements": [
         "DIR-SUBMISSIONS-001"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/drive/token",
+      "basis": "named",
+      "requirements": [
+        "MEDIA-STORAGE-WRITES-001"
       ]
     },
     {
@@ -1663,6 +1752,22 @@
       "basis": "named",
       "requirements": [
         "QA-REPORT-AUTHORING-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/genres/suggestions",
+      "basis": "named",
+      "requirements": [
+        "TAX-GENRE-SUGGESTION-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/genres/suggestions/check",
+      "basis": "named",
+      "requirements": [
+        "TAX-GENRE-SUGGESTION-001"
       ]
     },
     {
@@ -2447,11 +2552,27 @@
       ]
     },
     {
+      "method": "PUT",
+      "path": "/music/me/featured-track",
+      "basis": "named",
+      "requirements": [
+        "MEDIA-ARTIST-FEATURED-001"
+      ]
+    },
+    {
       "method": "POST",
       "path": "/music/me/playback-events",
       "basis": "named",
       "requirements": [
         "MEDIA-MUSIC-PLAYBACK-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/music/media-health/{sourceKind}/{sourceId}/revalidate",
+      "basis": "named",
+      "requirements": [
+        "MEDIA-SOURCE-HEALTH-001"
       ]
     },
     {
@@ -2695,6 +2816,30 @@
       "basis": "named",
       "requirements": [
         "NAV-PREFERENCES-001"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/notifications/channels",
+      "basis": "named",
+      "requirements": [
+        "MSG-DELIVERY-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/notifications/push-subscriptions",
+      "basis": "named",
+      "requirements": [
+        "MSG-DELIVERY-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/notifications/push-subscriptions/revoke",
+      "basis": "named",
+      "requirements": [
+        "MSG-DELIVERY-001"
       ]
     },
     {
@@ -3876,6 +4021,14 @@
     },
     {
       "method": "POST",
+      "path": "/social-events/events/{eventId}/ticket-sale/request",
+      "basis": "named",
+      "requirements": [
+        "EVT-TICKET-SALE-001"
+      ]
+    },
+    {
+      "method": "POST",
       "path": "/social-events/events/{eventId}/ticket-tiers",
       "basis": "named",
       "requirements": [
@@ -3991,6 +4144,22 @@
       "basis": "named",
       "requirements": [
         "PAY-STRIPE-WEBHOOK-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/ticket-sale-requests/{requestId}/approve",
+      "basis": "named",
+      "requirements": [
+        "EVT-TICKET-SALE-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/ticket-sale-requests/{requestId}/decline",
+      "basis": "named",
+      "requirements": [
+        "EVT-TICKET-SALE-001"
       ]
     },
     {

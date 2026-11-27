@@ -8,12 +8,15 @@ module TDF.Server.Directory
   ( directoryPublicServer
   , directoryProtectedServer
   , consumeRate
+  , searchSql
   , startAgreementDepositExpiryJob
+  , directoryTaxonomyFacetsSql
   ) where
 
 import Control.Applicative ((<|>))
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Exception (SomeException, try)
+import Control.Exception.Safe (tryAny)
 import Control.Monad (forM_, forever, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, asks)
@@ -46,8 +49,12 @@ import TDF.API.Directory
 import TDF.Auth (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
 import qualified TDF.CMS.Models as CMS
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import TDF.Config (AppConfig(..))
 import TDF.DB (Env(..))
 import TDF.Directory.Policy
+import TDF.Directory.SemanticIndex (resolveQueryEmbedding)
+import TDF.Directory.SemanticSearch (plannedSearch, searchPlan)
+import TDF.Taxonomy.Filter (directoryTaxonomyClause, directoryTaxonomyFacetsSql, mkTaxonomyFilter, taxonomyInputParams)
 import TDF.Server.DirectoryAgreementText
 import TDF.Models (RoleEnum(Admin))
 import qualified TDF.Models.SocialEventsModels as Social
@@ -98,8 +105,11 @@ directoryPublicServer =
 
 searchDirectory mQuery mEntityType mCityId mLatitude mLongitude mRadiusKm
   mProfessionId mServiceId mInstrumentId mGenreId mRemote mAvailable
-  mDateFrom mDateTo mCursor mLimit mProfileKind mIntent = do
+  mDateFrom mDateTo mCursor mLimit mProfileKind mIntent
+  countryIds regionIds cityIds genreIds = do
   query <- validateQuery mQuery
+  taxonomy <- either (\message -> throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 message) }) pure
+    (mkTaxonomyFilter countryIds regionIds cityIds genreIds)
   entityType <- validateEntityType mEntityType
   let profileKind = normalizeOptional mProfileKind
       intent = normalizeOptional mIntent
@@ -118,14 +128,33 @@ searchDirectory mQuery mEntityType mCityId mLatitude mLongitude mRadiusKm
         , maybe PersistNull PersistBool mRemote, maybe PersistNull PersistBool mAvailable
         , optionalTime mDateFrom, optionalTime mDateTo, optionalText profileKind
         , optionalText intent
-        ]
+        ] <> taxonomyInputParams taxonomy
       eventVisibilityParams = [PersistText Social.externalEventRefSuppressedStatus]
-  ranked <- jsonRows (searchSql False) (commonParams <> eventVisibilityParams <> [optionalText cursor, PersistInt64 (fromIntegral (limit + 1))])
-  sponsored <- jsonRows (searchSql True) (commonParams <> eventVisibilityParams <> [PersistNull, PersistInt64 3])
-  facetRows <- jsonRows facetsSql (commonParams <> eventVisibilityParams)
+  -- DIR-SEMANTIC-SEARCH-001: with the flag off, or without a query
+  -- embedding, the plan is lexical and both statements are today's.
+  cfg <- asks envConfig
+  pool <- asks envPool
+  queryEmbedding <- liftIO (resolveQueryEmbedding cfg pool query)
+  let plan = searchPlan (directorySemanticSearchEnabled cfg) queryEmbedding
+      rankedParams = [optionalText cursor, PersistInt64 (fromIntegral (limit + 1))]
+      sponsoredParams = [PersistNull, PersistInt64 3]
+      searchRows sponsoredOnly tailParams = do
+        let lexical = searchSql sponsoredOnly
+            (statement, semanticParams) = plannedSearch plan lexical
+            run sql extra = runSqlPool (rawSql sql (commonParams <> map PersistText extra <> eventVisibilityParams <> tailParams) :: SqlPersistT IO [Single CMS.AesonValue]) pool
+        rows <- if null semanticParams
+          then liftIO (run lexical [])
+          else liftIO (tryAny (run statement semanticParams) >>= either (const (run lexical [])) pure)
+        pure [CMS.unAesonValue value | Single value <- rows]
+  ranked <- searchRows False rankedParams
+  sponsored <- searchRows True sponsoredParams
+  -- The taxonomy facet base repeats the shared filter clause, hence the second
+  -- event-visibility parameter.
+  facetRows <- jsonRows facetsSql (commonParams <> eventVisibilityParams <> eventVisibilityParams)
   let visible = take limit ranked
       next = if length ranked > limit then valueCursor (last visible) else Nothing
-      facetValue = fromMaybe (object ["entityTypes" .= object [], "cities" .= ([] :: [Value])]) (listToMaybe facetRows)
+      facetValue = fromMaybe (object ["entityTypes" .= object [], "cities" .= ([] :: [Value]), "taxonomy" .= emptyTaxonomyFacets]) (listToMaybe facetRows)
+      emptyTaxonomyFacets = object ["genres" .= ([] :: [Value]), "countries" .= ([] :: [Value]), "regions" .= ([] :: [Value]), "cities" .= ([] :: [Value])]
   recordSearchAnalytics query entityType mCityId mProfessionId mServiceId mInstrumentId mGenreId mRemote mAvailable (length visible)
   pure DirectorySearchResponse
     { items = visible
@@ -224,7 +253,7 @@ directoryEntityTypeClause =
 -- Materialize only aliases: typed inputs remain foldable for index conditions.
 directorySearchInputSql :: Text
 directorySearchInputSql =
-  "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to,?::text profile_kind,?::text intent), " <>
+  "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to,?::text profile_kind,?::text intent,?::uuid[] tax_country_ids,?::uuid[] tax_region_ids,?::uuid[] tax_city_ids,taxonomy_genre_closure(?::uuid[]) tax_genre_ids), " <>
   "directory_query_aliases AS MATERIALIZED (SELECT directory_query_alias_entity_ids((SELECT q FROM input)) alias_entity_ids), "
 
 searchSql :: Bool -> Text
@@ -236,11 +265,18 @@ searchSql sponsoredOnly =
   "CASE WHEN input.q='' THEN 0 WHEN EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%')) THEN 1 ELSE 0 END semantic_score " <>
   "FROM documents document CROSS JOIN input WHERE document.sponsored=" <> (if sponsoredOnly then "TRUE " else "FALSE ") <>
   directoryEntityTypeClause <>
-  directoryFilterClause <> "), " <>
-  "ranked AS (SELECT scored.*,round(((.40*text_score+.15*semantic_score+.15*CASE WHEN distance_km IS NULL THEN .35 ELSE 1/(1+distance_km/25) END+.10*profile_completeness+.08*least(1,1/(1+extract(epoch from (now()-source_updated_at))/2592000))+.05*availability_score+.07*reputation_score)/5)::numeric,6) organic_score FROM scored), " <>
-  "boundary AS (SELECT organic_score,source_updated_at,entity_kind,entity_id FROM ranked WHERE entity_kind||':'||entity_id=?::text), " <>
-  "page AS (SELECT ranked.* FROM ranked WHERE NOT EXISTS (SELECT 1 FROM boundary) OR EXISTS (SELECT 1 FROM boundary b WHERE ranked.organic_score<b.organic_score OR (ranked.organic_score=b.organic_score AND (ranked.source_updated_at<b.source_updated_at OR (ranked.source_updated_at=b.source_updated_at AND (ranked.entity_kind>b.entity_kind OR (ranked.entity_kind=b.entity_kind AND ranked.entity_id>b.entity_id)))))) ORDER BY organic_score DESC,source_updated_at DESC,entity_kind,entity_id LIMIT ?) " <>
-  "SELECT jsonb_build_object('id',entity_id,'type',entity_kind,'slug',slug,'title',title,'subtitle',subtitle,'summary',summary,'profileKind',profile_kind,'canonicalPath',CASE WHEN entity_kind='profile' THEN canonical_path ELSE NULL END,'imageUrl',image_url,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision',location_precision,'distanceKm',CASE WHEN distance_km IS NULL THEN NULL ELSE round(distance_km::numeric,1) END),'modality',jsonb_build_object('onsite',onsite,'remote',remote,'travel',available_to_travel),'taxonomy',jsonb_build_object('professionIds',profession_ids,'serviceIds',service_ids,'instrumentIds',instrument_ids,'genreIds',genre_ids),'score',organic_score,'scoreBreakdown',jsonb_build_object('text',round(text_score::numeric,4),'taxonomy',semantic_score,'proximity',CASE WHEN distance_km IS NULL THEN NULL ELSE round((1/(1+distance_km/25))::numeric,4) END,'quality',profile_completeness,'activityWeight',.08,'availability',availability_score,'reputation',reputation_score),'sponsored',sponsored,'sponsorDisclosure',sponsor_disclosure,'effectiveAt',effective_at,'expiresAt',expires_at,'sourceProfile',CASE WHEN source_profile_id IS NULL THEN NULL ELSE (SELECT jsonb_build_object('id',profile.id,'slug',profile.slug,'name',profile.public_name,'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile profile WHERE profile.id=page.source_profile_id) END,'intent',CASE WHEN entity_kind='classified' THEN (SELECT intent_category.intent FROM classified intent_classified JOIN classified_category intent_category ON intent_category.id=intent_classified.category_id WHERE intent_classified.id::text=page.entity_id) ELSE NULL END,'cursor',entity_kind||':'||entity_id) FROM page"
+  directoryFilterClause <>
+  directoryTaxonomyClause <> "), " <>
+  "ranked AS (SELECT scored.*,round(((.40*text_score+.15*semantic_score+.15*CASE WHEN distance_km IS NULL THEN .35 ELSE 1/(1+distance_km/25) END+.10*profile_completeness+.08*least(1,1/(1+extract(epoch from (now()-source_updated_at))/2592000))+.05*availability_score+.07*reputation_score)/5)::numeric,6) organic_score,CASE WHEN btrim(coalesce(image_url,''))='' OR image_url LIKE '%/artist-fallback.svg' THEN 0 ELSE 1 END image_score FROM scored), " <>
+  -- A result with a picture is listed before one without. Browsing (no query) the
+  -- other signals differ by at most .09, so the .10 boost always wins; searching,
+  -- title match tiers are .24 apart and other signals add at most .12, so the
+  -- boost never lifts a result over a better name match. The public `score`
+  -- stays the organic score; only the ordering uses the boosted value.
+  "positioned AS (SELECT ranked.*,organic_score+.10*image_score rank_score FROM ranked), " <>
+  "boundary AS (SELECT rank_score,source_updated_at,entity_kind,entity_id FROM positioned WHERE entity_kind||':'||entity_id=?::text), " <>
+  "page AS (SELECT positioned.* FROM positioned WHERE NOT EXISTS (SELECT 1 FROM boundary) OR EXISTS (SELECT 1 FROM boundary b WHERE positioned.rank_score<b.rank_score OR (positioned.rank_score=b.rank_score AND (positioned.source_updated_at<b.source_updated_at OR (positioned.source_updated_at=b.source_updated_at AND (positioned.entity_kind>b.entity_kind OR (positioned.entity_kind=b.entity_kind AND positioned.entity_id>b.entity_id)))))) ORDER BY rank_score DESC,source_updated_at DESC,entity_kind,entity_id LIMIT ?) " <>
+  "SELECT jsonb_build_object('id',entity_id,'type',entity_kind,'slug',slug,'title',title,'subtitle',subtitle,'summary',summary,'profileKind',profile_kind,'canonicalPath',CASE WHEN entity_kind='profile' THEN canonical_path ELSE NULL END,'imageUrl',image_url,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision',location_precision,'distanceKm',CASE WHEN distance_km IS NULL THEN NULL ELSE round(distance_km::numeric,1) END),'modality',jsonb_build_object('onsite',onsite,'remote',remote,'travel',available_to_travel),'taxonomy',jsonb_build_object('professionIds',profession_ids,'serviceIds',service_ids,'instrumentIds',instrument_ids,'genreIds',genre_ids),'score',organic_score,'scoreBreakdown',jsonb_build_object('text',round(text_score::numeric,4),'taxonomy',semantic_score,'proximity',CASE WHEN distance_km IS NULL THEN NULL ELSE round((1/(1+distance_km/25))::numeric,4) END,'quality',profile_completeness,'activityWeight',.08,'availability',availability_score,'reputation',reputation_score,'image',image_score),'sponsored',sponsored,'sponsorDisclosure',sponsor_disclosure,'effectiveAt',effective_at,'expiresAt',expires_at,'sourceProfile',CASE WHEN source_profile_id IS NULL THEN NULL ELSE (SELECT jsonb_build_object('id',profile.id,'slug',profile.slug,'name',profile.public_name,'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile profile WHERE profile.id=page.source_profile_id) END,'intent',CASE WHEN entity_kind='classified' THEN (SELECT intent_category.intent FROM classified intent_classified JOIN classified_category intent_category ON intent_category.id=intent_classified.category_id WHERE intent_classified.id::text=page.entity_id) ELSE NULL END,'cursor',entity_kind||':'||entity_id) FROM page"
 
 -- `total` and `cities` describe the current query (its entity type included),
 -- so "Resultados orgánicos · N" is the full match count, not the page size.
@@ -254,11 +290,16 @@ facetsSql =
   directorySearchInputSql <>
   searchDocumentsSql <>
   "filtered AS (SELECT document.entity_kind,document.profile_kind,document.city_id,document.city_name," <> directorySourceProfileSql <> " source_profile_id FROM documents document CROSS JOIN input WHERE NOT document.sponsored " <>
-  directoryFilterClause <> "), " <>
-  "selected AS (SELECT filtered.* FROM filtered CROSS JOIN input WHERE directory_matches_entity_and_derivation(filtered.entity_kind,filtered.profile_kind,filtered.source_profile_id,input.entity_type)) " <>
+  directoryFilterClause <>
+  directoryTaxonomyClause <> "), " <>
+  "selected AS (SELECT filtered.* FROM filtered CROSS JOIN input WHERE directory_matches_entity_and_derivation(filtered.entity_kind,filtered.profile_kind,filtered.source_profile_id,input.entity_type)), " <>
+  "taxonomy_base AS (SELECT document.entity_kind||':'||document.entity_id item_key,document.city_id,(SELECT country.id FROM country_reference country WHERE country.alpha2=document.country_code) country_id,document.genre_ids FROM documents document CROSS JOIN input WHERE NOT document.sponsored " <>
+  directoryFilterClause <>
+  "AND directory_matches_entity_and_derivation(document.entity_kind,document.profile_kind," <> directorySourceProfileSql <> ",input.entity_type)) " <>
   "SELECT jsonb_build_object('entityTypes',coalesce((SELECT jsonb_object_agg(entity_kind,total) FROM (SELECT entity_kind,count(*) total FROM filtered GROUP BY entity_kind) counts),'{}'::jsonb)||jsonb_build_object('all',(SELECT count(*) FROM filtered WHERE source_profile_id IS NULL),'artist',(SELECT count(*) FROM filtered WHERE profile_kind IN ('artist','band','project')))," <>
   "'cities',coalesce((SELECT jsonb_agg(jsonb_build_object('id',city_id,'name',city_name,'count',total) ORDER BY total DESC,city_name) FROM (SELECT city_id,max(city_name) city_name,count(*) total FROM selected WHERE city_id IS NOT NULL GROUP BY city_id ORDER BY total DESC LIMIT 20) cities),'[]'::jsonb)," <>
-  "'total',(SELECT count(*) FROM selected))"
+  "'total',(SELECT count(*) FROM selected),'taxonomy'," <>
+  directoryTaxonomyFacetsSql <> ")"
 
 valueCursor :: Value -> Maybe Text
 valueCursor (Object value) = case KeyMap.lookup (Key.fromText "cursor") value of
@@ -1622,7 +1663,10 @@ expireOverdueDepositsDB participant = do
   forM_ overdue $ \(Single agreementId, Single classifiedId, Single applicationId) -> do
     _ <- (rawSql "SELECT classified.status FROM classified WHERE classified.id=? FOR UPDATE" [toPersistValue classifiedId] :: SqlPersistT IO [Single Text])
     _ <- (rawSql "SELECT application.status FROM classified_application application WHERE application.id=? FOR UPDATE" [toPersistValue applicationId] :: SqlPersistT IO [Single Text])
-    expired <- rawSql "UPDATE marketplace_agreement SET status='expired',updated_at=now(),version=version+1 WHERE id=? AND status='pending_deposit' AND deposit_due_at<=now() RETURNING id"
+    -- Payment start locks the agreement before recording its attempt, so after
+    -- this lock a fresh statement sees any attempt it committed meanwhile.
+    _ <- (rawSql "SELECT agreement.status FROM marketplace_agreement agreement WHERE agreement.id=? FOR UPDATE" [toPersistValue agreementId] :: SqlPersistT IO [Single Text])
+    expired <- rawSql ("UPDATE marketplace_agreement agreement SET status='expired',updated_at=now(),version=version+1 WHERE agreement.id=? AND agreement.status='pending_deposit' AND agreement.deposit_due_at<=now() AND NOT EXISTS (SELECT 1 FROM marketplace_agreement_payment payment JOIN commerce_payment_attempt attempt ON attempt.checkout_id=payment.checkout_id WHERE payment.agreement_id=agreement.id AND attempt.status IN " <> liveAttemptStatusesSql <> ") RETURNING agreement.id")
       [toPersistValue agreementId] :: SqlPersistT IO [Single UUID]
     unless (null expired) $ do
       rawExecute "UPDATE marketplace_agreement_payment SET status='expired',updated_at=now(),version=version+1 WHERE agreement_id=? AND status='pending'"

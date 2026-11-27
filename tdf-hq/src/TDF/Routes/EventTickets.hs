@@ -18,6 +18,8 @@ module TDF.Routes.EventTickets
   , PublicEventTicketsAPI
   ) where
 
+import TDF.Commerce.DatafastClientIP (DatafastClientRequest)
+
 import           Data.Aeson
   ( FromJSON(..), Options(..), ToJSON, defaultOptions, genericParseJSON )
 import           Data.Int (Int64)
@@ -26,7 +28,7 @@ import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
 import           Servant
 
-import TDF.Server.TicketPaymentReceipt (TicketPaymentReceipt)
+import TDF.DTO.TicketPaymentReceipt (TicketPaymentReceipt)
 
 import qualified TDF.API.Types as APITypes
 import           TDF.API.Types (rejectNullOptionalFields)
@@ -120,6 +122,9 @@ data PublicEventTicketQuoteDTO = PublicEventTicketQuoteDTO
   , checkoutTotalMinor     :: Int64
   , organizerPayableMinor  :: Int64
   , platformFeeMinor       :: Int64
+  , tierName               :: Maybe Text
+  , termsSummary           :: Text
+  , refundPolicy           :: Text
   , termsVersion           :: Text
   } deriving (Eq, Show, Generic)
 
@@ -196,7 +201,7 @@ type PublicEventTicketsAPI =
   :<|> "public" :> "events" :> Capture "eventId" Int64 :> "ticket-orders"
          :> Capture "orderId" Int64 :> "datafast" :> "checkout"
          :> Header "X-Order-Lookup-Token" Text
-         :> Post '[JSON] APITypes.DatafastCheckoutDTO
+         :> DatafastClientRequest :> Post '[JSON] APITypes.DatafastCheckoutDTO
   :<|> "public" :> "events" :> Capture "eventId" Int64 :> "ticket-orders"
          :> Capture "orderId" Int64 :> "datafast" :> "status"
          :> Header "X-Order-Lookup-Token" Text

@@ -1,5 +1,5 @@
 const LOCAL_DRAFT_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
-const DEFAULT_REMOTE_DRAFT_HOSTS = new Set(['tdf-hq-studio-audit-staging.fly.dev']);
+const DEFAULT_REMOTE_DRAFT_HOSTS = new Set();
 
 export function parseAdditionalDraftHosts(raw = '') {
   return raw

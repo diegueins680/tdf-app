@@ -16,6 +16,7 @@ import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import InstagramEntryLinks from './InstagramEntryLinks';
 import SessionMenu from './SessionMenu';
+import { OfflineBanner } from './OfflineBanner';
 import UpcomingEventsCarousel, { EVENTS_PATH } from './events/UpcomingEventsCarousel';
 import MarketplaceCartButton from './MarketplaceCartButton';
 import { useSession } from '../session/SessionContext';
@@ -26,6 +27,8 @@ import {
 } from '../utils/instagramTraffic';
 
 const FeatureMenu = lazy(() => import('./SidebarNav'));
+// Signed-in visitors see their notifications (chat messages included) on every public page too.
+const NotificationBell = lazy(() => import('./NotificationBell'));
 
 const PUBLIC_NAV_ITEMS = [
   { label: 'authEntry.search', to: '/buscar' },
@@ -39,6 +42,11 @@ const PUBLIC_NAV_ITEMS = [
   { label: 'authEntry.book', to: '/reservar' },
   { label: 'authEntry.releases', to: '/records' },
 ] as const;
+
+// The header row on wide screens shows these five; search is the header icon. Every item is listed under
+// "Más opciones", which is the whole navigation on phones.
+const isHeaderRowPath = (path: string) =>
+  path === EVENTS_PATH || path === '/tdf' || path === '/fans' || path === '/marketplace' || path === '/reservar';
 
 interface FooterAction {
   label: string;
@@ -70,7 +78,15 @@ export default function PublicBranding({
   // Commerce pages keep the header (and its cart control) pinned so the cart
   // stays one tap away after scrolling to a product, on every width.
   const stickyHeader = location.pathname === '/marketplace' || location.pathname.startsWith('/marketplace/');
+  // Buying a ticket, reading its order and returning from a payment are one
+  // task: the shell keeps the brand, the account and help, and drops promotion
+  // and the rest of the navigation until the task is over.
+  const focusedPurchase = /^\/eventos\/[1-9]\d{0,18}\/(?:entradas$|orden\/)/.test(location.pathname)
+    || location.pathname === '/pagos/retorno';
   const signupInvitation = Boolean(session && (location.state as { mobileInvitation?: boolean } | null)?.mobileInvitation);
+  const landingMobilePromo = ['/', '/inicio', '/tdf', '/fans', '/comunidad'].includes(location.pathname);
+  const pageMobilePromo = signupInvitation || landingMobilePromo || profileRoute;
+  const bannerMobilePromo = !profileRoute && !['/', '/inicio', '/tdf', '/fans', '/comunidad', '/app', '/login', '/reset', '/feedback', '/cuenta/eliminar'].includes(location.pathname) && !location.pathname.includes('/orden/') && !location.pathname.startsWith('/reservar') && !focusedPurchase;
   const contextualLoginPath = useMemo(
     () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
     [location.hash, location.pathname, location.search],
@@ -124,6 +140,10 @@ export default function PublicBranding({
     }
     return { label: 'WhatsApp', kind: 'external', value: STUDIO_WHATSAPP_URL };
   }, [contextualLoginPath, location.pathname, t]);
+
+  // A signed-in visitor has no use for actions that only lead to the login page.
+  const hideFooterAction = (action: FooterAction) =>
+    action.kind === 'route' && (focusedPurchase || (Boolean(session) && action.value.startsWith('/login')));
 
   useEffect(() => {
     const referrer = typeof document === 'undefined' ? '' : document.referrer;
@@ -210,14 +230,14 @@ export default function PublicBranding({
                     }}
                   />
                 </Box>
-                <Stack
+                {!focusedPurchase && <Stack
                   component="nav"
                   aria-label={t('authEntry.mainNavigation')}
                   direction="row"
                   spacing={0.5}
                   sx={{ display: { xs: 'none', md: 'flex' }, flexWrap: 'wrap' }}
                 >
-                  {PUBLIC_NAV_ITEMS.map((item) => (
+                  {PUBLIC_NAV_ITEMS.filter((item) => isHeaderRowPath(item.to)).map((item) => (
                     <Button
                       key={item.to}
                       component={RouterLink}
@@ -239,13 +259,18 @@ export default function PublicBranding({
                       {t(item.label)}
                     </Button>
                   ))}
-                </Stack>
+                </Stack>}
               </Stack>
               <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5 }} sx={{ maxWidth: '100%', minWidth: 0 }}>
-                <MarketplaceCartButton />
-                <IconButton component={RouterLink} to="/buscar" aria-label={t('authEntry.search')} sx={{ minWidth: 44, minHeight: 44, display: { md: 'none' } }}><SearchIcon /></IconButton>
+                {!focusedPurchase && <MarketplaceCartButton />}
+                {!focusedPurchase && <IconButton component={RouterLink} to="/buscar" aria-label={t('authEntry.search')} sx={{ minWidth: 44, minHeight: 44 }}><SearchIcon /></IconButton>}
                 {session ? (
-                  <SessionMenu />
+                  <>
+                    <Suspense fallback={null}>
+                      <NotificationBell />
+                    </Suspense>
+                    <SessionMenu />
+                  </>
                 ) : showLoginButton && (
                   <Button
                     variant="contained"
@@ -272,14 +297,14 @@ export default function PublicBranding({
                   anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                   transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                 >
-                  {/* The main navigation already shows these from md up; here they serve phones only. */}
+                  {/* From md up the header row already shows the primary items and the search icon. */}
                   {PUBLIC_NAV_ITEMS.map((item) => (
                     <MenuItem
                       key={item.to}
                       component={RouterLink}
                       to={navItemProps(item).to}
                       onClick={() => { navItemProps(item).onClick?.(); setMenuAnchor(null); }}
-                      sx={{ display: { md: 'none' } }}
+                      sx={{ display: focusedPurchase || !(isHeaderRowPath(item.to) || item.to === '/buscar') ? undefined : { md: 'none' } }}
                     >
                       {t(item.label)}
                     </MenuItem>
@@ -317,6 +342,7 @@ export default function PublicBranding({
           </Suspense>
         </Drawer>
       )}
+      <OfflineBanner />
       <Container
         component="main"
         id="main-content"
@@ -325,12 +351,12 @@ export default function PublicBranding({
         sx={{ py: { xs: showHeader ? 2 : 3, md: showHeader ? 4 : 5 }, minWidth: 0, outline: 'none' }}
       >
         {location.pathname !== '/cuenta/eliminar' && <SignupMobileInvitation />}
-        {showInstagramEntryLinks && <InstagramEntryLinks />}
-        {!['/login', '/reset', '/cuenta/eliminar'].includes(location.pathname) && !location.pathname.includes('/orden/') && <UpcomingEventsCarousel />}
+        {showInstagramEntryLinks && !focusedPurchase && <InstagramEntryLinks />}
+        {!['/login', '/reset', '/cuenta/eliminar'].includes(location.pathname) && !location.pathname.includes('/orden/') && !focusedPurchase && <UpcomingEventsCarousel />}
         {children}
-        {!signupInvitation && ['/', '/inicio', '/tdf', '/fans', '/comunidad'].includes(location.pathname) && <MobilePromo surface={location.pathname === '/tdf' ? 'tdf_landing' : (location.pathname === '/fans' || location.pathname === '/comunidad') ? 'community' : session ? 'authenticated_home' : 'homepage'} />}
+        {!signupInvitation && landingMobilePromo && <MobilePromo surface={location.pathname === '/tdf' ? 'tdf_landing' : (location.pathname === '/fans' || location.pathname === '/comunidad') ? 'community' : session ? 'authenticated_home' : 'homepage'} />}
         {!signupInvitation && profileRoute && <MobilePromo surface="profile" />}
-        {!signupInvitation && !profileRoute && !['/', '/inicio', '/tdf', '/fans', '/comunidad', '/app', '/login', '/reset', '/feedback', '/cuenta/eliminar'].includes(location.pathname) && !location.pathname.includes('/orden/') && !location.pathname.startsWith('/reservar') && <MobilePromo surface="mobile_banner" banner />}
+        {!signupInvitation && bannerMobilePromo && <MobilePromo surface="mobile_banner" banner />}
       </Container>
       <Box
         component="footer"
@@ -342,7 +368,11 @@ export default function PublicBranding({
         }}
       >
         <Container maxWidth="xl">
-          {!['/app', '/cuenta/eliminar'].includes(location.pathname) && <MobilePromo surface="footer" compact />}
+          {/* One invitation per page (audit decision D3): the footer link stands in only where the page
+              shows no invitation of its own, and on phones the dismissable banner already covers it. */}
+          {!['/app', '/cuenta/eliminar'].includes(location.pathname) && !focusedPurchase && !pageMobilePromo && (
+            <MobilePromo surface="footer" compact desktopOnly={bannerMobilePromo} />
+          )}
           <Stack
             direction={{ xs: 'column', xl: 'row' }}
             spacing={3}
@@ -357,7 +387,7 @@ export default function PublicBranding({
                 {t('authEntry.footerHelp')}
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {footerPrimaryAction.kind === 'external' ? (
+                {hideFooterAction(footerPrimaryAction) ? null : footerPrimaryAction.kind === 'external' ? (
                   <Button
                     size="small"
                     variant="contained"
@@ -380,7 +410,7 @@ export default function PublicBranding({
                     {footerPrimaryAction.label}
                   </Button>
                 )}
-                {footerSecondaryAction.kind === 'external' ? (
+                {hideFooterAction(footerSecondaryAction) ? null : footerSecondaryAction.kind === 'external' ? (
                   <Button
                     size="small"
                     variant="outlined"
@@ -405,74 +435,15 @@ export default function PublicBranding({
                 )}
               </Stack>
             </Stack>
-            <Stack component="nav" aria-label={t('authEntry.exploreTdf')} spacing={0.75}>
-              <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.35 }}>
-                {t('authEntry.explore')}
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {PUBLIC_NAV_ITEMS.map((item) => (
-                  <Button
-                    key={item.to}
-                    size="small"
-                    component={RouterLink}
-                    {...navItemProps(item)}
-                    aria-current={isActiveNavItem(item.to) ? 'page' : undefined}
-                    sx={{
-                      textTransform: 'none',
-                      color: isActiveNavItem(item.to) ? 'text.primary' : 'text.secondary',
-                      bgcolor: isActiveNavItem(item.to) ? 'action.selected' : 'transparent',
-                      px: 1.5,
-                      fontWeight: isActiveNavItem(item.to) ? 700 : 500,
-                      '&:hover': {
-                        bgcolor: isActiveNavItem(item.to) ? 'action.selected' : 'action.hover',
-                      },
-                    }}
-                  >
-                    {t(item.label)}
-                  </Button>
-                ))}
-                <Button
-                  size="small"
-                  component={RouterLink}
-                  to="/feedback"
-                  sx={{ textTransform: 'none', color: 'text.secondary', px: 1.5 }}
-                >
-                  {t('authEntry.feedback')}
-                </Button>
-                <Button
-                  size="small"
-                  component={RouterLink}
-                  to="/donar"
-                  sx={{ textTransform: 'none', color: 'text.secondary', px: 1.5 }}
-                >
-                  {t('authEntry.donate')}
-                </Button>
-              </Stack>
-            </Stack>
-            <Stack spacing={0.75}>
-              <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.35 }}>
-                {t('authEntry.messageSettings')}
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Button
-                  size="small"
-                  component={RouterLink}
-                  to="/whatsapp/consentimiento"
-                  sx={{ textTransform: 'none', color: 'text.secondary', px: 1.5 }}
-                >
-                  {t('authEntry.whatsappConsent')}
-                </Button>
-                <Button
-                  size="small"
-                  component={RouterLink}
-                  to="/whatsapp/ok"
-                  sx={{ textTransform: 'none', color: 'text.secondary', px: 1.5 }}
-                >
-                  {t('authEntry.whatsappConfirmation')}
-                </Button>
-              </Stack>
-            </Stack>
-            {showLoginButton && (
+            <Button
+              size="small"
+              component={RouterLink}
+              to="/whatsapp/consentimiento"
+              sx={{ textTransform: 'none', color: 'text.secondary', px: 1.5 }}
+            >
+              {t('authEntry.whatsappPreferences')}
+            </Button>
+            {showLoginButton && !session && !focusedPurchase && (
               <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
                 <Button
                   size="small"

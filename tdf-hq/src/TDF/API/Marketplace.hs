@@ -3,6 +3,8 @@
 
 module TDF.API.Marketplace where
 
+import TDF.Commerce.DatafastClientIP (DatafastClientRequest)
+
 import           Data.Text (Text)
 import           Servant
 
@@ -39,7 +41,7 @@ type MarketplaceAPI =
   :<|> "cart" :> Capture "cartId" Text :> "items" :> ReqBody '[JSON] MarketplaceCartItemUpdate :> Post '[JSON] MarketplaceCartDTO
   :<|> "cart" :> Capture "cartId" Text :> "checkout" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] MarketplaceCheckoutReq :> Post '[JSON] MarketplaceOrderDTO
   :<|> "cart" :> Capture "cartId" Text :> "stripe" :> "payment-intent" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] MarketplaceCheckoutReq :> Post '[JSON] StripePaymentIntentDTO
-  :<|> "cart" :> Capture "cartId" Text :> "datafast" :> "checkout" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] MarketplaceCheckoutReq :> Post '[JSON] DatafastCheckoutDTO
+  :<|> "cart" :> Capture "cartId" Text :> "datafast" :> "checkout" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] MarketplaceCheckoutReq :> DatafastClientRequest :> Post '[JSON] DatafastCheckoutDTO
   :<|> "datafast" :> "status" :> Header "X-Order-Lookup-Token" Text :> QueryParam "orderId" Text :> QueryParam "resourcePath" Text :> Get '[JSON] MarketplaceOrderDTO
   :<|> "cart" :> Capture "cartId" Text :> "paypal" :> "create" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] MarketplaceCheckoutReq :> Post '[JSON] PaypalCreateDTO
   :<|> "paypal" :> "capture" :> Header "X-Order-Lookup-Token" Text :> ReqBody '[JSON] PaypalCaptureReq :> Post '[JSON] MarketplaceOrderDTO

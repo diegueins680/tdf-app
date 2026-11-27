@@ -1,0 +1,22 @@
+{
+  "id": "561cffe910e93eef6dca",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+  "justification": "Typed API-client methods add author memory edits/deletion and public media upload; method names are transport mechanics and no selectable business catalog.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "event-memories-2026-10-25",
+  "evidence": {
+    "file": "tdf-hq-ui/src/api/socialEvents.ts",
+    "line": 581
+  },
+  "mergedDecision": {
+    "$historyRef": "sha256:3a1c2216f13413ca6c4b7997fcc6a60b399f9df78bbfcd69e6e5c2f261b8f9cd"
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:5d5b88a347d5c09d44a36c4626087541c8737a12188087d347ec05f088d5cdd5"
+  }
+}

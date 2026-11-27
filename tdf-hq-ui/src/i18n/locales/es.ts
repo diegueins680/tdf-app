@@ -1,6 +1,7 @@
 import mobileApp from './mobileApp.es';
 import accountDeletion from './accountDeletion.es';
 import directorySearch from './directorySearch.es';
+import taxonomyFilters from './taxonomyFilters.es';
 import marketplace from './marketplace.es';
 import authEntry from './authEntry.es';
 const es = {
@@ -9,6 +10,7 @@ const es = {
   records: { videoUnavailable: 'Video no disponible en la fuente', thumbnailUnavailable: 'Miniatura no disponible', loadingThumbnail: 'Cargando miniatura' },
   authEntry,
   directorySearch,
+  taxonomyFilters,
   marketplace,
   auditAccessibility: {
     loadingFeaturedArtists: 'Cargando artistas destacados',
@@ -264,7 +266,7 @@ const es = {
       mix: 'Mezcla',
     },
   },
-  sessionMenu: {
+  sessionMenu: { help: 'Ayuda y cuenta', manual: 'Manual', docs: 'Documentación', about: 'Acerca de', security: 'Seguridad', whatsapp: 'Preferencias de WhatsApp', deleteAccount: 'Eliminar mi cuenta',
     noRoles: 'Sin roles asignados',
     logout: 'Cerrar sesión',
     open: 'Abrir menú de sesión',
@@ -331,6 +333,7 @@ const es = {
     domain: 'Dominio o tipo', sourceChannel: 'Canal de origen', service: 'Servicio', statusLabel: 'Estado',
     priorityLabel: 'Prioridad', slaLabel: 'SLA', customerId: 'ID de cliente', paymentState: 'Estado del pago',
     from: 'Desde', to: 'Hasta', minAmount: 'Monto mínimo', maxAmount: 'Monto máximo', seenLabel: 'Lectura compartida',
+    amountInputHint: 'Hasta dos decimales. Cada registro conserva su moneda.', amountInvalid: 'Usa un importe decimal exacto con hasta dos decimales, dentro del rango admitido.', amountRangeInvalid: 'El mínimo no puede superar el máximo.', savedAmountInvalid: 'La vista guardada contiene importes inválidos. Se conservan los filtros actuales.',
     all: 'Todos', clear: 'Limpiar', applyFilters: 'Aplicar filtros',
     status: { new: 'Nuevo', seen: 'Visto', assigned: 'Asignado', in_progress: 'En curso', waiting: 'En espera', resolved: 'Resuelto', archived: 'Archivado' },
     priority: { urgent: 'Urgente', high: 'Alta', normal: 'Normal', low: 'Baja' },

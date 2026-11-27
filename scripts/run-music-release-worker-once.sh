@@ -10,11 +10,27 @@ timing() {
   [ "${MUSIC_WORKER_DIAGNOSTICS:-false}" = true ] || return 0
   printf '{"event":"music_worker_timing","stage":"%s","phase":"%s","elapsedSeconds":%s,"status":%s}\n' "$1" "$2" "$3" "$4" >&4
 }
+trace_heartbeat_stop() {
+  [ "${MUSIC_WORKER_STOP_DIAGNOSTICS:-false}" = true ] || return 0
+  [ "$#" -eq 3 ] || return 0
+  case "$1" in start|term|wait) ;; *) return 0 ;; esac
+  case "$2" in ''|0*|*[!0-9]*) return 0 ;; esac
+  [ "${#2}" -le 10 ] || return 0
+  case "$3" in 0|[1-9]*) ;; *) return 0 ;; esac
+  case "$3" in *[!0-9]*) return 0 ;; esac
+  [ "${#3}" -le 3 ] && [ "$3" -le 255 ] || return 0
+  # A broken diagnostics pipe must not signal or run EXIT cleanup in the worker.
+  # The short writer owns no lease/transfer child and cannot run inherited traps.
+  (
+    trap - EXIT INT TERM USR1 PIPE
+    printf '{"event":"music_worker_stop","stage":"%s","heartbeatPid":%s,"status":%s}\n' "$1" "$2" "$3" 2>/dev/null >&4
+  ) 2>/dev/null || true
+}
 active_child=''
 run_child() {
   local started=$SECONDS result=0 stage
   case "${1##*/}" in
-    perl) stage=storage_upload ;;
+    perl) case "${2##*/}" in measure-music-loudness.pl) stage=loudness_measurement ;; *) stage=storage_upload ;; esac ;;
     curl) stage=storage_request ;;
     process-music-release-audio.sh) stage=audio_pipeline ;;
     process-music-release-artwork.sh) stage=artwork_pipeline ;;
@@ -41,6 +57,7 @@ worker_id=${MUSIC_WORKER_ID:-"music-worker-$$"}
 repository_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 audio_pipeline=${MUSIC_AUDIO_PIPELINE:-"$repository_root/scripts/process-music-release-audio.sh"}
 artwork_pipeline=${MUSIC_ARTWORK_PIPELINE:-"$repository_root/scripts/process-music-release-artwork.sh"}
+loudness_tool=${MUSIC_LOUDNESS_TOOL:-"$repository_root/scripts/measure-music-loudness.pl"}
 ddex_package_builder=${MUSIC_DDEX_PACKAGE_BUILDER:-"$repository_root/scripts/build-ddex-ern432-package.sh"}
 ddex_renderer=${MUSIC_DDEX_RENDER_BIN:-tdf-ddex-render}
 endpoint=${MUSIC_S3_ENDPOINT%/}
@@ -208,6 +225,24 @@ audio_derivative_metadata() {
   jq -c --argjson bitrate "$2" '{pipeline:"audio-v2",preview:.preview,bitrate_kbps:$bitrate,loudness:.normalization.measurement,normalized:true,masterModified:false}' "$1"
 }
 
+# MEDIA-MUSIC-LOUDNESS-001: warn-only loudness measurement of the verified
+# master, behind music_releases.loudness_check. Every path returns 0: neither a
+# missing measurement nor a failed write may fail the inspection. The row is
+# opened and closed through the lease guard for this job and attempt.
+measure_loudness() {
+  local environment=sandbox enabled measurement_id outcome
+  case "$(printf '%s' "${APP_ENV:-}" | tr '[:upper:]' '[:lower:]')" in production|prod) environment=production ;; esac
+  enabled=$(psql_db -v environment="$environment" -c "SELECT enabled FROM revenue_feature_flag WHERE flag_key='music_releases.loudness_check' AND environment=:'environment';") || return 0
+  [ "$enabled" = t ] || return 0
+  measurement_id=$(psql_db -v asset_id="$source_asset_id" -v expected_sha256="$expected_sha256" -v job_id="$job_id" -v attempt="$attempt" -c "SELECT music_begin_audio_measurement(:'asset_id'::uuid,:'expected_sha256','loudness','ffmpeg-ebur128-v1',:'job_id'::uuid,:'attempt'::integer);") || return 0
+  [ -n "$measurement_id" ] || return 0
+  run_child perl "$loudness_tool" "$source_file" > "$working_dir/loudness-result.json" || true
+  active_child=''
+  outcome=$(head -c 4096 "$working_dir/loudness-result.json" | jq -c 'select(type == "object")' 2>/dev/null | head -n 1) || outcome=''
+  [ -n "$outcome" ] || outcome='{"state":"failed","reason":"interrupted"}'
+  psql_db -v measurement_id="$measurement_id" -v job_id="$job_id" -v attempt="$attempt" -v outcome="$outcome" -c "SELECT music_finish_audio_measurement(:'measurement_id'::uuid,:'job_id'::uuid,:'attempt'::integer,:'outcome'::jsonb);" >/dev/null || return 0
+}
+
 process_audio() {
   [ -n "$source_asset_id" ] && [ -n "$recording_id" ] && [ -n "$source_bucket" ] || return 1
   source_file="$working_dir/master"
@@ -244,6 +279,7 @@ process_audio() {
     metadata=$(audio_derivative_metadata "$output_dir/manifest.json" "$bitrate")
     psql_db -v version_id="$version_id" -v recording_id="$recording_id" -v parent_id="$source_asset_id" -v role="$role" -v bucket="$MUSIC_S3_DERIVATIVE_BUCKET" -v object_key="$object_key" -v media_type="$media_type" -v bytes="$derivative_bytes" -v sha256="$derivative_sha" -v metadata="$metadata" -v created_by="$created_by" -c "INSERT INTO music_asset(release_version_id,recording_id,parent_asset_id,asset_role,storage_provider,storage_class,bucket_name,object_key,media_type,byte_size,sha256,processing_state,technical_metadata,provenance,immutable,created_by,ready_at) VALUES(:'version_id'::uuid,:'recording_id'::uuid,:'parent_id'::uuid,:'role','s3_compatible','standard',:'bucket',:'object_key',:'media_type',:'bytes'::bigint,:'sha256','ready',:'metadata'::jsonb,jsonb_build_object('pipeline','audio-v2','sourceAssetId',:'parent_id'::uuid),TRUE,:'created_by'::bigint,NOW()) ON CONFLICT(release_version_id,asset_role,sha256) DO NOTHING;" >/dev/null
   done
+  measure_loudness || echo "Warning: loudness measurement step did not complete" >&2
   mark_succeeded "$(jq -nc --arg sourceSha256 "$expected_sha256" '{pipeline:"audio-v2",sourceSha256:$sourceSha256}')"
 }
 
@@ -403,8 +439,27 @@ error_log="$working_dir/error.log"
 heartbeat_pid=''
 stop_heartbeat() {
   if [ -n "$heartbeat_pid" ]; then
-    kill -TERM -- "-$heartbeat_pid" 2>/dev/null || true
-    wait "$heartbeat_pid" 2>/dev/null || true
+    local heartbeat_term_status=0 heartbeat_wait_status=0
+    # Retain stop intent if startup has not installed its signal handler yet.
+    : > "$working_dir/heartbeat-stop"
+    trace_heartbeat_stop start "$heartbeat_pid" 0
+    kill -TERM -- "-$heartbeat_pid" 2>/dev/null || heartbeat_term_status=$?
+    trace_heartbeat_stop term "$heartbeat_pid" "$heartbeat_term_status"
+    # A TERM that lands while the heartbeat, or the sleep it is starting, is
+    # still being forked is lost, and the wait below would then last a whole
+    # heartbeat interval. Repeat the signal until the group is gone.
+    # `command -p` keeps the short delay on the system sleep.
+    (
+      trap - EXIT
+      while command -p sleep 0.1; do
+        kill -TERM -- "-$heartbeat_pid" 2>/dev/null || exit 0
+      done
+    ) &
+    local heartbeat_resender=$!
+    wait "$heartbeat_pid" 2>/dev/null || heartbeat_wait_status=$?
+    trace_heartbeat_stop wait "$heartbeat_pid" "$heartbeat_wait_status"
+    kill -KILL -- "-$heartbeat_resender" 2>/dev/null || kill -KILL "$heartbeat_resender" 2>/dev/null || true
+    wait "$heartbeat_resender" 2>/dev/null || true
     heartbeat_pid=''
   fi
 }
@@ -427,9 +482,13 @@ run_heartbeat_child() {
   fi
   wait "$heartbeat_child" || heartbeat_child_status=$?
   if [ "$heartbeat_stopping" = true ]; then
-    # A trapped signal can interrupt wait before the native process exits.
-    # Reap outside the signal handler, including on macOS Bash 3.2.
-    wait "$heartbeat_child" 2>/dev/null || true
+    # A trapped signal can interrupt wait before the native process exits, and
+    # the stop signal is repeated, so it can interrupt this wait as well. Keep
+    # reaping outside the signal handler until the child is really gone,
+    # including on macOS Bash 3.2.
+    while kill -0 "$heartbeat_child" 2>/dev/null; do
+      wait "$heartbeat_child" 2>/dev/null || true
+    done
     heartbeat_child=''
     return 143
   fi
@@ -443,6 +502,9 @@ heartbeat() {
   local heartbeat_stopping=false heartbeat_child='' heartbeat_supervised=true
   trap - EXIT USR1
   trap request_heartbeat_stop TERM INT
+  # The parent can finish a short job before this function initializes. A
+  # signal alone cannot preserve that earlier intent across initialization.
+  [ ! -f "$working_dir/heartbeat-stop" ] || return 0
   while kill -0 "$$" 2>/dev/null; do
     run_heartbeat_child sleep "$heartbeat_seconds" || {
       [ "$heartbeat_stopping" = true ] && return 0

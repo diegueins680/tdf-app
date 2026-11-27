@@ -1,5 +1,5 @@
 import { get, patch, post } from './client';
-import type { FeatureAction } from '../features/featureRegistry';
+import type { FeatureAction } from '../utils/featureRegistry';
 
 export type FeatureAccessRequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled' | 'expired';
 

@@ -4,6 +4,8 @@ interface ImportMetaEnv {
   readonly VITE_ACCOUNT_DELETION_FORM_ENABLED?: string;
   readonly VITE_ACCOUNT_DELETION_QUEUE_ENABLED?: string;
   readonly VITE_SOCIAL_V2_ENABLED?: string;
+  readonly VITE_PLAYER_SIMILAR_CONTINUATION_ENABLED?: string;
+  readonly VITE_EVENT_AFFINITY_ORDER_ENABLED?: string;
   readonly VITE_API_BASE?: string;
   readonly VITE_LIVE_SESSIONS_PUBLIC_TOKEN?: string;
   readonly VITE_CHATKIT_WORKFLOW_ID?: string;
@@ -18,6 +20,7 @@ interface ImportMetaEnv {
   readonly VITE_DEFAULT_LOCALE?: string;
   readonly VITE_DEFAULT_CURRENCY?: string;
   readonly VITE_DEFAULT_TIMEZONE?: string;
+  readonly VITE_DRIVE_VAULT_REQUIRED?: string;
   readonly VITE_EXCHANGE_RATE_API_BASE?: string;
   readonly VITE_DOMO_TIMEZONE?: string;
   readonly VITE_ADA_USD_RATE?: string;
