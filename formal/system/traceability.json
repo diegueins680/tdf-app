@@ -31533,8 +31533,8 @@
     "tdf-hq-ui/src/components/ArtistProfileImage.test.tsx": "826bfe01af0ec470ce6a8096068960b87b61df5f6a582568bfbfadfcbc950b0a",
     "tdf-hq-ui/src/components/ArtistProfileImage.tsx": "3c8e49833a85f3220ca06125db816d25bfbd6a465abc82f300be2d0759cb1370",
     "tdf-hq-ui/src/components/ArtistProfileLink.tsx": "b320117e6d8108cad10a55c193ff7c05111a2abbaae149d4628499eef34ad15b",
-    "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx": "5dcab0089505cd3c7a6e207e40a966f64804f40d8dfe4310bc1357ff525d4a6f",
-    "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx": "12b5c7fbb55aaaa9df265c3feb6832c61d75bfe45050f1459304f73f3b21cbcc",
+    "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx": "5f4829b6aefa81f191e1c229c7ba17877f89ba8674b1275deb85f0142c8727e1",
+    "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx": "d9d46f2252ffe008004284787e1315730453b215c29eceff7a95fbc87ea28430",
     "tdf-hq-ui/src/components/ChatKitLauncher.tsx": "88d0bc910d5475efcacd80343a2ca22c26deeed0877a1a8b33ee776d2b9f7b74",
     "tdf-hq-ui/src/components/ChatNotificationChannels.test.tsx": "f08be2fa42471413c6fd504b110e25f23c71ad3e2427fc2446bef9912f28eb26",
     "tdf-hq-ui/src/components/ChatNotificationChannels.tsx": "9491df1e5d6131d53888259c1334c57af6dd62f4ab5eaa13c1794fe974377033",
@@ -68115,7 +68115,7 @@
     {
       "id": "SURFACE-52978cc467763ee4",
       "path": "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx",
-      "sha256": "5dcab0089505cd3c7a6e207e40a966f64804f40d8dfe4310bc1357ff525d4a6f",
+      "sha256": "5f4829b6aefa81f191e1c229c7ba17877f89ba8674b1275deb85f0142c8727e1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68127,7 +68127,7 @@
     {
       "id": "SURFACE-57b1a4ec1eee9541",
       "path": "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx",
-      "sha256": "12b5c7fbb55aaaa9df265c3feb6832c61d75bfe45050f1459304f73f3b21cbcc",
+      "sha256": "d9d46f2252ffe008004284787e1315730453b215c29eceff7a95fbc87ea28430",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
