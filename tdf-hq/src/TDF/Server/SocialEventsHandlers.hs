@@ -348,6 +348,8 @@ import TDF.Server.SocialArtistOwnership (duplicateArtistOwner, ensureAvailableAr
 import qualified TDF.Profiles.Artist as ArtistProfiles
 import qualified TDF.ModelsExtra as ME
 import TDF.Server.TicketSalesWindow (eventTicketPurchaseEnabledFor)
+import qualified TDF.Fans.ArtistSimilarity as ArtistSimilarity
+import qualified TDF.Fans.EventAffinity as EventAffinity
 import qualified TDF.SocialEventLifecycle as EventLifecycle
 import TDF.ServerRadio (nativeBroadcastUnavailable)
 import TDF.Server.StripeTicketCapture (StripeTicketCapture (..), parseStripeTicketCapture, recordStripeTicketCapture, stripeTicketClosedOrderNeedsReview)
@@ -2006,7 +2008,8 @@ validateEventListScope (Just rawScope) =
         "" -> Right "all"
         "all" -> Right "all"
         "subscribed" -> Right "subscribed"
-        _ -> Left err400{errBody = "scope must be one of: all, subscribed"}
+        "for_you" -> Right "for_you"
+        _ -> Left err400{errBody = "scope must be one of: all, subscribed, for_you"}
 
 validateEventCountryCode :: T.Text -> Either ServerError T.Text
 validateEventCountryCode rawCountry =
@@ -2335,21 +2338,27 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         taxonomy <- either (throwError . taxonomyFilterError) pure (mkTaxonomyFilter countryIds regionIds cityIds genreIds)
         limit <- resolveLimit 200 500 mLimit
         offset <- either throwError pure (validateSocialEventsListOffset mOffset)
-        rows <- selectListedEvents mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId taxonomy limit offset
-        loadSocialEventListDTOs (defaultCurrency envConfig) envPool rows
+        scope <- either throwError pure (validateEventListScope mScope)
+        rows <- selectListedEvents mCity scope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId taxonomy limit offset
+        -- EVT-AFFINITY-ORDER-001: permute only the visible, filtered page.
+        orderedRows <- if scope == "for_you" && eventAffinityOrderEnabled envConfig
+            then liftIO $ runSqlPool (EventAffinity.orderEventPageForFan
+                ArtistSimilarity.StoredGeneration (auPartyId user) (fromSqlKey . entityKey) rows) envPool
+            else pure rows
+        loadSocialEventListDTOs (defaultCurrency envConfig) envPool orderedRows
 
     -- TAX-FILTER-001 counts over the first 500 events the list would return without its own selection.
     eventFacets :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> [UUID] -> [UUID] -> [UUID] -> [UUID] -> AppM Aeson.Value
     eventFacets mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId countryIds regionIds cityIds genreIds = do
         Env{..} <- ask
         taxonomy <- either (throwError . taxonomyFilterError) pure (mkTaxonomyFilter countryIds regionIds cityIds genreIds)
-        rows <- selectListedEvents mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId emptyTaxonomyFilter 500 0
+        scope <- either throwError pure (validateEventListScope mScope)
+        rows <- selectListedEvents mCity scope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId emptyTaxonomyFilter 500 0
         liftIO $ runSqlPool (eventTaxonomyFacets taxonomy [fromSqlKey (entityKey row) | row <- rows]) envPool
 
-    selectListedEvents :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> TaxonomyFilter -> Int -> Int -> AppM [Entity SocialEvent]
-    selectListedEvents mCity mScope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId taxonomy limit offset = do
+    selectListedEvents :: Maybe T.Text -> T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> TaxonomyFilter -> Int -> Int -> AppM [Entity SocialEvent]
+    selectListedEvents mCity scope mStartAfter mTypeId mWorkflowStateId mArtistId mVenueId taxonomy limit offset = do
         Env{..} <- ask
-        scope <- either throwError pure (validateEventListScope mScope)
         eventTypeFilter <- traverse
             (\rawId -> liftIO (runSqlPool (loadKnownEventTypeId rawId) envPool) >>= either throwError pure)
             (cleanMaybeText mTypeId)

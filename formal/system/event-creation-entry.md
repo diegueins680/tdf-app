@@ -19,6 +19,13 @@ the preview; the management page remains complete. The empty state therefore
 says "no upcoming events", not "no events". A failed list keeps both actions and
 offers a retry.
 
+## Public event entry points
+
+An organizer or delegated administrator can open event management from the public
+event page. A Circuito de Jams invitation links to jam registration. Guests return
+to registration after sign-in. The jam form keeps its own draft and uses the
+existing event publication controls.
+
 ## Art first
 
 The creator opens on the event art picker, ahead of every other field. The

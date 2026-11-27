@@ -101,6 +101,7 @@ import Data.Char
 import Data.Foldable (for_)
 import Data.Int (Int64)
 import GHC.Generics (Generic)
+import TDF.Auth.EmailVerification (recordVerifiedEmail)
 import Data.List (nub)
 import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
 import qualified Data.Set as Set
@@ -2328,8 +2329,7 @@ validateGoogleIdTokenInfo :: Maybe Text -> GoogleIdTokenInfo -> Either Text Goog
 validateGoogleIdTokenInfo mExpectedClientId info
   | not (gitEmailVerified info) =
       Left "Tu correo de Google debe estar verificado."
-  | Just expected <- mExpectedClientId
-  , gitAud info /= expected =
+  | gitAud info `notElem` acceptedAudiences =
       Left "El token de Google no coincide con el cliente configurado."
   | not (issuerAllowed (gitIss info)) =
       Left "El token de Google proviene de un emisor no permitido."
@@ -2353,6 +2353,14 @@ validateGoogleIdTokenInfo mExpectedClientId info
                 }
            in Right profile
   where
+    -- The released mobile apps request a Google ID token for their own web client.
+    -- Trust that audience only alongside the corresponding TDF production web client.
+    acceptedAudiences = case mExpectedClientId of
+      Just web | web == tdfWebClient -> [web, tdfMobileWebClient]
+      Just configured -> [configured]
+      Nothing -> []
+    tdfWebClient = "3700622137-4mvs5oc77n07e09pk32hk6n4ol07cjpl.apps.googleusercontent.com"
+    tdfMobileWebClient = "1016946267087-mvr22vuc8dql37fem7aa1msdnatjvhh4.apps.googleusercontent.com"
     subject = T.strip (gitSub info)
 
 issuerAllowed :: Maybe Text -> Bool
@@ -2767,6 +2775,9 @@ runPasswordResetConfirm ttl tokenVal passwordVal = do
                                   hashed <- liftIO (hashPasswordText passwordVal)
                                   update credId [UserCredentialPasswordHash =. hashed]
                                   revokeInteractiveSessions (userCredentialPartyId cred)
+                                  -- The token was delivered to the party's address, so
+                                  -- consuming it shows control of that address.
+                                  recordVerifiedEmail (fromSqlKey (userCredentialPartyId cred))
                                   sessionToken <- createSessionToken ttl (userCredentialPartyId cred) (userCredentialUsername cred)
                                   mUser <- loadAuthedUser sessionToken
                                   case mUser of

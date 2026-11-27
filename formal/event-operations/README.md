@@ -150,6 +150,8 @@ reproducibility boundary, not proof of translator correctness or SQL refinement.
 | `EventStructure.als` assertions | Command-specific bounds up to 4 atoms per top-level signature and 4-bit integers | PASS; all 8 checks UNSAT (no counterexample in scope) |
 | `TaskReadStructure.als` scenario | Exactly 2 parties, 2 events, 2 tasks and 1 grant | SAT; exact-task access coexists with denied sibling and other-party access |
 | `TaskReadStructure.als` assertions | Up to 4 atoms per top-level signature; owners abstracted as equivalent effective grants | PASS; all 5 checks UNSAT, including manager-gated and exact-task recipient options (no counterexample in scope) |
+| `FriendSuggestionGraph.als` scenario | Up to 4 accounts | SAT; a viewer reaches a second-degree candidate while a fake account injects follows |
+| `FriendSuggestionGraph.als` assertions | Up to 5 accounts; graph structure only, scores are not modelled (COMMUNITY-FRIEND-SUGGESTION-001) | PASS; all 4 checks have no counterexample, and each of 6 named mutations (age filter, email filter, liveness, open edge target, either block direction) produces one |
 
 The PR 25 rerun completed all 22 positive TLC configurations, 48 named negative controls,
 13 PlusCal integrity tests, 2 SAT Alloy scenarios and 13 UNSAT assertions. Exact commands and

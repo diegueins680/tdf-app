@@ -18,6 +18,6 @@ export default defineConfig({
     command: `npm run build:e2e --workspace=tdf-hq-ui && npm run preview:e2e --workspace=tdf-hq-ui -- --port ${port}`,
     url: `http://127.0.0.1:${port}/inicio`,
     reuseExistingServer: false,
-    env: { VITE_API_BASE: 'http://127.0.0.1:19099', VITE_TZ: 'America/Guayaquil' },
+    env: { VITE_API_BASE: 'http://127.0.0.1:19099', VITE_TZ: 'America/Guayaquil', VITE_PLAYER_SIMILAR_CONTINUATION_ENABLED: 'true' },
   },
 });
