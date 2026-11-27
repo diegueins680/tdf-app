@@ -708,7 +708,7 @@ test('continuous-improvement-loop publishes each iteration on its own branch and
 
     const branches = await fixture.remoteLoopBranches();
     assert.equal(branches.length, 1);
-    assert.match(branches[0], /^continuous-improvement-loop\/\d{8}-\d{6}-1$/);
+    assert.match(branches[0], /^continuous-improvement-loop\/\d{8}-\d{6}-1-[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/);
 
     const diff = await fixture.remoteGit(['diff', '--name-only', 'refs/heads/main', `refs/heads/${branches[0]}`]);
     assert.deepEqual(diff.stdout.trim().split('\n').filter(Boolean), ['tracked.txt']);
@@ -1060,7 +1060,7 @@ test('continuous-improvement-loop moves on to the next iteration after a discard
 
     const branches = await fixture.remoteLoopBranches();
     assert.equal(branches.length, 1);
-    assert.match(branches[0], /-2$/);
+    assert.match(branches[0], /-2-[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/);
     const content = await fixture.remoteGit(['show', `refs/heads/${branches[0]}:tracked.txt`]);
     assert.equal(content.stdout, 'before\nafter\n');
   } finally {

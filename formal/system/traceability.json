@@ -30923,7 +30923,7 @@
     "scripts/__tests__/compiled-api-surface.test.mjs": "d86d7c4db38bd1648dd981df2548e0b4eb02562c8b7ca0589259a6f79e4f48ec",
     "scripts/__tests__/content-storage-model.test.mjs": "ec3c939221c9a2470f0706c49ec6d2e52e91ebbc4b756419874beddbd8e501ea",
     "scripts/__tests__/content-storage-reconciliation.test.mjs": "e495bbdecb4c88ad8c178c8d06d17cfebafc71148e2fcebeca1423b4558c27da",
-    "scripts/__tests__/continuous-improvement-loop.test.mjs": "39c16426374c82d9649b95dedcfcceef024d45b2ef0e3b86532b8ada2b2c85b2",
+    "scripts/__tests__/continuous-improvement-loop.test.mjs": "21f2a734e9b43bb5b75e783fee6a021732bee0376cf018dc657511fd15a56c59",
     "scripts/__tests__/delivery-matrix.test.mjs": "37dfd759fd9d46dac0b539dc88e9b8d8d64a6c2f777b7034d1f60c541fc2aac9",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
@@ -57274,7 +57274,7 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "39c16426374c82d9649b95dedcfcceef024d45b2ef0e3b86532b8ada2b2c85b2",
+      "sha256": "21f2a734e9b43bb5b75e783fee6a021732bee0376cf018dc657511fd15a56c59",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
