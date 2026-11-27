@@ -19450,6 +19450,115 @@
       "historicalStatus": null
     },
     {
+      "id": "COMMUNITY-FRIEND-SUGGESTION-001",
+      "title": "Friend suggestions ranked by personalized PageRank over follows",
+      "statement": "Behind FRIEND_SUGGESTIONS_PAGERANK_ENABLED (off by default), GET /social/suggestions returns the stored result of a nightly personalized PageRank over actor-confirmed social_v2_pair.follow_a and follow_b directions for the signed-in viewer: a random walk with restart at the viewer (damping 0.85, 100 iterations, dead ends return to the viewer) over live people with a verified email (provider-bound credential or completed password reset) at least seven days old with an open profile and no block with the viewer, ordered by score and then party id, at most 20 of the 50 stored. With the flag off, for a viewer who opted out of personalization, without the schema or social-v2 policy, without a stored result younger than 48 hours, when any party that carried score for the viewer is no longer eligible, or on any read failure, the route returns exactly the previous second-degree count answer.",
+      "domain": "COMMUNITY",
+      "authority": "Owner request and approval of 2026-11-21: the rule, its constants and the nine decisions of the proposal in formal/system/friend-suggestions-pagerank.md. On 24 November the owner approved actor-confirmed canonical follows for rollout.",
+      "source": "formal/system/friend-suggestions-pagerank.md",
+      "contract": "tdf-hq/src/TDF/Social/SuggestionRank.hs",
+      "property": "For every viewer v and step t: p_t >= 0 /\\ SUM p_t = 1 /\\ (a \\notin nodes(G_v) => p_t(a) = 0); p_t depends only on v and the follows between nodes of G_v; norm1(p_100 - p*) <= 2 * 0.85^100 < 2e-7. For every returned personalized entry a: a # v /\\ a stored for v /\\ eligibleNow(v, a) /\\ no follow between v and a /\\ every party in support(v) is eligible now. flagOff \\/ optedOut(v) => response = fallback(v).",
+      "actors": [
+        "Authenticated party",
+        "Nightly run (one API replica under an advisory lock)"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect), revalidated in the read transaction",
+        "Migration tdf-hq/sql/2026-11-21_social_friend_suggestions.sql applied and the social-v2 policy installed; otherwise the fallback is returned",
+        "FRIEND_SUGGESTIONS_PAGERANK_ENABLED=true when the API starts, for the run to be scheduled"
+      ],
+      "inputs": [
+        "GET /social/suggestions?networkReason=true for capable clients; other clients receive the fallback",
+        "party, user_credential, auth_provider_identity, party_email_verification, social_v2_preference and social_v2_pair rows at the run's snapshot"
+      ],
+      "state": {
+        "initial": "No stored result",
+        "terminal": [
+          "Stored result of the latest run",
+          "Fallback answer"
+        ]
+      },
+      "allowedTransitions": [
+        "Run: snapshot -> scores for every eligible viewer that did not opt out -> replace all stored results in one transaction",
+        "Read: stored result usable -> personalized entries; otherwise -> fallback"
+      ],
+      "forbiddenTransitions": [
+        "A blocked, closed, deactivated, organisation, too new or unverified party holding score or passing score to another party",
+        "Returning a party the installed follow policy refuses for the viewer, the viewer, or a party connected to the viewer by a follow",
+        "Serving a stored result while any party of its support is no longer eligible for the viewer",
+        "Returning a personalized entry to a viewer who opted out, or while the flag is off",
+        "Returning a score or a count derived from other parties' follows",
+        "A reader observing a mixture of two runs"
+      ],
+      "effects": [
+        "Run: one social_suggestion_run row, one social_suggestion_viewer row per computed viewer and up to 50 social_suggestion_score rows each; every earlier run is deleted.",
+        "Read: none.",
+        "Completed password reset: one party_email_verification row for the party, once the table exists, whether or not the flag is on."
+      ],
+      "authorization": "The caller's own party only, taken from the session. Stored rows are read only for their viewer.",
+      "privacy": "Follows are used as evidence without being disclosed: a personalized entry carries a party id and the reason code only, no score, no count and no third party. Hidden, closed, blocked and deactivated parties are neither returned nor used as evidence at the run, and a later exclusion of any evidence party sends the viewer to the fallback. A viewer with personalized=false receives exactly the fallback and has no stored rows after the next run.",
+      "concurrency": "The run reads one REPEATABLE READ snapshot and replaces all results in one transaction; a PostgreSQL advisory lock admits one replica. Reads run at the pool's default isolation and re-apply eligibility and connection checks at request time.",
+      "idempotency": "The read is read-only. A repeated run replaces the stored results with the results of the later snapshot.",
+      "failure": "Any refusal, missing schema, stale or missing result, invalid session or database error on the personalized path leads to the fallback, which applies its own checks and errors. A failed run leaves the previous results, which stop being served 48 hours after their run.",
+      "recovery": "Turn the flag off: the route returns the fallback without touching the tables. tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql drops the three derived tables.",
+      "observability": "One log line per run with viewer and candidate counts, or the failure.",
+      "implementation": [
+        "tdf-hq/src/TDF/API/SocialRelationships.hs",
+        "tdf-hq-ui/src/api/social.ts",
+        "tdf-hq/src/TDF/Social/SuggestionRank.hs",
+        "tdf-hq/src/TDF/Social/SuggestionStore.hs",
+        "tdf-hq/src/TDF/Auth/EmailVerification.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/src/TDF/Social/RelationshipReads.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql",
+        "tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql",
+        "tdf-hq-ui/src/features/social/suggestionReason.ts",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
+        "tdf-hq-ui/src/pages/SocialPage.tsx",
+        "tdf-hq-ui/src/api/types.ts"
+      ],
+      "tests": [
+        "scripts/social/RelationshipReadSpec.hs",
+        "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs",
+        "tdf-hq/test/TDF/Social/SuggestionStoreSpec.hs",
+        "scripts/test-friend-suggestions-sql.py",
+        "scripts/test-friend-suggestions-postgres.sh",
+        "scripts/verify-friend-suggestion-pagerank.py",
+        "tdf-hq-ui/src/api/social.test.ts",
+        "scripts/social/preview.mjs",
+        "scripts/social/verify-preview.mjs",
+        "tdf-hq-ui/src/features/social/suggestionReason.test.ts",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx"
+      ],
+      "formalModels": [
+        "formal/event-operations/FriendSuggestionGraph.als",
+        "scripts/verify-friend-suggestion-pagerank.py"
+      ],
+      "verification": "PROVED (Z3, exact reals, one step, every viewer, node set and follow relation up to 4 accounts; negative control for each): a step keeps a distribution on the viewer's graph a distribution, dead ends included; an account outside the graph holds no score and follow rows touching it do not change the step; a step contracts the L1 distance by the damping (symbolic up to 3 accounts, per follow relation with the viewer fixed and all accounts nodes at 4); 2 * 0.85^100 < 2e-7. The induction over iterations and the fixed-point argument are a hand proof in the contract. BOUNDED MODEL (Alloy 6.2.0, up to 5 accounts, six mutation controls): follows by or to accounts failing the age or email filter leave every viewer's graph unchanged; only live, aged, verified accounts are reachable; a block in either direction removes the account. TESTED (Hspec + QuickCheck): the Haskell ranking over exact Rational and over Double (sum within 1e-9), exclusions, ordering, limits, input-order independence, the run's per-viewer computation, the flag and the fallback JSON. TESTED (PostgreSQL 16): the statements extracted from the Haskell source and the migration, 13 accounts and 16 read scenarios including opt-out, staleness and each evidence exclusion, plus the password-reset verification write. TESTED (Jest): the web label.",
+      "evidence": "scripts/verify-friend-suggestion-pagerank.py --max-nodes 4 output; scripts/verify-alloy-controls.mjs result for FriendSuggestionGraph.als; tdf-hq-test SuggestionRankSpec and SuggestionStoreSpec runs; scripts/test-friend-suggestions-sql.py output; Jest suggestionReason run.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the one-step walk properties on bounded graphs (machine-checked) and for the Haskell ranking and the SQL on the fixture (tested). Medium for convergence at any size, which rests on a hand proof whose step is machine-checked only on bounded graphs. The handler and job wiring are covered by compilation, the flag-off and no-session tests and review only.",
+      "ambiguity": [
+        "The Z3 step is a hand translation of walkStep; correspondence with the Haskell and SQL text is not machine-checked, and Double rounding is outside the proof.",
+        "A verified email is an auth_provider_identity binding or a completed password reset; neither is withdrawn when the party later changes its address, and the reset write is covered by the SQL test and a no-op test, not by an HTTP-level reset.",
+        "The follow-policy filter is exercised against a stand-in with the migrated signature, not the migrated social_v2_profile_eligible itself; no HTTP-level test runs the route or the run against a fully migrated database.",
+        "Account age is party.created_at; credentials have no creation time.",
+        "The graph uses actor-confirmed follow directions. Legacy friendship and fan-club mirrors cannot contribute score.",
+        "Clients request networkReason=true only if they support sfReason. Older clients receive the existing fallback.",
+        "The manifest successor review for the new migration is an author review, not independent approval; the migration has not been rehearsed on a production-shaped database.",
+        "Production activation state of social-v2 and the number of actor-confirmed follows were not observed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Core properties proved on bounded graphs and tested; SQL tested on a fixture; HTTP-level checks on the migrated schema, the Mobile presentation and production observations remain."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "COMMUNITY-FAN-RECOMMENDATION-001",
       "title": "Artist recommendations for a fan from shared followers",
       "statement": "A signed-in fan reads the publicly listed artists they do not follow yet and are allowed to follow, ordered by how strongly the followers of the artists they follow also follow each one (sum of cosine similarities of follower sets), completed with the most followed artists when the evidence gives fewer than the requested number. Route: GET /fans/me/recommendations.",
@@ -22357,7 +22466,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/bookings-routes.md.",
       "source": "formal/system/bookings-routes.md",
       "contract": "formal/system/bookings-routes.md",
-      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); only a newly created legacy tentative booking notifies: the assigned engineer by email, every active Admin, Manager and StudioManager by an in-app notification (public_booking_request, target booking) plus email and WhatsApp, and the customer by a receipt email stating the request is unconfirmed and records no payment, and that it holds its slot tentatively until staff confirm or release it only when the created booking was allocated rooms or resources; without allocations it says no slot is held (the staff email and the Domo request page make the same distinction). The in-app rows are written before the response; emails and WhatsApp are sent on a background thread after it, so provider latency never delays or fails the accepted request. Each delivery is best-effort and logged.",
+      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); only a newly created legacy tentative booking notifies: the assigned engineer by email, the staff recipients (the existing parties listed in PUBLIC_BOOKING_ALERT_PARTY_IDS when it names any, otherwise every active Admin, Manager and StudioManager) by an in-app notification (public_booking_request, target booking) plus email and WhatsApp, and the customer by a receipt email stating the request is unconfirmed and records no payment, and that it holds its slot tentatively until staff confirm or release it only when the created booking was allocated rooms or resources; without allocations it says no slot is held (the staff email and the Domo request page make the same distinction). The in-app rows are written before the response; emails and WhatsApp are sent on a background thread after it, so provider latency never delays or fails the accepted request. Each delivery is best-effort and logged.",
       "actors": [
         "Anonymous customer"
       ],
@@ -22418,7 +22527,8 @@
         "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-booking-tentative-idempotency-migration.sh",
         "tdf-hq-ui/src/components/notificationTarget.test.ts",
-        "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx"
+        "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx",
+        "tdf-hq/test/TDF/Server/PublicBookingNotificationsSpec.hs"
       ],
       "formalModels": [],
       "verification": "publicBookingSqlConflict is tested in tdf-hq/test/TDF/ServerSpec.hs; the HTTP concurrency script drives concurrent public checkouts; the rest is read from the handlers.",
@@ -28199,7 +28309,9 @@
         "tdf-hq-ui/src/i18n/locales/es.ts",
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-        "tdf-hq-ui/src/utils/eventLineup.ts"
+        "tdf-hq-ui/src/utils/eventLineup.ts",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-hq-ui/src/utils/jamCircuit.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
@@ -28211,7 +28323,8 @@
         "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
         "tdf-hq/test/Spec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -29647,17 +29760,17 @@
     {
       "id": "EVT-VENUE-SEARCH-001",
       "title": "Venue search filters in SQL without a row cap, equal to the in-memory specification",
-      "statement": "Behind the runtime flag social_venues.sql_search the venue list applies its city, text and distance filters, its ordering and its page in one PostgreSQL statement over every venue. Its answer is the pure specification venueSearchSpec applied to all venues ordered by name and then id, except that a venue whose specified distance is within 0.000001 km of the radius may be answered either way and a stored coordinate above 1e300 never matches. With the flag off, or without the migration, the former path runs: the same specification over the first 2,000 venues by name. Route: GET /social-events/venues.",
+      "statement": "Behind the runtime flag social_venues.sql_search the venue list applies its city, text and distance filters, its ordering and its page in one PostgreSQL statement over every venue. Its answer is the pure specification venueSearchSpec applied to all venues ordered by name and then id, except that a venue whose specified distance is within 0.000001 km of the radius may be answered either way. The constraint venue_coordinates_in_range keeps every stored coordinate NULL or within -90..90 / -180..180. With the flag off, or without the fold function or the constraint, the former path runs: the same specification over the first 2,000 venues by name. Route: GET /social-events/venues.",
       "domain": "EVT",
       "authority": "Owner task of 2026-11-21 to move venue search to indexed SQL; the owner approved the rule and its constants the same day (exact fold function, 1 mm tolerance, ordering by name then id, fewer than 10,000 venues expected in two years). formal/system/venue-search.md.",
       "source": "formal/system/venue-search.md",
       "contract": "tdf-hq/src/TDF/Venues/Search.hs",
-      "property": "Let R be all venues ordered by (name, id) and keep(v) = city(v) /\\ text(v) /\\ near(v) as in venueSearchSpec. Flag on: answer = Page(SelectSeq(R, m)) where m(v) = keep(v) for every v with |distance(v) - radius| > 0.000001 km and coordinates of magnitude at most 1e300. Box soundness: for coordinates in -90..90 and -180..180, haversine(v) <= radius => inVenueBoundingBox(venueBoundingBox(query), v). Fold: venue_search_fold(s) = toCaseFold(s) for every string s. Flag off: answer = Page(SelectSeq(first 2000 of venues ordered by name, keep)).",
+      "property": "Let R be all venues ordered by (name, id) and keep(v) = city(v) /\\ text(v) /\\ near(v) as in venueSearchSpec. Flag on: answer = Page(SelectSeq(R, m)) where m(v) = keep(v) for every v with |distance(v) - radius| > 0.000001 km. Stored coordinates: latitude in -90..90 and longitude in -180..180 or NULL (database constraint). Box soundness: for such coordinates, haversine(v) <= radius => inVenueBoundingBox(venueBoundingBox(query), v). Fold: venue_search_fold(s) = toCaseFold(s) for every string s. Flag off: answer = Page(SelectSeq(first 2000 of venues ordered by name, keep)).",
       "actors": [
         "Any caller of the venue list"
       ],
       "preconditions": [
-        "revenue_feature_flag row social_venues.sql_search enabled for the environment, and venue_search_fold(text) installed, for the SQL path"
+        "revenue_feature_flag row social_venues.sql_search enabled for the environment, venue_search_fold(text) installed and the validated constraint venue_coordinates_in_range on venue, for the SQL path"
       ],
       "inputs": [
         "GET /social-events/venues",
@@ -29675,9 +29788,10 @@
       ],
       "forbiddenTransitions": [
         "Dropping a matching venue because of its position in the table while the flag is on",
-        "A bounding box that excludes an in-range venue the haversine test accepts",
+        "A bounding box that excludes a venue the haversine test accepts",
         "A database error for a stored coordinate or a query the specification answers",
-        "Any write"
+        "Any write",
+        "Storing a venue coordinate out of range or not finite"
       ],
       "effects": [
         "None; read-only."
@@ -29687,7 +29801,7 @@
       "concurrency": "One statement and one snapshot at the pool's default isolation. The flag is read before the search in separate statements.",
       "idempotency": "Read-only.",
       "failure": "Invalid input is refused with 400 before the search. Arithmetic the specification evaluates to NaN is a non-match in SQL, not an error. A database error is a 500.",
-      "recovery": "Disabling the flag row restores the in-memory path without a deploy; tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql removes the function, indexes and flag rows.",
+      "recovery": "Disabling the flag row restores the in-memory path without a deploy; tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql removes the constraint and restores the partial index, and tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql removes the function, indexes and flag rows.",
       "observability": "HTTP status only.",
       "implementation": [
         "tdf-hq/src/TDF/Venues/Search.hs",
@@ -29695,7 +29809,9 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
         "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql",
-        "scripts/render-venue-search-fold.hs"
+        "scripts/render-venue-search-fold.hs",
+        "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql",
+        "tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/Venues/SearchSpec.hs",
@@ -29709,22 +29825,569 @@
         "formal/event-operations/VenueSearchNoPoleGuard.cfg",
         "formal/event-operations/VenueSearchCapped.cfg"
       ],
-      "verification": "PROVED (Z3 4.13.3, real arithmetic over algebraic stand-ins for sine and cosine): the haversine term is the central angle, the latitude bound, and the longitude bound outside the pole case; two witnesses and three negative controls. BOUNDED MODEL (TLC 1.7.2, 576,000 states on a discrete globe): the boxed search equals the specification, the box is sound, the capped path equals the specification when the cap is not exceeded; negative controls without the wrap, without the pole guard and with an exceeded cap each violate the named invariant. TESTED (Hspec and QuickCheck): the SQL answer equals the specification outside the tolerance on generated venue tables on PostgreSQL through the statement the server sends, and exactly on 2,000 and 2,500 venues; the bounding box of the real function on 20,000 generated cases and boundary examples; venue_search_fold equals Data.Text.toCaseFold on all 1,112,063 Unicode scalar values through each branch; the handler with the flag off, on and off again. NOT PROVED: equivalence of the SQL and the specification, floating-point soundness of the box, the 1 mm tolerance, index use.",
+      "verification": "PROVED (Z3 4.13.3, real arithmetic over algebraic stand-ins for sine and cosine): the haversine term is the central angle, the latitude bound, and the longitude bound outside the pole case; two witnesses and three negative controls. BOUNDED MODEL (TLC 1.7.2, 576,000 states on a discrete globe): the boxed search equals the specification, the box is sound, the capped path equals the specification when the cap is not exceeded; negative controls without the wrap, without the pole guard and with an exceeded cap each violate the named invariant. TESTED (Hspec and QuickCheck): the SQL answer equals the specification outside the tolerance on generated venue tables on PostgreSQL through the statement the server sends, and exactly on 2,000 and 2,500 venues; the bounding box of the real function on 20,000 generated cases and boundary examples; venue_search_fold equals Data.Text.toCaseFold on all 1,112,063 Unicode scalar values through each branch; the handler with the flag off, on and off again; the flag check off without the fold function or the constraint; the database refusing eight out-of-range or non-finite coordinates and keeping the in-range edges; the constraint migration refusing a table holding an out-of-range row and applying twice without change. NOT PROVED: equivalence of the SQL and the specification, floating-point soundness of the box, the 1 mm tolerance, index use.",
       "evidence": "formal/social/venue_search_bounding_box.py output; scripts/verify-event-operations-formal.sh VenueSearch runs; tdf-hq-test venue-search sections; scripts/test-venue-search.sh output.",
       "critical": true,
       "status": "specified and implemented",
-      "confidence": "High for text matching (exhaustive fold comparison and generated tables) and for the real-arithmetic box. Medium for distance at the radius edge: the tolerance is supported by tests on one platform pair, not by an error analysis. The local runs used PostgreSQL 16 with the macOS mathematics library; PostgreSQL 17 on Linux is exercised by CI only.",
+      "confidence": "High for text matching (exhaustive fold comparison and generated tables) and for the real-arithmetic box. Medium for distance at the radius edge: the tolerance is supported by tests on one platform pair, not by an error analysis. The local runs used PostgreSQL 16 with the macOS mathematics library; PostgreSQL 17 on Linux is exercised by CI and by the release rehearsal on a copy of production.",
       "ambiguity": [
-        "Production was not queried: the venue count is the owner's figure, and whether any stored coordinate is out of range or not finite is unknown.",
-        "For finite out-of-range stored coordinates the two sides may differ when the haversine term rounds to the edge of its domain; no tolerance is argued for those rows.",
-        "A finite stored coordinate above 1e300 never matches in SQL although the specification computes a distance for it.",
         "With the flag on, venues sharing a name are ordered by id; with it off their relative order stays undefined, as before.",
         "Index use by the planner is not asserted by any test.",
         "A text upgrade that changes Data.Text.toCaseFold requires a new migration; the test detects it but nothing applies it."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Specification, SQL, fold and handler tested; box proved in real arithmetic and model-checked; the flag is disabled, and enabling it and confirming production data are owner steps."
+        "reason": "Specification, SQL, fold, constraint and handler tested; box proved in real arithmetic and model-checked; the flag is enabled in production since release 10 (2026-11-24). The SQL equivalence and floating-point behaviour remain tested, not proved."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MEDIA-MUSIC-LOUDNESS-001",
+      "title": "Advisory loudness check of delivered masters, bound to one file",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "Behind music_releases.loudness_check (disabled by default), the music worker measures the integrated loudness and maximum true peak of every inspected master with FFmpeg's ebur128 filter through a total wrapper, and records the outcome in music_audio_measurement against the asset and its SHA-256. GET /music/releases/{releaseId}/versions/{versionId}/loudness reports, per track, a pass or warning against -14.0 LUFS +/- 2.0 LU and -1.0 dBTP, computed on read. A track is shown as checked only from a measurement of its newest master file. The result is advisory: it never blocks inspection, validation, approval or publication.",
+      "authority": "Owner request of 2026-11-21 (FFT audio features, phase 1) and owner answers of the same day: run inside inspect_audio, current inputs with a 900 s limit, -14.0 LUFS and -1.0 dBTP, warn only. The +/- 2.0 LU two-sided band, the silent-file rule, the newest-master rule and the accepted measured range were proposed by the implementer and accepted by the owner on 2026-11-22 (\"Continue with recommended defaults\"). AUTHORITY-099. formal/system/music-loudness-check.md.",
+      "source": "formal/system/music-loudness-check.md",
+      "contract": "formal/system/music-loudness-check.md",
+      "property": "L1: checked(track) => exists a measured row r with r.asset = newestMaster(track) /\\ r.sha256 = newestMaster(track).sha256 /\\ usable(newestMaster(track)). L2: measured and failed rows change only to superseded. L3: the wrapper prints exactly one result within limit + grace and leaves no child. L4: each flag is monotone in its value. L5: with the flag off no row is written and the route answers 404.",
+      "actors": [
+        "Music worker",
+        "Verified artist or team member with release.read",
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "music_releases.loudness_check enabled for the environment (revenue_feature_flag); seeded disabled",
+        "music_releases.authoring enabled for the read route",
+        "An inspect_audio job whose master passed the checksum and the audio pipeline"
+      ],
+      "inputs": [
+        "The verified master file of an inspect_audio job",
+        "GET /music/releases/{releaseId}/versions/{versionId}/loudness"
+      ],
+      "state": {
+        "states": [
+          "pending",
+          "measured",
+          "failed",
+          "superseded"
+        ],
+        "initial": "pending",
+        "terminal": [
+          "superseded"
+        ],
+        "transitions": {
+          "pending": [
+            "measured",
+            "failed",
+            "superseded"
+          ],
+          "measured": [
+            "superseded"
+          ],
+          "failed": [
+            "superseded"
+          ],
+          "superseded": []
+        },
+        "authority": "music_audio_measurement.state; transitions are enforced by the trigger function music_audio_measurement_guard and mirrored by TDF.MusicRelease.Loudness.stepMeasurement"
+      },
+      "allowedTransitions": [
+        "(none) -> pending when the worker opens an attempt for a master and its SHA-256 (music_begin_audio_measurement)",
+        "pending -> measured with two in-range integers in tenths, by the attempt that opened the row",
+        "pending -> failed with one reason (timeout, decode_error, no_summary, unparseable, out_of_range, silent, tool_unavailable, interrupted)",
+        "pending | measured | failed -> superseded when a later attempt opens for the same asset, or the asset is re-pointed before promotion"
+      ],
+      "forbiddenTransitions": [
+        "Showing a track as checked from a measurement of another asset or another SHA-256",
+        "Storing a checked mark on a track or version",
+        "Rewriting or deleting a measured or failed row",
+        "Closing a pending row from another job attempt",
+        "A measurement outcome failing inspect_audio or changing assets_valid",
+        "Any measurement write while the flag is off"
+      ],
+      "effects": [
+        "One music_audio_measurement row per attempt",
+        "An advisory line per track in the web release editor"
+      ],
+      "authorization": "The route requires a bearer session and release.read on the release (owner, team or strict administrator), as GET /music/releases/{releaseId}/versions/{versionId}. Worker writes run under the job's lease guard.",
+      "privacy": "No personal data and no per-user behaviour: the result is a function of the file bytes and the constants, so there is nothing to personalise or opt out of. Measurements are returned only to parties who can read the draft version; nothing is added to public responses.",
+      "concurrency": "Rows are keyed by asset and SHA-256; at most one row per asset and kind is not superseded (partial unique index). music_begin_audio_measurement locks the asset row; music_finish_audio_measurement closes only a pending row of the same job and attempt; both run after the worker's lease guard. Checked is derived on every read from the newest master's open row, so a concurrent re-upload cannot leave a stale mark.",
+      "idempotency": "A later attempt supersedes the earlier row and measures again; identical bytes give identical values with the same FFmpeg build.",
+      "failure": "Any input ends in one recorded reason within the time limit plus the kill grace; the inspection continues. 404 when the flag is off or the version is missing, 403 without release.read, 503 when authoring is disabled.",
+      "recovery": "A new upload or a re-queued inspection measures again. A pending row left by a killed worker stays pending until the next attempt supersedes it.",
+      "observability": "music_audio_measurement rows (tool, FFmpeg version, job and attempt); worker timing stage loudness_measurement.",
+      "implementation": [
+        "scripts/measure-music-loudness.pl",
+        "scripts/run-music-release-worker-once.sh",
+        "tdf-hq/Dockerfile.music-worker",
+        "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
+        "tdf-hq/sql/2026-11-21_music_audio_measurement_rollback.sql",
+        "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq-ui/src/api/musicLoudness.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/features/releases/TrackLoudnessCheck.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicRelease/LoudnessSpec.hs",
+        "scripts/test-music-loudness-wrapper.mjs",
+        "scripts/test-music-loudness-query.mjs",
+        "scripts/test-music-release-worker-runtime.mjs",
+        "tdf-hq-ui/src/api/musicLoudness.test.ts",
+        "tdf-hq-ui/src/features/releases/TrackLoudnessCheck.test.tsx"
+      ],
+      "formalModels": [
+        "formal/music/MusicLoudnessBinding.tla",
+        "formal/music/MusicLoudnessBinding.cfg",
+        "formal/music/MusicLoudnessBindingUnbound.cfg",
+        "formal/music/MusicLoudnessBindingStoredMark.cfg",
+        "formal/music/MusicLoudnessBindingUnfenced.cfg",
+        "formal/music/MusicLoudnessSupervision.tla",
+        "formal/music/MusicLoudnessSupervision.cfg",
+        "formal/music/MusicLoudnessSupervisionNoKill.cfg",
+        "formal/music/MusicLoudnessSupervisionNoReap.cfg",
+        "formal/music/MusicLoudnessSupervisionTrusting.cfg",
+        "formal/music/loudness_decision.py"
+      ],
+      "verification": "Proved (Apalache inductive invariants, unbounded in steps, parameters up to 4 files, 3 workers, 6 attempts; and limit 1..900 s, grace 1..60 s): L1 and L2 on formal/music/MusicLoudnessBinding.tla, L3 on formal/music/MusicLoudnessSupervision.tla. Proved (Z3, all integers): L4 flag monotonicity and the exact pass set, formal/music/loudness_decision.py, pinned to the source region. These proofs are about the models and a hand translation, not about the SQL, the Perl wrapper or FFmpeg. Bounded (TLC): both models with three negative configurations each. Tested: QuickCheck properties of the pure core; the wrapper on EBU Tech 3341 cases 1-6 and 15-19 and on malformed, truncated, silent and never-ending input; the worker, trigger, functions and flag on PostgreSQL 16; the handler query extracted from the Haskell source; web parsing and rendering by Jest.",
+      "evidence": "scripts/verify-inductive-proofs.sh (music block); formal/music/loudness_decision.py; LoudnessSpec in tdf-hq-test; node scripts/test-music-loudness-wrapper.mjs; node scripts/test-music-loudness-query.mjs; node scripts/test-music-release-worker-runtime.mjs; Jest musicLoudness and TrackLoudnessCheck.",
+      "status": "specified and implemented",
+      "confidence": "High for the decision rule and the lifecycle (proved on models, tested on PostgreSQL). Medium for accuracy: the conformance signals pass on FFmpeg 7.0.1 locally and were not run on the worker image's FFmpeg. The handler is covered by compilation, the extracted query and review, not by an HTTP test.",
+      "ambiguity": [
+        "Pass/warn is not monotone across the whole loudness axis because the band is two-sided; each flag is.",
+        "EBU Tech 3341 cases 7-8 (programme material) and 20-23 (filtered impulses) are not tested; they exist only as EBU downloads.",
+        "A version may hold several master files for one recording and nothing else in the platform names a current one; this requirement uses the newest undeleted master.",
+        "A pending row left by a killed worker is shown as pending until another attempt runs.",
+        "A 192 kHz multichannel master of several hours exceeds the 900 s limit and is recorded as failed: timeout.",
+        "The proofs cover TLA+ models and a hand-translated decision; correspondence to the SQL and the wrapper is by tests.",
+        "Production has no music worker, so the check cannot run there yet.",
+        "No HTTP-level test calls the route on a migrated database."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Critical properties proved on models and tested on PostgreSQL and the real FFmpeg; accuracy on the worker image, the untested EBU cases, and an HTTP-level route test remain."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "TAX-FILTER-001",
+      "title": "Shared country, region, city and genre filters across community search, radio, music and events",
+      "statement": "Community and global directory search, radio stations, public music releases and track search, and signed-in event listings accept repeatable countryIds, regionIds, cityIds and genreIds referencing the persisted taxonomy. Values inside a dimension are ORed, dimensions are ANDed, a genre includes its active subgenres, a region and missing country derive from the item's city, and an item without a value for an active dimension is not returned. Each surface reports per-value counts that apply every other active filter but not the counted dimension. The web keeps one shared selection per browser, overridable per surface, mirrored in namespaced URL keys so links reproduce the view, shows removable chips and a clear-all action, names options in the viewer's language with fallback to the other, and pre-selects the profile city once; device location is used only after an explicit tap.",
+      "domain": "TAX",
+      "critical": false,
+      "actors": [
+        "Visitor",
+        "Signed-in user",
+        "Fan",
+        "Artist"
+      ],
+      "preconditions": [
+        "2026-11-21_location_genre_filters.sql applied (shared predicates, Ecuador provinces and cities, bilingual subgenres)",
+        "Existing surface visibility, territory and authorization rules remain authoritative"
+      ],
+      "inputs": [
+        "GET /taxonomy/filter-options",
+        "GET /directory/search countryIds/regionIds/cityIds/genreIds",
+        "GET /radio/streams and /radio/streams/facets",
+        "GET /music/releases, /music/search and /music/facets/releases",
+        "GET /social-events/events and /social-events/events/facets",
+        "URL keys f.country, f.region, f.city, f.genre, f.scope"
+      ],
+      "state": {
+        "boundary": "formal/system/taxonomy-filters.md",
+        "selection": [
+          "shared",
+          "surface override"
+        ]
+      },
+      "allowedTransitions": [
+        "unfiltered -> filtered",
+        "shared -> surface override (only here, or a link that differs)",
+        "surface override -> shared (use general filters)",
+        "surface override -> shared set (use everywhere)",
+        "filtered -> cleared"
+      ],
+      "forbiddenTransitions": [
+        "A filter widening the authorized result set",
+        "An item without a value matching an active dimension",
+        "Changing directory saved-search alert semantics",
+        "Requesting device location without an explicit tap or when a profile city exists",
+        "Overriding a viewer's existing selection with the profile-city default"
+      ],
+      "effects": [
+        "Parameterized predicates before pagination on every surface",
+        "Per-dimension facet counts",
+        "Shared browser selection and URL state"
+      ],
+      "authorization": "No new authority: each list keeps its existing public or authenticated check; filter options are public reference data.",
+      "privacy": "Only public reference ids travel in URLs; the profile city is read from the viewer's own profile and never sent elsewhere; device coordinates stay in the browser and become a city id.",
+      "concurrency": "Query keys include the selection; superseded requests are cancelled or ignored as before.",
+      "idempotency": "Selections are deduplicated sets; repeating a parameter has no effect; at most 50 values per dimension.",
+      "failure": "Malformed ids return 400; unknown ids match nothing; failed option or facet reads leave the list usable without counts.",
+      "recovery": "Clear filters, use the general filters, or remove a chip.",
+      "observability": "Visible chips, counts and override notice; existing API telemetry.",
+      "source": "tdf-hq/src/TDF/Taxonomy/Filter.hs and tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+      "contract": "formal/system/taxonomy-filters.md",
+      "implementation": [
+        "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+        "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
+        "tdf-hq/sql/2026-11-21_location_genre_filters_rollback.sql",
+        "tdf-hq/src/TDF/Taxonomy/Filter.hs",
+        "tdf-hq/src/TDF/API/Taxonomy.hs",
+        "tdf-hq/src/TDF/Server/Taxonomy.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/API/Radio.hs",
+        "tdf-hq/src/TDF/ServerRadio.hs",
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/Server/MusicRelease.hs",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsTaxonomy.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/docs/openapi/taxonomy.yaml",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/docs/openapi/music-search.yaml",
+        "tdf-hq-ui/src/api/taxonomy.ts",
+        "tdf-hq-ui/src/api/directory.ts",
+        "tdf-hq-ui/src/api/radio.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterStore.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/useTaxonomyFilters.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/useProfileCityDefault.ts",
+        "tdf-hq-ui/src/components/taxonomyFilters/TaxonomyFilterBar.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/taxonomyFilters.es.ts",
+        "tdf-hq-ui/src/i18n/locales/taxonomyFilters.en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+        "playwright.discovery.config.mjs",
+        "tdf-mobile/src/api/taxonomy.ts",
+        "tdf-mobile/src/features/taxonomyFilters/TaxonomyFilterBar.tsx",
+        "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterModel.ts",
+        "tdf-mobile/src/features/taxonomyFilters/taxonomyFilterStore.ts",
+        "tdf-mobile/src/features/taxonomyFilters/useSharedCityDefault.ts",
+        "tdf-mobile/src/features/taxonomyFilters/useTaxonomyFilters.ts"
+      ],
+      "tests": [
+        "scripts/test-community-search.py",
+        "scripts/test-music-catalog-search.mjs",
+        "tdf-hq/test/TDF/Taxonomy/FilterSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
+        "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+        "e2e/web/taxonomy-filters.spec.mjs",
+        "e2e/web/community-discovery.spec.mjs",
+        "tdf-mobile/__tests__/DirectoryTaxonomyFilters.test.tsx",
+        "tdf-mobile/__tests__/taxonomyFilterModel.test.ts",
+        "tdf-mobile/__tests__/taxonomyFilterStore.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Directory SQL executed on migrated PostgreSQL 16 with OR/AND, closure, region and missing-value assertions; radio, music, events and suggestions exercised against a locally built server; React unit and Playwright fixture coverage. Hosted CI and production verification pending.",
+      "ambiguity": [
+        "Regions and cities outside Ecuador are not curated yet.",
+        "Marketplace listings and studio storefront packages carry no location or genre and are reached only through directory classifieds and services.",
+        "Native radio and music screens do not exist; mobile covers directory and events."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local PostgreSQL, compiled-server, React and Playwright fixture evidence; hosted CI and production verification pending."
+      },
+      "authority": "approved by user",
+      "property": "Result = visible items AND each active dimension (OR of its values, genres expanded to descendants, location derived from city); counts per dimension omit only that dimension's own selection.",
+      "verification": "scripts/test-community-search.py on migrated PostgreSQL; Hspec FilterSpec (including literal directory facet SQL equality); React model, discovery and radio tests; Playwright taxonomy-filters spec in Spanish and English.",
+      "evidence": "scripts/test-community-search.py; tdf-hq/test/TDF/Taxonomy/FilterSpec.hs; tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts; e2e/web/taxonomy-filters.spec.mjs"
+    },
+    {
+      "id": "TAX-GENRE-SUGGESTION-001",
+      "title": "Artists suggest bilingual genres checked for casing, spelling and duplicates; administrators settle the rest",
+      "statement": "An artist proposes a genre or subgenre with Spanish and English names and an optional parent. The names are cleaned, cased for their language and compared with every existing genre in both languages ignoring case, accents, spacing and punctuation. An equal name is refused with the existing genre; a near name is refused with the existing name unless the artist confirms it is different; a name whose words all appear in existing genre names is published at once and added to the artist's profile; anything else waits for a strict administrator, who approves with reviewed names, merges into an existing genre or rejects with a note. Pending suggestions are visible to their author.",
+      "domain": "TAX",
+      "critical": false,
+      "actors": [
+        "Artist",
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "genre_suggestion table and guard trigger from 2026-11-21_location_genre_filters.sql",
+        "Artist or administrator role with coherent grants"
+      ],
+      "inputs": [
+        "POST /genres/suggestions/check",
+        "POST /genres/suggestions",
+        "GET /genres/suggestions/mine",
+        "GET /admin/genre-suggestions",
+        "POST /admin/genre-suggestions/{suggestionId}/approve",
+        "POST /admin/genre-suggestions/{suggestionId}/reject",
+        "POST /admin/genre-suggestions/{suggestionId}/merge"
+      ],
+      "state": {
+        "boundary": "formal/system/taxonomy-filters.md",
+        "genre_suggestion.status": [
+          "pending",
+          "approved",
+          "rejected",
+          "merged"
+        ]
+      },
+      "allowedTransitions": [
+        "new -> approved (automatic, all checks pass)",
+        "new -> pending",
+        "pending -> approved",
+        "pending -> rejected",
+        "pending -> merged"
+      ],
+      "forbiddenTransitions": [
+        "approved/rejected/merged -> any",
+        "Creating a genre whose normalized name equals an existing one",
+        "Changing a suggestion's author or submitted name",
+        "Two pending suggestions with the same normalized key",
+        "Rejecting without a note"
+      ],
+      "effects": [
+        "Published genre row with both names",
+        "Membership on the suggesting artist's profile when approved or merged"
+      ],
+      "authorization": "Suggestions require Artist, Artista or Admin with coherent grants; the queue and decisions require strict administrator access.",
+      "privacy": "The queue shows the suggesting artist's public display name only.",
+      "concurrency": "Decisions lock the suggestion row; the partial unique index shares a concurrent identical pending suggestion; the trigger rejects late transitions.",
+      "idempotency": "A repeated identical suggestion returns the pending one; repeated decisions are refused with 409.",
+      "failure": "Unsafe or out-of-range names 400; duplicates and probable typos 409 with the existing genre; more than 10 pending or 20 per day 429.",
+      "recovery": "Use the offered existing genre, confirm a distinct genre for review, or suggest again after rejection.",
+      "observability": "Verdict, cleaned names and corrections before submission; pending chips; admin queue with reasons.",
+      "source": "tdf-hq/src/TDF/Taxonomy/GenreSuggestion.hs and tdf-hq/src/TDF/Server/Taxonomy.hs",
+      "contract": "formal/system/taxonomy-filters.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Taxonomy/GenreSuggestion.hs",
+        "tdf-hq/src/TDF/Server/Taxonomy.hs",
+        "tdf-hq/src/TDF/API/Taxonomy.hs",
+        "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+        "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq-ui/src/components/taxonomyFilters/GenreSuggestionDialog.tsx",
+        "tdf-hq-ui/src/pages/GenreSuggestionsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-mobile/app/editArtistProfile.tsx",
+        "tdf-mobile/src/features/taxonomyFilters/GenreSuggestionModal.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs",
+        "scripts/test-community-search.py",
+        "tdf-hq/test/Spec.hs",
+        "e2e/web/taxonomy-filters.spec.mjs",
+        "tdf-mobile/__tests__/GenreSuggestionModal.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Hspec cases for casing, duplicates, typos, review and approval; every endpoint exercised against a locally built server on migrated PostgreSQL 16 including the transition trigger; Playwright admin approval fixture.",
+      "ambiguity": [
+        "Unknown words always go to review: there is no external dictionary, so the vocabulary is the existing genre names.",
+        "Translation quality between the two names is judged by the same vocabulary check."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local compiled-server and PostgreSQL evidence; hosted CI and production verification pending."
+      },
+      "authority": "approved by user",
+      "property": "No two published genres share a normalized name; a suggestion is decided at most once; only checked or reviewed names are published.",
+      "verification": "Hspec GenreSuggestionSpec; local HTTP smoke of check/submit/mine/approve/reject/merge and trigger refusal; Playwright admin approval.",
+      "evidence": "tdf-hq/test/TDF/Taxonomy/GenreSuggestionSpec.hs; e2e/web/taxonomy-filters.spec.mjs; formal/system/taxonomy-filters.md"
+    },
+    {
+      "id": "MEDIA-MUSIC-CONTINUATION-001",
+      "title": "Web player continues an ended queue with tracks of recommended artists",
+      "statement": "With VITE_PLAYER_SIMILAR_CONTINUATION_ENABLED set to true at build time, when playback reaches the end of a non-repeating queue of a signed-in listener the web player reads GET /fans/me/recommendations?limit=12 and, in the returned order, the newest public release of each artist, and appends at most five tracks: the first playable track of each artist whose recording is not already queued, one per artist. Playback moves to the first appended track. If nothing can be appended, a read fails, or the queue changed meanwhile, the player pauses at the end of the queue as before; if the listener paused, played, selected a track, went back, loaded a new track or started the radio while it loaded, the player stays as that intent left it. With the flag off or for an anonymous listener the player is unchanged.",
+      "domain": "MEDIA",
+      "authority": "On 2026-11-24 the feature owner approved the web player behavior tested at 2931f1306, including the default-off rollout, discovery-only recommendations, a request of up to 12 artists and a continuation of up to five tracks.",
+      "source": "formal/system/queue-continuation.md",
+      "contract": "tdf-hq-ui/src/player/queueContinuation.ts",
+      "property": "plan = planQueueContinuation(queue, candidates, 5) where candidates are in the server order. For every planned track t: t belongs to a candidate artist; the artists of plan are a subsequence of the candidate order without repetition; key(t) is not the key of a queued track and no two planned tracks share a key; |plan| <= 5; plan is a function of (queue, candidates). continue(queue, listener, flag) = flag /\\ listener signed in /\\ queue non-empty /\\ repeat = off /\\ nextQueueIndex(queue) < 0.",
+      "actors": [
+        "Fan",
+        "Customer"
+      ],
+      "preconditions": [
+        "Signed-in listener",
+        "VITE_PLAYER_SIMILAR_CONTINUATION_ENABLED=true in the web build",
+        "Playback reached the end of a queue whose repeat mode is off"
+      ],
+      "inputs": [
+        "The player queue",
+        "GET /fans/me/recommendations?limit=12",
+        "GET /music/releases?artistPartyId=<id>&limit=1",
+        "GET /music/releases/{slug}"
+      ],
+      "state": {
+        "initial": "Queue ended, player paused",
+        "terminal": [
+          "Continuation appended and playing",
+          "Player paused at the end of the queue"
+        ]
+      },
+      "allowedTransitions": [
+        "Append the planned tracks to the queue that ended and select the first of them",
+        "Discard a loaded continuation when the queue is no longer the one that ended",
+        "Abort a pending continuation on an explicit pause, play, track selection, previous, newly loaded track or radio takeover"
+      ],
+      "forbiddenTransitions": [
+        "Appending a track of an artist the recommendation response did not contain",
+        "Appending a recording that is already queued, or the same recording twice",
+        "Appending more than five tracks or two tracks of one artist",
+        "Changing the order the server returned",
+        "Starting a continuation for an anonymous listener, with the flag off, or while a repeat mode is on",
+        "Applying a continuation loaded for an earlier queue or an earlier listener",
+        "Selecting or starting a continuation after an explicit playback intent given while it loaded, in particular stopping a radio the listener just started"
+      ],
+      "effects": [
+        "Up to five tracks appended to the local queue; no server write"
+      ],
+      "authorization": "The recommendation read requires fan access on the server (COMMUNITY-FAN-RECOMMENDATION-001); the release reads are public. The client adds no authorization decision.",
+      "privacy": "The client reads no behaviour of its own and stores nothing new on the server. Appended tracks enter the locally persisted queue under the existing listener-ownership rule (MEDIA-MUSIC-PRIVACY-001). A listener who opted out of personalisation receives the server's popularity fallback and the continuation is built from that list.",
+      "concurrency": "One pending continuation per player session, bound to the queue object that ended; any later queue state, an abort, a listener change or an explicit playback intent (pause, play, select, previous, a newly loaded track, a radio takeover) discards it.",
+      "idempotency": "Read-only towards the server. Reaching the end again plans against the then-current queue, so earlier appended recordings are not appended again.",
+      "failure": "Recommendation read fails or is empty: no continuation. A release read fails, returns nothing or answers for another artist: that artist is skipped.",
+      "recovery": "The next time the queue ends the continuation is loaded again.",
+      "observability": "None added; the appended tracks emit the existing player analytics events.",
+      "implementation": [
+        "tdf-hq-ui/src/player/queueContinuation.ts",
+        "tdf-hq-ui/src/player/loadQueueContinuation.ts",
+        "tdf-hq-ui/src/config/queueContinuationRollout.ts",
+        "tdf-hq-ui/src/player/PlayerProvider.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/player/queueContinuation.test.ts",
+        "tdf-hq-ui/src/player/PlayerProvider.continuation.test.tsx",
+        "e2e/web/music-player-native.spec.mjs"
+      ],
+      "formalModels": [
+        "formal/player/QueueContinuation.tla"
+      ],
+      "verification": "PROVED (Apalache inductive invariant, for the TLA+ model, three artists, four recordings, every limit in 0..3, walks of any length): appended recordings belong to served artists, follow the served order, are neither queued nor repeated, and stay within the limit. MODEL-CHECKED (TLC, three artists and three recordings, limits 2 and 3): the same invariants, with a negative control (no check against the queue) that violates NoRepeat, also reproduced by Apalache. TESTED (Jest, 1,000 seeded random cases per property and fixed cases): the same four invariants on planQueueContinuation, determinism and purity, the decision function, the flag, and the loader's order, early stop and failure handling with a stubbed API. A Chromium browser test uses a synthetic signed-in session, catalog and real loopback audio to verify that the recommended track plays after the final native ended event.",
+      "evidence": "scripts/verify-inductive-proofs.sh, the queue continuation and PlayerProvider Jest suites, and the signed-in queue continuation case in e2e/web/music-player-native.spec.mjs.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the pure planning function (tested) and the model (proved). Medium for the correspondence between them: review plus random tests of the same invariants. Component tests cover disabled and anonymous listeners, unresolved identity, successful continuation and cancellation. Browser coverage includes the signed-in transition to a recommended recording.",
+      "ambiguity": [
+        "The exclusions of the server response hold as of that response; an artist hidden between the recommendation read and the release read is not re-checked by the client, and whether the release list route hides releases of an unlisted artist was not examined.",
+        "The model lets the client take any eligible recording of an artist; the code takes the first. Determinism is tested, not proved.",
+        "The web workspace has no property-testing library; the random cases come from a seeded generator, not QuickCheck.",
+        "The recommendation list excludes artists the listener already follows, so the continuation is discovery only."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The model covers planning invariants. Jest exercises the loader and the player, and the browser test verifies native playback with synthetic catalog metadata. Release visibility changes between the two server reads remain unverified."
+      }
+    },
+    {
+      "id": "EVT-AFFINITY-ORDER-001",
+      "title": "Events page ordered by the caller's affinity to the lineups",
+      "statement": "With EVENT_AFFINITY_ORDER_ENABLED on, GET /social-events/events?scope=for_you returns the page that scope=all returns for the same parameters, ordered by event affinity, largest first, keeping the date order among equal affinities. The affinity of an event is the largest affinity among the artists of its lineup; an artist the caller has a signal for (follow, favourite, accepted RSVP or play) has affinity 1 + min(weight, 8)/8, and any other usable artist the mean over the caller's usable seeds of strength times the stored similarity of COMMUNITY-ARTIST-SIMILARITY-001, capped at 1. Usable artists are publicly listed, are not the caller, and are followed by the caller or followable under the installed follow policy. A caller without affinities, a caller who switched personalisation off, and every caller while the flag is off receive exactly the page of scope=all.",
+      "domain": "EVT",
+      "authority": "Owner instruction of 2026-11-22 to continue with the recommended defaults. The rule (permutation inside one page, own signals above inferred ones, mean over seeds) is the implementer's default and was not approved item by item.",
+      "source": "formal/system/event-affinity.md",
+      "contract": "tdf-hq/src/TDF/Fans/EventAffinity.hs",
+      "property": "result = orderByAffinity(affinities, lineup, page) where page is the result of scope=all. result is a permutation of page. For positions p < q in result: eventAffinity(result[p]) > eventAffinity(result[q]), or they are equal and result[p] precedes result[q] in page. affinity(a) is defined only for usable a: 1 + min(w(caller,a),8)/8 if w(caller,a) > 0, else min(1, (SUM over usable seeds s of min(w(caller,s),8)/8 * sim(s,a)) / |usable seeds|) when positive. usable(a) = listed(a) /\\ a # caller /\\ (followed(a) \\/ ~excluded(a)). personalised(caller) = false \\/ flag off => result = page.",
+      "actors": [
+        "Fan",
+        "Customer",
+        "Artist",
+        "Admin"
+      ],
+      "preconditions": [
+        "Authenticated session",
+        "EVENT_AFFINITY_ORDER_ENABLED=true",
+        "scope=for_you"
+      ],
+      "inputs": [
+        "GET /social-events/events with scope=for_you and the filters, limit and offset of scope=all",
+        "fan_follow, music_favorite, event_rsvp, music_playback_event and social_v2_preference rows of the caller",
+        "event_artist and social_artist_profile rows of the page",
+        "The stored similarity (artist_similarity_pair, artist_similarity_norm)"
+      ],
+      "state": {
+        "initial": "Page chosen by the date-ordered query",
+        "terminal": [
+          "Page ordered by affinity",
+          "Page unchanged"
+        ]
+      },
+      "allowedTransitions": [
+        "Permute the rows of one page",
+        "A request reads; it never writes"
+      ],
+      "forbiddenTransitions": [
+        "Returning an event the page of scope=all does not contain, or dropping one it contains",
+        "Giving an affinity to, or taking a contribution from, an artist that is not publicly listed, is the caller, or is neither followed nor followable",
+        "Reading the favourites, RSVPs or plays of a caller who switched personalisation off",
+        "Changing the order of events with equal affinity",
+        "Any write by the request"
+      ],
+      "effects": [
+        "None; read-only"
+      ],
+      "authorization": "That of GET /social-events/events; event visibility is decided by the existing query and is not changed.",
+      "privacy": "The response has the shape and the events of scope=all; only the order inside the page depends on the caller's own signals. No other person's identity or behaviour is read at request time; the stored similarity holds aggregates supported by at least two fans. Hidden artists are neither evidence nor contributors, as of the request's own read of the listing.",
+      "concurrency": "The page query and the affinity reads are separate statements at READ COMMITTED. The page set is fixed by the first; listing, follows, policy, signals and lineups are seen as of their own read.",
+      "idempotency": "Read-only.",
+      "failure": "scope outside all, subscribed, for_you: 400 as before. No usable stored generation: only own signals order the page. A lineup entry whose profile has no canonical party id is not evidence.",
+      "recovery": "None needed.",
+      "observability": "None added.",
+      "implementation": [
+        "tdf-hq/src/TDF/Fans/EventAffinity.hs",
+        "tdf-hq/src/TDF/Fans/ArtistSimilarity.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts",
+        "tdf-hq-ui/src/config/eventAffinityRollout.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Fans/EventAffinitySpec.hs",
+        "tdf-hq/test/ArtistSimilarityProbe.hs",
+        "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts"
+      ],
+      "formalModels": [
+        "formal/fans/EventAffinity.tla",
+        "formal/fans/event_affinity_order.py"
+      ],
+      "verification": "PROVED (Z3, on a hand translation pinned by source hash, with witnesses and guard-necessity controls): an artist with an affinity and a seed contributing to one are usable; own-signal affinities are numbers in (1, 2], inferred ones in [0, 1], event affinities numbers that are not negative; the page key is a strict total order on distinct positions. PROVED (Apalache inductive invariant, for the TLA+ model, three artists and two events, artists hidden and shown, signals changing and the job running at any time): no artist hidden at the request's read is evidence, the response holds exactly the events of the page, a promoted event has a listed lineup artist that is evidence. MODEL-CHECKED (TLC, two artists and two events): the same, with a negative control (listing taken from the stored relation's snapshot) that violates it, also reproduced by Apalache. TESTED (Hspec and QuickCheck): permutation, identity without affinity, order by key, stability, idempotence, bounds, non-usable artists never evidence, fixed values; (PostgreSQL probe on a fixture) lineups, stored affinities equal to the reference, range, opt-out; (Jest) the web page-size and flag helpers. NOT VERIFIED: the handler wiring beyond compilation and review; no HTTP-level test of scope=for_you; the web switch beyond typecheck, lint and helper tests.",
+      "evidence": "formal/fans/event_affinity_order.py output; scripts/verify-inductive-proofs.sh output; tdf-hq-test EventAffinitySpec run; scripts/test-artist-similarity-postgres.sh output; tdf-hq-ui jest run of src/pages/eventDiscoveryFilters.test.ts.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the pure core (tested) and for the model and translation properties (proved). Medium for the step from model and translation to the running code: review plus the PostgreSQL probe. Low for the handler wiring and the web switch: compilation, typecheck and review only.",
+      "ambiguity": [
+        "The task names TDF.Services.EventDiscovery, which is ingestion; the order a person sees is decided in listEvents, so the rule was specified there by the implementer.",
+        "The order is a permutation inside one page; a global order across pages was not attempted and would need its own pagination contract.",
+        "An artist the caller follows that later becomes unfollowable under the policy still counts, because the recommendation frame does not distinguish it from a followed artist.",
+        "The inferred affinity is a mean over the caller's seeds, so many unrelated seeds dilute it.",
+        "The proofs are about a TLA+ model without weights and about a hand translation; neither is mechanically refined to the Haskell and SQL.",
+        "The web page asks for exactly one page when ordered for the listener, so a last page that is exactly full offers an empty next page."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Pure core, model and translation verified as stated; the handler wiring and the web switch have no HTTP-level or browser test."
       },
       "historicalStatus": null
     },

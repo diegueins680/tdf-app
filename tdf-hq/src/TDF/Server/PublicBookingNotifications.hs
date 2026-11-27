@@ -4,6 +4,8 @@
 -- (BOOK-PUBLIC-INTAKE-001).
 module TDF.Server.PublicBookingNotifications
   ( notifyPublicBookingRequest
+  , resolveAlertRecipients
+  , parseAlertPartyIds
   ) where
 
 import           Control.Applicative ((<|>))
@@ -11,6 +13,7 @@ import           Control.Concurrent (forkIO)
 import           Control.Exception (SomeException, displayException, try)
 import           Control.Monad (forM_, mfilter, unless, void)
 import           Data.Char (isDigit)
+import           Data.Int (Int64)
 import           Data.List (nub)
 import           Data.Maybe (fromMaybe)
 import           Data.Text (Text)
@@ -18,9 +21,10 @@ import qualified Data.Text as T
 import           Data.Time (getCurrentTime, hoursToTimeZone, utcToLocalTime)
 import           Data.Time.Format (defaultTimeLocale, formatTime)
 import           Database.Persist (get, insert_)
-import           Database.Persist.Sql (runSqlPool)
+import           Database.Persist.Sql (runSqlPool, toSqlKey)
 import           System.Environment (lookupEnv)
 import           System.IO (hPutStrLn, stderr)
+import           Text.Read (readMaybe)
 
 import           TDF.Catalog.Security (selectCanonicalPartyIdsByRole)
 import           TDF.DB (Env(..))
@@ -44,6 +48,10 @@ import           TDF.WhatsApp.Transport (WhatsAppEnv, loadWhatsAppEnv, sendWhats
 -- WHATSAPP_STAFF_ALERT_TEMPLATE (body variables: 1 service, 2 customer,
 -- 3 start, 4 contact; language WHATSAPP_STAFF_ALERT_TEMPLATE_LANGUAGE,
 -- default es) when it is configured, and free-form text otherwise.
+--
+-- Staff recipients are the parties listed in PUBLIC_BOOKING_ALERT_PARTY_IDS
+-- (comma-separated party ids) when it names at least one; otherwise every
+-- active Admin, Manager and StudioManager.
 notifyPublicBookingRequest :: Env -> DTO.BookingDTO -> Text -> Text -> Maybe Text -> IO ()
 notifyPublicBookingRequest Env{envPool = pool, envConfig = cfg} booking customerName customerEmail mPhone = do
   now <- getCurrentTime
@@ -71,10 +79,12 @@ notifyPublicBookingRequest Env{envPool = pool, envConfig = cfg} booking customer
         let msg = "[Bookings] Failed to " <> detail <> " (booking " <> T.pack (show bookingKey) <> ")"
         hPutStrLn stderr (T.unpack msg)
         LogBuf.addLog LogBuf.LogWarning msg
+  configuredRecipients <- maybe [] (parseAlertPartyIds . T.pack) <$> lookupEnv "PUBLIC_BOOKING_ALERT_PARTY_IDS"
   staffResult <- (try $ flip runSqlPool pool $ do
-    groups <- mapM selectCanonicalPartyIdsByRole [M.Admin, M.Manager, M.StudioManager]
-    let recipients = nub (concat groups)
-    forM_ recipients $ \recipient -> insert_ M.Notification
+    staff <- resolveAlertRecipients get
+      (nub . concat <$> mapM selectCanonicalPartyIdsByRole [M.Admin, M.Manager, M.StudioManager])
+      (map toSqlKey configuredRecipients :: [PartyId])
+    forM_ staff $ \(recipient, _) -> insert_ M.Notification
       { M.notificationRecipientPartyId = recipient
       , M.notificationNotifType = "public_booking_request"
       , M.notificationTitle = "Nueva solicitud: " <> serviceLabel
@@ -85,10 +95,7 @@ notifyPublicBookingRequest Env{envPool = pool, envConfig = cfg} booking customer
       , M.notificationIsRead = False
       , M.notificationCreatedAt = now
       }
-    parties <- mapM get recipients
-    pure [ (recipient, party)
-         | (recipient, Just party) <- zip recipients parties
-         ]) :: IO (Either SomeException [(PartyId, Party)])
+    pure staff) :: IO (Either SomeException [(PartyId, Party)])
   staff <- case staffResult of
     Left err -> do
       logFailure "notify staff in-app" (Left err)
@@ -168,3 +175,30 @@ notifyPublicBookingRequest Env{envPool = pool, envConfig = cfg} booking customer
         go seen (x:xs)
           | key x `elem` seen = go seen xs
           | otherwise = x : go (key x : seen) xs
+
+-- | Keep configured parties that exist. If none resolve, look up the role recipients.
+resolveAlertRecipients
+  :: Monad m => (key -> m (Maybe party)) -> m [key] -> [key] -> m [(key, party)]
+resolveAlertRecipients lookupParty roleRecipients configured = do
+  matches <- resolve configured
+  if null matches then roleRecipients >>= resolve else pure matches
+  where
+    resolve keys = do
+      parties <- mapM lookupParty keys
+      pure [(key, party) | (key, Just party) <- zip keys parties]
+
+-- | Party ids from PUBLIC_BOOKING_ALERT_PARTY_IDS: comma- or space-separated
+-- positive integers, in order, without duplicates. Anything else is ignored,
+-- so a malformed value falls back to the role-based recipients.
+parseAlertPartyIds :: Text -> [Int64]
+parseAlertPartyIds raw =
+  nub
+    [ n
+    | token <- T.split (\c -> c == ',' || c == ' ' || c == ';') raw
+    , let digits = T.strip token
+    , not (T.null digits)
+    , T.all isDigit digits
+    , Just value <- [readMaybe (T.unpack digits) :: Maybe Integer]
+    , value > 0, value <= toInteger (maxBound :: Int64)
+    , let n = fromInteger value
+    ]

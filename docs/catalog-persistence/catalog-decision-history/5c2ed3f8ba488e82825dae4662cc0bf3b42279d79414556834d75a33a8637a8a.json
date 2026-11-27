@@ -1,0 +1,26 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "2fbe85dc2eccf49b01cd",
+  "reviewed": true,
+  "justification": "Keep the reviewed migration sequence from main 228ab63e and append the location and genre filters migration followed by the Unicode suggestion-key and unavailable-genre corrections. Retain the independent parent review histories of the loudness and taxonomy lists.",
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "taxonomy-filters-main-integration-20261124",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 271
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:4c0c7a51f06d9355e78bcc8e1538bb9d25b9e24e627cf34811767d530cee55ea"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:e534c249ba5da74ebc4b96cce59f58fc3a0ea3c3b199b711fab0d31544167562"
+    }
+  ]
+}

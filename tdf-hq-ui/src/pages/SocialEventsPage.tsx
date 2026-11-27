@@ -1,3 +1,8 @@
+import { Taxonomy } from '../api/taxonomy';
+import TaxonomyFilterBar from '../components/taxonomyFilters/TaxonomyFilterBar';
+import { isTaxonomySelectionEmpty } from '../components/taxonomyFilters/taxonomyFilterModel';
+import { useProfileCityDefault } from '../components/taxonomyFilters/useProfileCityDefault';
+import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from '../components/taxonomyFilters/useTaxonomyFilters';
 import ArtistProfileLink from '../components/ArtistProfileLink';
 import { formatEventMoney as formatMoney } from '../utils/eventFinanceMoney';
 import { parseOptionalPriceCents } from '../utils/priceInput';
@@ -78,7 +83,8 @@ import EventTaxDocumentsPanel from '../components/events/EventTaxDocumentsPanel'
 import { RefundManagementPanel } from '../components/RefundManagementPanel';
 import ConfirmDialog from '../components/ConfirmDialog';
 import EventArtistSelector from '../components/events/EventArtistSelector';
-import { EVENT_PAGE_SIZE, eventArtistIds, eventPage, isPastEvent } from './eventDiscoveryFilters';
+import { EVENT_PAGE_SIZE, eventArtistIds, eventForYouOrder, eventHasNextPage, eventPage, eventPageLimit, isPastEvent } from './eventDiscoveryFilters';
+import { isEventAffinityOrderEnabled } from '../config/eventAffinityRollout';
 
 interface InvitationState {
   party: PartySelectorOption | null;
@@ -298,11 +304,6 @@ export default function SocialEventsPage() {
     if (key !== 'page') next.delete('page');
     return next;
   }, { replace: key === 'city' });
-  const clearFilters = () => setSearchParams(previous => {
-    const next = new URLSearchParams(previous);
-    ['city', 'type', 'state', 'artists', 'past', 'page'].forEach(key => next.delete(key));
-    return next;
-  });
   const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
   const [invites, setInvites] = useState<Record<string, InvitationState>>({});
   const [ticketPurchases, setTicketPurchases] = useState<Record<string, TicketPurchaseState>>({});
@@ -318,7 +319,16 @@ export default function SocialEventsPage() {
   const sessionPartyId = session?.partyId != null ? String(session.partyId) : null;
   const hasSession = Boolean(sessionPartyId);
   const hasAdminAccess = hasStrictAdminAccess(session?.roles, session?.modules);
-  const eventsQueryKey = ['social-events', sessionPartyId, cityFilter, eventTypeFilter, eventWorkflowStateFilter, artistIds.join(','), includePast, page] as const;
+  const forYouAvailable = isEventAffinityOrderEnabled() && hasSession;
+  const forYou = eventForYouOrder(searchParams.get('order'), isEventAffinityOrderEnabled(), hasSession);
+  // TAX-FILTER-001: events follow the shared location (venue) and genre
+  // (lineup) filters; the free-text city search above stays as it was.
+  const taxonomyOptions = useTaxonomyFilterOptions();
+  const profileCity = useProfileCityDefault(taxonomyOptions.data);
+  const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true });
+  const taxonomySelection = taxonomyFilters.selection;
+  const taxonomyKey = JSON.stringify(taxonomySelection);
+  const eventsQueryKey = ['social-events', sessionPartyId, cityFilter, eventTypeFilter, eventWorkflowStateFilter, artistIds.join(','), includePast, page, forYou, taxonomyKey] as const;
 
   const eventsQuery = useQuery({
     queryKey: eventsQueryKey,
@@ -329,9 +339,11 @@ export default function SocialEventsPage() {
         workflowStateId: eventWorkflowStateFilter || undefined,
         artistIds,
         startAfter: includePast ? undefined : new Date().toISOString(),
-        limit: EVENT_PAGE_SIZE + 1,
+        limit: eventPageLimit(forYou),
         offset: (page - 1) * EVENT_PAGE_SIZE,
+        forYou,
         signal,
+        taxonomy: taxonomySelection,
       }),
     enabled: city.trim() === cityFilter,
     // This page already exposes an explicit refresh action. Retrying a failed
@@ -390,8 +402,22 @@ export default function SocialEventsPage() {
   ]));
   const hasVenueError = venueQueries.some((query) => query.isError);
 
-  const hasNextPage = (eventsQuery.data?.length ?? 0) > EVENT_PAGE_SIZE;
-  const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventWorkflowStateFilter !== '' || artistIds.length > 0 || includePast || page > 1;
+  const hasNextPage = eventHasNextPage(forYou, eventsQuery.data?.length ?? 0);
+  const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventWorkflowStateFilter !== '' || artistIds.length > 0 || includePast || forYou || page > 1
+    || !isTaxonomySelectionEmpty(taxonomySelection);
+  const eventFacets = useQuery({
+    queryKey: ['social-events', 'facets', sessionPartyId, cityFilter, eventTypeFilter, eventWorkflowStateFilter, artistIds.join(','), includePast, taxonomyKey],
+    queryFn: ({ signal }) => Taxonomy.eventFacets(taxonomySelection, {
+      city: cityFilter || undefined,
+      eventTypeId: eventTypeFilter || undefined,
+      workflowStateId: eventWorkflowStateFilter || undefined,
+      artistIds,
+      startAfter: includePast ? undefined : new Date().toISOString(),
+    }, signal),
+    enabled: hasSession && city.trim() === cityFilter,
+    retry: false,
+    staleTime: 60_000,
+  });
   const eventOverviewUiState = getSocialEventsOverviewUiState({
     canCreateEvent: hasSession,
     eventCount: events.length,
@@ -1054,7 +1080,19 @@ export default function SocialEventsPage() {
           <FormControlLabel label="Incluir eventos pasados" control={
             <Switch checked={includePast} onChange={(_event, checked) => updateFilter('past', checked ? '1' : '')} />
           } />
-          {eventFiltersActive && <Button onClick={clearFilters}>Limpiar filtros</Button>}
+          {forYouAvailable && (
+            <FormControlLabel label="Ordenar según mis artistas" control={
+              <Switch checked={forYou} onChange={(_event, checked) => updateFilter('order', checked ? 'for_you' : '')} />
+            } />
+          )}
+          {eventFiltersActive && (
+            <Button
+              sx={{ width: { xs: '100%', md: 'auto' } }}
+              onClick={() => taxonomyFilters.clearAll(['city', 'type', 'state', 'artists', 'past', 'order'])}
+            >
+              Limpiar filtros
+            </Button>
+          )}
           {showRefreshAction && (
             <Button
               variant="outlined"
@@ -1084,6 +1122,8 @@ export default function SocialEventsPage() {
             </Alert>
           )}
         </Stack>
+        <TaxonomyFilterBar profileCity={profileCity} idPrefix="events" filters={taxonomyFilters} options={taxonomyOptions.data} optionsError={taxonomyOptions.isError}
+          facets={eventFacets.data} />
         {eventCreateUiState.showCreateWelcome && (
           <Card
             variant="outlined"

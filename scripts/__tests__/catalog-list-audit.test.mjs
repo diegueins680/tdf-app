@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
+import { isDeepStrictEqual, promisify } from 'node:util';
 import { DECISIONS_FILE, expandAtRevision, readExpandedDecisions } from '../lib/catalog-decision-history.mjs';
 
 // Complete retained parent assertions; dated inputs are explicitly projected.
@@ -6523,20 +6523,30 @@ const integrationFiles = new Map([
   ['docs/catalog-persistence/event-catalog-current-successors.json', 'successors'],
   ['docs/catalog-persistence/event-integration-retirements.json', 'retirements'],
 ]);
-const integrationCanonical = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
-  ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
+// Index small object shapes so each lookup compares only plausible matches.
+// Serializing each entire subtree here duplicates the expanded review history.
+function integrationLookupKey(node) {
+  if (Array.isArray(node)) return `array/${node.length}`;
+  return JSON.stringify([Object.keys(node).sort(), node.id ?? null, node.name ?? null]);
+}
+
 function integrationFind(value, expected) {
-  if (!value || typeof value !== 'object') return undefined;
+  if (!value || typeof value !== 'object' || !expected || typeof expected !== 'object') return undefined;
   if (!integrationIndexes.has(value)) {
     const index = new Map();
     const visit = node => {
       if (!node || typeof node !== 'object') return;
-      index.set(integrationCanonical(node), node);
+      const key = integrationLookupKey(node);
+      const bucket = index.get(key);
+      if (bucket) bucket.push(node);
+      else index.set(key, [node]);
       for (const child of Object.values(node)) visit(child);
     };
-    visit(value); integrationIndexes.set(value, index);
+    visit(value);
+    integrationIndexes.set(value, index);
   }
-  return integrationIndexes.get(value).get(integrationCanonical(expected));
+  const candidates = integrationIndexes.get(value).get(integrationLookupKey(expected)) ?? [];
+  return candidates.find(node => isDeepStrictEqual(node, expected));
 }
 async function integrationParent(ref, file) {
   const key = `${ref}:${file}`;
@@ -6592,6 +6602,90 @@ async function integrationSource(ref, file) {
 // Retain both original published parents and additionally guard latest published main.
 const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1", "5a81672285dc9c03130fc9fd8355e2b4c58e9e12"];
 
+// Qualify the new append against both published parents before running their historical assertions.
+async function manifestBeforeVenueCoordinates(file) {
+  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const entry = current.migrations.at(-1);
+  const original = (await integrationParent('218797e0c3c8d4c5af839f10c42b3549d4f7f7c5', file)).migrations.at(-1);
+  assert.equal(entry.id, '2026-11-24_venue_coordinate_constraint');
+  assert.deepEqual(entry, original);
+  return { ...current, migrations: current.migrations.slice(0, -1) };
+}
+
+test('venue coordinates append the original SQL after the protected migration sequence', async () => {
+  const file = 'scripts/production-migrations.json';
+  const parent = await integrationParent('422a524684ca068b2b4f609688f0ba838919effb', file);
+  assert.deepEqual(await manifestBeforeVenueCoordinates(file), parent);
+  const { migrations } = await integrationParent('218797e0c3c8d4c5af839f10c42b3549d4f7f7c5', file);
+  const entry = migrations.at(-1);
+  await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), await integrationSource(entry.introducedBy, entry.path));
+});
+
+async function manifestBeforeTaxonomy(file) {
+  const suggestions = await manifestBeforeVenueCoordinates(file);
+  assert.equal(suggestions.migrations.at(-1).id, '2026-11-21_social_friend_suggestions');
+  const current = { ...suggestions, migrations: suggestions.migrations.slice(0, -1) };
+  const original = (await integrationParent('be996410572a72f8f787b2cd5d345b30523ba1ea', file)).migrations.at(-1);
+  assert.equal(original.id, '2026-11-21_location_genre_filters');
+  assert.deepEqual(current.migrations.at(-3), original);
+  const additions = current.migrations.slice(-2);
+  assert.deepEqual(additions.map(entry => entry.id), ['2026-11-24_unicode_genre_suggestion_keys', '2026-11-24_preserve_selected_genre_ids']);
+  for (const entry of additions) {
+    assert.equal(entry.path, `tdf-hq/sql/${entry.id}.sql`);
+    assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), await integrationSource(entry.introducedBy, entry.path));
+    await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  }
+  return { ...current, migrations: current.migrations.slice(0, -3) };
+}
+
+test('taxonomy appends its original migration to the full loudness manifest', async () => {
+  const file = 'scripts/production-migrations.json';
+  assert.deepEqual(await manifestBeforeTaxonomy(file), await integrationParent('228ab63e448b93970aa0bb32af6320c4cfb88e57', file));
+  const { migrations } = await integrationParent('be996410572a72f8f787b2cd5d345b30523ba1ea', file);
+  const entry = migrations.at(-1);
+  await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), await integrationSource(entry.introducedBy, entry.path));
+});
+
+async function manifestBeforeLoudness(file) {
+  const current = await manifestBeforeTaxonomy(file);
+  const original = (await integrationParent('f008ebb18d9aa7c2e892301ddf435d0da6020e2f', file)).migrations.at(-1);
+  assert.equal(original.id, '2026-11-21_music_audio_measurement');
+  assert.deepEqual(current.migrations.at(-1), original);
+  return { ...current, migrations: current.migrations.slice(0, -1) };
+}
+
+function decisionBeforeLoudness(decisions) {
+  const merged = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations');
+  const suggestions = merged.previousDecision;
+  assert.equal(suggestions.reviewBatch, 'friend-suggestions-main-integration-20261124');
+  const [coordinates] = merged.concurrentReviewHistory;
+  assert.equal(coordinates.reviewBatch, 'venue-coordinate-constraint-main-integration-20261124');
+  assert.equal(coordinates.evidence.valueCount, coordinates.previousDecision.evidence.valueCount + 1);
+  assert.equal(coordinates.concurrentReviewHistory[0].reviewBatch, 'venue-coordinate-constraint-20261124');
+  assert.deepEqual(suggestions.previousDecision, coordinates.previousDecision);
+  const taxonomy = suggestions.previousDecision;
+  assert.equal(taxonomy.reviewBatch, 'taxonomy-filters-main-integration-20261124');
+  assert.equal(taxonomy.evidence.valueCount, taxonomy.previousDecision.evidence.valueCount + 3);
+  assert.equal(taxonomy.concurrentReviewHistory[0].evidence.file, 'scripts/production-migrations.json');
+  const tip = taxonomy.previousDecision;
+  assert.equal(tip.reviewBatch, 'music-loudness-main-integration-20261124');
+  assert.equal(tip.evidence.valueCount, tip.previousDecision.evidence.valueCount + 1);
+  assert.equal(tip.concurrentReviewHistory[0].reviewBatch, 'music-loudness-check-20261121');
+  return tip.previousDecision;
+}
+
+test('music loudness appends the original SQL migration to the complete main manifest', async () => {
+  const file = 'scripts/production-migrations.json';
+  const parent = await integrationParent('39935739e2def3817eaa2b84229cc2cc4b4941f1', file);
+  assert.deepEqual(await manifestBeforeLoudness(file), parent);
+  const { migrations } = await manifestBeforeTaxonomy(file);
+  const { introducedBy, path: sql } = migrations.at(-1);
+  await integrationExec('git', ['merge-base', '--is-ancestor', introducedBy, 'HEAD'], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, sql), 'utf8'), await integrationSource(introducedBy, sql));
+});
+
 // EVT-VENUE-SEARCH-001 appends one migration after the directory semantic search entry.
 // Earlier reviews are verified over the manifest without that entry.
 const VENUE_SEARCH_ENTRY = '2026-11-21_venue_search_sql';
@@ -6610,7 +6704,7 @@ const beforeArtistSimilarity = decision => (
 
 test('venue search appends its migration last, unchanged since its introduction, with the previous review nested', async () => {
   const file = 'scripts/production-migrations.json';
-  const manifest = withoutArtistSimilarity(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')));
+  const manifest = withoutArtistSimilarity(await manifestBeforeLoudness(file));
   const entry = manifest.migrations.at(-1);
   assert.equal(entry.id, VENUE_SEARCH_ENTRY);
   assert.equal(manifest.migrations.filter(row => row.id === VENUE_SEARCH_ENTRY).length, 1);
@@ -6618,7 +6712,7 @@ test('venue search appends its migration last, unchanged since its introduction,
   const { stdout } = await integrationExec('git', ['show', entry.introducedBy + ':' + entry.path], { cwd: integrationRoot });
   assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), stdout);
   const decisions = readExpandedDecisions(integrationRoot).decisions;
-  const tip = beforeArtistSimilarity(decisions.find(row => row.evidence?.file === file && row.evidence?.name === 'migrations'));
+  const tip = beforeArtistSimilarity(decisionBeforeLoudness(decisions));
   assert.equal(tip.reviewBatch, 'venue-search-sql-20261121');
   assert.equal(tip.evidence.valueCount, manifest.migrations.length);
   assert.equal(tip.previousDecision.evidence.valueCount, manifest.migrations.length - 1);
@@ -6651,7 +6745,7 @@ async function withoutChatDelivery(manifest) {
 
 test('actual UX/storage composition preserves current main, immutable SQL and both complete review graphs', async () => {
   const file = 'scripts/production-migrations.json';
-  const raw = withoutVenueSearch(withoutArtistSimilarity(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'))));
+  const raw = withoutVenueSearch(withoutArtistSimilarity(await manifestBeforeLoudness(file)));
   // The directory semantic search migration (DIR-SEMANTIC-SEARCH-001) is the
   // last reviewed append; it has its own test below.
   assert.equal(raw.migrations.at(-1).id, '2026-11-21_directory_semantic_search');
@@ -6689,7 +6783,7 @@ test('studio gallery appends its original migration and preserves both complete 
   const gallery = '279c1fa994e9cada3e39dc6953a8ef24a6faf7ea';
   const before = await integrationParent(base, file);
   const original = (await integrationParent(gallery, file)).migrations.at(-1);
-  const raw = withoutVenueSearch(withoutArtistSimilarity(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'))));
+  const raw = withoutVenueSearch(withoutArtistSimilarity(await manifestBeforeLoudness(file)));
   assert.equal(original.id, '2026-11-07_studio_gallery');
   // The directory semantic search migration is appended last (next test).
   assert.equal(raw.migrations.at(-1).id, '2026-11-21_directory_semantic_search');
@@ -6711,7 +6805,7 @@ test('directory semantic search appends its migration after the chat delivery mi
   const file = 'scripts/production-migrations.json';
   const main = '6142acf4cb33bee1aff32daf4c283210344feb4b';
   const before = await integrationParent(main, file);
-  const current = withoutVenueSearch(withoutArtistSimilarity(JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'))));
+  const current = withoutVenueSearch(withoutArtistSimilarity(await manifestBeforeLoudness(file)));
   const added = current.migrations.at(-1);
   assert.deepEqual(added, {
     id: '2026-11-21_directory_semantic_search',
@@ -6728,7 +6822,7 @@ test('directory semantic search appends its migration after the chat delivery mi
     { cwd: integrationRoot, maxBuffer: 512 * 1024 * 1024 });
   const previous = JSON.parse(published.stdout).decisions
     .find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
-  const tip = beforeArtistSimilarity(decisions.find(row => row.evidence?.file === file && row.evidence?.name === 'migrations'));
+  const tip = beforeArtistSimilarity(decisionBeforeLoudness(decisions));
   // EVT-VENUE-SEARCH-001 reviews the next append and nests this review unchanged.
   const successor = tip.reviewBatch === 'venue-search-sql-20261121' ? tip.previousDecision : tip;
   assert.equal(successor.evidence.valueCount, before.migrations.length + 1);
@@ -6739,7 +6833,7 @@ test('artist similarity appends exactly one migration after venue search and nes
   const file = 'scripts/production-migrations.json';
   const main = '1184f9ffeffa2fd5f280fad2f026c12ab7224f4d';
   const before = await integrationParent(main, file);
-  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const current = await manifestBeforeLoudness(file);
   const added = current.migrations.at(-1);
   assert.deepEqual(added, {
     id: ARTIST_SIMILARITY_ENTRY,
@@ -6757,8 +6851,7 @@ test('artist similarity appends exactly one migration after venue search and nes
     { cwd: integrationRoot, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   const previous = expandAtRevision(JSON.parse(published.stdout), readObject).decisions
     .find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
-  const successor = readExpandedDecisions(integrationRoot).decisions
-    .find(row => row.evidence?.file === file && row.evidence?.name === 'migrations');
+  const successor = decisionBeforeLoudness(readExpandedDecisions(integrationRoot).decisions);
   assert.equal(previous.reviewBatch, 'venue-search-sql-20261121');
   assert.equal(successor.evidence.valueCount, before.migrations.length + 1);
   assert.equal(successor.reviewBatch, ARTIST_SIMILARITY_BATCH);
@@ -6836,8 +6929,11 @@ test('current My tickets mirror matches its generator and rejects the prior main
     assert.equal(selected.length, ids.size);
     const current = selected.find(row => row.evidence?.name === 'mobileFeatureRegistry');
     assert.ok(current);
-    assert.equal(current.id, '105fd7b2786498f6bb56');
-    assert.equal(current.previousDecision.id, 'ea29c6e8a6cd165802a8');
+    // The taxonomy filters successor (one appended feature) keeps the My
+    // tickets review whole as its predecessor.
+    assert.equal(current.id, 'd2149b0cbd417238e171');
+    assert.equal(current.previousDecision.id, '105fd7b2786498f6bb56');
+    assert.equal(current.previousDecision.previousDecision.id, 'ea29c6e8a6cd165802a8');
     const decisions = path.join(temporary, 'decisions.json');
     await fs.writeFile(decisions, JSON.stringify(selected));
     const args = [path.join(integrationRoot, 'scripts/catalog-list-audit.mjs'), '--root', repo, '--decisions', decisions, '--fail-on-unreviewed'];
@@ -6856,4 +6952,37 @@ test('sidebar and tab lists retain their six individually reviewed decisions', a
   const reviewed = published.decisions.filter(row => row.reviewBatch === batch);
   assert.equal(reviewed.length, 6);
   assert.deepEqual(readExpandedDecisions(integrationRoot).decisions.filter(row => row.reviewBatch === batch), reviewed);
+});
+
+test('friend suggestions append one original migration and preserve the protected main review', async () => {
+  const base = 'bddc0a2a6c18ef101db3c7750a4ec7fe7f01b4d8';
+  const file = 'scripts/production-migrations.json';
+  const before = await integrationParent(base, file);
+  const current = await manifestBeforeVenueCoordinates(file);
+  const added = current.migrations.at(-1);
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, added] });
+  assert.equal(new Set(current.migrations.map(row => row.id)).size, current.migrations.length);
+  assert.equal(added.id, '2026-11-21_social_friend_suggestions');
+  assert.equal(added.path, 'tdf-hq/sql/2026-11-21_social_friend_suggestions.sql');
+  assert.equal(await fs.readFile(path.join(integrationRoot, added.path), 'utf8'), await integrationSource(added.introducedBy, added.path));
+  await integrationExec('git', ['merge-base', '--is-ancestor', added.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const published = await integrationParent(base, DECISIONS_FILE);
+  const readObject = objectPath => execFileSync('git', ['show', base + ':' + objectPath], { cwd: integrationRoot, encoding: 'utf8' });
+  const manifestDecision = document => document.decisions.find(row => row.evidence?.file === file);
+  const tip = manifestDecision(readExpandedDecisions(integrationRoot)).previousDecision;
+  assert.equal(tip.evidence.valueCount, current.migrations.length);
+  assert.deepEqual(tip.previousDecision, manifestDecision(expandAtRevision(published, readObject)));
+});
+
+test('the combined manifest retains both complete migration reviews', async () => {
+  const manifestDecision = document => document.decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json');
+  const merged = manifestDecision(readExpandedDecisions(integrationRoot));
+  assert.equal(merged.evidence.valueCount, 273);
+  const parentReview = async ref => {
+    const document = await integrationParent(ref, DECISIONS_FILE);
+    const readObject = file => execFileSync('git', ['show', ref + ':' + file], { cwd: integrationRoot, encoding: 'utf8' });
+    return manifestDecision(expandAtRevision(document, readObject));
+  };
+  assert.deepEqual(merged.previousDecision, await parentReview('422a524684ca068b2b4f609688f0ba838919effb'));
+  assert.deepEqual(merged.concurrentReviewHistory, [await parentReview('83e3c864cab056800b833cf82dac94fc8463645d')]);
 });

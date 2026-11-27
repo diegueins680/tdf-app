@@ -1,0 +1,21 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "535e84169238df8154ac",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "music-loudness-check-20261121",
+  "justification": "Preserve all 264 reviewed migration objects of protected main 030ca5c3b0c993a8783a1146d75c8f7bc48188a9 in their exact order and append only 2026-11-21_music_audio_measurement (MEDIA-MUSIC-LOUDNESS-001): one additive table with its lifecycle trigger, two worker functions, one asset hook and two disabled feature-flag rows. No existing entry, introduction commit or SQL file changes, and the complete prior review graph remains nested unchanged as previousDecision. This author review does not authorize deployment or enabling the flag and is not independent approval.",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 265
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:379128378cc4adc104c5c8043b8950624bcc0b4b471940d44da8e3838628805f"
+  }
+}

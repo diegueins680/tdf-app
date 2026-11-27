@@ -1,3 +1,4 @@
+import { appendTaxonomyParams, type TaxonomySelection } from './taxonomy';
 import { assertSafeEventFinanceMoney } from '../utils/eventFinanceMoney';
 import { del, get, post, postForm, put } from './client';
 
@@ -694,9 +695,11 @@ export const SocialEventsAPI = {
     const path = `/social-events/upcoming${qs}`;
     return await (opts?.signal ? getUnknown(path, { signal: opts.signal }) : getUnknown(path)) as PublicUpcomingEventDTO[];
   },
-  listEvents: async (opts?: { city?: string; startAfter?: string; eventTypeId?: string; workflowStateId?: string; artistId?: string; artistIds?: readonly string[]; venueId?: string; limit?: number; offset?: number; signal?: AbortSignal }) => {
+  listEvents: async (opts?: { city?: string; startAfter?: string; eventTypeId?: string; workflowStateId?: string; artistId?: string; artistIds?: readonly string[]; venueId?: string; limit?: number; offset?: number; forYou?: boolean; signal?: AbortSignal; taxonomy?: Partial<TaxonomySelection> }) => {
     const qs = buildQuery({
       city: opts?.city,
+      // EVT-AFFINITY-ORDER-001: the same page, ordered by the caller's affinity.
+      scope: opts?.forYou ? 'for_you' : undefined,
       start_after: opts?.startAfter,
       event_type_id: opts?.eventTypeId,
       workflow_state_id: opts?.workflowStateId,
@@ -705,7 +708,9 @@ export const SocialEventsAPI = {
       limit: opts?.limit,
       offset: opts?.offset,
     });
-    const path = `/social-events/events${qs}`;
+    // TAX-FILTER-001: venue location and lineup genres (repeatable parameters).
+    const taxonomyQs = appendTaxonomyParams(new URLSearchParams(), opts?.taxonomy).toString();
+    const path = `/social-events/events${qs}${taxonomyQs ? `${qs ? '&' : '?'}${taxonomyQs}` : ''}`;
     return await (opts?.signal ? getUnknown(path, { signal: opts.signal }) : getUnknown(path)) as SocialEventDTO[];
   },
   listArtists: async (opts?: { name?: string; signal?: AbortSignal }) => {

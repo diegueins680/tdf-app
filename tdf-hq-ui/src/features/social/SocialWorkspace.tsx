@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, Button, Card, Checkbox, FormControlLabel, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { SocialAPI } from '../../api/social';
+import { NETWORK_SUGGESTION_REASON, suggestionReasonLabel } from './suggestionReason';
 import { SocialV2, type SocialOperation, type SocialRelationship } from '../../api/socialV2';
 import { useSession } from '../../session/SessionContext';
 
@@ -59,6 +61,19 @@ export default function SocialWorkspace() {
     getNextPageParam: (last) => last.nextCursor ?? undefined, enabled: enabled && tab === 0 });
   const discover = useQuery({ queryKey: [...root, 'discover'], queryFn: SocialV2.discover,
     enabled: enabled && tab === 1 });
+  const canRank = enabled && tab === 1 && discover.isSuccess && discover.data.personalized
+    && discover.data.items.length > 0;
+  const suggestions = useQuery({ queryKey: [...root, 'network-suggestions'],
+    queryFn: SocialAPI.listNetworkSuggestions, enabled: canRank, retry: false });
+  const ranked = canRank && suggestions.isSuccess
+    ? suggestions.data.filter(item => item.sfReason === NETWORK_SUGGESTION_REASON) : [];
+  const networkReasons = new Map(ranked.map((item, rank) => [item.sfPartyId, { rank, reason: suggestionReasonLabel(item) }]));
+  // Only Discover can admit profiles. An unavailable ranking leaves its order intact.
+  const people = (discover.data?.items ?? []).map(person => {
+    const match = networkReasons.get(person.partyId);
+    const reason = person.reason === 'shared_interests' ? 'Intereses musicales compartidos' : 'Perfil público de la comunidad';
+    return { person, rank: match?.rank ?? ranked.length, reason: match?.reason ?? reason };
+  }).sort((a, b) => a.rank - b.rank);
   const preferences = useMutation({
     mutationFn: (value: { discoverable: boolean; personalized: boolean }) => {
       if (!profile.data) throw new Error('Perfil no disponible');
@@ -108,9 +123,9 @@ export default function SocialWorkspace() {
       {discover.isPending && <Typography role="status">Buscando perfiles…</Typography>}
       {discover.isError && <Alert severity="error">No pudimos cargar las sugerencias. <Button onClick={() => { void discover.refetch(); }}>Reintentar</Button></Alert>}
       {discover.data?.items.length === 0 && <Typography>No hay sugerencias nuevas. Puedes actualizar tus intereses o volver más tarde.</Typography>}
-      {!discover.isError && discover.data?.items.map((person) => <Card key={person.partyId} sx={{ p: 2 }}>
+      {!discover.isError && people.map(({ person, reason }) => <Card key={person.partyId} sx={{ p: 2 }}>
         <UserProfileLink partyId={person.partyId}><Typography variant="h6">{person.displayName}</Typography></UserProfileLink>
-        <Typography>{person.reason === 'shared_interests' ? 'Intereses musicales compartidos' : 'Perfil público de la comunidad'}</Typography>
+        <Typography>{reason}</Typography>
         <RelationshipActions partyId={person.partyId} displayName={person.displayName} initial={person.relationship} />
       </Card>)}
     </Stack>}

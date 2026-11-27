@@ -108,10 +108,18 @@ jobs:
         run: python formal/payments/stripe_ticket_capture.py
       - name: Prove hosted dead-letter review coverage and guard necessity
         run: python formal/payments/hosted_dead_letter_review.py
+      - name: Prove friend suggestion walk invariants on bounded graphs and their controls
+        timeout-minutes: 20
+        run: python scripts/verify-friend-suggestion-pagerank.py --max-nodes 4
       - name: Prove directory ranking tiers, semantic fallback and guard necessity
         run: python formal/directory/semantic_rank.py
       - name: Prove artist similarity ranking exclusions and total order
         run: python formal/fans/artist_similarity_ranking.py
+
+      - name: Prove event affinity evidence and page order
+        run: python formal/fans/event_affinity_order.py
+      - name: Prove music loudness decision monotonicity and controls
+        run: python formal/music/loudness_decision.py
       - name: Generate formal assurance and release decision
         if: ${{ !cancelled() }}
         timeout-minutes: 15
@@ -233,6 +241,9 @@ jobs:
 
       - name: Check public artist visibility SQL on isolated PostgreSQL
         run: sh scripts/test-artist-visibility-postgres.sh
+
+      - name: Check friend suggestion SQL and migration on isolated PostgreSQL
+        run: sh scripts/test-friend-suggestions-postgres.sh
 
       - name: Check feed affinity evidence SQL on isolated PostgreSQL
         run: sh scripts/test-feed-affinity-postgres.sh
