@@ -38,6 +38,9 @@ export default function ArtistVideoLibrary({ artistId, featuredUrl, featuredPost
       {selected.description && <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>{selected.description}</Typography>}
       {selectedKey && <Button component="a" href={`/a/${artistId}?video=${encodeURIComponent(selectedKey)}#artist-session`}>Enlace a esta sesión</Button>}
     </Box>}
+    {query.isFetching && <Typography role="status" variant="body2" color="text.secondary" sx={{ my: 1 }}>
+      {query.isLoading ? 'Cargando videos del artista…' : 'Actualizando videos del artista…'}
+    </Typography>}
     {query.isError && <Alert severity="info" action={<Button onClick={() => { void query.refetch(); }}>Reintentar</Button>}>No pudimos cargar los demás videos del artista.</Alert>}
     {items.filter(video => !sameVideo(video.url, selected?.url)).map(video => <Box component="section" key={video.id}>
     <Typography component="h2" variant="h6" gutterBottom>{video.title}</Typography>
