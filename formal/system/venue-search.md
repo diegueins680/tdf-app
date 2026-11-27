@@ -38,7 +38,7 @@ then drops `offset` rows and takes `limit`. With the flag off the handler still 
 function on the first 2,000 rows, so the specification is the code that runs.
 
 **Rule.** With the flag on, the answer is the specification applied to every venue, except
-as stated under Tolerance and Stored coordinates. On a table of at most 2,000 venues that is
+as stated under Tolerance. On a table of at most 2,000 venues that is
 the former answer, with one refinement: venues with the same name are now ordered by id.
 
 ## SQL
@@ -55,7 +55,8 @@ the former answer, with one refinement: venues with the same name are now ordere
   agreement on every scalar value is agreement on every string. A `text` upgrade that changes
   the fold fails the test and needs a new migration that rebuilds the expression indexes.
 - **Distance.** The bounding box, then the haversine formula with the operations of the
-  Haskell function in the same order.
+  Haskell function in the same order. Every stored coordinate is in range (see Stored
+  coordinates), so the box applies to every row.
 - **Order and page.** `ORDER BY venue.name, venue.id LIMIT ? OFFSET ?`.
 - No PostGIS and no new extension. `pg_trgm` is used when installed.
 
@@ -71,7 +72,8 @@ holds every venue inside the tolerance band:
   all longitudes are kept (below that the arcsine is well conditioned);
 - each half-width is widened by a relative `1e-9` plus `1e-9` degrees.
 
-**Soundness (critical):** the box never excludes an in-range venue the haversine test accepts.
+**Soundness (critical):** the box never excludes a venue the haversine test accepts. The
+argument needs the venue's latitude in −90..90, which the coordinate constraint guarantees.
 
 ### Tolerance
 
@@ -86,16 +88,21 @@ computes) and drops a squared sine below `1e-240` (a change far inside the toler
 
 ### Stored coordinates
 
-The API refuses coordinates that are not finite or lie outside −90..90 / −180..180, but there
-is no database constraint, so older rows may hold anything.
+The constraint `venue_coordinates_in_range` (migration
+`2026-11-24_venue_coordinate_constraint.sql`) keeps each coordinate NULL or within
+−90..90 / −180..180. `NaN` and both infinities fail it. Every writer already refused such
+values (the venue create and update handler, event research materialisation and event
+discovery), and on 2026-11-23 production held 45 venues, none out of range. The migration
+refuses, changing nothing, if any stored row is out of range.
 
 - No coordinates, or only one: never matches.
-- `NaN`, infinite, or magnitude above `1e300`: never matches in SQL. For `NaN` and infinity
-  that is the specification's answer; for a finite value above `1e300` the specification
-  computes a meaningless distance and this is a stated deviation.
-- Finite but out of range: skips the box and gets the haversine test, as the specification
-  does. The tolerance above is argued for in-range coordinates; for these rows the two sides
-  can also differ when the haversine term rounds to the edge of its domain.
+- `venueSqlSearchEnabled` requires the validated constraint on the venue table the
+  statement reads, so a database without it keeps the in-memory path.
+
+The first version of the SQL had a separate branch and a partial index for out-of-range
+rows, with two stated deviations (values above `1e300` never matched; no argued tolerance for
+out-of-range rows). The constraint removes those rows, the branch, the index and both
+deviations.
 
 ## Failure
 
@@ -120,7 +127,10 @@ an error. A database error is a `500`, as before. The statement never writes.
   a deploy. Reading the flag adds two small queries to each venue list request.
 - Migration `tdf-hq/sql/2026-11-21_venue_search_sql.sql` (rollback beside it): the fold
   function; `venue (latitude, longitude)`; a partial index on out-of-range rows; three
-  trigram expression indexes when `pg_trgm` is installed. At the expected size (under 10,000
+  trigram expression indexes when `pg_trgm` is installed. Migration
+  `tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql` (rollback beside it) adds the
+  coordinate constraint and drops the partial index.
+- In production since release 10 (2026-11-24): flag enabled, `pg_trgm` installed. At the expected size (under 10,000
   venues) a scan is already fast; the indexes are sized for that and no more. A needle
   shorter than three characters cannot use a trigram index.
 - Web only. No OpenAPI change, no regenerated clients, no mobile pin.
@@ -134,7 +144,8 @@ an error. A database error is a `500`, as before. The statement never writes.
 | Bounding box is sound in floating point | QuickCheck, 20,000 cases on the real function, and boundary examples | tested |
 | `venue_search_fold` equals `toCaseFold` | every Unicode scalar value (1,112,063) on PostgreSQL, through each of the three branches | tested exhaustively |
 | Filtering every venue refines the capped path; the box needs the wrap and the pole guard | TLC, `formal/event-operations/VenueSearch.tla`, with three negative controls | bounded model |
-| Flag off is the former path; flag on lifts the cap; missing migration keeps the former path | handler test on PostgreSQL | tested |
+| Flag off is the former path; flag on lifts the cap; missing function or constraint keeps the former path | handler and flag tests on PostgreSQL | tested |
+| Out-of-range and non-finite coordinates cannot be stored | PostgreSQL test of eight refused values and the in-range edges; migration refuses a table holding one | tested |
 
 The Z3 result is about the mathematics of the box, with `sin` and `cos` replaced by algebraic
 values. It does not cover IEEE rounding, the compiled SQL or PostgreSQL's planner; the
@@ -143,9 +154,5 @@ SQL with the specification is tested, not proved.
 
 ## Open for the owner
 
-- The number of venues was given by the owner; production was not queried. Whether any stored
-  coordinate is out of range or not finite is unknown. If none is, a `CHECK` constraint would
-  let the out-of-range branch and its index go.
-- Enabling the flag in sandbox and then production.
-- `introducedBy` in `scripts/production-migrations.json` must be replaced by the merge commit
-  if the pull request is squash-merged.
+- Nothing is open. Merged with a merge commit, so `introducedBy` in
+  `scripts/production-migrations.json` stays in the release history.

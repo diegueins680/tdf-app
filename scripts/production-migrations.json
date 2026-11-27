@@ -1383,6 +1383,11 @@
       "id": "2026-11-21_social_friend_suggestions",
       "path": "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql",
       "introducedBy": "02d0da0d60de43834eefef060649d06b9e06b90a"
+    },
+    {
+      "id": "2026-11-24_venue_coordinate_constraint",
+      "path": "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql",
+      "introducedBy": "866fdf72a77045234a257e66752148f15e817d1e"
     }
   ]
 }

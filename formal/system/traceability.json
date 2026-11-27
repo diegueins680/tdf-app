@@ -29761,17 +29761,17 @@
     {
       "id": "EVT-VENUE-SEARCH-001",
       "title": "Venue search filters in SQL without a row cap, equal to the in-memory specification",
-      "statement": "Behind the runtime flag social_venues.sql_search the venue list applies its city, text and distance filters, its ordering and its page in one PostgreSQL statement over every venue. Its answer is the pure specification venueSearchSpec applied to all venues ordered by name and then id, except that a venue whose specified distance is within 0.000001 km of the radius may be answered either way and a stored coordinate above 1e300 never matches. With the flag off, or without the migration, the former path runs: the same specification over the first 2,000 venues by name. Route: GET /social-events/venues.",
+      "statement": "Behind the runtime flag social_venues.sql_search the venue list applies its city, text and distance filters, its ordering and its page in one PostgreSQL statement over every venue. Its answer is the pure specification venueSearchSpec applied to all venues ordered by name and then id, except that a venue whose specified distance is within 0.000001 km of the radius may be answered either way. The constraint venue_coordinates_in_range keeps every stored coordinate NULL or within -90..90 / -180..180. With the flag off, or without the fold function or the constraint, the former path runs: the same specification over the first 2,000 venues by name. Route: GET /social-events/venues.",
       "domain": "EVT",
       "authority": "Owner task of 2026-11-21 to move venue search to indexed SQL; the owner approved the rule and its constants the same day (exact fold function, 1 mm tolerance, ordering by name then id, fewer than 10,000 venues expected in two years). formal/system/venue-search.md.",
       "source": "formal/system/venue-search.md",
       "contract": "tdf-hq/src/TDF/Venues/Search.hs",
-      "property": "Let R be all venues ordered by (name, id) and keep(v) = city(v) /\\ text(v) /\\ near(v) as in venueSearchSpec. Flag on: answer = Page(SelectSeq(R, m)) where m(v) = keep(v) for every v with |distance(v) - radius| > 0.000001 km and coordinates of magnitude at most 1e300. Box soundness: for coordinates in -90..90 and -180..180, haversine(v) <= radius => inVenueBoundingBox(venueBoundingBox(query), v). Fold: venue_search_fold(s) = toCaseFold(s) for every string s. Flag off: answer = Page(SelectSeq(first 2000 of venues ordered by name, keep)).",
+      "property": "Let R be all venues ordered by (name, id) and keep(v) = city(v) /\\ text(v) /\\ near(v) as in venueSearchSpec. Flag on: answer = Page(SelectSeq(R, m)) where m(v) = keep(v) for every v with |distance(v) - radius| > 0.000001 km. Stored coordinates: latitude in -90..90 and longitude in -180..180 or NULL (database constraint). Box soundness: for such coordinates, haversine(v) <= radius => inVenueBoundingBox(venueBoundingBox(query), v). Fold: venue_search_fold(s) = toCaseFold(s) for every string s. Flag off: answer = Page(SelectSeq(first 2000 of venues ordered by name, keep)).",
       "actors": [
         "Any caller of the venue list"
       ],
       "preconditions": [
-        "revenue_feature_flag row social_venues.sql_search enabled for the environment, and venue_search_fold(text) installed, for the SQL path"
+        "revenue_feature_flag row social_venues.sql_search enabled for the environment, venue_search_fold(text) installed and the validated constraint venue_coordinates_in_range on venue, for the SQL path"
       ],
       "inputs": [
         "GET /social-events/venues",
@@ -29789,9 +29789,10 @@
       ],
       "forbiddenTransitions": [
         "Dropping a matching venue because of its position in the table while the flag is on",
-        "A bounding box that excludes an in-range venue the haversine test accepts",
+        "A bounding box that excludes a venue the haversine test accepts",
         "A database error for a stored coordinate or a query the specification answers",
-        "Any write"
+        "Any write",
+        "Storing a venue coordinate out of range or not finite"
       ],
       "effects": [
         "None; read-only."
@@ -29801,7 +29802,7 @@
       "concurrency": "One statement and one snapshot at the pool's default isolation. The flag is read before the search in separate statements.",
       "idempotency": "Read-only.",
       "failure": "Invalid input is refused with 400 before the search. Arithmetic the specification evaluates to NaN is a non-match in SQL, not an error. A database error is a 500.",
-      "recovery": "Disabling the flag row restores the in-memory path without a deploy; tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql removes the function, indexes and flag rows.",
+      "recovery": "Disabling the flag row restores the in-memory path without a deploy; tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql removes the constraint and restores the partial index, and tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql removes the function, indexes and flag rows.",
       "observability": "HTTP status only.",
       "implementation": [
         "tdf-hq/src/TDF/Venues/Search.hs",
@@ -29809,7 +29810,9 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
         "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql",
-        "scripts/render-venue-search-fold.hs"
+        "scripts/render-venue-search-fold.hs",
+        "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql",
+        "tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/Venues/SearchSpec.hs",
@@ -29823,22 +29826,19 @@
         "formal/event-operations/VenueSearchNoPoleGuard.cfg",
         "formal/event-operations/VenueSearchCapped.cfg"
       ],
-      "verification": "PROVED (Z3 4.13.3, real arithmetic over algebraic stand-ins for sine and cosine): the haversine term is the central angle, the latitude bound, and the longitude bound outside the pole case; two witnesses and three negative controls. BOUNDED MODEL (TLC 1.7.2, 576,000 states on a discrete globe): the boxed search equals the specification, the box is sound, the capped path equals the specification when the cap is not exceeded; negative controls without the wrap, without the pole guard and with an exceeded cap each violate the named invariant. TESTED (Hspec and QuickCheck): the SQL answer equals the specification outside the tolerance on generated venue tables on PostgreSQL through the statement the server sends, and exactly on 2,000 and 2,500 venues; the bounding box of the real function on 20,000 generated cases and boundary examples; venue_search_fold equals Data.Text.toCaseFold on all 1,112,063 Unicode scalar values through each branch; the handler with the flag off, on and off again. NOT PROVED: equivalence of the SQL and the specification, floating-point soundness of the box, the 1 mm tolerance, index use.",
+      "verification": "PROVED (Z3 4.13.3, real arithmetic over algebraic stand-ins for sine and cosine): the haversine term is the central angle, the latitude bound, and the longitude bound outside the pole case; two witnesses and three negative controls. BOUNDED MODEL (TLC 1.7.2, 576,000 states on a discrete globe): the boxed search equals the specification, the box is sound, the capped path equals the specification when the cap is not exceeded; negative controls without the wrap, without the pole guard and with an exceeded cap each violate the named invariant. TESTED (Hspec and QuickCheck): the SQL answer equals the specification outside the tolerance on generated venue tables on PostgreSQL through the statement the server sends, and exactly on 2,000 and 2,500 venues; the bounding box of the real function on 20,000 generated cases and boundary examples; venue_search_fold equals Data.Text.toCaseFold on all 1,112,063 Unicode scalar values through each branch; the handler with the flag off, on and off again; the flag check off without the fold function or the constraint; the database refusing eight out-of-range or non-finite coordinates and keeping the in-range edges; the constraint migration refusing a table holding an out-of-range row and applying twice without change. NOT PROVED: equivalence of the SQL and the specification, floating-point soundness of the box, the 1 mm tolerance, index use.",
       "evidence": "formal/social/venue_search_bounding_box.py output; scripts/verify-event-operations-formal.sh VenueSearch runs; tdf-hq-test venue-search sections; scripts/test-venue-search.sh output.",
       "critical": true,
       "status": "specified and implemented",
-      "confidence": "High for text matching (exhaustive fold comparison and generated tables) and for the real-arithmetic box. Medium for distance at the radius edge: the tolerance is supported by tests on one platform pair, not by an error analysis. The local runs used PostgreSQL 16 with the macOS mathematics library; PostgreSQL 17 on Linux is exercised by CI only.",
+      "confidence": "High for text matching (exhaustive fold comparison and generated tables) and for the real-arithmetic box. Medium for distance at the radius edge: the tolerance is supported by tests on one platform pair, not by an error analysis. The local runs used PostgreSQL 16 with the macOS mathematics library; PostgreSQL 17 on Linux is exercised by CI and by the release rehearsal on a copy of production.",
       "ambiguity": [
-        "Production was not queried: the venue count is the owner's figure, and whether any stored coordinate is out of range or not finite is unknown.",
-        "For finite out-of-range stored coordinates the two sides may differ when the haversine term rounds to the edge of its domain; no tolerance is argued for those rows.",
-        "A finite stored coordinate above 1e300 never matches in SQL although the specification computes a distance for it.",
         "With the flag on, venues sharing a name are ordered by id; with it off their relative order stays undefined, as before.",
         "Index use by the planner is not asserted by any test.",
         "A text upgrade that changes Data.Text.toCaseFold requires a new migration; the test detects it but nothing applies it."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Specification, SQL, fold and handler tested; box proved in real arithmetic and model-checked; the flag is disabled, and enabling it and confirming production data are owner steps."
+        "reason": "Specification, SQL, fold, constraint and handler tested; box proved in real arithmetic and model-checked; the flag is enabled in production since release 10 (2026-11-24). The SQL equivalence and floating-point behaviour remain tested, not proved."
       },
       "historicalStatus": null
     },
@@ -30413,7 +30413,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "4de8821ef8e4d226b650eb42e814bdf87c6aaeecef98f1b6d12c8fd2c86f3a23",
+    "docs/catalog-persistence/catalog-list-decisions.json": "81ea2a51a892f8a7cc6418845dc09827d6ebd994756fca9759bc35f3d1acf04e",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -30913,7 +30913,7 @@
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
     "scripts/__tests__/catalog-decision-history.test.mjs": "90eb66416f6dd3a92c936aeced40dd23e0d8592026ecbd128430679a93e003b0",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "3a2bc4f9fb86c8ce5b42f194ec5931565121854a0b23338b882d9921c8df51a2",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "74e2c14a636c9a993bbc12f79bcad76b540b4166cfdb983201843e89d7aa0603",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -31106,7 +31106,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "9a5b6d14b3ba511b75ead533b561b695b95215b34b718e76b008c03b6c79522d",
+    "scripts/production-migrations.json": "875ad459f0912b54eddd4ec6b7cddb10ef6e4b43123f45328a26f8243cf0f353",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "e497d1ce41e8b1bdc3ae776a164b0cb3c6317b5c799ecce85205ef9c79602729",
@@ -31281,7 +31281,7 @@
     "scripts/test-ticket-manual-review.sh": "eee1ff9f0a6ed9fd295033f5552b69ae64cf6e49173af4d00618095f48132724",
     "scripts/test-ticket-payment-gate.sh": "3d226d1c5413e352528c1a2b8a43db51a21408d2159d3129bf535a08b7e6679a",
     "scripts/test-trial-identity.sh": "f8b36b41a30b527d6d1f22d8817cd6486e996c24179e16bf02469152bdc82ee6",
-    "scripts/test-venue-search.sh": "2d1f31d1f4f6ffdd6a8346f44ea6bf5f42684b3b9d49d0242b7af1e669bdf144",
+    "scripts/test-venue-search.sh": "97c29a16abdd3b3bfc3a104ae5ed22c64069bb314efa2365cd41af8c9f832bcc",
     "scripts/test-verification-report.py": "c7135f7d76bdebc33b7493edd6284149a585c1b3220a3af61da03b3ddacb987f",
     "scripts/test-video-campaign-postgres.sh": "0e6c93dc5d5784fcdd874459d282c32c3b9634f21cbf114b206af6cda08c948a",
     "scripts/test-weekly-platform-metrics.py": "27de8dd96d8f852d06cb352580144f9a4c988500b876015384f578b99d52d10b",
@@ -32312,6 +32312,8 @@
     "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql": "a6b9391b61df6a98c08cb049be75aa4c1fe53dbad6acb2df1b57981f8b931e55",
     "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql": "361a542eccf5b1d225686b116d11e82c857ef1dda39dfe915070d39a222ec689",
     "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql": "4f053514c5881c8b1a1dc0090f15b3968921031aa005b3f419e8c2a6c2ceb2ae",
+    "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql": "b8b072a0c8c62431c6795e13309e740501af4f5ef90f497396eb15f84477869c",
+    "tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql": "10ed3efcf7e1cb08659689bde7e0114f58f0899090eeab164c63da99b59ee55d",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
     "tdf-hq/src/TDF/API.hs": "59f9072aac0c821c25d7961afd6aba27f5d5b46f64da0517fc91fb50bc03c456",
@@ -32537,7 +32539,7 @@
     "tdf-hq/src/TDF/Trials/API.hs": "93f67c233d78fcf4108fc76d8351fb91dfd8d8b21a8fc50ecbfa56aa85e25ea5",
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "c617719d5173d354e462ee6d64fc334243313958beeaa69a6cd911d69743d4a0",
-    "tdf-hq/src/TDF/Venues/Search.hs": "c0352e27e14fdb7ec8fd49c83214053bc0c65853cc5183a0ee7ed11a384a2967",
+    "tdf-hq/src/TDF/Venues/Search.hs": "4f3965259bc43dc51b9e01276299a42f16fcd2c715fce32a3c9695af7fc57f57",
     "tdf-hq/src/TDF/Venues/SearchFold.hs": "8c63e3a0d1a0a4f33dc1cbe9bb54980b0ae40d1ee2b0628fbfdec30c9b8c1731",
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/VideoCampaigns.hs": "39e55365c71ec6bbaa77749048141519a192a112220a5ab1494229c427dbb25c",
@@ -32651,7 +32653,7 @@
     "tdf-hq/test/TDF/TicketPaymentReceiptSpec.hs": "cec7960d91dcca1fdb69846eef1ed504824a0cda51c252aceb32e162ae5ef432",
     "tdf-hq/test/TDF/TrialIdentitySpec.hs": "b0aedc327dffadf0a90fa678a2a1baa4a5a619175585c0a8ad469c37fa4a2f63",
     "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": "eebde69c59c367555188cf00435c64dadb9b0c0c99fa724f58cade0c427b2242",
-    "tdf-hq/test/TDF/Venues/SearchSpec.hs": "a31e06c160bb0aac3509150e0111e29e9fd94314d994ff11eeda885cb1a4afc9",
+    "tdf-hq/test/TDF/Venues/SearchSpec.hs": "304834b92f4acfa749c1c88b4f0e3760a0958268c3189fcbcd36f5375c837cfe",
     "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "8a3d61f60286b5846516d8ea0bfd68154fa62172354f69232dc385e4615daad2",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
     "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "793ceed7d044f4ae86b61fd5bcbdf200fc833977d1408d6461f5536ac3c500fd",
@@ -54504,6 +54506,18 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql": [
+      {
+        "requirement": "EVT-VENUE-SEARCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql": [
+      {
+        "requirement": "EVT-VENUE-SEARCH-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/Venues/SearchSpec.hs": [
       {
         "requirement": "EVT-VENUE-SEARCH-001",
@@ -57024,7 +57038,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "3a2bc4f9fb86c8ce5b42f194ec5931565121854a0b23338b882d9921c8df51a2",
+      "sha256": "74e2c14a636c9a993bbc12f79bcad76b540b4166cfdb983201843e89d7aa0603",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60343,7 +60357,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "9a5b6d14b3ba511b75ead533b561b695b95215b34b718e76b008c03b6c79522d",
+      "sha256": "875ad459f0912b54eddd4ec6b7cddb10ef6e4b43123f45328a26f8243cf0f353",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63862,7 +63876,7 @@
     {
       "id": "SURFACE-86a1f24a716c11ec",
       "path": "scripts/test-venue-search.sh",
-      "sha256": "2d1f31d1f4f6ffdd6a8346f44ea6bf5f42684b3b9d49d0242b7af1e669bdf144",
+      "sha256": "97c29a16abdd3b3bfc3a104ae5ed22c64069bb314efa2365cd41af8c9f832bcc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83733,6 +83747,30 @@
       ]
     },
     {
+      "id": "SURFACE-10ce780b0e3bba7b",
+      "path": "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql",
+      "sha256": "b8b072a0c8c62431c6795e13309e740501af4f5ef90f497396eb15f84477869c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-SEARCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-def3a20cbc135f56",
+      "path": "tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql",
+      "sha256": "10ed3efcf7e1cb08659689bde7e0114f58f0899090eeab164c63da99b59ee55d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-SEARCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -89004,7 +89042,7 @@
     {
       "id": "SURFACE-0233f07ad8ee305f",
       "path": "tdf-hq/src/TDF/Venues/Search.hs",
-      "sha256": "c0352e27e14fdb7ec8fd49c83214053bc0c65853cc5183a0ee7ed11a384a2967",
+      "sha256": "4f3965259bc43dc51b9e01276299a42f16fcd2c715fce32a3c9695af7fc57f57",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -91517,7 +91555,7 @@
     {
       "id": "SURFACE-4564ae309b51c027",
       "path": "tdf-hq/test/TDF/Venues/SearchSpec.hs",
-      "sha256": "a31e06c160bb0aac3509150e0111e29e9fd94314d994ff11eeda885cb1a4afc9",
+      "sha256": "304834b92f4acfa749c1c88b4f0e3760a0958268c3189fcbcd36f5375c837cfe",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -98716,7 +98754,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a519674959a71e561de9c38cd4c280c817ebe7c18b0eb6f919a841e9d1a2188d",
+      "sourceSha256": "55ca94187a6998e6141906047594f67ce169f9a41ef4e57e23fb760afe3b1cbf",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -98744,7 +98782,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a519674959a71e561de9c38cd4c280c817ebe7c18b0eb6f919a841e9d1a2188d",
+      "sourceSha256": "55ca94187a6998e6141906047594f67ce169f9a41ef4e57e23fb760afe3b1cbf",
       "definition": {
         "states": [
           "absent",
@@ -98774,7 +98812,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a519674959a71e561de9c38cd4c280c817ebe7c18b0eb6f919a841e9d1a2188d",
+      "sourceSha256": "55ca94187a6998e6141906047594f67ce169f9a41ef4e57e23fb760afe3b1cbf",
       "definition": {
         "export": [
           "queued",
@@ -98831,7 +98869,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a519674959a71e561de9c38cd4c280c817ebe7c18b0eb6f919a841e9d1a2188d",
+      "sourceSha256": "55ca94187a6998e6141906047594f67ce169f9a41ef4e57e23fb760afe3b1cbf",
       "definition": {
         "states": [
           "pending",

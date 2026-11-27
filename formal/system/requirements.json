@@ -29760,17 +29760,17 @@
     {
       "id": "EVT-VENUE-SEARCH-001",
       "title": "Venue search filters in SQL without a row cap, equal to the in-memory specification",
-      "statement": "Behind the runtime flag social_venues.sql_search the venue list applies its city, text and distance filters, its ordering and its page in one PostgreSQL statement over every venue. Its answer is the pure specification venueSearchSpec applied to all venues ordered by name and then id, except that a venue whose specified distance is within 0.000001 km of the radius may be answered either way and a stored coordinate above 1e300 never matches. With the flag off, or without the migration, the former path runs: the same specification over the first 2,000 venues by name. Route: GET /social-events/venues.",
+      "statement": "Behind the runtime flag social_venues.sql_search the venue list applies its city, text and distance filters, its ordering and its page in one PostgreSQL statement over every venue. Its answer is the pure specification venueSearchSpec applied to all venues ordered by name and then id, except that a venue whose specified distance is within 0.000001 km of the radius may be answered either way. The constraint venue_coordinates_in_range keeps every stored coordinate NULL or within -90..90 / -180..180. With the flag off, or without the fold function or the constraint, the former path runs: the same specification over the first 2,000 venues by name. Route: GET /social-events/venues.",
       "domain": "EVT",
       "authority": "Owner task of 2026-11-21 to move venue search to indexed SQL; the owner approved the rule and its constants the same day (exact fold function, 1 mm tolerance, ordering by name then id, fewer than 10,000 venues expected in two years). formal/system/venue-search.md.",
       "source": "formal/system/venue-search.md",
       "contract": "tdf-hq/src/TDF/Venues/Search.hs",
-      "property": "Let R be all venues ordered by (name, id) and keep(v) = city(v) /\\ text(v) /\\ near(v) as in venueSearchSpec. Flag on: answer = Page(SelectSeq(R, m)) where m(v) = keep(v) for every v with |distance(v) - radius| > 0.000001 km and coordinates of magnitude at most 1e300. Box soundness: for coordinates in -90..90 and -180..180, haversine(v) <= radius => inVenueBoundingBox(venueBoundingBox(query), v). Fold: venue_search_fold(s) = toCaseFold(s) for every string s. Flag off: answer = Page(SelectSeq(first 2000 of venues ordered by name, keep)).",
+      "property": "Let R be all venues ordered by (name, id) and keep(v) = city(v) /\\ text(v) /\\ near(v) as in venueSearchSpec. Flag on: answer = Page(SelectSeq(R, m)) where m(v) = keep(v) for every v with |distance(v) - radius| > 0.000001 km. Stored coordinates: latitude in -90..90 and longitude in -180..180 or NULL (database constraint). Box soundness: for such coordinates, haversine(v) <= radius => inVenueBoundingBox(venueBoundingBox(query), v). Fold: venue_search_fold(s) = toCaseFold(s) for every string s. Flag off: answer = Page(SelectSeq(first 2000 of venues ordered by name, keep)).",
       "actors": [
         "Any caller of the venue list"
       ],
       "preconditions": [
-        "revenue_feature_flag row social_venues.sql_search enabled for the environment, and venue_search_fold(text) installed, for the SQL path"
+        "revenue_feature_flag row social_venues.sql_search enabled for the environment, venue_search_fold(text) installed and the validated constraint venue_coordinates_in_range on venue, for the SQL path"
       ],
       "inputs": [
         "GET /social-events/venues",
@@ -29788,9 +29788,10 @@
       ],
       "forbiddenTransitions": [
         "Dropping a matching venue because of its position in the table while the flag is on",
-        "A bounding box that excludes an in-range venue the haversine test accepts",
+        "A bounding box that excludes a venue the haversine test accepts",
         "A database error for a stored coordinate or a query the specification answers",
-        "Any write"
+        "Any write",
+        "Storing a venue coordinate out of range or not finite"
       ],
       "effects": [
         "None; read-only."
@@ -29800,7 +29801,7 @@
       "concurrency": "One statement and one snapshot at the pool's default isolation. The flag is read before the search in separate statements.",
       "idempotency": "Read-only.",
       "failure": "Invalid input is refused with 400 before the search. Arithmetic the specification evaluates to NaN is a non-match in SQL, not an error. A database error is a 500.",
-      "recovery": "Disabling the flag row restores the in-memory path without a deploy; tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql removes the function, indexes and flag rows.",
+      "recovery": "Disabling the flag row restores the in-memory path without a deploy; tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql removes the constraint and restores the partial index, and tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql removes the function, indexes and flag rows.",
       "observability": "HTTP status only.",
       "implementation": [
         "tdf-hq/src/TDF/Venues/Search.hs",
@@ -29808,7 +29809,9 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
         "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql",
-        "scripts/render-venue-search-fold.hs"
+        "scripts/render-venue-search-fold.hs",
+        "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql",
+        "tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/Venues/SearchSpec.hs",
@@ -29822,22 +29825,19 @@
         "formal/event-operations/VenueSearchNoPoleGuard.cfg",
         "formal/event-operations/VenueSearchCapped.cfg"
       ],
-      "verification": "PROVED (Z3 4.13.3, real arithmetic over algebraic stand-ins for sine and cosine): the haversine term is the central angle, the latitude bound, and the longitude bound outside the pole case; two witnesses and three negative controls. BOUNDED MODEL (TLC 1.7.2, 576,000 states on a discrete globe): the boxed search equals the specification, the box is sound, the capped path equals the specification when the cap is not exceeded; negative controls without the wrap, without the pole guard and with an exceeded cap each violate the named invariant. TESTED (Hspec and QuickCheck): the SQL answer equals the specification outside the tolerance on generated venue tables on PostgreSQL through the statement the server sends, and exactly on 2,000 and 2,500 venues; the bounding box of the real function on 20,000 generated cases and boundary examples; venue_search_fold equals Data.Text.toCaseFold on all 1,112,063 Unicode scalar values through each branch; the handler with the flag off, on and off again. NOT PROVED: equivalence of the SQL and the specification, floating-point soundness of the box, the 1 mm tolerance, index use.",
+      "verification": "PROVED (Z3 4.13.3, real arithmetic over algebraic stand-ins for sine and cosine): the haversine term is the central angle, the latitude bound, and the longitude bound outside the pole case; two witnesses and three negative controls. BOUNDED MODEL (TLC 1.7.2, 576,000 states on a discrete globe): the boxed search equals the specification, the box is sound, the capped path equals the specification when the cap is not exceeded; negative controls without the wrap, without the pole guard and with an exceeded cap each violate the named invariant. TESTED (Hspec and QuickCheck): the SQL answer equals the specification outside the tolerance on generated venue tables on PostgreSQL through the statement the server sends, and exactly on 2,000 and 2,500 venues; the bounding box of the real function on 20,000 generated cases and boundary examples; venue_search_fold equals Data.Text.toCaseFold on all 1,112,063 Unicode scalar values through each branch; the handler with the flag off, on and off again; the flag check off without the fold function or the constraint; the database refusing eight out-of-range or non-finite coordinates and keeping the in-range edges; the constraint migration refusing a table holding an out-of-range row and applying twice without change. NOT PROVED: equivalence of the SQL and the specification, floating-point soundness of the box, the 1 mm tolerance, index use.",
       "evidence": "formal/social/venue_search_bounding_box.py output; scripts/verify-event-operations-formal.sh VenueSearch runs; tdf-hq-test venue-search sections; scripts/test-venue-search.sh output.",
       "critical": true,
       "status": "specified and implemented",
-      "confidence": "High for text matching (exhaustive fold comparison and generated tables) and for the real-arithmetic box. Medium for distance at the radius edge: the tolerance is supported by tests on one platform pair, not by an error analysis. The local runs used PostgreSQL 16 with the macOS mathematics library; PostgreSQL 17 on Linux is exercised by CI only.",
+      "confidence": "High for text matching (exhaustive fold comparison and generated tables) and for the real-arithmetic box. Medium for distance at the radius edge: the tolerance is supported by tests on one platform pair, not by an error analysis. The local runs used PostgreSQL 16 with the macOS mathematics library; PostgreSQL 17 on Linux is exercised by CI and by the release rehearsal on a copy of production.",
       "ambiguity": [
-        "Production was not queried: the venue count is the owner's figure, and whether any stored coordinate is out of range or not finite is unknown.",
-        "For finite out-of-range stored coordinates the two sides may differ when the haversine term rounds to the edge of its domain; no tolerance is argued for those rows.",
-        "A finite stored coordinate above 1e300 never matches in SQL although the specification computes a distance for it.",
         "With the flag on, venues sharing a name are ordered by id; with it off their relative order stays undefined, as before.",
         "Index use by the planner is not asserted by any test.",
         "A text upgrade that changes Data.Text.toCaseFold requires a new migration; the test detects it but nothing applies it."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Specification, SQL, fold and handler tested; box proved in real arithmetic and model-checked; the flag is disabled, and enabling it and confirming production data are owner steps."
+        "reason": "Specification, SQL, fold, constraint and handler tested; box proved in real arithmetic and model-checked; the flag is enabled in production since release 10 (2026-11-24). The SQL equivalence and floating-point behaviour remain tested, not proved."
       },
       "historicalStatus": null
     },
