@@ -10775,7 +10775,19 @@
           ]
         }
       }
-    ]
+    ],
+    "veniceAssistantMigration": {
+      "sourceRevision": "c533868c34086d9406acacd3c752c017b0cbe35e",
+      "reason": "The navigation label changed. The hosted ChatKit script loader and its UI status union were removed.",
+      "decisions": [
+        {
+          "$historyRef": "sha256:0e353c15bcbe9e3a01894899a2091cd2c27d85c484adb27fced1e243eb1d89a6"
+        },
+        {
+          "$historyRef": "sha256:910995ba9252d7635c2159f4e1583166921b82a40e774e339e9d54cdd5103bfa"
+        }
+      ]
+    }
   },
   "decisions": [
     {
@@ -13768,7 +13780,7 @@
       }
     },
     {
-      "id": "c388c94cfce1b0e865b0",
+      "id": "e06dd34c7f1ad04c6a6d",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
@@ -15008,16 +15020,6 @@
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
-    },
-    {
-      "id": "bf9a966de4b48fc631fe",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
     },
     {
       "id": "36b7f0148a9c9f4dfd2a",
@@ -32341,21 +32343,26 @@
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "7e2eb77daf47101ca955",
+      "id": "89377f884fff9f9d8d25",
       "reviewed": true,
-      "justification": "Append the friend suggestions migration after the 271 reviewed migrations on bddc0a2a6c18ef101db3c7750a4ec7fe7f01b4d8. All prior objects and their order are preserved.",
+      "justification": "Preserve the 272 migrations through friend suggestions and append the original venue coordinate constraint. Retain the complete reviews of both migration lists.",
       "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "friend-suggestions-main-integration-20261124",
+      "reviewBatch": "venue-coordinate-after-friend-suggestions",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 272
+        "valueCount": 273
       },
       "previousDecision": {
-        "$historyRef": "sha256:5c2ed3f8ba488e82825dae4662cc0bf3b42279d79414556834d75a33a8637a8a"
-      }
+        "$historyRef": "sha256:622a2ae8a28302de76b608d225953bc979661a3b94513de7712c42b8e0497550"
+      },
+      "concurrentReviewHistory": [
+        {
+          "$historyRef": "sha256:f9a114d476fe61417a93aa8abf8ae43cca8a0095661af15de0948654efc5b2fc"
+        }
+      ]
     }
   ],
   "sourceContextHistory": [

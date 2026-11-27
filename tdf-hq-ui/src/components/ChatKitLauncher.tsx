@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, Drawer, Fab, Tooltip } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import ChatKitPage from '../pages/ChatKitPage';
+import VeniceAssistant from './VeniceAssistant';
 import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
 
@@ -20,7 +20,7 @@ export default function ChatKitLauncher() {
       <Drawer anchor="right" open={open} onClose={() => setOpen(false)} ModalProps={{ keepMounted: true }}
         PaperProps={{ sx: { width: { xs: '100%', sm: 420 } } }}>
         <Button onClick={() => setOpen(false)}>Cerrar</Button>
-        <ChatKitPage />
+        <VeniceAssistant />
       </Drawer>
     </>
   );

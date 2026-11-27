@@ -191,7 +191,7 @@ spec = do
                       (map entityId page === take (vsqLimit query) (drop (vsqOffset query) fullIds))
                   , counterexample "exact"
                       (not exact .||. map entityId page
-                        === map entityId (venueSearchSpec entityFields query (filter (admissible query . entityFields) ordered)))
+                        === map entityId (venueSearchSpec entityFields query ordered))
                   ]
 
         it "equals the specification on 2,000 venues and finds the venues a cap would drop" $ \pool -> do
@@ -219,28 +219,55 @@ spec = do
           map entityId found `shouldSatisfy` (not . null)
           venueSearchSpec entityFields beyond (take 2000 ordered) `shouldSatisfy` null
 
-        it "never raises on coordinates PostgreSQL arithmetic would reject" $ \pool -> do
-          let extremes = [0, 5.0e-324, -1.0e-200, 1.0e-160, 90, -180, 1.0e10, 1.0e300, 1.0e301, 1.7e308, 0 / 0, 1 / 0, -1 / 0]
+        it "never raises on in-range coordinates PostgreSQL arithmetic would underflow on" $ \pool -> do
+          let latitudes = [0, 5.0e-324, -1.0e-200, 1.0e-160, 89.9999999, 90, -90]
+              longitudes = latitudes ++ [180, -180, 179.9999999, -1.0e-300]
               rows =
                 [ Stored n (VenueSearchFields "v" Nothing Nothing (Just lat) (Just lng))
-                | (n, (lat, lng)) <- zip [1 ..] [(lat, lng) | lat <- extremes, lng <- extremes]
+                | (n, (lat, lng)) <- zip [1 ..] [(lat, lng) | lat <- latitudes, lng <- longitudes]
                 ]
           forM_ [(0, 0, 1.0e-300), (5.0e-324, -1.0e-200, 1), (90, 180, 1000), (-1.0e-160, 0, 25)] $ \near -> do
             answer <- runSqlPool (seed rows >> loadVenueSearch (VenueSearchQuery Nothing Nothing (Just near) 500 0)) pool
             length answer `shouldSatisfy` (<= length rows)
 
-        it "is off until the flag row is enabled for the environment, and off without the function" $ \pool -> do
+        it "refuses to store a coordinate out of range or not finite" $ \pool -> do
+          -- Each refusal is caught inside the database: an error that left the
+          -- session would discard its private tables.
+          refusals <- runSqlPool (do
+            rawExecute "TRUNCATE pg_temp.venue" []
+            rawExecute
+              "DO $refusals$ DECLARE c record; refused int := 0; BEGIN\
+              \ FOR c IN SELECT * FROM (VALUES (95::float8, 0::float8), (-90.000001, 0), (0, 180.000001),\
+              \ (0, -200), (1e300, 0), ('NaN', 0), (0, 'Infinity'), ('-Infinity', 0)) AS t (lat, lng) LOOP\
+              \ BEGIN INSERT INTO pg_temp.venue (id, name, latitude, longitude) VALUES (1, 'v', c.lat, c.lng);\
+              \ EXCEPTION WHEN check_violation THEN refused := refused + 1; END;\
+              \ END LOOP;\
+              \ PERFORM set_config('venue_search.refusals', refused::text, true); END $refusals$" []
+            refused <- rawSql "SELECT current_setting('venue_search.refusals')" []
+            stored <- rawSql "SELECT count(*) FROM pg_temp.venue" []
+            seed [Stored 1 (VenueSearchFields "v" Nothing Nothing (Just 90) (Just (-180))),
+                  Stored 2 (VenueSearchFields "w" Nothing Nothing (Just (-90)) Nothing)]
+            kept <- rawSql "SELECT count(*) FROM pg_temp.venue" []
+            pure (refused, stored, kept)) pool
+          refusals `shouldBe` ([Single ("8" :: Text)], [Single (0 :: Int64)], [Single (2 :: Int64)])
+
+        it "is off until the flag row is enabled for the environment, and off without the function or the constraint" $ \pool -> do
           observed <- runSqlPool (do
             initial <- mapM venueSqlSearchEnabled ["sandbox", "production"]
             rawExecute "UPDATE revenue_feature_flag SET enabled = TRUE WHERE flag_key = ? AND environment = 'sandbox'"
               [PersistText venueSqlSearchFlag]
             enabled <- mapM venueSqlSearchEnabled ["sandbox", "production"]
+            rawExecute "ALTER TABLE pg_temp.venue DROP CONSTRAINT venue_coordinates_in_range" []
+            withoutConstraint <- venueSqlSearchEnabled "sandbox"
+            transactionUndo
+            rawExecute "UPDATE revenue_feature_flag SET enabled = TRUE WHERE flag_key = ? AND environment = 'sandbox'"
+              [PersistText venueSqlSearchFlag]
             rawExecute "ALTER FUNCTION venue_search_fold(text) RENAME TO venue_search_fold_absent" []
             withoutFunction <- venueSqlSearchEnabled "sandbox"
             transactionUndo
             restored <- venueSqlSearchEnabled "sandbox"
-            pure (initial, enabled, withoutFunction, restored)) pool
-          observed `shouldBe` ([False, False], [True, False], False, False)
+            pure (initial, enabled, withoutConstraint, withoutFunction, restored)) pool
+          observed `shouldBe` ([False, False], [True, False], False, False, False)
 
         it "keeps the capped in-memory path while the flag is off and lifts the cap when it is on" $ \pool -> do
           runSqlPool (seedSeries 2500) pool
@@ -265,23 +292,17 @@ spec = do
           map venueId offAgain `shouldBe` map venueId off
 
 -- | What the SQL answer must say about one venue; 'Nothing' leaves it open.
--- The specification decides, except where the contract leaves the answer
--- open: a distance within the tolerance of the radius, and an out-of-range
--- coordinate whose haversine term sits on the edge of its domain. A coordinate
--- above the ceiling or not finite never matches.
+-- The specification decides, except within the tolerance of the radius.
 expectation :: VenueSearchQuery -> VenueSearchFields -> Maybe Bool
 expectation query venue
   | not (inCity query venue && hasText) = Just False
   | otherwise = case (vsqNear query, vsfLatitude venue, vsfLongitude venue) of
       (Nothing, _, _) -> Just True
       (Just (lat, lng, radiusKm), Just venueLat, Just venueLng)
-        | absurd venue -> Just False
         | abs (distance - radiusKm) <= venueSearchToleranceKm -> Nothing
-        | outOfRange && (isNaN distance || distance <= venueSearchToleranceKm) -> Nothing
         | otherwise -> Just (distance <= radiusKm)
         where
           distance = haversineDistanceKm lat lng venueLat venueLng
-          outOfRange = abs venueLat > 90 || abs venueLng > 180
       _ -> Just False
   where
     hasText = case vsqNeedle query of
@@ -290,16 +311,6 @@ expectation query venue
 
 inCity :: VenueSearchQuery -> VenueSearchFields -> Bool
 inCity query venue = maybe True (\city -> vsfCity venue == Just city) (vsqCity query)
-
--- | Outside a distance query every venue is admissible; inside one, a venue
--- with an absurd coordinate is not.
-admissible :: VenueSearchQuery -> VenueSearchFields -> Bool
-admissible query venue = not (isJust (vsqNear query) && absurd venue)
-
-absurd :: VenueSearchFields -> Bool
-absurd venue = any (maybe False beyond) [vsfLatitude venue, vsfLongitude venue]
-  where
-    beyond value = not (abs value <= venueSearchCoordinateCeiling)
 
 data Stored = Stored { storedId :: Int64, storedFields :: VenueSearchFields } deriving (Eq, Show)
 
@@ -369,12 +380,11 @@ genCoordinates near = frequency
   , (1, pure (Nothing, Nothing))
   , (1, (,) <$> (Just <$> choose (-90, 90)) <*> pure Nothing)
   , (1, (,) Nothing <$> (Just <$> choose (-180, 180)))
-  , (3, (,) <$> (Just <$> elements special) <*> (Just <$> elements special))
+  , (3, (,) <$> (Just <$> elements special) <*> (Just <$> elements (special ++ [180, -180, 179.9999999])))
   ]
   where
-    special =
-      [ 0, 90, -90, 180, -180, 5.0e-324, 1.0e-200, -1.0e-160, 95, -200, 540, 1.0e10, -1.0e15
-      , 1.0e300, 1.0e301, 1.7e308, 0 / 0, 1 / 0, -1 / 0 ]
+    -- Stored coordinates are in range (venue_coordinates_in_range).
+    special = [0, 90, -90, 5.0e-324, 1.0e-200, -1.0e-160, 89.9999999, -89.9999999]
 
 genFields :: (Double, Double, Double) -> Gen VenueSearchFields
 genFields near = do
@@ -465,7 +475,7 @@ open :: String -> IO ConnectionPool
 open connection = do
   pool <- runNoLoggingT (createPostgresqlPool (BS.pack connection) 1)
   runSqlPool (do
-    rawExecute "CREATE TEMP TABLE venue (LIKE venue INCLUDING DEFAULTS)" []
+    rawExecute "CREATE TEMP TABLE venue (LIKE venue INCLUDING DEFAULTS INCLUDING CONSTRAINTS)" []
     rawExecute "CREATE TEMP TABLE revenue_feature_flag (LIKE revenue_feature_flag INCLUDING DEFAULTS)" []
     rawExecute
       "INSERT INTO pg_temp.revenue_feature_flag (flag_key, enabled, environment, reason) \
