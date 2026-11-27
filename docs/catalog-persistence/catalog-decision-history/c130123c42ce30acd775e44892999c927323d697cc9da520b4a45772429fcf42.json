@@ -1,0 +1,27 @@
+{
+  "id": "015ddf4475d1e02f496a",
+  "classification": "dynamic-business-catalog",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+  "priority": "P1-cross-platform",
+  "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+  "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-hq/src/TDF/Server/Merch.hs",
+    "line": 1225,
+    "kind": "haskell-list",
+    "name": "refundStatuses",
+    "valueCount": 6,
+    "consumerCount": 256,
+    "exactDuplicateIds": [
+      "6e49e1dd9002b9a384f9",
+      "53eb977c438f2629bf40"
+    ],
+    "similarCandidateIds": [
+      "6e49e1dd9002b9a384f9"
+    ]
+  }
+}

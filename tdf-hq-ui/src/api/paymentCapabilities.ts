@@ -43,6 +43,7 @@ export interface AvailableCheckoutMethods {
   placeToPayBankRedirect: boolean;
   placeToPayDeunaQr: boolean;
   payPhoneWallet: boolean;
+  payPhoneCard: boolean;
   bankTransfer: boolean;
 }
 
@@ -99,6 +100,7 @@ export const loadAvailableCheckoutMethods = async (
     placeToPayBankRedirect: bankRedirect.routes.some((route) => route.provider === 'placetopay'),
     placeToPayDeunaQr: deunaQr.routes.some((route) => route.provider === 'placetopay'),
     payPhoneWallet: payPhone.routes.some((route) => route.provider === 'payphone'),
+    payPhoneCard: card.routes.some((route) => route.provider === 'payphone'),
     bankTransfer: bank.routes.some((route) => route.provider === 'bank_transfer'),
   };
 };

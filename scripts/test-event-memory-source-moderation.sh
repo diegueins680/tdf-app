@@ -21,11 +21,24 @@ const { buildMigrationBatchSql, expandMigrationIncludes }=await import(pathToFil
 const manifest=JSON.parse(await fs.readFile(path.join(root,'scripts/production-migrations.json'),'utf8'));
 const repair=manifest.migrations.findIndex(entry=>entry.id==='2026-10-25_event_memory_source_authorization');
 const prefix=repair<0?manifest.migrations:manifest.migrations.slice(0,repair);
+// The current schema guard also requires independent storage identity prerequisites.
+// Keep the later EventMemory authorization/privacy migrations outside this bootstrap.
+const storagePrerequisites=[
+ '2026-11-04_content_storage','2026-11-04_content_storage_drive',
+ '2026-11-04_content_storage_deletion','2026-11-04_content_storage_accounting',
+ '2026-11-04_content_storage_delete_capacity','2026-11-06_content_storage_security',
+ '2026-11-07_content_storage_identity_guards'
+];
+for(const id of storagePrerequisites) {
+ const entry=manifest.migrations.find(entry=>entry.id===id);
+ if(!entry) throw new Error(`Missing canonical storage prerequisite: ${id}`);
+ if(!prefix.some(existing=>existing.id===id)) prefix.push(entry);
+}
 // Keep the historical event-memory functions while satisfying the unchanged
 // current runtime guard with the independent, actual featured-track migration.
 // Its manifest entry supplies the canonical SQL and checksum; no dummy schema.
 const prerequisites=manifest.migrations.filter(entry=>
- ['2026-10-30_artist_featured_track','2026-11-06_music_media_health','2026-11-06_music_legacy_source_compatibility','2026-11-07_music_featured_source_health','2026-11-07_artist_featured_identity_guard'].includes(entry.id)&&!prefix.some(prior=>prior.id===entry.id));
+ ['2026-10-30_artist_featured_track','2026-11-06_music_media_health','2026-11-06_music_legacy_source_compatibility','2026-11-07_music_featured_source_health','2026-11-07_artist_featured_identity_guard','2026-11-21_music_audio_measurement'].includes(entry.id)&&!prefix.some(prior=>prior.id===entry.id));
 const migrations=await Promise.all([...prefix,...prerequisites].map(async entry=>{
  const content=await expandMigrationIncludes({...entry,content:await fs.readFile(path.join(root,entry.path),'utf8')},p=>fs.readFile(path.join(root,p),'utf8'));
  return {...entry,content,checksum:createHash('sha256').update(content).digest('hex')};
@@ -33,7 +46,7 @@ const migrations=await Promise.all([...prefix,...prerequisites].map(async entry=
 // The prefix ends before 2026-11-01_social_sync_account_delivery_designation (AUTHORITY-094)
 // and before 2026-11-08_marketplace_offers (ADR 0134) and
 // 2026-11-12_marketplace_agreements (ADR 0135).
-process.stdout.write(buildMigrationBatchSql(migrations,{sourceCommit:'0'.repeat(40),socialDesignationIncluded:false,marketplaceOffersIncluded:false,marketplaceAgreementsIncluded:false,marketplaceAgreementPaymentsIncluded:false})+'\n');
+process.stdout.write(buildMigrationBatchSql(migrations,{sourceCommit:'0'.repeat(40),socialDesignationIncluded:false,marketplaceOffersIncluded:false,marketplaceAgreementsIncluded:false,marketplaceAgreementPaymentsIncluded:false,directorySemanticSearchIncluded:false})+'\n');
 JS
 tdf_test_psql -f "$batch" >/dev/null
 tdf_test_psql -f "$repo_root/tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql" >/dev/null

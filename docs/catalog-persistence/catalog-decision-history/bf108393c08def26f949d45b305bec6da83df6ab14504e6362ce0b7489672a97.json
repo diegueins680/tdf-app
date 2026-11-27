@@ -1,0 +1,26 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "7362b266dc1dd2eaabfb",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "storage-refund-composition-20261120",
+  "justification": "Preserve all 259 reviewed migration objects of protected main d65017d10f16e8089c43b82bdbcacf3177d206f5 in their exact order, then append the two storage migrations from cdf57961e4058f403ee4dd903bacfced2a5ee258 with unchanged introduction metadata and SQL. Both complete parent review graphs remain nested unchanged. This author composition review does not authorize deployment, provider activation or whole-system conformance and is not independent approval.",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 261
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:9827c8ec60a02d3c46f0928f78a951ebab67cb7546e21ced8606f7d60019f313"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:6040d6cb14e7f6246eac8e66931cb3acf4474f51ab2240c775c9a3bc84fd18f1"
+    }
+  ]
+}

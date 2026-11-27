@@ -1144,6 +1144,18 @@
       "resolution": "Remove the module requirement from social.event.logistics and keep its record scopes; the backend record check remains the authorization of plan data (EVT-LOGISTICS-ACCESS-001). No other registry entry is changed."
     },
     {
+      "id": "AUTHORITY-099",
+      "sources": [
+        "formal/system/music-loudness-check.md",
+        "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
+        "tdf-hq/src/TDF/MusicRelease/Loudness.hs",
+        "scripts/process-music-release-audio.sh"
+      ],
+      "conflict": "The audio pipeline already measures loudness with loudnorm to normalise derivatives, but nothing judged the delivered master, the measurement had no lifecycle and FFmpeg had no time limit. A version can hold several master files for one recording and no rule named the one a result describes.",
+      "authority": "Repository owner request and answers of 2026-11-21: measure inside inspect_audio, current inputs with a 900 s limit, -14.0 LUFS and -1.0 dBTP, warn only. The owner accepted the implementer's remaining proposals on 2026-11-22 (\"Continue with recommended defaults\").",
+      "resolution": "music_audio_measurement.state is pending, measured, failed or superseded, enforced by the trigger music_audio_measurement_guard. A result belongs to one asset and its SHA-256; a track is checked only from the open row of its newest undeleted master, derived on read. Implementer proposals accepted by the owner on 2026-11-22: tolerance +/- 2.0 LU, a silent file is failed: silent, and the newest undeleted master is the track's file (MEDIA-MUSIC-LOUDNESS-001)."
+    },
+    {
       "id": "AUTHORITY-URI-DECODE-001",
       "sources": [
         "formal/system/dependency-security.md",

@@ -43,6 +43,8 @@ module TDF.API.MusicRelease
   , MusicUploadConfirmRequest(..)
   ) where
 
+import TDF.Commerce.DatafastClientIP (DatafastClientRequest)
+
 import Data.Aeson
   ( FromJSON(..)
   , Options
@@ -71,7 +73,21 @@ type MusicReleasePublicAPI = "music" :>
          :> QueryParam "artistPartyId" Int64
          :> QueryParam "limit" Int
          :> QueryParam "offset" Int
+         -- TAX-FILTER-001: the release's genres (its artist's when it has
+         -- none) and its artist's location.
+         :> QueryParams "countryIds" UUID
+         :> QueryParams "regionIds" UUID
+         :> QueryParams "cityIds" UUID
+         :> QueryParams "genreIds" UUID
          :> Get '[JSON] [Value]
+  :<|> Header "CF-IPCountry" Text :> "facets" :> "releases"
+         :> QueryParam "q" Text
+         :> QueryParam "artistPartyId" Int64
+         :> QueryParams "countryIds" UUID
+         :> QueryParams "regionIds" UUID
+         :> QueryParams "cityIds" UUID
+         :> QueryParams "genreIds" UUID
+         :> Get '[JSON] Value
   :<|> "releases" :> Capture "slug" Text :> Header "CF-IPCountry" Text :> Get '[JSON] Value
   :<|> "assets" :> Capture "assetId" UUID :> "access"
          :> Header "CF-IPCountry" Text :> Get '[JSON] Value
@@ -81,6 +97,10 @@ type MusicReleasePublicAPI = "music" :>
          :> QueryParam "q" Text
          :> QueryParam "limit" Int
          :> QueryParam "offset" Int
+         :> QueryParams "countryIds" UUID
+         :> QueryParams "regionIds" UUID
+         :> QueryParams "cityIds" UUID
+         :> QueryParams "genreIds" UUID
          :> Get '[JSON] (Headers '[Header "Cache-Control" Text] [MusicPublicTrackSearchHit])
   :<|> "artists" :> Capture "artistPartyId" Int64 :> "featured-track"
          :> Header "CF-IPCountry" Text
@@ -97,6 +117,8 @@ type MusicReleaseProtectedAPI = "music" :>
          :> "revalidate" :> Post '[JSON] (Headers '[Header "Cache-Control" Text] Value)
   :<|> "releases" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] MusicReleaseCreateRequest :> PostCreated '[JSON] Value
   :<|> "releases" :> Capture "releaseId" UUID :> "versions" :> Capture "versionId" UUID :> Get '[JSON] Value
+  :<|> "releases" :> Capture "releaseId" UUID :> "versions" :> Capture "versionId" UUID :> "loudness"
+         :> Get '[JSON] Value
   :<|> "releases" :> Capture "releaseId" UUID :> "versions" :> Capture "versionId" UUID :> "corrections"
          :> Header "Idempotency-Key" Text :> PostCreated '[JSON] Value
   :<|> "releases" :> Capture "releaseId" UUID :> "versions" :> Capture "versionId" UUID :> "draft"
@@ -154,7 +176,7 @@ type MusicReleaseProtectedAPI = "music" :>
          :> ReqBody '[JSON] MusicPurchaseCreateRequest :> PostCreated '[JSON] Value
   :<|> "purchases" :> Get '[JSON] [Value]
   :<|> "purchases" :> Capture "purchaseId" UUID :> "datafast" :> "checkout"
-         :> Header "Idempotency-Key" Text :> Post '[JSON] Value
+         :> Header "Idempotency-Key" Text :> DatafastClientRequest :> Post '[JSON] Value
   :<|> "purchases" :> Capture "purchaseId" UUID :> "datafast" :> "status"
          :> Header "Idempotency-Key" Text :> ReqBody '[JSON] MusicDatafastStatusRequest :> Post '[JSON] Value
   :<|> "purchases" :> Capture "purchaseId" UUID :> "paypal" :> "create"

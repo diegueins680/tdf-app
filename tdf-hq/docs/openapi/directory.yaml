@@ -26,6 +26,10 @@ paths:
         - { name: dateTo, in: query, schema: { type: string, format: date-time } }
         - { $ref: '#/components/parameters/Cursor' }
         - { $ref: '#/components/parameters/Limit' }
+        - { $ref: './taxonomy.yaml#/components/parameters/TaxonomyCountryIds' }
+        - { $ref: './taxonomy.yaml#/components/parameters/TaxonomyRegionIds' }
+        - { $ref: './taxonomy.yaml#/components/parameters/TaxonomyCityIds' }
+        - { $ref: './taxonomy.yaml#/components/parameters/TaxonomyGenreIds' }
       responses:
         '200': { description: Organic results, separate sponsored results, and facets, content: { application/json: { schema: { $ref: '#/components/schemas/DirectorySearchResponse' } } } }
         '400': { description: Unsupported target kind filter }
@@ -580,6 +584,7 @@ components:
         entityTypes: { type: object, additionalProperties: { type: integer, minimum: 0 } }
         cities: { type: array, items: { type: object, required: [id, name, count], properties: { id: { type: string, format: uuid }, name: { type: string }, count: { type: integer } } } }
         total: { type: integer, minimum: 0 }
+        taxonomy: { $ref: './taxonomy.yaml#/components/schemas/TaxonomyFacets' }
     DirectorySearchResponse:
       type: object
       required: [items, sponsoredItems, facets]

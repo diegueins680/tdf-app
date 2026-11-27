@@ -43,8 +43,8 @@
     "audit:ui:static": "node scripts/ui-static-audit.mjs",
     "check:architecture": "node scripts/check-architecture-boundaries.mjs",
     "test:architecture": "node --test scripts/__tests__/architecture-boundaries.test.mjs",
-    "audit:catalog-lists": "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output /tmp/tdf-catalog-list-audit.json",
-    "audit:catalog-lists:refresh": "node scripts/catalog-list-audit.mjs --output docs/catalog-persistence/reports/static-list-inventory.json && node scripts/build-catalog-decisions.mjs && node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output docs/catalog-persistence/reports/static-list-inventory.json && node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv",
+    "audit:catalog-lists": "node scripts/catalog-decision-history.mjs verify && node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output /tmp/tdf-catalog-list-audit.json",
+    "audit:catalog-lists:refresh": "node scripts/catalog-list-audit.mjs --output docs/catalog-persistence/reports/static-list-inventory.json && node scripts/build-catalog-decisions.mjs && node scripts/catalog-decision-history.mjs compact && node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output docs/catalog-persistence/reports/static-list-inventory.json && node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --format csv --output docs/catalog-persistence/reports/list-consumer-matrix.csv",
     "audit:formal": "node scripts/audit-formal-methods.mjs",
     "verify:event-operations:formal": "bash scripts/verify-event-operations-formal.sh",
     "verify:inductive-proofs": "bash scripts/verify-inductive-proofs.sh",
@@ -57,7 +57,7 @@
     "test:production-release": "node --test scripts/__tests__/production-entrypoint.test.mjs scripts/__tests__/production-release.test.mjs scripts/__tests__/provider-rollback.test.mjs",
     "test:ci-pipeline": "node --test scripts/__tests__/ci-change-scope.test.mjs scripts/__tests__/ci-pipeline.test.mjs scripts/__tests__/ci-job-admission.test.mjs",
     "test:instagram-token-workflows": "node --test scripts/__tests__/instagram-token-workflows.test.mjs",
-    "test:catalog-list-audit": "node --test scripts/__tests__/catalog-list-audit.test.mjs",
+    "test:catalog-list-audit": "node --test scripts/__tests__/catalog-decision-history.test.mjs scripts/__tests__/catalog-list-audit.test.mjs",
     "test:music-directory-visual-artifacts": "node --test scripts/__tests__/music-directory-visual-artifacts.test.mjs",
     "test:music-worker-runtime": "node scripts/test-music-release-worker-runtime.mjs",
     "test:music-playback-identity": "node scripts/test-music-playback-identity.mjs",
@@ -123,7 +123,9 @@
     "clean": "rm -rf node_modules tdf-hq-ui/node_modules tdf-mobile/node_modules",
     "clean:build": "rm -rf tdf-hq-ui/dist tdf-mobile/dist tdf-hq/.stack-work",
     "cron:sync-drive": "node scripts/sync-artist-drive.js",
-    "verify:system:evidence": "node scripts/verify-system-evidence.mjs"
+    "verify:system:evidence": "node scripts/verify-system-evidence.mjs",
+    "audit:delivery": "node scripts/delivery-matrix.mjs",
+    "test:delivery": "node --test scripts/__tests__/delivery-matrix.test.mjs scripts/__tests__/verification-evidence.test.mjs"
   },
   "keywords": [
     "crm",

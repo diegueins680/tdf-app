@@ -49,9 +49,7 @@ import {
   discoverImprovementIdea,
   verifyDiscoveryPolicyModel,
 } from '../lib/discovery.mjs';
-import { findExtractedFlyctlBinary, selectFlyctlDownloadUrl } from '../lib/flyctl-cli.mjs';
 import { auditUiSource } from '../lib/ui-static-audit.mjs';
-import { installFlyctl } from '../install-flyctl.mjs';
 
 const execFileAsync = promisify(execFile);
 const testDir = path.dirname(fileURLToPath(import.meta.url));
@@ -363,103 +361,6 @@ test('summarizeWorkflowRuns separates pending, successful, and failed workflow r
       detailsUrl: 'https://example.com/smoke',
     },
   ]);
-});
-
-test('selectFlyctlDownloadUrl prefers amd64 Linux tarballs over weaker fallbacks', () => {
-  const selected = selectFlyctlDownloadUrl([
-    '',
-    'null',
-    'https://example.com/flyctl_0.4.33_Linux_arm64.tar.gz',
-    'https://example.com/flyctl_0.4.33_Linux_x86_64.tar.gz',
-    'https://example.com/checksums.txt',
-  ]);
-
-  assert.equal(selected, 'https://example.com/flyctl_0.4.33_Linux_x86_64.tar.gz');
-});
-
-test('findExtractedFlyctlBinary ignores similarly named archives and only returns an executable binary', async () => {
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'flyctl-binary-search-test-'));
-  const nestedDir = path.join(tempRoot, 'nested');
-  const binaryPath = path.join(nestedDir, 'flyctl');
-
-  try {
-    await fs.mkdir(nestedDir, { recursive: true });
-    await fs.writeFile(path.join(tempRoot, 'flyctl.tar.gz'), 'not a binary\n', 'utf8');
-    await fs.writeFile(binaryPath, '#!/usr/bin/env bash\nprintf "flyctl v0.4.33\\n"\n', { encoding: 'utf8', mode: 0o755 });
-
-    const selected = await findExtractedFlyctlBinary(tempRoot);
-    assert.equal(selected, binaryPath);
-  } finally {
-    await fs.rm(tempRoot, { recursive: true, force: true });
-  }
-});
-
-test('installFlyctl installs the extracted executable instead of the downloaded archive', async () => {
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'flyctl-install-test-'));
-  const payloadDir = path.join(tempRoot, 'payload');
-  const installDir = path.join(tempRoot, 'bin');
-  const archivePath = path.join(tempRoot, 'flyctl_0.4.33_Linux_x86_64.tar.gz');
-  const originalFetch = global.fetch;
-
-  try {
-    await fs.mkdir(payloadDir, { recursive: true });
-    await fs.writeFile(
-      path.join(payloadDir, 'flyctl'),
-      '#!/usr/bin/env bash\nprintf "flyctl v0.4.33\\n"\n',
-      { encoding: 'utf8', mode: 0o755 },
-    );
-    await execFileAsync('tar', ['-czf', archivePath, '-C', payloadDir, '.']);
-
-    const archiveBytes = await fs.readFile(archivePath);
-    const releaseApiUrl = 'https://example.com/flyctl/releases/latest';
-    const tarballUrl = 'https://example.com/flyctl_0.4.33_Linux_x86_64.tar.gz';
-    const githubToken = 'test-github-token';
-
-    global.fetch = async (input, init = {}) => {
-      const href = String(input);
-      if (href === releaseApiUrl) {
-        assert.equal(init.headers.Authorization, `Bearer ${githubToken}`);
-        return new Response(
-          JSON.stringify({
-            assets: [
-              {
-                browser_download_url: tarballUrl,
-              },
-            ],
-          }),
-          {
-            headers: { 'content-type': 'application/json' },
-            status: 200,
-          },
-        );
-      }
-
-      if (href === tarballUrl) {
-        return new Response(archiveBytes, {
-          headers: { 'content-type': 'application/gzip' },
-          status: 200,
-        });
-      }
-
-      throw new Error(`unexpected fetch url: ${href}`);
-    };
-
-    const result = await installFlyctl({
-      githubToken,
-      installDir,
-      log: () => {},
-      releaseApiUrl,
-    });
-
-    assert.equal(result.downloadUrl, tarballUrl);
-    assert.equal(path.basename(result.binPath), 'flyctl');
-
-    const { stdout } = await execFileAsync(path.join(installDir, 'flyctl'), ['version']);
-    assert.equal(stdout.trim(), 'flyctl v0.4.33');
-  } finally {
-    global.fetch = originalFetch;
-    await fs.rm(tempRoot, { recursive: true, force: true });
-  }
 });
 
 test('syncSubmodulesRecursively initializes nested submodules', async () => {

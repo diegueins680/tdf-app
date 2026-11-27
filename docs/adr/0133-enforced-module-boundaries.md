@@ -41,7 +41,7 @@ Web (`tdf-hq-ui/src`, 521 non-test modules):
    and the executables).
 
    Web: `foundation` (`vendor`, `assets`, `styles`, `lib`, `i18n`) → `utils` →
-   `config` → `api` → `app-services` (session, services, analytics, contexts,
+   `config` → `auth-state` (`auth/`) → `api` → `app-services` (session, services, analytics, contexts,
    hooks, player, mobile, desktop, theme) → `components` → `features` → `pages`
    → `routing` → `shell` (`App.tsx`, `main.tsx`, `player/PlayerShell.tsx`).
 
@@ -96,11 +96,34 @@ imports, 17 oversized files. Suggested order, each as its own small change:
 3. Done: the `TicketPaymentReceipt` wire type moved to
    `TDF.DTO.TicketPaymentReceipt`; the handler module re-exports it. The route
    contract no longer imports HTTP delivery.
-4. Web `api -> session`: move `logoutIntent` and `authEvents` below `api`; they
-   are storage and event primitives, not session UI.
-5. Web `features/featureRegistry.ts`: it is static registry data used from
-   `utils`, `api` and `components`; move it to a low layer.
-6. Split the oversized files along the seams their own section comments mark,
+4. Done: `logoutIntent` and `authEvents` moved from `session/` to `auth/`, a
+   new `auth-state` layer directly below `api`. Neither imports anything, and
+   both are storage and event primitives that the api client needs, not session
+   UI. Seven of the eight `api -> session` imports are gone. The two value lists
+   they declare keep their catalog reviews as successors under the new paths.
+   The last one, `api/authHeader.ts -> session/SessionContext.tsx`, reads the
+   token that `SessionProvider` keeps in module state, and about 25 tests stub
+   `SessionContext` to control it; moving it is a separate change.
+5. Done: `featureRegistry.ts` (static registry data plus pure access
+   evaluation, importing only the registry JSON and `utils/stringValues`) moved
+   from `features/` to `utils/`, its lowest consumer's layer. The four imports
+   of it from `utils` and `components` are gone, and its eleven value lists keep
+   their catalog reviews as successors under the new path.
+6. Done: the three `components -> features` imports are gone. The video
+   campaign model (`videoCampaign.ts`: types, a zod schema and pure helpers,
+   whose types `api/videoCampaigns.ts` also uses) moved to `utils/`. Campaign
+   attribution (`videoAttribution.ts`, which records conversions through the
+   api) and the marketplace cart summary store (`cartSummary.ts`, browser
+   storage plus a React subscription) moved to `services/`, the app-services
+   layer between `api` and `components`. The three value lists in the campaign
+   model keep their catalog reviews as successors under the new path.
+7. Done: the four `utils -> api/client` imports are gone. `chatkit.ts` and
+   `tidalAgent.ts` call the api and `directoryPreviewImage.ts` resolves media
+   against the api base, so all three moved to `services/`. `merch.ts` stays in
+   `utils/`: only `resolveMerchImageUrl` read the api base, and it moved to
+   `services/merchImage.ts`. None of the moved code declares a reviewed value
+   list.
+8. Split the oversized files along the seams their own section comments mark,
    lowering each ceiling in the same change.
 
 ## Consequences

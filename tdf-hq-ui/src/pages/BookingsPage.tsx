@@ -50,6 +50,7 @@ import {
 } from './bookingsPageLogic';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { bookingStatusLabel } from '../utils/bookingStatusLabel';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
@@ -1213,7 +1214,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                     >
                       {statusOptions.map((option) => (
                         <MenuItem key={option} value={option}>
-                          {option}
+                          {bookingStatusLabel(option)}
                         </MenuItem>
                       ))}
                     </Select>

@@ -321,6 +321,14 @@ type DirectoryPublicAPI = "directory" :>
            :> QueryParam "limit" Int
            :> QueryParam "profileKind" Text
            :> QueryParam "intent" Text
+           -- TAX-FILTER-001: repeatable shared location and genre filters
+           -- (OR within a dimension, AND across; a genre includes its
+           -- subgenres). The single cityId/genreId above keep their exact
+           -- saved-search semantics.
+           :> QueryParams "countryIds" UUID
+           :> QueryParams "regionIds" UUID
+           :> QueryParams "cityIds" UUID
+           :> QueryParams "genreIds" UUID
            :> Get '[JSON] DirectorySearchResponse
     :<|> "suggestions" :> QueryParam "q" Text :> QueryParam "cityId" UUID :> Get '[JSON] [DirectorySuggestion]
     :<|> "taxonomies" :> QueryParam "locale" Text :> Get '[JSON] Value

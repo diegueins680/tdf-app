@@ -60,6 +60,7 @@ jest.unstable_mockModule('../api/fans', () => ({
   Fans: {
     listArtists: listArtistsMock,
     listFollows: listFollowsMock,
+    listRecommendations: jest.fn(async () => []),
     listMyClubs: listMyClubsMock,
     getMyArtistProfile: getMyArtistProfileMock,
     updateMyArtistProfile: updateMyArtistProfileMock,
@@ -145,6 +146,19 @@ jest.unstable_mockModule('../features/fans/FanProfileEditor', () => ({ FanProfil
 jest.unstable_mockModule('../features/fans/FollowedArtists', () => ({ FollowedArtists: () => null }));
 jest.unstable_mockModule('../features/fanclubs/FanClubPreview', () => ({ FanClubPreview: () => null }));
 
+// TAX-FILTER-001: shared filter options and the profile-city default are not under test here.
+jest.unstable_mockModule('../api/taxonomy', () => ({
+  Taxonomy: {
+    filterOptions: jest.fn(async () => ({ countries: [], regions: [], cities: [], genres: [] })),
+    radioFacets: jest.fn(async () => ({})), musicReleaseFacets: jest.fn(async () => ({})), eventFacets: jest.fn(async () => ({})),
+    myGenreSuggestions: jest.fn(async () => []), checkGenreSuggestion: jest.fn(), submitGenreSuggestion: jest.fn(),
+  },
+  appendTaxonomyParams: (params: URLSearchParams, selection?: Record<string, string[]>) => {
+    Object.entries(selection ?? {}).forEach(([key, values]) => (values ?? []).forEach((value) => params.append(key, value)));
+    return params;
+  },
+}));
+jest.unstable_mockModule('../components/taxonomyFilters/useProfileCityDefault', () => ({ useProfileCityDefault: () => undefined }));
 const { default: FanHubPage } = await import('./FanHubPage');
 
 const eligibleProgress: OnboardingProgressDTO = {

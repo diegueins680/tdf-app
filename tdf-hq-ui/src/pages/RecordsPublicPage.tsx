@@ -1,4 +1,4 @@
-import MarkdownText from '../components/MarkdownText';
+import RecordDescription from '../features/records/RecordDescription';
 import SessionVideoPreview from '../components/SessionVideoPreview';
 import { PublicationAnchor, usePublicationSelection, type PublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
@@ -800,9 +800,7 @@ const RecordingsGrid = ({ items, selection }: { items: RecordingItem[]; selectio
             <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
               {item.artist}
             </Typography>
-            <MarkdownText variant="body2" sx={{ color: 'text.secondary' }}>
-              {item.description}
-            </MarkdownText>
+            <RecordDescription text={item.description} title={item.title} />
             {item.url && (
               <Box sx={{ mt: 'auto' }}>
                 <Button
@@ -891,9 +889,7 @@ const ReleasesGrid = ({ items, selection }: { items: ReleaseItem[]; selection: P
                 {release.artist}
               </Typography>
               {release.blurb && (
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  {release.blurb}
-                </Typography>
+                <RecordDescription text={release.blurb} title={release.title} plain />
               )}
               <Stack direction="row" spacing={1} flexWrap="wrap">
                 {release.links.map((link) => (
@@ -989,9 +985,7 @@ const SessionsGrid = ({ items, selection }: { items: SessionItem[]; selection: P
               <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
                 {video.guests}
               </Typography>
-              <MarkdownText variant="body2" sx={{ color: 'text.secondary' }}>
-                {video.description}
-              </MarkdownText>
+              <RecordDescription text={video.description} title={video.title} />
               <InteractionPanel kind="recording_session" entityKey={video.id} />
             </CardContent>
           </Card>

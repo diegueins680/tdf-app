@@ -2,7 +2,7 @@ import { useEffect, useState, type ComponentProps } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { Box, ButtonBase, Dialog, IconButton } from '@mui/material';
 import DirectoryPreviewImage from './DirectoryPreviewImage';
-import { resolveDirectoryPreviewImage } from '../../utils/directoryPreviewImage';
+import { resolveDirectoryPreviewImage } from '../../services/directoryPreviewImage';
 
 type ExpandablePreviewImageProps = ComponentProps<typeof DirectoryPreviewImage> & {
   /** Accessible name of the control that opens the full image. */
@@ -47,9 +47,12 @@ export default function ExpandablePreviewImage({
         open={open}
         onClose={() => setOpen(false)}
         maxWidth={false}
-        PaperProps={{ 'aria-label': preview.alt, sx: { m: { xs: 1, sm: 3 }, bgcolor: 'transparent', boxShadow: 'none', overflow: 'visible' } }}
+        PaperProps={{ 'aria-label': preview.alt, sx: {
+          m: 0, width: '100%', maxWidth: '100%', height: '100%', maxHeight: '100%',
+          bgcolor: 'transparent', boxShadow: 'none', borderRadius: 0,
+        } }}
       >
-        <Box sx={{ position: 'relative', lineHeight: 0 }}>
+        <Box sx={{ position: 'relative', height: '100%', minHeight: 0, lineHeight: 0 }}>
           <Box
             component="img"
             src={resolved}
@@ -58,8 +61,7 @@ export default function ExpandablePreviewImage({
             onError={() => { setOpen(false); setFailed(true); }}
             sx={{
               display: 'block',
-              maxWidth: { xs: 'calc(100vw - 16px)', sm: 'calc(100vw - 48px)' },
-              maxHeight: { xs: 'calc(100dvh - 16px)', sm: 'calc(100dvh - 48px)' },
+              boxSizing: 'border-box', width: '100%', height: '100%', p: 1,
               objectFit: 'contain',
               borderRadius: 2,
               cursor: 'zoom-out',

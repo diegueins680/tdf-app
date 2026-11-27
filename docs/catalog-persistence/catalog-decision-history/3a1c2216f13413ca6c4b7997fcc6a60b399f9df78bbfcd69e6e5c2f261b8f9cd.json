@@ -1,0 +1,16 @@
+{
+  "id": "c69afb90768a2e78770a",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+  "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "ticket-tax-invoices-2026-10-06",
+  "evidence": {
+    "file": "tdf-hq-ui/src/api/socialEvents.ts",
+    "line": 576
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "f7bf7d7a483d435dc242",
+  "classification": "genuine-technical-constant",
+  "disposition": "explicit-allowlist",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P1-integrity",
+  "risk": "Changing a closed wire state, supported adapter identity, SQL invariant or test fixture independently can break validation and compatibility.",
+  "justification": "Reviewed video campaign boundary: these values are closed adapter identities, serialization keys, draft/manual-publication states or synthetic test fixtures. The current API supports only Instagram/TikTok manual preparation; adding a provider or lifecycle action requires implementation and contract changes. These constants do not authorize provider publication, paid spending or editable commercial catalog values.",
+  "reviewed": true,
+  "evidence": {
+    "file": "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+    "line": 2
+  },
+  "reviewBatch": "video-campaigns-2026-10-20",
+  "reviewMethod": "manual-boundary-review"
+}

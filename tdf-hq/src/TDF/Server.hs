@@ -11,13 +11,20 @@
 
 module TDF.Server where
 
+import qualified TDF.Commerce.DatafastClientIP as ClientIP
+
 import qualified TDF.VideoCampaigns as VideoCampaigns
 import qualified TDF.ContentStorage as ContentStorage
+import qualified TDF.StorageVault as StorageVault
 import qualified TDF.Calendar.TokenCipher as CalendarTokenCipher
 import qualified TDF.Social.Chat as SocialChat
+import           TDF.Server.NotificationDelivery (notificationDeliveryServer)
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
+import qualified TDF.Fans.ArtistRecommendations as ArtistRecommendations
+import qualified TDF.Fans.ArtistSimilarity as ArtistSimilarity
 import qualified TDF.Social.RelationshipReads as SocialReads
+import qualified TDF.Social.SuggestionStore as SocialSuggestions
 import qualified TDF.Social.RelationshipWrites as SocialWrites
 import qualified TDF.Social.Profiles as SocialProfiles
 import TDF.Social.Server (socialV2Server)
@@ -129,11 +136,11 @@ import           TDF.Courses.Metadata
 import           TDF.Services.LlmChat
 import qualified TDF.Courses.PublicMetadata as CoursePublic
 import qualified TDF.Internationalization as Internationalization
+import qualified TDF.DriveOAuthClient as DriveOAuthClient
 import           TDF.Config ( AppConfig(..)
                             , courseSlugFallback
                             , normalizeLlmApiBase
                             , normalizeConfiguredGraphNodeId
-                            , normalizeConfiguredGoogleClientId
                             , normalizeConfiguredBaseUrl
                             , resolveConfiguredAppBase
                             , resolveConfiguredAssetsBase
@@ -179,6 +186,7 @@ import           TDF.Auth
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
+import qualified TDF.Server.PublicBookingNotifications as PublicBookingNotifications
 import           TDF.Server.SocialEventsHandlers
   ( publicUpcomingEventsServer
   , socialEventsServer
@@ -219,6 +227,7 @@ import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Server.Directory as DirectoryServer
+import qualified TDF.Server.Taxonomy as TaxonomyServer
 import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MusicRelease as MusicReleaseServer
 import TDF.MusicRelease.CredentialCache (musicCredentialCache)
@@ -320,7 +329,8 @@ data GoogleToken = GoogleToken
   , refresh_token :: Maybe Text
   , expires_in    :: Maybe Int
   , token_type    :: Maybe Text
-  } deriving (Generic, Show)
+  } deriving (Generic)
+instance Show GoogleToken where show _ = "<google-credential>"
 instance FromJSON GoogleToken where
   parseJSON = withObject "GoogleToken" $ \o -> do
     accessToken <- o .: "access_token" >>= parseGoogleTokenField "access_token"
@@ -360,11 +370,10 @@ parseGoogleTokenField fieldName raw =
              else pure clean
 
 maxDriveOAuthTokenChars :: Int
-maxDriveOAuthTokenChars = 4096
+maxDriveOAuthTokenChars = DriveOAuthClient.maxDriveOAuthTokenChars
 
 isHiddenDriveOAuthTokenChar :: Char -> Bool
-isHiddenDriveOAuthTokenChar ch =
-  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+isHiddenDriveOAuthTokenChar = DriveOAuthClient.isHiddenDriveOAuthTokenChar
 
 parseGoogleTokenType :: Text -> Parser Text
 parseGoogleTokenType raw = do
@@ -776,6 +785,7 @@ server env =
   :<|> CatalogServer.publicCatalogServer
   :<|> InteractionsServer.publicInteractionsServer
   :<|> DirectoryServer.directoryPublicServer
+  :<|> TaxonomyServer.taxonomyPublicServer
   :<|> MerchServer.merchPublicServer
   :<|> publicUpcomingEventsServer
   :<|> ReviewsServer.reviewsPublicServer
@@ -790,7 +800,7 @@ server env =
   :<|> listEngineersPublic
   :<|> bookingPublicServer
   :<|> inventoryStaticServer assetsRoot
-  :<|> assetsServeServer assetsRoot
+  :<|> assetsServeServer env assetsRoot
   :<|> stripeWebhookServer
 
 versionServer :: ServerT Api.VersionAPI AppM
@@ -1678,8 +1688,11 @@ whatsappWebhookServer =
                   , acceptedTermsVersion = Nothing
                   }
                 let incomingMsg = entityVal incomingEntity
-                claimed <- liftIO $ flip runSqlPool envPool $
-                  claimWhatsAppAutoReply now (entityKey incomingEntity)
+                -- The registration is kept; a contact who withdrew consent
+                -- gets no automated reply (MSG-STAFF-OUTBOUND-001).
+                claimed <- liftIO $ flip runSqlPool envPool $ do
+                  withdrawn <- CampaignAutomation.whatsAppRecipientConsentWithdrawn phone
+                  if withdrawn then pure False else claimWhatsAppAutoReply now (entityKey incomingEntity)
                 when claimed $ do
                   (replyTxt, replyRes) <- sendWhatsappReply cfg phone
                   liftIO $ flip runSqlPool envPool $ do
@@ -1803,7 +1816,7 @@ whatsappManualReplyHandler user WhatsAppReplyReq{..} = do
 validateWhatsAppReplyConsent :: Maybe ME.WhatsAppConsent -> Either ServerError ()
 validateWhatsAppReplyConsent mConsent
   | CampaignAutomation.whatsAppConsentWithdrawn mConsent =
-      Left err409 { errBody = "El contacto retiró su consentimiento para recibir mensajes de WhatsApp" }
+      Left err409 { errBody = BL.fromStrict (TE.encodeUtf8 CampaignAutomation.whatsAppConsentWithdrawnMessage) }
   | otherwise = Right ()
 
 whatsappOperatorQuestionHandler :: AuthedUser -> WhatsAppOperatorQuestionReq -> AppM Value
@@ -3214,6 +3227,7 @@ fanSecureServer :: AuthedUser -> ServerT FanSecureAPI AppM
 fanSecureServer user =
        (fanGetProfile user :<|> fanUpdateProfile user)
   :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
+  :<|> fanListRecommendations user
   :<|> (artistGetOwnProfile user :<|> artistUpdateOwnProfile user)
   :<|> (notifList user :<|> notifCount user :<|> notifGet user :<|> notifMarkRead user :<|> notifMarkAllRead user)
   :<|> CatalogServer.createSelfFanRoleRequest user
@@ -3241,7 +3255,8 @@ socialServer user =
   :<|> socialRemoveFriend user
   :<|> SocialProfiles.profileList user (socialListProfiles user)
   :<|> SocialProfiles.profileGet user (socialGetProfile user)
-  :<|> SocialReads.suggestions user (socialListSuggestedFriends user)
+  :<|> SocialSuggestions.suggestions user
+         (SocialReads.suggestions user (socialListSuggestedFriends user))
   :<|> socialV2Server user
 
 chatServer :: AuthedUser -> ServerT ChatAPI AppM
@@ -3256,6 +3271,7 @@ driveServer user =
   driveUploadServer user
   :<|> driveTokenExchangeServer user
   :<|> driveTokenRefreshServer user
+  :<|> StorageVault.revokeConnection user
   :<|> ContentStorage.contentStorageServer user
 
 validateDriveAccess :: AuthedUser -> Either ServerError ()
@@ -3284,6 +3300,10 @@ hasCoherentAuthScope user =
 driveUploadServer :: AuthedUser -> Maybe Text -> DriveUploadForm -> AppM DriveUploadDTO
 driveUploadServer user mAccessToken form@DriveUploadForm{..}
   | duDestination == Just "tdf" = do
+      ContentStorage.requireUploadsEnabled
+      cfg <- asks envConfig
+      unless ("/assets/serve" `T.isSuffixOf` resolveConfiguredAssetsBase cfg)
+        (throwError (ContentStorage.storageError err503 "storage_public_reader_required"))
       unless (hasCoherentAuthScope user) (throwError err403)
       unless (duAuthMode == Just "server" && isNothing mAccessToken && isNothing duAccessToken && isNothing duFolderId) $
         throwError (ContentStorage.storageError err400 "storage_destination_conflict")
@@ -3295,6 +3315,7 @@ driveUploadServer user mAccessToken form@DriveUploadForm{..}
 
 legacyDriveUploadServer :: AuthedUser -> Maybe Text -> DriveUploadForm -> AppM DriveUploadDTO
 legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
+  when (isJust duDestination) ContentStorage.requireUploadsEnabled
   unless (duVisibility `elem` [Nothing, Just "private", Just "public"]) $
     throwError (ContentStorage.storageError err400 "storage_visibility_invalid")
   unless (duDestination `elem` [Nothing, Just "google_drive"]) $
@@ -3303,6 +3324,8 @@ legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
   providedToken <-
     either throwError pure (resolveProvidedDriveAccessToken mAccessToken duAccessToken)
   personal <- either throwError pure (resolveDriveUploadAuthority duAuthMode providedToken)
+  when (personal && duDestination /= Just "google_drive") $
+    throwError (ContentStorage.storageError err400 "storage_destination_required")
   if personal && duDestination == Just "google_drive"
     then unless (hasCoherentAuthScope user) (throwError err403)
     else either throwError pure (validateDriveAccess user)
@@ -3312,13 +3335,24 @@ legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
     throwError (ContentStorage.storageError err409 "storage_destination_required")
   mFolderEnv <- if personal then pure Nothing else liftIO $ lookupEnvTextNonEmpty "DRIVE_UPLOAD_FOLDER_ID"
   folder <- either throwError pure (resolveDriveUploadFolderId duFolderId mFolderEnv)
+  when (personal && sharing /= Just "public" && isJust folder) $
+    throwError (ContentStorage.storageError err400 "storage_private_folder_unsupported")
   nameOverride <- either throwError pure (resolveDriveUploadName duName (fdFileName duFile))
   fileSize <- liftIO (getFileSize (fdPayload duFile))
   either throwError pure (validateDriveUploadFileSize fileSize)
   mimeType <- either throwError pure (resolveDriveUploadMimeType (fdFileCType duFile))
+  -- Legacy operational uploads cannot bypass activation or claim privacy in a
+  -- service folder with inherited permissions. Private files need an explicit
+  -- managed/personal destination with the corresponding admission boundary.
+  ContentStorage.requireUploadsEnabled
+  when (not personal && sharing /= Just "public") $
+    throwError (ContentStorage.storageError err409 "storage_destination_required")
   manager <- pure sharedTlsManager
-  accessToken <- resolveDriveAccessToken manager providedToken
-  stableId <- if personal && duDestination == Just "google_drive" then do
+  accessToken <- if personal
+    then maybe (throwError (ContentStorage.storageError err409 "storage_reconnect_required"))
+           (StorageVault.resolveConnection manager user) providedToken
+    else resolveDriveAccessToken manager providedToken
+  (stableId, providerAccount) <- if personal && duDestination == Just "google_drive" then do
     key <- maybe (throwError (ContentStorage.storageError err400 "storage_idempotency_required")) pure duIdempotencyKey
     identifiers <- liftIO (Safe.tryAny (driveUploadIdentifiers manager accessToken))
     (accountId, proposedId) <- case identifiers of
@@ -3328,14 +3362,26 @@ legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
       Right values -> pure values
     bytes <- liftIO (BL.readFile (fdPayload duFile))
     let fingerprint = effectiveDriveUploadFingerprint (auPartyId user) nameOverride mimeType folder bytes sharing
-    Just <$> ContentStorage.bindExternalDriveAttempt user key fingerprint accountId proposedId
-  else pure Nothing
+    bound <- ContentStorage.bindExternalDriveAttempt user key fingerprint accountId proposedId
+    pure (Just bound, Just accountId)
+  else pure (Nothing, Nothing)
   dtoOrErr <-
     liftIO
       (Safe.tryAny (uploadToDrive manager (auPartyId user) accessToken duFile mimeType (Just nameOverride) folder duIdempotencyKey sharing stableId) ::
         IO (Either SomeException DriveUploadDTO))
   case dtoOrErr of
-    Right dto -> pure dto
+    Right dto -> do
+      when (personal && sharing /= Just "public") $ do
+        accountId <- maybe (throwError err409) pure providerAccount
+        verified <- liftIO $ Safe.tryAny $ do
+          permissions <- driveJsonRequest manager accessToken
+            ("https://www.googleapis.com/drive/v3/files/" <> T.unpack (duFileId dto)
+              <> "/permissions?fields=nextPageToken,permissions(id,type,role,deleted)&pageSize=100&supportsAllDrives=true")
+          pure (privateDrivePermissionsSafe accountId permissions)
+        case verified of
+          Right True -> pure ()
+          _ -> throwError (ContentStorage.storageError err403 "storage_private_permissions_unverified")
+      pure dto
     Left err -> case fromException err of
       Just replayError -> if errHTTPCode replayError == 409 then throwError replayError
                           else throwError (storageProviderError personal (replayError :: ServerError))
@@ -3366,10 +3412,26 @@ legacyDriveUploadServer user mAccessToken DriveUploadForm{..} = do
 
 -- New callers declare their chosen authority. A failed personal connection
 -- must never select TDF's credential or its configured upload folder.
--- Explicit provider destinations default private; absent flags retain legacy callers.
+-- Every destination defaults private; public permission always needs a choice.
 resolveDriveUploadVisibility :: Maybe Text -> Maybe Text -> Maybe Text
 resolveDriveUploadVisibility (Just "google_drive") visibility = Just (fromMaybe "private" visibility)
-resolveDriveUploadVisibility _ visibility = visibility
+resolveDriveUploadVisibility _ visibility = Just (fromMaybe "private" visibility)
+
+-- A private personal result is never returned for an uninspected, paginated,
+-- inherited, domain, group, anyone, or foreign-user ACL. New private files are
+-- created in the personal root, never in a caller-selected shared folder.
+privateDrivePermissionsSafe :: Text -> Value -> Bool
+privateDrivePermissionsSafe owner value = fromMaybe False $ parseMaybe
+  (withObject "Drive ACL" $ \acl -> do
+    next <- acl .:? "nextPageToken" :: Parser (Maybe Text)
+    permissions <- acl .: "permissions" :: Parser [Value]
+    entries <- mapM (withObject "Permission" $ \permission -> do
+      identifier <- permission .: "id"
+      kind <- permission .: "type"
+      role <- permission .: "role"
+      deleted <- permission .:? "deleted" .!= False
+      pure (identifier == owner && kind == ("user" :: Text) && role == ("owner" :: Text) && not deleted)) permissions
+    pure (isNothing next && length entries == 1 && and entries)) value
 
 resolveDriveUploadAuthority :: Maybe Text -> Maybe Text -> Either ServerError Bool
 resolveDriveUploadAuthority authMode token = case (authMode, token) of
@@ -3638,6 +3700,7 @@ validateDriveAccessTokenWith baseError token
 
 driveTokenExchangeServer :: AuthedUser -> DriveTokenExchangeRequest -> AppM DriveTokenResponse
 driveTokenExchangeServer user payload = do
+  ContentStorage.requireUploadsEnabled
   unless (hasCoherentAuthScope user) (throwError err403)
   Env{envConfig} <- ask
   manager <- pure sharedTlsManager
@@ -3652,21 +3715,14 @@ driveTokenExchangeServer user payload = do
     , ("redirect_uri", TE.encodeUtf8 redirectResolved)
     , ("grant_type", "authorization_code")
     ] `catchError` (throwError . storageProviderError True)
-  pure (driveTokenResponseFrom token Nothing)
+  StorageVault.storeConnection user (access_token token) (refresh_token token)
+    (fromMaybe 3600 (expires_in token))
 
 driveTokenRefreshServer :: AuthedUser -> DriveTokenRefreshRequest -> AppM DriveTokenResponse
 driveTokenRefreshServer user payload = do
   unless (hasCoherentAuthScope user) (throwError err403)
   refreshTokenVal <- either throwError pure (validateDriveTokenRefreshRequest payload)
-  manager <- pure sharedTlsManager
-  (cid, secret) <- loadDriveClientCreds
-  token <- requestGoogleToken manager
-    [ ("client_id", TE.encodeUtf8 cid)
-    , ("client_secret", TE.encodeUtf8 secret)
-    , ("refresh_token", TE.encodeUtf8 refreshTokenVal)
-    , ("grant_type", "refresh_token")
-    ] `catchError` (throwError . storageProviderError True)
-  pure (driveTokenResponseFrom token (Just refreshTokenVal))
+  StorageVault.refreshConnection sharedTlsManager user refreshTokenVal
 
 validateDriveTokenExchangeRequest
   :: AppConfig
@@ -3815,15 +3871,6 @@ isSafeDriveRedirectUri uri
 googleDriveOAuthCallbackPath :: Text
 googleDriveOAuthCallbackPath = "/oauth/google-drive/callback"
 
-driveTokenResponseFrom :: GoogleToken -> Maybe Text -> DriveTokenResponse
-driveTokenResponseFrom GoogleToken{..} fallbackRefresh =
-  DriveTokenResponse
-    { accessToken = access_token
-    , refreshToken = refresh_token <|> fallbackRefresh
-    , expiresIn = fromMaybe 3600 expires_in
-    , tokenType = token_type
-    }
-
 requestGoogleToken :: Manager -> [(ByteString, ByteString)] -> AppM GoogleToken
 requestGoogleToken manager form = do
   req0 <- liftIO $ parseRequest "https://oauth2.googleapis.com/token"
@@ -3872,109 +3919,15 @@ loadDriveClientCreds = do
     resolveDriveClientCreds mCid mSecret mCidFallback mSecretFallback
 
 resolveDriveClientCreds
-  :: Maybe Text
-  -> Maybe Text
-  -> Maybe Text
-  -> Maybe Text
+  :: Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text
   -> Either ServerError (Text, Text)
-resolveDriveClientCreds
-  rawDriveClientId
-  rawDriveClientSecret
-  rawGoogleClientId
-  rawGoogleClientSecret = do
-  mDriveClientId <- validateOptionalDriveClientId "DRIVE_CLIENT_ID" rawDriveClientId
-  mDriveClientSecret <-
-    validateOptionalDriveClientCredential "DRIVE_CLIENT_SECRET" rawDriveClientSecret
-  mGoogleClientId <- validateOptionalDriveClientId "GOOGLE_CLIENT_ID" rawGoogleClientId
-  mGoogleClientSecret <-
-    validateOptionalDriveClientCredential "GOOGLE_CLIENT_SECRET" rawGoogleClientSecret
-  case (mDriveClientId, mDriveClientSecret) of
-    (Just cid, Just secret) -> Right (cid, secret)
-    (Just _, Nothing) -> Left partialDriveCredsError
-    (Nothing, Just _) -> Left partialDriveCredsError
-    (Nothing, Nothing) ->
-      case (mGoogleClientId, mGoogleClientSecret) of
-        (Just cid, Just secret) -> Right (cid, secret)
-        (Just _, Nothing) -> Left partialGoogleCredsError
-        (Nothing, Just _) -> Left partialGoogleCredsError
-        (Nothing, Nothing) -> Left missingDriveCredsError
-  where
-    partialDriveCredsError =
-      err503
-        { errBody =
-            "Google Drive no configurado: set both DRIVE_CLIENT_ID and DRIVE_CLIENT_SECRET, " <>
-            "or unset both to use GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET fallback."
-        }
-    partialGoogleCredsError =
-      err503
-        { errBody =
-            "Google Drive no configurado: GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET " <>
-            "must both be set for fallback credentials."
-        }
-    missingDriveCredsError =
-      err503
-        { errBody =
-            "Google Drive no configurado (faltan DRIVE_CLIENT_ID/DRIVE_CLIENT_SECRET o " <>
-            "GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET)."
-        }
+resolveDriveClientCreds = DriveOAuthClient.resolveDriveClientCreds
 
 validateOptionalDriveClientId :: Text -> Maybe Text -> Either ServerError (Maybe Text)
-validateOptionalDriveClientId envName rawClientId =
-  case rawClientId of
-    Nothing -> Right Nothing
-    Just clientId ->
-      if T.null (T.strip clientId)
-        then
-          Left err503
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  envName <> " is configured but blank"
-            }
-        else
-          case normalizeConfiguredGoogleClientId (T.unpack envName) (T.unpack clientId) of
-            Left msg ->
-              Left err503
-                { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack msg)) }
-            Right normalized -> Right normalized
+validateOptionalDriveClientId = DriveOAuthClient.validateOptionalDriveClientId
 
 validateOptionalDriveClientCredential :: Text -> Maybe Text -> Either ServerError (Maybe Text)
-validateOptionalDriveClientCredential envName rawCredential =
-  case rawCredential of
-    Nothing -> Right Nothing
-    Just raw
-      | T.null credential ->
-          Left err503
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  envName <> " is configured but blank"
-            }
-      | T.any (\ch -> isControl ch || isSpace ch) credential ->
-          Left err503
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  envName <> " must not contain control characters or whitespace"
-            }
-      | T.any isHiddenDriveOAuthTokenChar credential ->
-          Left err503
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  envName <> " must not contain hidden formatting characters"
-            }
-      | T.any (not . isAscii) credential ->
-          Left err503
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  envName <> " must contain only ASCII characters"
-            }
-      | T.length credential > maxDriveOAuthTokenChars ->
-          Left err503
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  envName <> " must be 4096 characters or fewer"
-            }
-      | otherwise -> Right (Just credential)
-      where
-        credential = T.strip raw
+validateOptionalDriveClientCredential = DriveOAuthClient.validateOptionalDriveClientCredential
 
 refreshDriveAccessToken :: Manager -> Text -> Text -> Text -> AppM Text
 refreshDriveAccessToken manager cid secret rt = do
@@ -4026,6 +3979,7 @@ protectedServer user =
   :<|> whatsappConsentServer user
   :<|> socialServer user
   :<|> chatServer user
+  :<|> notificationDeliveryServer user
   :<|> chatkitSessionServer user
   :<|> tidalAgentServer user
   :<|> socialSyncServer user
@@ -4051,6 +4005,7 @@ protectedServer user =
   :<|> AuthServer.artistInvitationsServer user
   :<|> navigationPreferencesServer user
   :<|> DirectoryServer.directoryProtectedServer user
+  :<|> TaxonomyServer.taxonomyProtectedServer user
   :<|> MerchServer.merchProtectedServer user
   :<|> OperationsServer.operationsServer user
   :<|> EventOperationsServer.eventOperationsServer user
@@ -6247,6 +6202,9 @@ updateCourseRegistrationNotes rawSlug regId CourseRegistrationNotesUpdate{..} = 
     loadCourseRegistrationCounts regKey
   pure (toCourseRegistrationDTOWithCounts receiptCount followUpCount (Entity regKey updated))
 
+storageApiBase :: AppConfig -> Text
+storageApiBase cfg = fromMaybe "https://api.tdfrecords.net" (T.stripSuffix "/assets/serve" (resolveConfiguredAssetsBase cfg))
+
 createCourseRegistrationReceipt
   :: AuthedUser
   -> Text
@@ -6274,18 +6232,18 @@ createCourseRegistrationReceipt user rawSlug regId CourseRegistrationReceiptCrea
         , ME.courseRegistrationReceiptCreatedAt = now
         , ME.courseRegistrationReceiptUpdatedAt = now
         }
-  receiptId <- runDB $ insert receipt
-  void $ runDB $ insertCourseRegistrationFollowUp
-    regKey
-    (ME.courseRegistrationPartyId reg)
-    (Just (auPartyId user))
-    "payment_receipt"
-    (Just "Comprobante de pago agregado")
-    (fromMaybe "Se agregó un comprobante de pago." (cleanOptional notes <|> fileNameVal))
-    (Just fileUrlVal)
-    fileNameVal
-    Nothing
-    now
+  cfg <- asks envConfig
+  receiptId <- ContentStorage.runReferenceMutation user $ do
+    identifier <- insert receipt
+    ContentStorage.requireReference user (storageApiBase cfg) "course_receipt" (fromSqlKey identifier) (Just fileUrlVal)
+    followUp <- insertCourseRegistrationFollowUp
+      regKey (ME.courseRegistrationPartyId reg) (Just (auPartyId user))
+      "payment_receipt" (Just "Comprobante de pago agregado")
+      (fromMaybe "Se agregó un comprobante de pago." (cleanOptional notes <|> fileNameVal))
+      (Just fileUrlVal) fileNameVal Nothing now
+    ContentStorage.requireReference user (storageApiBase cfg) "course_follow_up"
+      (fromSqlKey (entityKey followUp)) (Just fileUrlVal)
+    pure identifier
   pure (toCourseRegistrationReceiptDTO (Entity receiptId receipt))
 
 fetchCourseRegistrationReceiptEntity
@@ -6312,7 +6270,7 @@ updateCourseRegistrationReceipt
   -> Int64
   -> CourseRegistrationReceiptUpdate
   -> AppM DTO.CourseRegistrationReceiptDTO
-updateCourseRegistrationReceipt _ rawSlug regId receiptId CourseRegistrationReceiptUpdate{..} = do
+updateCourseRegistrationReceipt user rawSlug regId receiptId CourseRegistrationReceiptUpdate{..} = do
   (ent, Entity receiptKey receipt) <- fetchCourseRegistrationReceiptEntity rawSlug regId receiptId
   now <- liftIO getCurrentTime
   fileUrlVal <- case fileUrl of
@@ -6337,14 +6295,17 @@ updateCourseRegistrationReceipt _ rawSlug regId receiptId CourseRegistrationRece
               maybe (ME.courseRegistrationReceiptNotes receipt) (cleanOptional . Just) notes
           , ME.courseRegistrationReceiptUpdatedAt = now
           }
-  runDB $ update receiptKey
-    [ ME.CourseRegistrationReceiptPartyId =. ME.courseRegistrationReceiptPartyId updated
-    , ME.CourseRegistrationReceiptFileUrl =. ME.courseRegistrationReceiptFileUrl updated
-    , ME.CourseRegistrationReceiptFileName =. ME.courseRegistrationReceiptFileName updated
-    , ME.CourseRegistrationReceiptMimeType =. ME.courseRegistrationReceiptMimeType updated
-    , ME.CourseRegistrationReceiptNotes =. ME.courseRegistrationReceiptNotes updated
-    , ME.CourseRegistrationReceiptUpdatedAt =. now
-    ]
+  cfg <- asks envConfig
+  ContentStorage.runReferenceMutation user $ do
+    ContentStorage.requireReference user (storageApiBase cfg) "course_receipt" (fromSqlKey receiptKey) (Just fileUrlVal)
+    update receiptKey
+      [ ME.CourseRegistrationReceiptPartyId =. ME.courseRegistrationReceiptPartyId updated
+      , ME.CourseRegistrationReceiptFileUrl =. ME.courseRegistrationReceiptFileUrl updated
+      , ME.CourseRegistrationReceiptFileName =. ME.courseRegistrationReceiptFileName updated
+      , ME.CourseRegistrationReceiptMimeType =. ME.courseRegistrationReceiptMimeType updated
+      , ME.CourseRegistrationReceiptNotes =. ME.courseRegistrationReceiptNotes updated
+      , ME.CourseRegistrationReceiptUpdatedAt =. now
+      ]
   pure (toCourseRegistrationReceiptDTO (Entity receiptKey updated))
 
 deleteCourseRegistrationReceipt
@@ -6396,17 +6357,14 @@ createCourseRegistrationFollowUp user rawSlug regId CourseRegistrationFollowUpCr
       (resolveCourseRegistrationAttachmentName attachmentUrlVal Nothing attachmentName)
   mNextFollowUpAt <- parseOptionalUtcText "nextFollowUpAt" nextFollowUpAt
   now <- liftIO getCurrentTime
-  followUp <- runDB $ insertCourseRegistrationFollowUp
-    (entityKey ent)
-    (ME.courseRegistrationPartyId (entityVal ent))
-    (Just (auPartyId user))
-    entryTypeVal
-    subject
-    notesVal
-    attachmentUrlVal
-    attachmentNameVal
-    mNextFollowUpAt
-    now
+  cfg <- asks envConfig
+  followUp <- ContentStorage.runReferenceMutation user $ do
+    inserted <- insertCourseRegistrationFollowUp
+      (entityKey ent) (ME.courseRegistrationPartyId (entityVal ent))
+      (Just (auPartyId user)) entryTypeVal subject notesVal attachmentUrlVal
+      attachmentNameVal mNextFollowUpAt now
+    ContentStorage.requireReference user (storageApiBase cfg) "course_follow_up" (fromSqlKey (entityKey inserted)) attachmentUrlVal
+    pure inserted
   pure (toCourseRegistrationFollowUpDTO followUp)
 
 updateCourseRegistrationFollowUp
@@ -6416,7 +6374,7 @@ updateCourseRegistrationFollowUp
   -> Int64
   -> CourseRegistrationFollowUpUpdate
   -> AppM DTO.CourseRegistrationFollowUpDTO
-updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFollowUpUpdate{..} = do
+updateCourseRegistrationFollowUp user rawSlug regId followUpId CourseRegistrationFollowUpUpdate{..} = do
   (ent, Entity followUpKey followUp) <- fetchCourseRegistrationFollowUpEntity rawSlug regId followUpId
   notesVal <- case notes of
     Nothing -> pure (ME.courseRegistrationFollowUpNotes followUp)
@@ -6453,16 +6411,19 @@ updateCourseRegistrationFollowUp _ rawSlug regId followUpId CourseRegistrationFo
           , ME.courseRegistrationFollowUpNextFollowUpAt = mNextFollowUpAt
           , ME.courseRegistrationFollowUpUpdatedAt = now
           }
-  runDB $ update followUpKey
-    [ ME.CourseRegistrationFollowUpPartyId =. ME.courseRegistrationFollowUpPartyId updated
-    , ME.CourseRegistrationFollowUpEntryType =. ME.courseRegistrationFollowUpEntryType updated
-    , ME.CourseRegistrationFollowUpSubject =. ME.courseRegistrationFollowUpSubject updated
-    , ME.CourseRegistrationFollowUpNotes =. ME.courseRegistrationFollowUpNotes updated
-    , ME.CourseRegistrationFollowUpAttachmentUrl =. ME.courseRegistrationFollowUpAttachmentUrl updated
-    , ME.CourseRegistrationFollowUpAttachmentName =. ME.courseRegistrationFollowUpAttachmentName updated
-    , ME.CourseRegistrationFollowUpNextFollowUpAt =. ME.courseRegistrationFollowUpNextFollowUpAt updated
-    , ME.CourseRegistrationFollowUpUpdatedAt =. now
-    ]
+  cfg <- asks envConfig
+  ContentStorage.runReferenceMutation user $ do
+    ContentStorage.requireReference user (storageApiBase cfg) "course_follow_up" (fromSqlKey followUpKey) attachmentUrlVal
+    update followUpKey
+      [ ME.CourseRegistrationFollowUpPartyId =. ME.courseRegistrationFollowUpPartyId updated
+      , ME.CourseRegistrationFollowUpEntryType =. ME.courseRegistrationFollowUpEntryType updated
+      , ME.CourseRegistrationFollowUpSubject =. ME.courseRegistrationFollowUpSubject updated
+      , ME.CourseRegistrationFollowUpNotes =. ME.courseRegistrationFollowUpNotes updated
+      , ME.CourseRegistrationFollowUpAttachmentUrl =. ME.courseRegistrationFollowUpAttachmentUrl updated
+      , ME.CourseRegistrationFollowUpAttachmentName =. ME.courseRegistrationFollowUpAttachmentName updated
+      , ME.CourseRegistrationFollowUpNextFollowUpAt =. ME.courseRegistrationFollowUpNextFollowUpAt updated
+      , ME.CourseRegistrationFollowUpUpdatedAt =. now
+      ]
   pure (toCourseRegistrationFollowUpDTO (Entity followUpKey updated))
 
 deleteCourseRegistrationFollowUp
@@ -7961,6 +7922,35 @@ fanListFollows user = do
     profileMap <- fetchArtistProfileMap artistIds
     pure (map (fanFollowEntityToDTO nameMap profileMap) follows)
 
+-- | GET /fans/me/recommendations (COMMUNITY-FAN-RECOMMENDATION-001). With
+-- FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED the ranking reads the stored
+-- multi-signal similarity (COMMUNITY-ARTIST-SIMILARITY-001); otherwise it is
+-- the follows-only ranking.
+fanListRecommendations :: AuthedUser -> Maybe Int -> AppM [ArtistRecommendationDTO]
+fanListRecommendations user mLimit = do
+  requireFanAccess user
+  Env pool cfg <- ask
+  let limit = ArtistRecommendations.clampRecommendationLimit mLimit
+  recommendations <- liftIO $ flip runSqlPool pool $
+    if fanMultiSignalRecommendationsEnabled cfg
+      then
+        ArtistSimilarity.loadSimilarityRecommendations
+          ArtistSimilarity.StoredGeneration
+          (auPartyId user)
+          limit
+      else ArtistRecommendations.loadArtistRecommendations (auPartyId user) limit
+  pure
+    [ ArtistRecommendationDTO
+        { arecArtistId = ArtistRecommendations.recArtistId item
+        , arecReason =
+            ArtistRecommendations.recommendationReasonCode
+              (ArtistRecommendations.recReason item)
+        , arecScore = ArtistRecommendations.recScore item
+        , arecSeedArtistIds = ArtistRecommendations.recSeedArtistIds item
+        }
+    | item <- recommendations
+    ]
+
 fanFollowArtist :: AuthedUser -> Int64 -> AppM FanFollowDTO
 fanFollowArtist = FanEffects.followArtist
 
@@ -8244,6 +8234,7 @@ socialListSuggestedFriends user = do
           [ SuggestedFriendDTO
               { sfPartyId = fromSqlKey candidateId
               , sfMutualCount = mutuals
+              , sfReason = Nothing
               }
           | (candidateId, mutuals) <- ordered
           ]
@@ -9660,20 +9651,31 @@ bookingPublicServer =
 
 inventoryStaticServer :: FilePath -> ServerT Api.AssetsAPI AppM
 inventoryStaticServer assetsRoot =
-  serveDirectoryFileServer (assetsRoot </> "inventory")
-
-assetsServeServer :: FilePath -> ServerT Api.AssetsServeAPI AppM
-assetsServeServer assetsRoot =
-  case serveDirectoryFileServer assetsRoot of
-    Tagged staticApplication -> Tagged $ \request sendResponse ->
-      if assetsServePathAllowed (Wai.pathInfo request)
+  case serveDirectoryFileServer (assetsRoot </> "inventory") of
+    Tagged staticApplication -> Tagged $ \request sendResponse -> do
+      safe <- ContentStorage.publicRequestSafe assetsRoot ("inventory" : Wai.pathInfo request)
+      if safe && assetsServePathAllowed (Wai.pathInfo request)
         then staticApplication request sendResponse
         else sendResponse (Wai.responseLBS status404 [] "Not found")
 
+assetsServeServer :: Env -> FilePath -> ServerT Api.AssetsServeAPI AppM
+assetsServeServer env assetsRoot =
+  case serveDirectoryFileServer assetsRoot of
+    Tagged staticApplication -> Tagged $ \request sendResponse -> do
+      rootsSafe <- ContentStorage.publicRequestSafe assetsRoot (Wai.pathInfo request)
+      committedPublic <- if rootsSafe then ContentStorage.publicObjectAllowed env (Wai.pathInfo request) else pure False
+      let respond = if take 1 (Wai.pathInfo request) == ["content"]
+            then sendResponse . Wai.mapResponseHeaders (\headers ->
+              ("Cache-Control","no-store") : filter ((/= "Cache-Control") . fst) headers)
+            else sendResponse
+      if assetsServePathAllowed (Wai.pathInfo request) && committedPublic
+        then staticApplication request respond
+        else sendResponse (Wai.responseLBS status404 [] "Not found")
+
 assetsServePathAllowed :: [Text] -> Bool
-assetsServePathAllowed (firstSegment : _) =
-  firstSegment `notElem` [".internal-feedback", ".content-storage-staging"]
-assetsServePathAllowed [] = True
+assetsServePathAllowed = all $ \segment ->
+  segment `notElem` [".", "..", ".internal-feedback", ".content-storage-staging"]
+    && not (T.any (`elem` ['/', '\\', '\NUL']) segment)
 
 bookingServer :: AuthedUser -> ServerT BookingAPI AppM
 bookingServer user =
@@ -10777,8 +10779,9 @@ bindServiceBookingProviderResource
 createPublicBookingDatafastCheckout
   :: Int64
   -> Maybe Text
+  -> ClientIP.DatafastClientRequest
   -> AppM DatafastCheckoutDTO
-createPublicBookingDatafastCheckout rawBookingId mLookupToken = do
+createPublicBookingDatafastCheckout rawBookingId mLookupToken clientRequest = do
   context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
   when (sbpcCheckoutStatus context == "paid") $
     throwError err409 { errBody = "This booking deposit is already paid" }
@@ -10786,19 +10789,25 @@ createPublicBookingDatafastCheckout rawBookingId mLookupToken = do
   (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireServiceBookingProvider
     context (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
+  existing <- loadServiceBookingProviderBinding
+    context Checkout.ProviderDatafast (ServiceStorefront.sdfEntityId datafast) "checkout"
+  preflight <- maybe
+    (Right <$> ServiceStorefront.loadDatafastClientIP clientRequest) (pure . Left) existing
   attempt <- beginServiceBookingPaymentAttempt
     context Checkout.ProviderDatafast Checkout.OperationCreate
     (ServiceStorefront.sdfEntityId datafast) "create"
-  existing <- loadServiceBookingProviderBinding
-    context Checkout.ProviderDatafast (ServiceStorefront.sdfEntityId datafast) "checkout"
-  (checkoutId, widgetUrl) <- case existing of
-    Just (storedCheckoutId, _) -> pure
+  checkoutRequest <- ServiceStorefront.recheckDatafastCheckout
+    (loadServiceBookingProviderBinding
+      context Checkout.ProviderDatafast (ServiceStorefront.sdfEntityId datafast) "checkout") preflight
+  (checkoutId, widgetUrl) <- case checkoutRequest of
+    Left (storedCheckoutId, _) -> pure
       ( storedCheckoutId
       , normalizeBaseUrl (ServiceStorefront.sdfBaseUrl datafast)
           <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
       )
-    Nothing -> ServiceStorefront.requestDatafastCheckoutForService
-      (toPathPiece (sbpcBookingKey context))
+    Right clientIP -> ServiceStorefront.requestDatafastCheckoutForService
+      (sbpcCheckout context)
+      attempt clientIP
       (fromIntegral (sbpcDepositMinor context))
       (sbpcCurrency context)
       (sbpcBuyerName context)
@@ -10870,11 +10879,11 @@ confirmPublicBookingDatafastStatus rawBookingId mLookupToken rawResourcePath = d
           pending = resultCode == "000.200.000"
       if success
         then do
-          case ServiceStorefront.validateDatafastSuccessfulPayment
-              (toPathPiece (sbpcBookingKey context))
-              (fromIntegral (sbpcDepositMinor context))
-              (sbpcCurrency context)
-              providerStatus of
+          validation <- ServiceStorefront.validateBoundDatafastSuccessfulPayment
+            (sbpcCheckout context) (ServiceStorefront.sdfEnvironment datafast)
+            (ServiceStorefront.sdfEntityId datafast) checkoutId
+            (fromIntegral (sbpcDepositMinor context)) (sbpcCurrency context) providerStatus
+          case validation of
             Left validationMessage -> do
               let actualAmount = ServiceStorefront.sdfpsAmount providerStatus
                     >>= either (const Nothing) Just . ServiceStorefront.parseDatafastCents
@@ -11574,7 +11583,10 @@ createPublicBooking mIdempotency PublicBookingReq{..} = do
     dtos <- buildBookingDTOs [created]
     pure (requirePersistedBookingDTO dtos)
   dto <- either throwError pure dtoResult
-  when createdNow (notifyEngineerIfNeeded dto)
+  when createdNow $ do
+    notifyEngineerIfNeeded dto
+    env <- ask
+    liftIO (PublicBookingNotifications.notifyPublicBookingRequest env dto fullNameClean emailClean phoneClean)
   pure dto
 
 -- | SQL failures a public booking transaction turns into 409 instead of a
@@ -16560,8 +16572,8 @@ isMarketplaceActiveStripeOrderConflict exception =
           `BS8.isInfixOf` (sqlErrorMsg sqlErr <> " " <> sqlErrorDetail sqlErr)
     Nothing -> False
 
-createDatafastCheckout :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
-createDatafastCheckout rawId mIdempotency payload = do
+createDatafastCheckout :: Text -> Maybe Text -> MarketplaceCheckoutReq -> ClientIP.DatafastClientRequest -> AppM DatafastCheckoutDTO
+createDatafastCheckout rawId mIdempotency payload clientRequest = do
   context <- prepareMarketplaceSaleCheckout "datafast" rawId mIdempotency payload
   dfEnv <- loadDatafastCheckoutEnv
   unless (dfEnvironment dfEnv == msccEnvironment context) $
@@ -16574,6 +16586,12 @@ createDatafastCheckout rawId mIdempotency payload = do
     Checkout.providerEnabledForEnvironment (msccEnvironment context) Checkout.ProviderDatafast
   unless providerEnabled $
     throwError err503 { errBody = "Datafast checkout is disabled in this environment" }
+  mPreflightOrder <- liftIO $ flip runSqlPool envPool $ get (msccOrderKey context)
+  preflightOrder <- maybe (throwError marketplaceOrderNotFound) pure mPreflightOrder
+  preflight <- case ME.marketplaceOrderDatafastCheckoutId preflightOrder of
+    Just storedCheckoutId -> Left <$> either throwError pure
+      (validateStoredDatafastCheckoutId storedCheckoutId)
+    Nothing -> Right <$> ServiceStorefront.loadDatafastClientIP clientRequest
   attemptResult <- liftIO $ flip runSqlPool envPool $
     PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
       { Checkout.pacCheckout = msccCheckout context
@@ -16590,18 +16608,20 @@ createDatafastCheckout rawId mIdempotency payload = do
   attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
   mOrder <- liftIO $ flip runSqlPool envPool $ get (msccOrderKey context)
   order <- maybe (throwError marketplaceOrderNotFound) pure mOrder
-  (checkoutId, widgetUrl) <- case ME.marketplaceOrderDatafastCheckoutId order of
-    Just storedCheckoutId -> do
-      validatedCheckoutId <- either throwError pure
-        (validateStoredDatafastCheckoutId storedCheckoutId)
+  checkoutRequest <- ServiceStorefront.recheckDatafastCheckout
+    (traverse (either throwError pure . validateStoredDatafastCheckoutId)
+      (ME.marketplaceOrderDatafastCheckoutId order)) preflight
+  (checkoutId, widgetUrl) <- case checkoutRequest of
+    Left validatedCheckoutId ->
       pure
         ( validatedCheckoutId
         , normalizeBaseUrl (dfBaseUrl dfEnv)
             <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack validatedCheckoutId
         )
-    Nothing ->
+    Right clientIP ->
       requestDatafastCheckout
-        (msccOrderKey context)
+        (msccCheckout context)
+        attempt clientIP
         (msccTotalCents context)
         (msccCurrency context)
         (ME.marketplaceOrderBuyerName order)
@@ -16673,10 +16693,6 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
         (ME.marketplaceOrderCurrency order)
         (dfpAmount statusResp)
         (dfpCurrency statusResp)
-    unless (dfpMerchantTransactionId statusResp == Just (toPathPiece orderKey)) $
-      throwError err502
-        { errBody = "Datafast merchant transaction reference does not match this order"
-        }
   paymentId <- either throwError pure (validateOptionalDatafastPaymentIdField (dfpId statusResp))
   resultDescription <- either throwError pure $
     validateOptionalDatafastMetadataField
@@ -16727,6 +16743,19 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
       attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
       if success
         then do
+          validation <- ServiceStorefront.validateBoundDatafastSuccessfulPayment checkout
+            checkoutEnvironment (dfEntityId dfEnv)
+            (fromMaybe "" (ME.marketplaceOrderDatafastCheckoutId order))
+            (ME.marketplaceOrderTotalUsdCents order) (ME.marketplaceOrderCurrency order)
+            ServiceStorefront.ServiceDatafastPaymentStatus
+              { ServiceStorefront.sdfpsPaymentId = dfpId statusResp
+              , ServiceStorefront.sdfpsAmount = dfpAmount statusResp
+              , ServiceStorefront.sdfpsCurrency = dfpCurrency statusResp
+              , ServiceStorefront.sdfpsMerchantTransactionId = dfpMerchantTransactionId statusResp
+              , ServiceStorefront.sdfpsResultCode = code
+              }
+          either (\message -> throwError err502
+            { errBody = BL.fromStrict (TE.encodeUtf8 message) }) pure validation
           verified <- liftIO $ flip runSqlPool envPool $
             Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
               { Checkout.vpAttempt = attempt
@@ -16752,7 +16781,10 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
               ("marketplace-datafast:" <> toPathPiece orderKey) now
             else Checkout.recordPaymentFailure checkout attempt Checkout.ProviderDatafast code
               ("marketplace-datafast:" <> toPathPiece orderKey) now
-    [] -> pure ()
+    [] -> when success $
+      unless (dfpMerchantTransactionId statusResp == Just (toPathPiece orderKey)) $
+        throwError err502
+          { errBody = "Datafast merchant transaction reference does not match this order" }
     _ -> throwError (marketplaceCheckoutInternal
       "Marketplace Datafast runtime lookup was ambiguous")
   let nextStatus
@@ -17085,9 +17117,10 @@ captureLegacyPaypalOrder orderKey order paypalOrderId = do
   either throwError pure $
     requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
 
-requestDatafastCheckout :: Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
-requestDatafastCheckout orderKey totalCents currency name email mPhone = do
+requestDatafastCheckout :: Checkout.CheckoutReference -> Checkout.PaymentAttemptReference -> ClientIP.DatafastClientIP -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
+requestDatafastCheckout checkout attempt clientIP totalCents currency name email mPhone = do
   dfEnv <- loadDatafastCheckoutEnv
+  cartParameters <- ServiceStorefront.loadDatafastCartParameters checkout totalCents currency
   let manager = sharedProviderManager
   let amountTxt = Internationalization.formatMinorUnitsDecimal
         currency (fromIntegral totalCents)
@@ -17098,14 +17131,15 @@ requestDatafastCheckout orderKey totalCents currency name email mPhone = do
         , ("amount", TE.encodeUtf8 amountTxt)
         , ("currency", TE.encodeUtf8 currencyTxt)
         , ("paymentType", "DB")
-        , ("merchantTransactionId", TE.encodeUtf8 (toPathPiece orderKey))
+        , ("merchantTransactionId", TE.encodeUtf8 (Checkout.paymentAttemptReferenceId attempt))
         , ("customer.givenName", TE.encodeUtf8 givenName)
         , ("customer.surname", TE.encodeUtf8 surname)
         , ("customer.email", TE.encodeUtf8 email)
         ]
       phoneParam = maybe [] (\p -> [("customer.phone", TE.encodeUtf8 p)]) mPhone
       testModeParam = maybe [] (\tm -> [("testMode", TE.encodeUtf8 tm)]) (dfTestMode dfEnv)
-      allParams = baseParams <> phoneParam <> testModeParam <> dfExtraParams dfEnv
+      allParams = baseParams <> ClientIP.datafastClientIPParameters clientIP
+        <> phoneParam <> testModeParam <> dfExtraParams dfEnv <> cartParameters
       body = RequestBodyBS (renderSimpleQuery False allParams)
       baseUrlClean = normalizeBaseUrl (dfBaseUrl dfEnv)
   req0 <- ServiceStorefront.providerRequest Checkout.ProviderDatafast (baseUrlClean ++ "/v1/checkouts")
@@ -20757,7 +20791,7 @@ uploadToDrive manager actor accessToken file mimeTypeTxt mName mFolder mIdempote
       body = BL.intercalate "\r\n" [metaPart, filePart, closing, ""]
 
   req0 <- parseRequest $
-    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart" <>
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&ignoreDefaultVisibility=true" <>
     "&fields=id,webViewLink,webContentLink,resourceKey,appProperties,sha256Checksum,size&supportsAllDrives=true"
   let bearer = "Bearer " <> TE.encodeUtf8 accessToken
       req = req0
@@ -20802,7 +20836,7 @@ uploadToDrive manager actor accessToken file mimeTypeTxt mName mFolder mIdempote
     unless (darSha256 driveResp == Just contentHash && darSize driveResp == Just (T.pack (show (BL.length fileBytes)))) $
       throwIO (ContentStorage.storageError err409 "storage_integrity_pending")
   -- A new upload never grants public access without an explicit sharing choice.
-  let shouldShare = mVisibility `elem` [Nothing, Just "public"]
+  let shouldShare = mVisibility == Just "public"
   let permBody = encode (object ["role" .= ("reader" :: Text), "type" .= ("anyone" :: Text)])
   permReq0 <- parseRequest $
     "https://www.googleapis.com/drive/v3/files/" <>

@@ -1,0 +1,10 @@
+{
+  "id": "6e81d64a25c5f15c36e8",
+  "classification": "dynamic-business-catalog",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "service_category, service_offering, booking_type",
+  "priority": "P2-domain",
+  "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+  "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+  "reviewed": true
+}

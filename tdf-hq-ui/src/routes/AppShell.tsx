@@ -10,6 +10,7 @@ import { OfflineBanner } from '../components/OfflineBanner';
 import RegistryBreadcrumbs from '../components/RegistryBreadcrumbs';
 import RouteErrorBoundary from '../components/RouteErrorBoundary';
 import SidebarNav from '../components/SidebarNav';
+import MenuFamilyTabs from '../components/MenuFamilyTabs';
 import TopBar from '../components/TopBar';
 import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
@@ -19,7 +20,7 @@ import ForbiddenPage from '../pages/ForbiddenPage';
 import PublicBranding from '../components/PublicBranding';
 import UpcomingEventsCarousel from '../components/events/UpcomingEventsCarousel';
 import UpcomingEventsPublicPage from '../pages/UpcomingEventsPublicPage';
-import { evaluatePathAccess } from '../features/featureRegistry';
+import { evaluatePathAccess } from '../utils/featureRegistry';
 import { useNavigationPreferences } from '../hooks/useNavigationPreferences';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';
@@ -268,6 +269,7 @@ export function Shell() {
         >
           <Container maxWidth="xl" sx={{ pt: { xs: 3, md: 4 }, pb: 6 }}>
             <RegistryBreadcrumbs />
+            {!forbiddenDecision && <MenuFamilyTabs />}
             <SignupMobileInvitation />
             {!forbiddenDecision && <UpcomingEventsCarousel />}
             {forbiddenDecision ? <ForbiddenPage decision={forbiddenDecision} /> : <RouteErrorBoundary><Outlet /></RouteErrorBoundary>}

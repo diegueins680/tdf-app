@@ -6,11 +6,6 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      inspect_payment_staging:
-        description: Read-only metadata and secret-name inspection of the two fixed staging apps.
-        required: false
-        default: false
-        type: boolean
       force_backend:
         description: Build the backend even when path classification would skip it.
         type: boolean
@@ -29,12 +24,6 @@ on:
         required: false
       DOCKERHUB_TOKEN:
         required: false
-      FLY_STAGING_API_TOKEN:
-        required: false
-      FLY_STAGING_WEB_TOKEN:
-        required: false
-      KOYEB_API_TOKEN:
-        required: false
     inputs:
       force_backend:
         description: Always build and test the backend, even when path classification would skip it.
@@ -52,41 +41,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  payment-staging-inspection:
-    if: github.event_name == 'workflow_dispatch' && inputs.inspect_payment_staging == true
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-      - name: Verify staging target and redaction guards
-        run: node --test scripts/__tests__/payment-staging-inspection.test.mjs
-      - name: Install official Fly CLI
-        uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1
-        with:
-          version: '0.4.103'
-      - name: Inspect only existing staging metadata
-        env:
-          FLY_STAGING_API_TOKEN: ${{ secrets.FLY_STAGING_API_TOKEN }}
-          FLY_STAGING_WEB_TOKEN: ${{ secrets.FLY_STAGING_WEB_TOKEN }}
-          KOYEB_API_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
-          NO_COLOR: '1'
-        run: node scripts/inspect-payment-staging.mjs
-      - name: Upload allowlisted staging access report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: payment-staging-access-${{ github.sha }}
-          path: artifacts/payment-staging/access-report.json
-          if-no-files-found: ignore
-          retention-days: 7
-
   changes:
     runs-on: ubuntu-latest
     outputs:
@@ -432,6 +386,12 @@ jobs:
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
 
+      - name: Verify public event card tickets through the actual API and full schema
+        run: >-
+          python3 scripts/test-public-event-card-tickets-http.py
+          --binary "$BACKEND_BINARY_OUT"
+          --output tmp/specification/public-event-card-tickets
+
       - name: Verify authorized music catalog recording search
         env:
           TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_search_test
@@ -590,6 +550,14 @@ jobs:
           createdb -h postgres -U postgres tdf_records_runtime_test
           ./scripts/test-records-ingestion-runtime.sh
 
+      - name: Verify artist similarity job, stored read and reference
+        env:
+          PGPASSWORD: postgres
+          TDF_ARTIST_SIMILARITY_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_artist_similarity_test
+        run: |
+          createdb -h postgres -U postgres tdf_artist_similarity_test
+          sh scripts/test-artist-similarity-postgres.sh
+
       - name: Verify shared event pilot and publication boundaries
         env:
           PGPASSWORD: postgres
@@ -639,7 +607,10 @@ jobs:
       - name: Verify community search ranking and privacy on PostgreSQL
         env:
           TDF_DISCOVERY_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
-        run: python3 scripts/test-community-search.py
+        run: |
+          python3 scripts/test-community-search.py
+          cd tdf-hq
+          "$(stack path --dist-dir)/build/tdf-hq-test/tdf-hq-test" --match="publishes one genre when artists submit" --fail-on=empty
 
       - name: Verify saved-search alert and public query parity
         env:
@@ -695,6 +666,7 @@ jobs:
           bash scripts/test-api-token-session-expiry-migration.sh
           sh scripts/test-meta-redelivery.sh
           sh scripts/test-rag-index-privacy.sh
+          sh scripts/test-directory-semantic-search.sh
           node scripts/__tests__/identity-http-runtime.mjs
           sh scripts/test-whatsapp-redelivery.sh
           sh scripts/test-credential-lifecycle.sh
@@ -704,6 +676,7 @@ jobs:
           sh scripts/test-music-publication.sh
           sh scripts/test-index-declarations.sh
           sh scripts/test-interaction-write-budget.sh
+          sh scripts/test-venue-search.sh
 
       - name: Verify single assignment of an event without an organizer
         env:
@@ -713,6 +686,10 @@ jobs:
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: sh scripts/test-event-admin-delegation.sh
+      - name: Paid ticket sale requests and their approval
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-event-ticket-sale.sh
       - name: Chat recipient notifications and repeated messages
         env:
           TDF_CHAT_NOTIFICATION_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
@@ -1136,6 +1113,15 @@ jobs:
         run: |
           psql "$PGURL" -v ON_ERROR_STOP=1 -c 'CREATE DATABASE tdf_public_ticket_checkout_test'
           npm run test:public-ticket-checkout-migration
+
+      - name: Verify studio gallery seed and editorial changes survive migration retries
+        env:
+          TDF_GALLERY_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/tdf_studio_gallery_test
+        run: |
+          python3 scripts/test-studio-gallery-runner-safety.py
+          bash scripts/test-studio-gallery-migration.sh --check-routing-only
+          psql "${TDF_GALLERY_TEST_DATABASE_URL%/tdf_studio_gallery_test}/postgres" -X -v ON_ERROR_STOP=1 -c 'CREATE DATABASE tdf_studio_gallery_test'
+          bash scripts/test-studio-gallery-migration.sh
 
       - name: Create production baseline fixture
         run: |

@@ -25,7 +25,9 @@ current application database role) retain access; there is no new HTTP endpoint 
 new permission granted to CRM users. Keep output in a private directory; never put inventories,
 credentials, contact attributes or proof documents into PRs, Git or general reports.
 
-Use the existing Fly database access workflow with `scripts/identity-reconciliation.mjs`:
+`scripts/identity-reconciliation.mjs` builds the reviewed transactions below. Its previous database
+transport was retired with the old provider and no production transport is implemented yet, so every
+command except `summary` currently fails closed before contacting a database:
 
 ```sh
 node scripts/identity-reconciliation.mjs --command inventory \

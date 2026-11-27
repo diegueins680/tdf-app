@@ -1331,6 +1331,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social-events/events/{eventId}/attendees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List visible attendee profiles for one RSVP status */
+        get: operations["listEventAttendees"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social-events/events/{eventId}/rsvp-summary": {
         parameters: {
             query?: never;
@@ -3034,6 +3051,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/fans/me/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recommend artists to follow
+         * @description Returns publicly listed artists the authenticated fan does not follow yet, best match first. Artists followed by the same fans as the artists the caller follows come first (`similar_fans`, cosine similarity of the follower sets); when those are fewer than `limit` the list is completed with the most followed artists (`popular`). Read-only.
+         */
+        get: operations["listFanArtistRecommendations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/fans/me/artist-profile": {
         parameters: {
             query?: never;
@@ -4169,6 +4206,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/chat/threads/{threadId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record that the caller read a conversation
+         * @description Stores a recipient read receipt up to a message and marks that conversation's chat notices read. External email/push reminders are not sent for messages already read.
+         */
+        post: operations["markChatThreadRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/channels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get chat reminder channels
+         * @description Email and phone reminder preferences for chat notices. The in-app notice is always on.
+         */
+        get: operations["getNotificationChannels"];
+        /** Update chat reminder channels */
+        put: operations["updateNotificationChannels"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/push-subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register this device for push notifications
+         * @description Registers an Expo push token for the caller. The token is stored encrypted; a token registered by another account moves to the caller.
+         */
+        post: operations["registerPushSubscription"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/push-subscriptions/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop push notifications on this device */
+        post: operations["revokePushSubscription"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/drive/token": {
         parameters: {
             query?: never;
@@ -4180,10 +4297,14 @@ export interface paths {
         put?: never;
         /**
          * Exchange Google Drive OAuth code
-         * @description Exchanges a Google OAuth code (PKCE) for Drive tokens.
+         * @description Stores delegated Google credentials encrypted on the server and returns an owner-bound opaque TDFConnection handle. Provider access and refresh tokens are never returned. Legacy browser tokens require new consent.
          */
         post: operations["exchangeDriveToken"];
-        delete?: never;
+        /**
+         * Disconnect personal Google Drive
+         * @description Erases this account's encrypted delegated credential. In-flight refreshes cannot restore it. Existing external files remain in the user's provider account. Provider-wide OAuth revocation is separately managed in Google permissions.
+         */
+        delete: operations["disconnectDrive"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4200,7 +4321,7 @@ export interface paths {
         put?: never;
         /**
          * Refresh Google Drive access token
-         * @description Refreshes a Google Drive access token using a refresh token.
+         * @description Resolves the authenticated owner-bound TDFConnection handle; refreshes provider credentials inside the encrypted server vault when required. Raw Google refresh tokens are rejected.
          */
         post: operations["refreshDriveToken"];
         delete?: never;
@@ -6497,6 +6618,202 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/taxonomy/filter-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every country, region, city and published genre a filter can offer
+         * @description Both names are returned so a shared link (taxonomy ids) renders in Spanish or English without another request.
+         */
+        get: operations["getTaxonomyFilterOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/genres/suggestions/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Normalize and check a genre suggestion without storing it */
+        post: operations["checkGenreSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/genres/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suggest a new genre or subgenre
+         * @description A suggestion whose words all appear in existing genre names is published at once and added to the artist's profile. One the checks cannot settle waits for an administrator. Duplicates and probable typos are refused with the existing genre unless confirmDistinct is true.
+         */
+        post: operations["submitGenreSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/genres/suggestions/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The artist's own suggestions, newest first */
+        get: operations["listMyGenreSuggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/genre-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Genre suggestion review queue (strict administrators) */
+        get: operations["listGenreSuggestionQueue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/genre-suggestions/{suggestionId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approveGenreSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/genre-suggestions/{suggestionId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rejectGenreSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/genre-suggestions/{suggestionId}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["mergeGenreSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/radio/streams/facets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Per-value counts for the radio filters
+         * @description Stations carry a country and a genre; a selected region or city narrows to its country.
+         */
+        get: operations["getRadioStreamFacets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/music/facets/releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-value counts for the public release filters */
+        get: operations["getPublicMusicReleaseFacets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/facets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Per-value counts for the event filters
+         * @description Counts the first 500 events the list would return for the same scope, date, type, artist and venue filters, without its own taxonomy selection.
+         */
+        get: operations["getSocialEventFacets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/directory/profiles/{slug}": {
         parameters: {
             query?: never;
@@ -7710,6 +8027,146 @@ export interface paths {
          * @description Strict administrators only. The approved cancellation policy prices the refund (customer ladder or full refund when TDF cancels) and the refund request is created in the same transaction with the administrator as requester; a different party must approve it. Called on a customer-cancelled quote with an open obligation, it creates that refund request.
          */
         post: operations["adminCancelDomoQuote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the bound cancellation refund
+         * @description Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+         */
+        get: operations["getDomoRefund"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/refund/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve independently without contacting the provider
+         * @description Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+         */
+        post: operations["approveDomoRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/refund/execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Claim one execution permit; automatic PayPal POST or manual handoff
+         * @description Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+         */
+        post: operations["executeDomoRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/refund/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Query a known PayPal refund; exact completion alone settles the obligation
+         * @description Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+         */
+        post: operations["reconcileDomoRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/refund/manual-evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record immutable evidence of a manual refund without completing it
+         * @description Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+         */
+        post: operations["recordDomoManualRefundEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/refund/confirm-manual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Independently verify the recorded receipt and post the canonical refund
+         * @description Strict administrators with current authenticated session and admin module access. Refund requester cannot approve or execute their own request. Outstanding obligations close only after exact verified completion; retries never issue another refund POST. Manual receipt confirmation requires a reviewer distinct from its recorder and the requester.
+         */
+        post: operations["confirmDomoManualRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/domo/quotes/{quoteId}/refund/provider-reference": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record an operator-discovered PayPal refund ID for exact authenticated readback
+         * @description Current strict administrator distinct from the requester. A query candidate is not evidence of returned money. The original processing fence and existing provider identity are retained; this route never issues a refund POST.
+         */
+        post: operations["bindDomoRefundProviderReference"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9378,6 +9835,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/music/releases/{releaseId}/versions/{versionId}/loudness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Loudness check of each track's newest master file
+         * @description Read-only, requires release.read. For every track, reports the loudness measurement of its newest master file against the approved limits. A track is checked only when the measurement was taken from that exact file (same asset and SHA-256). The result is advisory and never blocks validation, approval or publication (MEDIA-MUSIC-LOUDNESS-001).
+         */
+        get: operations["getMusicReleaseVersionLoudness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/music/releases/{releaseId}/versions/{versionId}/validate": {
         parameters: {
             query?: never;
@@ -9510,6 +9987,24 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ChatThreadReadRequest: {
+            /** Format: int64 */
+            lastMessageId: number;
+        };
+        NotificationChannels: {
+            email: boolean;
+            push: boolean;
+        };
+        PushSubscriptionRegister: {
+            /** @description Push provider; the backend accepts `expo`. */
+            provider: string;
+            token: string;
+            /** @description Device platform; the backend accepts `ios` or `android`. */
+            platform: string;
+        };
+        PushSubscriptionRevoke: {
+            token: string;
+        };
         VideoCampaignWrite: {
             /** Format: int64 */
             expectedRevision: number;
@@ -11200,7 +11695,7 @@ export interface components {
             refundDueMinor: number;
             currency: string;
             /** @enum {string} */
-            refundStatus: "none" | "awaiting_operator" | "requested";
+            refundStatus: "none" | "awaiting_operator" | "requested" | "approved" | "processing" | "succeeded" | "failed" | "cancelled";
             /** @description True when the quote was cancelled earlier and the stored record is returned */
             alreadyCancelled: boolean;
         };
@@ -11208,6 +11703,19 @@ export interface components {
             /** @enum {string} */
             canceller: "customer" | "tdf";
             note?: string;
+        };
+        DomoRefundProviderReference: {
+            providerRefundId: string;
+        };
+        DomoManualRefundEvidence: {
+            externalReference: string;
+            /** @description Secure internal reference to the actual receipt; never a credential or raw bank document */
+            evidenceReference: string;
+            /** Format: int64 */
+            amountMinor: number;
+            currency: string;
+            /** Format: date-time */
+            occurredAt: string;
         };
         PublicDomoQuoteLine: {
             code: string;
@@ -11259,7 +11767,8 @@ export interface components {
             termsAcceptedAt?: string | null;
             /** Format: date-time */
             depositPaidAt?: string | null;
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
+            cancellation?: components["schemas"]["PublicDomoCancellation"] | null;
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card")[];
         };
         PublicDomoPaypalCaptureRequest: {
             paypalOrderId: string;
@@ -11368,6 +11877,12 @@ export interface components {
             /** Format: int64 */
             platformFeeMinor: number;
             termsVersion: string;
+            /** @description Tier recorded on the purchased checkout line. */
+            tierName?: string | null;
+            /** @description Terms of the policy accepted for this order. */
+            termsSummary?: string;
+            /** @description Refund policy accepted for this order. */
+            refundPolicy?: string;
         };
         PublicEventTicket: {
             /** Format: int64 */
@@ -11391,7 +11906,7 @@ export interface components {
             /** Format: date-time */
             holdExpiresAt: string;
             quote: components["schemas"]["PublicEventTicketQuote"];
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "bank_transfer")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card" | "bank_transfer")[];
             /** @description Empty until fulfillment issues tickets after verified payment. */
             tickets: components["schemas"]["PublicEventTicket"][];
             /** @description Present only after the buyer selected bank transfer. */
@@ -11594,7 +12109,7 @@ export interface components {
             holdExpiresAt: string;
             quote: components["schemas"]["PublicBookingQuote"];
             /** @description Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown. */
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "bank_transfer")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card" | "bank_transfer")[];
             manualPayment: components["schemas"]["PublicBookingManualPayment"] | null;
         };
         PublicBookingManualPaymentCreate: {
@@ -14830,6 +15345,19 @@ export interface components {
             /** Format: date */
             ffStartedAt?: string;
         };
+        ArtistRecommendation: {
+            /** Format: int64 */
+            arecArtistId: number;
+            /** @enum {string} */
+            arecReason: "similar_fans" | "popular";
+            /**
+             * Format: double
+             * @description Sum of the cosine similarities to the followed artists; 0 for `popular`.
+             */
+            arecScore: number;
+            /** @description Followed artists behind a `similar_fans` entry, strongest first (at most 3). */
+            arecSeedArtistIds: number[];
+        };
         CourseSession: {
             label?: string;
             /** Format: date */
@@ -14926,7 +15454,7 @@ export interface components {
             /** Format: date-time */
             holdExpiresAt: string | null;
             quote: components["schemas"]["CourseCheckoutQuote"] | null;
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card")[];
             checkoutAvailable: boolean;
         };
         CoursePaypalCaptureRequest: {
@@ -14948,6 +15476,7 @@ export interface components {
         DriveTokenRefreshRequest: {
             refreshToken: string;
         };
+        /** @description Nonsecret TDFConnection descriptor. accessToken and refreshToken contain the same opaque owner-bound handle; neither contains a provider credential. */
         DriveTokenResponse: {
             accessToken: string;
             refreshToken?: string | null;
@@ -16122,6 +16651,33 @@ export interface components {
             /** @description JSON metadata limited to 16 KiB when encoded. */
             metadata: unknown;
         };
+        MusicLoudnessCheck: {
+            /** @description Approved limits in tenths (-140 is -14.0 LUFS). */
+            limits: {
+                integratedLufsTenths: number;
+                toleranceTenths: number;
+                truePeakCeilingDbtpTenths: number;
+            };
+            tracks: components["schemas"]["MusicLoudnessTrack"][];
+        };
+        MusicLoudnessTrack: {
+            /** Format: uuid */
+            recordingId: string;
+            /**
+             * Format: uuid
+             * @description Newest master file of the track that was not deleted.
+             */
+            masterAssetId: string | null;
+            /** @enum {string} */
+            status: "pass" | "warn" | "failed" | "pending" | "not_measured";
+            /** @description True only for pass and warn, from a measurement of exactly this master file. */
+            checked: boolean;
+            flags: ("too_loud" | "too_quiet" | "true_peak_over")[];
+            integratedLufsTenths: number | null;
+            truePeakDbtpTenths: number | null;
+            /** @enum {string|null} */
+            failureReason: "timeout" | "decode_error" | "no_summary" | "unparseable" | "out_of_range" | "silent" | "tool_unavailable" | "interrupted" | null;
+        };
         MusicValidationIssue: {
             fieldPath: string;
             code: string;
@@ -16329,6 +16885,18 @@ export interface components {
                 canonicalUrl: string;
             } | null;
         };
+        TaxonomyFacetCount: {
+            /** Format: uuid */
+            id: string;
+            count: number;
+        };
+        /** @description Each dimension's counts apply every other active filter but not that dimension's own selection. Genre counts include subgenre items. */
+        TaxonomyFacets: {
+            genres?: components["schemas"]["TaxonomyFacetCount"][];
+            countries?: components["schemas"]["TaxonomyFacetCount"][];
+            regions?: components["schemas"]["TaxonomyFacetCount"][];
+            cities?: components["schemas"]["TaxonomyFacetCount"][];
+        };
         DirectoryFacets: {
             entityTypes: {
                 [key: string]: number;
@@ -16340,6 +16908,7 @@ export interface components {
                 count: number;
             }[];
             total: number;
+            taxonomy?: components["schemas"]["TaxonomyFacets"];
         };
         DirectorySearchResponse: {
             items: components["schemas"]["DirectorySearchItem"][];
@@ -16390,6 +16959,127 @@ export interface components {
             genres: components["schemas"]["TaxonomyItem"][];
             languages: components["schemas"]["TaxonomyItem"][];
             cities: components["schemas"]["TaxonomyItem"][];
+        };
+        TaxonomyCountryOption: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            nameEs: string;
+            nameEn: string;
+        };
+        TaxonomyRegionOption: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            countryId: string;
+            code: string;
+            type?: string;
+            nameEs: string;
+            nameEn: string;
+        };
+        TaxonomyCityOption: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            countryId: string;
+            /** Format: uuid */
+            regionId?: string | null;
+            code: string;
+            nameEs: string;
+            nameEn: string;
+            latitude?: number | null;
+            longitude?: number | null;
+        };
+        TaxonomyGenreOption: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            parentId?: string | null;
+            code: string;
+            slug?: string | null;
+            nameEs: string;
+            nameEn: string;
+        };
+        TaxonomyFilterOptions: {
+            countries: components["schemas"]["TaxonomyCountryOption"][];
+            regions: components["schemas"]["TaxonomyRegionOption"][];
+            cities: components["schemas"]["TaxonomyCityOption"][];
+            genres: components["schemas"]["TaxonomyGenreOption"][];
+        };
+        GenreSuggestionRequest: {
+            nameEs: string;
+            nameEn: string;
+            /** Format: uuid */
+            parentGenreId?: string | null;
+            /** @description The artist saw the near match and confirms the genre is different; the suggestion goes to review. */
+            confirmDistinct?: boolean | null;
+        };
+        GenreSummary: {
+            /** Format: uuid */
+            id: string;
+            nameEs: string;
+            nameEn: string;
+            /** Format: uuid */
+            parentId?: string | null;
+        };
+        GenreSuggestionCheck: {
+            /** @enum {string} */
+            verdict: "duplicate" | "similar" | "review" | "approve";
+            /** @description Cleaned and cased Spanish name that would be stored */
+            nameEs: string;
+            /** @description Cleaned and cased English name that would be stored */
+            nameEn: string;
+            normalizedKey: string;
+            match?: components["schemas"]["GenreSummary"] | null;
+            corrections: {
+                word: string;
+                suggestion: string;
+            }[];
+            reviewReasons: string[];
+        };
+        GenreSuggestion: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "pending" | "approved" | "rejected" | "merged";
+            submittedName: string;
+            nameEs: string;
+            nameEn: string;
+            /** Format: uuid */
+            parentGenreId?: string | null;
+            parentGenre?: components["schemas"]["GenreSummary"] | null;
+            reviewReasons: string[];
+            resolvedGenre?: components["schemas"]["GenreSummary"] | null;
+            suggestedBy: {
+                /** Format: int64 */
+                partyId: number;
+                displayName?: string | null;
+            };
+            reviewNote?: string | null;
+            /** Format: date-time */
+            reviewedAt?: string | null;
+            automatic: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        GenreSuggestionSubmission: {
+            suggestion: components["schemas"]["GenreSuggestion"];
+            /** @description An identical suggestion was already pending; it is returned instead of a new one. */
+            alreadySuggested: boolean;
+            check: components["schemas"]["GenreSuggestionCheck"];
+        };
+        GenreSuggestionApproval: {
+            approvedNameEs: string;
+            approvedNameEn: string;
+            /** Format: uuid */
+            approvedParentGenreId?: string | null;
+        };
+        GenreSuggestionRejection: {
+            rejectionNote: string;
+        };
+        GenreSuggestionMerge: {
+            /** Format: uuid */
+            mergeIntoGenreId: string;
         };
         /** @enum {string} */
         DirectoryProfileKind: "person" | "artist" | "band" | "project" | "organization" | "company" | "venue" | "studio" | "agency" | "label" | "distributor" | "school";
@@ -17597,10 +18287,19 @@ export interface components {
         OrderLookupToken: string;
         /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
         IdempotencyKey: string;
+        /** @description Repeatable country UUIDs (ORed). At most 50. */
+        TaxonomyCountryIds: string[];
+        /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+        TaxonomyRegionIds: string[];
+        /** @description Repeatable city UUIDs (ORed). At most 50. */
+        TaxonomyCityIds: string[];
+        /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+        TaxonomyGenreIds: string[];
         SearchQuery: string;
         /** @description Opaque stable keyset cursor */
         Cursor: string;
         Limit: number;
+        SuggestionId: string;
         Slug: string;
         "parameters-IdempotencyKey": string;
         ProfileId: string;
@@ -22434,6 +23133,14 @@ export interface operations {
                 event_type_id?: string;
                 /** @description Stable UUID of an active state in the persisted `social-event-lifecycle` workflow. */
                 workflow_state_id?: string;
+                /** @description Repeatable country UUIDs (ORed). At most 50. */
+                countryIds?: components["parameters"]["TaxonomyCountryIds"];
+                /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+                regionIds?: components["parameters"]["TaxonomyRegionIds"];
+                /** @description Repeatable city UUIDs (ORed). At most 50. */
+                cityIds?: components["parameters"]["TaxonomyCityIds"];
+                /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+                genreIds?: components["parameters"]["TaxonomyGenreIds"];
             };
             header?: never;
             path?: never;
@@ -22826,6 +23533,59 @@ export interface operations {
             };
             /** @description Mutation rate limit exceeded */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventAttendees: {
+        parameters: {
+            query: {
+                status: "accepted" | "maybe";
+                after?: number;
+            };
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Up to 20 profiles visible to the viewer, ordered by stable RSVP identifier */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        nextCursor: string | null;
+                        items: {
+                            id: string;
+                            name: string;
+                            avatarUrl: string | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Invalid status or cursor */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event is missing or inaccessible */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -26236,6 +26996,43 @@ export interface operations {
             };
         };
     };
+    listFanArtistRecommendations: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of artists; values outside 1..24 are clamped. */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recommended artists */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistRecommendation"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Fan access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getMyArtistProfile: {
         parameters: {
             query?: never;
@@ -28519,6 +29316,153 @@ export interface operations {
             };
         };
     };
+    markChatThreadRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                threadId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatThreadReadRequest"];
+            };
+        };
+        responses: {
+            /** @description Receipt stored */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid identifiers */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not a participant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getNotificationChannels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current channels */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationChannels"];
+                };
+            };
+        };
+    };
+    updateNotificationChannels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationChannels"];
+            };
+        };
+        responses: {
+            /** @description Saved channels */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationChannels"];
+                };
+            };
+        };
+    };
+    registerPushSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionRegister"];
+            };
+        };
+        responses: {
+            /** @description Registered */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported provider, platform or token */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Push notifications are not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    revokePushSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionRevoke"];
+            };
+        };
+        responses: {
+            /** @description Revoked (or already inactive) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid token */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     exchangeDriveToken: {
         parameters: {
             query?: never;
@@ -28543,6 +29487,31 @@ export interface operations {
             };
             /** @description Google OAuth error */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    disconnectDrive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Personal connection erased */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authenticated session required */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -28618,6 +29587,14 @@ export interface operations {
                 countryId?: string;
                 /** @description Canonical persisted genre UUID; copied labels and slugs are not accepted. */
                 genreId?: string;
+                /** @description Repeatable country UUIDs (ORed). At most 50. */
+                countryIds?: components["parameters"]["TaxonomyCountryIds"];
+                /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+                regionIds?: components["parameters"]["TaxonomyRegionIds"];
+                /** @description Repeatable city UUIDs (ORed). At most 50. */
+                cityIds?: components["parameters"]["TaxonomyCityIds"];
+                /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+                genreIds?: components["parameters"]["TaxonomyGenreIds"];
             };
             header?: never;
             path?: never;
@@ -33803,6 +34780,14 @@ export interface operations {
                 /** @description Opaque stable keyset cursor */
                 cursor?: components["parameters"]["Cursor"];
                 limit?: components["parameters"]["Limit"];
+                /** @description Repeatable country UUIDs (ORed). At most 50. */
+                countryIds?: components["parameters"]["TaxonomyCountryIds"];
+                /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+                regionIds?: components["parameters"]["TaxonomyRegionIds"];
+                /** @description Repeatable city UUIDs (ORed). At most 50. */
+                cityIds?: components["parameters"]["TaxonomyCityIds"];
+                /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+                genreIds?: components["parameters"]["TaxonomyGenreIds"];
             };
             header?: never;
             path?: never;
@@ -33869,6 +34854,362 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DirectoryTaxonomies"];
+                };
+            };
+        };
+    };
+    getTaxonomyFilterOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Filter options */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyFilterOptions"];
+                };
+            };
+        };
+    };
+    checkGenreSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenreSuggestionRequest"];
+            };
+        };
+        responses: {
+            /** @description Normalized names and the verdict */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestionCheck"];
+                };
+            };
+            /** @description Unsafe or out-of-range name */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Only artists can suggest genres */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitGenreSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenreSuggestionRequest"];
+            };
+        };
+        responses: {
+            /** @description Stored or shared suggestion */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestionSubmission"];
+                };
+            };
+            /** @description Unsafe or out-of-range name */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Only artists can suggest genres */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Duplicate or probable typo of an existing genre (body is a GenreSuggestionCheck) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestionCheck"];
+                };
+            };
+            /** @description Ten pending or twenty suggestions in the last day */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMyGenreSuggestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Suggestions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestion"][];
+                };
+            };
+        };
+    };
+    listGenreSuggestionQueue: {
+        parameters: {
+            query?: {
+                status?: "pending" | "approved" | "rejected" | "merged" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Suggestions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestion"][];
+                };
+            };
+            /** @description Administrator access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    approveGenreSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestionId: components["parameters"]["SuggestionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenreSuggestionApproval"];
+            };
+        };
+        responses: {
+            /** @description Approved suggestion with its new genre */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestion"];
+                };
+            };
+            /** @description Already decided */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    rejectGenreSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestionId: components["parameters"]["SuggestionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenreSuggestionRejection"];
+            };
+        };
+        responses: {
+            /** @description Rejected suggestion */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestion"];
+                };
+            };
+            /** @description Already decided */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    mergeGenreSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestionId: components["parameters"]["SuggestionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenreSuggestionMerge"];
+            };
+        };
+        responses: {
+            /** @description Suggestion resolved to an existing genre */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreSuggestion"];
+                };
+            };
+            /** @description Already decided */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getRadioStreamFacets: {
+        parameters: {
+            query?: {
+                /** @description Repeatable country UUIDs (ORed). At most 50. */
+                countryIds?: components["parameters"]["TaxonomyCountryIds"];
+                /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+                regionIds?: components["parameters"]["TaxonomyRegionIds"];
+                /** @description Repeatable city UUIDs (ORed). At most 50. */
+                cityIds?: components["parameters"]["TaxonomyCityIds"];
+                /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+                genreIds?: components["parameters"]["TaxonomyGenreIds"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Counts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyFacets"];
+                };
+            };
+        };
+    };
+    getPublicMusicReleaseFacets: {
+        parameters: {
+            query?: {
+                q?: string;
+                artistPartyId?: number;
+                /** @description Repeatable country UUIDs (ORed). At most 50. */
+                countryIds?: components["parameters"]["TaxonomyCountryIds"];
+                /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+                regionIds?: components["parameters"]["TaxonomyRegionIds"];
+                /** @description Repeatable city UUIDs (ORed). At most 50. */
+                cityIds?: components["parameters"]["TaxonomyCityIds"];
+                /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+                genreIds?: components["parameters"]["TaxonomyGenreIds"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Counts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyFacets"];
+                };
+            };
+        };
+    };
+    getSocialEventFacets: {
+        parameters: {
+            query?: {
+                city?: string;
+                scope?: string;
+                start_after?: string;
+                event_type_id?: string;
+                workflow_state_id?: string;
+                artistId?: string;
+                venueId?: string;
+                /** @description Repeatable country UUIDs (ORed). At most 50. */
+                countryIds?: components["parameters"]["TaxonomyCountryIds"];
+                /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+                regionIds?: components["parameters"]["TaxonomyRegionIds"];
+                /** @description Repeatable city UUIDs (ORed). At most 50. */
+                cityIds?: components["parameters"]["TaxonomyCityIds"];
+                /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+                genreIds?: components["parameters"]["TaxonomyGenreIds"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Counts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyFacets"];
                 };
             };
         };
@@ -36498,6 +37839,497 @@ export interface operations {
             };
             /** @description No approved cancellation policy exists */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getDomoRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current refund state; processing does not mean money returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid quote identifier or evidence */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session revoked or expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator or module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing independent approval or inconsistent binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider query quota exhausted */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider outcome unverified; keep the same refund ID */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Qualified capabilities or configuration disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    approveDomoRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current refund state; processing does not mean money returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid quote identifier or evidence */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session revoked or expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator or module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing independent approval or inconsistent binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider query quota exhausted */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider outcome unverified; keep the same refund ID */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Qualified capabilities or configuration disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    executeDomoRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current refund state; processing does not mean money returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid quote identifier or evidence */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session revoked or expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator or module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing independent approval or inconsistent binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider query quota exhausted */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider outcome unverified; keep the same refund ID */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Qualified capabilities or configuration disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reconcileDomoRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current refund state; processing does not mean money returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid quote identifier or evidence */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session revoked or expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator or module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing independent approval or inconsistent binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider query quota exhausted */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider outcome unverified; keep the same refund ID */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Qualified capabilities or configuration disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordDomoManualRefundEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DomoManualRefundEvidence"];
+            };
+        };
+        responses: {
+            /** @description Current refund state; processing does not mean money returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid quote identifier or evidence */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session revoked or expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator or module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing independent approval or inconsistent binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider query quota exhausted */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider outcome unverified; keep the same refund ID */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Qualified capabilities or configuration disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmDomoManualRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current refund state; processing does not mean money returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Invalid quote identifier or evidence */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session revoked or expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator or module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing independent approval or inconsistent binding */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider query quota exhausted */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider outcome unverified; keep the same refund ID */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Qualified capabilities or configuration disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    bindDomoRefundProviderReference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DomoRefundProviderReference"];
+            };
+        };
+        responses: {
+            /** @description Current processing refund and its immutable query candidate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Malformed identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authenticated session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator and Admin module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider identity */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -39514,6 +41346,14 @@ export interface operations {
                 q?: string;
                 limit?: number;
                 offset?: number;
+                /** @description Repeatable country UUIDs (ORed). At most 50. */
+                countryIds?: components["parameters"]["TaxonomyCountryIds"];
+                /** @description Repeatable region (subdivision) UUIDs (ORed); matched through the item's city. At most 50. */
+                regionIds?: components["parameters"]["TaxonomyRegionIds"];
+                /** @description Repeatable city UUIDs (ORed). At most 50. */
+                cityIds?: components["parameters"]["TaxonomyCityIds"];
+                /** @description Repeatable genre UUIDs (ORed); each includes its subgenres. At most 50. */
+                genreIds?: components["parameters"]["TaxonomyGenreIds"];
             };
             header?: {
                 /** @description Accepted only through the existing trusted-edge configuration. Absent, ignored or invalid values use the existing unknown-territory policy; the browser does not choose this value. */
@@ -39550,6 +41390,57 @@ export interface operations {
             };
             /** @description Explicit service failure; not an empty catalog. */
             500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMusicReleaseVersionLoudness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                releaseId: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Limits and one entry per track, in track order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicLoudnessCheck"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Verified artist ownership or team permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Release version not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authoring disabled */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

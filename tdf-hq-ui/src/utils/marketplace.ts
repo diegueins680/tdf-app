@@ -1,3 +1,5 @@
+import { marketplaceManualPaymentMethodLabel } from './marketplaceStatusLabel';
+
 export interface OrderStatusMeta {
   label: string;
   color: 'success' | 'warning' | 'info' | 'default';
@@ -83,6 +85,7 @@ export const getMarketplacePaymentProviderLabel = (provider: string): string => 
   if (normalized === 'stripe') return 'Stripe';
   if (normalized === 'datafast') return 'Tarjeta (Datafast)';
   if (normalized === 'contact') return 'Manual/otros';
+  if (normalized === 'bank_transfer' || normalized === 'cash' || normalized === 'pos') return marketplaceManualPaymentMethodLabel(normalized);
   return provider.trim();
 };
 

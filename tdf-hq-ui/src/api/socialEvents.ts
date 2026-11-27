@@ -1,3 +1,4 @@
+import { appendTaxonomyParams, type TaxonomySelection } from './taxonomy';
 import { assertSafeEventFinanceMoney } from '../utils/eventFinanceMoney';
 import { del, get, post, postForm, put } from './client';
 
@@ -73,6 +74,11 @@ export interface PublicUpcomingEventDTO {
   publicUpcomingEventTicketUrl?: string | null;
   publicUpcomingEventImageUrl?: string | null;
   publicUpcomingEventWorkflowStateCode: string;
+  /** Lowest price among ticket tiers on sale and in stock now; absent when nothing is on sale. */
+  publicUpcomingEventTicketFromPriceCents?: number | null;
+  publicUpcomingEventTicketCurrency?: string | null;
+  /** True only when tiers are on sale and none has inventory left. */
+  publicUpcomingEventTicketsSoldOut?: boolean;
 }
 
 export interface SocialEventImageUploadDTO {
@@ -592,6 +598,41 @@ export interface EventAdminInvitationPreviewDTO {
   eaipExpiresAt: string;
 }
 
+/** Terms TDF applies to every paid ticket sale it approves (EVT-TICKET-SALE-001). */
+export interface EventTicketSaleTermsDTO {
+  etstCurrency: string;
+  etstBuyerFeeBps: number;
+  etstOrganizerFeeBps: number;
+  etstTaxBps: number;
+  etstHoldMinutes: number;
+  etstMaxTicketsPerOrder: number;
+  etstRefundPolicy: string;
+  etstTermsSummary: string;
+}
+export interface EventTicketSaleDTO {
+  etsEventId: string;
+  /** Derived by the server: `none`, `requested`, `approved` or `declined`. */
+  etsStatus: string;
+  etsRequestId?: string | null;
+  etsRequestedAt?: string | null;
+  etsDecidedAt?: string | null;
+  etsCanRequest: boolean;
+  /** `already_approved`, `already_requested`, `not_manager` or `no_paid_tier`. */
+  etsBlockedReason?: string | null;
+  /** True for a strict administrator while the request is pending. */
+  etsCanDecide: boolean;
+  etsTerms: EventTicketSaleTermsDTO;
+}
+export interface EventTicketSaleRequestDTO {
+  etsrRequestId: string;
+  etsrEventId: string;
+  etsrEventTitle: string;
+  etsrEventStartsAt: string;
+  etsrOrganizerName?: string | null;
+  etsrRequestedAt: string;
+  etsrTiers: { etstiName: string; etstiPriceCents: number; etstiCurrency: string; etstiQuantityTotal: number }[];
+  etsrTerms: EventTicketSaleTermsDTO;
+}
 export interface EventCourtesyTicketDTO {
   ectTierId: string;
   /** 1 to 10 tickets per issue. */
@@ -654,9 +695,11 @@ export const SocialEventsAPI = {
     const path = `/social-events/upcoming${qs}`;
     return await (opts?.signal ? getUnknown(path, { signal: opts.signal }) : getUnknown(path)) as PublicUpcomingEventDTO[];
   },
-  listEvents: async (opts?: { city?: string; startAfter?: string; eventTypeId?: string; workflowStateId?: string; artistId?: string; artistIds?: readonly string[]; venueId?: string; limit?: number; offset?: number; signal?: AbortSignal }) => {
+  listEvents: async (opts?: { city?: string; startAfter?: string; eventTypeId?: string; workflowStateId?: string; artistId?: string; artistIds?: readonly string[]; venueId?: string; limit?: number; offset?: number; forYou?: boolean; signal?: AbortSignal; taxonomy?: Partial<TaxonomySelection> }) => {
     const qs = buildQuery({
       city: opts?.city,
+      // EVT-AFFINITY-ORDER-001: the same page, ordered by the caller's affinity.
+      scope: opts?.forYou ? 'for_you' : undefined,
       start_after: opts?.startAfter,
       event_type_id: opts?.eventTypeId,
       workflow_state_id: opts?.workflowStateId,
@@ -665,7 +708,9 @@ export const SocialEventsAPI = {
       limit: opts?.limit,
       offset: opts?.offset,
     });
-    const path = `/social-events/events${qs}`;
+    // TAX-FILTER-001: venue location and lineup genres (repeatable parameters).
+    const taxonomyQs = appendTaxonomyParams(new URLSearchParams(), opts?.taxonomy).toString();
+    const path = `/social-events/events${qs}${taxonomyQs ? `${qs ? '&' : '?'}${taxonomyQs}` : ''}`;
     return await (opts?.signal ? getUnknown(path, { signal: opts.signal }) : getUnknown(path)) as SocialEventDTO[];
   },
   listArtists: async (opts?: { name?: string; signal?: AbortSignal }) => {
@@ -926,6 +971,14 @@ export const SocialEventsAPI = {
       ectHolderEmail: email || null,
     }) as SocialTicketOrderDTO;
   },
+  getTicketSale: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-sale`) as EventTicketSaleDTO,
+  requestTicketSale: async (eventId: string) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-sale/request`, {}) as EventTicketSaleDTO,
+  listTicketSaleRequests: async () =>
+    await getUnknown('/social-events/ticket-sale-requests') as EventTicketSaleRequestDTO[],
+  decideTicketSaleRequest: async (requestId: string, decision: 'approve' | 'decline') =>
+    await postUnknown(`/social-events/ticket-sale-requests/${encodeURIComponent(requestId)}/${decision}`, {}) as EventTicketSaleDTO,
   // QR Codes
   getTicketQR: async (eventId: string, ticketId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tickets/${encodeURIComponent(ticketId)}/qr`) as TicketWithQRDTO,

@@ -5,6 +5,7 @@
 module TDF.Server.ProviderExecution
   ( providerExecutionServer
   , providerReference
+  , providerReferenceFor
   , providerReturnUrl
   , checkoutMoneyBreakdown
   ) where
@@ -33,6 +34,7 @@ import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.Commerce.ProviderAdapter
 import           TDF.Commerce.ProviderAdapter.Http
   ( AdapterTransportError(..), executeAdapterRequest, sharedProviderManager )
+import qualified TDF.Commerce.ProviderAdapter.PayPhone as PayPhone
 import qualified TDF.Commerce.ProviderAdapter.PlaceToPay as PlaceToPay
 import           TDF.Commerce.ProviderCapabilities
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
@@ -103,14 +105,13 @@ startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paym
       (EventTicketCheckout.ticketOrderSalesOpen (Store.ceDomainOrderId checkout)) envPool)
     unless salesOpen $
       throwError (conflict "Tickets are no longer on sale for this event; this order cannot be paid")
-  -- ADR 0136: an agreement charge must be split between the platform and the
-  -- service provider in the same provider operation. No executor on this path
-  -- sends a split yet, so the charge is refused before any provider is
-  -- contacted instead of collecting the provider's share into the platform
-  -- account (ADR 0115 rejects that custody).
-  when (Store.ceDomainType checkout == "marketplace_agreement") $
-    throwError unavailable
-      { errBody = "Agreement payments are not available until a split-capable provider flow is verified" }
+  -- ADR 0136: an agreement charge is split between the platform and the
+  -- service provider in the same provider operation. Its recipients come from
+  -- the charge, and an adapter that cannot split refuses them, so the
+  -- provider's share is never collected into the platform account (ADR 0115
+  -- rejects that custody). Every other domain keeps its charge whole.
+  transfers <- liftIO (runSqlPool (Store.lockCheckoutSplit checkout provider) envPool)
+    >>= either (throwError . conflict) pure
   flow <- maybe
     (throwError (conflict "Checkout domain does not support shared provider execution"))
     pure
@@ -134,13 +135,18 @@ startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paym
     >>= either (throwError . unavailableText) pure
   runtime <- liftIO (loadRuntimeProviderAdapter (Store.ceEnvironment checkout) provider)
     >>= either (throwError . unavailableText) pure
+  -- Routing already requires the method's configuration; recheck it on the
+  -- runtime that builds the request so no unconfigured method reaches a provider.
+  unless (paymentMethod `elem` rpaConfiguredMethods runtime) $
+    throwError unavailable
+      { errBody = "Requested provider and payment method are not operationally available" }
   clientIp <- liftIO (numericHost remoteAddress)
     >>= either (throwError . unavailableText) pure
   nonce <- liftIO (getEntropy 32)
   let correlationId = "provider-create:" <> checkoutId <> ":" <> idempotencyKey
       preflightPayment = CreatePayment
         { cpPaymentMethod = paymentMethod
-        , cpReference = providerReference provider checkoutId
+        , cpReference = providerReferenceFor provider paymentMethod checkoutId
         , cpDescription = checkoutDescription checkout
         , cpMoney = checkoutMoneyBreakdown checkout
         , cpReturnUrl = providerReturnUrl (rpaReturnUrl runtime)
@@ -150,6 +156,7 @@ startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paym
         , cpBuyerCountryCode = T.strip <$> pscBuyerCountryCode request
         , cpIpAddress = clientIp
         , cpUserAgent = userAgent
+        , cpTransfers = transfers
         }
       context = AdapterContext now nonce
       adapter = rpaAdapter runtime
@@ -178,14 +185,28 @@ startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paym
             maybe (EventTicketCheckout.ticketUnverifiedCaptureRefusal
               (Checkout.pacCheckout attemptCreation)) (pure . Just) closed
         | otherwise = pure Nothing
+      -- The agreement charge must still be payable, to the same recipients,
+      -- when the attempt is recorded: it can be replaced, cancelled or expired
+      -- in the meantime. Once the attempt exists, cancellation and expiry wait.
+      splitGuard
+        | Store.ceDomainType checkout == "marketplace_agreement" = do
+            current <- Store.lockCheckoutSplit checkout provider
+            pure $ case current of
+              Left problem -> Just problem
+              Right recipients
+                | recipients == transfers -> Nothing
+                | otherwise -> Just "This agreement charge changed; start the payment again"
+        | otherwise = pure Nothing
+      attemptGuard = ticketSalesGuard >>= maybe splitGuard (pure . Just)
   attempt <- liftIO (runSqlPool
-      (PaymentRuntime.beginPaymentAttemptForMethodGuarded ticketSalesGuard paymentMethod attemptCreation)
+      (PaymentRuntime.beginPaymentAttemptForMethodGuarded attemptGuard paymentMethod attemptCreation)
       envPool)
     >>= either (throwError . conflict) pure
   previousReference <- liftIO (runSqlPool (Store.loadAttemptProviderReference attempt) envPool)
     >>= either (throwError . conflict) pure
   let merchantReference = fromMaybe
-        (providerReference provider (Checkout.paymentAttemptReferenceId attempt)) previousReference
+        (providerReferenceFor provider paymentMethod (Checkout.paymentAttemptReferenceId attempt))
+        previousReference
       payment = preflightPayment { cpReference = merchantReference }
       expected = ExpectedPayment merchantReference
         (Store.ceTotalMinor checkout) (Store.ceCurrency checkout)
@@ -407,7 +428,7 @@ operationToDTO checkoutId operation = PaymentSessionDTO
   , pssExternalId = Store.porProviderResourceId operation
   , pssRedirectUrl = Store.porRedirectUrl operation
   , pssOutcomeCertainty = outcomeCertaintyText (Store.porOutcomeCertainty operation)
-  , pssCanRetryOrFallback = safeToFallback (Store.porOutcomeCertainty operation)
+  , pssCanRetryOrFallback = hostedSessionCanRetry (Store.porStatus operation) (Store.porOutcomeCertainty operation)
   }
 
 checkoutMoneyBreakdown :: Store.CheckoutExecution -> MoneyBreakdown
@@ -428,6 +449,17 @@ providerReference provider attemptId = case provider of
   Checkout.ProviderPlaceToPay -> PlaceToPay.placeToPayReference scopedReference
   Checkout.ProviderPayPhone -> "TDF-" <> T.take 28 (sha256Text scopedReference)
   _ -> "TDF-" <> T.take 28 (sha256Text scopedReference)
+  where
+    scopedReference = Checkout.paymentProviderText provider <> ":" <> attemptId
+
+-- | The merchant reference for a new attempt. PayPhone Button charges carry
+-- the adapter's button prefix so their reconciliation uses the Button
+-- confirmation; every other reference is 'providerReference'. Same length.
+providerReferenceFor :: Checkout.PaymentProvider -> PaymentMethod -> Text -> Text
+providerReferenceFor provider paymentMethod attemptId = case (provider, paymentMethod) of
+  (Checkout.ProviderPayPhone, MethodCard) ->
+    PayPhone.payPhoneButtonReferencePrefix <> T.take 27 (sha256Text scopedReference)
+  _ -> providerReference provider attemptId
   where
     scopedReference = Checkout.paymentProviderText provider <> ":" <> attemptId
 

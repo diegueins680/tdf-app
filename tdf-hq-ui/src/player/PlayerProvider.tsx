@@ -12,6 +12,9 @@ import {
 import { logger } from '../utils/logger';
 import { EMPTY_QUEUE, nextQueueIndex, previousQueueIndex, queueReducer, type QueueAction, type QueueState } from './queue';
 import { authorizePlayerAsset } from './assetAccess';
+import { isQueueContinuationEnabled } from '../config/queueContinuationRollout';
+import { loadQueueContinuation } from './loadQueueContinuation';
+import { shouldContinueQueue } from './queueContinuation';
 import {
   PLAYER_LOAD_TRACK_EVENT,
   PLAYER_ANALYTICS_EVENT,
@@ -250,6 +253,18 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     queueIntentRef.current = true;
     reduceQueue(action);
   }, []);
+  // MEDIA-MUSIC-CONTINUATION-001: one pending continuation per session, bound
+  // to the exact queue that ended; any later queue state discards it, and so
+  // does any explicit playback intent (pause, play, select, previous, a new
+  // track or a radio takeover) given while it loads.
+  const latestQueueRef = useRef(queue);
+  const continuationRef = useRef<AbortController | null>(null);
+  const cancelContinuation = useCallback(() => {
+    continuationRef.current?.abort();
+    continuationRef.current = null;
+  }, []);
+  useEffect(() => { latestQueueRef.current = queue; }, [queue]);
+  useEffect(() => cancelContinuation, [cancelContinuation]);
   const [status, setStatus] = useState<PlaybackStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
@@ -317,7 +332,9 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     emitPlayerEvent('progress', track, audio.currentTime, { listenedDeltaMs });
   }, []);
 
-  const pause = useCallback(() => {
+  // Stops the audio without touching a pending continuation; `next` uses it
+  // when the queue ends, every explicit pause goes through `pause`.
+  const haltPlayback = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
     playAttemptRef.current += 1;
@@ -331,7 +348,13 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     }
   }, [cancelRetry, currentTrack, flushProgress]);
 
+  const pause = useCallback(() => {
+    cancelContinuation();
+    haltPlayback();
+  }, [cancelContinuation, haltPlayback]);
+
   const play = useCallback(async () => {
+    cancelContinuation();
     const audio = audioRef.current;
     if (!audio || !currentTrack || !source) {
       setStatus('unavailable');
@@ -379,13 +402,14 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
           : 'No se pudo iniciar la reproducción. Revisa la conexión o vuelve a intentarlo.');
       logger.warn('Global player could not start playback', caught);
     }
-  }, [currentTrack, scheduleRecovery, source]);
+  }, [cancelContinuation, currentTrack, scheduleRecovery, source]);
 
   const selectTrack = useCallback((index: number) => {
+    cancelContinuation();
     if (index === queue.currentIndex) { void play(); return; }
     autoplayRef.current = true;
     dispatchQueue({ type: 'select', index });
-  }, [dispatchQueue, play, queue.currentIndex]);
+  }, [cancelContinuation, dispatchQueue, play, queue.currentIndex]);
 
   const seek = useCallback((seconds: number) => {
     const audio = audioRef.current;
@@ -403,7 +427,22 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
   const next = useCallback(() => {
     const nextIndex = nextQueueIndex(queue);
     if (nextIndex < 0) {
-      pause();
+      haltPlayback();
+      if (identityReady && !continuationRef.current && shouldContinueQueue(queue, ownerPartyId, isQueueContinuationEnabled())) {
+        const controller = new AbortController();
+        const ended = queue;
+        continuationRef.current = controller;
+        void loadQueueContinuation(ended.tracks, { signal: controller.signal }).then((tracks) => {
+          if (continuationRef.current !== controller) return;
+          continuationRef.current = null;
+          if (controller.signal.aborted || tracks.length === 0 || latestQueueRef.current !== ended) return;
+          autoplayRef.current = true;
+          dispatchQueue({ type: 'enqueue', tracks });
+          dispatchQueue({ type: 'select', index: ended.tracks.length });
+        }).catch(() => {
+          if (continuationRef.current === controller) continuationRef.current = null;
+        });
+      }
       return;
     }
     if (nextIndex === queue.currentIndex) {
@@ -413,9 +452,10 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     }
     autoplayRef.current = true;
     dispatchQueue({ type: 'select', index: nextIndex });
-  }, [dispatchQueue, pause, play, queue, seek]);
+  }, [dispatchQueue, haltPlayback, identityReady, ownerPartyId, play, queue, seek]);
 
   const previous = useCallback(() => {
+    cancelContinuation();
     const audio = audioRef.current;
     if (audio && (pendingPositionRef.current?.position ?? audio.currentTime) > 3) {
       seek(0);
@@ -426,7 +466,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       autoplayRef.current = true;
       dispatchQueue({ type: 'select', index: previousIndex });
     }
-  }, [dispatchQueue, queue, seek]);
+  }, [cancelContinuation, dispatchQueue, queue, seek]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -677,6 +717,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       if (typeof detail.startPositionMs === 'number' && Number.isFinite(detail.startPositionMs) && detail.startPositionMs >= 0) {
         positionsRef.current[detail.track.id] = detail.startPositionMs / 1000;
       }
+      cancelContinuation();
       autoplayRef.current = detail.autoplay !== false;
       dispatchQueue({ type: 'replace', tracks, currentTrackId: detail.track.id });
     };
@@ -687,7 +728,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       window.removeEventListener(PLAYER_LOAD_TRACK_EVENT, handleLoad as EventListener);
       window.removeEventListener(RADIO_TAKEOVER_EVENT, handleRadioTakeover);
     };
-  }, [dispatchQueue, pause]);
+  }, [cancelContinuation, dispatchQueue, pause]);
 
   useEffect(() => installPlayerAnalyticsBridge(), []);
 
@@ -783,6 +824,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
 
   const playTrack = useCallback((track: PlayerTrack, replacementQueue?: PlayerTrack[], autoplay = true) => {
     queueIntentRef.current = true;
+    cancelContinuation();
     if (track === currentTrack && !replacementQueue) {
       if (autoplay) void play(); else pause();
       return;
@@ -790,7 +832,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     const tracks = replacementQueue?.filter(isTrack) ?? [track];
     autoplayRef.current = autoplay;
     dispatchQueue({ type: 'replace', tracks, currentTrackId: track.id });
-  }, [currentTrack, dispatchQueue, pause, play]);
+  }, [cancelContinuation, currentTrack, dispatchQueue, pause, play]);
 
   const contextValue = useMemo<PlayerContextValue>(() => ({
     queue,
