@@ -1,0 +1,20 @@
+[Unit]
+Description=TDF Mobile Android beta CRM email campaign
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/var/lib/tdf-android-beta-email/campaign.sqlite
+
+[Service]
+Type=oneshot
+User=tdf-android-beta-email
+Group=tdf-android-beta-email
+UMask=0077
+StateDirectory=tdf-android-beta-email
+StateDirectoryMode=0700
+EnvironmentFile=/etc/tdf/android-beta-email.env
+ExecStart=/usr/bin/python3 /opt/tdf/production/android-beta-email.py --state /var/lib/tdf-android-beta-email/campaign.sqlite tick
+TimeoutStartSec=10min
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
