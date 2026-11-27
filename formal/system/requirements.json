@@ -4891,6 +4891,7 @@
         "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
         "tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql",
         "tdf-hq-ui/src/components/TicketCredentialQR.tsx",
+        "tdf-hq-ui/src/utils/ticketPass.ts",
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq/src/TDF/Routes/EventTickets.hs",
         "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
