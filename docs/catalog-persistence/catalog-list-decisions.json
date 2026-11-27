@@ -32341,24 +32341,24 @@
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "18a46eb2d68dbcc0ffaa",
+      "id": "89377f884fff9f9d8d25",
       "reviewed": true,
-      "justification": "Append the venue coordinate constraint to the 271 migrations on main at bddc0a2a6. The original migration entry and SQL are retained from the venue change. Both parent reviews are preserved.",
+      "justification": "Preserve the 272 migrations through friend suggestions and append the original venue coordinate constraint. Retain the complete reviews of both migration lists.",
       "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "venue-coordinate-constraint-main-integration-20261124",
+      "reviewBatch": "venue-coordinate-after-friend-suggestions",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 272
+        "valueCount": 273
       },
       "previousDecision": {
-        "$historyRef": "sha256:5c2ed3f8ba488e82825dae4662cc0bf3b42279d79414556834d75a33a8637a8a"
+        "$historyRef": "sha256:622a2ae8a28302de76b608d225953bc979661a3b94513de7712c42b8e0497550"
       },
       "concurrentReviewHistory": [
         {
-          "$historyRef": "sha256:d6c8d6b5890ffaab3bbe0ae8197571df8bacc32d28df6e5c96779e105f854b28"
+          "$historyRef": "sha256:f9a114d476fe61417a93aa8abf8ae43cca8a0095661af15de0948654efc5b2fc"
         }
       ]
     }
