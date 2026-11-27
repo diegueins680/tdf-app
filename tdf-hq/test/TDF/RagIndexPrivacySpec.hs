@@ -301,8 +301,18 @@ spec = describe "rag-index-privacy-postgresql" $ do
 
       it "purges legacy chunks even when the remaining public index is fresh" $ \pool -> do
         cfg <- testConfig
+        runSqlPool (rawExecute
+          "UPDATE rag_chunk SET metadata=jsonb_build_object('embeddingSpace','local-v1'::text) WHERE source='course'" []) pool
         ensureRagIndex cfg pool `shouldReturn` Right False
         indexRows pool `shouldReturn` [("course", "PUBLIC_PREVIOUS_INDEX")]
+
+      it "rebuilds a fresh index lacking the configured embedding space" $ \pool -> do
+        publicCourse pool
+        cfg <- testConfig
+        ensureRagIndex cfg pool `shouldReturn` Right True
+        docs <- retrieveRagContext cfg pool "synthetic course query"
+        T.unwords docs `shouldSatisfy` T.isInfixOf "PUBLIC_COURSE_SENTINEL"
+        ensureRagIndex cfg pool `shouldReturn` Right False
 
       it "purges legacy chunks before rejecting invalid embedding configuration" $ \pool -> do
         cfg <- testConfig

@@ -10775,19 +10775,7 @@
           ]
         }
       }
-    ],
-    "veniceAssistantMigration": {
-      "sourceRevision": "c533868c34086d9406acacd3c752c017b0cbe35e",
-      "reason": "The navigation label changed. The hosted ChatKit script loader and its UI status union were removed.",
-      "decisions": [
-        {
-          "$historyRef": "sha256:0e353c15bcbe9e3a01894899a2091cd2c27d85c484adb27fced1e243eb1d89a6"
-        },
-        {
-          "$historyRef": "sha256:910995ba9252d7635c2159f4e1583166921b82a40e774e339e9d54cdd5103bfa"
-        }
-      ]
-    }
+    ]
   },
   "decisions": [
     {
@@ -33379,5 +33367,17 @@
         }
       ]
     }
-  ]
+  ],
+  "veniceAssistantMigration": {
+    "sourceRevision": "c533868c34086d9406acacd3c752c017b0cbe35e",
+    "reason": "The navigation label changed. The hosted ChatKit script loader and its UI status union were removed.",
+    "decisions": [
+      {
+        "$historyRef": "sha256:0e353c15bcbe9e3a01894899a2091cd2c27d85c484adb27fced1e243eb1d89a6"
+      },
+      {
+        "$historyRef": "sha256:910995ba9252d7635c2159f4e1583166921b82a40e774e339e9d54cdd5103bfa"
+      }
+    ]
+  }
 }

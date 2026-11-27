@@ -25312,7 +25312,9 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq-ui/src/services/tidalAgent.ts",
         "tdf-hq-ui/src/pages/TidalAgentPage.tsx",
-        "tdf-hq-ui/src/pages/MusicMakerPage.tsx"
+        "tdf-hq-ui/src/pages/MusicMakerPage.tsx",
+        "tidal-agent/index.js",
+        "tdf-hq-ui/public/privacy.html"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",

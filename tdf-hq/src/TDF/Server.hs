@@ -14372,7 +14372,7 @@ resolveAdsAssistFinalReply cfg (Left err)
 
 shouldUseAdsAssistNoAiFallback :: Text -> Bool
 shouldUseAdsAssistNoAiFallback rawError =
-  errorMessage == "openai_api_key no configurada"
+  errorMessage == "venice_api_key no configurada"
     || errorMessage == "no pude generar una respuesta automática en este momento."
     || shouldRetryWithFallbackModel 404 rawError
   where

@@ -166,7 +166,7 @@ ensureRagIndex :: AppConfig -> ConnectionPool -> IO (Either Text Bool)
 ensureRagIndex cfg pool = do
   -- Privacy cleanup must not depend on index age or provider availability.
   runSqlPool purgeLegacyRagChunks pool
-  stats <- runSqlPool loadRagIndexStats pool
+  stats <- runSqlPool (loadRagIndexStats (Just (configuredSpace cfg))) pool
   now <- getCurrentTime
   let stale = case risUpdatedAt stats of
         Nothing -> True
@@ -207,7 +207,7 @@ retrieveRagContext cfg pool query = do
 
 getRagIndexStats :: ConnectionPool -> IO (Int, Maybe UTCTime)
 getRagIndexStats pool = do
-  RagIndexStats{..} <- runSqlPool loadRagIndexStats pool
+  RagIndexStats{..} <- runSqlPool (loadRagIndexStats Nothing) pool
   pure (risCount, risUpdatedAt)
 
 buildPublicCourseDocuments :: AppConfig -> Day -> SqlPersistT IO [PublicCourseDocument]
@@ -481,15 +481,18 @@ validateRagEmbeddingDim cfg pool =
                      "). Ejecuta migraciones o ajusta VENICE_EMBED_MODEL."
                     ))
 
-loadRagIndexStats :: SqlPersistT IO RagIndexStats
-loadRagIndexStats = do
+loadRagIndexStats :: Maybe Text -> SqlPersistT IO RagIndexStats
+loadRagIndexStats space = do
   exists <- ragTableExists
   if not exists
     then pure RagIndexStats { risCount = 0, risUpdatedAt = Nothing }
     else do
+      let (predicate, params) = case space of
+            Nothing -> ("", [])
+            Just value -> (" WHERE metadata->>'embeddingSpace' = ?", [PersistText value])
       rows <- rawSql
-        "SELECT COUNT(*)::bigint, MAX(updated_at) FROM rag_chunk"
-        [] :: SqlPersistT IO [(Single Int64, Single (Maybe UTCTime))]
+        ("SELECT COUNT(*)::bigint, MAX(updated_at) FROM rag_chunk" <> predicate)
+        params :: SqlPersistT IO [(Single Int64, Single (Maybe UTCTime))]
       case rows of
         [(Single countVal, Single updatedAt)] ->
           pure RagIndexStats

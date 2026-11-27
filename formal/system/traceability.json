@@ -25313,7 +25313,9 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq-ui/src/services/tidalAgent.ts",
         "tdf-hq-ui/src/pages/TidalAgentPage.tsx",
-        "tdf-hq-ui/src/pages/MusicMakerPage.tsx"
+        "tdf-hq-ui/src/pages/MusicMakerPage.tsx",
+        "tidal-agent/index.js",
+        "tdf-hq-ui/public/privacy.html"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
@@ -30414,7 +30416,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "c9ebdd7c524ed2463e1f47398280ca9189a9e5a71e225f07c07ea677729ec471",
+    "docs/catalog-persistence/catalog-list-decisions.json": "849d703ebb0e2ed108a1bf5efa88aa3590edfa7f0759569ce9df09fe174b1f22",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -31411,6 +31413,7 @@
     "tdf-hq-ui/public/mobile-app/support.html": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
     "tdf-hq-ui/public/mobile-app/terms.html": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
     "tdf-hq-ui/public/mobile-distribution.json": "076cb7a81ebfaec803ff40d3d9c4ebd48c8ecdd184a383ac4b80977500126b17",
+    "tdf-hq-ui/public/privacy.html": "94be476e1bf8e621f99bb2d01d7a48b3f9b0a3b30a0fd6b503419ebd5589994f",
     "tdf-hq-ui/public/robots.txt": "082606e607e29733ad0e44ad1efd702079008d9bf867b97638b289d9a18cfb76",
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
     "tdf-hq-ui/public/third-party/webtorrent-NOTICES.txt": "3c99a4054a1b5222253ed9b864605d8b7375ff0eed6b819fe028d9652a082246",
@@ -32449,7 +32452,7 @@
     "tdf-hq/src/TDF/Profiles/Artist.hs": "806657f972b93ae6ecc0b4e27bea896b3009de3123440a5eddef9e28e3fb3a21",
     "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs": "352dd0ea4d8df0c977b6f02acdba30a38e4275b2c2d48872480ddbdff205461a",
     "tdf-hq/src/TDF/PublicUrl.hs": "f6d8765fca93de1e02416ce6aa5eab9712efb191fc5565e4b66ff22e2926ad4d",
-    "tdf-hq/src/TDF/RagStore.hs": "c7641f2e03d1c4fbf3326aba1f469871eb6202e42b734521da99266b1c89c271",
+    "tdf-hq/src/TDF/RagStore.hs": "e4efb38c1a4993d1b3b9b112b3e1de16a44471faf92cdb2dc35bf993007b6e69",
     "tdf-hq/src/TDF/Reputation.hs": "410eabe943cc2389b5113e439427d78781200a61ded87310e470010a20babd9a",
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "a84a2a2c5e23f83a7e578ec4de33eef16866702bb414ad89e3333f93d0a68014",
@@ -32457,7 +32460,7 @@
     "tdf-hq/src/TDF/Routes/DomoRefunds.hs": "b30e9a615d9ea754e2ffe29a257e272d4fc7342d17ec919e1235a199aeff34fd",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "c5b5eac3f58fbb0a24651c2bb2e57664720a6526ac25a69d2bf9f49acfdcc438",
     "tdf-hq/src/TDF/Seed.hs": "ca67f75f5e7408961b3baa9c273df119259bcd0fe3a55225050879d0fb17df4c",
-    "tdf-hq/src/TDF/Server.hs": "ec964d221d15944bafb84b2d6f435adef9bc5bb81bb14df344022d1fc7075437",
+    "tdf-hq/src/TDF/Server.hs": "9b0fb59472cd3f64019648f69d8465203c32f845fe4a060d54a1a026fbb1e471",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
@@ -32626,7 +32629,7 @@
     "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "800836782553cecc8a7715636eec74e9fad398c772e4653b05a43e9766ff070e",
     "tdf-hq/test/TDF/Profiles/ArtistSpec.hs": "012311f9c2954e1611e71c80b53eb4107a8f24cc8b1955a1b692265267f06429",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
-    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "52081eaf4528c2149b352cc3e1f6d55dc0af2a89875112678217d9395aae91d0",
+    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "4fb4b5691dec0c09b8ed1bf7e79cd0f0b9d0299e1ab70612a0229605f64f1fb5",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/Server/PublicBookingNotificationsSpec.hs": "020dd1d269b9c5841f390dd1e60767a824af1846a18e130a99394d39cf3d70ef",
@@ -32835,7 +32838,8 @@
     "test/fixtures/music-worker/ddex-render.mjs": "529eb232ca7550638a0d88d8f64cfcff8ca1fbdec46b338b02e121d887596bc2",
     "test/fixtures/music-worker/upload-curl.mjs": "2af421e7b5ce9d281bde6205774c628521d1cc3fba78a4cac61ba20d2ed8cf16",
     "third_party/webtorrent/browser.json": "aaedd205fc6b19e8c850245e6a55fdeb7792bbac89d309a0b3a2e69fcea58dc6",
-    "third_party/webtorrent/bundled-provenance.json": "82971c29f4d319e78318ff66b933ddbfdbf30bc8d8ba83739a804a488722bede"
+    "third_party/webtorrent/bundled-provenance.json": "82971c29f4d319e78318ff66b933ddbfdbf30bc8d8ba83739a804a488722bede",
+    "tidal-agent/index.js": "f6e1ea6c8ff9109020b652b2d09648e1866da89b9bd0c059d69df7ac8ab05e68"
   },
   "reverseTraceability": {
     "scripts/production-release.mjs": [
@@ -51408,6 +51412,18 @@
         "relationship": "implementation"
       }
     ],
+    "tidal-agent/index.js": [
+      {
+        "requirement": "AI-STAFF-ASSISTANTS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/public/privacy.html": [
+      {
+        "requirement": "AI-STAFF-ASSISTANTS-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/services/tidalAgent.test.ts": [
       {
         "requirement": "AI-STAFF-ASSISTANTS-001",
@@ -65670,7 +65686,12 @@
       "path": "tdf-hq-ui/public/privacy.html",
       "sha256": "94be476e1bf8e621f99bb2d01d7a48b3f9b0a3b30a0fd6b503419ebd5589994f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AI-STAFF-ASSISTANTS-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-092f602711fabb68",
@@ -86648,7 +86669,7 @@
     {
       "id": "SURFACE-4d5b5b67e9af24f7",
       "path": "tdf-hq/src/TDF/RagStore.hs",
-      "sha256": "c7641f2e03d1c4fbf3326aba1f469871eb6202e42b734521da99266b1c89c271",
+      "sha256": "e4efb38c1a4993d1b3b9b112b3e1de16a44471faf92cdb2dc35bf993007b6e69",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86811,7 +86832,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "ec964d221d15944bafb84b2d6f435adef9bc5bb81bb14df344022d1fc7075437",
+      "sha256": "9b0fb59472cd3f64019648f69d8465203c32f845fe4a060d54a1a026fbb1e471",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -90703,7 +90724,7 @@
     {
       "id": "SURFACE-7a8c25536f4eeac3",
       "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "52081eaf4528c2149b352cc3e1f6d55dc0af2a89875112678217d9395aae91d0",
+      "sha256": "4fb4b5691dec0c09b8ed1bf7e79cd0f0b9d0299e1ab70612a0229605f64f1fb5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -96083,7 +96104,12 @@
       "path": "tidal-agent/index.js",
       "sha256": "f6e1ea6c8ff9109020b652b2d09648e1866da89b9bd0c059d69df7ac8ab05e68",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AI-STAFF-ASSISTANTS-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-b7c7359f0a4f26db",
@@ -96318,7 +96344,6 @@
     "SURFACE-4d91a2ae6d7c7367",
     "SURFACE-dfe8096f81b40bd5",
     "SURFACE-16fd6a7d303023ea",
-    "SURFACE-c13a12d2ea792bdf",
     "SURFACE-092f602711fabb68",
     "SURFACE-1585a9050a6bc1d3",
     "SURFACE-ebb7d25970fd6836",
@@ -97429,7 +97454,6 @@
     "SURFACE-4524a86b8ddfc0ee",
     "SURFACE-6dd3b23981136d85",
     "SURFACE-d0a0739ff5dbb590",
-    "SURFACE-54bf47f9e4362775",
     "SURFACE-b7c7359f0a4f26db",
     "SURFACE-21b31fbb27b536c4"
   ],
@@ -98744,7 +98768,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "77821b43cfb99e647beb1a587ef066555ca10f1d94ebdfc10c247fa8e11fe5e4",
+      "sourceSha256": "120ebdd3b9df9ba12db01352c6454524232e7b00b51d15f267b4710c176cacb2",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -98772,7 +98796,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "77821b43cfb99e647beb1a587ef066555ca10f1d94ebdfc10c247fa8e11fe5e4",
+      "sourceSha256": "120ebdd3b9df9ba12db01352c6454524232e7b00b51d15f267b4710c176cacb2",
       "definition": {
         "states": [
           "absent",
@@ -98802,7 +98826,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "77821b43cfb99e647beb1a587ef066555ca10f1d94ebdfc10c247fa8e11fe5e4",
+      "sourceSha256": "120ebdd3b9df9ba12db01352c6454524232e7b00b51d15f267b4710c176cacb2",
       "definition": {
         "export": [
           "queued",
@@ -98859,7 +98883,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "77821b43cfb99e647beb1a587ef066555ca10f1d94ebdfc10c247fa8e11fe5e4",
+      "sourceSha256": "120ebdd3b9df9ba12db01352c6454524232e7b00b51d15f267b4710c176cacb2",
       "definition": {
         "states": [
           "pending",
