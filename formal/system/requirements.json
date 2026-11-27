@@ -24316,13 +24316,12 @@
         "tdf-hq/src/TDF/Server/SocialSync.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
-        "tdf-hq-ui/src/hooks/useChatKitScript.ts",
         "tdf-hq-ui/src/pages/ChatKitPage.tsx",
-        "tdf-hq-ui/src/services/chatkit.ts"
+        "tdf-hq/src/TDF/Services/LlmChat.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq-ui/src/services/chatkit.test.ts"
+        "tdf-hq-ui/src/pages/ChatKitPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
@@ -25271,7 +25270,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
       "source": "formal/system/commerce-integration-routes.md",
       "contract": "formal/system/commerce-integration-routes.md",
-      "property": "Tidal needs ops or admin access (403), a prompt of 1..2000 safe characters (400) and an OpenAI key (503), and calls chat completions (502 on failure) without database writes. Ads assist needs hasSocialInboxAccess (403), a message of 1..2000 safe characters, positive ids, a channel and no partyId (400); it reads the ad and its examples, retrieves public course context (PRIV-RAG-001) and calls the model (502, or a canned Spanish fallback without a key).",
+      "property": "Tidal needs ops or admin access (403), a prompt of 1..2000 safe characters (400) and a Venice inference key (503), and calls chat completions (502 on failure) without database writes. Ads assist needs hasSocialInboxAccess (403), a message of 1..2000 safe characters, positive ids, a channel and no partyId (400); it reads the ad and its examples, retrieves public course context (PRIV-RAG-001) and calls the model (502, or a canned Spanish fallback without a key).",
       "actors": [
         "Operations staff",
         "Social inbox staff"
