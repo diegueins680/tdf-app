@@ -72,16 +72,20 @@ import TDF.Catalog.Security (ensureBootstrapSecurityRole, validateSecurityRegist
 import TDF.Catalog.Seed (seedCatalogFoundation, validateCatalogRuntimeRegistries)
 import qualified TDF.DDEX.Models as Ddex
 import TDF.Server.Directory (startAgreementDepositExpiryJob)
+import TDF.Social.SuggestionStore (startFriendSuggestionJob)
 import TDF.Cron (
     startCoursePaymentReminderJob,
+    startCourseFollowUpReminderJob,
     startEventDiscoveryJob,
     startEventLogisticsRecheckJob,
     startArtistEnrichmentJob,
+    startArtistSimilarityJob,
     startInstagramSyncJob,
     startSocialAutoReplyJob,
   )
 import TDF.Services.RecordsIngestion (startRecordsIngestionJob)
 import TDF.Interactions.Notifications (startInteractionNotifications)
+import TDF.Chat.Delivery (startChatDeliveryWorker)
 import TDF.DB (ConnectionPool, Env (..), makePool)
 import TDF.Models (
     PartyId,
@@ -91,6 +95,7 @@ import TDF.Models (
   )
 import TDF.Models.SocialEventsModels (migrateSocialEvents)
 import TDF.ModelsExtra (migrateExtra)
+import TDF.Directory.SemanticIndex (startDirectorySemanticIndexWorker)
 import TDF.Operations.Worker (startOperationsWorker)
 import TDF.Reputation.Worker (startReputationWorker)
 import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
@@ -150,12 +155,16 @@ runBootServer = do
         let env = Env{envPool = pool, envConfig = cfg}
         writeIORef appRef (wrapApp (mkApp env))
         startCoursePaymentReminderJob env
+        startCourseFollowUpReminderJob env
         startAgreementDepositExpiryJob env
         startRecordsIngestionJob (envPool env)
         startInteractionNotifications (envPool env)
+        startChatDeliveryWorker env
         startEventDiscoveryJob env
+        startFriendSuggestionJob env
         startEventLogisticsRecheckJob env
         startArtistEnrichmentJob env
+        startArtistSimilarityJob env
         startInstagramSyncJob env
         startSocialAutoReplyJob env
         startCampaignAutomationJob env
@@ -166,6 +175,7 @@ runBootServer = do
         startTicketConfirmationWorker env
         startTaxInvoiceWorker env
         startReputationWorker env
+        startDirectorySemanticIndexWorker env
 
   serverResult <- newEmptyMVar
   _ <-

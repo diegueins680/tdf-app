@@ -1313,6 +1313,81 @@
       "id": "2026-11-07_artist_featured_identity_guard",
       "path": "tdf-hq/sql/2026-11-07_artist_featured_identity_guard.sql",
       "introducedBy": "6d7bf89fc4ab5127549f67c5e044f69007f1ac2c"
+    },
+    {
+      "id": "2026-11-02_domo_refund_lifecycle",
+      "path": "tdf-hq/sql/2026-11-02_domo_refund_lifecycle.sql",
+      "introducedBy": "fee3642a70a1eeabf0c4d2efaace5da5d240e23a"
+    },
+    {
+      "id": "2026-11-06_content_storage_security",
+      "path": "tdf-hq/sql/2026-11-06_content_storage_security.sql",
+      "introducedBy": "a0f18086cb8ded76cc1d3b1d19dc31e813070a20"
+    },
+    {
+      "id": "2026-11-07_content_storage_identity_guards",
+      "path": "tdf-hq/sql/2026-11-07_content_storage_identity_guards.sql",
+      "introducedBy": "a8b31cefcf5c6ce45a3fc38406f23f11a3616b56"
+    },
+    {
+      "id": "2026-11-07_studio_gallery",
+      "path": "tdf-hq/sql/2026-11-07_studio_gallery.sql",
+      "introducedBy": "d77cd1319a67e89675e12e9e9082641bdf9fcc66"
+    },
+    {
+      "id": "2026-11-20_course_follow_up_reminder_delivery",
+      "path": "tdf-hq/sql/2026-11-20_course_follow_up_reminder_delivery.sql",
+      "introducedBy": "7da005edcdcce714343d3bbf7273fc31dd0743f4"
+    },
+    {
+      "id": "2026-11-20_chat_external_delivery",
+      "path": "tdf-hq/sql/2026-11-20_chat_external_delivery.sql",
+      "introducedBy": "8da140ae64c51b8ef006e7678589c8bcf5ef38f3"
+    },
+    {
+      "id": "2026-11-21_directory_semantic_search",
+      "path": "tdf-hq/sql/2026-11-21_directory_semantic_search.sql",
+      "introducedBy": "d48fd5f1117f6778759185ac2e6ba559937bc360"
+    },
+    {
+      "id": "2026-11-21_venue_search_sql",
+      "path": "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
+      "introducedBy": "1c581e2e6016b76e04269a29b09d38665719559d"
+    },
+    {
+      "id": "2026-11-21_artist_similarity",
+      "path": "tdf-hq/sql/2026-11-21_artist_similarity.sql",
+      "introducedBy": "89d467302501d47ce53c1551b031c46cb7bb1162"
+    },
+    {
+      "id": "2026-11-21_music_audio_measurement",
+      "path": "tdf-hq/sql/2026-11-21_music_audio_measurement.sql",
+      "introducedBy": "6ab7ca2abd473e901c619f2fc9488dbf5a5dab2b"
+    },
+    {
+      "id": "2026-11-21_location_genre_filters",
+      "path": "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+      "introducedBy": "a0ca9cd7367ecdd7252dfe50d0a9c94365fc2fcf"
+    },
+    {
+      "id": "2026-11-24_unicode_genre_suggestion_keys",
+      "path": "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql",
+      "introducedBy": "75bb471542ae62f4f4a591bb57fc8565fcc9118d"
+    },
+    {
+      "id": "2026-11-24_preserve_selected_genre_ids",
+      "path": "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
+      "introducedBy": "670482f551c6e366040a20cf7f72117aa6df4ab5"
+    },
+    {
+      "id": "2026-11-21_social_friend_suggestions",
+      "path": "tdf-hq/sql/2026-11-21_social_friend_suggestions.sql",
+      "introducedBy": "02d0da0d60de43834eefef060649d06b9e06b90a"
+    },
+    {
+      "id": "2026-11-24_venue_coordinate_constraint",
+      "path": "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql",
+      "introducedBy": "866fdf72a77045234a257e66752148f15e817d1e"
     }
   ]
 }

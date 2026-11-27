@@ -1,0 +1,10 @@
+{
+  "id": "3391a96825357d78f794",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+  "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+  "reviewed": true
+}

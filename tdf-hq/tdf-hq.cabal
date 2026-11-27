@@ -44,13 +44,22 @@ library
     TDF.Social.API
     TDF.Social.Server
     TDF.API.Chat
+    TDF.API.NotificationDelivery
+    TDF.Chat.Delivery
+    TDF.Server.NotificationDelivery
     TDF.API.SocialProfiles
     TDF.Social.Profiles
     TDF.API.SocialRelationships
     TDF.Social.FanEffects
+    TDF.Fans.ArtistRecommendations
+    TDF.Fans.ArtistSimilarity
+    TDF.Fans.EventAffinity
     TDF.API.FanFollowing
     TDF.Social.RelationshipWrites
     TDF.Social.RelationshipReads
+    TDF.Auth.EmailVerification
+    TDF.Social.SuggestionRank
+    TDF.Social.SuggestionStore
     TDF.Social.Chat
     TDF.Social.Session
     TDF.API.Calendar
@@ -60,6 +69,8 @@ library
     TDF.API.Drive
     TDF.API.ContentStorage
     TDF.ContentStorage
+    TDF.StorageVault
+    TDF.DriveOAuthClient
     TDF.API.Rooms
     TDF.API.Services
     TDF.API.Sessions
@@ -79,6 +90,7 @@ library
     TDF.API.WhatsApp
     TDF.API.DDEX
     TDF.API.Directory
+    TDF.API.Taxonomy
     TDF.API.Reviews
     TDF.API.MerchReputation
     TDF.API.Catalog
@@ -101,6 +113,7 @@ library
     TDF.Ticketing.Issuance
     TDF.Ticketing.Refund
     TDF.Ticketing.Confirmation
+    TDF.Ticketing.LookupToken
     TDF.Ticketing.Inventory
     TDF.Ticketing.Transfer
     TDF.Commerce.MarketplaceSales
@@ -120,6 +133,7 @@ library
     TDF.Commerce.ProviderReconciliation
     TDF.Commerce.ProviderRuntimeConfig
     TDF.Commerce.DatafastConfig
+    TDF.Commerce.DatafastClientIP
     TDF.Commerce.TicketBuyerContact
     TDF.Commerce.ProviderAdapter
     TDF.Commerce.ProviderAdapter.Http
@@ -160,6 +174,7 @@ library
     TDF.MusicRelease.Domain
     TDF.MusicRelease.ContentValidation
     TDF.MusicRelease.Money
+    TDF.MusicRelease.Loudness
     TDF.MusicRelease.CredentialCache
     TDF.MusicRelease.DDEX.ERN432
     TDF.MusicRelease.Storage.S3
@@ -222,26 +237,38 @@ library
     TDF.ServerInternships
     TDF.ServerInternAudit
     TDF.Server.EventAdminDelegation
+    TDF.Server.PublicEventTicketSummary
+    TDF.Server.EventTicketSale
+    TDF.Server.EventAttendees
+    TDF.Server.TicketSalesWindow
     TDF.Server.SocialEventsHandlers
+    TDF.Server.SocialEventsTaxonomy
+    TDF.Server.SocialArtistOwnership
     TDF.Server.StripeTicketCapture
     TDF.Server.EventResearch
     TDF.Server.DDEX
     TDF.Server.Directory
+    TDF.Server.Taxonomy
+    TDF.Taxonomy.Filter
+    TDF.Taxonomy.GenreSuggestion
     TDF.Server.DirectoryAgreementText
     TDF.Server.Merch
     TDF.Server.Reviews
     TDF.Server.MerchReputation
     TDF.Server.Catalog
     TDF.Server.ServiceStorefront
+    TDF.Server.DatafastCheckoutContext
     TDF.Server.ProviderTransport
     TDF.Server.TicketManualPayments
     TDF.Server.TicketPaymentReceipt
     TDF.Server.TicketTaxDocuments
+    TDF.Server.PublicBookingNotifications
     TDF.Server.TicketRefunds
     TDF.ServerLiveSessions
     TDF.ServerFeedback
     TDF.ServerRadio
     TDF.ServerFanClub
+    TDF.Fans.FeedAffinity
     TDF.ServerFuture
     TDF.Routes.Courses
     TDF.Routes.DomoQuotes
@@ -254,6 +281,7 @@ library
     TDF.Calendar.Models
     TDF.Calendar.TokenCipher
     TDF.Auth.Throttle
+    TDF.Auth.ClientAddress
     TDF.CMS.Models
     TDF.Catalog.Models
     TDF.Catalog.CountryReferenceSeed
@@ -262,6 +290,8 @@ library
     TDF.Catalog.Seed
     TDF.Catalog.Types
     TDF.Directory.Policy
+    TDF.Directory.SemanticIndex
+    TDF.Directory.SemanticSearch
     TDF.DDEX.Types
     TDF.DDEX.Models
     TDF.DDEX.DB
@@ -277,6 +307,8 @@ library
     TDF.DDEX.ERN.V432.Convert
     TDF.DDEX.Observability
     TDF.DDEX.TestFixtures
+    TDF.Venues.Search
+    TDF.Venues.SearchFold
     TDF.Version
     TDF.WhatsApp.Client
     TDF.WhatsApp.History
@@ -289,6 +321,9 @@ library
     TDF.Commerce.DepositPolicy
     TDF.Commerce.DomoCancellation
     TDF.Commerce.DomoCancellationStore
+    TDF.Commerce.DomoRefundStore
+    TDF.Routes.DomoRefunds
+    TDF.Server.DomoRefunds
     TDF.Profiles.ArtistVisibility
     TDF.Social.AccountOwnership
     TDF.Social.AccountOwnershipStore
@@ -335,6 +370,7 @@ library
     , mtl
     , network
     , network-uri
+    , iproute
     , mime-mail
     , unordered-containers
     , uuid-types
@@ -354,6 +390,7 @@ library
     , tagged
     , crypton
     , memory
+    , unix
     , JuicyPixels
 
 
@@ -396,11 +433,14 @@ test-suite tdf-hq-test
     TDF.OperationsInboundCaptureSpec
     TDF.ProviderIdentitySpec
     TDF.CredentialLifecycleSpec
+    TDF.Venues.SearchSpec
     TDF.WhatsAppConsentSpec
     TDF.LedgerPostingSpec
     TDF.MusicPublicationSpec
     TDF.InteractionWriteBudgetSpec
+    TDF.ChatDeliverySpec
     TDF.MusicPurchaseSpec
+    TDF.StorageSecuritySpec
     TDF.MusicCredentialCacheSpec
     TDF.DriveReplaySpec
     TDF.WhatsAppRedeliverySpec
@@ -412,6 +452,7 @@ test-suite tdf-hq-test
     TDF.Commerce.CheckoutMoneySpec
     TDF.Commerce.PaymentArithmeticSpec
     TDF.Commerce.DatafastConfigSpec
+    TDF.Commerce.DatafastClientIPSpec
     TDF.EmailHeadersSpec
     TDF.CorsSpec
     TDF.Invoice.ReceiptSpec
@@ -421,6 +462,7 @@ test-suite tdf-hq-test
     TDF.ReadinessSpec
     TDF.TicketConfirmationSpec
     TDF.EventAdminDelegationSpec
+    TDF.EventTicketSaleSpec
     TDF.EventOrganizerSpec
     TDF.InvoiceDatilSpec
     TDF.TicketManualReviewSpec
@@ -434,6 +476,7 @@ test-suite tdf-hq-test
     TDF.Artists.EnrichmentSpec
     TDF.MusicRelease.DDEX.ERN432Spec
     TDF.MusicRelease.ContentSpec
+    TDF.MusicRelease.LoudnessSpec
     TDF.MusicRelease.Storage.S3Spec
     TDF.MusicRelease.DomainSpec
     TDF.EventOperations.DatabaseBoundarySpec
@@ -442,6 +485,10 @@ test-suite tdf-hq-test
     TDF.Catalog.RecordsSpec
     TDF.Catalog.PipelineSpec
     TDF.Directory.PolicySpec
+    TDF.Directory.SemanticSearchPostgresSpec
+    TDF.Directory.SemanticSearchSpec
+    TDF.Taxonomy.FilterSpec
+    TDF.Taxonomy.GenreSuggestionSpec
     TDF.Profiles.ArtistSpec
     TDF.Profiles.ArtistActivationSpec
     TDF.Server.MerchRuntimeSpec
@@ -453,13 +500,20 @@ test-suite tdf-hq-test
     TDF.AppleSignInSpec
     TDF.ServerExtraSpec
     TDF.ServerFanClubSpec
+    TDF.Fans.FeedAffinitySpec
+    TDF.Fans.ArtistRecommendationsSpec
+    TDF.Fans.ArtistSimilaritySpec
+    TDF.Fans.EventAffinitySpec
     TDF.ServerSpec
     TDF.StartupResponseSpec
     TDF.ServerAdminSpec
     TDF.ServerProposalsSpec
     TDF.Social.FollowHandlerSpec
     TDF.Server.EventRelationsSpec
+    TDF.Server.PublicBookingNotificationsSpec
     TDF.Social.FollowSpec
+    TDF.Social.SuggestionRankSpec
+    TDF.Social.SuggestionStoreSpec
     TDF.Services.EventDiscoverySpec
     TDF.Services.YouTubeSpec
     TDF.Services.RecordsIngestionSpec
@@ -522,6 +576,8 @@ test-suite tdf-hq-test
     , mtl
     , network
     , network-uri
+    , iproute
+    , wai-extra
     , mime-mail
     , tagged
     , unordered-containers

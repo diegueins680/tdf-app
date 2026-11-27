@@ -20,12 +20,30 @@ function render(template, params) {
 // predates it, so the reference is rendered without that parameter and the
 // per-row intent projection is ignored when comparing result rows.
 const INTENT_INDEX = 15;
-const legacy = (params) => params.filter((_, index) => index !== INTENT_INDEX);
+const legacy = (params) => params.filter((_, index) => index !== INTENT_INDEX && !(index > INTENT_INDEX && index <= INTENT_INDEX + TAXONOMY_ARRAYS));
+// TAX-FILTER-001 adds four shared filter arrays after intent (empty here, so
+// results, counts and plans must match the reference) and repeats the event
+// visibility parameter for the taxonomy facet base.
+const TAXONOMY_ARRAYS = 4;
+const currentFacetParams = (params) => [...params.slice(0, -2), 'suppressed'];
+const withoutTaxonomyFacets = (facets) => {
+  if (!facets?.jsonb_build_object) return facets;
+  const { taxonomy, ...rest } = facets.jsonb_build_object;
+  return { ...facets, jsonb_build_object: rest };
+};
+// Fields added after the reference revision: the classified intent (ADR 0132)
+// and the picture component of the ranking. The fixture has no pictures, so a
+// zero picture score must leave every ID, score and position unchanged; any
+// other value is kept and fails the comparison.
 const withoutIntent = (rows) => rows.map((row) => {
   const { intent, ...item } = row.jsonb_build_object;
+  if (item.scoreBreakdown?.image === 0) {
+    const { image, ...breakdown } = item.scoreBreakdown;
+    item.scoreBreakdown = breakdown;
+  }
   return { ...row, jsonb_build_object: item };
 });
-const q = (query = '', city = null, genre = null, latitude = null, longitude = null, radius = null) => [query, 'classified', city, latitude, longitude, radius, null, null, null, genre, null, null, null, null, null, null, 'suppressed', null, 50];
+const q = (query = '', city = null, genre = null, latitude = null, longitude = null, radius = null) => [query, 'classified', city, latitude, longitude, radius, null, null, null, genre, null, null, null, null, null, null, '{}', '{}', '{}', '{}', 'suppressed', null, 50];
 const cases = [
   ['empty', q()],
   ['selective-city', q('', '24000000-0000-4000-8000-000000000002')],
@@ -62,7 +80,7 @@ let fixture = `BEGIN;
 `;
 for (const [name, params] of cases) {
   const oldQuery = render(before.search, legacy(params)), newQuery = render(after.search, params);
-  const oldFacets = render(before.facets, legacy(params).slice(0, -2)), newFacets = render(after.facets, params.slice(0, -2));
+  const oldFacets = render(before.facets, legacy(params).slice(0, -2)), newFacets = render(after.facets, currentFacetParams(params));
   fixture += `SELECT jsonb_build_object('name',${quote(name)},
     'beforeRows',coalesce((SELECT jsonb_agg(to_jsonb(value)) FROM (${oldQuery}) value),'[]'::jsonb),
     'afterRows',coalesce((SELECT jsonb_agg(to_jsonb(value)) FROM (${newQuery}) value),'[]'::jsonb),
@@ -80,7 +98,7 @@ assert.equal(rows.length, cases.length);
 function nodes(plan) { return [plan, ...(plan.Plans ?? []).flatMap(nodes)]; }
 for (const row of rows) {
   assert.deepEqual(withoutIntent(row.afterRows), row.beforeRows, `${row.name}: result IDs, values, scores and order changed`);
-  assert.deepEqual(row.afterFacets, row.beforeFacets, `${row.name}: facet counts changed`);
+  assert.deepEqual(withoutTaxonomyFacets(row.afterFacets), row.beforeFacets, `${row.name}: facet counts changed`);
   assert.ok(!JSON.stringify(row.afterPlan).includes('directory_matches_non_geo_filters'), `${row.name}: filter helper was not inlined`);
   assert.ok(!JSON.stringify(row.afterPlan).includes('directory_matches_entity_and_derivation'), `${row.name}: entity helper was not inlined`);
   const oldNodes = nodes(row.beforePlan[0].Plan), newNodes = nodes(row.afterPlan[0].Plan);

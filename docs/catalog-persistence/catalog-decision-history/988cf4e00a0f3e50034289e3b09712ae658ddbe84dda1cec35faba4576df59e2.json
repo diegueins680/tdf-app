@@ -1,0 +1,22 @@
+{
+  "id": "e7bcfcc68efa32ce3d27",
+  "classification": "security-system-registry",
+  "disposition": "historical-evidence-replaced-by-forward-migration",
+  "specializedModel": "security_action, security_permission, role_permission",
+  "priority": "P0-security",
+  "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+  "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+    "line": 84,
+    "kind": "sql-check-values",
+    "name": "CHECK IN",
+    "valueCount": 13,
+    "consumerCount": 119,
+    "exactDuplicateIds": [],
+    "similarCandidateIds": []
+  }
+}

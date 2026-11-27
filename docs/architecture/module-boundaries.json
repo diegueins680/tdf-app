@@ -109,6 +109,12 @@
           ]
         },
         {
+          "name": "auth-state",
+          "match": [
+            "^auth/"
+          ]
+        },
+        {
           "name": "api",
           "match": [
             "^api/"
@@ -151,27 +157,8 @@
         }
       ],
       "knownViolations": [
-        "api/auth.ts -> session/logoutIntent.ts",
         "api/authHeader.ts -> session/SessionContext.tsx",
-        "api/client.ts -> session/authEvents.ts",
-        "api/client.ts -> session/logoutIntent.ts",
-        "api/contentStorage.ts -> session/authEvents.ts",
-        "api/drive.ts -> services/googleDrive.ts",
-        "api/drive.ts -> session/logoutIntent.ts",
-        "api/inventory.ts -> session/logoutIntent.ts",
-        "api/session.ts -> session/logoutIntent.ts",
-        "components/MarketplaceCartButton.tsx -> features/marketplace/cartSummary.ts",
-        "components/RegistryBreadcrumbs.tsx -> features/featureRegistry.ts",
-        "components/SessionVideoPreview.tsx -> features/campaigns/videoAttribution.ts",
-        "components/SessionVideoPreview.tsx -> features/campaigns/videoCampaign.ts",
-        "components/SidebarNav.tsx -> features/featureRegistry.ts",
-        "components/TopBar.tsx -> features/featureRegistry.ts",
-        "utils/accessControl.ts -> features/featureRegistry.ts",
-        "utils/chatkit.ts -> api/client.ts",
-        "utils/directoryPreviewImage.ts -> api/client.ts",
-        "utils/inAppBrowser.ts -> mobile/distribution.ts",
-        "utils/merch.ts -> api/client.ts",
-        "utils/tidalAgent.ts -> api/client.ts"
+        "utils/inAppBrowser.ts -> mobile/distribution.ts"
       ],
       "sizeBudget": {
         "maxLines": 2000,

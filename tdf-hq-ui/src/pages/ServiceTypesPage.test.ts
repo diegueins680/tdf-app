@@ -11,7 +11,7 @@ const form: OfferingForm = {
   sortOrder: 20,
   categoryId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
   pricingModelId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
-  rateCents: '12500',
+  price: '125.00',
   currencyId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
   billingUnitEs: ' hora ',
   billingUnitEn: ' hour ',
@@ -27,7 +27,7 @@ const form: OfferingForm = {
 };
 
 describe('buildServiceOfferingDraft', () => {
-  it('writes canonical relationships and never copied service selectors', () => {
+  it('converts a displayed currency amount to exact cents while preserving canonical relationships and never copied service selectors', () => {
     const draft = buildServiceOfferingDraft(form);
 
     expect(draft).toMatchObject({
@@ -54,5 +54,17 @@ describe('buildServiceOfferingDraft', () => {
     expect(draft.serviceOffering?.taxRateId).toBeUndefined();
     expect(draft).not.toHaveProperty('serviceType');
     expect(draft.serviceOffering).not.toHaveProperty('pricingModelCode');
+  });
+  it('keeps a quoted price absent, preserves zero and accepts decimal commas', () => {
+    expect(buildServiceOfferingDraft({ ...form, price: '' }).serviceOffering?.rateCents).toBeUndefined();
+    expect(buildServiceOfferingDraft({ ...form, price: '0' }).serviceOffering?.rateCents).toBe(0);
+    expect(buildServiceOfferingDraft({ ...form, price: '25,50' }).serviceOffering?.rateCents).toBe(2550);
+  });
+
+  it('never silently removes an invalid entered price from a draft', () => {
+    expect(() => buildServiceOfferingDraft({ ...form, price: '25.501' })).toThrow();
+    expect(() => buildServiceOfferingDraft({ ...form, price: '-25' })).toThrow();
+    expect(() => buildServiceOfferingDraft({ ...form, price: '1e3' })).toThrow();
+    expect(() => buildServiceOfferingDraft({ ...form, price: '90071992547409.92' })).toThrow();
   });
 });

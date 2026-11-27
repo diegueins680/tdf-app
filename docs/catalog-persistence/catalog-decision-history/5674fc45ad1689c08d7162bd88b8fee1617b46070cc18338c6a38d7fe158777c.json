@@ -1,0 +1,10 @@
+{
+  "id": "97f5e84df29e38480f3f",
+  "classification": "security-system-registry",
+  "disposition": "retain-as-versioned-adapter-dispatch",
+  "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
+  "priority": "P0-security",
+  "risk": "An incorrect label-to-provider-method binding could execute a different rail than the server offered and undermine duplicate-charge and consent controls.",
+  "justification": "This closed dispatch maps server-authorized composite labels to the two implemented hosted adapters; unknown labels fail closed and the database registry remains authoritative for visibility.",
+  "reviewed": true
+}

@@ -1,3 +1,4 @@
+import { appendTaxonomyParams, type TaxonomySelection } from './taxonomy';
 import { del, get, post } from './client';
 import type { RadioPresenceDTO, RadioPresenceUpsert } from './types';
 
@@ -90,10 +91,12 @@ export const RadioAPI = {
     const qs = params.toString();
     return get<RadioAutoStopOptions>(`/radio/auto-stop-options${qs ? `?${qs}` : ''}`);
   },
-  search: (params?: { countryId?: string; genreId?: string }) => {
+  search: (params?: { countryId?: string; genreId?: string } & Partial<TaxonomySelection>) => {
     const searchParams = new URLSearchParams();
     if (params?.countryId?.trim()) searchParams.set('countryId', params.countryId.trim());
     if (params?.genreId?.trim()) searchParams.set('genreId', params.genreId.trim());
+    // TAX-FILTER-001 shared filters (repeatable; a city or region narrows to its country).
+    appendTaxonomyParams(searchParams, params);
     const qs = searchParams.toString();
     return get<RadioStreamDTO[]>(`/radio/streams${qs ? `?${qs}` : ''}`);
   },

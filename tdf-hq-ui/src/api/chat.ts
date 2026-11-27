@@ -1,4 +1,4 @@
-import { get, post } from './client';
+import { get, post, put } from './client';
 import type { ChatMessageDTO, ChatThreadDTO } from './types';
 
 const requirePositiveInteger = (value: number, field: string): number => {
@@ -23,6 +23,12 @@ function buildQuery(params: Record<string, string | number | undefined | null>) 
   return raw ? `?${raw}` : '';
 }
 
+/** External chat reminders (email and phone). The in-app bell is always on. */
+export interface ChatNotificationChannels {
+  email: boolean;
+  push: boolean;
+}
+
 export const ChatAPI = {
   listThreads: () => get<ChatThreadDTO[]>('/chat/threads'),
   getOrCreateDmThread: (otherPartyId: number) =>
@@ -35,6 +41,15 @@ export const ChatAPI = {
         afterId: normalizeOptionalPositiveInteger(opts?.afterId),
       })}`,
     ),
+  /** Records on the server that the signed-in user read the conversation up to a message,
+   * so email/phone reminders are not sent for messages already seen. */
+  markThreadRead: (threadId: number, lastMessageId: number) =>
+    post<void>(`/chat/threads/${requirePositiveInteger(threadId, 'threadId')}/read`, {
+      lastMessageId: requirePositiveInteger(lastMessageId, 'lastMessageId'),
+    }),
+  getNotificationChannels: () => get<ChatNotificationChannels>('/notifications/channels'),
+  updateNotificationChannels: (channels: ChatNotificationChannels) =>
+    put<ChatNotificationChannels>('/notifications/channels', { email: channels.email, push: channels.push }),
   sendMessage: (threadId: number, body: string) => {
     const trimmedBody = body.trim();
     if (!trimmedBody) {

@@ -1,0 +1,34 @@
+{
+  "id": "137567fa80095813947d",
+  "classification": "genuine-technical-constant",
+  "disposition": "retain-in-code",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P3-retain",
+  "risk": "Dropping or merging a case would show a generic message for a storage failure that needs a specific recovery step.",
+  "justification": "Preserve the nine existing backend storage-error messages and add storage_activation_pending for the default-disabled account-upload gate. This is an exhaustive backend error protocol, not an editable catalog.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "storage-security-20261106",
+  "evidence": {
+    "file": "tdf-hq-ui/src/api/uploadFailure.ts",
+    "line": 36,
+    "kind": "switch-cases",
+    "name": "error.code",
+    "valueCount": 10
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:2decade57376a8c68bc9b707e98b6d2e9337681f86662f39182ebdca12037e28"
+  },
+  "sourceReviewReferences": [
+    {
+      "sourceRevision": "c47c2a8d8851a58a828dec830704f8c352496c20",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "360004e743c689ff9a547c2d55d304f532325a9bb2ba5cc6ac15ab654b9ebb9e",
+      "sourceEntry": {
+        "id": "dba5e241ba7782bae73f"
+      },
+      "sourceEntryCanonicalSha256": "c09fec9eff9128e8cd1408f10bdca911b0c07ab2d92e82a53924566f6b43ba0f",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    }
+  ]
+}

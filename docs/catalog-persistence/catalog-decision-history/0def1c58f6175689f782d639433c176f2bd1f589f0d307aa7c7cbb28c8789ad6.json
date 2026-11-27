@@ -1,0 +1,13 @@
+{
+  "id": "d24fc428c18f60568996",
+  "classification": "dynamic-business-catalog",
+  "disposition": "retain-in-code",
+  "specializedModel": "navigation_item",
+  "priority": "P3-retain",
+  "risk": "Changing UI constants could break rendering or user experience.",
+  "justification": "Existing reviewed client navigation presentation now also links to the canonical /app route. It contains no tester eligibility or distribution state; those derive from the validated distribution manifest. ES/EN labels remain localized.",
+  "reviewed": true,
+  "previousDecision": {
+    "$historyRef": "sha256:590921d973525e46270b4b5d6afa0fcd92ba67d7129e1bcab9c783593f2b4c3b"
+  }
+}

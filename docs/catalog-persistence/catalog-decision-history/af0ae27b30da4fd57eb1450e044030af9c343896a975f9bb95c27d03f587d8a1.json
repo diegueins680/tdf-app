@@ -1,0 +1,27 @@
+{
+  "id": "5646672e19706cb496e6",
+  "classification": "dynamic-business-catalog",
+  "disposition": "historical-evidence-replaced-by-forward-migration",
+  "specializedModel": "domain-specific catalog table selected during consumer refactor",
+  "priority": "P1-cross-platform",
+  "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+  "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
+    "line": 1155,
+    "kind": "sql-check-values",
+    "name": "CHECK IN",
+    "valueCount": 3,
+    "consumerCount": 79,
+    "exactDuplicateIds": [],
+    "similarCandidateIds": [
+      "8c80d98c11e7d2dca074",
+      "25bef0a2b44ce140e985",
+      "4e84ef6ee94c1086c764",
+      "239051ed5dff81995c92"
+    ]
+  }
+}

@@ -61,7 +61,7 @@ const de = {
     bookingItems: 'Buchungen', classItems: 'Kurse', trackItems: 'Tracks',
     statuses: { confirmed: 'Bestätigt', confirmada: 'Bestätigt', scheduled: 'Geplant', programada: 'Geplant', mix: 'Mix' },
   },
-  sessionMenu: { noRoles: 'Keine Rollen zugewiesen', logout: 'Abmelden', open: 'Sitzungsmenü öffnen' },
+  sessionMenu: { help: 'Hilfe und Konto', manual: 'Handbuch', docs: 'Dokumentation', about: 'Über', security: 'Sicherheit', whatsapp: 'WhatsApp-Einstellungen', deleteAccount: 'Mein Konto löschen', noRoles: 'Keine Rollen zugewiesen', logout: 'Abmelden', open: 'Sitzungsmenü öffnen' },
   preferences: {
     title: 'Sprache und Region', subtitle: 'Wähle die Darstellung von Sprache, Währung, Datum und Uhrzeit.',
     language: 'Sprache', currency: 'Währung', timezone: 'Zeitzone', country: 'Ländercode',

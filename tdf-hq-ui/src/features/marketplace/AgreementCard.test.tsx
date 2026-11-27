@@ -6,8 +6,11 @@ import { MemoryRouter } from 'react-router-dom';
 import type { MarketplaceAgreement } from '../../api/directory';
 import { formatMinor } from './offers';
 
+const createAgreementPayment = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const createProviderPaymentSession = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+jest.unstable_mockModule('../../api/providerPaymentSessions', () => ({ createProviderPaymentSession, getProviderPaymentSession: jest.fn() }));
 const setAgreementStatus = jest.fn<(...args: unknown[]) => Promise<unknown>>();
-jest.unstable_mockModule('../../api/directory', () => ({ Directory: { setAgreementStatus } }));
+jest.unstable_mockModule('../../api/directory', () => ({ Directory: { setAgreementStatus, createAgreementPayment } }));
 jest.unstable_mockModule('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string, options?: Record<string, unknown>) => (options && 'percent' in options ? `${key} ${String(options['percent'])}` : key), i18n: { language: 'es' } }),
 }));
@@ -29,6 +32,9 @@ const base: MarketplaceAgreement = {
 let client: QueryClient;
 beforeEach(() => {
   setAgreementStatus.mockReset();
+  createAgreementPayment.mockReset();
+  createProviderPaymentSession.mockReset();
+  window.sessionStorage.clear();
   client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
 });
 afterEach(() => { cleanup(); client.clear(); });
@@ -74,4 +80,25 @@ it('offers no action on a completed agreement and points to verified reviews', (
   show({ ...base, status: 'completed' });
   expect(screen.queryAllByRole('button')).toHaveLength(0);
   expect(screen.getByText('marketplace.agreement.reviewHint')).toBeTruthy();
+});
+
+it('keeps payment alternatives unknown after an agreement payment request fails', async () => {
+  createAgreementPayment.mockRejectedValue(new Error('Synthetic payment lookup failure'));
+  show({ ...base, settlementMode: 'platform', status: 'pending_deposit', payoutProviders: ['payphone'] });
+  fireEvent.click(screen.getByTestId('agreement-pay'));
+  await screen.findByText(/No pudimos consultar otros medios de pago/);
+  expect(screen.queryByText(/No hay otro medio habilitado/)).toBeNull();
+  expect(screen.getByText(/Verifica el pago original antes de volver a pagar/)).toBeTruthy();
+  expect(createAgreementPayment).toHaveBeenCalledTimes(1);
+  expect(createProviderPaymentSession).not.toHaveBeenCalled();
+});
+
+it('offers support after the only agreement executor confirms no charge', async () => {
+  createAgreementPayment.mockResolvedValue({ checkoutId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', lookupToken: 'synthetic-private-lookup' });
+  createProviderPaymentSession.mockResolvedValue({ checkoutId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', attemptId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', state: 'failed', canRetryOrFallback: true });
+  show({ ...base, settlementMode: 'platform', status: 'pending_deposit', payoutProviders: ['payphone'] });
+  fireEvent.click(screen.getByTestId('agreement-pay'));
+  await screen.findByText(/No hay otro medio habilitado/);
+  expect(screen.queryByText(/No pudimos consultar otros medios de pago/)).toBeNull();
+  expect(createProviderPaymentSession).toHaveBeenCalledTimes(1);
 });

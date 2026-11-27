@@ -10,7 +10,8 @@ export const DISMISS_MS = 30 * 24 * 60 * 60 * 1000;
 export function promoDismissed(now = Date.now()): boolean {
   try { const until = Number(localStorage.getItem(DISMISS_KEY)); return Number.isFinite(until) && until > now; } catch { return true; }
 }
-export default function MobilePromo({ surface, banner = false, compact = false }: { surface: string; banner?: boolean; compact?: boolean }) {
+// `desktopOnly` is for the footer link on pages where phones already get the banner: one invitation per page.
+export default function MobilePromo({ surface, banner = false, compact = false, desktopOnly = false }: { surface: string; banner?: boolean; compact?: boolean; desktopOnly?: boolean }) {
   const { t } = useTranslation();
   const { search } = useLocation();
   const track = useMobileTelemetry(surface);
@@ -19,7 +20,8 @@ export default function MobilePromo({ surface, banner = false, compact = false }
   const measured = useRef(false);
   const trackRef = useRef(track);
   trackRef.current = track;
-  const visible = !dismissed && (!banner || detectPlatform(navigator.userAgent, navigator.maxTouchPoints) !== 'desktop');
+  const desktop = detectPlatform(navigator.userAgent, navigator.maxTouchPoints) === 'desktop';
+  const visible = !dismissed && (!banner || !desktop) && (!desktopOnly || desktop);
   useEffect(() => {
     measured.current = false;
     if (!visible || !ref.current || !('IntersectionObserver' in window)) return;

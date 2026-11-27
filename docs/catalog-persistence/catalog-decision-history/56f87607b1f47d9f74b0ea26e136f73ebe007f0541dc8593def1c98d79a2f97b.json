@@ -1,0 +1,22 @@
+{
+  "id": "d55b0d93ab3224fe96ac",
+  "classification": "genuine-technical-constant",
+  "disposition": "explicit-allowlist",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P0-cutover",
+  "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+  "justification": "The 217-entry execution registry preserves every object and SQL byte of the immutable 216-entry prefix and appends source permission locking introduced by baab857f085b74f333c9f5d29e31306072fbc496. It reuses the existing canonical permission locks, rejects unknown or unsafe predecessors, and retains function OIDs and all source/report/request/audit data. Eight actual PostgreSQL interleavings and an observed committed predecessor counterexample qualify the scoped regression; current review/CI and production deployment remain separate obligations.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "event-memory-source-permission-locks-20261025",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 217
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:dc4429b1b25ed481e3386bd32272954d206a94c5a847265daf3f421eddbcfa71"
+  }
+}

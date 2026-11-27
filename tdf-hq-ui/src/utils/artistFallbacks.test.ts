@@ -1,4 +1,4 @@
-import { artistInitials, artistPlaceholderImage, getArtistHeroImage, isArtistPlaceholderImage } from './artistFallbacks';
+import { artistInitials, artistPlaceholderImage, getArtistHeroImage, isArtistPlaceholderImage, isUnnamedArtistProfile, picturedArtistsFirst } from './artistFallbacks';
 
 describe('getArtistHeroImage', () => {
   it('ignores legacy page URLs in image fields and keeps the verified artwork', () => {
@@ -38,5 +38,29 @@ describe('getArtistHeroImage', () => {
   it('preserves artist-provided images', () => {
     expect(getArtistHeroImage(' https://cdn.example/owned.jpg ', null, 'Artist')).toBe('https://cdn.example/owned.jpg');
     expect(isArtistPlaceholderImage('https://cdn.example/owned.jpg')).toBe(false);
+  });
+});
+
+describe('isUnnamedArtistProfile', () => {
+  it('recognises profiles that still carry the account placeholder or no name', () => {
+    expect(isUnnamedArtistProfile({ apDisplayName: 'Cuenta TDF' })).toBe(true);
+    expect(isUnnamedArtistProfile({ apDisplayName: '  Cuenta TDF ' })).toBe(true);
+    expect(isUnnamedArtistProfile({ apDisplayName: '' })).toBe(true);
+    expect(isUnnamedArtistProfile({ apDisplayName: null })).toBe(true);
+    expect(isUnnamedArtistProfile({ apDisplayName: 'Verde 70' })).toBe(false);
+    expect(isUnnamedArtistProfile({ apDisplayName: 'Cuenta TDF Sessions' })).toBe(false);
+  });
+});
+
+describe('picturedArtistsFirst', () => {
+  it('lists artists with a picture before those without, keeping the order within each group', () => {
+    const artists = [
+      { id: 1, apHeroImageUrl: null, apSlug: 'unknown-artist' },
+      { id: 2, apHeroImageUrl: 'https://cdn.example.test/a.jpg', apSlug: 'a' },
+      { id: 3, apHeroImageUrl: '  ', apSlug: null },
+      { id: 4, apHeroImageUrl: null, apSlug: 'skankafe' },
+      { id: 5, apHeroImageUrl: '/artist-fallback.svg', apSlug: 'b' },
+    ];
+    expect(picturedArtistsFirst(artists).map((artist) => artist.id)).toEqual([2, 4, 1, 3, 5]);
   });
 });

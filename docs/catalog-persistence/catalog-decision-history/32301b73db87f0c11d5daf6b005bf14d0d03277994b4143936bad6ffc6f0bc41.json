@@ -1,0 +1,18 @@
+{
+  "id": "c6915506d0f7b802519d",
+  "classification": "genuine-technical-constant",
+  "disposition": "explicit-allowlist",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P1-integrity",
+  "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+  "justification": "The ordered production migration protocol preserves all 160 current-main entries with their original introduction SHAs and appends six payment migrations in source order. SQL checksums, deployment ancestry and release approval remain mandatory. This immutable registry is not administrator-selectable product data.",
+  "reviewed": true,
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3
+  },
+  "reviewBatch": "event-editorial-ownership-2026-10-03",
+  "previousDecision": {
+    "$historyRef": "sha256:7c8cef7910b74d1201c070f5abdb77a9ffcac599211aa8857442f7e6ed2740aa"
+  }
+}

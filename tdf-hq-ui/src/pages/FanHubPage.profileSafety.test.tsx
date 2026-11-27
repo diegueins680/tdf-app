@@ -29,6 +29,7 @@ jest.unstable_mockModule('../api/fans', () => ({
     updateProfile: updateFanProfile,
     listArtists: jest.fn(async () => []),
     listFollows: jest.fn(async () => []),
+    listRecommendations: jest.fn(async () => []),
     listMyClubs: jest.fn(async () => []),
     requestMyFanRole: jest.fn(),
     follow: jest.fn(),

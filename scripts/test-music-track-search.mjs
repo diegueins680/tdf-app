@@ -1,5 +1,5 @@
 // Actual appended track-search SQL and Haskell binding contract against an owned
-// PostgreSQL database. Selected migration fixture, not HTTP/storage/full-schema proof.
+// PostgreSQL database using the production migration sequence.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
@@ -11,10 +11,25 @@ import { disposableMusicDatabase, musicTestEnvironment } from './lib/music-test-
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const source = readFileSync(join(root, 'tdf-hq/src/TDF/Server/MusicRelease.hs'), 'utf8');
 const gate = 'music_public_asset_accessible(asset.id,?::text)';
-const expectedBindings = ['PersistText rawQuery', 'PersistText rawQuery', 'optionalText territory',
-  'PersistInt64 (fromIntegral limit)', 'PersistInt64 (fromIntegral offset)'];
+const filterSource = readFileSync(join(root, 'tdf-hq/src/TDF/Taxonomy/Filter.hs'), 'utf8');
+const expectedBindings = ['PersistText rawQuery', 'PersistText rawQuery', 'taxonomyInputParams taxonomy',
+  'optionalText territory', 'PersistInt64 (fromIntegral limit)', 'PersistInt64 (fromIntegral offset)'];
+
+// The shipped SQL is composed of Text literals and named fragments. Reject an
+// unknown expression so the fixture cannot silently miss a new predicate.
+function concatenate(expression, fragments = {}) {
+  return expression.trim().split(/\s+<>\s+/).map(part => {
+    if (Object.hasOwn(fragments, part)) return fragments[part];
+    return JSON.parse(part);
+  }).join('');
+}
+function definition(sourceText, header, fragments) {
+  const body = sourceText.split('\n' + header + ' =\n')[1]?.split('\n\n')[0];
+  assert(body, 'Missing SQL definition ' + header);
+  return concatenate(body, fragments);
+}
 function extract(handler) {
-  const block = handler.split('searchPublicTracks edgeCountry query requestedLimit requestedOffset =')[1];
+  const block = handler.split('searchPublicTracks edgeCountry query requestedLimit requestedOffset countryIds regionIds cityIds genreIds =')[1];
   assert(block, 'Actual search handler must exist');
   assert(block.includes('requirePublicFeature'), 'Reuse the public feature gate');
   assert(block.includes('Assets.trustedEdgeTerritory edgeCountry'), 'Use trusted territory');
@@ -25,25 +40,31 @@ function extract(handler) {
   assert(block.includes('addHeader ("private, no-store" :: Text)'), 'Metadata response cache policy');
   assert(block.includes('search `catchError`'), 'Handler errors receive the same cache policy');
   const gapless = block.replace(/\\\n\s*\\/g, '');
-  const match = gapless.match(/jsonRows\s+("(?:[^"\\]|\\.)*")/s);
-  assert(match, 'Actual SQL literal');
-  const statement = JSON.parse(match[1]);
+  const match = gapless.match(/jsonRows\s*\(([\s\S]*?)\)\s*\(\[([\s\S]*?)\]\)/);
+  assert(match, 'Actual SQL and bindings');
+  const predicate = definition(filterSource, 'taxonomyMatchSql input cityExpr countryExpr genresExpr', {
+    input: 'input', cityExpr: definition(handler, 'musicReleaseCitySql'),
+    countryExpr: definition(handler, 'musicReleaseCountrySql'), genresExpr: definition(handler, 'musicReleaseGenresSql'),
+  });
+  const statement = concatenate(match[1], {
+    taxonomyInputColumnsSql: definition(filterSource, 'taxonomyInputColumnsSql'),
+    'taxonomyMatchSql "input" musicReleaseCitySql musicReleaseCountrySql musicReleaseGenresSql': predicate,
+  });
   assert(statement.includes(gate), 'Reuse authoritative delivery policy');
   assert(statement.includes('matching AS MATERIALIZED'), 'Match public contexts before scoped authorization');
   assert(statement.includes('authorized AS MATERIALIZED'), 'Authorize before public result projection');
-  const list = gapless.slice(match.index + match[0].length).match(/^\s*\[([^\]]*)\]/s);
-  assert(list, 'Actual Haskell bindings');
-  const bindings = list[1].split(',').map(item => item.trim().replace(/\s+/g, ' '));
+  const bindings = match[2].replace(/\]\s*<>\s*(.*?)\s*<>\s*\[/, ', $1, ')
+    .split(',').map(item => item.trim().replace(/\s+/g, ' '));
   assert.deepEqual(bindings, expectedBindings, 'Actual binding expressions and positional order');
-  assert.equal((statement.match(/\?/g) ?? []).length, bindings.length);
+  assert.equal((statement.match(/\?/g) ?? []).length, bindings.length + 3); // four taxonomy arrays
   return { statement, bindings };
 }
 const { statement, bindings } = extract(source);
 // Controls validate the shipped argument list, not a manually inferred SQL count.
-assert.throws(() => extract(source.replace(/PersistText rawQuery,\s*PersistText rawQuery,\s*optionalText territory/,
-  'PersistText rawQuery, PersistText rawQuery')), assert.AssertionError);
-assert.throws(() => extract(source.replace(/PersistText rawQuery,\s*PersistText rawQuery,\s*optionalText territory/,
-  'optionalText territory, PersistText rawQuery, PersistText rawQuery')), assert.AssertionError);
+assert.throws(() => extract(source.replace('] <> taxonomyInputParams taxonomy <> [optionalText territory',
+  '] <> [optionalText territory')), assert.AssertionError);
+assert.throws(() => extract(source.replace('] <> taxonomyInputParams taxonomy <> [optionalText territory',
+  ', optionalText territory] <> taxonomyInputParams taxonomy <> [')), assert.AssertionError);
 assert.throws(() => extract(source.replaceAll(gate, '(?::text IS NULL OR TRUE)')), assert.AssertionError);
 console.log('PASS contract: actual SQL/bindings, public/trusted-territory boundary, input/cache guards; omitted/reordered binding and removed-policy controls detected');
 if (process.argv.includes('--contract-only')) process.exit(0);
@@ -58,10 +79,11 @@ const psqlArgs = ['-XAtq', '-v', 'ON_ERROR_STOP=1', '-d', database];
 const sql = input => command('psql', psqlArgs, { input });
 const quote = value => value === null ? 'NULL' : typeof value === 'number' ? String(value)
   : `'${value.replaceAll("'", "''")}'`;
-function query(text, territory = 'EC', limit = 100, offset = 0, mutate = x => x) {
+function query(text, territory = 'EC', limit = 100, offset = 0, mutate = x => x, countries = []) {
   const values = { 'PersistText rawQuery': text, 'optionalText territory': territory,
     'PersistInt64 (fromIntegral limit)': limit, 'PersistInt64 (fromIntegral offset)': offset };
-  const parameters = bindings.map(binding => {
+  const parameters = bindings.flatMap(binding => {
+    if (binding === 'taxonomyInputParams taxonomy') return [`{${countries.join(',')}}`, '{}', '{}', '{}'];
     assert(Object.hasOwn(values, binding));
     return values[binding];
   });
@@ -73,17 +95,11 @@ function query(text, territory = 'EC', limit = 100, offset = 0, mutate = x => x)
 const same = (rows, ids, message) => assert.deepEqual(rows.map(row => row.recordingId), ids, message);
 try {
   owner.create();
-  const migrations = ['init_schema.sql', '2026-07-12_notification_table.sql',
-    '2026-08-05_artist_enrichment.sql', '2026-08-13_unified_checkout_core.sql',
-    '2026-09-04_access_request_notification_types.sql', '2026-09-11_music_release_platform.sql',
-    '2026-09-15_music_preview_ranges.sql', '2026-09-15_music_version_parties.sql',
-    '2026-09-15_music_party_details.sql', '2026-09-16_music_correction_asset_graph.sql',
-    '2026-09-16_music_correction_concurrency.sql', '2026-09-16_music_resource_graph_validation.sql',
-    '2026-10-11_music_publication_isolation.sql', '2026-10-15_music_exact_minor_units.sql'];
-  for (const migration of migrations) command('psql', [...psqlArgs, '-f', join(root, 'tdf-hq/sql', migration)]);
-  const normalizer = readFileSync(join(root, 'tdf-hq/sql/2026-08-14_music_directory_core.sql'), 'utf8')
-    .match(/CREATE OR REPLACE FUNCTION directory_normalize_text[\s\S]*?\$\$;/)?.[0];
-  assert(normalizer); sql(normalizer);
+  for (const fixture of ['production-schema-20260814.sql', 'catalog-production-source-fixture.sql']) {
+    command('psql', [...psqlArgs, '-f', join(root, 'scripts/__tests__/fixtures', fixture)]);
+  }
+  const batch = command(process.execPath, [join(root, 'scripts/render-production-migration-batch.mjs')]);
+  sql(batch);
   const fixtureSource = readFileSync(join(root, 'tdf-hq/test/TDF/MusicPublicationSpec.hs'), 'utf8');
   const fixtureList = fixtureSource.split('[ "CREATE OR REPLACE FUNCTION music_spec_publishable')[1].split(']) []')[0];
   const fixtureLiterals = ('"CREATE OR REPLACE FUNCTION music_spec_publishable' + fixtureList).match(/"(?:[^"\\]|\\.)*"/g);
@@ -140,6 +156,8 @@ try {
   const album = make('album', 'A opening', 'album'); publish(album);
   const b = sql(`SELECT recording_id FROM music_release_track WHERE release_version_id='${album.version}' AND track_number=2`);
   same(query('cancion noct'), [b], 'Only matching B is returned, never first track A');
+  same(query('cancion noct', 'EC', 100, 0, undefined, [randomUUID()]), [],
+    'A country outside the recording context excludes an otherwise authorized title match');
   same(query('Guest Artist'), [b], 'Track display artist is searchable');
   assert.equal(query('Spec album').length, 2, 'Release title matches both authorized tracks');
   for (const q of ['Canción', 'CANCION', 'nocturna', 'B Canción']) same(query(q), [b], 'Accent, case and partial search');
@@ -212,7 +230,7 @@ try {
   same(query('%_'), [literal.recording], 'Literal wildcard-containing title remains searchable without matching other records');
   same(query("'; DROP TABLE music_recording; --"), [], 'Parameter text cannot alter SQL');
   console.log('PASS canonical deduplication: multiple matching contexts and quality variants, stable pages, non-Latin/literal/injection controls');
-  console.log(`PASS real PostgreSQL track search: ${migrations.length} selected migrations plus actual directory normalizer; no HTTP/storage/full-schema claim`);
+  console.log('PASS PostgreSQL recording search against the production migration sequence');
 } finally {
   await owner.cleanup();
   console.log('Cleaned only this run’s owned disposable database');

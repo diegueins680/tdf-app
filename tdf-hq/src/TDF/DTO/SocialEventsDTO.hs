@@ -78,6 +78,10 @@ module TDF.DTO.SocialEventsDTO (
     EventAdminInvitationTokenDTO (..),
     EventAdminInvitationPreviewDTO (..),
     EventCourtesyTicketDTO (..),
+    EventTicketSaleDTO (..),
+    EventTicketSaleRequestDTO (..),
+    EventTicketSaleTermsDTO (..),
+    EventTicketSaleTierDTO (..),
     EventLogisticsMemberDTO (..),
     EventLogisticsPlaceDTO (..),
     EventLogisticsAssignmentDTO (..),
@@ -527,6 +531,12 @@ data PublicUpcomingEventDTO = PublicUpcomingEventDTO
     , publicUpcomingEventTicketUrl :: Maybe Text
     , publicUpcomingEventImageUrl :: Maybe Text
     , publicUpcomingEventWorkflowStateCode :: Text
+    , -- Lowest price among ticket tiers that are on sale and in stock right now.
+      -- Absent when nothing is on sale, or when tiers use different currencies.
+      publicUpcomingEventTicketFromPriceCents :: Maybe Int
+    , publicUpcomingEventTicketCurrency :: Maybe Text
+    , -- True only when tiers are on sale and none has inventory left.
+      publicUpcomingEventTicketsSoldOut :: Bool
     }
     deriving (Show, Eq, Generic)
 instance ToJSON PublicUpcomingEventDTO
@@ -1884,6 +1894,64 @@ data EventCourtesyTicketDTO = EventCourtesyTicketDTO
 instance ToJSON EventCourtesyTicketDTO
 instance FromJSON EventCourtesyTicketDTO where
     parseJSON = genericParseJSON defaultOptions{rejectUnknownFields = True}
+
+-- | EVT-TICKET-SALE-001: the commercial terms TDF applies to every paid
+-- ticket sale it approves. The organizer sees them before asking.
+data EventTicketSaleTermsDTO = EventTicketSaleTermsDTO
+    { etstCurrency :: Text
+    , etstBuyerFeeBps :: Int
+    , etstOrganizerFeeBps :: Int
+    , etstTaxBps :: Int
+    , etstHoldMinutes :: Int
+    , etstMaxTicketsPerOrder :: Int
+    , etstRefundPolicy :: Text
+    , etstTermsSummary :: Text
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventTicketSaleTermsDTO
+instance FromJSON EventTicketSaleTermsDTO
+
+-- | Where one event stands on paid ticket sales: @none@, @requested@,
+-- @approved@ or @declined@.
+data EventTicketSaleDTO = EventTicketSaleDTO
+    { etsEventId :: Text
+    , etsStatus :: Text
+    , etsRequestId :: Maybe Text
+    , etsRequestedAt :: Maybe UTCTime
+    , etsDecidedAt :: Maybe UTCTime
+    , etsCanRequest :: Bool
+    , etsBlockedReason :: Maybe Text
+    , etsCanDecide :: Bool
+    , etsTerms :: EventTicketSaleTermsDTO
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventTicketSaleDTO
+instance FromJSON EventTicketSaleDTO
+
+data EventTicketSaleTierDTO = EventTicketSaleTierDTO
+    { etstiName :: Text
+    , etstiPriceCents :: Int
+    , etstiCurrency :: Text
+    , etstiQuantityTotal :: Int
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventTicketSaleTierDTO
+instance FromJSON EventTicketSaleTierDTO
+
+-- | One pending request in the strict administrators' review queue.
+data EventTicketSaleRequestDTO = EventTicketSaleRequestDTO
+    { etsrRequestId :: Text
+    , etsrEventId :: Text
+    , etsrEventTitle :: Text
+    , etsrEventStartsAt :: UTCTime
+    , etsrOrganizerName :: Maybe Text
+    , etsrRequestedAt :: UTCTime
+    , etsrTiers :: [EventTicketSaleTierDTO]
+    , etsrTerms :: EventTicketSaleTermsDTO
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventTicketSaleRequestDTO
+instance FromJSON EventTicketSaleRequestDTO
 
 data EventLogisticsPlaceDTO = EventLogisticsPlaceDTO
     { elpId :: Maybe Text

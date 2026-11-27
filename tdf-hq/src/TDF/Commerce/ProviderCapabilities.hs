@@ -20,6 +20,7 @@ module TDF.Commerce.ProviderCapabilities
   , routePayments
   , requireCheckoutCompletion
   , safeToFallback
+  , hostedSessionCanRetry
   , paymentMethodText
   , paymentMethodFromText
   , paymentCapabilityText
@@ -200,6 +201,12 @@ safeToFallback outcome = case outcome of
   ProviderAmbiguous -> False
   ProviderSucceeded -> False
 
+-- A prepared operation can still be claimed. Its current lack of provider
+-- contact only authorizes another attempt once the operation is terminal.
+hostedSessionCanRetry :: Text -> ProviderOutcomeCertainty -> Bool
+hostedSessionCanRetry state certainty =
+  state `elem` ["failed", "confirmed_no_charge"] && safeToFallback certainty
+
 paymentMethodText :: PaymentMethod -> Text
 paymentMethodText method = case method of
   MethodCard -> "card"
@@ -363,11 +370,20 @@ providerProfile provider = case provider of
     }
   ProviderPayPhone -> Just ProviderProfile
     { ppProvider = provider
-    , ppFlows = directFlows
+    -- ADR 0136: the payment button with split serves marketplace charges.
+    -- Routing still needs verified evidence for every marketplace capability.
+    , ppFlows = directFlows <> [FlowMarketplace]
     , ppMethodCapabilities =
         [ (MethodPayPhoneWallet,
             [ CapabilityOneTime
             , CapabilityServerVerification
+            ])
+        , (MethodCard,
+            [ CapabilityOneTime
+            , CapabilityServerVerification
+            , CapabilityConnectedAccounts
+            , CapabilitySplitSettlement
+            , CapabilitySellerPayouts
             ])
         ]
     }

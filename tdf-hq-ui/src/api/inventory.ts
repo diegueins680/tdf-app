@@ -1,4 +1,4 @@
-import { assertNoLogoutIntent } from '../session/logoutIntent';
+import { assertNoLogoutIntent } from '../auth/logoutIntent';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { del, get, patch, post } from './client';
 import { buildAuthorizationHeader } from './authHeader';

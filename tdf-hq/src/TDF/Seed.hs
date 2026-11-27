@@ -451,7 +451,7 @@ seedProductionCourse now = do
         priceCentsVal = 15000
         currencyVal = "USD"
         capacityVal = 16
-        sessionStart = Just 15
+        sessionStart = Just 8
         sessionDuration = Just 4
         locationLabel = Just "TDF Records – Quito"
         locationMap = Just (fromMaybe "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6" (mapEnv >>= nonEmptyText))
