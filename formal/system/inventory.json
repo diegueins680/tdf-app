@@ -33850,6 +33850,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "ops/hetzner/studio-release-compose-review.md",
+      "sha256": "186f87d2a2deb6624a75a253d2cf7947bcfc80dbad938b38d1650bc4ebff6f09",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "ops/hetzner/validation-2026-09-28.md",
       "sha256": "949a2c0aed81223dcc9382f76c1d9ef94e223d0d7d2ad432c7825d6f90732d66",
       "authority": "inferred",
