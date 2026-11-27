@@ -211,7 +211,7 @@ describe('UpcomingEventsCarousel', () => {
       expect(view.container.textContent).toContain('PATCH CULTURE vol.1');
       expect(view.container.textContent).toContain('Vas');
       expect(view.container.querySelector('a[href="/eventos/141"]')).not.toBeNull();
-      expect(button(view.container, 'Asistiré')).toBeDefined();
+      expect(button(view.container, 'Voy')).toBeDefined();
     } finally {
       await view.cleanup();
     }
@@ -224,9 +224,9 @@ describe('UpcomingEventsCarousel', () => {
     upsertMock.mockResolvedValue({ rsvpEventId: '143', rsvpStatus: 'accepted', rsvpShowOnProfile: false });
     const view = await render();
     try {
-      await waitFor(() => button(view.container, 'Asistiré')?.disabled === false);
+      await waitFor(() => button(view.container, 'Voy')?.disabled === false);
       await act(async () => {
-        button(view.container, 'Asistiré')?.click();
+        button(view.container, 'Voy')?.click();
         for (let i = 0; i < 3; i += 1) await flush();
       });
       expect(upsertMock).toHaveBeenCalledWith('143', { rsvpStatus: 'accepted', rsvpShowOnProfile: false });
@@ -243,10 +243,10 @@ describe('UpcomingEventsCarousel', () => {
     getRsvpMock.mockReturnValue(new Promise((resolve) => { deliver = resolve; }));
     const view = await render();
     try {
-      await waitFor(() => Boolean(button(view.container, 'Asistiré')));
-      expect(button(view.container, 'Asistiré')?.disabled).toBe(true);
+      await waitFor(() => Boolean(button(view.container, 'Voy')));
+      expect(button(view.container, 'Voy')?.disabled).toBe(true);
       await act(async () => {
-        button(view.container, 'Asistiré')?.click();
+        button(view.container, 'Voy')?.click();
         await flush();
       });
       expect(upsertMock).not.toHaveBeenCalled();
@@ -255,8 +255,8 @@ describe('UpcomingEventsCarousel', () => {
         deliver({ rsvpEventId: '143', rsvpStatus: 'maybe', rsvpShowOnProfile: true });
         await flush();
       });
-      await waitFor(() => (view.container.textContent ?? '').includes('Quizás'));
-      expect(button(view.container, 'Asistiré')).toBeUndefined();
+      await waitFor(() => (view.container.textContent ?? '').includes('Tal vez'));
+      expect(button(view.container, 'Voy')).toBeUndefined();
       expect(upsertMock).not.toHaveBeenCalled();
     } finally {
       await view.cleanup();
@@ -271,7 +271,7 @@ describe('UpcomingEventsCarousel', () => {
       await waitFor(() => view.container.textContent?.includes('ELECTROETNIA') === true && getRsvpMock.mock.calls.length > 0);
       for (let i = 0; i < 4; i += 1) await act(async () => { await flush(); });
       // No permanently disabled button: the card still links to the event, where RSVP is explained.
-      expect(button(view.container, 'Asistiré')).toBeFalsy();
+      expect(button(view.container, 'Voy')).toBeFalsy();
       expect(view.container.querySelector('a[href="/eventos/143"]')).not.toBeNull();
     } finally {
       await view.cleanup();
@@ -286,9 +286,9 @@ describe('UpcomingEventsCarousel', () => {
     try {
       view.queryClient.setQueryData(eventRsvpQueryKeys.summary('143'), { stale: true });
       view.queryClient.setQueryData(eventRsvpQueryKeys.feed('7'), { stale: true });
-      await waitFor(() => button(view.container, 'Asistiré')?.disabled === false);
+      await waitFor(() => button(view.container, 'Voy')?.disabled === false);
       await act(async () => {
-        button(view.container, 'Asistiré')?.click();
+        button(view.container, 'Voy')?.click();
         for (let i = 0; i < 3; i += 1) await flush();
       });
       await waitFor(() => (view.container.textContent ?? '').includes('Vas'));
@@ -308,9 +308,9 @@ describe('UpcomingEventsCarousel', () => {
     upsertMock.mockResolvedValueOnce({ rsvpEventId: '143', rsvpStatus: 'accepted', rsvpShowOnProfile: true });
     const view = await render();
     try {
-      await waitFor(() => button(view.container, 'Asistiré')?.disabled === false);
+      await waitFor(() => button(view.container, 'Voy')?.disabled === false);
       await act(async () => {
-        button(view.container, 'Asistiré')?.click();
+        button(view.container, 'Voy')?.click();
         for (let i = 0; i < 3; i += 1) await flush();
       });
       await waitFor(() => Boolean(view.container.querySelector('[role="alert"]')));
@@ -335,9 +335,9 @@ describe('UpcomingEventsCarousel', () => {
     upsertMock.mockRejectedValueOnce(new Error('offline'));
     const view = await render();
     try {
-      await waitFor(() => button(view.container, 'Asistiré')?.disabled === false);
+      await waitFor(() => button(view.container, 'Voy')?.disabled === false);
       await act(async () => {
-        button(view.container, 'Asistiré')?.click();
+        button(view.container, 'Voy')?.click();
         for (let i = 0; i < 3; i += 1) await flush();
       });
       await waitFor(() => Boolean(view.container.querySelector('[role="alert"]')));
@@ -361,7 +361,7 @@ describe('UpcomingEventsCarousel', () => {
     try {
       await waitFor(() => (view.container.textContent ?? '').includes('No vas'));
       expect(view.container.textContent).toContain('No vas');
-      expect(button(view.container, 'Asistiré')).toBeUndefined();
+      expect(button(view.container, 'Voy')).toBeUndefined();
     } finally {
       await view.cleanup();
     }
@@ -469,7 +469,7 @@ describe('UpcomingEventsCarousel', () => {
       : Promise.resolve({ rsvpEventId: '143', rsvpStatus: 'accepted', rsvpShowOnProfile: true })));
     const view = await render();
     const cards = () => Array.from(view.container.querySelectorAll<HTMLElement>('[role="listitem"]'));
-    const attendIn = (card: HTMLElement) => Array.from(card.querySelectorAll('button')).find((b) => /Asistiré|Reintentar/.test(b.textContent ?? ''));
+    const attendIn = (card: HTMLElement) => Array.from(card.querySelectorAll('button')).find((b) => /Voy|Reintentar/.test(b.textContent ?? ''));
     try {
       await waitFor(() => cards().length === 2 && cards().every((card) => attendIn(card)?.disabled === false));
       await act(async () => { attendIn(cards()[0]!)?.click(); for (let i = 0; i < 3; i += 1) await flush(); });
@@ -523,7 +523,7 @@ describe('UpcomingEventsCarousel', () => {
       expect(content).toContain('Upcoming events');
       expect(content).toContain('See all');
       expect(content).toContain(new Intl.DateTimeFormat('en', { month: 'short' }).format(new Date(inTwoWeeks)));
-      expect(content).not.toMatch(/Próximos|Asistiré|Vas/);
+      expect(content).not.toMatch(/Próximos|Voy|Vas/);
       expect(button(view.container, "I'll go")).toBeDefined();
       expect(view.container.querySelector('button[aria-label="Hide upcoming events"]')).not.toBeNull();
     } finally {

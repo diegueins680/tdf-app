@@ -252,6 +252,18 @@ data FanFollowDTO = FanFollowDTO
   } deriving (Show, Generic)
 instance ToJSON FanFollowDTO
 
+-- | One recommended artist for the signed-in fan
+-- (COMMUNITY-FAN-RECOMMENDATION-001). @arecReason@ is @similar_fans@ or
+-- @popular@; @arecSeedArtistIds@ are the followed artists behind a
+-- @similar_fans@ entry, strongest first.
+data ArtistRecommendationDTO = ArtistRecommendationDTO
+  { arecArtistId      :: Int64
+  , arecReason        :: Text
+  , arecScore         :: Double
+  , arecSeedArtistIds :: [Int64]
+  } deriving (Show, Generic)
+instance ToJSON ArtistRecommendationDTO
+
 data ArtistFanDTO = ArtistFanDTO
   { afFanId       :: Int64
   , afDisplayName :: Text
@@ -280,11 +292,16 @@ data PartyFollowDTO = PartyFollowDTO
   } deriving (Show, Generic)
 instance ToJSON PartyFollowDTO
 
+-- | @sfReason@ is absent for the mutual-count answer, whose JSON is unchanged,
+-- and @"network"@ for an entry ranked by COMMUNITY-FRIEND-SUGGESTION-001, whose
+-- @sfMutualCount@ is 0 and carries no meaning.
 data SuggestedFriendDTO = SuggestedFriendDTO
   { sfPartyId       :: Int64
   , sfMutualCount   :: Int
+  , sfReason        :: Maybe Text
   } deriving (Show, Generic)
-instance ToJSON SuggestedFriendDTO
+instance ToJSON SuggestedFriendDTO where
+  toJSON = genericToJSON defaultOptions { omitNothingFields = True }
 
 data ChatThreadDTO = ChatThreadDTO
   { ctThreadId         :: Int64

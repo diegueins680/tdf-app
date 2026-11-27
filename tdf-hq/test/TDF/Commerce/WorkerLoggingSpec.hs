@@ -15,6 +15,7 @@ import qualified Test.QuickCheck as QC
 import qualified TDF.Commerce.MerchReservationWorker as Merch
 import qualified TDF.Commerce.ProviderEventWorker as Events
 import qualified TDF.Commerce.ProviderReconciliation as Query
+import qualified TDF.Directory.SemanticIndex as Semantic
 import qualified TDF.Operations.Worker as Operations
 
 -- The names are markers, not real credentials, card data, accounts or customers.
@@ -54,6 +55,9 @@ spec = describe "payment worker logging boundary" $ do
   failureBoundary "provider query recovery"
     (\tick logError _ -> Query.providerQueryWorkerIterationWith (tick >> pure 0) logError)
     "provider-query-worker" "tick failed; lease recovery required"
+  failureBoundary "directory semantic index"
+    (\tick -> Semantic.directorySemanticIndexIterationWith (tick >> pure Semantic.emptySweepStats))
+    "directory-semantic-index" "tick failed"
 
   it "keeps provider-event counters on the information sink without payment claims" $ do
     (info, captureInfo) <- captureLog

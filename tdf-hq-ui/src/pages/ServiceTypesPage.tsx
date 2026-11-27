@@ -34,6 +34,7 @@ import { Services } from '../api/services';
 import type { RoomDTO, ServiceCatalogDTO } from '../api/types';
 import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { formatPriceCentsInput, parseOptionalPriceCents } from '../utils/priceInput';
 
 const SERVICE_QUERY_KEY = ['service-catalog', 'admin'] as const;
 const SERVICE_ITEMS_QUERY_KEY = ['catalog', 'services', 'admin-items'] as const;
@@ -52,7 +53,7 @@ export interface OfferingForm {
   sortOrder: number;
   categoryId: string;
   pricingModelId: string;
-  rateCents: string;
+  price: string;
   currencyId: string;
   billingUnitEs: string;
   billingUnitEn: string;
@@ -72,7 +73,7 @@ const emptyForm = (): OfferingForm => ({
   sortOrder: 0,
   categoryId: '',
   pricingModelId: '',
-  rateCents: '',
+  price: '',
   currencyId: '',
   billingUnitEs: '',
   billingUnitEn: '',
@@ -99,12 +100,13 @@ const correlationId = (): string => {
 
 const formatPrice = (service: ServiceType): string => {
   if (service.priceCents == null) return 'A cotizar';
-  const amount = service.priceCents / 100;
+  if (!Number.isSafeInteger(service.priceCents) || service.priceCents < 0) return 'Precio no disponible';
+  const cents = BigInt(service.priceCents);
+  const formatter = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const amount = formatter.formatToParts(cents / 100n)
+    .map((part) => part.type === 'fraction' ? String(cents % 100n).padStart(2, '0') : part.value).join('');
   const unit = service.billingUnit ? ` / ${service.billingUnit}` : '';
-  return `${service.currency} ${amount.toLocaleString(undefined, {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 0,
-  })}${unit}`;
+  return `${service.currency} ${amount}${unit}`;
 };
 
 export const buildServiceOfferingDraft = (form: OfferingForm): CatalogDraft => ({
@@ -121,7 +123,7 @@ export const buildServiceOfferingDraft = (form: OfferingForm): CatalogDraft => (
   serviceOffering: {
     categoryId: form.categoryId,
     pricingModelId: form.pricingModelId,
-    rateCents: optionalInteger(form.rateCents),
+    rateCents: parseOptionalPriceCents(form.price) ?? undefined,
     currencyId: form.currencyId,
     billingUnitEs: optionalText(form.billingUnitEs),
     billingUnitEn: optionalText(form.billingUnitEn),
@@ -149,6 +151,7 @@ export default function ServiceTypesPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [priceReadError, setPriceReadError] = useState<string | null>(null);
   const [form, setForm] = useState<OfferingForm>(emptyForm);
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
 
@@ -239,6 +242,7 @@ export default function ServiceTypesPage() {
   });
 
   const openCreate = () => {
+    setPriceReadError(null);
     const next = emptyForm();
     next.sortOrder = services.length * 10;
     next.categoryId = categoriesQuery.data?.items[0]?.id ?? '';
@@ -251,6 +255,14 @@ export default function ServiceTypesPage() {
   };
 
   const openEdit = (service: ServiceType) => {
+    let price: string;
+    try {
+      price = formatPriceCentsInput(service.priceCents);
+    } catch {
+      setPriceReadError('No podemos editar este precio con precisión. Recarga el catálogo o solicita su revisión.');
+      return;
+    }
+    setPriceReadError(null);
     const item = itemById.get(service.id);
     setForm({
       entityId: service.id,
@@ -263,7 +275,7 @@ export default function ServiceTypesPage() {
       sortOrder: item?.sortOrder ?? 0,
       categoryId: service.categoryId,
       pricingModelId: service.pricingModelId,
-      rateCents: service.priceCents == null ? '' : String(service.priceCents),
+      price,
       currencyId: service.currencyId,
       billingUnitEs: service.billingUnit ?? '',
       billingUnitEn: service.billingUnit ?? '',
@@ -302,9 +314,15 @@ export default function ServiceTypesPage() {
   };
 
   const submitForm = () => {
+    if (!formValid || createRevision.isPending) return;
     createRevision.mutate(buildServiceOfferingDraft(form));
   };
-  const formValid = Boolean(
+  const priceError = useMemo(() => {
+    try { parseOptionalPriceCents(form.price); return null; }
+    catch (error) { return error instanceof Error ? error.message : 'Ingresa un precio válido.'; }
+  }, [form.price]);
+  const priceCurrency = currenciesQuery.data?.items.find((item) => item.id === form.currencyId)?.code;
+  const formValid = !priceError && Boolean(
     form.code.trim()
       && form.nameEs.trim()
       && form.nameEn.trim()
@@ -332,6 +350,8 @@ export default function ServiceTypesPage() {
           No se pudo cargar toda la configuración canónica. No se habilitarán valores locales ni escritura parcial.
         </Alert>
       )}
+
+      {priceReadError && <Alert severity="error" sx={{ mb: 2 }}>{priceReadError}</Alert>}
 
       <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', mb: 2 }}>
         <CardContent>
@@ -403,7 +423,13 @@ export default function ServiceTypesPage() {
           <Stack spacing={2} mt={1}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
               <TextField fullWidth required label="Código interno" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} />
-              <TextField fullWidth label="Precio en centavos" type="number" value={form.rateCents} onChange={(event) => setForm({ ...form, rateCents: event.target.value })} inputProps={{ min: 0 }} />
+              <TextField
+                fullWidth label={priceCurrency ? `Precio (${priceCurrency})` : 'Precio'}
+                value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })}
+                inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+                error={Boolean(priceError)}
+                helperText={priceError ?? 'Hasta dos decimales, por ejemplo 25,50. Deja en blanco para cotizar.'}
+              />
               <TextField fullWidth label="Orden manual" type="number" value={form.sortOrder} onChange={(event) => setForm({ ...form, sortOrder: Number(event.target.value) })} inputProps={{ min: 0 }} />
             </Stack>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>

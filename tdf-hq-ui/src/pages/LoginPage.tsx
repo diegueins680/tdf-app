@@ -9,7 +9,6 @@ import {
   Button,
   Checkbox,
   Chip,
-  Collapse,
   CircularProgress,
   Container,
   Dialog,
@@ -17,7 +16,6 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
-  Fade,
   FormControlLabel,
   IconButton,
   InputAdornment,
@@ -33,9 +31,6 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Trans, useTranslation } from 'react-i18next';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Navigate, useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
@@ -222,10 +217,6 @@ export default function LoginPage() {
   const [googleButtonWidth, setGoogleButtonWidth] = useState(320);
   const [googleStatus, setGoogleStatus] = useState<string | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
-  const [showOnboardingCards, setShowOnboardingCards] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth >= 900;
-  });
   const textFieldSx = useMemo(
     () => ({
       '& .MuiInputLabel-root': {
@@ -307,7 +298,6 @@ export default function LoginPage() {
 
   const { mode, toggleMode } = useThemeMode();
   const isMobile = useMediaQuery('(max-width:600px)');
-  const isWideLayout = useMediaQuery('(min-width:900px)');
   const loginMutation = useMutation({
     mutationFn: (payload: { username: string; password: string }) => loginRequest(payload),
   });
@@ -1023,11 +1013,6 @@ export default function LoginPage() {
                   <Typography variant="h5" fontWeight={700}>
                     {t('authEntry.signIn')}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
-                    {isWideLayout
-                      ? t('authEntry.loginIntroWide')
-                      : t('authEntry.loginIntroNarrow')}
-                  </Typography>
                 </Stack>
 
                 <Stack spacing={2.25}>
@@ -1041,7 +1026,6 @@ export default function LoginPage() {
                       fullWidth
                       autoComplete="username"
                       inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
-                      helperText={t('authEntry.identifierHint')}
                       sx={textFieldSx}
                     />
 
@@ -1137,9 +1121,6 @@ export default function LoginPage() {
                   }
                   label={t('authEntry.rememberDevice')}
                 />
-                <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.7)' }}>
-                  {t('authEntry.rememberHint')}
-                </Typography>
 
                 {(logoutStatus === 'pending' || logoutStatus === 'unconfirmed') && (
                   <Alert severity="warning" action={logoutStatus === 'unconfirmed' ? (
@@ -1170,7 +1151,7 @@ export default function LoginPage() {
                       {t('authEntry.generalAccount')}
                     </Button>
                   </Stack>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 0, sm: 2 }}>
                     <Button
                       component={RouterLink}
                       to="/fans"
@@ -1180,16 +1161,23 @@ export default function LoginPage() {
                     >
                       {t('authEntry.exploreGuest')}
                     </Button>
-                    {!isWideLayout && (
-                      <Button
-                        variant="text"
-                        size="small"
-                        onClick={() => setShowOnboardingCards(true)}
-                        sx={{ textTransform: 'none', alignSelf: 'flex-start', px: 0 }}
-                      >
-                        {t('authEntry.showQuickStarts')}
-                      </Button>
-                    )}
+                    {/* The three persona cards became two text links: a general account already covers fans. */}
+                    <Button
+                      variant="text"
+                      size="small"
+                      onClick={() => openSignupDialog('artist_profile')}
+                      sx={{ textTransform: 'none', alignSelf: 'flex-start', px: 0 }}
+                    >
+                      {t('authEntry.artist')}
+                    </Button>
+                    <Button
+                      variant="text"
+                      size="small"
+                      onClick={() => openSignupDialog('internships')}
+                      sx={{ textTransform: 'none', alignSelf: 'flex-start', px: 0 }}
+                    >
+                      {t('authEntry.intern')}
+                    </Button>
                   </Stack>
                 </Stack>
 
@@ -1205,218 +1193,9 @@ export default function LoginPage() {
                     >
                       {t('authEntry.recover')}</Link>
                   </Typography>
-                  <Typography variant="body2">
-                    {t('authEntry.trialQuestion')}{' '}
-                    <Link component={RouterLink} to="/trials" underline="hover">
-                      {t('authEntry.requestTrial')}</Link>
-                  </Typography>
-                  <Typography variant="body2">
-                    {t('authEntry.musicQuestion')}{' '}
-                    <Link component={RouterLink} to="/fans" underline="hover">
-                      {t('authEntry.communityLink')}</Link>
-                  </Typography>
                 </Stack>
               </Stack>
             </Paper>
-          </Box>
-          <Box sx={{ width: '100%', maxWidth: 440 }}>
-            {!isWideLayout && (
-              <Button
-                fullWidth
-                variant="text"
-                onClick={() => setShowOnboardingCards((prev) => !prev)}
-                sx={{ textTransform: 'none', color: 'rgba(226,232,240,0.88)' }}
-              >
-                {showOnboardingCards ? t('authEntry.hideQuickStarts') : t('authEntry.newQuickStarts')}
-              </Button>
-            )}
-            <Collapse in={isWideLayout || showOnboardingCards} unmountOnExit={!isWideLayout}>
-              <Fade in={isWideLayout || showOnboardingCards} timeout={350}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    mt: 1,
-                    width: '100%',
-                    p: { xs: 2.5, sm: 3 },
-                    borderRadius: { xs: 3, sm: 4 },
-                    background: 'linear-gradient(160deg, rgba(15,23,42,0.94), rgba(15,23,42,0.78))',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    color: '#e2e8f0',
-                  }}
-                >
-                  <Stack spacing={2}>
-                    <Stack spacing={0.75}>
-                      <Chip
-                        label={t('authEntry.quickStart')}
-                        size="small"
-                        sx={{
-                          width: 'fit-content',
-                          bgcolor: 'rgba(56,189,248,0.18)',
-                          color: '#e2e8f0',
-                          borderColor: 'rgba(56,189,248,0.35)',
-                          fontWeight: 700,
-                        }}
-                        variant="outlined"
-                      />
-                      <Typography variant="h6" fontWeight={800}>
-                        {t('authEntry.startMinutes')}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.78)' }}>
-                        {t('authEntry.chooseJourney')}
-                      </Typography>
-                    </Stack>
-                    <Stack spacing={1.5}>
-                      <Paper
-                        variant="outlined"
-                        sx={{
-                          p: 2,
-                          borderRadius: 3,
-                          borderColor: 'rgba(148,163,184,0.24)',
-                          bgcolor: 'rgba(15,23,42,0.65)',
-                        }}
-                      >
-                        <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                          <Box
-                            sx={{
-                              width: 44,
-                              height: 44,
-                              borderRadius: 2,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              bgcolor: 'rgba(56,189,248,0.18)',
-                              color: '#38bdf8',
-                            }}
-                          >
-                            <MusicNoteIcon />
-                          </Box>
-                          <Stack spacing={0.5} sx={{ flex: 1 }}>
-                            <Typography variant="subtitle1" fontWeight={700}>
-                              {t('authEntry.artist')}
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-                              {t('authEntry.artistDescription')}
-                            </Typography>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={() => openSignupDialog('artist_profile')}
-                              sx={{
-                                alignSelf: 'flex-start',
-                                textTransform: 'none',
-                                borderColor: 'rgba(148,163,184,0.4)',
-                                color: '#e2e8f0',
-                              }}
-                            >
-                              {t('authEntry.createProfile')}
-                            </Button>
-                          </Stack>
-                        </Stack>
-                      </Paper>
-                      <Paper
-                        variant="outlined"
-                        sx={{
-                          p: 2,
-                          borderRadius: 3,
-                          borderColor: 'rgba(148,163,184,0.24)',
-                          bgcolor: 'rgba(15,23,42,0.65)',
-                        }}
-                      >
-                        <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                          <Box
-                            sx={{
-                              width: 44,
-                              height: 44,
-                              borderRadius: 2,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              bgcolor: 'rgba(244,114,182,0.18)',
-                              color: '#f472b6',
-                            }}
-                          >
-                            <FavoriteBorderIcon />
-                          </Box>
-                          <Stack spacing={0.5} sx={{ flex: 1 }}>
-                            <Typography variant="subtitle1" fontWeight={700}>
-                              {t('authEntry.fan')}
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-                              {t('authEntry.fanDescription')}
-                            </Typography>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={() => openSignupDialog('follow_artists')}
-                              sx={{
-                                alignSelf: 'flex-start',
-                                textTransform: 'none',
-                                borderColor: 'rgba(148,163,184,0.4)',
-                                color: '#e2e8f0',
-                              }}
-                            >
-                              {t('authEntry.createFan')}
-                            </Button>
-                          </Stack>
-                        </Stack>
-                      </Paper>
-                      <Paper
-                        variant="outlined"
-                        sx={{
-                          p: 2,
-                          borderRadius: 3,
-                          borderColor: 'rgba(148,163,184,0.24)',
-                          bgcolor: 'rgba(15,23,42,0.65)',
-                        }}
-                      >
-                        <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                          <Box
-                            sx={{
-                              width: 44,
-                              height: 44,
-                              borderRadius: 2,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              bgcolor: 'rgba(52,211,153,0.18)',
-                              color: '#34d399',
-                            }}
-                          >
-                            <SchoolOutlinedIcon />
-                          </Box>
-                          <Stack spacing={0.5} sx={{ flex: 1 }}>
-                            <Typography variant="subtitle1" fontWeight={700}>
-                              {t('authEntry.intern')}
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-                              {t('authEntry.internDescription')}
-                            </Typography>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={() => openSignupDialog('internships')}
-                              sx={{
-                                alignSelf: 'flex-start',
-                                textTransform: 'none',
-                                borderColor: 'rgba(148,163,184,0.4)',
-                                color: '#e2e8f0',
-                              }}
-                            >
-                              {t('authEntry.applyIntern')}
-                            </Button>
-                          </Stack>
-                        </Stack>
-                      </Paper>
-                    </Stack>
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                      <Chip label={t('authEntry.shortSetup')} size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
-                      <Chip label={t('authEntry.governedRoles')} size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
-                      <Chip label={t('authEntry.traceableAssignment')} size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
-                    </Stack>
-                  </Stack>
-                </Paper>
-              </Fade>
-            </Collapse>
           </Box>
         </Stack>
       </Container>

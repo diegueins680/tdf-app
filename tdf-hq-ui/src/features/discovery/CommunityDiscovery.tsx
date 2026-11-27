@@ -1,12 +1,16 @@
 import MarkdownText from '../../components/MarkdownText';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Alert, Box, Button, Card, CardActionArea, CardContent, LinearProgress, MenuItem, Stack, TablePagination, TextField, Typography } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
-import { resolveDirectoryPreviewImage } from '../../utils/directoryPreviewImage';
+import { resolveDirectoryPreviewImage } from '../../services/directoryPreviewImage';
+import { useTranslation } from 'react-i18next';
+import TaxonomyFilterBar from '../../components/taxonomyFilters/TaxonomyFilterBar';
+import { isTaxonomySelectionEmpty, resolveTaxonomyLanguage, taxonomyName } from '../../components/taxonomyFilters/taxonomyFilterModel';
+import { useSurfaceTaxonomyFilters, useTaxonomyFilterOptions } from '../../components/taxonomyFilters/useTaxonomyFilters';
+import { useProfileCityDefault } from '../../components/taxonomyFilters/useProfileCityDefault';
 import { isArtistPlaceholderImage } from '../../utils/artistFallbacks';
 import ArtistProfileImage from '../../components/ArtistProfileImage';
-import { Directory, type DirectorySearchQuery } from '../../api/directory';
+import { type DirectorySearchQuery } from '../../api/directory';
 import { directoryResultPath, useDebouncedSearch, useDirectorySearch } from './useDirectorySearch';
 
 const PAGE_SIZE_OPTIONS = [12, 24, 48];
@@ -24,23 +28,38 @@ export default function CommunityDiscovery() {
   const [draft, setDraft] = useState(query);
   const debounced = useDebouncedSearch(draft);
   const previousQuery = useRef(query);
-  useEffect(() => { setDraft(query); }, [query]);
+  const submittedQuery = useRef<string | null>(null);
   // The result page and page size live in the URL with the filters, so coming
   // back from a profile restores the same results. Any other change starts
   // again from the first page.
-  const update = (key: string, value: string) => setParams((current) => {
-    const next = new URLSearchParams(current);
-    if (value) next.set(key, value); else next.delete(key);
-    if (key !== 'page') next.delete('page');
-    return next;
-  }, { replace: true });
+  const update = (key: string, value: string) => {
+    if (key === 'q' && value !== query) submittedQuery.current = value;
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      if (value) next.set(key, value); else next.delete(key);
+      if (key !== 'page') next.delete('page');
+      return next;
+    }, { replace: true });
+  };
   useEffect(() => {
-    if (previousQuery.current !== query) { previousQuery.current = query; return; }
+    if (previousQuery.current !== query) {
+      previousQuery.current = query;
+      // History navigation restores the URL. An acknowledgement of our own
+      // search can arrive after the user has already typed more characters.
+      if (submittedQuery.current !== query) setDraft(query);
+      submittedQuery.current = null;
+      return;
+    }
     if (debounced !== query && debounced === draft.trim().replace(/\s+/gu, ' ')) update('q', debounced);
   }, [debounced, draft, query]); // eslint-disable-line react-hooks/exhaustive-deps
   const profileKind = params.get('profileKind') ?? '';
-  const genreId = params.get('genreId') ?? '';
-  const cityId = params.get('cityId') ?? '';
+  const { i18n } = useTranslation();
+  const language = resolveTaxonomyLanguage(i18n?.resolvedLanguage ?? i18n?.language);
+  const taxonomyOptions = useTaxonomyFilterOptions();
+  const profileCity = useProfileCityDefault(taxonomyOptions.data);
+  const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true, legacyFilters: 'genre-and-city' });
+  const { selection } = taxonomyFilters;
+  const genreNames = new Map((taxonomyOptions.data?.genres ?? []).map((genre) => [genre.id, taxonomyName(genre, language)]));
   const requestedPage = Number(params.get('page'));
   const page = Number.isInteger(requestedPage) && requestedPage > 1 ? requestedPage - 1 : 0;
   const setPage = (next: number) => update('page', next > 0 ? String(next + 1) : '');
@@ -48,10 +67,10 @@ export default function CommunityDiscovery() {
   const rowsPerPage = PAGE_SIZE_OPTIONS.includes(requestedSize) ? requestedSize : PAGE_SIZE_OPTIONS[0]!;
   const setRowsPerPage = (size: number) => update('perPage', size === PAGE_SIZE_OPTIONS[0] ? '' : String(size));
   const section = useRef<HTMLDivElement>(null);
-  const taxonomies = useQuery({ queryKey: ['directory', 'taxonomies', 'es'], queryFn: () => Directory.taxonomies('es'), staleTime: 30 * 60_000 });
   const results = useDirectorySearch({ q: query || undefined, entityType: 'profile',
     profileKind: (profileKind || undefined) as DirectorySearchQuery['profileKind'],
-    genreId: genreId || undefined, cityId: cityId || undefined, limit: rowsPerPage });
+    countryIds: selection.countryIds, regionIds: selection.regionIds, cityIds: selection.cityIds, genreIds: selection.genreIds,
+    limit: rowsPerPage });
   // The server pages by cursor, so pages are reached one step at a time and
   // already visited ones are shown again without another request.
   const pages = results.data?.pages ?? [];
@@ -67,7 +86,7 @@ export default function CommunityDiscovery() {
     if (catchingUp && !isFetching && !isFetchNextPageError) void fetchNextPage();
   }, [catchingUp, isFetching, isFetchNextPageError, fetchNextPage, pages.length]);
   const retryResults = () => { void (isFetchNextPageError ? fetchNextPage() : results.refetch()); };
-  const searchKey = [query, profileKind, genreId, cityId, rowsPerPage].join('\u0000');
+  const searchKey = [query, profileKind, JSON.stringify(selection), rowsPerPage].join('\u0000');
   const currentSearch = useRef(searchKey);
   useEffect(() => { currentSearch.current = searchKey; }, [searchKey]);
   const goToPage = async (next: number) => {
@@ -85,33 +104,28 @@ export default function CommunityDiscovery() {
   globalSearchParams.delete('page');
   globalSearchParams.delete('perPage');
   const submit = (event: FormEvent) => { event.preventDefault(); update('q', draft.trim().replace(/\s+/gu, ' ')); };
-  const clear = () => { setDraft(''); setParams((current) => {
-    const next = new URLSearchParams(current);
-    for (const key of ['q', 'profileKind', 'genreId', 'cityId', 'page']) next.delete(key);
-    return next;
-  }, { replace: true }); };
+  const clear = () => {
+    setDraft('');
+    taxonomyFilters.clearAll(['q', 'profileKind', 'genreId', 'cityId']);
+  };
   return <Box ref={section} component="section" aria-labelledby="community-discovery-heading" sx={{ color: 'text.primary', bgcolor: 'background.paper', p: { xs: 2, sm: 3 }, borderRadius: 2, '& .MuiInputLabel-root': { color: 'text.primary' }, '& .MuiButton-text': { color: 'text.primary' } }}>
     <Typography id="community-discovery-heading" component="h2" variant="h5" mb={2}>Descubre tu comunidad</Typography>
     <Stack component="form" role="search" aria-label="Buscar en Comunidad" onSubmit={submit} spacing={2}>
       <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
         <TextField fullWidth type="search" label="Buscar artistas y perfiles" placeholder="Nombre, banda, proyecto, género o ciudad" value={draft} onChange={(event) => setDraft(event.target.value)} inputProps={{ maxLength: 160, enterKeyHint: 'search' }} />
         <Button type="submit" variant="contained">Buscar</Button>
-        <Button onClick={clear} disabled={!draft && !profileKind && !genreId && !cityId}>Limpiar búsqueda</Button>
+        <Button onClick={clear} disabled={!draft && !profileKind && isTaxonomySelectionEmpty(selection)}>Limpiar búsqueda</Button>
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
         <TextField select fullWidth label="Tipo de perfil" value={profileKind} onChange={(event) => update('profileKind', event.target.value)}>
           <MenuItem value="">Todos los perfiles</MenuItem><MenuItem value="artist">Artistas</MenuItem><MenuItem value="band">Bandas</MenuItem><MenuItem value="project">Proyectos musicales</MenuItem><MenuItem value="person">Personas</MenuItem>
         </TextField>
-        <TextField select fullWidth label="Género musical" value={genreId} onChange={(event) => update('genreId', event.target.value)}>
-          <MenuItem value="">Todos los géneros</MenuItem>{taxonomies.data?.genres.map((genre) => <MenuItem key={genre.id} value={genre.id}>{genre.name}</MenuItem>)}
-        </TextField>
-        <TextField select fullWidth label="Ciudad" value={cityId} onChange={(event) => update('cityId', event.target.value)}>
-          <MenuItem value="">Todas las ciudades</MenuItem>{taxonomies.data?.cities.map((city) => <MenuItem key={city.id} value={city.id}>{city.name}</MenuItem>)}
-        </TextField>
       </Stack>
+      <TaxonomyFilterBar profileCity={profileCity} idPrefix="community" filters={taxonomyFilters} options={taxonomyOptions.data} optionsError={taxonomyOptions.isError}
+        facets={pages[0]?.facets.taxonomy} />
     </Stack>
     <Box sx={{ height: 4, my: 2 }}>{results.isFetching && <LinearProgress aria-label="Buscando perfiles" />}</Box>
-    {taxonomies.isError && <Alert severity="warning" action={<Button onClick={() => { void taxonomies.refetch(); }}>Reintentar</Button>}>No pudimos cargar los filtros. Puedes seguir buscando por nombre.</Alert>}
+    {taxonomyOptions.isError && <Alert severity="warning" action={<Button onClick={() => { void taxonomyOptions.refetch(); }}>Reintentar</Button>}>No pudimos cargar los filtros. Puedes seguir buscando por nombre.</Alert>}
     {results.isError && <Alert severity="error" action={<Button onClick={retryResults}>Reintentar</Button>}>No pudimos cargar los perfiles. Intenta de nuevo.</Alert>}
     <Typography role="status" aria-live="polite" mb={2}>{results.isFetching ? 'Buscando perfiles…' : `${total} perfiles · Ordenados por relevancia`}</Typography>
     {!results.isPending && !results.isError && !catchingUp && !items.length && <Alert severity="info">No encontramos perfiles con esta búsqueda. Prueba otro nombre o <Button onClick={clear}>explora todos los perfiles</Button>.</Alert>}
@@ -123,7 +137,7 @@ export default function CommunityDiscovery() {
             <Typography component="h3" variant="h6">{item.title}</Typography>
             {item.subtitle && <Typography variant="body2">{item.subtitle}</Typography>}
             <Typography variant="body2" color="text.secondary">{[item.location.city, item.location.countryCode].filter(Boolean).join(' · ')}</Typography>
-            <Typography variant="body2">{item.taxonomy?.genreIds.map((id) => taxonomies.data?.genres.find((genre) => genre.id === id)?.name).filter(Boolean).join(' · ')}</Typography>
+            <Typography variant="body2">{item.taxonomy?.genreIds.map((id) => genreNames.get(id)).filter(Boolean).join(' · ')}</Typography>
             {item.summary && <MarkdownText disableLinks inline variant="body2" mt={1} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary}</MarkdownText>}
             <Typography color="primary" mt={2}>Ver perfil</Typography>
           </CardContent>

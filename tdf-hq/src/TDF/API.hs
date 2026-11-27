@@ -9,6 +9,7 @@ module TDF.API where
 import TDF.Commerce.DatafastClientIP (DatafastClientRequest)
 
 import qualified TDF.API.Chat as Chat
+import TDF.API.NotificationDelivery (NotificationDeliveryAPI)
 import TDF.VideoCampaigns (VideoCampaignAPI)
 import TDF.API.FanFollowing (FollowArtistAPI, UnfollowArtistAPI)
 import TDF.API.SocialRelationships (FollowersAPI, FollowingAPI, FriendsAPI, SuggestionsAPI, AddFriendAPI, RemoveFriendAPI, VCardAPI)
@@ -83,6 +84,7 @@ import           TDF.API.CommerceOperations (CommerceOperationsAPI)
 import           TDF.API.PaymentCapabilities (PaymentCapabilitiesAPI)
 import           TDF.API.ProviderExecution (ProviderExecutionAPI)
 import           TDF.API.Directory (DirectoryPublicAPI, DirectoryProtectedAPI)
+import           TDF.API.Taxonomy (TaxonomyPublicAPI, TaxonomyProtectedAPI)
 import           TDF.API.Reviews (ReviewsPublicAPI, ReviewsProtectedAPI)
 import           TDF.Operations.API (OperationsAPI)
 import           TDF.EventOperations.API (EventOperationsAPI)
@@ -497,6 +499,7 @@ type FanSecureAPI =
       :<|> FollowArtistAPI
       :<|> UnfollowArtistAPI
          )
+  :<|> "me" :> "recommendations" :> QueryParam "limit" Int :> Get '[JSON] [ArtistRecommendationDTO]
   :<|> "me" :> "artist-profile" :>
          ( Get '[JSON] ArtistProfileDTO
        :<|> ReqBody '[JSON] ArtistProfileUpsert :> Put '[JSON] ArtistProfileDTO
@@ -635,6 +638,7 @@ type ProtectedAPI =
   :<|> WhatsAppConsentAPI
   :<|> "social" :> SocialAPI
   :<|> ChatAPI
+  :<|> NotificationDeliveryAPI
   :<|> ChatKitSessionAPI
   :<|> TidalAgentAPI
   :<|> "social-sync" :> SocialSyncAPI
@@ -660,6 +664,7 @@ type ProtectedAPI =
   :<|> "artist-invitations" :> ArtistInvitationsAPI
   :<|> "navigation" :> "preferences" :> NavigationPreferencesAPI
   :<|> DirectoryProtectedAPI
+  :<|> TaxonomyProtectedAPI
   :<|> MerchProtectedAPI
   :<|> OperationsAPI
   :<|> EventOperationsAPI
@@ -700,6 +705,7 @@ type API =
   :<|> PublicCatalogAPI
   :<|> PublicInteractionsAPI
   :<|> DirectoryPublicAPI
+  :<|> TaxonomyPublicAPI
   :<|> MerchPublicAPI
   :<|> PublicUpcomingEventsAPI
   :<|> ReviewsPublicAPI

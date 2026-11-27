@@ -1,0 +1,18 @@
+{
+  "id": "253cfbcfb46ab22bcf98",
+  "classification": "security-system-registry",
+  "disposition": "retain-in-code",
+  "specializedModel": "directory_claim lifecycle protocol",
+  "priority": "P1-integrity",
+  "risk": "Undeclared claim actions can imply authority or invite conflicting state changes.",
+  "justification": "Client projection of the canonical claim transition graph; rendered tests compare outgoing actions to formal-model.yaml and real HTTP tests exhaust the backend relation. The server remains authoritative and rejects unauthorized or stale decisions.",
+  "reviewed": true,
+  "previousDecision": {
+    "$historyRef": "sha256:1c6ac3128683cee01aae808604077c34c120428b3f91d339c9d8cc5ad01b875e"
+  },
+  "reviewBatch": "directory-claim-conformance-2026-10-04",
+  "evidence": {
+    "file": "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
+    "line": 145
+  }
+}

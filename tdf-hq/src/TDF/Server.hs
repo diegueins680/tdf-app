@@ -18,9 +18,13 @@ import qualified TDF.ContentStorage as ContentStorage
 import qualified TDF.StorageVault as StorageVault
 import qualified TDF.Calendar.TokenCipher as CalendarTokenCipher
 import qualified TDF.Social.Chat as SocialChat
+import           TDF.Server.NotificationDelivery (notificationDeliveryServer)
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
+import qualified TDF.Fans.ArtistRecommendations as ArtistRecommendations
+import qualified TDF.Fans.ArtistSimilarity as ArtistSimilarity
 import qualified TDF.Social.RelationshipReads as SocialReads
+import qualified TDF.Social.SuggestionStore as SocialSuggestions
 import qualified TDF.Social.RelationshipWrites as SocialWrites
 import qualified TDF.Social.Profiles as SocialProfiles
 import TDF.Social.Server (socialV2Server)
@@ -182,6 +186,7 @@ import           TDF.Auth
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
+import qualified TDF.Server.PublicBookingNotifications as PublicBookingNotifications
 import           TDF.Server.SocialEventsHandlers
   ( publicUpcomingEventsServer
   , socialEventsServer
@@ -222,6 +227,7 @@ import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Server.Directory as DirectoryServer
+import qualified TDF.Server.Taxonomy as TaxonomyServer
 import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MusicRelease as MusicReleaseServer
 import TDF.MusicRelease.CredentialCache (musicCredentialCache)
@@ -779,6 +785,7 @@ server env =
   :<|> CatalogServer.publicCatalogServer
   :<|> InteractionsServer.publicInteractionsServer
   :<|> DirectoryServer.directoryPublicServer
+  :<|> TaxonomyServer.taxonomyPublicServer
   :<|> MerchServer.merchPublicServer
   :<|> publicUpcomingEventsServer
   :<|> ReviewsServer.reviewsPublicServer
@@ -3220,6 +3227,7 @@ fanSecureServer :: AuthedUser -> ServerT FanSecureAPI AppM
 fanSecureServer user =
        (fanGetProfile user :<|> fanUpdateProfile user)
   :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
+  :<|> fanListRecommendations user
   :<|> (artistGetOwnProfile user :<|> artistUpdateOwnProfile user)
   :<|> (notifList user :<|> notifCount user :<|> notifGet user :<|> notifMarkRead user :<|> notifMarkAllRead user)
   :<|> CatalogServer.createSelfFanRoleRequest user
@@ -3247,7 +3255,8 @@ socialServer user =
   :<|> socialRemoveFriend user
   :<|> SocialProfiles.profileList user (socialListProfiles user)
   :<|> SocialProfiles.profileGet user (socialGetProfile user)
-  :<|> SocialReads.suggestions user (socialListSuggestedFriends user)
+  :<|> SocialSuggestions.suggestions user
+         (SocialReads.suggestions user (socialListSuggestedFriends user))
   :<|> socialV2Server user
 
 chatServer :: AuthedUser -> ServerT ChatAPI AppM
@@ -3970,6 +3979,7 @@ protectedServer user =
   :<|> whatsappConsentServer user
   :<|> socialServer user
   :<|> chatServer user
+  :<|> notificationDeliveryServer user
   :<|> chatkitSessionServer user
   :<|> tidalAgentServer user
   :<|> socialSyncServer user
@@ -3995,6 +4005,7 @@ protectedServer user =
   :<|> AuthServer.artistInvitationsServer user
   :<|> navigationPreferencesServer user
   :<|> DirectoryServer.directoryProtectedServer user
+  :<|> TaxonomyServer.taxonomyProtectedServer user
   :<|> MerchServer.merchProtectedServer user
   :<|> OperationsServer.operationsServer user
   :<|> EventOperationsServer.eventOperationsServer user
@@ -7911,6 +7922,35 @@ fanListFollows user = do
     profileMap <- fetchArtistProfileMap artistIds
     pure (map (fanFollowEntityToDTO nameMap profileMap) follows)
 
+-- | GET /fans/me/recommendations (COMMUNITY-FAN-RECOMMENDATION-001). With
+-- FAN_MULTI_SIGNAL_RECOMMENDATIONS_ENABLED the ranking reads the stored
+-- multi-signal similarity (COMMUNITY-ARTIST-SIMILARITY-001); otherwise it is
+-- the follows-only ranking.
+fanListRecommendations :: AuthedUser -> Maybe Int -> AppM [ArtistRecommendationDTO]
+fanListRecommendations user mLimit = do
+  requireFanAccess user
+  Env pool cfg <- ask
+  let limit = ArtistRecommendations.clampRecommendationLimit mLimit
+  recommendations <- liftIO $ flip runSqlPool pool $
+    if fanMultiSignalRecommendationsEnabled cfg
+      then
+        ArtistSimilarity.loadSimilarityRecommendations
+          ArtistSimilarity.StoredGeneration
+          (auPartyId user)
+          limit
+      else ArtistRecommendations.loadArtistRecommendations (auPartyId user) limit
+  pure
+    [ ArtistRecommendationDTO
+        { arecArtistId = ArtistRecommendations.recArtistId item
+        , arecReason =
+            ArtistRecommendations.recommendationReasonCode
+              (ArtistRecommendations.recReason item)
+        , arecScore = ArtistRecommendations.recScore item
+        , arecSeedArtistIds = ArtistRecommendations.recSeedArtistIds item
+        }
+    | item <- recommendations
+    ]
+
 fanFollowArtist :: AuthedUser -> Int64 -> AppM FanFollowDTO
 fanFollowArtist = FanEffects.followArtist
 
@@ -8194,6 +8234,7 @@ socialListSuggestedFriends user = do
           [ SuggestedFriendDTO
               { sfPartyId = fromSqlKey candidateId
               , sfMutualCount = mutuals
+              , sfReason = Nothing
               }
           | (candidateId, mutuals) <- ordered
           ]
@@ -11542,7 +11583,10 @@ createPublicBooking mIdempotency PublicBookingReq{..} = do
     dtos <- buildBookingDTOs [created]
     pure (requirePersistedBookingDTO dtos)
   dto <- either throwError pure dtoResult
-  when createdNow (notifyEngineerIfNeeded dto)
+  when createdNow $ do
+    notifyEngineerIfNeeded dto
+    env <- ask
+    liftIO (PublicBookingNotifications.notifyPublicBookingRequest env dto fullNameClean emailClean phoneClean)
   pure dto
 
 -- | SQL failures a public booking transaction turns into 409 instead of a

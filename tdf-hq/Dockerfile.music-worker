@@ -37,6 +37,7 @@ COPY scripts/process-music-release-artwork.sh /app/scripts/process-music-release
 COPY scripts/build-ddex-ern432-package.sh /app/scripts/build-ddex-ern432-package.sh
 COPY scripts/run-music-release-worker-once.sh /app/scripts/run-music-release-worker-once.sh
 COPY scripts/music-s3-upload.pl /app/scripts/music-s3-upload.pl
+COPY scripts/measure-music-loudness.pl /app/scripts/measure-music-loudness.pl
 COPY scripts/run-music-release-worker.sh /app/scripts/run-music-release-worker.sh
 COPY scripts/music-media-health.py /app/scripts/music-media-health.py
 RUN chmod 0755 /app/tdf-ddex-render /app/scripts/*.sh && \
@@ -48,6 +49,7 @@ ENV LANG=C.UTF-8
 ENV MUSIC_DDEX_RENDER_BIN=/app/tdf-ddex-render
 ENV MUSIC_AUDIO_PIPELINE=/app/scripts/process-music-release-audio.sh
 ENV MUSIC_ARTWORK_PIPELINE=/app/scripts/process-music-release-artwork.sh
+ENV MUSIC_LOUDNESS_TOOL=/app/scripts/measure-music-loudness.pl
 ENV MUSIC_DDEX_PACKAGE_BUILDER=/app/scripts/build-ddex-ern432-package.sh
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["/app/scripts/run-music-release-worker.sh"]

@@ -1,3 +1,4 @@
+import PaymentMethodChoices, { PaymentMethodButton } from '../components/payments/PaymentMethodChoices';
 import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import MarkdownText from '../components/MarkdownText';
 import {
@@ -100,6 +101,21 @@ const formatCourseDate = (value?: string | null) => {
     }).format(dt);
   }
   return formatDateForUser(value, { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const formatCourseHour = (hour: number) => `${String(hour).padStart(2, '0')}:00`;
+
+// The API reports an unset start hour as 0, so only a positive hour counts as a published schedule.
+export const buildSessionScheduleLabel = (
+  meta?: Pick<CourseMetadata, 'sessionStartHour' | 'sessionDurationHours'>,
+) => {
+  const startHour = meta?.sessionStartHour;
+  const durationHours = meta?.sessionDurationHours;
+  if (typeof startHour !== 'number' || !Number.isInteger(startHour) || startHour <= 0 || startHour > 23) return null;
+  if (typeof durationHours !== 'number' || !Number.isInteger(durationHours) || durationHours <= 0) return null;
+  const endHour = startHour + durationHours;
+  if (endHour > 24) return null;
+  return `${formatCourseHour(startHour)} a ${formatCourseHour(endHour)}`;
 };
 
 const getSessionDates = (sessions?: CourseMetadata['sessions']) => {
@@ -1266,6 +1282,18 @@ function CourseCheckoutCard({
   const paid = checkout.paymentStatus === 'paid';
   const held = checkout.fulfillmentStatus === 'seat_held';
   const quote = checkout.quote;
+  const legacyPaymentMethods = checkout.checkoutAvailable && !paid && (checkout.paymentMethods.includes('datafast') || (checkout.paymentMethods.includes('paypal') && paypalAvailable)) ? (<>
+                {checkout.paymentMethods.includes('datafast') && (
+                  <PaymentMethodButton disabled={availabilityUnknown || paymentBusy || hostedPaymentLocked} onClick={onDatafast}>
+                    Tarjeta · Datafast
+                  </PaymentMethodButton>
+                )}
+                {checkout.paymentMethods.includes('paypal') && paypalAvailable && (
+                  <PaymentMethodButton disabled={availabilityUnknown || paymentBusy || hostedPaymentLocked} onClick={onPaypal}>
+                    Pagar con PayPal
+                  </PaymentMethodButton>
+                )}
+            </>) : null;
   return (
     <Card
       sx={{
@@ -1327,24 +1355,14 @@ function CourseCheckoutCard({
 
           {checkout.checkoutAvailable && !paid && !availabilityUnknown && checkout.paymentMethods.length === 0 && (
             <Alert severity="info" variant="outlined">
-              No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.
+              Todavía no hay un método de pago en línea para esta orden. La reserva no equivale a pago.
             </Alert>
           )}
           <Stack spacing={1.5}>
-            {checkout.checkoutAvailable && !paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                {checkout.paymentMethods.includes('datafast') && (
-                  <Button variant="contained" disabled={availabilityUnknown || paymentBusy || hostedPaymentLocked} onClick={onDatafast}>
-                    Pagar con Datafast
-                  </Button>
-                )}
-                {checkout.paymentMethods.includes('paypal') && paypalAvailable && (
-                  <Button variant="outlined" disabled={availabilityUnknown || paymentBusy || hostedPaymentLocked} onClick={onPaypal}>
-                    Pagar con PayPal
-                  </Button>
-                )}
-            </Stack>}
+            {(!checkout.checkoutId || !checkoutLookupToken) && legacyPaymentMethods && <PaymentMethodChoices methods={legacyPaymentMethods} />}
             {checkout.checkoutId && checkoutLookupToken && (
                 <HostedProviderCheckout
+                  additionalMethods={legacyPaymentMethods}
                   checkout={{
                     checkoutId: checkout.checkoutId,
                     lookupToken: checkoutLookupToken,
@@ -1468,6 +1486,7 @@ function Hero({
   const primaryCta = heroOverride?.cta ?? 'Inscribirme';
   const whatsappCta = heroOverride?.whatsappCta ?? 'Inscribirme por WhatsApp';
   const badgeDate = heroOverride?.badge3 ?? dateRangeLabel ?? 'Fechas por confirmar';
+  const scheduleLabel = buildSessionScheduleLabel(meta);
   return (
     <Box
       sx={{
@@ -1504,7 +1523,11 @@ function Hero({
           </Typography>
           <Stack spacing={0.5}>
             <Typography variant="body1" sx={{ color: 'rgba(226,232,240,0.75)' }}>
-              {loading ? '—' : `${meta?.format ?? 'Presencial'} · ${meta?.duration ?? '16 horas'}`}
+              {loading
+                ? '—'
+                : [meta?.format ?? 'Presencial', meta?.duration ?? '16 horas', scheduleLabel ? `Horario: ${scheduleLabel}` : null]
+                    .filter(Boolean)
+                    .join(' · ')}
             </Typography>
             {seatsLabel && (
               <Typography
@@ -1564,6 +1587,7 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
   const focusLabel = meta?.daws?.length ? `Enfoque: ${meta.daws.join(', ')}` : 'Programa práctico';
   const durationLabel = trimToUndefined(meta?.duration) ?? 'Duración por confirmar';
   const formatLabel = trimToUndefined(meta?.format) ?? 'Curso TDF';
+  const scheduleLabel = buildSessionScheduleLabel(meta);
   return (
     <Stack spacing={3}>
       <Card
@@ -1577,6 +1601,7 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap" useFlexGap>
             <Badge icon={<CelebrationIcon />} label={formatLabel} />
             <Badge icon={<HeadsetIcon />} label={durationLabel} />
+            {scheduleLabel && <Badge icon={<CalendarTodayIcon />} label={`Horario: ${scheduleLabel}`} />}
             <Badge icon={<MusicNoteIcon />} label={focusLabel} />
             <Badge icon={<CheckCircleIcon />} label="Incluye seguimiento y certificado" />
           </Stack>
@@ -1605,7 +1630,9 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
                     sx={badgeStyle}
                   />
                   <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.8)' }}>
-                    {formatCourseDate(session.date)}
+                    {scheduleLabel
+                      ? `${formatCourseDate(session.date)} · ${scheduleLabel}`
+                      : formatCourseDate(session.date)}
                   </Typography>
                 </Stack>
               ))}

@@ -217,6 +217,32 @@ describe('LoginPage Google signup consent flow', () => {
     } finally { userAgent.mockRestore(); await cleanup(); }
   });
 
+  it('offers the artist and internship entries as two text links instead of persona cards', async () => {
+    const cleanup = await renderLoginPage('/login');
+    try {
+      expect(screen.queryByText('Onboarding rápido')).toBeNull();
+      expect(screen.queryByText('Soy fan')).toBeNull();
+      expect(screen.queryByRole('button', { name: /rutas rápidas/ })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Soy artista' })).not.toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: 'Busco prácticas' }));
+      await waitFor(() => expect(window.location.search).toContain('intent=internships'));
+      expect(screen.queryByRole('dialog')).not.toBeNull();
+    } finally { await cleanup(); }
+  });
+
+  it('keeps the sign-in card to its core actions without helper copy or duplicate links', async () => {
+    const cleanup = await renderLoginPage('/login');
+    try {
+      expect(screen.queryByRole('button', { name: 'Crear cuenta general' })).not.toBeNull();
+      expect(screen.queryByRole('link', { name: 'Explorar sin cuenta' })).not.toBeNull();
+      expect(screen.queryByRole('button', { name: 'Recuperar acceso' })).not.toBeNull();
+      expect(screen.queryByText('Ir a la comunidad')).toBeNull();
+      expect(screen.queryByText('Solicitar clase de prueba')).toBeNull();
+      expect(screen.queryByText(/Usa tus credenciales/)).toBeNull();
+      expect(screen.queryByText(/Mantendremos tu sesión/)).toBeNull();
+    } finally { await cleanup(); }
+  });
+
   it('recognizes only the server consent precondition', () => {
     expect(isGoogleSignupConsentRequiredError(new Error(` ${GOOGLE_CONSENT_ERROR} `))).toBe(true);
     expect(isGoogleSignupConsentRequiredError(new Error('Invalid Google token'))).toBe(false);

@@ -34,4 +34,4 @@ Estado documentado: 2026-09-16. Esta carpeta describe el nuevo dominio canónico
 - [Operaciones DDEX, identidad estable y retiro desde suspensión](ddex-operation-lifecycle.md)
 - [Encolado DDEX atómico, concurrencia y recuperación de huérfanos](ddex-atomic-enqueue.md)
 
-Las banderas `music_releases.authoring`, `music_releases.processing`, `music_releases.public`, `music_releases.commerce` y `music_releases.ddex_export` se crean apagadas en sandbox y producción. No habilitarlas todas a la vez.
+Las banderas `music_releases.authoring`, `music_releases.processing`, `music_releases.public`, `music_releases.commerce` y `music_releases.ddex_export` se crean apagadas en sandbox y producción. No habilitarlas todas a la vez. `music_releases.loudness_check` (migración `2026-11-21_music_audio_measurement`) también nace apagada; activa la medición de sonoridad de los másteres, que es solo informativa (`formal/system/music-loudness-check.md`).

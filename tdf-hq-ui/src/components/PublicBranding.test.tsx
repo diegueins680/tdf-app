@@ -148,6 +148,40 @@ describe('PublicBranding', () => {
     }
   });
 
+  it('tells a visitor on a public page when the connection drops', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderBranding(container, '/eventos/141/entradas');
+    const notice = () => container.querySelector('[role="alert"]')?.closest('.MuiCollapse-root');
+
+    try {
+      expect(notice()?.textContent).toContain('Sin conexión');
+      expect(notice()?.classList.contains('MuiCollapse-hidden')).toBe(true);
+      await act(async () => {
+        window.dispatchEvent(new Event('offline'));
+        await flushPromises();
+      });
+      expect(notice()?.classList.contains('MuiCollapse-hidden')).toBe(false);
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the header row to five destinations', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderBranding(container, '/tdf');
+
+    try {
+      const nav = container.querySelector('nav[aria-label="Navegación principal"]');
+      const paths = Array.from(nav?.querySelectorAll<HTMLAnchorElement>('a') ?? []).map((link) => link.getAttribute('href'));
+      expect(paths).toEqual(['/social/eventos', '/tdf', '/fans', '/marketplace', '/reservar']);
+      expect(container.querySelector('a[href="/buscar"][aria-label="Buscar"]')).not.toBeNull();
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('offers exactly one events entry in the main navigation', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -256,15 +290,19 @@ it('places the signup invitation before public destination content inside main',
   } finally { await view.cleanup(); activeSession = null; }
 });
 
-it('sends the TDF Mobile navigation entry to the landing with its surface', async () => {
+it('sends the TDF Mobile entry under more options to the landing with its surface', async () => {
+  await i18n.changeLanguage('es');
   const container = document.createElement('div');
   document.body.appendChild(container);
   const view = await renderBranding(container, '/tdf');
   try {
-    const navLinks = Array.from(container.querySelectorAll('nav a')).filter((a) => a.getAttribute('href')?.startsWith('/app'));
-    expect(navLinks.length).toBeGreaterThan(0);
-    for (const link of navLinks) expect(link.getAttribute('href')).toBe('/app?surface=nav');
-    expect(container.querySelector('nav a[href="/buscar"]')).toBeTruthy();
+    expect(container.querySelector('nav a[href^="/app"]')).toBeNull();
+    const more = container.querySelector<HTMLButtonElement>(`button[aria-label="${i18n.t('authEntry.more')}"]`);
+    expect(more).not.toBeNull();
+    await act(async () => { more!.click(); await flushPromises(); });
+    const entries = Array.from(document.querySelectorAll('[role="menu"] a')).map((a) => a.getAttribute('href'));
+    expect(entries).toContain('/app?surface=nav');
+    for (const path of ['/buscar', '/comercio', '/domo-del-pululahua', '/records', '/donar']) expect(entries).toContain(path);
   } finally {
     await view.cleanup();
     container.remove();
@@ -329,5 +367,75 @@ it.each([
         expect(destination.searchParams.get('redirect')).toBe(expectedTarget);
       }
     } finally { await view.cleanup(); }
+  },
+);
+
+it('shows one TDF Mobile invitation per page: the footer link only where the page has none', async () => {
+  activeSession = null;
+  const userAgent = navigator.userAgent;
+  const cases = [
+    ['Android', '/tdf', false, '/app?surface=tdf_landing'],
+    ['Android', '/servicios', false, '/app?surface=mobile_banner'],
+    ['Mozilla/5.0 (X11; Linux x86_64)', '/tdf', false, '/app?surface=tdf_landing'],
+    ['Mozilla/5.0 (X11; Linux x86_64)', '/servicios', true, '/app?surface=footer'],
+  ] as const;
+  try {
+    for (const [agent, route, inFooter, href] of cases) {
+      Object.defineProperty(navigator, 'userAgent', { configurable: true, value: agent });
+      localStorage.clear();
+      const container = document.createElement('div'); document.body.appendChild(container);
+      const view = await renderBranding(container, route);
+      try {
+        await act(async () => { await flushPromises(); await flushPromises(); });
+        const invitations = [...container.querySelectorAll('aside')];
+        expect(invitations).toHaveLength(1);
+        expect(invitations[0]?.querySelector('a')?.getAttribute('href')).toBe(href);
+        expect(Boolean(invitations[0]?.closest('footer'))).toBe(inFooter);
+      } finally { await view.cleanup(); }
+    }
+  } finally { Object.defineProperty(navigator, 'userAgent', { configurable: true, value: userAgent }); }
+});
+
+it('keeps the footer to help and WhatsApp preferences without repeating the navigation', async () => {
+  activeSession = null;
+  const container = document.createElement('div'); document.body.appendChild(container);
+  const view = await renderBranding(container, '/tdf');
+  try {
+    const footer = container.querySelector('footer')!;
+    expect(footer.querySelector('nav')).toBeNull();
+    expect(footer.querySelector('a[href="/buscar"]')).toBeNull();
+    expect(footer.querySelector('a[href="/whatsapp/consentimiento"]')?.textContent).toBe('Preferencias de WhatsApp');
+    expect(footer.textContent).toContain('¿Necesitas ayuda?');
+    expect(footer.querySelector('a[href*="/login"]')).not.toBeNull();
+  } finally { await view.cleanup(); container.remove(); }
+});
+
+it('offers no login or signup actions in the footer to a signed-in visitor', async () => {
+  activeSession = { username: 'fan', displayName: 'Fan', roles: ['fan'], partyId: 7 };
+  const container = document.createElement('div'); document.body.appendChild(container);
+  const view = await renderBranding(container, '/tdf');
+  try {
+    const footer = container.querySelector('footer')!;
+    expect(footer.querySelector('a[href*="/login"]')).toBeNull();
+    expect(footer.textContent).not.toContain('Crear cuenta');
+    expect(footer.querySelector('a[href="/whatsapp/consentimiento"]')).not.toBeNull();
+  } finally { await view.cleanup(); container.remove(); activeSession = null; }
+});
+
+it.each(['/eventos/141/entradas', '/eventos/141/orden/9', '/pagos/retorno'])(
+  'keeps promotion and site navigation out of the purchase task: %s', async (route) => {
+    activeSession = null;
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const view = await renderBranding(container, route);
+    try {
+      expect(container.querySelector('nav[aria-label="Navegación principal"]')).toBeNull();
+      expect(container.querySelector('aside[aria-label="TDF Mobile"]')).toBeNull();
+      expect(container.querySelector('header a[href="/buscar"]')).toBeNull();
+      const footer = container.querySelector('footer')!;
+      expect(footer.querySelector('a[href*="signup=1"]')).toBeNull();
+      expect(footer.querySelector('a[href="/whatsapp/consentimiento"]')).not.toBeNull();
+      expect(footer.textContent).toContain('WhatsApp');
+      expect(container.querySelector('header a[href*="/login"]')).not.toBeNull();
+    } finally { await view.cleanup(); container.remove(); }
   },
 );

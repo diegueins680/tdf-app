@@ -180,7 +180,7 @@ test('@critical anonymous RSVP survives signup, appears once in the profile, sha
   await expect(page.getByRole('heading', { name: event.title })).toBeVisible();
   await page.getByText(/Cargando conversación…|No se pudo cargar la conversación\./).scrollIntoViewIfNeeded();
   await expect(page.getByText('No se pudo cargar la conversación.')).toBeVisible();
-  await page.getByRole('button', { name: 'Voy' }).dblclick();
+  await page.getByRole('button', { name: 'Voy', exact: true }).dblclick();
 
   await expect(page).toHaveURL(/\/login\?.*signup=1.*redirect=%2Feventos%2F42/);
   const signup = page.getByRole('dialog', { name: /crear cuenta/i });
@@ -193,14 +193,24 @@ test('@critical anonymous RSVP survives signup, appears once in the profile, sha
   await expect(page).toHaveURL(/\/eventos\/42$/);
   await expect.poll(() => api.getState().upsertCount).toBe(1);
   expect(api.getState().bodies).toEqual([{ rsvpStatus: 'accepted', rsvpShowOnProfile: true }]);
-  await expect(page.getByRole('button', { name: 'Voy' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Voy', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('section[aria-labelledby="event-rsvp-title-42"]')).toHaveAttribute('aria-busy', 'false');
   await expectNoSeriousAxeViolations(page, testInfo, 'event-rsvp-axe.json');
   await page.screenshot({ path: testInfo.outputPath('web-rsvp-event.png'), fullPage: true });
 
-  await page.getByRole('button', { name: 'Copiar enlace' }).click();
-  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('/eventos/42');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).not.toContain('/social/eventos/');
+  // A browser with a share sheet gets one "Compartir" control; one without gets "Copiar enlace" and WhatsApp.
+  if (await page.evaluate(() => typeof navigator.share === 'function')) {
+    await expect(page.getByRole('button', { name: 'Copiar enlace' })).toHaveCount(0);
+    await page.evaluate(() => Object.defineProperty(navigator, 'share', { configurable: true, value: async (data) => { window.__rsvpSharedUrl = data.url; } }));
+    await page.getByRole('button', { name: 'Compartir', exact: true }).click();
+    await expect.poll(() => page.evaluate(() => window.__rsvpSharedUrl)).toContain('/eventos/42');
+    expect(await page.evaluate(() => window.__rsvpSharedUrl)).not.toContain('/social/eventos/');
+  } else {
+    await expect(page.locator('section[aria-labelledby="event-rsvp-title-42"]').getByRole('button', { name: 'Compartir', exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Copiar enlace' }).click();
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('/eventos/42');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).not.toContain('/social/eventos/');
+  }
 
   await page.goto('/perfil/101');
   await expect(page.getByText('Va a')).toBeVisible();
@@ -209,7 +219,7 @@ test('@critical anonymous RSVP survives signup, appears once in the profile, sha
   await page.screenshot({ path: testInfo.outputPath('web-rsvp-profile.png'), fullPage: true });
 
   await page.goto('/eventos/42');
-  await page.getByRole('button', { name: 'No iré' }).click();
+  await page.getByRole('button', { name: 'No voy' }).click();
   await expect.poll(() => api.getState().currentRsvp?.rsvpStatus).toBe('declined');
   await page.goto('/perfil/101');
   await expect(page.getByText('Todavía no hay actividad de RSVP visible.')).toBeVisible();
@@ -231,9 +241,9 @@ test('private events do not enumerate and cancelled public events disable RSVP a
     json: { ...event, id: '43', title: 'Evento Cancelado Ficticio', canonicalUrl: '/eventos/43', workflowStateCode: 'cancelled', rsvpEligible: false, publicShareEligible: false },
   }));
   await page.goto('/eventos/43');
-  await expect(page.getByText('Los eventos cancelados no aceptan nuevos RSVPs.')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Voy' })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Compartir' })).toBeDisabled();
+  await expect(page.getByText('Los eventos cancelados no aceptan nuevas respuestas.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Voy', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /^(Compartir|Copiar enlace)$/ }).first()).toBeDisabled();
 });
 
 test('RSVP fixtures block unconfigured APIs and foreign module-shaped requests', async ({ page }, testInfo) => {

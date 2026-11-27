@@ -733,11 +733,17 @@ spec = do
           it "does not contact a merely prepared operation on an expired checkout" $ \pool ->
             withRecoveryEnvironment $ do
               (creation, operation, request) <- replayFixture pool Checkout.ProviderPlaceToPay
+              let checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+                  attemptId = Checkout.paymentAttemptReferenceId (Execution.porAttempt operation)
+                  _ :<|> getSession :<|> _ = providerExecutionServer
+                  env = Env pool (error "Status lookup must not use AppConfig")
+              session <- runHandler (runReaderT (getSession checkoutId attemptId (Just checkoutId)) env)
+                >>= requireRight
+              pssState session `shouldBe` "prepared"
+              pssCanRetryOrFallback session `shouldBe` False
               closeCheckout pool creation "expired"
               replayHandler pool creation request >>= assertHttpError 404
-              let checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
-              stored <- runSqlPool (Execution.loadAuthorizedCreateOperation checkoutId
-                (Checkout.paymentAttemptReferenceId (Execution.porAttempt operation))
+              stored <- runSqlPool (Execution.loadAuthorizedCreateOperation checkoutId attemptId
                 (digestText checkoutId) recoveryEncryptionKey) pool >>= requireRight
               Execution.porStatus stored `shouldBe` "prepared"
               assertCounts pool creation 1 1
@@ -5199,7 +5205,7 @@ ticketEligibilityUpdate pool eventKey change = do
 ticketEligibilityEventUpdate :: AuthedUser -> Text -> TD.EventUpdateDTO -> ReaderT Env Handler TD.EventDTO
 ticketEligibilityEventUpdate user = case Social.socialEventsServer user of
   events :<|> _ -> case events of
-    _ :<|> _ :<|> _ :<|> updateEvent :<|> _ -> updateEvent
+    _ :<|> _ :<|> _ :<|> _ :<|> updateEvent :<|> _ -> updateEvent
 
 ticketTierCapacitySpec :: SpecWith ConnectionPool
 ticketTierCapacitySpec = describe "legacy ticket inventory mutation concurrency" $ do

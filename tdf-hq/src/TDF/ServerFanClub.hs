@@ -10,6 +10,8 @@ module TDF.ServerFanClub
   , fanClubSecureListMyClubs
   , fanClubSecureArtistHandlers
   , buildFanClubPostReactionSummary
+  , sortFeedItems
+  , feedEvidenceTargets
   , validateFanClubArtistPathId
   , validateFanClubPostPathId
   , validateFanClubPostAccess
@@ -48,8 +50,9 @@ import           Control.Exception      (throwIO, try)
 import           Control.Monad          (forM, forM_, when, unless, filterM)
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Reader   (ReaderT, ask)
+import           Control.Monad.Reader   (ReaderT, ask, asks)
 import           Data.Aeson (Value, object, (.=))
+import qualified TDF.Fans.FeedAffinity as FeedAffinity
 import qualified TDF.Interactions.Legacy as Interactions
 import qualified TDF.Interactions.Server as Interactions
 import           Data.Char              (GeneralCategory (Format, LineSeparator, ParagraphSeparator)
@@ -76,6 +79,7 @@ import           Servant                (NoContent(..), ServerError, (:<|>)(..),
 import           Servant                (Handler)
 
 import           TDF.Auth               (AuthedUser(..))
+import           TDF.Config             (fanFeedAffinityEnabled)
 import           TDF.DB                 (Env(..))
 import           TDF.DTO
 import           TDF.Models             (FanClub(..), FanClubId, FanClubOfficer(..), FanClubElection(..)
@@ -90,7 +94,6 @@ import           TDF.Models             (FanClub(..), FanClubId, FanClubOfficer(
 import qualified TDF.Models             as M
 import qualified TDF.Profiles.ArtistVisibility as ArtistVisibility
 import qualified TDF.Catalog.Models     as Catalog
-import           Data.Time.Clock        (diffUTCTime)
 
 type AppM = ReaderT Env Handler
 
@@ -261,6 +264,7 @@ fanClubSecureArtistHandlers user artistId =
     listClubFeed aId mSort _mPeriod = do
       artistKey <- requireArtistKey aId
       now <- liftIO getCurrentTime
+      affinityGate <- asks (fanFeedAffinityEnabled . envConfig)
       runDB $ do
         mClub <- getBy (UniqueFanClubArtist artistKey)
         case mClub of
@@ -329,7 +333,12 @@ fanClubSecureArtistHandlers user artistId =
                     }
             let allItems = postItems ++ catMaybes memoryItems
             let sortMode = fromMaybe "new" mSort
-            pure $ sortFeedItems sortMode now allItems
+            -- Only the hot sort is personal; no behaviour is read for the others.
+            mode <- if sortMode == "hot"
+              then FeedAffinity.loadFeedMode affinityGate (auPartyId user) now
+                     (feedEvidenceTargets allItems)
+              else pure FeedAffinity.fallbackMode
+            pure $ sortFeedItems mode sortMode now allItems
 
     listClubPosts aId = do
       artistKey <- requireArtistKey aId
@@ -1379,20 +1388,39 @@ buildContentReactionSummary reactions viewerPartyId = do
     , rsMyReactionTypeId = mine
     }
 
-sortFeedItems :: Text -> UTCTime -> [FanClubFeedItemDTO] -> [FanClubFeedItemDTO]
-sortFeedItems sortMode now items =
+-- | Order a club feed. Pinned items stay first in input order. The hot sort is
+-- ranked by "TDF.Fans.FeedAffinity" (COMMUNITY-FEED-AFFINITY-001); the other
+-- sorts never read the mode.
+sortFeedItems
+  :: FeedAffinity.FeedMode -> Text -> UTCTime -> [FanClubFeedItemDTO] -> [FanClubFeedItemDTO]
+sortFeedItems mode sortMode now items =
   let (pinned, unpinned) = partition fcfIsPinned items
       sorted = case sortMode of
-        "hot" -> sortOn (Down . hotScore now) unpinned
+        "hot" -> map FeedAffinity.riPayload
+          (FeedAffinity.rankHot mode now (map feedRankItem unpinned))
         "top" -> sortOn (Down . rsTotal . fcfReactions) unpinned
         _     -> sortOn (Down . fcfCreatedAt) unpinned
   in pinned ++ sorted
-  where
-    hotScore :: UTCTime -> FanClubFeedItemDTO -> Double
-    hotScore n item =
-      let hoursSincePublish = max 1.0 (realToFrac (diffUTCTime n (fcfCreatedAt item)) / 3600.0)
-          total = fromIntegral (rsTotal (fcfReactions item))
-      in total / (hoursSincePublish ** 0.8)
+
+feedRankItem :: FanClubFeedItemDTO -> FeedAffinity.RankItem FanClubFeedItemDTO
+feedRankItem item = FeedAffinity.RankItem
+  { FeedAffinity.riKind = FeedAffinity.feedItemKindFromCode (fcfKind item)
+  , FeedAffinity.riId = fcfId item
+  , FeedAffinity.riAuthorId = fcfAuthorId item
+  , FeedAffinity.riCreatedAt = fcfCreatedAt item
+  , FeedAffinity.riReactions = rsTotal (fcfReactions item)
+  , FeedAffinity.riPayload = item
+  }
+
+-- | The items of a feed whose interactions may count as affinity evidence:
+-- every returned item that is not hidden, with its author. The feed has
+-- already dropped what the viewer may not read.
+feedEvidenceTargets :: [FanClubFeedItemDTO] -> Map.Map (FeedAffinity.FeedItemKind, Int64) Int64
+feedEvidenceTargets items = Map.fromList
+  [ ((FeedAffinity.feedItemKindFromCode (fcfKind item), fcfId item), fcfAuthorId item)
+  | item <- items
+  , not (fcfIsHidden item)
+  ]
 
 -- ============================================================================
 -- DTO Builders

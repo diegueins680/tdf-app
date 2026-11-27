@@ -14,6 +14,7 @@ async function fixture(page, baseURL, authenticated = false) {
     if (!['fetch', 'xhr'].includes(request.resourceType())) return url.origin === new URL(baseURL).origin ? route.continue() : route.abort();
     if (url.pathname === '/session') return route.fulfill(authenticated ? { json: { username: 'fixture-admin', displayName: 'Synthetic Admin', partyId: 42, roles: ['Admin'], modules: ['admin', 'crm', 'scheduling'], featureFlags: [], preferences: { locale: 'es', currency: 'USD', timeZone: 'America/Guayaquil' } } } : { status: 401, json: {} });
     if (url.pathname === '/directory/taxonomies') return route.fulfill({ json: { locale: 'es', cities: [], professions: [], serviceOfferings: [], instruments: [], genres: [{ id: genre, name: 'Jazz' }] } });
+    if (url.pathname === '/taxonomy/filter-options') return route.fulfill({ json: { countries: [], regions: [], cities: [], genres: [{ id: genre, code: 'jazz', nameEs: 'Jazz', nameEn: 'Jazz', parentId: null }] } });
     if (url.pathname === '/directory/search') {
       requests.push(Object.fromEntries(url.searchParams));
       const items = url.searchParams.get('q') === 'missing' ? [] : profiles;
@@ -38,9 +39,12 @@ test('community discovery preserves query, genre and scroll through profile/hist
   await expect(search).toBeVisible();
   await search.getByLabel('Buscar artistas y perfiles').fill('Luna');
   await expect.poll(() => requests.some((request) => request.q === 'Luna')).toBe(true);
-  await search.getByLabel('Género musical').click();
+  // TAX-FILTER-001: the genre comes from the shared location and genre filters.
+  await search.getByRole('button', { name: 'Filtrar por lugar y género' }).click();
+  await search.getByRole('combobox', { name: 'Género' }).click();
   await page.getByRole('option', { name: 'Jazz', exact: true }).click();
-  await expect(page).toHaveURL(new RegExp(`genreId=${genre}`));
+  await page.keyboard.press('Escape');
+  await expect(page).toHaveURL(new RegExp(`f\\.genre=${genre}`));
   const artist = page.getByRole('link').filter({ has: page.getByRole('heading', { name: 'Lúna 12', exact: true }) });
   await artist.scrollIntoViewIfNeeded();
   // Capture the departure viewport after the browser's focus/actionability
@@ -55,7 +59,7 @@ test('community discovery preserves query, genre and scroll through profile/hist
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(3);
   await page.goBack();
   await expect(search.getByLabel('Buscar artistas y perfiles')).toHaveValue('Luna');
-  await expect(page).toHaveURL(new RegExp(`genreId=${genre}`));
+  await expect(page).toHaveURL(new RegExp(`f\\.genre=${genre}`));
   await expect.poll(async () => Math.abs(await page.evaluate(() => window.scrollY) - before)).toBeLessThan(8);
   await page.goForward();
   await expect(page).toHaveURL(/\/directorio\/luna-12$/);

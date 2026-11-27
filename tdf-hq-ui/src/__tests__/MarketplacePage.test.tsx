@@ -5,6 +5,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import type { MarketplaceCartDTO, MarketplaceItemDTO, MarketplaceOrderDTO } from '../api/types';
 
+let staffSession = false;
+const updateRentalTermsMock = jest.fn<(id: string, payload: unknown) => Promise<MarketplaceItemDTO>>();
 const listMock = jest.fn<() => Promise<MarketplaceItemDTO[]>>();
 const getCartMock = jest.fn<(cartId: string) => Promise<MarketplaceCartDTO>>();
 const createCartMock = jest.fn<() => Promise<MarketplaceCartDTO>>();
@@ -21,6 +23,7 @@ const storeLookupTokenMock = jest.fn();
 jest.unstable_mockModule('../api/marketplace', () => ({
   Marketplace: {
     list: () => listMock(),
+    updateRentalTerms: (id: string, payload: unknown) => updateRentalTermsMock(id, payload),
     getCart: (cartId: string) => getCartMock(cartId),
     createCart: () => createCartMock(),
     upsertItem: (cartId: string, payload: unknown) => upsertItemMock(cartId, payload),
@@ -54,7 +57,7 @@ jest.unstable_mockModule('../utils/logger', () => ({
 }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
-  useSession: () => ({ session: null }),
+  useSession: () => ({ session: staffSession ? { username: 'operator', modules: ['ops'], roles: [] } : null }),
   getStoredSessionToken: () => null,
   getActiveSession: () => null,
 }));
@@ -241,6 +244,8 @@ describe('MarketplacePage', () => {
   });
 
   beforeEach(() => {
+    staffSession = false;
+    updateRentalTermsMock.mockReset();
     listMock.mockReset();
     getCartMock.mockReset();
     createCartMock.mockReset();
@@ -437,6 +442,82 @@ describe('MarketplacePage', () => {
 
     await cleanup();
     document.body.removeChild(container);
+  });
+
+  it('edits USD rental amounts, keeps rejected edits and retries the exact cents with existing policy fields', async () => {
+    staffSession = true;
+    const listing = buildListing({ miPurpose: 'rent', miPriceUsdCents: 2550,
+      miRentalWeeklyPriceUsdCents: 12345, miRentalSecurityDepositUsdCents: 0, miRentalLateFeeUsdCents: 151,
+      miRentalTermsVersion: 'v1', miRentalTermsSummary: 'Términos sintéticos', miRentalMinDays: 2,
+      miRentalMaxDays: 15, miRentalCancellationWindowHours: 48 });
+    listMock.mockResolvedValue([listing]);
+    updateRentalTermsMock.mockRejectedValueOnce(new Error('Rechazo sintético')).mockResolvedValue(listing);
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(document.body.textContent).toContain('Configurar renta'));
+      await act(async () => { clickButtonByText('Configurar renta'); await flushPromises(); });
+      expect(getInputByLabel(document.body, 'Tarifa diaria (USD)').value).toBe('25.50');
+      expect(getInputByLabel(document.body, 'Tarifa semanal (USD, opcional)').value).toBe('123.45');
+      expect(getInputByLabel(document.body, 'Depósito reembolsable (USD)').value).toBe('0.00');
+      expect(getInputByLabel(document.body, 'Cargo tardío (USD)').value).toBe('1.51');
+      await act(async () => {
+        setInputValue(getInputByLabel(document.body, 'Tarifa diaria (USD)'), '40,99');
+        setInputValue(getInputByLabel(document.body, 'Tarifa semanal (USD, opcional)'), '');
+        setInputValue(getInputByLabel(document.body, 'Depósito reembolsable (USD)'), '12.05');
+        setInputValue(getInputByLabel(document.body, 'Cargo tardío (USD)'), '0');
+      });
+      await act(async () => { clickButtonByText('Guardar versión'); await flushPromises(); });
+      await waitForExpectation(() => expect(document.body.textContent).toContain('Rechazo sintético'));
+      expect(getInputByLabel(document.body, 'Tarifa diaria (USD)').value).toBe('40,99');
+      await act(async () => { clickButtonByText('Guardar versión'); await flushPromises(); });
+      await waitForExpectation(() => expect(updateRentalTermsMock).toHaveBeenCalledTimes(2));
+      const expected = { mrtuDailyRateUsdCents: 4099, mrtuWeeklyRateUsdCents: null,
+        mrtuSecurityDepositUsdCents: 1205, mrtuLateFeeUsdCents: 0, mrtuMinDays: 2, mrtuMaxDays: 15,
+        mrtuCancellationWindowHours: 48, mrtuTimezone: 'America/Guayaquil', mrtuTermsVersion: 'v1',
+        mrtuTermsSummary: 'Términos sintéticos', mrtuActive: true };
+      expect(updateRentalTermsMock.mock.calls).toEqual([['listing-1', expected], ['listing-1', expected]]);
+    } finally { await cleanup(); container.remove(); }
+  });
+
+  it('blocks invalid rental prices beside their fields and preserves explicit zero versus a blank amount', async () => {
+    staffSession = true;
+    listMock.mockResolvedValue([buildListing({ miPurpose: 'rent', miPriceUsdCents: 1,
+      miRentalTermsVersion: 'v1', miRentalTermsSummary: 'Términos sintéticos' })]);
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(document.body.textContent).toContain('Configurar renta'));
+      await act(async () => { clickButtonByText('Configurar renta'); await flushPromises(); });
+      for (const [label, value] of [
+        ['Tarifa diaria (USD)', ''], ['Tarifa diaria (USD)', '0'], ['Tarifa semanal (USD, opcional)', '0'],
+        ['Depósito reembolsable (USD)', ''], ['Cargo tardío (USD)', '-1'],
+        ['Tarifa diaria (USD)', '1.234'], ['Tarifa diaria (USD)', '1e3'],
+        ['Tarifa diaria (USD)', '21474836.48'],
+      ]) {
+        await act(async () => { setInputValue(getInputByLabel(document.body, label!), value!); });
+        const field = getInputByLabel(document.body, label!);
+        expect(field.getAttribute('aria-invalid')).toBe('true');
+        expect(document.getElementById(field.getAttribute('aria-describedby')!)?.textContent).toBeTruthy();
+        const save = Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Guardar versión');
+        expect(save?.disabled).toBe(true);
+        expect(updateRentalTermsMock).not.toHaveBeenCalled();
+      }
+      await act(async () => {
+        setInputValue(getInputByLabel(document.body, 'Tarifa diaria (USD)'), '21474836.47');
+        setInputValue(getInputByLabel(document.body, 'Tarifa semanal (USD, opcional)'), '0.01');
+        setInputValue(getInputByLabel(document.body, 'Depósito reembolsable (USD)'), '0');
+        setInputValue(getInputByLabel(document.body, 'Cargo tardío (USD)'), '0');
+      });
+      const save = Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Guardar versión');
+      expect(save?.disabled).toBe(false);
+      updateRentalTermsMock.mockResolvedValue(buildListing());
+      await act(async () => { save?.click(); await flushPromises(); });
+      expect(updateRentalTermsMock).toHaveBeenCalledWith('listing-1', expect.objectContaining({
+        mrtuDailyRateUsdCents: 2147483647, mrtuWeeklyRateUsdCents: 1,
+        mrtuSecurityDepositUsdCents: 0, mrtuLateFeeUsdCents: 0,
+      }));
+    } finally { await cleanup(); container.remove(); }
   });
 
   it('keeps a rental disabled until approved server-side terms exist', async () => {

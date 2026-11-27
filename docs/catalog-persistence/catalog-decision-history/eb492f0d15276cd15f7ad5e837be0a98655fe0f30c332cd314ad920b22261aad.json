@@ -1,0 +1,21 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "2817f4536be296b99f44",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "artist-similarity-2026-11-21",
+  "justification": "Preserve all 266 reviewed migration objects in their exact order, paths and introduction commits, and append only 2026-11-21_artist_similarity (COMMUNITY-ARTIST-SIMILARITY-001: three additive similarity tables and two partial indexes), introduced by 89d467302501d47ce53c1551b031c46cb7bb1162. The complete parent review graph remains in previousDecision. This author review does not authorize deployment or feature activation and is not independent approval.",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 267
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:0002218d6522d63ad815bee808b1d4dac1e41a652108ab940c104ad6a4edb17c"
+  }
+}

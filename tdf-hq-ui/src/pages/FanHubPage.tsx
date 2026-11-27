@@ -5,6 +5,7 @@ import { buildArtistPublicPath } from '../utils/artistIdentity';
 import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/artistAudience';
 import MarkdownText from '../components/MarkdownText';
 import CommunityDiscovery from '../features/discovery/CommunityDiscovery';
+import { GenreSuggestionDialog, PendingGenreSuggestions } from '../components/taxonomyFilters/GenreSuggestionDialog';
 import RecordThumbnail from '../features/records/RecordThumbnail';
 import { primaryRecordsResource } from '../features/records/resolveRecordThumbnail';
 import { buildArtistFollowAuthPath, safeArtistId } from '../utils/artistFollowIntent';
@@ -75,6 +76,7 @@ import { useReleaseFeed, type ReleaseFeedArtist } from '../features/releases/use
 import { ReleaseFeed } from '../features/releases/ReleaseFeed';
 import { FanProfileEditor } from '../features/fans/FanProfileEditor';
 import { FollowedArtists } from '../features/fans/FollowedArtists';
+import { RecommendedArtists } from '../features/fans/RecommendedArtists';
 import { ProfileSectionCard } from '../features/fans/ProfileSectionCard';
 import { useFanProfile } from '../features/fans/useFanProfile';
 import { useOwnedProfileDraft } from '../features/fans/useOwnedProfileDraft';
@@ -158,6 +160,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     queryFn: () => Records.getFeed('es'),
     staleTime: 5 * 60 * 1000,
   });
+
+  const [genreSuggestionOpen, setGenreSuggestionOpen] = useState(false);
   const genresCatalogQuery = useQuery({
     queryKey: ['catalog', 'public', 'genres', 'es'],
     queryFn: () => Catalogs.listPublicItems('genres', { locale: 'es', page: 1, pageSize: 500 }),
@@ -1876,6 +1880,23 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           )}
                           fullWidth
                         />
+                        {/* TAX-GENRE-SUGGESTION-001: a missing genre can be suggested; pending ones stay visible here. */}
+                        <Stack spacing={1} sx={{ minWidth: { md: 200 } }}>
+                          <Button size="small" variant="outlined" onClick={() => setGenreSuggestionOpen(true)}>
+                            {t('taxonomyFilters.suggest.open')}
+                          </Button>
+                          <PendingGenreSuggestions enabled={Boolean(artistDraft)} />
+                        </Stack>
+                        <GenreSuggestionDialog
+                          open={genreSuggestionOpen}
+                          onClose={() => setGenreSuggestionOpen(false)}
+                          onGenreReady={(genreId) => {
+                            void genresCatalogQuery.refetch();
+                            setArtistDraft((prev) => (prev.apuGenreIds.includes(genreId)
+                              ? prev
+                              : { ...prev, apuGenreIds: [...prev.apuGenreIds, genreId] }));
+                          }}
+                        />
                         <TextField
                           label="Highlights"
                           value={artistDraft.apuHighlights ?? ''}
@@ -2004,17 +2025,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </Card>
         )}
 
-        {!isHomeManagerView && !showCatalogFallback && !hasFollows && suggestedArtists.length > 0 && (
-          <Card sx={{ p: 2, mb: 2 }}>
-            <Typography variant="h6" gutterBottom>Recomendados para ti</Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap">
-              {suggestedArtists.map((artist) => (
-                <ArtistProfileLink key={artist.apArtistId} partyId={artist.apArtistId} slug={artist.apSlug}>
-                  <Chip label={artist.apDisplayName} variant="outlined" />
-                </ArtistProfileLink>
-              ))}
-            </Stack>
-          </Card>
+        {!isHomeManagerView && !showCatalogFallback && (
+          <RecommendedArtists
+            viewerId={viewerId}
+            personalized={Boolean(isFan && hasAuthToken && !sessionLoading && followsQuery.isSuccess && hasFollows)}
+            artists={artists}
+            follows={follows}
+            starterArtists={hasFollows ? [] : suggestedArtists}
+          />
         )}
 
         {!isHomeManagerView && showCatalogFilters && (

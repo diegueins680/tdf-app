@@ -20,6 +20,7 @@ module TDF.Commerce.ProviderCapabilities
   , routePayments
   , requireCheckoutCompletion
   , safeToFallback
+  , hostedSessionCanRetry
   , paymentMethodText
   , paymentMethodFromText
   , paymentCapabilityText
@@ -199,6 +200,12 @@ safeToFallback outcome = case outcome of
   ProviderConfirmedNoCharge -> True
   ProviderAmbiguous -> False
   ProviderSucceeded -> False
+
+-- A prepared operation can still be claimed. Its current lack of provider
+-- contact only authorizes another attempt once the operation is terminal.
+hostedSessionCanRetry :: Text -> ProviderOutcomeCertainty -> Bool
+hostedSessionCanRetry state certainty =
+  state `elem` ["failed", "confirmed_no_charge"] && safeToFallback certainty
 
 paymentMethodText :: PaymentMethod -> Text
 paymentMethodText method = case method of

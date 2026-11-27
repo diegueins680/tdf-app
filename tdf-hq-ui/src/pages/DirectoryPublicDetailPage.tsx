@@ -10,6 +10,7 @@ import {
   Divider,
   FormControl,
   InputLabel,
+  Link,
   MenuItem,
   Paper,
   Rating,
@@ -31,6 +32,7 @@ import { Link as RouterLink, Navigate, useLocation, useParams } from 'react-rout
 
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
 import { describeTerms } from '../features/marketplace/offers';
+import { SocialEventsAPI } from '../api/socialEvents';
 import { EventTickets } from '../api/eventTickets';
 import { findExternalTicketLink, localizeTicketUnavailableReason } from '../utils/externalTicketing';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -43,13 +45,15 @@ import {
 } from '../utils/directoryContactRouting';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventRsvpFeed from '../components/events/EventRsvpFeed';
+import { jamRegistrationPath, mentionsJamCircuit } from '../utils/jamCircuit';
 import { canonicalEventUrl } from '../utils/eventSharing';
-import { resolveDirectoryPreviewImage } from '../utils/directoryPreviewImage';
+import { resolveDirectoryPreviewImage } from '../services/directoryPreviewImage';
 import ExpandablePreviewImage from '../components/directory/ExpandablePreviewImage';
 import appI18n from '../i18n';
 import { useAnalytics } from '../analytics/useAnalytics';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
+import { BOTTOM_DOCK_OFFSET } from '../utils/bottomDock';
 
 type DetailKind = Exclude<DirectoryEntityType, never>;
 
@@ -71,6 +75,22 @@ const formatEventDate = (value: unknown, locale: string, timezone?: string): str
   }
 };
 const PUBLIC_EVENT_ID = /^[1-9]\d{0,17}$/;
+// Lowest price among tiers that still have stock, as "desde $X" for the buy block.
+const lowestTicketPrice = (tiers: readonly unknown[] | undefined, locale: string): string | undefined => {
+  let best: { minor: number; currency: string } | undefined;
+  for (const tier of rows(tiers)) {
+    const minor = number(tier['unitPriceMinor']);
+    const currency = text(tier['currency']);
+    if (minor === undefined || !currency || (number(tier['remaining']) ?? 1) <= 0) continue;
+    if (!best || (currency === best.currency && minor < best.minor)) best = { minor, currency };
+  }
+  if (!best) return undefined;
+  try {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: best.currency }).format(best.minor / 100);
+  } catch {
+    return undefined;
+  }
+};
 export default function DirectoryPublicDetailPage({ kind, authenticationFallback }: { kind: DetailKind; authenticationFallback?: string }) {
   const params = useParams();
   const location = useLocation();
@@ -90,6 +110,15 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
     enabled: Boolean(identifier),
     ...(authenticationFallback ? { retry: false } : {}),
   });
+  const accountScope = session ? `account:${session.partyId ?? session.username}` : 'anonymous';
+  const adminAccess = useQuery({
+    queryKey: ['social-event-admin-access', identifier, accountScope],
+    queryFn: () => SocialEventsAPI.getEventAdminAccess(identifier),
+    enabled: kind === 'event' && Boolean(session) && PUBLIC_EVENT_ID.test(identifier),
+    retry: false,
+  });
+  const canManageEvent = kind === 'event' && session && adminAccess.isSuccess
+    && (adminAccess.data.eaaAccess === 'owner' || adminAccess.data.eaaAccess === 'admin');
   // Whether the TDF checkout actually sells this event. Imported events
   // (Eventbrite and similar) have no storefront, so the ticket card must
   // point at the external vendor instead of an empty order form.
@@ -176,6 +205,20 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
   };
   const whatsapp = `https://wa.me/?text=${encodeURIComponent(`${title} · ${canonical}`)}`;
 
+  // On phones the buy button stays reachable: once the block under the title
+  // scrolls away, a bar pinned to the bottom repeats it. Never both at once.
+  const [buyBlock, setBuyBlock] = useState<HTMLElement | null>(null);
+  const [buyBlockOffscreen, setBuyBlockOffscreen] = useState(false);
+  useEffect(() => {
+    if (!buyBlock || typeof IntersectionObserver === 'undefined') {
+      setBuyBlockOffscreen(false);
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => setBuyBlockOffscreen(entry ? !entry.isIntersecting : false));
+    observer.observe(buyBlock);
+    return () => observer.disconnect();
+  }, [buyBlock]);
+
   if (detail.isLoading) return <Stack minHeight="55vh" alignItems="center" justifyContent="center"><CircularProgress aria-label="Cargando perfil del directorio" /></Stack>;
   if (detail.isError) {
     const status = detail.error instanceof ApiError ? detail.error.status : undefined;
@@ -244,6 +287,10 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
       })
     : [];
   const invitationAction = `/mis-clasificados?invite=${encodeURIComponent(targetId)}`;
+  const ticketsPath = `/eventos/${encodeURIComponent(identifier)}/entradas`;
+  const ticketPrice = checkoutOpen ? lowestTicketPrice(storefront.data?.tiers, displayLocale) : undefined;
+  const ticketPriceLabel = ticketPrice ? (english ? `From ${ticketPrice}` : `Desde ${ticketPrice}`) : undefined;
+  const stickyBuyBar = kind === 'event' && checkoutOpen && !eventCancelled && buyBlockOffscreen;
   const shouldResumeContact = kind === 'profile'
     && Boolean(session)
     && shouldResumeDirectoryContact(location.search, targetId);
@@ -252,10 +299,13 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
     : buildLoginRedirectPath(location.pathname);
 
   return (
-    <Box sx={{ py: { xs: 4, md: 7 } }}>
+    <Box sx={{ py: { xs: 4, md: 7 }, ...(stickyBuyBar ? { pb: { xs: 14, md: 7 } } : {}) }}>
       <Container maxWidth="lg">
         <Stack spacing={3}>
-          <Button component={RouterLink} to="/buscar" startIcon={<ArrowBackIcon />} sx={{ alignSelf: 'flex-start' }}>Volver a buscar</Button>
+          {/* Events are mostly opened from a shared link, so "back" leads to more events, not to a search the visitor never made. */}
+          <Button component={RouterLink} to={kind === 'event' ? '/social/eventos' : '/buscar'} startIcon={<ArrowBackIcon />} sx={{ alignSelf: 'flex-start' }}>
+            {kind === 'event' ? (english ? 'More events' : 'Más eventos') : 'Volver a buscar'}
+          </Button>
           <Paper variant="outlined" sx={{ p: { xs: 3, md: 5 }, borderRadius: 4 }}>
             <Stack spacing={3}>
               <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={3}>
@@ -274,7 +324,8 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                     eager
                     sx={{
                       width: { xs: '100%', sm: 220 },
-                      height: { xs: 300, sm: 220 },
+                      // A shorter poster on phones keeps an event's buy button in the first screen.
+                      height: { xs: kind === 'event' ? 200 : 300, sm: 220 },
                       aspectRatio: 'auto',
                       ...(kind === 'event' && { objectFit: 'contain' }),
                       borderRadius: 3,
@@ -290,6 +341,11 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                       {eventCancelled && <Chip color="error" label={english ? 'Cancelled' : 'Cancelado'} />}
                     </Stack>
                     <Typography component="h1" variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '3.7rem' } }}>{title}</Typography>
+                    {canManageEvent && (
+                      <Button component={RouterLink} to={`/social/eventos/${identifier}`} variant="outlined" sx={{ mt: 1 }}>
+                        {english ? 'Manage event' : 'Gestionar evento'}
+                      </Button>
+                    )}
                     {eventDate && <Typography variant="h6" color="text.secondary" mt={1}>{eventDate}</Typography>}
                     {author && <Typography variant="h6" color="text.secondary" mt={1}>Publicado por {text(author['name'])}</Typography>}
                     {sourceProfile && text(sourceProfile['canonicalUrl']) && (
@@ -311,9 +367,58 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                 </Stack>}
               </Stack>
 
-              {publicLocation && <Typography>{publicLocation}</Typography>}
+              {kind === 'event' && (checkoutOpen ? (
+                <Paper ref={setBuyBlock} sx={{ p: { xs: 2, md: 3 }, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
+                    <Box>
+                      <Typography variant="h5" component="h2" fontWeight={800}>{english ? 'Tickets' : 'Entradas'}</Typography>
+                      {ticketPriceLabel && <Typography color="text.secondary">{ticketPriceLabel}</Typography>}
+                    </Box>
+                    <Button component={RouterLink} to={ticketsPath} variant="contained" size="large" sx={{ minHeight: 48, px: 4 }}>
+                      Ver entradas
+                    </Button>
+                  </Stack>
+                </Paper>
+              ) : externalTickets ? (
+                <Paper sx={{ p: { xs: 2, md: 3 }, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
+                  <Typography variant="h5" component="h2" fontWeight={800}>Entradas</Typography>
+                  <Typography color="text.secondary" mt={1}>
+                    {`Las entradas de este evento se venden en ${externalTickets.vendor ?? 'la página del organizador'}.`}
+                  </Typography>
+                  <Button
+                    href={externalTickets.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="contained"
+                    endIcon={<OpenInNewIcon />}
+                    sx={{ mt: 2 }}
+                  >
+                    {`Comprar entradas en ${externalTickets.vendor ?? 'la venta oficial'}`}
+                  </Button>
+                </Paper>
+              ) : storefront.data ? (
+                <Paper sx={{ p: { xs: 2, md: 3 }, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
+                  <Typography variant="h5" component="h2" fontWeight={800}>Entradas</Typography>
+                  <Typography color="text.secondary" mt={1}>{localizeTicketUnavailableReason(storefront.data.unavailableReason, english)}</Typography>
+                </Paper>
+              ) : null)}
+
+              {kind === 'event' && publicLocation && (
+                <Typography color="text.secondary">{publicLocation}</Typography>
+              )}
+              {locationValue && kind !== 'event' && (
+                <Alert severity="info">
+                  {text(locationValue['city']) ?? 'Ubicación amplia'}{text(locationValue['countryCode']) ? `, ${text(locationValue['countryCode'])}` : ''}. La ubicación pública es aproximada; no incluye direcciones residenciales.
+                </Alert>
+              )}
               <Divider />
               <MarkdownText sx={{ fontSize: '1.08rem', lineHeight: 1.75 }}>{detailDescription}</MarkdownText>
+              {kind === 'event' && mentionsJamCircuit(detailDescription) && (
+                <Button component={RouterLink} variant="outlined" sx={{ alignSelf: 'flex-start' }}
+                  to={session ? jamRegistrationPath : buildLoginRedirectPath(jamRegistrationPath)}>
+                  {english ? 'Register a jam' : 'Registrar una jam'}
+                </Button>
+              )}
 
               {kind === 'event' && (
                 <Stack spacing={2}>
@@ -335,47 +440,10 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                       origin="public_event_detail"
                     />
                   </Paper>
-                  <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
-                    <Typography variant="h5" fontWeight={800}>Recuerdos y comunidad</Typography>
-                    <Typography color="text.secondary" mt={1}>Encuentra los momentos del evento y comparte tu experiencia. Inicia sesión o crea una cuenta para participar.</Typography>
-                    <Button component={RouterLink} to={composePath} variant="contained" sx={{ mt: 2 }}>Compartir mis momentos</Button>
-                  </Paper>
-                  {checkoutOpen ? (
-                    <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
-                      <Typography variant="h5" fontWeight={800}>Entradas del evento</Typography>
-                      <Typography color="text.secondary" mt={1}>Consulta disponibilidad y paga como invitado con un checkout verificado por el servidor.</Typography>
-                      <Button
-                        component={RouterLink}
-                        to={`/eventos/${encodeURIComponent(identifier)}/entradas`}
-                        variant="contained"
-                        sx={{ mt: 2 }}
-                      >
-                        Ver entradas
-                      </Button>
-                    </Paper>
-                  ) : externalTickets ? (
-                    <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
-                      <Typography variant="h5" fontWeight={800}>Entradas del evento</Typography>
-                      <Typography color="text.secondary" mt={1}>
-                        {`Las entradas de este evento se venden en ${externalTickets.vendor ?? 'la página del organizador'}.`}
-                      </Typography>
-                      <Button
-                        href={externalTickets.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        variant="contained"
-                        endIcon={<OpenInNewIcon />}
-                        sx={{ mt: 2 }}
-                      >
-                        {`Comprar entradas en ${externalTickets.vendor ?? 'la venta oficial'}`}
-                      </Button>
-                    </Paper>
-                  ) : storefront.data ? (
-                    <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
-                      <Typography variant="h5" fontWeight={800}>Entradas del evento</Typography>
-                      <Typography color="text.secondary" mt={1}>{localizeTicketUnavailableReason(storefront.data.unavailableReason, english)}</Typography>
-                    </Paper>
-                  ) : null}
+                  <Typography color="text.secondary">
+                    {english ? 'Were you there? ' : '¿Estuviste ahí? '}
+                    <Link component={RouterLink} to={composePath}>Compartir mis momentos</Link>
+                  </Typography>
                 </Stack>
               )}
 
@@ -422,7 +490,7 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                     </Stack>
                   </Stack>
                 </Alert>
-              ) : (
+              ) : kind === 'event' ? null : (
                 <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
                   <Typography variant="h5" fontWeight={800}>{kind === 'classified' ? (intent === 'offering' ? '¿Te interesa lo que ofrece?' : '¿Puedes cubrir lo que busca? Envía tu oferta') : '¿Quieres contactar este perfil?'}</Typography>
                   <Typography color="text.secondary" mt={1}>{kind === 'classified' && !offersClosed ? 'Propón tu precio y condiciones; el autor compara las ofertas y elige. TDF mantiene tu correo y teléfono ocultos hasta que decidas compartirlos.' : 'TDF mantiene tu correo y teléfono ocultos hasta que decidas compartirlos.'}</Typography>
@@ -450,6 +518,38 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
           </Paper>
         </Stack>
       </Container>
+      {stickyBuyBar && (
+        <Box
+          role="region"
+          aria-label={english ? 'Buy tickets' : 'Comprar entradas'}
+          data-testid="event-sticky-buy"
+          sx={{
+            display: { xs: 'flex', md: 'none' },
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            bottom: BOTTOM_DOCK_OFFSET,
+            zIndex: (theme) => theme.zIndex.appBar,
+            alignItems: 'center',
+            gap: 2,
+            px: 2,
+            pt: 1.5,
+            pb: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+            bgcolor: 'background.paper',
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            boxShadow: '0 -8px 28px rgba(0,0,0,0.22)',
+          }}
+        >
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography variant="subtitle2" noWrap fontWeight={800}>{title}</Typography>
+            {ticketPriceLabel && <Typography variant="body2" color="text.secondary" noWrap>{ticketPriceLabel}</Typography>}
+          </Box>
+          <Button component={RouterLink} to={ticketsPath} variant="contained" sx={{ minHeight: 48, px: 3, flexShrink: 0 }}>
+            Ver entradas
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }

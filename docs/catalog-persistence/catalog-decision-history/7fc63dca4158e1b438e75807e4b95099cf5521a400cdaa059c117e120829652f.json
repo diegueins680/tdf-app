@@ -1,0 +1,22 @@
+{
+  "id": "4beaac5c476079656a0a",
+  "classification": "security-system-registry",
+  "disposition": "canonical-contract",
+  "specializedModel": "notification_destination_registry",
+  "priority": "P1-integrity",
+  "risk": "Divergence from persisted interaction authority can change privacy, counts or delivery.",
+  "justification": "Pinned Mobile retains the reviewed notification destination allowlist and adds chat_thread with a positive-safe-integer threadId and /chat fallback. These client routes grant no thread access; recipient and thread membership remain backend authorities. Arbitrary URL navigation remains excluded.",
+  "reviewed": true,
+  "evidence": {
+    "file": "tdf-mobile/src/navigation/notificationTarget.ts",
+    "line": 15
+  },
+  "reviewBatch": "booking-mobile-pin-consolidation-2026-10-15",
+  "reviewMethod": "successor-of-reviewed-decision",
+  "previousDecision": {
+    "$historyRef": "sha256:5bdb975af8c948ecfafc86e9662dda653b8e6075160fbf2034054c63af57c20c"
+  },
+  "mergedSourceDecision": {
+    "$historyRef": "sha256:427f029d2c233e7c95847766d109bd3ef703f270ed5b0be24b3887cff77ee98c"
+  }
+}

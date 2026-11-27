@@ -2,7 +2,6 @@ import { Component, useEffect, useMemo, useRef, useState, useCallback } from 're
 import {
   Badge,
   Box,
-  Button,
   Collapse,
   IconButton,
   List,
@@ -32,14 +31,18 @@ import { useSession } from '../session/SessionContext';
 import { useChatUnreadCount } from '../hooks/useChatUnreadCount';
 import {
   canAccessPath,
-  pathRequiresModule,
 } from '../utils/accessControl';
 import { COURSE_REGISTRATIONS_NAV_LABEL } from '../utils/navigationLabels';
 import { featureGroups, standaloneMenuFeatures } from '../utils/featureRegistry';
+import { defaultMenuGroups } from './sidebarMenuRules';
 
 export interface NavItem {
   label: string;
   path: string;
+  /** Registered with globalMenu:false: reachable through the menu search, not listed by default. */
+  searchOnly?: boolean;
+  /** Set on the one entry that stands for a family of pages: every member's path. */
+  familyPaths?: string[];
 }
 
 export interface NavGroup {
@@ -48,7 +51,7 @@ export interface NavGroup {
   icon?: ReactNode;
 }
 
-type NavGroupView = NavGroup & { restricted?: boolean; requiredModule?: string | null };
+type NavGroupView = NavGroup;
 type NavShortcutItem = NavItem & { group: string };
 type PositivePixelDimension = number;
 type PositiveSafeInteger = number;
@@ -133,7 +136,6 @@ assertPositiveUnitCount(
 const GROUP_HEADER_ICON_SX = {
   fontSize: SIDEBAR_NAV_ICON_LAYOUT.groupHeaderIconSizePx,
 } as const;
-const REQUEST_ACCESS_LABEL = 'Solicitar acceso';
 
 export const NAV_GROUPS: NavGroup[] = [
   {
@@ -262,13 +264,15 @@ export const NAV_GROUPS: NavGroup[] = [
 // The registry supplies missing destinations so adding a feature cannot leave
 // it reachable only by a pasted URL. Keep curated labels/order and one link per
 // path. Access, module and rollout checks are applied below for each viewer.
+// Features registered with globalMenu:false stay findable through the menu
+// search but are not listed by default.
 const menuPaths = new Set(NAV_GROUPS.flatMap((group) => group.items.map((item) => item.path)));
 for (const feature of standaloneMenuFeatures) {
   if (!feature.webRoute || menuPaths.has(feature.webRoute)) continue;
   const title = featureGroups.find((group) => group.id === feature.navigationGroup)?.labelEs;
   const group = NAV_GROUPS.find((candidate) => candidate.title === title);
   if (!group) throw new Error(`Feature ${feature.id} has no sidebar group`);
-  group.items.push({ label: feature.label.es, path: feature.webRoute });
+  group.items.push({ label: feature.label.es, path: feature.webRoute, ...(feature.globalMenu ? {} : { searchOnly: true }) });
   menuPaths.add(feature.webRoute);
 }
 
@@ -627,7 +631,6 @@ function NavGroupHeader(props: NavGroupHeaderProps) {
 interface NavGroupSectionProps {
   activePath: string;
   chatUnreadCount: number;
-  getAccessHref: (group: NavGroupView) => string;
   group: NavGroupView;
   highlightedPath: string | null;
   isExpanded: boolean;
@@ -640,7 +643,6 @@ function NavGroupSection(props: NavGroupSectionProps) {
   const {
     activePath,
     chatUnreadCount,
-    getAccessHref,
     group,
     highlightedPath,
     isExpanded,
@@ -667,11 +669,6 @@ function NavGroupSection(props: NavGroupSectionProps) {
               />
             </Box>
           ))}
-          {group.items.length === 0 && group.restricted ? (
-            <Box component="li" sx={{ listStyle: 'none' }}>
-              <RestrictedGroupNotice href={getAccessHref(group)} />
-            </Box>
-          ) : null}
         </List>
       </Collapse>
     </Box>
@@ -690,7 +687,8 @@ interface NavItemLinkProps {
 
 function NavItemLink(props: NavItemLinkProps) {
   const { activePath, groupTitle, highlighted, item, searchQuery, unreadCount, onVisit } = props;
-  const isNavItemActive = isRouteActive(activePath, item.path);
+  const isNavItemActive = isRouteActive(activePath, item.path)
+    || (item.familyPaths?.some((path) => isRouteActive(activePath, path)) ?? false);
   const selected = highlighted || (!searchQuery && isNavItemActive);
 
   return (
@@ -729,25 +727,6 @@ function NavItemLink(props: NavItemLinkProps) {
   );
 }
 
-interface RestrictedGroupNoticeProps {
-  href: string;
-}
-
-function RestrictedGroupNotice(props: RestrictedGroupNoticeProps) {
-  const { href } = props;
-
-  return (
-    <Stack spacing={1} sx={{ px: 2, py: 1.5 }}>
-      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-        No tienes acceso a esta sección.
-      </Typography>
-      <Button size="small" variant="outlined" disabled={!href} sx={{ alignSelf: 'flex-start' }} href={href}>
-        {REQUEST_ACCESS_LABEL}
-      </Button>
-    </Stack>
-  );
-}
-
 export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const location = useLocation();
   const { session } = useSession();
@@ -762,47 +741,27 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   );
   const { unreadCount: chatUnreadCount } = useChatUnreadCount({ enabled: open });
 
-  const buildAccessMailto = useCallback(
-    (group: NavGroupView) => {
-      const module = group.requiredModule ?? 'acceso';
-      const subject = encodeURIComponent(`Acceso ${group.title} (${module})`);
-      const bodyLines = [
-        'Hola equipo, necesito acceso a esta sección.',
-        `Sección: ${group.title}`,
-        `Módulo: ${module}`,
-        session ? `Usuario: ${session.displayName} (${session.username})` : null,
-      ].filter(Boolean);
-      const body = encodeURIComponent(bodyLines.join('\n'));
-      return `mailto:soporte@tdf.com?subject=${subject}&body=${body}`;
-    },
-    [session],
-  );
-
+  // Groups the viewer cannot use are left out entirely; a locked heading only
+  // adds a choice that leads nowhere.
   const allowedNavGroups = useMemo((): NavGroupView[] => {
-    return NAV_GROUPS.map((group) => {
-      const hiddenItems = group.items.filter((item) => !canUsePath(item.path));
-      const filteredItems = group.items.filter((item) => canUsePath(item.path));
-      const requiredModule = hiddenItems[0] ? pathRequiresModule(hiddenItems[0].path) : null;
-      const restricted = filteredItems.length === 0 && hiddenItems.length > 0;
-      return { ...group, items: filteredItems, restricted, requiredModule };
-    }).filter((group) => group.items.length > 0 || group.restricted);
+    return NAV_GROUPS
+      .map((group) => ({ ...group, items: group.items.filter((item) => canUsePath(item.path)) }))
+      .filter((group) => group.items.length > 0);
   }, [canUsePath]);
 
   const filteredNavGroups = useMemo((): NavGroupView[] => {
     const normalizedSearchQuery = filter.trim().toLowerCase();
-    if (!normalizedSearchQuery) return allowedNavGroups;
+    // Without a search the menu follows the per-viewer rules (one entry per
+    // page family, internal studio pages for the studio team). A search looks
+    // through every destination the viewer may open, under its own name.
+    if (!normalizedSearchQuery) return defaultMenuGroups(allowedNavGroups, session?.roles, location.pathname);
+    const matches = (item: NavItem) =>
+      item.label.toLowerCase().includes(normalizedSearchQuery) ||
+      item.path.toLowerCase().includes(normalizedSearchQuery);
     return allowedNavGroups
-      .map((group) => ({
-        ...group,
-        items: group.items.filter(
-          (item) =>
-            item.label.toLowerCase().includes(normalizedSearchQuery) ||
-            item.path.toLowerCase().includes(normalizedSearchQuery),
-        ),
-        restricted: group.restricted,
-      }))
-      .filter((group) => group.items.length > 0 || group.restricted);
-  }, [allowedNavGroups, filter]);
+      .map((group) => ({ ...group, items: group.items.filter(matches) }))
+      .filter((group) => group.items.length > 0);
+  }, [allowedNavGroups, filter, location.pathname, session?.roles]);
 
   const flatFilteredItems = useMemo(
     () => filteredNavGroups.flatMap((group) => group.items),
@@ -835,7 +794,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
       const matchesRoute = group.items.some(
         (item) => isRouteActive(location.pathname, item.path),
       );
-      if (hasSingle || matchesRoute || group.restricted) next.add(group.title);
+      if (hasSingle || matchesRoute) next.add(group.title);
     });
     return next;
   };
@@ -987,7 +946,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
           </Box>
         ) : null}
         {filteredNavGroups.map((group) => {
-          const isExpanded = searchQuery.length > 0 || expandedGroups.has(group.title) || Boolean(group.restricted);
+          const isExpanded = searchQuery.length > 0 || expandedGroups.has(group.title);
           return (
             <NavGroupSection
               key={group.title}
@@ -997,7 +956,6 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
               isExpanded={isExpanded}
               searchQuery={searchQuery}
               chatUnreadCount={chatUnreadCount}
-              getAccessHref={buildAccessMailto}
               onToggle={toggleGroup}
               onVisit={handleVisit}
             />

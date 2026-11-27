@@ -158,11 +158,7 @@
       ],
       "knownViolations": [
         "api/authHeader.ts -> session/SessionContext.tsx",
-        "utils/chatkit.ts -> api/client.ts",
-        "utils/directoryPreviewImage.ts -> api/client.ts",
-        "utils/inAppBrowser.ts -> mobile/distribution.ts",
-        "utils/merch.ts -> api/client.ts",
-        "utils/tidalAgent.ts -> api/client.ts"
+        "utils/inAppBrowser.ts -> mobile/distribution.ts"
       ],
       "sizeBudget": {
         "maxLines": 2000,
