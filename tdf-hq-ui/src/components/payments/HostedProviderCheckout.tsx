@@ -1,19 +1,21 @@
 import {
   Alert,
   Button,
-  CircularProgress,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import PaymentMethodChoices, { PaymentMethodButton } from './PaymentMethodChoices';
+import PaymentAlternativesNotice from './PaymentAlternativesNotice';
 
 import { ApiError } from '../../api/client';
 import {
   createProviderPaymentSession,
   getProviderPaymentSession,
   HOSTED_PAYMENT_METHODS,
-  safePlaceToPayRedirect,
+  safeProviderRedirect,
   type HostedPaymentMethodDefinition,
   type HostedPaymentMethodLabel,
   type ProviderPaymentSession,
@@ -42,6 +44,11 @@ export interface HostedCheckoutContext {
 interface HostedProviderCheckoutProps {
   checkout?: HostedCheckoutContext | null;
   offeredMethods: readonly string[];
+  /** Existing local payment buttons, with availability/handlers owned by the caller. */
+  additionalMethods?: ReactNode;
+  alternativeMethods?: readonly string[];
+  availabilityUnknown?: boolean;
+  paymentFailure?: { method?: string | null; needsVerification: boolean } | null;
   disabled?: boolean;
   english?: boolean;
   initialBuyerPhone?: string | null;
@@ -75,6 +82,7 @@ const methodCopy = (
     placetopay_card: ['Card · PlaceToPay', 'Tarjeta · PlaceToPay'],
     placetopay_bank_redirect: ['Online bank payment · PlaceToPay', 'Pago bancario en línea · PlaceToPay'],
     placetopay_deuna_qr: ['DeUna! QR · PlaceToPay', 'QR DeUna! · PlaceToPay'],
+    payphone_card: ['Card · PayPhone', 'Tarjeta · PayPhone'],
     payphone_wallet: ['PayPhone wallet', 'Billetera PayPhone'],
   };
   return copy[label][english ? 0 : 1];
@@ -89,8 +97,8 @@ const isPotentiallyAmbiguous = (error: unknown): boolean =>
 const publicError = (english: boolean, potentiallyAmbiguous: boolean): string => {
   if (potentiallyAmbiguous) {
     return english
-      ? 'The provider result is not yet known. Do not use another payment method. Retry this exact option to recover its durable status.'
-      : 'Todavía no conocemos el resultado del proveedor. No uses otro método. Reintenta esta misma opción para recuperar su estado durable.';
+      ? 'We do not know yet whether the payment went through. Do not use another payment method. Retry this same option to check its status.'
+      : 'Todavía no sabemos si el pago se completó. No uses otro método. Vuelve a intentar con esta misma opción para consultar su estado.';
   }
   return english
     ? 'This payment method could not be started. No charge is shown as successful.'
@@ -107,22 +115,22 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
         severity: 'success',
         message: english
           ? 'The provider payment was verified by the server.'
-          : 'El servidor verificó el pago del proveedor.',
+          : 'Pago confirmado.',
       };
     case 'confirmed_no_charge':
       return {
         severity: 'info',
         message: english
           ? 'The server confirmed that no charge was completed. You may try again or choose another available method.'
-          : 'El servidor confirmó que no se completó un cobro. Puedes reintentar o elegir otro método disponible.',
+          : 'No se realizó ningún cobro. Puedes reintentar o elegir otro método disponible.',
       };
     case 'failed':
       return {
         severity: session.canRetryOrFallback ? 'warning' : 'error',
         message: session.canRetryOrFallback
           ? (english
-            ? 'The payment was declined before a charge was created. You may try again.'
-            : 'El pago fue rechazado antes de crear un cobro. Puedes reintentar.')
+            ? 'The payment was declined before a charge was created. You may choose another available method or try again.'
+            : 'El pago fue rechazado antes de crear un cobro. Puedes elegir otro método disponible o reintentar.')
           : (english
             ? 'The result needs review. Do not use another payment method.'
             : 'El resultado necesita revisión. No uses otro método de pago.'),
@@ -132,25 +140,25 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
         severity: 'warning',
         message: english
           ? 'The result is ambiguous and is being reconciled. Do not retry or use another provider.'
-          : 'El resultado es ambiguo y está en conciliación. No reintentes ni uses otro proveedor.',
+          : 'Todavía no sabemos si el pago se completó y lo estamos revisando. No vuelvas a intentar ni uses otro método.',
       };
     case 'requires_customer_action':
       return {
         severity: 'info',
         message: english
           ? 'Complete the payment on the provider-hosted page. Returning to TDF is not proof of payment.'
-          : 'Completa el pago en la página alojada por el proveedor. Volver a TDF no prueba el pago.',
+          : 'Completa el pago en la página del procesador de pagos. El pago solo cuenta cuando lo confirmemos aquí.',
       };
     default:
       return {
         severity: 'info',
         message: session.provider === 'payphone'
           ? (english
-            ? 'Approve the request in PayPhone. TDF is waiting for verified provider confirmation.'
-            : 'Aprueba la solicitud en PayPhone. TDF espera la confirmación verificada del proveedor.')
+            ? 'Complete or approve the payment in PayPhone. TDF is waiting for verified provider confirmation.'
+            : 'Completa o aprueba el pago en PayPhone. TDF espera la confirmación verificada del proveedor.')
           : (english
             ? 'The payment is processing. TDF is waiting for verified provider confirmation.'
-            : 'El pago está en proceso. TDF espera la confirmación verificada del proveedor.'),
+            : 'El pago está en proceso. Estamos esperando la confirmación.'),
       };
   }
 };
@@ -158,6 +166,10 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
 export default function HostedProviderCheckout({
   checkout,
   offeredMethods,
+  additionalMethods,
+  alternativeMethods = offeredMethods,
+  availabilityUnknown = false,
+  paymentFailure,
   disabled = false,
   english = false,
   initialBuyerPhone,
@@ -188,6 +200,14 @@ export default function HostedProviderCheckout({
   const [error, setError] = useState<string | null>(null);
   const [buyerCountryCode, setBuyerCountryCode] = useState('593');
   const [buyerPhone, setBuyerPhone] = useState(() => digitsOnly(initialBuyerPhone ?? ''));
+  const [payphoneRequested, setPayphoneRequested] = useState(false);
+  const [countryCodeError, setCountryCodeError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const countryInput = useRef<HTMLInputElement | null>(null);
+  const phoneInput = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (payphoneRequested) phoneInput.current?.focus();
+  }, [payphoneRequested]);
   const recoveryScope = checkout?.checkoutId ?? pendingReturnPathPrefix ?? '';
   const recoveryScopeRef = useRef(recoveryScope);
   recoveryScopeRef.current = recoveryScope;
@@ -238,6 +258,8 @@ export default function HostedProviderCheckout({
     setPendingCreation(null);
     setPotentiallyAmbiguous(false);
     setError(null);
+    setCountryCodeError(null);
+    setPhoneError(null);
     setBusy(false);
     const expectedCheckoutId = checkout?.checkoutId;
     const pending = loadProviderPaymentPending(expectedCheckoutId, pendingReturnPathPrefix);
@@ -327,30 +349,53 @@ export default function HostedProviderCheckout({
     return () => onSafetyLockChangeRef.current?.(false);
   }, [safetyLocked]);
 
-  if (methods.length === 0 && !pendingCreation && !selected && !session) return null;
+  if (!additionalMethods && methods.length === 0 && !pendingCreation && !selected && !session && !error && !paymentFailure) return null;
 
-  const navigate = navigateToProvider ?? ((url: string) => window.location.assign(url));
+  const navigate = (provider: ProviderPaymentSession['provider'], url: string) => {
+    if (navigateToProvider) {
+      navigateToProvider(url);
+      return;
+    }
+    if (provider !== 'payphone') {
+      window.location.assign(url);
+      return;
+    }
+    // PayPhone checks the referring origin. Keep the ticket document's private
+    // path and query under its existing referrer policy for all other requests.
+    const link = document.createElement('a');
+    link.href = url;
+    link.referrerPolicy = 'origin';
+    document.body.append(link);
+    link.click();
+    link.remove();
+  };
 
   const startPayment = async (method: HostedPaymentMethodDefinition) => {
     if (busy) return;
     const requestScope = recoveryScopeRef.current;
     const original = pendingCreation?.provider === method.provider
       && pendingCreation.paymentMethod === method.paymentMethod ? pendingCreation : null;
-    if (!original && (disabled || !methods.some((candidate) => candidate.label === method.label))) return;
+    if (!original && (disabled || availabilityUnknown || !methods.some((candidate) => candidate.label === method.label))) return;
     if (safetyLocked && selected?.label !== method.label) {
       setError(publicError(english, true));
       return;
     }
     const phone = original?.buyerPhone ?? digitsOnly(buyerPhone);
     const countryCode = original?.buyerCountryCode ?? digitsOnly(buyerCountryCode);
-    if (method.provider === 'payphone'
-        && (phone.length < 6 || phone.length > 15
-          || countryCode.length < 1 || countryCode.length > 3)) {
-      setError(english
-        ? 'Enter a valid country calling code and phone number for PayPhone.'
-        : 'Ingresa un código de país y número de teléfono válidos para PayPhone.');
-      return;
+    if (method.paymentMethod === 'payphone_wallet') {
+      const invalidCountry = countryCode.length < 1 || countryCode.length > 3;
+      const invalidPhone = phone.length < 6 || phone.length > 15;
+      setCountryCodeError(invalidCountry
+        ? (english ? 'Enter a country calling code of 1 to 3 digits.' : 'Ingresa un código de país de 1 a 3 dígitos.') : null);
+      setPhoneError(invalidPhone
+        ? (english ? 'Enter a phone number of 6 to 15 digits, without the country code.' : 'Ingresa un teléfono de 6 a 15 dígitos, sin el código de país.') : null);
+      if (invalidCountry || invalidPhone) {
+        (invalidCountry ? countryInput : phoneInput).current?.focus();
+        return;
+      }
     }
+    setCountryCodeError(null);
+    setPhoneError(null);
     setBusy(true);
     setPotentiallyAmbiguous(true);
     setSelected(method);
@@ -388,7 +433,7 @@ export default function HostedProviderCheckout({
         paymentMethod: method.paymentMethod,
         lookupToken: context.lookupToken,
         returnPath: context.returnPath,
-        ...(method.provider === 'payphone' ? {
+        ...(method.paymentMethod === 'payphone_wallet' ? {
           buyerPhone: phone,
           buyerCountryCode: countryCode,
         } : {}),
@@ -406,7 +451,7 @@ export default function HostedProviderCheckout({
         {
           provider: method.provider,
           paymentMethod: method.paymentMethod,
-          ...(method.provider === 'payphone' ? {
+          ...(method.paymentMethod === 'payphone_wallet' ? {
             buyerPhone: phone,
             buyerCountryCode: countryCode,
           } : {}),
@@ -431,22 +476,22 @@ export default function HostedProviderCheckout({
         clearProviderPaymentPending(context.checkoutId);
         setPendingCreation(null);
       }
-      if (next.provider === 'placetopay' && next.state === 'requires_customer_action') {
+      if (next.state === 'requires_customer_action') {
         if (!resumeSaved) {
           setPotentiallyAmbiguous(true);
           setError(english
             ? 'Secure return recovery could not be stored. Stay on this page while TDF reconciles the attempt.'
-            : 'No se pudo guardar la recuperación segura. Permanece en esta página mientras TDF concilia el intento.');
+            : 'No pudimos guardar los datos para retomar este pago. Quédate en esta página mientras lo revisamos.');
           return;
         }
-        const redirect = safePlaceToPayRedirect(next.redirectUrl);
+        const redirect = safeProviderRedirect(next.provider, next.redirectUrl);
         if (!redirect) {
           setError(english
             ? 'The provider returned an unsafe redirect. Do not retry with another method; support must reconcile this attempt.'
-            : 'El proveedor devolvió una redirección insegura. No reintentes con otro método; soporte debe conciliar este intento.');
+            : 'El procesador devolvió un enlace que no es seguro. No intentes con otro método; contacta a soporte para revisar este intento.');
           return;
         }
-        navigate(redirect);
+        navigate(next.provider, redirect);
       }
     } catch (startError) {
       if (recoveryScopeRef.current !== requestScope) return;
@@ -457,7 +502,7 @@ export default function HostedProviderCheckout({
       setError(startError instanceof PaymentRecoveryUnavailableError
         ? (english
           ? 'The original payment recovery key is unavailable. Do not pay again; contact support to reconcile this order.'
-          : 'La clave original de recuperación no está disponible. No pagues otra vez; contacta a soporte para conciliar esta orden.')
+          : 'No podemos retomar el pago original desde aquí. No pagues otra vez; contacta a soporte para revisar esta orden.')
         : publicError(english, ambiguous));
       if (!ambiguous && attemptedContext) {
         clearProviderPaymentPending(attemptedContext.checkoutId);
@@ -489,24 +534,62 @@ export default function HostedProviderCheckout({
     setError(null);
   };
 
+  // PayPhone's number fields appear once that wallet is chosen, or when an
+  // earlier PayPhone attempt is being recovered.
+  const payphoneFieldsVisible = payphoneRequested || selected?.paymentMethod === 'payphone_wallet'
+    || pendingCreation?.paymentMethod === 'payphone_wallet';
   const copy = session ? stateCopy(session, english) : null;
-  const existingRedirect = session?.provider === 'placetopay'
-    ? safePlaceToPayRedirect(session.redirectUrl)
-    : null;
+  const existingRedirect = safeProviderRedirect(session?.provider, session?.redirectUrl);
+  const showAlternatives = session?.state !== 'succeeded' && (
+    (Boolean(error) || Boolean(paymentFailure))
+    || session?.state === 'failed' || session?.state === 'confirmed_no_charge'
+  );
 
   return (
     <Stack spacing={1.5} component="section" aria-label={english ? 'Additional secure payment methods' : 'Métodos de pago seguros adicionales'}>
-      <Typography variant="subtitle2" fontWeight={800}>
-        {english ? 'More secure payment methods' : 'Más métodos de pago seguros'}
-      </Typography>
-      {methods.some((method) => method.provider === 'payphone') && (
+      {showAlternatives && (
+        <PaymentAlternativesNotice
+          methods={alternativeMethods}
+          availabilityUnknown={availabilityUnknown}
+          failedMethod={selected?.label ?? paymentFailure?.method}
+          blocked={safetyLocked || Boolean(paymentFailure?.needsVerification)}
+          english={english}
+        />
+      )}
+    <PaymentMethodChoices english={english} methods={<>
+      {additionalMethods}
+      {methods.map((method) => {
+        const isSelected = selected?.label === method.label;
+        const blockedByAttempt = session?.canRetryOrFallback === false;
+        return (
+          <PaymentMethodButton
+            key={method.label}
+            busy={busy && isSelected}
+            disabled={disabled || availabilityUnknown || busy || ((safetyLocked || blockedByAttempt) && !isSelected) || (Boolean(session) && isSelected)}
+            onClick={() => {
+              // The first tap on PayPhone only asks for the wallet number.
+              if (method.paymentMethod === 'payphone_wallet' && !payphoneFieldsVisible) { setPayphoneRequested(true); return; }
+              void startPayment(method);
+            }}
+          >{methodCopy(method.label, english)}</PaymentMethodButton>
+        );
+      })}
+    </>}>
+      {payphoneFieldsVisible && methods.some((method) => method.paymentMethod === 'payphone_wallet') && (
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
           <TextField
             size="small"
             label={english ? 'Country code' : 'Código país'}
             disabled={safetyLocked}
             value={buyerCountryCode}
-            onChange={(event) => setBuyerCountryCode(digitsOnly(event.target.value).slice(0, 3))}
+            inputRef={countryInput}
+            error={Boolean(countryCodeError)}
+            helperText={countryCodeError}
+            autoComplete="tel-country-code"
+            onChange={(event) => {
+              setBuyerCountryCode(digitsOnly(event.target.value).slice(0, 3));
+              setCountryCodeError(null);
+            }}
             inputProps={{ inputMode: 'numeric', maxLength: 3 }}
             sx={{ maxWidth: { sm: 150 } }}
           />
@@ -515,28 +598,18 @@ export default function HostedProviderCheckout({
             label={english ? 'PayPhone number' : 'Número PayPhone'}
             disabled={safetyLocked}
             value={buyerPhone}
-            onChange={(event) => setBuyerPhone(digitsOnly(event.target.value).slice(0, 15))}
+            inputRef={phoneInput}
+            error={Boolean(phoneError)}
+            autoComplete="tel-national"
+            onChange={(event) => {
+              setBuyerPhone(digitsOnly(event.target.value).slice(0, 15));
+              setPhoneError(null);
+            }}
             inputProps={{ inputMode: 'tel', maxLength: 15 }}
-            helperText={english ? 'Digits only, without the country code.' : 'Solo dígitos, sin el código de país.'}
+            helperText={phoneError ?? (english ? 'Digits only, without the country code.' : 'Solo dígitos, sin el código de país.')}
           />
         </Stack>
       )}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-        {methods.map((method) => {
-          const isSelected = selected?.label === method.label;
-          const blockedByAttempt = session?.canRetryOrFallback === false;
-          return (
-            <Button
-              key={method.label}
-              variant={method.provider === 'placetopay' ? 'contained' : 'outlined'}
-              disabled={disabled || busy || ((safetyLocked || blockedByAttempt) && !isSelected) || (Boolean(session) && isSelected)}
-              onClick={() => void startPayment(method)}
-            >
-              {busy && isSelected ? <CircularProgress size={20} color="inherit" /> : methodCopy(method.label, english)}
-            </Button>
-          );
-        })}
-      </Stack>
       {pendingCreation && selected && !session && (
         <Button variant="outlined" disabled={busy} onClick={() => void startPayment(selected)}>
           {english ? 'Recover original payment' : 'Recuperar pago original'}
@@ -545,8 +618,8 @@ export default function HostedProviderCheckout({
       {copy && <Alert severity={copy.severity}>{copy.message}</Alert>}
       {error && <Alert severity="warning">{error}</Alert>}
       {existingRedirect && session?.state === 'requires_customer_action' && (
-        <Button variant="contained" onClick={() => navigate(existingRedirect)} disabled={disabled || busy}>
-          {english ? 'Continue on the secure provider page' : 'Continuar en la página segura del proveedor'}
+        <Button variant="contained" onClick={() => navigate(session.provider, existingRedirect)} disabled={disabled || busy}>
+          {english ? 'Continue on the secure provider page' : 'Continuar con el pago'}
         </Button>
       )}
       {session && activeContext && POLLABLE_STATES.has(session.state) && (
@@ -555,19 +628,20 @@ export default function HostedProviderCheckout({
           disabled={busy}
           onClick={() => void refreshSession(activeContext, session.attemptId)}
         >
-          {english ? 'Refresh verified status' : 'Actualizar estado verificado'}
+          {english ? 'Refresh verified status' : 'Actualizar estado del pago'}
         </Button>
       )}
       {session?.canRetryOrFallback && (session.state === 'failed' || session.state === 'confirmed_no_charge') && (
-        <Button variant="outlined" onClick={resetKnownNoCharge} disabled={disabled || busy}>
+        <Button variant="outlined" onClick={resetKnownNoCharge} disabled={disabled || availabilityUnknown || busy}>
           {english ? 'Choose another payment method' : 'Elegir otro método de pago'}
         </Button>
       )}
       <Typography variant="caption" color="text.secondary">
         {english
           ? 'TDF never collects card numbers or security codes here. Payment success is shown only after server verification.'
-          : 'TDF no recopila aquí números de tarjeta ni códigos de seguridad. Solo mostramos éxito después de la verificación del servidor.'}
+          : 'TDF no pide aquí números de tarjeta ni códigos de seguridad. Un pago aparece como completado solo cuando está confirmado.'}
       </Typography>
+    </PaymentMethodChoices>
     </Stack>
   );
 }

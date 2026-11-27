@@ -9,7 +9,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import LinkIcon from '@mui/icons-material/Link';
 import RouteIcon from '@mui/icons-material/Route';
 import ShareIcon from '@mui/icons-material/Share';
-import { Alert, Avatar, Box, Button, ButtonBase, Card, CardContent, Chip, CircularProgress, Divider, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Avatar, Box, Button, ButtonBase, Card, CardContent, Chip, CircularProgress, Divider, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, MenuItem, Stack, Switch, TextField, Typography } from '@mui/material';
 import { Link as RouterLink, useLocation, useParams } from 'react-router-dom';
 import PageShell, { EmptyState } from '../components/PageShell';
 import { ApiError } from '../api/client';
@@ -17,13 +17,14 @@ import { SocialEventsAPI, type SocialEventMomentCreateDTO, type SocialTicketTier
 import { EventTickets } from '../api/eventTickets';
 import { Catalogs } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
+import { canAccessPath, hasStrictAdminAccess } from '../utils/accessControl';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { formatCurrency } from '../utils/formatters';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventMemoryInvitationControls from '../components/events/EventMemoryInvitations';
 import { EventMemoryInvitations } from '../api/eventMemoryInvitations';
-import { getAuthSessionEpoch } from '../session/authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 import { useOwnedSessionDraft } from '../session/useOwnedSessionDraft';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { formatInEventTimeZone } from '../utils/dateTime';
@@ -32,6 +33,8 @@ import EventPreparationPanel from '../components/events/EventPreparationPanel';
 import EventLineupEditor from '../components/events/EventLineupEditor';
 import EventAdminsCard from '../components/events/EventAdminsCard';
 import EventCourtesyTicketsCard from '../components/events/EventCourtesyTicketsCard';
+import { useSaveTicketTier } from '../components/events/useSaveTicketTier';
+import EventTicketSaleCard from '../components/events/EventTicketSaleCard';
 import { estimateTicketFees, parseOptionalPriceCents } from '../utils/eventTicketPricing';
 
 const formatDate = (value: string | null | undefined, locale: string, timezone: string) => {
@@ -46,6 +49,9 @@ const inferredMediaType = (url: string): 'image' | 'video' => /\.(mp4|mov|webm|m
 
 interface MomentDraft { caption: string; mediaKind: 'media' | 'audio' | 'text'; mediaUrl: string; file: File | null }
 const emptyMomentDraft: MomentDraft = { caption: '', mediaKind: 'media', mediaUrl: '', file: null };
+const emptyTicketDraft = {
+  name: 'General', price: '', quantity: '100', editing: null as SocialTicketTierDTO | null, active: true,
+};
 interface PublicationAttempt { eventId: string; scope: string; draft: MomentDraft; extended: boolean; ready: boolean; isCurrentOwner: () => boolean }
 interface OwnMomentAction { id: string; mode: 'edit' | 'delete'; caption: string; updatedAt: string }
 interface OwnMomentAttempt { eventId: string; action: OwnMomentAction; isCurrentOwner: () => boolean }
@@ -80,9 +86,11 @@ export default function SocialEventDetailPage() {
   const uploadedFile = useRef<{ scope: string; file: File; url: string } | null>(null);
   const [publishingPhase, setPublishingPhase] = useState('');
   useEffect(() => { uploadedFile.current = null; if (fileInputRef.current) fileInputRef.current.value = ''; }, [editorScope]);
-  const [ticketName, setTicketName] = useState('General');
-  const [ticketPrice, setTicketPrice] = useState('');
-  const [ticketQuantity, setTicketQuantity] = useState('100');
+  const { draft: ticketDraft, setDraft: setTicketDraft, ready: ticketFormReady } = useOwnedSessionDraft({
+    ownerId: session?.partyId ?? null, scope: eventId,
+    baseline: emptyTicketDraft, empty: emptyTicketDraft,
+  });
+  const { name: ticketName, price: ticketPrice, quantity: ticketQuantity, editing } = ticketDraft;
   const [shareFeedback, setShareFeedback] = useState<{ severity: 'success' | 'error'; message: string } | null>(null);
   const eventQuery = useQuery({
     queryKey: ['social-event', eventId, accountScope],
@@ -187,8 +195,23 @@ export default function SocialEventDetailPage() {
     onSettled: (_value, _error, attempt) => { if (attempt.isCurrentOwner()) setPublishingPhase(''); },
   });
   const publicationPending = postMutation.variables?.scope === editorScope && postMutation.isPending;
-  const ticketTierMutation = useMutation({
-    mutationFn: () => {
+  const resetTicketForm = () => setTicketDraft({
+    ...emptyTicketDraft, quantity: editing ? emptyTicketDraft.quantity : ticketQuantity,
+  });
+  const editTicketTier = (tier: SocialTicketTierDTO) => {
+    ticketTierMutation.reset();
+    setTicketDraft({
+      name: tier.ticketTierName,
+      price: (tier.ticketTierPriceCents / 100).toFixed(2),
+      quantity: String(tier.ticketTierQuantityTotal),
+      editing: tier,
+      active: tier.ticketTierActive,
+    });
+  };
+  const ticketTierMutation = useSaveTicketTier(
+    ({ tierId }) => {
+      const original = tierId ? tiersQuery.data?.find((tier) => tier.ticketTierId === tierId) : undefined;
+      if (tierId && !original) throw new Error('La categoría ya no está disponible.');
       const priceCents = parseOptionalPriceCents(ticketPrice);
       const quantity = Number(ticketQuantity);
       if (priceCents === null) throw new Error('Ingresa un precio válido.');
@@ -196,23 +219,21 @@ export default function SocialEventDetailPage() {
       if (!Number.isSafeInteger(quantity) || quantity <= 0) throw new Error('Ingresa una cantidad válida.');
       const name = ticketName.trim();
       if (!name) throw new Error('El nombre del ticket es obligatorio.');
-      const payload: SocialTicketTierDTO = {
-        ticketTierCode: name.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '') || 'GENERAL',
+      return {
+        ...original,
+        ticketTierCode: original?.ticketTierCode ?? (name.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '') || 'GENERAL'),
         ticketTierName: name,
         ticketTierPriceCents: priceCents,
-        ticketTierCurrency: event?.eventCurrency ?? preferredCurrency,
+        ticketTierCurrency: original?.ticketTierCurrency ?? event?.eventCurrency ?? preferredCurrency,
         ticketTierQuantityTotal: quantity,
-        ticketTierQuantitySold: 0,
-        ticketTierActive: true,
+        ticketTierQuantitySold: original?.ticketTierQuantitySold ?? 0,
+        ticketTierActive: ticketDraft.active,
       };
-      return SocialEventsAPI.createTicketTier(eventId, payload);
     },
-    onSuccess: () => {
-      setTicketName('General');
-      setTicketPrice('');
-      void queryClient.invalidateQueries({ queryKey: ['social-event-ticket-tiers', eventId] });
+    {
+      onSuccess: (_, target) => { if (target.eventId === eventId) resetTicketForm(); },
     },
-  });
+  );
 
   const event = eventQuery.data;
   const eventEnded = Boolean(event?.eventEnd && Date.parse(event.eventEnd) <= Date.now());
@@ -233,6 +254,14 @@ export default function SocialEventDetailPage() {
   // Organizer or delegated administrator: event editing, poster, ticket tiers
   // and courtesies. Memory campaigns and moderation stay with `isOrganizer`.
   const canManageEvent = isOrganizer || adminAccess === 'admin';
+  // The planning workspace is a separate, access-controlled section: without
+  // access its links only lead to a 403 page.
+  const canPlanLogistics = canAccessPath(`/social/eventos/${eventId ?? ''}/logistica`, session?.roles, session?.modules, session?.featureFlags);
+  // The server admits the organizer, delegated administrators and the logistics
+  // team. Offer the link to those this page can recognise (managers, and staff
+  // with scheduling access, as before), not to every signed-in visitor.
+  const showPlanningLink = canPlanLogistics
+    && (canManageEvent || (session?.modules ?? []).some((module) => module.toLowerCase() === 'scheduling'));
   const canShareTickets = ticketStorefrontPrerequisitesMet
     && storefrontQuery.data?.checkoutAvailable === true;
   const ticketPurchaseUrl = typeof window === 'undefined'
@@ -394,7 +423,7 @@ export default function SocialEventDetailPage() {
             Compartir entradas
           </Button>
         )}
-        {session && <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`} startIcon={<RouteIcon />} variant="contained">Logística</Button>}
+        {session && showPlanningLink && <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`} startIcon={<RouteIcon />} variant="contained">Logística</Button>}
       </Stack>}
     >
       <Stack spacing={2.5}>
@@ -442,7 +471,7 @@ export default function SocialEventDetailPage() {
           </Card>
         )}
 
-        {event && canManageEvent && session?.partyId && <EventPreparationPanel key={editorScope} event={event} ownerId={session.partyId} />}
+        {event && canManageEvent && session?.partyId && <EventPreparationPanel key={editorScope} event={event} ownerId={session.partyId} canPlanLogistics={canPlanLogistics} />}
         {event && canManageEvent && session?.partyId && <EventLineupEditor key={`lineup:${editorScope}`} event={event} ownerId={session.partyId} />}
         {eventEnded && memories}
         {event && <Card variant="outlined">
@@ -474,26 +503,45 @@ export default function SocialEventDetailPage() {
                     return <Stack key={tier.ticketTierId ?? tier.ticketTierCode} direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between" sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                       <Box><Typography fontWeight={700}>{tier.ticketTierName}</Typography><Typography variant="body2" color="text.secondary">{Math.max(0, tier.ticketTierQuantityTotal - tier.ticketTierQuantitySold)} disponibles</Typography></Box>
                       <Box sx={{ textAlign: { sm: 'right' } }}><Typography>{formatCurrency(tier.ticketTierPriceCents / 100, tier.ticketTierCurrency, locale)}</Typography><Typography variant="caption" color="text.secondary">{fee ? `Checkout estimado: ${formatCurrency(fee.checkout / 100, tier.ticketTierCurrency, locale)} (incluye ${formatCurrency(fee.buyer / 100, tier.ticketTierCurrency, locale)} de tarifa)` : 'No se pudo estimar el total. Consulta el checkout.'}</Typography></Box>
+                      {canManageEvent && tier.ticketTierId && <Button
+                        size="small"
+                        aria-label={`Editar ${tier.ticketTierName}`}
+                        disabled={!ticketFormReady || ticketTierMutation.isPending}
+                        onClick={() => editTicketTier(tier)}
+                      >Editar</Button>}
                     </Stack>;
                   })}
                 </Stack>
               ) : <Typography color="text.secondary">Aún no hay tickets para este evento.</Typography>}
               {canManageEvent && <>
                 <Divider />
-                <Typography variant="subtitle1" fontWeight={700}>Crear tipo de ticket</Typography>
-                {ticketTierMutation.error && <Alert severity="error">{ticketTierMutation.error instanceof Error ? ticketTierMutation.error.message : 'No se pudo crear el ticket.'}</Alert>}
+                <Typography variant="subtitle1" fontWeight={700}>{editing ? `Editar ${editing.ticketTierName}` : 'Crear tipo de ticket'}</Typography>
+                {ticketTierMutation.error && <Alert severity="error">{ticketTierMutation.error instanceof Error ? ticketTierMutation.error.message : 'No se pudo guardar el ticket.'}</Alert>}
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-                  <TextField label="Nombre" value={ticketName} onChange={(event) => setTicketName(event.target.value)} sx={{ flex: 1 }} />
-                  <TextField label="Precio" type="number" value={ticketPrice} onChange={(event) => setTicketPrice(event.target.value)} inputProps={{ min: 0, step: '0.01' }} helperText="Precio base, antes de comisiones." />
-                  <TextField label="Cantidad" type="number" value={ticketQuantity} onChange={(event) => setTicketQuantity(event.target.value)} inputProps={{ min: 1, step: 1 }} />
-                  <Button variant="contained" onClick={() => ticketTierMutation.mutate()} disabled={ticketTierMutation.isPending}>{ticketTierMutation.isPending ? <CircularProgress size={20} color="inherit" /> : 'Crear tickets'}</Button>
+                  <TextField label="Nombre" value={ticketName} onChange={(event) => setTicketDraft({ ...ticketDraft, name: event.target.value })} sx={{ flex: 1 }} />
+                  <TextField label="Precio" type="number" value={ticketPrice} onChange={(event) => setTicketDraft({ ...ticketDraft, price: event.target.value })} inputProps={{ min: 0, step: '0.01' }} helperText="Precio base, antes de comisiones." />
+                  <TextField label="Cantidad" type="number" value={ticketQuantity} onChange={(event) => setTicketDraft({ ...ticketDraft, quantity: event.target.value })} inputProps={{ min: 1, step: 1 }} />
+                  <Button
+                    variant="contained"
+                    onClick={() => ticketTierMutation.mutate({ eventId, tierId: editing?.ticketTierId ?? undefined })}
+                    disabled={!ticketFormReady || ticketTierMutation.isPending}
+                  >{ticketTierMutation.isPending ? <CircularProgress size={20} color="inherit" /> : editing ? 'Guardar cambios' : 'Crear tickets'}</Button>
+                  {editing && <Button onClick={() => {
+                    ticketTierMutation.reset();
+                    resetTicketForm();
+                  }} disabled={!ticketFormReady || ticketTierMutation.isPending}>Cancelar edición</Button>}
                 </Stack>
-                <TicketPricePreview price={ticketPrice} currency={event?.eventCurrency ?? preferredCurrency} locale={locale} />
+                {editing && <FormControlLabel label="Categoría activa" control={<Switch
+                  checked={ticketDraft.active}
+                  onChange={(_, active) => setTicketDraft({ ...ticketDraft, active })}
+                />} />}
+                <TicketPricePreview price={ticketPrice} currency={editing?.ticketTierCurrency ?? event?.eventCurrency ?? preferredCurrency} locale={locale} />
               </>}
             </Stack>
           </CardContent>
         </Card>
 
+        {event && (adminAccess !== 'none' || hasStrictAdminAccess(session?.roles, session?.modules)) && <EventTicketSaleCard key={`ticket-sale:${editorScope}`} eventId={eventId} />}
         {event && adminAccess !== 'none' && <EventCourtesyTicketsCard key={`courtesy:${editorScope}`} eventId={eventId} tiers={tiersQuery.data ?? []} tiersLoading={tiersQuery.isLoading} />}
         {event && adminAccess !== 'none' && <EventAdminsCard
           key={`admins:${editorScope}`}

@@ -1,0 +1,37 @@
+{
+  "id": "3e60b15491f1902f743a",
+  "classification": "security-system-registry",
+  "disposition": "consumer-update",
+  "specializedModel": "security_role, party_security_role, role_permission",
+  "priority": "P3-consumer",
+  "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+  "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+  "reviewed": true,
+  "reviewMethod": "deterministic-policy-v3",
+  "reviewBatch": "deterministic-policy-v3",
+  "evidence": {
+    "file": "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+    "line": 27,
+    "kind": "object-registry",
+    "name": "sessionMock",
+    "valueCount": 5,
+    "consumerCount": 134,
+    "exactDuplicateIds": [
+      "a86872972efe04fbd789",
+      "032010c2e0452a17c57c",
+      "2af7ddc51c86f983bc3c"
+    ],
+    "similarCandidateIds": [
+      "a86872972efe04fbd789",
+      "032010c2e0452a17c57c",
+      "2af7ddc51c86f983bc3c",
+      "5434d31cde115fdd283a",
+      "a08e3450ef31db632d8d",
+      "a6c32f91d1f591487d49",
+      "cbb4b83dfc2c8da596a4",
+      "0fcb046ecd22403d559d",
+      "e1630a13682bf0fee90d",
+      "320dead252ef1658d8a8"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "a43462622b60606b37d9",
+  "classification": "dynamic-business-catalog",
+  "disposition": "migrate-and-remove-authority-from-code",
+  "specializedModel": "domain-specific catalog table selected during consumer refactor",
+  "priority": "P2-domain",
+  "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+  "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+  "reviewed": true
+}

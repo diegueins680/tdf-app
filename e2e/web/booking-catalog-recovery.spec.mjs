@@ -255,7 +255,13 @@ for (const failure of ['error', 'empty']) {
     await expect(page.getByRole('combobox', { name: /^Servicio\b/ })).toContainText('Grabación de prueba');
     await page.getByRole('button', { name: 'Continuar', exact: true }).click();
     await expect(page.getByLabel(/^Fecha y hora/)).toBeVisible();
-    const slots = page.getByText('Sugerencias rápidas', { exact: true }).locator('..').getByRole('button');
+    const suggestions = page.getByText('Horarios sugeridos', { exact: true });
+    const disclosure = suggestions.locator('..');
+    await expect(disclosure).not.toHaveAttribute('open', '');
+    await suggestions.focus();
+    await suggestions.press('Enter');
+    await expect(disclosure).toHaveAttribute('open', '');
+    const slots = disclosure.getByRole('button');
     expect(await slots.count()).toBeGreaterThanOrEqual(3);
     const slot = slots.nth(2);
     // Reach the real control by keyboard, with the pointer away. Focus remains
@@ -284,7 +290,7 @@ for (const failure of ['error', 'empty']) {
       await page.setViewportSize({ width: 320, height: 740 });
       // The mobile marker exists at both390 and320px. Bind the measurement to
       // the requested content viewport, without waiting for overflow to vanish.
-      await expect(page.getByText('Paso 2 de 3', { exact: true })).toBeVisible();
+      await expect(page.getByText('Paso 2 de 2', { exact: true })).toBeVisible();
       await expect.poll(() => page.evaluate(() => {
         const width = document.documentElement.clientWidth;
         return width > 0 && width <= 320;

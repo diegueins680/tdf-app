@@ -4,6 +4,15 @@ import ShareIcon from '@mui/icons-material/Share';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import {
   Alert,
+  Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
   Box,
   Button,
   Checkbox,
@@ -17,6 +26,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState, type FocusEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { listAttendees, type AttendeeStatus } from '../../api/eventAttendees';
 import {
   SocialEventsAPI,
   type SocialRsvpDTO,
@@ -50,8 +60,10 @@ interface Props {
 const copyFor = (locale?: string | null) => {
   const en = locale?.toLowerCase().startsWith('en') ?? false;
   return en ? {
+    attendees: 'People going', interested: 'People interested', empty: 'There are no visible RSVPs on this page.',
+    previous: 'Previous', next: 'Next', close: 'Close', rosterError: 'Could not load attendees.', login: 'Sign in to view attendees',
     title: 'Your RSVP', going: 'Going', maybe: 'Interested', declined: "Can't go", remove: 'Remove my RSVP',
-    profile: 'Show this RSVP on my profile', privacyHint: "Can't go is never published.", manualLink: 'Public event link',
+    profile: 'Show my RSVP on my profile and in the attendee list', privacyHint: "Can't go is never published.", manualLink: 'Public event link',
     share: 'Share', copy: 'Copy link', copied: 'Link copied.',
     saved: 'Your RSVP was saved.', removed: 'Your RSVP was removed.', unavailable: 'This event is not accepting RSVPs.',
     cancelled: 'Cancelled events do not accept new RSVPs.', error: 'We could not update your RSVP. Try again.',
@@ -59,16 +71,55 @@ const copyFor = (locale?: string | null) => {
     summaryError: 'We could not refresh RSVP counts.', saving: 'Saving RSVP',
     sharePrompt: 'Want to invite someone?', discard: 'Discard pending RSVP', shareCancelled: 'Sharing was cancelled.', shareError: 'We could not open sharing.',
   } : {
-    title: 'Tu RSVP', going: 'Voy', maybe: 'Me interesa', declined: 'No iré', remove: 'Eliminar mi RSVP',
-    profile: 'Mostrar este RSVP en mi perfil', privacyHint: '“No iré” nunca se publica.', manualLink: 'Enlace público del evento',
+    attendees: 'Personas que van', interested: 'Personas interesadas', empty: 'No hay confirmaciones visibles en esta página.',
+    previous: 'Anterior', next: 'Siguiente', close: 'Cerrar', rosterError: 'No pudimos cargar la lista.', login: 'Ingresa para ver la lista',
+    title: '¿Vas?', going: 'Voy', maybe: 'Tal vez', declined: 'No voy', remove: 'Quitar mi respuesta',
+    profile: 'Mostrar mi respuesta en mi perfil y en la lista del evento', privacyHint: '“No voy” nunca se publica.', manualLink: 'Enlace público del evento',
     share: 'Compartir', copy: 'Copiar enlace', copied: 'Enlace copiado.',
-    saved: 'Guardamos tu RSVP.', removed: 'Eliminamos tu RSVP.', unavailable: 'Este evento no está aceptando RSVPs.',
-    cancelled: 'Los eventos cancelados no aceptan nuevos RSVPs.', error: 'No pudimos actualizar tu RSVP. Inténtalo otra vez.',
-    loadError: 'No pudimos cargar tu RSVP. Comprueba tu conexión.', retry: 'Reintentar',
-    summaryError: 'No pudimos actualizar los conteos de RSVP.', saving: 'Guardando RSVP',
-    sharePrompt: '¿Quieres invitar a alguien?', discard: 'Descartar RSVP pendiente', shareCancelled: 'Cancelaste la acción de compartir.', shareError: 'No pudimos abrir las opciones para compartir.',
+    saved: 'Guardamos tu respuesta.', removed: 'Quitamos tu respuesta.', unavailable: 'Este evento no está aceptando respuestas de asistencia.',
+    cancelled: 'Los eventos cancelados no aceptan nuevas respuestas.', error: 'No pudimos guardar tu respuesta. Inténtalo otra vez.',
+    loadError: 'No pudimos cargar tu respuesta. Comprueba tu conexión.', retry: 'Reintentar',
+    summaryError: 'No pudimos actualizar los conteos de asistencia.', saving: 'Guardando tu respuesta',
+    sharePrompt: '¿Quieres invitar a alguien?', discard: 'Descartar respuesta pendiente', shareCancelled: 'Cancelaste la acción de compartir.', shareError: 'No pudimos abrir las opciones para compartir.',
   };
 };
+
+function AttendeeDialog({ eventId, status, labels, viewer, close }: {
+  eventId: string;
+  status: AttendeeStatus;
+  labels: ReturnType<typeof copyFor>;
+  viewer?: string | number | null;
+  close: () => void;
+}) {
+  const [cursors, setCursors] = useState<string[]>([]);
+  const after = cursors[cursors.length - 1];
+  const page = useQuery({
+    queryKey: ['event-attendees', eventId, viewer, status, after],
+    queryFn: () => listAttendees(eventId, status, after),
+    enabled: Boolean(viewer),
+    gcTime: 0,
+  });
+  const nextCursor = page.data?.nextCursor;
+  const heading = status === 'accepted' ? labels.attendees : labels.interested;
+  return <Dialog open onClose={close} fullWidth maxWidth="xs" aria-label={heading}>
+    <DialogTitle>{heading}</DialogTitle>
+    <DialogContent>
+      {!viewer ? <Button href={`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`}>{labels.login}</Button>
+        : page.isPending ? <CircularProgress aria-label={heading} />
+        : page.isError ? <Alert severity="error" action={<Button onClick={() => void page.refetch()}>{labels.retry}</Button>}>{labels.rosterError}</Alert>
+        : page.data.items.length === 0 ? <Typography>{labels.empty}</Typography>
+        : <List>{page.data.items.map(person => <ListItem key={person.id}>
+          <ListItemAvatar><Avatar src={person.avatarUrl ?? undefined} alt="">{person.name.trim().slice(0, 1)}</Avatar></ListItemAvatar>
+          <ListItemText primary={person.name} />
+        </ListItem>)}</List>}
+    </DialogContent>
+    <DialogActions>
+      {cursors.length > 0 && <Button onClick={() => setCursors(current => current.slice(0, -1))}>{labels.previous}</Button>}
+      {nextCursor && <Button onClick={() => setCursors(current => [...current, nextCursor])}>{labels.next}</Button>}
+      <Button onClick={close}>{labels.close}</Button>
+    </DialogActions>
+  </Dialog>;
+}
 
 export default function EventRsvpControls({
   eventId,
@@ -88,9 +139,12 @@ export default function EventRsvpControls({
   const queryClient = useQueryClient();
   const { session } = useSession();
   const analytics = useAnalytics();
+  const [roster, setRoster] = useState<{ eventId: string; status: AttendeeStatus } | null>(null);
   const labels = copyFor(locale);
   const [showOnProfile, setShowOnProfile] = useState(session?.preferences?.showEventRsvpsOnProfile ?? true);
   const [feedback, setFeedback] = useState<{ severity: 'success' | 'info' | 'error'; message: string } | null>(null);
+  // The plain link is the fallback for a browser that can neither share nor copy; it stays out of the way otherwise.
+  const [shareFailed, setShareFailed] = useState(false);
   const [showSharePrompt, setShowSharePrompt] = useState(false);
   const [mutationPending, setMutationPending] = useState(false);
   const resumedNonce = useRef<string | null>(null);
@@ -303,6 +357,7 @@ export default function EventRsvpControls({
         captureGrowthEvent(analytics, 'event_share_cancelled', { platform: 'web', event_id: eventId, method });
       } else {
         setFeedback({ severity: 'error', message: labels.shareError });
+        setShareFailed(true);
         captureGrowthEvent(analytics, 'event_share_failed', { platform: 'web', event_id: eventId, method });
       }
     }
@@ -313,6 +368,8 @@ export default function EventRsvpControls({
   const loading = Boolean(session?.partyId && mine.isLoading);
   const busy = pending || loading;
   const summaryValue = summary.data ?? initialSummary ?? { rsvpAcceptedCount: 0, rsvpMaybeCount: 0 };
+  const nativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const directShare = !nativeShare || shareFailed;
   const whatsapp = publicShareEligible
     ? `https://wa.me/?text=${encodeURIComponent(`${buildEventShareMessage({ eventId, title, start, timezone, venue, status: current === 'declined' ? null : current, locale })} ${canonicalEventUrl(window.location.origin, eventId, { utm_source: 'tdf_web', utm_medium: 'whatsapp', utm_campaign: 'event_rsvp' })}`)}`
     : undefined;
@@ -339,9 +396,14 @@ export default function EventRsvpControls({
     <Stack spacing={compact ? 1 : 1.5}>
       <Box>
         <Typography id={`event-rsvp-title-${eventId}`} variant={compact ? 'subtitle1' : 'h6'} fontWeight={800}>{labels.title}</Typography>
-        <Typography variant="body2" color="text.secondary">
-          {summaryValue.rsvpAcceptedCount} {labels.going.toLowerCase()} · {summaryValue.rsvpMaybeCount} {labels.maybe.toLowerCase()}
-        </Typography>
+        <Stack direction="row" alignItems="center" gap={1}>
+          {([['accepted', summaryValue.rsvpAcceptedCount, labels.going, labels.attendees],
+            ['maybe', summaryValue.rsvpMaybeCount, labels.maybe, labels.interested]] as const).map(([status, count, label, heading]) =>
+              <Button key={status} size="small" aria-haspopup="dialog" aria-label={`${heading} (${count})`}
+                onClick={() => setRoster({ eventId, status })}>{count} {label.toLowerCase()}</Button>)}
+        </Stack>
+        {roster?.eventId === eventId && <AttendeeDialog key={`${eventId}-${roster.status}-${session?.partyId ?? ''}`}
+          eventId={eventId} status={roster.status} labels={labels} viewer={session?.partyId} close={() => setRoster(null)} />}
       </Box>
       <Stack direction="row" gap={1} flexWrap="wrap" role="group" aria-label={labels.title}>
         {([
@@ -364,12 +426,15 @@ export default function EventRsvpControls({
         label={labels.profile}
       />
       <Typography variant="caption" color="text.secondary">{labels.privacyHint}</Typography>
+      {showSharePrompt && publicShareEligible && <Alert severity="success">{labels.sharePrompt}</Alert>}
       <Stack direction="row" gap={1} flexWrap="wrap">
-        <Button startIcon={<ShareIcon />} disabled={!publicShareEligible} onClick={() => { void share('native'); }}>{labels.share}</Button>
-        <Button startIcon={<ContentCopyIcon />} disabled={!publicShareEligible} onClick={() => { void share('copy'); }}>{labels.copy}</Button>
-        {whatsapp && <Button component="a" href={whatsapp} target="_blank" rel="noreferrer" startIcon={<WhatsAppIcon />} onClick={() => captureGrowthEvent(analytics, 'event_share_started', { platform: 'web', event_id: eventId, method: 'whatsapp' })}>WhatsApp</Button>}
+        {/* One share control where the device has a share sheet (it already offers copy and WhatsApp);
+            copy and WhatsApp where it does not, or after the sheet failed. */}
+        {nativeShare && <Button startIcon={<ShareIcon />} disabled={!publicShareEligible} onClick={() => { void share('native'); }}>{labels.share}</Button>}
+        {directShare && <Button startIcon={<ContentCopyIcon />} disabled={!publicShareEligible} onClick={() => { void share('copy'); }}>{labels.copy}</Button>}
+        {directShare && whatsapp && <Button component="a" href={whatsapp} target="_blank" rel="noreferrer" startIcon={<WhatsAppIcon />} onClick={() => captureGrowthEvent(analytics, 'event_share_started', { platform: 'web', event_id: eventId, method: 'whatsapp' })}>WhatsApp</Button>}
       </Stack>
-      {!compact && publicUrl && (
+      {!compact && publicUrl && shareFailed && (
         <TextField
           label={labels.manualLink}
           value={publicUrl}
@@ -391,7 +456,6 @@ export default function EventRsvpControls({
           {labels.discard}
         </Button>
       )}
-      {showSharePrompt && <Alert severity="success" action={<Button color="inherit" size="small" onClick={() => { void share('native'); }}>{labels.share}</Button>}>{labels.sharePrompt}</Alert>}
       {feedback && <Alert severity={feedback.severity} role="status" aria-live="polite" onClose={() => setFeedback(null)}>{feedback.message}</Alert>}
     </Stack>
   </Box>;

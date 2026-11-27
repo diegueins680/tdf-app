@@ -25,5 +25,20 @@ export function verifyContentStorageModel(fault = '') {
     const destination = credential ? 'user' : fault === 'authority-fallback' ? 'tdf' : 'rejected';
     check(destination !== 'tdf', { invariant: 'chosen-authority', credential, destination });
   }
-  return { cases, violations, scope: 'Capacity five units; two leases; three stored states; explicit personal/service authority. Provider IDs, I/O, processes, permissions and liveness need separate qualification.' };
+  for (const owner of [1, 2]) for (const actor of [1, 2]) for (const liveSession of [false, true]) {
+    for (const domainGrant of [false, true]) for (const liveReference of [false, true]) {
+      const read = liveSession && (owner === actor || (domainGrant && (fault === 'unbound-reader' || liveReference)));
+      check(!read || (liveSession && (owner === actor || (domainGrant && liveReference))),
+        { invariant: 'private-reader', owner, actor, liveSession, domainGrant, liveReference });
+    }
+    for (const revoked of [false, true]) {
+      const use = liveSession && !revoked && (fault === 'foreign-credential' || owner === actor);
+      check(!use || (owner === actor && liveSession && !revoked), { invariant: 'credential-owner', owner, actor, liveSession, revoked });
+    }
+  }
+  for (const state of ['uploading', 'completed', 'cancelled']) for (const visibility of ['private', 'public']) {
+    const serve = visibility === 'public' && (fault === 'uncommitted-public' || state === 'completed');
+    check(!serve || (visibility === 'public' && state === 'completed'), { invariant: 'public-manifest', state, visibility });
+  }
+  return { cases, violations, scope: 'Capacity five units; two leases; three stored states; explicit personal/service authority. Two account identities, live resource references, credential ownership and public completion admission. Provider IDs, I/O, processes, actual grants and liveness need separate qualification.' };
 }

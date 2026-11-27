@@ -20,12 +20,28 @@ const sql = input => command('psql', ['-XAtq', '-v', 'ON_ERROR_STOP=1', '-d', da
 const quote = value => value === null ? 'NULL' : typeof value === 'number' ? String(value)
   : `'${value.replaceAll("'", "''")}'`;
 const source = readFileSync(join(root, 'tdf-hq/src/TDF/Server/MusicRelease.hs'), 'utf8');
-const block = source.split('listPublicReleases edgeCountry query artistPartyId requestedLimit requestedOffset = do')[1]
-  .split('\ngetPublicRelease ::')[0];
-const gapless = block.replace(/\\\n\s*\\/g, '');
-const literal = gapless.match(/jsonRows\s+("(?:[^"\\]|\\.)*")/s)?.[1];
-assert(literal, 'Locate the actual listPublicReleases SQL literal');
-const catalogSql = JSON.parse(literal);
+// The list SQL is the shared input, its own projection, the visibility clause
+// it shares with the facets endpoint, the TAX-FILTER-001 predicate and paging.
+// Reassemble it from the source without the taxonomy pieces: an empty taxonomy
+// selection matches every release, and this disposable schema has no taxonomy
+// tables (TAX-FILTER-001 is executed by scripts/test-community-search.py).
+const gapless = source.replace(/\\\n\s*\\/g, '');
+const STRING = '"(?:[^"\\\\]|\\\\.)*"';
+const firstLiteral = (text, after, label) => {
+  const found = text.split(after)[1]?.match(new RegExp(STRING, 's'))?.[0];
+  assert(found, `Locate ${label}`);
+  return JSON.parse(found);
+};
+const block = gapless.split('listPublicReleases edgeCountry query artistPartyId requestedLimit requestedOffset')[1]
+  ?.split('\npublicReleaseFacets ::')[0];
+assert(block, 'Locate the actual listPublicReleases body');
+const inputSql = firstLiteral(gapless, '\npublicReleaseInputSql =', 'the shared input CTE');
+assert(inputSql.endsWith(' query,'), 'Shared input CTE adds only the taxonomy columns');
+const catalogSql = inputSql.slice(0, -1) + ')'
+  + firstLiteral(block, 'publicReleaseInputSql <>', 'the release projection')
+  + firstLiteral(gapless, '\npublicReleaseVisibilitySql =', 'the shared visibility clause')
+  + firstLiteral(block, 'musicReleaseGenresSql', 'the release ordering');
+assert(catalogSql.endsWith(' LIMIT ? OFFSET ?'), 'Reassembled list SQL keeps its paging');
 const query = (text, territory = 'EC', limit = 100, offset = 0, artist = null, mutation = x => x) => {
   // The correction normalizes its two input parameters once and then binds
   // the track delivery territory. Keep this runnable on the baseline too.

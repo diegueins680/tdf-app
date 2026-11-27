@@ -36,8 +36,13 @@ try {
   const accessibility = await page.evaluate(async () => window.axe.run(document, {
     runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] },
   }));
+  await page.goto('http://127.0.0.1:5199/social-preview?network=1');
+  await page.getByRole('tab', { name: 'Descubrir' }).click();
+  await page.getByText('Cerca de tu red', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Aceptar conexión: Lucía — guitarra y producción' }).click();
+  await page.getByRole('button', { name: 'Desconectar: Lucía — guitarra y producción' }).waitFor();
   const report = { scope: 'Local component with synthetic session/API fixtures; not authenticated E2E',
-    checks: ['default Following', 'keyboard tabs', 'explicit acceptance', '390px overflow'],
+    checks: ['default Following', 'keyboard tabs', 'explicit acceptance', '390px overflow', 'network suggestion acceptance'],
     errors, accessibilityViolations: accessibility.violations };
   await writeFile(`${output}/results.json`, `${JSON.stringify(report, null, 2)}\n`);
   if (errors.length || accessibility.violations.length) throw new Error(JSON.stringify(report));

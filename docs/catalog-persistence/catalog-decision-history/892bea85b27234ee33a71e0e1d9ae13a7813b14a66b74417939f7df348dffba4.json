@@ -1,0 +1,22 @@
+{
+  "id": "c28667c70e40dcc18a55",
+  "classification": "genuine-technical-constant",
+  "disposition": "explicit-allowlist",
+  "specializedModel": "technical_constant_allowlist",
+  "priority": "P0-cutover",
+  "risk": "Reordering prerequisites, rewriting applied SQL or losing introduction commits corrupts migration history.",
+  "justification": "The 214-entry execution registry preserves all 213 protected-main entry objects/order/introduction commits and historical SQL bytes, then appends one event-memory migration introduced by 18690e78a9ce97255529bade31c5ce2250b7ce22. The migration installs no campaigns or consent and sends nothing. Full-schema replay, rollback/refusal, concurrent-worker and actual API tests are separate execution evidence; no production activation is authorized by this registry review.",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "event-memories-2026-10-25",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 214
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:bcdc6175d3a6499bd5046223ac218a49e4711b44e4cf38a7b817f10261a6f3b5"
+  }
+}

@@ -23,6 +23,7 @@ module TDF.API.MusicRelease
   , MusicReleaseTransitionRequest(..)
   , MusicReleaseCommentRequest(..)
   , MusicPlaybackEventRequest(..)
+  , MusicArtistFeaturedTrackRequest(..)
   , MusicFavoriteRequest(..)
   , MusicPlaylistCreateRequest(..)
   , MusicPlaylistItemRequest(..)
@@ -41,6 +42,8 @@ module TDF.API.MusicRelease
   , MusicUploadPartRequest(..)
   , MusicUploadConfirmRequest(..)
   ) where
+
+import TDF.Commerce.DatafastClientIP (DatafastClientRequest)
 
 import Data.Aeson
   ( FromJSON(..)
@@ -70,7 +73,21 @@ type MusicReleasePublicAPI = "music" :>
          :> QueryParam "artistPartyId" Int64
          :> QueryParam "limit" Int
          :> QueryParam "offset" Int
+         -- TAX-FILTER-001: the release's genres (its artist's when it has
+         -- none) and its artist's location.
+         :> QueryParams "countryIds" UUID
+         :> QueryParams "regionIds" UUID
+         :> QueryParams "cityIds" UUID
+         :> QueryParams "genreIds" UUID
          :> Get '[JSON] [Value]
+  :<|> Header "CF-IPCountry" Text :> "facets" :> "releases"
+         :> QueryParam "q" Text
+         :> QueryParam "artistPartyId" Int64
+         :> QueryParams "countryIds" UUID
+         :> QueryParams "regionIds" UUID
+         :> QueryParams "cityIds" UUID
+         :> QueryParams "genreIds" UUID
+         :> Get '[JSON] Value
   :<|> "releases" :> Capture "slug" Text :> Header "CF-IPCountry" Text :> Get '[JSON] Value
   :<|> "assets" :> Capture "assetId" UUID :> "access"
          :> Header "CF-IPCountry" Text :> Get '[JSON] Value
@@ -80,13 +97,28 @@ type MusicReleasePublicAPI = "music" :>
          :> QueryParam "q" Text
          :> QueryParam "limit" Int
          :> QueryParam "offset" Int
+         :> QueryParams "countryIds" UUID
+         :> QueryParams "regionIds" UUID
+         :> QueryParams "cityIds" UUID
+         :> QueryParams "genreIds" UUID
          :> Get '[JSON] (Headers '[Header "Cache-Control" Text] [MusicPublicTrackSearchHit])
+  :<|> "artists" :> Capture "artistPartyId" Int64 :> "featured-track"
+         :> Header "CF-IPCountry" Text
+         :> Get '[JSON] (Headers '[Header "Cache-Control" Text] Value)
+  :<|> "legacy" :> Capture "sourceId" Text :> "access"
+         :> Get '[JSON] (Headers '[Header "Cache-Control" Text] Value)
   )
 
 type MusicReleaseProtectedAPI = "music" :>
   (    "studio" :> "releases" :> QueryParam "artistPartyId" Int64 :> Get '[JSON] [Value]
+  :<|> "media-health" :> QueryParam "limit" Int
+         :> QueryParam "afterKind" Text :> QueryParam "afterId" Text :> Get '[JSON] (Headers '[Header "Cache-Control" Text] [Value])
+  :<|> "media-health" :> Capture "sourceKind" Text :> Capture "sourceId" Text
+         :> "revalidate" :> Post '[JSON] (Headers '[Header "Cache-Control" Text] Value)
   :<|> "releases" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] MusicReleaseCreateRequest :> PostCreated '[JSON] Value
   :<|> "releases" :> Capture "releaseId" UUID :> "versions" :> Capture "versionId" UUID :> Get '[JSON] Value
+  :<|> "releases" :> Capture "releaseId" UUID :> "versions" :> Capture "versionId" UUID :> "loudness"
+         :> Get '[JSON] Value
   :<|> "releases" :> Capture "releaseId" UUID :> "versions" :> Capture "versionId" UUID :> "corrections"
          :> Header "Idempotency-Key" Text :> PostCreated '[JSON] Value
   :<|> "releases" :> Capture "releaseId" UUID :> "versions" :> Capture "versionId" UUID :> "draft"
@@ -114,6 +146,11 @@ type MusicReleaseProtectedAPI = "music" :>
   :<|> "uploads" :> Capture "uploadId" UUID :> "confirm"
          :> ReqBody '[JSON] MusicUploadConfirmRequest :> Post '[JSON] Value
   :<|> "uploads" :> Capture "uploadId" UUID :> Delete '[JSON] Value
+  :<|> "me" :> "featured-track" :> Header "CF-IPCountry" Text
+         :> Get '[JSON] (Headers '[Header "Cache-Control" Text] Value)
+  :<|> "me" :> "featured-track" :> Header "CF-IPCountry" Text
+         :> ReqBody '[JSON] MusicArtistFeaturedTrackRequest
+         :> Put '[JSON] (Headers '[Header "Cache-Control" Text] Value)
   :<|> "favorites" :> Header "CF-IPCountry" Text :> Get '[JSON] [Value]
   :<|> "favorites" :> Header "CF-IPCountry" Text :> ReqBody '[JSON] MusicFavoriteRequest :> Put '[JSON] NoContent
   :<|> "favorites" :> Capture "recordingId" UUID :> Delete '[JSON] NoContent
@@ -139,7 +176,7 @@ type MusicReleaseProtectedAPI = "music" :>
          :> ReqBody '[JSON] MusicPurchaseCreateRequest :> PostCreated '[JSON] Value
   :<|> "purchases" :> Get '[JSON] [Value]
   :<|> "purchases" :> Capture "purchaseId" UUID :> "datafast" :> "checkout"
-         :> Header "Idempotency-Key" Text :> Post '[JSON] Value
+         :> Header "Idempotency-Key" Text :> DatafastClientRequest :> Post '[JSON] Value
   :<|> "purchases" :> Capture "purchaseId" UUID :> "datafast" :> "status"
          :> Header "Idempotency-Key" Text :> ReqBody '[JSON] MusicDatafastStatusRequest :> Post '[JSON] Value
   :<|> "purchases" :> Capture "purchaseId" UUID :> "paypal" :> "create"
@@ -402,6 +439,17 @@ instance FromJSON MusicPlaybackEventRequest where
   parseJSON = genericParseJSON musicEventOptions
 instance ToJSON MusicPlaybackEventRequest where
   toJSON = genericToJSON musicEventOptions
+
+data MusicArtistFeaturedTrackRequest = MusicArtistFeaturedTrackRequest
+  { musicFeaturedArtistPartyId :: Int64
+  , musicFeaturedRecordingId :: Maybe UUID
+  , musicFeaturedLegacyReleaseId :: Maybe Int64
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON MusicArtistFeaturedTrackRequest where
+  parseJSON = genericParseJSON (musicOptions 13)
+instance ToJSON MusicArtistFeaturedTrackRequest where
+  toJSON = genericToJSON (musicOptions 13)
 
 data MusicFavoriteRequest = MusicFavoriteRequest
   { musicFavoriteRecordingId :: UUID

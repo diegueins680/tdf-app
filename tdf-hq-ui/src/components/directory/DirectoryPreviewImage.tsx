@@ -5,7 +5,7 @@ import {
   directoryFallbackImageUrl,
   resolveDirectoryPreviewImage,
   type DirectoryPreviewKind,
-} from '../../utils/directoryPreviewImage';
+} from '../../services/directoryPreviewImage';
 
 // A native img keeps width/height as intrinsic attributes (Box would consume
 // them as style props), so the browser reserves space before loading.

@@ -1,0 +1,26 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "68953d9cd9bd5e61517e",
+  "reviewed": true,
+  "justification": "Append the studio gallery seed after the reviewed Domo refund migration, preserving both original SQL introductions and complete parent reviews.",
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "studio-gallery-refund-integration",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 260
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:9827c8ec60a02d3c46f0928f78a951ebab67cb7546e21ced8606f7d60019f313"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:8e18b7cd0e249426a30e9a0a8479ba5186c1b26786daadc101428cf1f387a52b"
+    }
+  ]
+}

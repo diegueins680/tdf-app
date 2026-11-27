@@ -29,6 +29,8 @@ import qualified TDF.Email as Email
 import TDF.Internationalization (formatMoney)
 import qualified TDF.Models.SocialEventsModels as M
 import qualified TDF.Ticketing.Transfer as Transfer
+import TDF.Ticketing.LookupToken
+  (deriveTicketLookupToken, ticketLookupTokenMatches, ticketLookupTokenSecretFromEnv, ticketOrderAccessUrl)
 
 data Confirmation = Confirmation
   { confirmationName :: Text
@@ -41,6 +43,9 @@ data Confirmation = Confirmation
   , confirmationCodes :: [Text]
   , confirmationEventUrl :: Text
   , confirmationAppUrl :: Text
+  -- | The buyer's order page with its access key, when the server can derive
+  -- the key the order was created with. Opens tickets and QR on any device.
+  , confirmationOrderUrl :: Maybe Text
   } deriving (Eq, Show)
 
 confirmationBody :: Confirmation -> [Text]
@@ -56,6 +61,11 @@ confirmationBody receipt =
   ] <> confirmationCodes receipt <>
   [ ""
   , "Puedes presentar estos códigos en el acceso. Cada entrada admite un solo ingreso."
+  ] <> maybe [] (\url ->
+  [ "Abre tu orden, con tus entradas y códigos QR, desde cualquier teléfono o computador:"
+  , url
+  ]) (confirmationOrderUrl receipt) <>
+  [ ""
   , "No compartas este correo ni los códigos: permiten utilizar tus entradas."
   , "Las entradas transferidas, canceladas o ya utilizadas no se incluyen en esta lista."
   , "Consulta horarios, ubicación y condiciones en la página del evento:"
@@ -68,14 +78,16 @@ confirmationBody receipt =
 -- The queue contains only a canonical order reference. Resolve recipient and
 -- credentials at delivery time; never retain a second copy of buyer PII or QR.
 loadConfirmation :: Env -> Int64 -> IO (Maybe Confirmation)
-loadConfirmation Env{envPool,envConfig} orderId = runSqlPool (do
+loadConfirmation Env{envPool,envConfig} orderId = do
+ lookupSecret <- ticketLookupTokenSecretFromEnv
+ runSqlPool (do
   let key = toSqlKey orderId
   paid <- rawSql
-    "SELECT r.order_id FROM event_ticket_checkout_runtime r JOIN event_ticket_order o ON o.id=r.order_id WHERE r.order_id=? AND r.payment_status='paid' AND r.fulfillment_status='issued' AND o.status='paid'"
-    [PersistInt64 orderId] :: SqlPersistT IO [Single Int64]
+    "SELECT r.create_idempotency_key, r.lookup_token_hash FROM event_ticket_checkout_runtime r JOIN event_ticket_order o ON o.id=r.order_id WHERE r.order_id=? AND r.payment_status='paid' AND r.fulfillment_status='issued' AND o.status='paid'"
+    [PersistInt64 orderId] :: SqlPersistT IO [(Single Text, Single Text)]
   order <- get key
   case (paid,order) of
-    ([_],Just row) -> do
+    ([(Single idempotencyKey, Single storedHash)],Just row) -> do
       event <- get (M.eventTicketOrderEventId row)
       tier <- get (M.eventTicketOrderTierId row)
       tickets <- selectList [M.EventTicketOrderRefId ==. key] [Asc M.EventTicketId]
@@ -88,6 +100,15 @@ loadConfirmation Env{envPool,envConfig} orderId = runSqlPool (do
             M.eventTicketStatus ticket == "issued", M.eventTicketCheckedInAt ticket == Nothing,
             Transfer.retainedByBuyer ticket]
           base = T.dropWhileEnd (== '/') (fromMaybe "https://www.tdfrecords.net" (appBaseUrl envConfig))
+          eventId = fromSqlKey (M.eventTicketOrderEventId row)
+          -- Only a key that still opens this order goes out; without the
+          -- secret, or after it rotated, the email keeps codes and event link.
+          orderUrl = do
+            secret <- lookupSecret
+            token <- either (const Nothing) Just (deriveTicketLookupToken secret idempotencyKey eventId)
+            if ticketLookupTokenMatches storedHash token
+              then Just (ticketOrderAccessUrl base eventId orderId token)
+              else Nothing
       pure $ case (event,tier,dates,M.eventTicketOrderBuyerEmail row,codes) of
         (Just e,Just t,[Single date],Just email,_:_) | not (T.null (T.strip email)) -> Just Confirmation
           { confirmationName=fromMaybe "" (M.eventTicketOrderBuyerName row)
@@ -98,6 +119,7 @@ loadConfirmation Env{envPool,envConfig} orderId = runSqlPool (do
           , confirmationCodes=codes
           , confirmationEventUrl=base <> "/eventos/" <> T.pack (show (fromSqlKey (M.eventTicketOrderEventId row)))
           , confirmationAppUrl=base <> "/app"
+          , confirmationOrderUrl=orderUrl
           }
         _ -> Nothing
     _ -> pure Nothing) envPool
@@ -130,7 +152,7 @@ sendConfirmation cfg receipt = Email.sendTransactionalEmail cfg
   (confirmationName receipt) (confirmationEmail receipt)
   ("Tus entradas para " <> confirmationEvent receipt)
   "Confirmación de compra de entradas"
-  (confirmationBody receipt) (Just (confirmationEventUrl receipt))
+  (confirmationBody receipt) (Just (fromMaybe (confirmationEventUrl receipt) (confirmationOrderUrl receipt)))
 
 startTicketConfirmationWorker :: Env -> IO ()
 startTicketConfirmationWorker env@Env{envConfig} = do

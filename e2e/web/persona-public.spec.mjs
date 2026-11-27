@@ -382,13 +382,13 @@ test('PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuanc
   await refundPolicy.click();
   await expect(page.getByText('Reembolso total.')).toBeVisible();
   await page.getByLabel('Nombre completo').fill('Elena Paredes');
-  await page.getByLabel('Email').fill('per-01.elena@persona.test');
+  await page.getByLabel('Correo').fill('per-01.elena@persona.test');
   await page.getByLabel(/Acepto los términos versionados/).check();
-  await page.getByRole('button', { name: 'Retener entradas y revisar total' }).click();
+  await page.getByRole('button', { name: 'Continuar al pago' }).click();
 
   await expect(page).toHaveURL(/\/eventos\/41\/orden\/91$/);
   await expect(page.getByText(/La orden no está pagada/)).toBeVisible();
-  await expect(page.getByText(/No hay un proveedor real habilitado/)).toBeVisible();
+  await expect(page.getByText(/no hay un método de pago en línea/)).toBeVisible();
   await expect(page.getByText(/Total:.*25[,.]50/)).toBeVisible();
   expect(checkoutRequest).toMatchObject({
     tierId: 8, quantity: 1, buyerName: 'Elena Paredes',
@@ -516,7 +516,7 @@ test('PW-PER-01-DOMO retries one truthful manual request in Ecuador time', async
   await submit.click();
   expect((await successfulAttempt).status()).toBe(200);
   await expect(page.getByRole('alert').filter({
-    hasText: 'Solicitud enviada. Este flujo manual no retiene la fecha ni confirma un pago',
+    hasText: 'Solicitud enviada. Aún no está confirmada, no aparta el horario',
   })).toBeVisible();
 
   expect(bookingPayloads).toHaveLength(2);
@@ -527,7 +527,8 @@ test('PW-PER-01-DOMO retries one truthful manual request in Ecuador time', async
     pbStartsAt: '2030-01-15T15:00:00Z',
     pbDurationMinutes: 480,
   });
-  expect(bookingPayloads[0].pbNotes).toContain('Disponibilidad: no verificada; esta solicitud no retiene la fecha');
+  expect(bookingPayloads[0].pbNotes).toContain('Disponibilidad: por confirmar');
+  expect(bookingPayloads[0].pbNotes).not.toContain('apartado');
   expect(bookingPayloads[1]).toEqual(bookingPayloads[0]);
   expect(bookingIdempotencyKeys).toHaveLength(2);
   expect(bookingIdempotencyKeys[0]).toMatch(/^service-booking-/);
@@ -625,7 +626,7 @@ test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public action
     'href',
     `/login?redirect=${encodedBookingEntry}&signup=1`,
   );
-  await expect(page.getByText(/crear una cuenta es opcional/i).first()).toBeVisible();
+  await expect(page.getByText(/no necesitas cuenta/i).first()).toBeVisible();
   await expect(page.getByText(/crearemos tu acceso automáticamente/i)).toHaveCount(0);
   const fullNameInput = page.getByLabel('Nombre completo');
   await expect(fullNameInput).toBeVisible();
@@ -633,7 +634,6 @@ test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public action
   await page.getByLabel('Correo').fill('per-01.elena@persona.test');
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.getByLabel('Fecha y hora').fill('2030-01-01T12:00');
-  await page.getByRole('button', { name: 'Revisar reserva' }).click();
   const confirmBookingButton = page.getByRole('button', { name: 'Confirmar reserva' });
   const failedAttempt = page.waitForResponse((response) =>
     response.request().method() === 'POST'

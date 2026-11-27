@@ -10,7 +10,7 @@ import { dirname, join } from 'node:path';
 import { tmpdir, userInfo } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { disposableMusicDatabase, musicTestEnvironment, musicTestDatabaseUrl } from './lib/music-test-database.mjs';
-import { observeTestChild, completedTestChild as completed } from './lib/test-child-completion.mjs';
+import { observeTestChild, completedTestChildWithStopTrace, createTestStopTraceForwarder } from './lib/test-child-completion.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const runtime = mkdtempSync(join(tmpdir(), 'tdf-music-worker-test-'));
@@ -84,14 +84,21 @@ const workerEnv = {
   // Synthetic fixture only: preserve fixed-stage timing before failure cleanup.
   // Explicit false remains available; never turn on shell argument tracing.
   MUSIC_WORKER_DIAGNOSTICS: process.env.MUSIC_WORKER_DIAGNOSTICS ?? 'true',
+  // Optional failed-baseline diagnostic pass only; normal qualification is untraced.
+  MUSIC_WORKER_STOP_DIAGNOSTICS: process.env.MUSIC_WORKER_STOP_DIAGNOSTICS ?? 'false',
   // Quotes and psql metacharacters must remain data through -v substitution.
   MUSIC_WORKER_ID: "worker's :quoted \\ identity",
 };
+const forwardStopTrace = createTestStopTraceForwarder({
+  enabled: workerEnv.MUSIC_WORKER_STOP_DIAGNOSTICS === 'true',
+});
+const completed = child => completedTestChildWithStopTrace(child, forwardStopTrace);
 function worker(extra = {}) {
   const started = performance.now();
   const result = spawnSync('bash', [join(root, 'scripts/run-music-release-worker-once.sh')], {
     env: { ...workerEnv, ...extra }, encoding: 'utf8', timeout: 120000, maxBuffer: 1024 * 1024,
   });
+  forwardStopTrace(result.stderr);
   if (workerEnv.MUSIC_WORKER_DIAGNOSTICS === 'true') {
     console.log(`Worker elapsed ${Math.round(performance.now() - started)} ms`);
     console.log(result.stderr?.split('\n').filter((line) => line.startsWith('{"event":"music_worker_timing"')).join('\n'));
@@ -160,7 +167,7 @@ try {
     '2026-08-05_artist_enrichment.sql', '2026-08-13_unified_checkout_core.sql',
     '2026-09-04_access_request_notification_types.sql', '2026-09-11_music_release_platform.sql',
     '2026-09-15_music_preview_ranges.sql', '2026-09-16_music_ddex_operations.sql',
-    '2026-10-12_music_upload_rebind.sql']) {
+    '2026-10-12_music_upload_rebind.sql', '2026-11-21_music_audio_measurement.sql']) {
     command('psql', ['-Xq', '-v', 'ON_ERROR_STOP=1', '-d', database, '-f', join(root, 'tdf-hq/sql', file)]);
   }
   artist = sql("INSERT INTO party(display_name) VALUES ('Synthetic worker artist') RETURNING id");
@@ -738,6 +745,120 @@ try {
     assert.notEqual(worker({ MUSIC_DDEX_RENDER_BIN: '/not-a-renderer', MUSIC_DDEX_SCHEMA_DIR: '/not-a-schema' }).status, 0);
     assert.equal(jobState(f), 'dead_letter:3:true');
     assert.equal(sql(`SELECT row_to_json(e)::text FROM music_ddex_export e WHERE id='${exportId}'`), failedBefore);
+  });
+  // MEDIA-MUSIC-LOUDNESS-001 (formal/system/music-loudness-check.md).
+  const measurements = (f) => JSON.parse(sql(`SELECT COALESCE(json_agg(row_to_json(m) ORDER BY m.created_at,m.id),'[]')
+    FROM music_audio_measurement m WHERE m.asset_id='${f.asset}'`));
+  const loudnessFlag = (enabled) => sql(`UPDATE revenue_feature_flag SET enabled=${enabled}
+    WHERE flag_key='music_releases.loudness_check' AND environment='sandbox'`);
+  const refused = (statement, pattern) => {
+    const result = spawnSync('psql', ['-XAtq', '-v', 'ON_ERROR_STOP=1', '-d', database, '-c', statement], { env, encoding: 'utf8' });
+    assert.notEqual(result.status, 0, `Expected refusal: ${statement}`);
+    assert.match(result.stderr, pattern);
+  };
+  check('loudness check: with the flag off inspection writes no measurement (L5)', () => {
+    assert.equal(sql("SELECT string_agg(environment||':'||enabled,',' ORDER BY environment) FROM revenue_feature_flag WHERE flag_key='music_releases.loudness_check'"),
+      'production:false,sandbox:false');
+    const f = fixture();
+    const result = worker();
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(jobState(f), 'succeeded:1:true');
+    assert.equal(sql('SELECT count(*) FROM music_audio_measurement'), '0');
+    assert.doesNotMatch(readFileSync(trace, 'utf8'), /loudness/);
+  });
+  check('loudness check: a production flag does not enable a sandbox worker', () => {
+    sql("UPDATE revenue_feature_flag SET enabled=TRUE WHERE flag_key='music_releases.loudness_check' AND environment='production'");
+    const sandbox = fixture();
+    assert.equal(worker().status, 0);
+    assert.deepEqual(measurements(sandbox), []);
+    const production = fixture();
+    assert.equal(worker({ APP_ENV: ' Production' }).status, 0);
+    assert.deepEqual(measurements(production), [], 'only the exact names select production');
+    const exact = fixture();
+    assert.equal(worker({ APP_ENV: 'Production' }).status, 0);
+    assert.equal(measurements(exact).map((row) => row.state).join(), 'measured');
+    sql("UPDATE revenue_feature_flag SET enabled=FALSE WHERE flag_key='music_releases.loudness_check' AND environment='production'");
+  });
+  check('loudness check: the verified master is measured once and bound to its SHA-256 (L1)', () => {
+    loudnessFlag(true);
+    const f = fixture();
+    const result = worker();
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(jobState(f), 'succeeded:1:true');
+    const rows = measurements(f);
+    assert.equal(rows.length, 1);
+    const [row] = rows;
+    assert.equal(row.state, 'measured');
+    assert.equal(row.kind, 'loudness');
+    assert.equal(row.tool, 'ffmpeg-ebur128-v1');
+    assert.equal(row.source_sha256, f.checksum);
+    assert.equal(row.job_id, f.job);
+    assert.equal(row.job_attempt, 1);
+    assert.equal(row.failure_reason, null);
+    // The fixture is FFmpeg's default sine: amplitude 1/8, about -18.1 dBFS.
+    assert.ok(Number.isInteger(row.integrated_lufs_tenths) && row.integrated_lufs_tenths > -260 && row.integrated_lufs_tenths < -140, String(row.integrated_lufs_tenths));
+    assert.ok(Number.isInteger(row.true_peak_dbtp_tenths) && Math.abs(row.true_peak_dbtp_tenths + 181) <= 3, String(row.true_peak_dbtp_tenths));
+    assert.equal(sql(`SELECT processing_state||':'||immutable FROM music_asset WHERE id='${f.asset}'`), 'valid:true');
+  });
+  check('loudness check: a hanging or broken tool is a recorded failure, never a failed inspection (L3)', () => {
+    const stall = join(bin, 'stalling-ffmpeg');
+    writeFileSync(stall, '#!/bin/sh\nsleep 30 &\ntrap "" TERM\nwait\n');
+    chmodSync(stall, 0o755);
+    let f = fixture();
+    const started = performance.now();
+    let result = worker({ MUSIC_LOUDNESS_FFMPEG: stall, MUSIC_LOUDNESS_TIMEOUT_SECONDS: '1', MUSIC_LOUDNESS_KILL_GRACE_SECONDS: '1' });
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(performance.now() - started < 60000);
+    assert.equal(jobState(f), 'succeeded:1:true');
+    assert.equal(measurements(f).map((row) => `${row.state}:${row.failure_reason}`).join(), 'failed:timeout');
+    assert.equal(sql(`SELECT processing_state FROM music_asset WHERE id='${f.asset}'`), 'valid');
+    for (const [tool, reason] of [['/not-a-loudness-tool', 'interrupted'], [join(bin, 'garbage-tool'), 'unparseable'], [join(bin, 'lying-tool'), 'out_of_range']]) {
+      writeFileSync(join(bin, 'garbage-tool'), 'print "{\\"state\\":\\"measured\\",\\"integratedLufsTenths\\":\\"loud\\"}\\n";\n');
+      writeFileSync(join(bin, 'lying-tool'), 'print "{\\"state\\":\\"measured\\",\\"integratedLufsTenths\\":-140,\\"truePeakDbtpTenths\\":9999}\\n";\n');
+      f = fixture();
+      result = worker({ MUSIC_LOUDNESS_TOOL: tool });
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(jobState(f), 'succeeded:1:true');
+      assert.equal(measurements(f).map((row) => `${row.state}:${row.failure_reason}`).join(), `failed:${reason}`);
+    }
+  });
+  check('loudness check: a later attempt supersedes, and results are never rewritten (L2)', () => {
+    const f = fixture();
+    assert.equal(worker().status, 0);
+    const [first] = measurements(f);
+    assert.equal(first.state, 'measured');
+    assert.equal(sql(`SELECT music_finish_audio_measurement('${first.id}','${f.job}',1,'{"state":"failed","reason":"timeout"}')`), 'f');
+    refused(`UPDATE music_audio_measurement SET integrated_lufs_tenths=-140 WHERE id='${first.id}'`, /changes only by a transition/);
+    refused(`UPDATE music_audio_measurement SET state='pending',finished_at=NULL,integrated_lufs_tenths=NULL,true_peak_dbtp_tenths=NULL WHERE id='${first.id}'`, /cannot go from measured to pending/);
+    refused(`UPDATE music_audio_measurement SET state='failed',failure_reason='timeout',integrated_lufs_tenths=NULL,true_peak_dbtp_tenths=NULL WHERE id='${first.id}'`, /cannot go from measured to failed/);
+    refused(`UPDATE music_audio_measurement SET source_sha256='${'0'.repeat(64)}' WHERE id='${first.id}'`, /identity .* is fixed/);
+    refused(`DELETE FROM music_audio_measurement WHERE id='${first.id}'`, /are kept/);
+    refused(`INSERT INTO music_audio_measurement(asset_id,source_sha256,kind,tool) VALUES ('${f.asset}','${'0'.repeat(64)}','loudness','ffmpeg-ebur128-v1')`, /one master file and its SHA-256/);
+    refused(`INSERT INTO music_audio_measurement(asset_id,source_sha256,kind,tool) VALUES ('${f.asset}','${f.checksum}','loudness','ffmpeg-ebur128-v1')`, /music_audio_measurement_open/);
+    assert.equal(sql(`SELECT music_begin_audio_measurement('${f.asset}','${'0'.repeat(64)}','loudness','ffmpeg-ebur128-v1',NULL,NULL) IS NULL`), 't');
+    assert.equal(measurements(f).length, 1, 'a refused attempt leaves the measured row open');
+    const second = sql(`SELECT music_begin_audio_measurement('${f.asset}','${f.checksum}','loudness','ffmpeg-ebur128-v1','${f.job}',2)`);
+    assert.equal(measurements(f).map((row) => row.state).join(), 'superseded,pending');
+    const kept = measurements(f)[0];
+    assert.equal(kept.integrated_lufs_tenths, first.integrated_lufs_tenths);
+    assert.equal(kept.true_peak_dbtp_tenths, first.true_peak_dbtp_tenths);
+    assert.equal(sql(`SELECT music_finish_audio_measurement('${second}','${f.job}',1,'{"state":"measured","integratedLufsTenths":-140,"truePeakDbtpTenths":-10}')`), 'f', 'another attempt cannot close the row');
+    assert.equal(sql(`SELECT music_finish_audio_measurement('${second}','${f.job}',2,'{"state":"measured","integratedLufsTenths":-700,"truePeakDbtpTenths":-10}')`), 't');
+    assert.equal(measurements(f).map((row) => `${row.state}:${row.failure_reason}`).join(), 'superseded:null,failed:silent');
+    assert.equal(sql(`SELECT music_finish_audio_measurement('${second}','${f.job}',2,'{"state":"measured","integratedLufsTenths":-140,"truePeakDbtpTenths":-10}')`), 'f');
+    refused(`UPDATE music_audio_measurement SET state='measured' WHERE id='${first.id}'`, /cannot go from superseded to measured/);
+  });
+  check('loudness check: re-binding an unpromoted master closes what was measured before', () => {
+    const f = fixture();
+    const open = sql(`SELECT music_begin_audio_measurement('${f.asset}','${f.checksum}','loudness','ffmpeg-ebur128-v1',NULL,NULL)`);
+    sql(`UPDATE music_asset SET object_key='${f.asset}/second',processing_state='uploaded' WHERE id='${f.asset}'`);
+    assert.equal(measurements(f).map((row) => `${row.id === open}:${row.state}`).join(), 'true:superseded');
+    sql(`UPDATE music_asset SET object_key='${f.key}' WHERE id='${f.asset}'`);
+    assert.equal(worker().status, 0);
+    assert.equal(measurements(f).map((row) => row.state).join(), 'superseded,measured');
+    // Promotion to the master bucket moves the object of the same file: the result stays.
+    assert.equal(sql(`SELECT storage_class FROM music_asset WHERE id='${f.asset}'`), 'standard');
+    loudnessFlag(false);
   });
   console.log(`Music worker runtime: ${passed} scenarios passed (transport fault injector; no S3 compatibility claim).`);
 } finally {

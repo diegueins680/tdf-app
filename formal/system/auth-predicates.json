@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1"
+    "tdf-hq/tdf-hq.cabal": "55f2c7d188e98985c1122ec9841e4dac50964a53a152404ea1c338efd64fc780"
   },
   "obligations": [
     {
@@ -583,6 +583,496 @@
       "change": "Register the library module TDF.Server.DirectoryAgreementText in exposed-modules for MKT-AGREEMENT-PAYMENT-001.",
       "semanticReview": "Removing exactly that one module line reproduces protected main Cabal bytes. Every other reviewed source byte and hash matches protected main. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed; the added library module holds pure marketplace agreement SQL projection and notification text only and is not imported by any reviewed source.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "2ebb5c38bef08f3205877dc9521026b40b68d4ef",
+      "previousSha256": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1",
+      "currentSha256": "6b17074b45766b8f5550a6bb188e96e27d2a84b013b1777b0bb64fbe652bbbbd",
+      "change": "Add TDF.Courses.Metadata and TDF.Services.LlmChat to the library exposed-modules list only; removing those exact two lines reproduces the protected Cabal manifest byte for byte.",
+      "semanticReview": "No source search paths, compiler options, CPP flags, dependencies, extensions or toolchain changes. The two modules hold code moved verbatim out of TDF.Server (course metadata projection and the chat-completion client); they import no authorization or recovery module and introduce no authorization or recovery binding. Every other reviewed source remains byte-identical to protected main. Conditional predicate translations and their assumptions are unchanged. Reviewed by the change author only; no independent review was performed.",
+      "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "2ebb5c38bef08f3205877dc9521026b40b68d4ef",
+      "previousSha256": "6b17074b45766b8f5550a6bb188e96e27d2a84b013b1777b0bb64fbe652bbbbd",
+      "currentSha256": "8e25c07ae89ff4e0a3dc0867ad8f5c7a034735fc574beb0ddb35feaaad06ae98",
+      "change": "Add TDF.DTO.TicketPaymentReceipt to the library exposed-modules list only; removing that exact line reproduces the previously reviewed Cabal manifest byte for byte.",
+      "semanticReview": "No source search paths, compiler options, CPP flags, dependencies, extensions or toolchain changes. The module holds the TicketPaymentReceipt wire type and its JSON instances moved verbatim out of TDF.Server.TicketPaymentReceipt, which re-exports it; it imports no authorization or recovery module and introduces no authorization or recovery binding. Every other reviewed source is unchanged. Reviewed by the change author only; no independent review was performed.",
+      "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "2ebb5c38bef08f3205877dc9521026b40b68d4ef",
+      "previousSha256": "8e25c07ae89ff4e0a3dc0867ad8f5c7a034735fc574beb0ddb35feaaad06ae98",
+      "currentSha256": "b67cda5d8695e231e113b25e5bab8cab96ba65f71cc39ec7da098630d8f653f8",
+      "change": "Add TDF.Commerce.PaypalWebhook and TDF.Ticketing.Issuance to the library exposed-modules list only; removing those exact two lines reproduces the previously reviewed Cabal manifest byte for byte.",
+      "semanticReview": "No source search paths, compiler options, CPP flags, dependencies, extensions or toolchain changes. The modules hold PayPal webhook processing moved verbatim out of TDF.Server.ServiceStorefront and paid-order ticket issuance moved verbatim out of TDF.Server.SocialEventsHandlers; they import no authorization or recovery module and introduce no authorization or recovery binding. Every other reviewed source is unchanged. Reviewed by the change author only; no independent review was performed.",
+      "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "624ee06d6150e960d5053a9fae36b1ef4feffecd",
+      "previousSha256": "b67cda5d8695e231e113b25e5bab8cab96ba65f71cc39ec7da098630d8f653f8",
+      "currentSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "change": "Add TDF.Auth.ClientAddress to the library exposed-modules list only; removing that exact line reproduces the previously reviewed Cabal manifest byte for byte.",
+      "semanticReview": "No source search paths, compiler options, CPP flags, dependencies, extensions or toolchain changes. The module derives the client network address for the per-address login limit (last X-Forwarded-For entry behind a loopback or private peer, else the peer); it imports no authorization or recovery module and introduces no authorization or recovery binding. Reviewed by the change author only; no independent review was performed.",
+      "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
+    },
+    {
+      "reviewedAgainst": "65317ec2e4febf920292ecace7df466153ae5046",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "currentSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "change": "Register the library module TDF.Server.EventTicketSale in exposed-modules and the test module TDF.EventTicketSaleSpec in the tdf-hq-test other-modules list for EVT-TICKET-SALE-001.",
+      "semanticReview": "Removing exactly those two module lines reproduces protected main Cabal bytes. Every other reviewed source byte and hash matches protected main. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed; the added library module holds paid ticket sale request and approval handlers only, calls hasStrictAdminAccess without changing it, and is not imported by any reviewed source.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "f615c862b1a7d50406cc0506d21d7650e607fa5f",
+      "previousSha256": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
+      "currentSha256": "028247e5430b87363fcc9bc0c867a480466268dae77797ca922955c134e11671",
+      "change": "Register TDF.Commerce.DomoRefundStore, TDF.Routes.DomoRefunds and TDF.Server.DomoRefunds; exactly three new library module-registration lines.",
+      "semanticReview": "Independent root review removes exactly these three registrations to reproduce protected Main Cabal bytes. Every other controlled authorization/recovery/Stack/model/SQL source, seven obligation objects and all prior review histories remain unchanged. No compiler flag, dependency, language option, existing module or predicate translation changes.",
+      "qualification": "Reviewed source-context correspondence only; the new Domo routes, transaction guards and financial behavior require separate actual tests. Fresh conditional solver/replay/control execution remains required; no whole endpoint, refinement, provider or release claim."
+    },
+    {
+      "reviewedAgainst": "321f4fe6c8e803ab1c32724a8ce5b7814418b79c",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "e4afce0bef5ab7d7c743bb893bab20bfc91841e4de5cf6a53b2273d86df1e0ca",
+      "currentSha256": "307b2da1756aefbe13ecb9c0284da24aa475b958b40941ac4fe2cdc42596c030",
+      "change": "Register only the existing DomoRefundStore, Routes.DomoRefunds and Server.DomoRefunds modules on canonical current Main.",
+      "semanticReview": "Independent removal of exactly3 registrations reproduces whole Main Cabal. All other controlled sources and7 conditional obligations are exact Main; all parent source-context review objects retained.",
+      "independentReviewSha256": "77f112cd73f292b96a820b3272e5c433536736bbf1df32203918fbb37151f3e0",
+      "qualification": "Conditional import/binding/translation context only, not money/refund/capture/cancellation/FAILED handling, provider execution, HTTP/SQL, concurrency, whole-program refinement or release approval. Fresh conditional solver/controls and mandatory hosted whole runtime checks remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "9399daf147d6c53dab153783e2d5721bebba566f",
+      "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "currentSha256": "d103055d35fa3621ca619ba1d5a82485abde749e4883918ab3601e0bfd8ab8c4",
+      "change": "Reconcile current protected main while retaining the reviewed DomoRefund Cabal additions.",
+      "semanticReview": "Removing the three Domo refund store, route and server module registrations reproduces protected main Cabal bytes exactly. No dependency, resolver, compiler flag or existing registration changes. All other authorization and recovery reviewed sources are byte-identical to protected main; obligation objects and both complete histories are preserved. This author source-context review does not establish refund-runtime conformance, whole-system safety or independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "966fb55dca70a49c0a340b674f8cc133cc413a2d",
+      "previousSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "currentSha256": "a6a23d82214ca0e1119787d8b4a7ca969485a3cb57e9aab3e7661aa47ed08da5",
+      "change": "Reconcile current protected main while retaining the reviewed DomoRefund Cabal additions.",
+      "semanticReview": "Removing the three Domo refund store, route and server module registrations reproduces protected main Cabal bytes exactly. No dependency, resolver, compiler flag or existing registration changes. All other authorization and recovery reviewed sources are byte-identical to protected main; obligation objects and both complete histories are preserved. This author source-context review does not establish refund-runtime conformance, whole-system safety or independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "reviewedAgainst": "4dcbaadee2fe22cd6777a9949a9679bf790145b6",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1",
+      "currentSha256": "5c80afe5c145c2bd413c7affe94212ffdaf47ce9dd132e3d2f478fc6d70ea77c",
+      "change": "Expose TDF.Commerce.DatafastClientIP, add direct library iproute, and register DatafastClientIPSpec with test-only iproute/wai-extra. Removing exactly these five lines reproduces the protected main manifest byte for byte; its DirectoryAgreementText registration remains.",
+      "semanticReview": "All other authorization/recovery reviewed sources, Stack resolver and lock are byte-identical to protected main. No source paths, module aliases, CPP/compiler flags, default language or existing dependency selections change. iproute1.7.15 and wai-extra3.1.18 are existing lts-24.42 snapshot packages. The new runtime module imports network/WAI/Servant primitives and defines only its own opaque request combinator and numeric-IP admission; route and hoist delegate the unchanged API and context, construct no AuthedUser and grant no authorization. Test-only wai-extra provides in-process transport probes. Auth/RoleEnum/RecordsIngestion, ServerAuth and recovery SQL/identity contract imports, predicates and time expressions are unchanged. Conditional translations and their existing assumptions remain unchanged; this is not a compiler or whole-endpoint proof.",
+      "qualification": "Requires fresh source-bound solver execution, serialized replay, assertion/counterexample controls and independent CPC checking. Implementation/refinement obligations remain UNPROVEN and release remains BLOCKED; no provider certification, merge or deployment is authorized by this review."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "6ccd1e55af264fd5a6a83b82ec732bf8a5f66239",
+      "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "currentSha256": "a18d212a721deca9191d5a5b9c3375e60581935ec0ecbcfb5d61ce7335155752",
+      "change": "Reconcile current protected main while retaining the reviewed Dataweb Cabal additions.",
+      "semanticReview": "The DatafastClientIP library and test modules are registered, iproute is added to library and tests and wai-extra to tests, using their existing snapshot versions. Removing those exact five lines reproduces current main Cabal bytes. No other dependency, flag, source path, compiler option or toolchain change exists. Current protected-main authorization and recovery sources are retained. Obligation objects are equal to both parents and remain unchanged. This is an author source-context review, not independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "a18d212a721deca9191d5a5b9c3375e60581935ec0ecbcfb5d61ce7335155752",
+      "currentSha256": "fe4fffcbd7ad67e223c342c36ef314018f1646cde368c02dbe18665799d0d01f",
+      "change": "Register the extracted DatafastCheckoutContext module to keep the storefront below the enforced module size limit.",
+      "semanticReview": "The immutable cart projection, recheck, saved service checkout reuse and trusted client-IP loader bodies move verbatim from ServiceStorefront to a small Server-layer module and are re-exported unchanged. This adds one module registration to the existing five reviewed Dataweb Cabal additions; no dependency, resolver, compiler flag or other source-context change. No obligation object changes; this author review supplies no independent approval.",
+      "qualification": "Fresh source-bound checks, compiler validation and hosted CI remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "966fb55dca70a49c0a340b674f8cc133cc413a2d",
+      "previousSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "currentSha256": "32a20b70aeebb16aed20c8b37ec2ca287083942632d786146d893c54833ff98d",
+      "change": "Reconcile current protected main while retaining the reviewed Dataweb Cabal additions.",
+      "semanticReview": "The DatafastClientIP library and test modules and extracted DatafastCheckoutContext module are registered, iproute is added to library and tests and wai-extra to tests, using their existing snapshot versions. Removing those exact six lines reproduces protected main Cabal bytes. No other dependency, flag, source path, compiler option or toolchain change exists. Protected-main authorization and recovery sources are retained. Obligation objects are equal to both parents and remain unchanged. This is an author source-context review, not independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "d65017d10f16e8089c43b82bdbcacf3177d206f5",
+      "previousSha256": "a6a23d82214ca0e1119787d8b4a7ca969485a3cb57e9aab3e7661aa47ed08da5",
+      "currentSha256": "7b74c8a2489454360ad4b6c8cedd4e6883e5b951fb2290e4f294df6c3bce6f83",
+      "change": "Reconcile protected main d65017d10 with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "reviewedAgainst": "5084d8a8a4d7a7a3b8d30d1f55ae5d9c8c032b9b",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+      "currentSha256": "6fcc5204a168ada4ed520ddc399015deb7de48718716b21e9efbf4ac865d4c19",
+      "change": "Register one new library module, TDF.Server.TicketSalesWindow (the ticket purchase-enabled check and its event end-time rule, split out of SocialEventsHandlers to respect its size ceiling). No other line changes.",
+      "semanticReview": "Removing exactly the one added exposed-module line reproduces the Cabal bytes of main at 5084d8a8a4d7. No dependency, flag, extension, source path or existing registration changes; the module uses packages already listed (base, text, time, persistent). Its only project imports are the social event models and TDF.SocialEventLifecycle; it does not import or redefine an authorization predicate, RoleEnum, ingestion admission or recovery arithmetic. Auth.hs, Models.hs, Server/RecordsIngestion.hs, the recovery expiry SQL and Stack/lock are byte-identical to that revision. Obligation claims, assumptions and translations are unchanged.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "6ccd1e55af264fd5a6a83b82ec732bf8a5f66239",
+      "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "currentSha256": "365540cb811429b6b7ddd51c9ca5d7672ea8ce99d4e8038c06270254ea2014e7",
+      "change": "Reconcile current protected main while retaining the single exposed module TDF.Server.TicketSalesWindow.",
+      "semanticReview": "Removing exactly the named module registration reproduces current main Cabal bytes. Dependencies, flags, source paths, compiler options, toolchain and all existing registrations are unchanged. This is an author source-context review; it supplies no independent approval. Current protected-main authorization and recovery sources are retained. Obligation objects are equal to both parents and remain unchanged.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "966fb55dca70a49c0a340b674f8cc133cc413a2d",
+      "previousSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "currentSha256": "c4c3308b0b745aa41bb1f1be0f4db41cad817e99b42f7a46f116682199ba399b",
+      "change": "Reconcile current protected main while retaining the reviewed TDF.Server.TicketSalesWindow Cabal additions.",
+      "semanticReview": "Removing exactly the named module registration reproduces current main Cabal bytes. Dependencies, flags, source paths, compiler options, toolchain and all existing registrations are unchanged. This is an author source-context review; it supplies no independent approval. Current protected-main authorization and recovery sources are retained. Obligation objects are equal to both parents and remain unchanged.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "2c6dd64b9bd28d3fec6ac8d961eddea338d448d5",
+      "previousSha256": "7b74c8a2489454360ad4b6c8cedd4e6883e5b951fb2290e4f294df6c3bce6f83",
+      "currentSha256": "7ee8bfa26ead09ec9b11445bbdae643359552c8ec5946b8cc17513f22c89c03e",
+      "change": "Reconcile protected main 2c6dd64b9 with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "966fb55dca70a49c0a340b674f8cc133cc413a2d",
+      "previousSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "currentSha256": "b0b447a372087070171e437869864cdaa8bc5dc56e147fb9c10376ff7ff6f809",
+      "change": "Add TDF.Ticketing.LookupToken to the library exposed-modules list only; removing that exact line reproduces the protected-main Cabal manifest byte for byte.",
+      "semanticReview": "No source search paths, compiler options, CPP flags, dependencies, extensions or toolchain changes. The module holds the guest ticket order lookup-key derivation moved verbatim out of TDF.Server.EventTicketCheckout, plus a hash comparison and an order-link builder used by the ticket confirmation worker; it imports no authorization or recovery module and introduces no authorization or recovery binding. Every other reviewed source is unchanged. Reviewed by the change author only; no independent review was performed.",
+      "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "7f1ae73d21a3ba14f59626776aa22c569696f1ea",
+      "previousSha256": "7ee8bfa26ead09ec9b11445bbdae643359552c8ec5946b8cc17513f22c89c03e",
+      "currentSha256": "62b39d4e1893be1cb75f38f50109c8fb15e234cc7b79ea9f78357a205fcbd28d",
+      "change": "Reconcile protected main 7f1ae73d2 with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
+    },
+    {
+      "reviewedAgainst": "06e88b75f715397f1a70d09b99d29d5b7dd86068",
+      "originalStorageExecutionSource": "931fe5e40919a28fa343bdc0cef2be6dbea873bd",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "2f923e9fbb52e90c249977d32673d1580d1b9dae867f2915a1eadee2453ec674",
+      "currentSha256": "ae1c54ae77c664dc7498f938390b4417aee6d42a42651ab91effe5f79a8d4b4a",
+      "change": "Exactly register TDF.StorageVault in the library, TDF.StorageSecuritySpec in tests and the direct unix dependency; removing these three lines reproduces current protected main byte-for-byte. Existing module registrations, dependency versions/constraints, flags, extensions, compiler/resolver and lock inputs are unchanged.",
+      "semanticReview": "The unix import is System.Posix.Files.setFileMode in ContentStorage: private/staging directories0700 and staged files0600. The new Vault uses existing crypton/memory, owner+connection AAD, fresh nonce, authenticated envelope and existing withCurrentAuthSession within its owning transaction. The storage tests register finite encryption/handle/ACL/static-path cases and a separately selected actual PostgreSQL handler case. These private-handler/filesystem/crypto semantics are outside the existing primitive Auth/Recovery formulas; they do not acquire an inductive storage proof from this context review. Every existing pinned Auth/Models/RecordsIngestion/ServerAuth/SQL/recovery declaration and build lock source other than the reviewed Cabal linkage remains exact.",
+      "qualification": "Context binding and preservation of the existing translated primitive scope only; fresh source-bound proof/control execution required. Original10 storage-security runtime cases retain931 execution identity; new current-main native compilation/handler coverage and independent review remain mandatory. No whole-storage/refinement, Mobile-contract, release, activation or deployment clearance."
+    },
+    {
+      "reviewedAgainst": "f615c862b1a7d50406cc0506d21d7650e607fa5f",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
+      "currentSha256": "66e275e1c76ec681518c74226e95b2272e7b8370ff7bacadbee9486bc954972a",
+      "change": "Register StorageVault and StorageSecuritySpec and add direct unix dependency. Reversing these exact three lines reproduces protected Main Cabal. Canonical Stack LTS24.42/GHC9.10.3 and locks unchanged.",
+      "semanticReview": "Independent policy-agent static context review: unix2.8.7.0 is exposed in the canonical snapshot. Production consumer is System.Posix.Files.setFileMode in ContentStorage for private/staging0700 and staged0600. All existing controlled Auth/Models/RecordsIngestion/ServerAuth/expirySQL/identity sources and seven ordinary projection claims/assumptions/limits are unchanged. This linkage review does not prove storage crypto, filesystem, HTTP, provider or full implementation/refinement behavior.",
+      "qualification": "Fresh3+4 solver/replay and16negative controls required. Preserve all Main30 and Source24 histories; new native/storage/runtime/current hosted and independent GitHub review remain separate."
+    },
+    {
+      "reviewedAgainst": "9df3922fc8261f80975f436bb14c417ce1194636",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "e4afce0bef5ab7d7c743bb893bab20bfc91841e4de5cf6a53b2273d86df1e0ca",
+      "currentSha256": "47a476da7d05d17f1890711060a821a34dd2854a191b13be3c50f0696b2d07fa",
+      "change": "Retain original qualified StorageVault exposed module, StorageSecuritySpec registration and library unix dependency on current protected Main.",
+      "semanticReview": "Independent reversal of exactly these3 literal lines reproduces complete Main9df Cabal. All other controlled sources are byte-exact Main; source productionVault/unix behavior is unchanged, and both parent context histories and7 obligations are retained.",
+      "independentReviewSha256": "b72542ad80b59791a077c377fdadddcfdf7a5370318f2bf5ff75e8492ab433f3",
+      "qualification": "Restricted conditional authentication/recovery import, binding and translation context only; no storage/vault/quota/privacy/ownership/Drive/provider/HTTP/SQL/whole-program or release proof. Fresh scoped solver/controls and mandatory hosted current native checks remain required."
+    },
+    {
+      "reviewedAgainst": "be052c96d85309d9726e2985b261e5673daebd1f",
+      "materialRevision": "057e7e8fec04afa721b57dcabc390ca67120f63e",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "47a476da7d05d17f1890711060a821a34dd2854a191b13be3c50f0696b2d07fa",
+      "currentSha256": "84b38e9bb52d76785ae44b37016e512797c097ad055412bcb1a8a5f1528f52bd",
+      "change": "Expose TDF.DriveOAuthClient so exchange and vault refresh reuse the existing canonical client resolver and validators.",
+      "semanticReview": "Independent review verifies exactly one exposed-module addition and no other Cabal dependency, compiler, flag or registration change. Shared helper bodies and constants are copied from the canonical Server implementation; thin Server compatibility wrappers preserve its existing callers. All other controlled sources and the seven obligations stay unchanged.",
+      "independentReviewSha256": "89c345a8a8ff1bc41f7f79c9a1cf86e915ac1868f1d1cea9c296ad36db92a4ee",
+      "qualification": "Restricted conditional authentication/recovery import, binding and translation context only. This is not a StorageVault/OAuth/request-builder/provider/HTTP/SQL/transaction/whole-program or release proof. Actual request controls and fresh scoped solvers/controls plus mandatory hosted checks remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "6ccd1e55af264fd5a6a83b82ec732bf8a5f66239",
+      "previousSha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
+      "currentSha256": "d563e8a5624d75b64cf97bb8626120e0d1d48f3223c65d1ed79a1b50d37e1da7",
+      "change": "Reconcile current protected main while retaining the reviewed StorageVault Cabal additions.",
+      "semanticReview": "The StorageVault and DriveOAuthClient library modules and StorageSecuritySpec test module are registered, and the existing snapshot unix package is added to the library for storage filesystem locking. Removing those exact four lines reproduces current main Cabal bytes. No resolver, lock, version, flag, source path, compiler option or other dependency change exists. Every other pinned authorization/recovery source is byte-identical to current protected main. Obligation objects are unchanged. This author source-context review does not prove endpoint, private-reader, credential lifecycle or whole-system security and is not independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "966fb55dca70a49c0a340b674f8cc133cc413a2d",
+      "previousSha256": "0308ef4b4116bd3562e6dd929416e43ed503619ee718f61d7154f7557884ea0a",
+      "currentSha256": "adf0b370e818aeaed0fe982979f3a387b7a59e4ebf0ddd0966edbcea2b98d674",
+      "change": "Reconcile current protected main while retaining the reviewed StorageVault Cabal additions.",
+      "semanticReview": "The StorageVault and DriveOAuthClient library modules and StorageSecuritySpec test module are registered, and the existing snapshot unix package is added to the library for storage filesystem locking. Removing those exact four lines reproduces current main Cabal bytes. No resolver, lock, version, flag, source path, compiler option or other dependency change exists. Every other pinned authorization/recovery source is byte-identical to current protected main. Obligation objects are unchanged. This author source-context review does not prove endpoint, private-reader, credential lifecycle or whole-system security and is not independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "d65017d10f16e8089c43b82bdbcacf3177d206f5",
+      "previousSha256": "a6a23d82214ca0e1119787d8b4a7ca969485a3cb57e9aab3e7661aa47ed08da5",
+      "currentSha256": "99ae419bad2b30ab871838c398af75a8994f7ba9a36961349bd23fc0bde73d8c",
+      "change": "Reconcile current protected main while retaining the reviewed StorageVault Cabal additions.",
+      "semanticReview": "The StorageVault and DriveOAuthClient library modules and StorageSecuritySpec test module are registered, and the existing snapshot unix package is added to the library for storage filesystem locking. Removing those exact four lines reproduces current main Cabal bytes. No resolver, lock, version, flag, source path, compiler option or other dependency change exists. Every other pinned authorization/recovery source is byte-identical to current protected main. Obligation objects are unchanged. This author source-context review does not prove endpoint, private-reader, credential lifecycle or whole-system security and is not independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "2c6dd64b9bd28d3fec6ac8d961eddea338d448d5",
+      "previousSha256": "7b74c8a2489454360ad4b6c8cedd4e6883e5b951fb2290e4f294df6c3bce6f83",
+      "currentSha256": "c3a4aa245523959f01e9b411f11d7f9f3c78703b45faf194bf6b926c8cdc0eb0",
+      "change": "Reconcile current protected main while retaining the reviewed StorageVault Cabal additions.",
+      "semanticReview": "The StorageVault and DriveOAuthClient library modules and StorageSecuritySpec test module are registered, and the existing snapshot unix package is added to the library for storage filesystem locking. Removing those exact four lines reproduces current main Cabal bytes. No resolver, lock, version, flag, source path, compiler option or other dependency change exists. Every other pinned authorization/recovery source is byte-identical to current protected main. Obligation objects are unchanged. This author source-context review does not prove endpoint, private-reader, credential lifecycle or whole-system security and is not independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "7f1ae73d21a3ba14f59626776aa22c569696f1ea",
+      "previousSha256": "7ee8bfa26ead09ec9b11445bbdae643359552c8ec5946b8cc17513f22c89c03e",
+      "currentSha256": "be0ab821e68ffb0cc665d0fdeb19e47263eec429a403a5c0244542b352917e02",
+      "change": "Reconcile current protected main while retaining the reviewed StorageVault Cabal additions.",
+      "semanticReview": "The StorageVault and DriveOAuthClient library modules and StorageSecuritySpec test module are registered, and the existing snapshot unix package is added to the library for storage filesystem locking. Removing those exact four lines reproduces current main Cabal bytes. No resolver, lock, version, flag, source path, compiler option or other dependency change exists. Every other pinned authorization/recovery source is byte-identical to current protected main. Obligation objects are unchanged. This author source-context review does not prove endpoint, private-reader, credential lifecycle or whole-system security and is not independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "2f830d5f4996c4dc7d9e0f6ec0512b5a271d0451",
+      "previousSha256": "62b39d4e1893be1cb75f38f50109c8fb15e234cc7b79ea9f78357a205fcbd28d",
+      "currentSha256": "7c0ee9e661a11f56f2b9f109139f78ad19a1cd7235fb9ca286f1b00a423bb5c8",
+      "change": "Reconcile current protected main while retaining the reviewed StorageVault Cabal additions.",
+      "semanticReview": "The StorageVault and DriveOAuthClient library modules and StorageSecuritySpec test module are registered, and the existing snapshot unix package is added to the library for storage filesystem locking. Removing those exact four lines reproduces current main Cabal bytes. No resolver, lock, version, flag, source path, compiler option or other dependency change exists. Every other pinned authorization/recovery source is byte-identical to current protected main. Obligation objects are unchanged. This author source-context review does not prove endpoint, private-reader, credential lifecycle or whole-system security and is not independent approval.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver execution, serialized replay, negative controls, hosted checks and independent review remain necessary; no production or full-system conformance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "d65017d10f16e8089c43b82bdbcacf3177d206f5",
+      "previousSha256": "a6a23d82214ca0e1119787d8b4a7ca969485a3cb57e9aab3e7661aa47ed08da5",
+      "currentSha256": "e77b6f8df740811c3cd7d868092c6c065294b0bc9c890f4accadba73be4d26db",
+      "change": "Register TDF.Server.SocialArtistOwnership in the backend library.",
+      "semanticReview": "Removing that registration reproduces the base manifest byte for byte. The authorization and recovery inputs retain the reviewed bindings and compiler configuration.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "de3b79ed29752d0f4c84ea36336003fe529588d0",
+      "previousSha256": "7c0ee9e661a11f56f2b9f109139f78ad19a1cd7235fb9ca286f1b00a423bb5c8",
+      "currentSha256": "92b06c484787facaf795af857a55dbb51c40a2eb1f1ea81096d54ee173ed5112",
+      "change": "Reconcile protected main de3b79ed2 with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "5a81672285dc9c03130fc9fd8355e2b4c58e9e12",
+      "previousSha256": "92b06c484787facaf795af857a55dbb51c40a2eb1f1ea81096d54ee173ed5112",
+      "currentSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "change": "Register the new TDF.Server.EventAttendees module in the library's other-modules on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly one added line, the TDF.Server.EventAttendees module entry. That module holds one read query for the attendee roster and is imported only by the social events server; it adds no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "reviewedAgainst": "5084d8a8a4d7a7a3b8d30d1f55ae5d9c8c032b9b",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+      "currentSha256": "78aff2bfc0573838f5be3072161efa079dd416c74df5b9e67fa97d67228b8d2e",
+      "change": "Register one new library module, TDF.Server.PublicEventTicketSummary (read-only summary of an event's ticket tiers for the public upcoming-events list, kept out of SocialEventsHandlers to respect its size ceiling). No other line changes.",
+      "semanticReview": "Removing exactly the one added exposed-module line reproduces the Cabal bytes of main at 5084d8a8a4d7. No dependency, flag, extension, source path or existing registration changes; the module uses packages already listed (base, text, time, persistent). Its only project imports are the social event models and isTicketTierSaleOpen from TDF.Server.EventAdminDelegation; it does not import or redefine an authorization predicate, RoleEnum, ingestion admission or recovery arithmetic. Auth.hs, Models.hs, Server/RecordsIngestion.hs, the recovery expiry SQL and Stack/lock are byte-identical to that revision. Obligation claims, assumptions and translations are unchanged.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "985117b3d9e23b1a84837040d39784e3debcb48e",
+      "previousSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "currentSha256": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
+      "change": "Register TDF.Server.PublicEventTicketSummary alongside current main modules; exactly one Cabal line is added.",
+      "semanticReview": "Removing the single module registration reproduces current main Cabal bytes exactly. Existing dependencies, flags, extensions, source directories and registrations remain unchanged. The focused module uses current event models/DTOs and existing workflow and sale-window helpers. The oversized handler retains its strict metadata decoder and passes only its four public fields; the existing public-card projection moves into the focused module without changing metadata, workflow or identity admission. No authentication, ingestion or recovery predicate, assumption or translation changes. Every other pinned source remains byte-identical to current main; both parent review histories are preserved.",
+      "qualification": "Conditional source-context correspondence only. Fresh solver execution, replay, negative controls, current hosted checks and independent review remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "403ba9acc943b62c6d9658bfbc38e16c742f9c30",
+      "previousSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "currentSha256": "3572a1afd73c7ec2b40da2d9b281cb1ea34a718217e7a30c5000af695288022f",
+      "change": "Register the new TDF.Server.PublicBookingNotifications module in the library's other-modules on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly one added line, the TDF.Server.PublicBookingNotifications module entry. That module sends the staff and customer notices for a public booking request and is imported only by the server; it adds no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "a63ab09f54ff0828e5e33c61a5152de9ba6b0922",
+      "previousSha256": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
+      "currentSha256": "745c0c005b545f1d8c6d08d568271336e5213a7ffa21d76ba45bb9f49592ce27",
+      "change": "Reconcile protected main a63ab09f5 with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "403ba9acc943b62c6d9658bfbc38e16c742f9c30",
+      "previousSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "currentSha256": "1c6c0c24e27cdfe42c0dd9c3bddc73e731a4f96400ef9bc919fb462296b37438",
+      "change": "Register the chat delivery modules (TDF.API.NotificationDelivery, TDF.Chat.Delivery, TDF.Server.NotificationDelivery) and the TDF.ChatDeliverySpec test module on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly four added lines: three library module entries for the chat notification delivery API, worker and handlers, and one test module entry. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "0e05c05762d661e18f9636d121c10c7c8e8e7389",
+      "previousSha256": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
+      "currentSha256": "69ec9047cb87c9e74bc0535d2a9be5980da68ade6f1892d3539441c980b247f3",
+      "change": "Integrate the chat delivery module registrations (TDF.API.NotificationDelivery, TDF.Chat.Delivery, TDF.Server.NotificationDelivery, TDF.ChatDeliverySpec) with current main, which now registers TDF.Server.PublicEventTicketSummary.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly the four added module lines already reviewed for the chat delivery branch. No dependency, flag, extension or source directory changes, and every other controlled source is byte-identical to current main, so the conditional authentication and recovery context is unchanged. Both parent review histories are preserved.",
+      "qualification": "Conditional source-context correspondence only. Fresh solver execution, replay, negative controls, current hosted checks and independent review remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "d722edb044b6dd57a4110198815b5c2cbe3bec6d",
+      "previousSha256": "745c0c005b545f1d8c6d08d568271336e5213a7ffa21d76ba45bb9f49592ce27",
+      "currentSha256": "0b89be834848ce754673da5f456c73092effd2b7dcf6f8558c42b08c97c171de",
+      "change": "Reconcile protected main d722edb04 with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "Conditional source-context correspondence only. Fresh solver execution, replay, negative controls, current hosted checks and independent review remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "403ba9acc943b62c6d9658bfbc38e16c742f9c30",
+      "previousSha256": "be9f7b8b3a0ba9874b89157202d40a27b0406471435b7324d95d5eea770b8654",
+      "currentSha256": "ac2c532ac44d40fa90deccf0617c0d3f8663993541b17a02fa81f322352cd155",
+      "change": "Register the new TDF.Fans.ArtistRecommendations library module and its TDF.Fans.ArtistRecommendationsSpec test module on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly two added lines: the TDF.Fans.ArtistRecommendations entry in the library's other-modules and the TDF.Fans.ArtistRecommendationsSpec entry in the test suite's other-modules. The library module holds a pure ranking function and three read-only aggregate queries over fan_follow, imports only TDF.Models and TDF.Profiles.ArtistVisibility from this package, and is imported only by TDF.Server; the test module imports only that module. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "0e05c05762d661e18f9636d121c10c7c8e8e7389",
+      "previousSha256": "b8e34308b344f4e5ba43c80351fbef8ad60067dbdef0e9bd40043db0ac8492f2",
+      "currentSha256": "b2699bc782904be3a871579f71a9928443135ca4d347d6d5769f23254d345f95",
+      "change": "Reconcile protected main 0e05c0576 with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the two module lines this branch added and reviewed above (TDF.Fans.ArtistRecommendations and TDF.Fans.ArtistRecommendationsSpec); git merged them without conflicts, so that review describes every difference from protected main and the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "6142acf4cb33bee1aff32daf4c283210344feb4b",
+      "previousSha256": "0b89be834848ce754673da5f456c73092effd2b7dcf6f8558c42b08c97c171de",
+      "currentSha256": "1958140b10c2e13a43dc83f4d0aaf38fc8be222bba91d3446fc29eb7252c86b4",
+      "change": "Reconcile protected main 6142acf4c with this branch's reviewed tdf-hq/tdf-hq.cabal changes.",
+      "semanticReview": "The merged file is protected main's version plus exactly the line changes this branch made and reviewed above; git merged them without conflicts, so those reviews describe every difference from main.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "0d9f2aaed81c5919b558c16a7a38f6050faa6039",
+      "previousSha256": "1958140b10c2e13a43dc83f4d0aaf38fc8be222bba91d3446fc29eb7252c86b4",
+      "currentSha256": "463d29cae8a590b7c4cc9958fdb001fd4df0f434cd6c296a58cf734395d48507",
+      "change": "Register the new TDF.Fans.FeedAffinity module in the library's other-modules and TDF.Fans.FeedAffinitySpec in the test suite's other-modules (COMMUNITY-FEED-AFFINITY-001).",
+      "semanticReview": "The Cabal file differs from protected main's by exactly two added lines, the TDF.Fans.FeedAffinity library module and its TDF.Fans.FeedAffinitySpec test module. The library module ranks the fan-club hot feed and reads the viewer's own reactions and replies; it is imported only by TDF.ServerFanClub. No dependency, flag, language extension or compiler option changes, and no module in the solver source context imports it.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "030ca5c3b0c993a8783a1146d75c8f7bc48188a9",
+      "previousSha256": "463d29cae8a590b7c4cc9958fdb001fd4df0f434cd6c296a58cf734395d48507",
+      "currentSha256": "3f719d332f1c5cee5585d53f4e2f78b059d5e260f3d1740133766befb79c3a66",
+      "change": "Register the new TDF.Directory.SemanticIndex and TDF.Directory.SemanticSearch library modules and their TDF.Directory.SemanticSearchPostgresSpec and TDF.Directory.SemanticSearchSpec test modules on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly four added lines: the TDF.Directory.SemanticIndex and TDF.Directory.SemanticSearch entries in the library's exposed-modules and the TDF.Directory.SemanticSearchPostgresSpec and TDF.Directory.SemanticSearchSpec entries in the test suite's other-modules. TDF.Directory.SemanticSearch is pure ranking arithmetic and SQL text for directory search and imports nothing from this package; TDF.Directory.SemanticIndex runs the embedding sweep and the query-vector lookup, imports only TDF.Config, TDF.DB, TDF.Directory.SemanticSearch and TDF.RagStore from this package, and is imported only by TDF.App.Boot and TDF.Server.Directory. Neither imports TDF.Auth, TDF.ServerAuth, a role type or a recovery binding. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "129962b8903f127909c1eda0f22657ac67947075",
+      "previousSha256": "3f719d332f1c5cee5585d53f4e2f78b059d5e260f3d1740133766befb79c3a66",
+      "currentSha256": "06cf60d8ced75b4a71446afa35fa25c7cdfee57930be8096176dc49567c2f10c",
+      "change": "Register the new TDF.Venues.Search and TDF.Venues.SearchFold library modules and the TDF.Venues.SearchSpec test module on current protected main.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly three added lines: the TDF.Venues.Search and TDF.Venues.SearchFold entries in the library's exposed-modules and the TDF.Venues.SearchSpec entry in the test suite's other-modules. TDF.Venues.SearchFold imports only base and text. TDF.Venues.Search holds a pure venue filter, a bounding box and read-only SQL over venue and revenue_feature_flag, imports only TDF.Models.SocialEventsModels from this package, and is imported only by TDF.Server.SocialEventsHandlers. Neither uses Template Haskell, CPP, OPTIONS_GHC, foreign imports or unsafePerformIO, and neither defines an authorization predicate, RoleEnum, ingestion admission or recovery arithmetic. They add no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "1184f9ffeffa2fd5f280fad2f026c12ab7224f4d",
+      "previousSha256": "06cf60d8ced75b4a71446afa35fa25c7cdfee57930be8096176dc49567c2f10c",
+      "currentSha256": "ad8464697185513d41a2b0f0342098e8bfc9f3091b779facf9e6a9151ecbabcd",
+      "change": "Register the TDF.Fans.ArtistSimilarity library module and its TDF.Fans.ArtistSimilaritySpec test module on current protected main 1184f9ffe.",
+      "semanticReview": "The merged Cabal file differs from protected main's by exactly two added lines: the TDF.Fans.ArtistSimilarity entry in the library's other-modules and the TDF.Fans.ArtistSimilaritySpec entry in the test suite's other-modules. git merged them without conflicts. They add no dependency, flag or build option, and no other controlled source changes, so the conditional authentication and recovery context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "030ca5c3b0c993a8783a1146d75c8f7bc48188a9",
+      "previousSha256": "463d29cae8a590b7c4cc9958fdb001fd4df0f434cd6c296a58cf734395d48507",
+      "currentSha256": "45ed3d240bd2e011a6a89ce32cf6e044829c771ad701b751f84ad1689ebbca4c",
+      "change": "Register the new TDF.MusicRelease.Loudness module in the library's exposed modules and TDF.MusicRelease.LoudnessSpec in the test suite's other-modules (MEDIA-MUSIC-LOUDNESS-001).",
+      "semanticReview": "The Cabal file differs from protected main's at 030ca5c3b0c9 by exactly two added lines, the TDF.MusicRelease.Loudness library module entry and the TDF.MusicRelease.LoudnessSpec test module entry. The new library module imports only aeson and text, is imported only by TDF.Server.MusicRelease, and neither it nor its spec is imported by or imports TDF.Auth, TDF.Models, TDF.ServerAuth or TDF.Server.RecordsIngestion. The change adds no dependency, flag or build option, and none of the other controlled sources changes, so the conditional authentication and recovery source context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "39935739e2def3817eaa2b84229cc2cc4b4941f1",
+      "previousSha256": "ad8464697185513d41a2b0f0342098e8bfc9f3091b779facf9e6a9151ecbabcd",
+      "currentSha256": "ce2bae809a91a14505ee64239b126fcc14e513490d27af06366b0dded5979bca",
+      "change": "Register the loudness library and test modules alongside the directory, venue and artist changes on main.",
+      "semanticReview": "The Cabal diff against the reviewed main revision adds only TDF.MusicRelease.Loudness and TDF.MusicRelease.LoudnessSpec to their existing module lists. Dependencies, flags and build options are identical to main.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "228ab63e448b93970aa0bb32af6320c4cfb88e57",
+      "previousSha256": "ce2bae809a91a14505ee64239b126fcc14e513490d27af06366b0dded5979bca",
+      "currentSha256": "903875f4791eb97ba37309de7e409343fab2dc5757ebb604ee815c862ca071bb",
+      "change": "Register the taxonomy API, handlers, filter model and two specification modules.",
+      "semanticReview": "Compared the Cabal diff against main. Only the module lists change. Package dependencies, constraints, flags and build options remain identical.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "bddc0a2a6c18ef101db3c7750a4ec7fe7f01b4d8",
+      "previousSha256": "903875f4791eb97ba37309de7e409343fab2dc5757ebb604ee815c862ca071bb",
+      "currentSha256": "8dd7989ad8d25be33650d9a557f5db5fd8449ee04b149e78bdb1a9212b2e58f7",
+      "change": "Register the new TDF.Auth.EmailVerification, TDF.Social.SuggestionRank and TDF.Social.SuggestionStore library modules and the TDF.Social.SuggestionRankSpec and TDF.Social.SuggestionStoreSpec test modules on current protected main.",
+      "semanticReview": "The Cabal file differs from protected main's by exactly five added lines: the TDF.Auth.EmailVerification, TDF.Social.SuggestionRank and TDF.Social.SuggestionStore entries in the library's other-modules and the TDF.Social.SuggestionRankSpec and TDF.Social.SuggestionStoreSpec entries in the test suite's other-modules. EmailVerification holds one existence-and-privilege probe and one insert into party_email_verification; it imports only base, text and persistent, and is imported by TDF.ServerAuth and the test suite. SuggestionRank is a pure ranking module that imports only base and containers. SuggestionStore holds read queries, the nightly score replacement and the read adapter for GET /social/suggestions; from this package it imports TDF.Auth (the AuthedUser type only), TDF.DB, TDF.DTO, TDF.LogBuffer, TDF.Social.Session and TDF.Social.SuggestionRank, and is imported only by TDF.Server and TDF.App.Boot. They add no dependency, flag or build option, so the conditional authentication and recovery import, binding and translation context is unchanged apart from the separately reviewed TDF.ServerAuth edit.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "d3b32d1f591a143da12f0484b669a49eb2e070a2",
+      "previousSha256": "903875f4791eb97ba37309de7e409343fab2dc5757ebb604ee815c862ca071bb",
+      "currentSha256": "5230045dba63cbf1202b9dcedea86036820863b891477f40218fe5c42f6fe39c",
+      "change": "Register the event affinity library and test modules.",
+      "semanticReview": "The Cabal diff adds TDF.Fans.EventAffinity and TDF.Fans.EventAffinitySpec to their respective module lists. Dependencies, flags and build options are identical.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "922167fdb55f140c05ed8210ae572e7c7c420aca",
+      "previousSha256": "8dd7989ad8d25be33650d9a557f5db5fd8449ee04b149e78bdb1a9212b2e58f7",
+      "currentSha256": "3bb5b85e0130e579eb3b7bc6d3992731634e70432d823024370381229dcbc2d3",
+      "change": "Register the event affinity library and test modules alongside the friend suggestion modules.",
+      "semanticReview": "The changes from the reviewed friend suggestion revision add only TDF.Fans.EventAffinity and TDF.Fans.EventAffinitySpec in the library and test module lists. Dependencies, build flags, and all other pinned sources match that revision.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "be46f18b2a17312ed36d75b99a2e50f8d59b71a9",
+      "previousSha256": "3bb5b85e0130e579eb3b7bc6d3992731634e70432d823024370381229dcbc2d3",
+      "currentSha256": "55f2c7d188e98985c1122ec9841e4dac50964a53a152404ea1c338efd64fc780",
+      "change": "Register TDF.Server.PublicBookingNotificationsSpec in the Haskell test suite.",
+      "semanticReview": "The Cabal diff adds one booking test module. The other pinned authorization and recovery sources match the protected revision.",
+      "qualification": "This review covers the conditional solver source context."
     }
   ]
 }

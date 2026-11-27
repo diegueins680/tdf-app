@@ -27,6 +27,11 @@ jest.unstable_mockModule('../api/trials', () => ({
   },
 }));
 
+jest.unstable_mockModule('../session/SessionContext', () => ({
+  useSession: () => ({ session: null, loading: false }),
+  getStoredSessionToken: () => null,
+  getActiveSession: () => null,
+}));
 jest.unstable_mockModule('../components/PublicBrandBar', () => ({
   default: () => null,
 }));

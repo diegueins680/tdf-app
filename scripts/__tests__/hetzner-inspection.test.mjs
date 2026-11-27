@@ -7,11 +7,11 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
-test('retired Fly preflight and execution stop before any remote tool', t => {
+test('retired release preflight and execution stop before any remote tool', t => {
   const dir = mkdtempSync(path.join(tmpdir(), 'tdf-retired-deploy-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const marker = path.join(dir, 'called');
-  for (const tool of ['flyctl', 'docker', 'ssh', 'git']) {
+  for (const tool of ['docker', 'ssh', 'git']) {
     writeFileSync(path.join(dir, tool), '#!/bin/sh\n: > "$MARKER"\nexit 97\n', { mode: 0o700 });
   }
   for (const mode of ['preflight', 'release']) {
@@ -20,8 +20,30 @@ test('retired Fly preflight and execution stop before any remote tool', t => {
       env: { PATH: `${dir}:${process.env.PATH}`, MARKER: marker }, encoding: 'utf8',
     });
     assert.equal(result.status, 1);
-    assert.match(result.stderr, /The Fly release CLI is retired/);
+    assert.match(result.stderr, /The release CLI is retired/);
     assert.match(result.stderr, /Preparation does not deploy or authorize database changes/);
+    assert.equal(existsSync(marker), false);
+  }
+});
+
+test('identity reconciliation database commands stop before any tool or output file', t => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'tdf-retired-reconciliation-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const marker = path.join(dir, 'called');
+  for (const tool of ['docker', 'ssh', 'psql']) {
+    writeFileSync(path.join(dir, tool), '#!/bin/sh\n: > "$MARKER"\nexit 97\n', { mode: 0o700 });
+  }
+  const operation = '00000000-0000-4000-8000-000000000001';
+  for (const command of [['list'], ['inventory'], ['rollback', '--operation', operation]]) {
+    const output = path.join(dir, `${command[0]}.json`);
+    const result = spawnSync(process.execPath, [path.join(root, 'scripts/identity-reconciliation.mjs'),
+      '--command', ...command, '--db-app', 'retired-db', '--database', 'tdf_hq', '--output', output], {
+      env: { PATH: `${dir}:${process.env.PATH}`, MARKER: marker }, encoding: 'utf8',
+    });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Database commands are unavailable/);
+    assert.equal(result.stdout, '');
+    assert.equal(existsSync(output), false);
     assert.equal(existsSync(marker), false);
   }
 });
@@ -45,6 +67,38 @@ test('inspector pins SSH target and suppresses raw failed-command output', t => 
   for (const required of ['StrictHostKeyChecking=yes', 'IdentitiesOnly=yes', 'BatchMode=yes',
     '/dev/null', 'root@178.105.93.101', 'python3', '-']) assert.ok(actual.includes(required));
   assert.equal(readFileSync(input, 'utf8'), readFileSync(path.join(root, 'ops/hetzner/inspect-runtime.py'), 'utf8'));
+});
+
+test('inspection failure protocol admits only complete fixed codes and never creates a receipt', t => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'tdf-inspection-failure-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const output = path.join(dir, 'receipt.json');
+  const secret = 'SYNTHETIC_SECRET_MUST_NOT_LEAK';
+  writeFileSync(path.join(dir, 'ssh'), '#!/bin/sh\ncat >/dev/null\nprintf "%s" "$FAILURE" >&2\nprintf "%s" "$PARTIAL"\nexit "$STATUS"\n', { mode: 0o700 });
+  const valid = 'TDF_INSPECTION_REJECTED container-api compose-files\n';
+  const cases = [
+    { failure: valid, status: '1', partial: '', diagnostic: true },
+    { failure: 'TDF_INSPECTION_REJECTED container-api immutable-image\n', status: '1', partial: '', diagnostic: true },
+    { failure: valid, status: '255', partial: '' },
+    { failure: valid, status: '1', partial: secret },
+    { failure: valid + secret, status: '1', partial: '' },
+    { failure: 'TDF_INSPECTION_REJECTED ' + secret + ' compose-files\n', status: '1', partial: '' },
+    { failure: 'TDF_INSPECTION_REJECTED container-api ' + secret + '\n', status: '1', partial: '' },
+    { failure: 'TDF_INSPECTION_REJECTED container-api compose-files\n\n', status: '1', partial: '' },
+    { failure: secret.repeat(20), status: '1', partial: '' },
+  ];
+  for (const value of cases) {
+    const result = spawnSync(process.execPath, [path.join(root, 'scripts/inspect-hetzner-production.mjs'),
+      '--identity-file', path.join(dir, 'synthetic-key'), '--output', output], {
+      encoding: 'utf8', env: { PATH: `${dir}:${process.env.PATH}`, FAILURE: value.failure,
+        PARTIAL: value.partial, STATUS: value.status },
+    });
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(existsSync(output), false);
+    assert.doesNotMatch(result.stderr, new RegExp(secret));
+    assert.equal(result.stderr.includes('inspection rejected at'), Boolean(value.diagnostic), result.stderr);
+  }
 });
 
 for (const changeDuringRead of [false, true]) {

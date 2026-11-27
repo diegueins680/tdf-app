@@ -26,6 +26,10 @@ paths:
         - name: offset
           in: query
           schema: { type: integer, format: int64, minimum: 0, default: 0 }
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyCountryIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyRegionIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyCityIds'
+        - $ref: './taxonomy.yaml#/components/parameters/TaxonomyGenreIds'
         - name: CF-IPCountry
           in: header
           description: Accepted only through the existing trusted-edge configuration. Absent, ignored or invalid values use the existing unknown-territory policy; the browser does not choose this value.

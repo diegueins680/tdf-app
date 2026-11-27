@@ -553,8 +553,19 @@
   },
   {
    "method": "GET",
+   "path": "/music/artists/{artistPartyId}/featured-track",
+   "boundary": "public-read"
+  },
+  {
+   "method": "GET",
    "path": "/music/assets/{assetId}/access",
    "boundary": "public-read"
+  },
+  {
+   "method": "GET",
+   "path": "/music/facets/releases",
+   "boundary": "public-read",
+   "requirement": "TAX-FILTER-001"
   },
   {
    "method": "POST",
@@ -966,6 +977,12 @@
    "boundary": "public-read"
   },
   {
+   "method": "GET",
+   "path": "/taxonomy/filter-options",
+   "boundary": "public-read",
+   "requirement": "TAX-FILTER-001"
+  },
+  {
    "method": "POST",
    "path": "/trials/v1/interests",
    "boundary": "public-intake"
@@ -1025,6 +1042,13 @@
    "path": "/webhooks/whatsapp",
    "boundary": "signed-provider-callback",
    "header": "X-Hub-Signature-256"
+  },
+  {
+   "method": "GET",
+   "path": "/music/legacy/{sourceId}/access",
+   "boundary": "public-read",
+   "requirement": "MEDIA-SOURCE-HEALTH-001",
+   "note": "Rechecks current source version, public artist visibility and confirmed invalidity; no arbitrary server-side fetch."
   }
  ]
 }

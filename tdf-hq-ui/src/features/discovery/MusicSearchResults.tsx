@@ -4,24 +4,27 @@ import { useQuery } from '@tanstack/react-query';
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
+import type { TaxonomySelection } from '../../api/taxonomy';
 import { musicReleases, type MusicPublicTrackSearchHit } from '../../api/musicReleases';
 import { publicMusicTrack } from '../../player/publicMusicTrack';
 import { PLAYER_LOAD_TRACK_EVENT } from '../../player/types';
 
 const PAGE_SIZE = 12;
 
-export default function MusicSearchResults({ query, changingQuery }: { query: string; changingQuery: boolean }) {
+export default function MusicSearchResults({ query, changingQuery, taxonomy }: { query: string; changingQuery: boolean; taxonomy?: TaxonomySelection }) {
   const { t } = useTranslation();
   const headingId = useId();
   const canonicalQuery = query.trim().replace(/\s+/gu, ' ');
-  const [page, setPage] = useState({ query: canonicalQuery, offset: 0 });
+  // TAX-FILTER-001: the shared location and genre filters also narrow music.
+  const searchKey = `${canonicalQuery}\u0000${JSON.stringify(taxonomy ?? null)}`;
+  const [page, setPage] = useState({ query: searchKey, offset: 0 });
   // Derive the first page immediately, before an effect could expose an old page
   // under a new query. Directory filters and its URL/history stay independent.
-  const offset = page.query === canonicalQuery ? page.offset : 0;
-  if (page.query !== canonicalQuery) setPage({ query: canonicalQuery, offset: 0 });
+  const offset = page.query === searchKey ? page.offset : 0;
+  if (page.query !== searchKey) setPage({ query: searchKey, offset: 0 });
   const results = useQuery({
-    queryKey: ['music', 'track-search', canonicalQuery, offset],
-    queryFn: ({ signal }) => musicReleases.searchTracks(canonicalQuery, { limit: PAGE_SIZE + 1, offset, signal }),
+    queryKey: ['music', 'track-search', searchKey, offset],
+    queryFn: ({ signal }) => musicReleases.searchTracks(canonicalQuery, { limit: PAGE_SIZE + 1, offset, signal, taxonomy }),
     enabled: canonicalQuery.length > 0 && !changingQuery,
     retry: false,
     staleTime: 0,
@@ -36,7 +39,7 @@ export default function MusicSearchResults({ query, changingQuery }: { query: st
     const track = queue.find((item) => item.id === selected.trackId && item.recordingId === selected.recordingId);
     if (track) window.dispatchEvent(new CustomEvent(PLAYER_LOAD_TRACK_EVENT, { detail: { track, queue, autoplay: true } }));
   };
-  const changePage = (next: number) => setPage({ query: canonicalQuery, offset: next });
+  const changePage = (next: number) => setPage({ query: searchKey, offset: next });
 
   return <Box component="section" aria-labelledby={headingId} sx={{ py: 2 }}>
     <Typography component="h2" variant="h5" fontWeight={800} id={headingId}>{t('directorySearch.music.heading')}</Typography>

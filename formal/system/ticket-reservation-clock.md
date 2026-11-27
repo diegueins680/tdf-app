@@ -58,3 +58,22 @@ binaries, clock manipulation, policy/terms interval changes, hold-duration
 refresh, alternate isolation availability, HTTP authentication, external payment
 and production rollout remain separate obligations. Current-head review,
 current-main composition, hosted CI and protected FIFO integration are required.
+
+
+## Event-end cutoff (PR735)
+
+The same post-lock admission sample also enforces the event end time in the
+shared inventory reservation. Admission requires `admissionTime < eventEnd`;
+an absent event end adds no time bound. This event boundary is exclusive,
+while the existing tier and promotion endpoints remain inclusive. The initial
+workflow/publication eligibility checks stay in place. The shared check occurs
+before changing stock, so it covers the canonical public, direct and legacy
+Stripe creation paths without extending an event because a request waited on a
+tier, policy or promotion lock. Existing orders and payment reconciliation
+retain their separate rules.
+
+The PostgreSQL clock regressions exercise unchanged event-end deadlines with
+both elapsed and still-future lock release, retaining the original tier/promo
+controls. They assert the result and committed stock/order/ticket/redemption
+counts. This is bounded execution evidence, not a proof about arbitrary writers
+or transaction commit time.
