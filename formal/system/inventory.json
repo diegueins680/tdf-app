@@ -18594,7 +18594,7 @@
     {
       "id": "SURFACE-163048cc75f29b92",
       "path": "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
-      "sha256": "0845b9639d054fbb4e43af1a86abf9b9b1587306e8f2ee0200ad529d2fd17fd3",
+      "sha256": "eafb32778abc9e483394275a25a7c042e69600acfb4532fed2722578ab870d11",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19392,7 +19392,7 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "d5129a96d1450d4c428ff8d6886abb1311116c24c43f40b8ae3e01327dfd3116",
+      "sha256": "e635917ea9b611e78acc7621d88a132ebd7bc3e5e7411e3170e925fa2272a58c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20094,7 +20094,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "c2dd591d1293766dab730983f1e059cea095642e0d0d4e6d08478314a922d132",
+      "sha256": "352682209ac409ce3a40d23d866d4d0898f747478bfccb694a4e0b94a8567191",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25696,7 +25696,7 @@
     },
     {
       "path": "docs/marketplace/manual-gates.md",
-      "sha256": "f0c70150c7e005806675054c6ba2b208b5dff12bbaa01a33811ddb1ff3e2b149",
+      "sha256": "9db184c3c03c0fcb99718eb41f793f8fc277146480099b2f91d471ca2401fa8f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -26327,6 +26327,13 @@
     {
       "path": "docs/payments/ecuador-payment-platform-audit-2026-09-11.md",
       "sha256": "819d350d7e7ebc11b344f84f19524af661313c10348a4e4116efd18aade2c26d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/ecuador-payment-review-2026-11-24.md",
+      "sha256": "b2be8605ff19dfeed20daac31f6e194eec8a6c244dc3b3e5419cf7841d5b4586",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
