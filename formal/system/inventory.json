@@ -9703,13 +9703,13 @@
     {
       "id": "SURFACE-fe47678f5e1d55b6",
       "path": "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx",
-      "sha256": "8f8f91271a67f1b9122b00076a85823ca32804b8b2b776bd31536e55539ff22e",
+      "sha256": "891885762ef9df13163b50606214eef76c063c673d1ad16e58b7c8de3cbb10dd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-237fd771d24b44a0",
       "path": "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
-      "sha256": "17c32d75dcce72b280738b18daa461e6b3f01fb4b95a9d5a2f20ed218a99744c",
+      "sha256": "b9dd75bb93c80ba47c81a8a21bf5a9ab5da5fe8b3a56fb94dfd136c67ace372f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
