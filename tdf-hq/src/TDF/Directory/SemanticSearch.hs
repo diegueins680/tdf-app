@@ -94,7 +94,7 @@ semanticSearchFlagName = "DIRECTORY_SEMANTIC_SEARCH_ENABLED"
 -- | Stored with every vector. Vectors of another provider or model are never
 -- compared: the local bag-of-words fallback of the RAG index is not used here.
 embeddingProviderName :: Text
-embeddingProviderName = "openai"
+embeddingProviderName = "venice"
 
 -- | Dimension of the @vector@ columns created by the migration.
 embeddingDimension :: Int

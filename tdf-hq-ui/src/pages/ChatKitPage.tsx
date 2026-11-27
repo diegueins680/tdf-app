@@ -1,106 +1,57 @@
-import { useEffect, useMemo } from 'react';
-import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
-import { ChatKit, useChatKit } from '@openai/chatkit-react';
-import { env, reportMissingEnv } from '../utils/env';
-import { createChatKitClientSecretFetcher } from '../services/chatkit';
-import { useChatKitScript } from '../hooks/useChatKitScript';
+import { useRef, useState } from 'react';
+import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
+import { useSession } from '../session/SessionContext';
+import { post } from '../api/client';
 
 export default function ChatKitPage() {
-  const workflowId = env.read('VITE_CHATKIT_WORKFLOW_ID') ?? '';
-  const supportsChatKit =
-    typeof window !== 'undefined'
-    && typeof window.crypto?.randomUUID === 'function'
-    && typeof window.customElements !== 'undefined';
-  const chatKitScript = useChatKitScript(Boolean(workflowId) && supportsChatKit);
+  const { session } = useSession();
+  return session ? <AssistantConversation key={session.partyId ?? session.username} /> : null;
+}
 
-  useEffect(() => {
-    reportMissingEnv(['VITE_CHATKIT_WORKFLOW_ID']);
-  }, []);
+function AssistantConversation() {
+  const [turns, setTurns] = useState<string[]>([]);
+  const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const pending = useRef(false);
 
-  const getClientSecret = useMemo(
-    () => createChatKitClientSecretFetcher(workflowId),
-    [workflowId],
-  );
-
-  const chatkit = useChatKit({
-    api: { getClientSecret },
-  });
+  async function send() {
+    const message = draft.trim();
+    if (!message || pending.current) return;
+    const history = [...turns.slice(-20), message];
+    while (history.length > 1 && history.join('').length > 32000) history.splice(0, 2);
+    pending.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      const reply = await post<string>('/assistant/chat', history);
+      setTurns([...turns, message, reply]);
+      setDraft('');
+    } catch {
+      setError('No se pudo obtener una respuesta. Puedes volver a intentarlo.');
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
+  }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
-      <Stack spacing={2}>
-        <Stack spacing={0.5}>
-          <Typography variant="overline" color="text.secondary">
-            Herramientas · IA
-          </Typography>
-          <Typography variant="h4" fontWeight={800}>
-            ChatKit
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Asistente conversacional conectado a tus workflows de OpenAI.
-          </Typography>
-        </Stack>
-
-        {!workflowId && (
-          <Alert severity="warning">
-            Define `VITE_CHATKIT_WORKFLOW_ID` en el frontend para iniciar la sesión de ChatKit.
-          </Alert>
-        )}
-
-        <Card variant="outlined">
-          <CardContent
-            sx={{
-              p: 0,
-              height: { xs: 520, md: 720 },
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            {workflowId ? (
-              !supportsChatKit ? (
-                <Box sx={{ p: 3 }}>
-                  <Alert severity="warning">
-                    Este navegador no soporta los requisitos de ChatKit.
-                  </Alert>
-                </Box>
-              ) : chatKitScript.status === 'ready' ? (
-                <Box sx={{ flex: 1, minHeight: 0 }}>
-                  <ChatKit control={chatkit.control} style={{ height: '100%', width: '100%' }} />
-                </Box>
-              ) : chatKitScript.status === 'error' ? (
-                <Box sx={{ p: 3 }}>
-                  <Alert severity="warning">
-                    {chatKitScript.errorMessage ?? 'No se pudo cargar ChatKit.'}
-                  </Alert>
-                </Box>
-              ) : (
-                <Stack
-                  spacing={1.5}
-                  alignItems="center"
-                  justifyContent="center"
-                  sx={{ flex: 1, minHeight: 360 }}
-                >
-                  <CircularProgress size={32} />
-                  <Typography variant="body2" color="text.secondary">
-                    Cargando ChatKit...
-                  </Typography>
-                </Stack>
-              )
-            ) : (
-              <Box sx={{ p: 3 }}>
-                <Typography color="text.secondary">
-                  Configura el workflow de ChatKit y vuelve a cargar esta vista.
-                </Typography>
-              </Box>
-            )}
-          </CardContent>
-        </Card>
-
-        <Alert severity="info" variant="outlined">
-          Env vars: `VITE_CHATKIT_WORKFLOW_ID` en el frontend y `OPENAI_API_KEY` en el backend.
-          Opcional: `CHATKIT_WORKFLOW_ID` (fallback backend) y `CHATKIT_API_BASE`.
-        </Alert>
+    <Stack spacing={2} sx={{ maxWidth: 800, mx: 'auto', p: 2 }}>
+      <Typography variant="h5" component="h1">Asistente de TDF</Typography>
+      <Stack spacing={2} role="log" aria-live="polite">
+        {turns.map((text, index) => (
+          <Stack key={index}>
+            <Typography variant="caption">{index % 2 === 0 ? 'Tú' : 'Venice'}</Typography>
+            <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{text}</Typography>
+          </Stack>
+        ))}
       </Stack>
-    </Box>
+      {error && <Alert severity="error">{error}</Alert>}
+      <TextField multiline label="Mensaje" value={draft} disabled={busy}
+        inputProps={{ maxLength: 8000 }} onChange={event => setDraft(event.target.value)} />
+      <Button variant="contained" disabled={busy || !draft.trim()} onClick={() => void send()}>
+        {busy ? 'Enviando…' : 'Enviar'}
+      </Button>
+    </Stack>
   );
 }
