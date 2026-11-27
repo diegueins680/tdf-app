@@ -5,7 +5,8 @@
 # and the list handler with the runtime flag off and on.
 #
 # Requires a disposable database that has received the production migration
-# manifest (venue, revenue_feature_flag and 2026-11-21_venue_search_sql.sql). The
+# manifest (venue, revenue_feature_flag, 2026-11-21_venue_search_sql.sql and
+# 2026-11-24_venue_coordinate_constraint.sql). The
 # test works on session-private copies of both tables and leaves the database's
 # own rows untouched. No production connection input is accepted.
 set -eu
