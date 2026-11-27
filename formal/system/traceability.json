@@ -22467,7 +22467,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/bookings-routes.md.",
       "source": "formal/system/bookings-routes.md",
       "contract": "formal/system/bookings-routes.md",
-      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); only a newly created legacy tentative booking notifies: the assigned engineer by email, every active Admin, Manager and StudioManager by an in-app notification (public_booking_request, target booking) plus email and WhatsApp, and the customer by a receipt email stating the request is unconfirmed and records no payment, and that it holds its slot tentatively until staff confirm or release it only when the created booking was allocated rooms or resources; without allocations it says no slot is held (the staff email and the Domo request page make the same distinction). The in-app rows are written before the response; emails and WhatsApp are sent on a background thread after it, so provider latency never delays or fails the accepted request. Each delivery is best-effort and logged.",
+      "property": "Both need Idempotency-Key header (16..128 visible ASCII, 400 otherwise), full name, email, phone, a duration of 30..480 minutes in steps of 15, a start within the next 365 days (400), an active published offering (422) and the engineer rule (400). Under pg_advisory_xact_lock on the key an identical request replays the stored booking and a different one answers 409; resources are locked FOR UPDATE and a new party is always created. The legacy route inserts a Tentative booking whose resource allocation is reserved until its end with no checkout. The checkout route also needs termsAccepted (400), an approved policy (409) and the service_bookings domain (503), expires stale holds, and creates the service order (deposit_due), booking, canonical checkout for the deposit, runtime (hold = policy hold minutes), holding allocation and event, returning a lookup token. Calendar exclusion, lifecycle triggers and serialization aborts answer 409 (publicBookingSqlConflict); only a newly created legacy tentative booking notifies: the assigned engineer by email, the staff recipients (the existing parties listed in PUBLIC_BOOKING_ALERT_PARTY_IDS when it names any, otherwise every active Admin, Manager and StudioManager) by an in-app notification (public_booking_request, target booking) plus email and WhatsApp, and the customer by a receipt email stating the request is unconfirmed and records no payment, and that it holds its slot tentatively until staff confirm or release it only when the created booking was allocated rooms or resources; without allocations it says no slot is held (the staff email and the Domo request page make the same distinction). The in-app rows are written before the response; emails and WhatsApp are sent on a background thread after it, so provider latency never delays or fails the accepted request. Each delivery is best-effort and logged.",
       "actors": [
         "Anonymous customer"
       ],
@@ -22528,7 +22528,8 @@
         "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-public-booking-tentative-idempotency-migration.sh",
         "tdf-hq-ui/src/components/notificationTarget.test.ts",
-        "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx"
+        "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx",
+        "tdf-hq/test/TDF/Server/PublicBookingNotificationsSpec.hs"
       ],
       "formalModels": [],
       "verification": "publicBookingSqlConflict is tested in tdf-hq/test/TDF/ServerSpec.hs; the HTTP concurrency script drives concurrent public checkouts; the rest is read from the handlers.",
@@ -30859,7 +30860,7 @@
     "formal/system/public-routes.json": "c2c6ccb156e5aec42bfecf84f6a248ccd5cae1a6c49790b5db11098e6c6274ee",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "d843ee5167fcdd6b0e5ac838fbc8ca50b4bb91440671479c73d5739872e7d881",
+    "formal/system/recovery-expiry-arithmetic.json": "c3a3d2ad85678b445aa69e818b895feba433f5db79f7301d6f3ecedde03d254f",
     "formal/system/route-requirements.json": "fae2eeeb651f354a6535deed3d643e05a564a0cd2a5f2e1803f39ebeb7ca01a0",
     "formal/system/state-machine-bindings.json": "6af96259b546588349a4cbc421d22a749ec4bb5faa5997f2ca7926d4fadc602c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -32481,7 +32482,7 @@
     "tdf-hq/src/TDF/Server/PaymentAvailability.hs": "b5c07724c67c4f02591abd0bec054547c47f45795f269b804318b7e85f062fae",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "d5129a96d1450d4c428ff8d6886abb1311116c24c43f40b8ae3e01327dfd3116",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "f42c6b0bf7913cf6f0a0deeae6aa6c14785644edf2d50d97dd840d1202080cae",
-    "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs": "e0716a47f555d27e774694ebe97ca81593b4a1b4a9f12f6e3b86adf257f246b9",
+    "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs": "2febaf5e9291240b45ed6c2a0d29ef6bcc2bd2276e6f280eb3acfab18c5c999d",
     "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs": "9ec708b9886bc37b131a48003a35a2ae4ca97f1b09a2b78bd9d52587f5b10a6f",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
@@ -32543,7 +32544,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "3bb5b85e0130e579eb3b7bc6d3992731634e70432d823024370381229dcbc2d3",
+    "tdf-hq/tdf-hq.cabal": "55f2c7d188e98985c1122ec9841e4dac50964a53a152404ea1c338efd64fc780",
     "tdf-hq/test/ArtistSimilarityProbe.hs": "7cbbd2d3fadfb1890eee7ae27f838ce237dab93f317893926c9418248714a74a",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
@@ -32552,7 +32553,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "1d36a7609fa687c8eabd80bc02b57f5ed5872145ef44bc501d855ba703996590",
+    "tdf-hq/test/Spec.hs": "3407a89b9b0005143e0233c261abd7eb747a1e56a371a930def7a8d4c8ab2cd6",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -32626,6 +32627,7 @@
     "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "52081eaf4528c2149b352cc3e1f6d55dc0af2a89875112678217d9395aae91d0",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
+    "tdf-hq/test/TDF/Server/PublicBookingNotificationsSpec.hs": "020dd1d269b9c5841f390dd1e60767a824af1846a18e130a99394d39cf3d70ef",
     "tdf-hq/test/TDF/ServerAdminSpec.hs": "e7a0734ee48ad1e74fd70aae7b82928001c36512bc1de5f6aebaa2c80bc283b8",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "4fa9818a84fa8ed5d501148df24115264975081c9dd5f903340305d75c19bab8",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "4746db879d19f0d2387b5198f6d402b7262b7ed2f50b4ec7772b6585172ae474",
@@ -51063,6 +51065,12 @@
       }
     ],
     "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx": [
+      {
+        "requirement": "BOOK-PUBLIC-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/Server/PublicBookingNotificationsSpec.hs": [
       {
         "requirement": "BOOK-PUBLIC-INTAKE-001",
         "relationship": "tests"
@@ -87698,7 +87706,7 @@
     {
       "id": "SURFACE-e6a81cd4686d612d",
       "path": "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs",
-      "sha256": "e0716a47f555d27e774694ebe97ca81593b4a1b4a9f12f6e3b86adf257f246b9",
+      "sha256": "2febaf5e9291240b45ed6c2a0d29ef6bcc2bd2276e6f280eb3acfab18c5c999d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -89101,7 +89109,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "3bb5b85e0130e579eb3b7bc6d3992731634e70432d823024370381229dcbc2d3",
+      "sha256": "55f2c7d188e98985c1122ec9841e4dac50964a53a152404ea1c338efd64fc780",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -89316,7 +89324,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "1d36a7609fa687c8eabd80bc02b57f5ed5872145ef44bc501d855ba703996590",
+      "sha256": "3407a89b9b0005143e0233c261abd7eb747a1e56a371a930def7a8d4c8ab2cd6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -90760,6 +90768,18 @@
       "sha256": "eb5ef47f63c9a53124d0cac7c5b2bbf6a20ceee47d64a2f028c4d3730443801b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-d7671e17d5e5026c",
+      "path": "tdf-hq/test/TDF/Server/PublicBookingNotificationsSpec.hs",
+      "sha256": "020dd1d269b9c5841f390dd1e60767a824af1846a18e130a99394d39cf3d70ef",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "BOOK-PUBLIC-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-9c08dc84fc4d951b",
@@ -98696,7 +98716,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "67de580ab2b371f77fddbd76797ae5017eb1b896fc4cd8db05aee912ab2c4ff8",
+      "sourceSha256": "a519674959a71e561de9c38cd4c280c817ebe7c18b0eb6f919a841e9d1a2188d",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -98724,7 +98744,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "67de580ab2b371f77fddbd76797ae5017eb1b896fc4cd8db05aee912ab2c4ff8",
+      "sourceSha256": "a519674959a71e561de9c38cd4c280c817ebe7c18b0eb6f919a841e9d1a2188d",
       "definition": {
         "states": [
           "absent",
@@ -98754,7 +98774,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "67de580ab2b371f77fddbd76797ae5017eb1b896fc4cd8db05aee912ab2c4ff8",
+      "sourceSha256": "a519674959a71e561de9c38cd4c280c817ebe7c18b0eb6f919a841e9d1a2188d",
       "definition": {
         "export": [
           "queued",
@@ -98811,7 +98831,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "67de580ab2b371f77fddbd76797ae5017eb1b896fc4cd8db05aee912ab2c4ff8",
+      "sourceSha256": "a519674959a71e561de9c38cd4c280c817ebe7c18b0eb6f919a841e9d1a2188d",
       "definition": {
         "states": [
           "pending",

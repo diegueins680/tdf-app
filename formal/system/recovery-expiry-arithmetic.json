@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "3bb5b85e0130e579eb3b7bc6d3992731634e70432d823024370381229dcbc2d3",
+    "tdf-hq/tdf-hq.cabal": "55f2c7d188e98985c1122ec9841e4dac50964a53a152404ea1c338efd64fc780",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -1122,6 +1122,15 @@
       "currentSha256": "3bb5b85e0130e579eb3b7bc6d3992731634e70432d823024370381229dcbc2d3",
       "change": "Register the event affinity library and test modules alongside the friend suggestion modules.",
       "semanticReview": "The changes from the reviewed friend suggestion revision add only TDF.Fans.EventAffinity and TDF.Fans.EventAffinitySpec in the library and test module lists. Dependencies, build flags, and all other pinned sources match that revision.",
+      "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "be46f18b2a17312ed36d75b99a2e50f8d59b71a9",
+      "previousSha256": "3bb5b85e0130e579eb3b7bc6d3992731634e70432d823024370381229dcbc2d3",
+      "currentSha256": "55f2c7d188e98985c1122ec9841e4dac50964a53a152404ea1c338efd64fc780",
+      "change": "Register TDF.Server.PublicBookingNotificationsSpec in the Haskell test suite.",
+      "semanticReview": "The Cabal diff adds one booking test module. The other pinned authorization and recovery sources match the protected revision.",
       "qualification": "This review covers the conditional solver source context."
     }
   ]
