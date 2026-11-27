@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "reviewedSources": {
-    "tdf-hq/src/TDF/ServerAuth.hs": "86e1570e7748f2a039b3d287c15c6ea0ff27242f51487539f80316a21ae838ad",
+    "tdf-hq/src/TDF/ServerAuth.hs": "48972a479cae7bb55ef55842ea33683cd5c49ebaacd54dead9ff6896dcdc2121",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
@@ -1132,6 +1132,33 @@
       "change": "Register TDF.Server.PublicBookingNotificationsSpec in the Haskell test suite.",
       "semanticReview": "The Cabal diff adds one booking test module. The other pinned authorization and recovery sources match the protected revision.",
       "qualification": "This review covers the conditional solver source context."
+    },
+    {
+      "source": "tdf-hq/src/TDF/ServerAuth.hs",
+      "reviewedAgainst": "228ab63e448b93970aa0bb32af6320c4cfb88e57",
+      "previousSha256": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
+      "currentSha256": "b20db383c88a651a9112b53cab02b5ff0f8241fb71953107ad23eb6bc69e78a4",
+      "change": "Accept the exact TDF mobile web client alongside the configured TDF production web audience in Google login.",
+      "semanticReview": "The full ServerAuth diff changes the audience predicate in validateGoogleIdTokenInfo and its local client IDs. Extraction of the recovery window and issuance addition gives identical expressions on both revisions. Recovery SQL, the time policy and the build configuration are unchanged.",
+      "qualification": "Refresh the source-bound recovery solver, serialized replay and mutation controls for this snapshot."
+    },
+    {
+      "source": "tdf-hq/src/TDF/ServerAuth.hs",
+      "reviewedAgainst": "f69535c5e0fe80938e54475cc6079599ab7715f2",
+      "previousSha256": "86e1570e7748f2a039b3d287c15c6ea0ff27242f51487539f80316a21ae838ad",
+      "currentSha256": "48972a479cae7bb55ef55842ea33683cd5c49ebaacd54dead9ff6896dcdc2121",
+      "change": "Accept the TDF mobile audience alongside the configured TDF web audience.",
+      "semanticReview": "Compared with protected main, ServerAuth changes only validateGoogleIdTokenInfo and its local audience allowlist. Password reset issuance, confirmation and expiry code is identical to main.",
+      "qualification": "Source-bound solver and mutation checks cover this composition."
+    },
+    {
+      "source": "tdf-hq/src/TDF/ServerAuth.hs",
+      "reviewedAgainst": "64ec5907337e4c1c1fea22760eac2f1b1a73bddb",
+      "previousSha256": "86e1570e7748f2a039b3d287c15c6ea0ff27242f51487539f80316a21ae838ad",
+      "currentSha256": "48972a479cae7bb55ef55842ea33683cd5c49ebaacd54dead9ff6896dcdc2121",
+      "change": "Accept the TDF mobile audience alongside the configured TDF web audience.",
+      "semanticReview": "Compared with protected main, ServerAuth changes only validateGoogleIdTokenInfo and its local audience allowlist. Password reset issuance, confirmation and expiry code is identical to main.",
+      "qualification": "Source-bound solver and mutation checks cover this composition."
     },
     {
       "source": "tdf-hq/tdf-hq.cabal",

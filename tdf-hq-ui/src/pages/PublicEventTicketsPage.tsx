@@ -917,16 +917,18 @@ export default function PublicEventTicketsPage() {
                   {paid && issued && checkout.tickets.length > 0 && (
                     <Stack spacing={1}>
                       <Typography variant="h6">{english ? 'Issued tickets' : 'Entradas emitidas'}</Typography>
-                      {checkout.tickets.map((ticket) => <Card key={ticket.ticketId} variant="outlined">
-                        <CardContent>
-                          <Typography gutterBottom>{ticket.holderName ?? title}</Typography>
-                          {ticket.status === 'issued' && ticket.ticketCode
-                            ? <TicketCredentialQR code={ticket.ticketCode} english={english} />
-                            : <Alert severity="info">{ticket.status === 'checked_in'
+                      {checkout.tickets.map((ticket) => ticket.status === 'issued' && ticket.ticketCode
+                        ? <TicketCredentialQR key={ticket.ticketCode} ticket={ticket} orderId={checkout.orderId}
+                            eventId={checkout.eventId} event={storefront.data} eventLoading={storefront.isLoading}
+                            date={storefront.data ? date(storefront.data.startsAt) : undefined}
+                            price={money(checkout.quote.unitPriceMinor, checkout.quote.currency)}
+                            quote={checkout.quote} english={english} />
+                        : <Card key={ticket.ticketId} variant="outlined"><CardContent>
+                            <Typography gutterBottom>{ticket.holderName ?? title}</Typography>
+                            <Alert severity="info">{ticket.status === 'checked_in'
                               ? (english ? 'Already used' : 'Entrada ya utilizada')
-                              : (english ? 'Not available for entry' : 'No disponible para el acceso')}</Alert>}
-                        </CardContent>
-                      </Card>)}
+                              : (english ? 'Not available for entry' : 'No disponible para el acceso')}</Alert>
+                          </CardContent></Card>)}
                       <MobilePromo surface="ticket_confirmation" />
                     </Stack>
                   )}
