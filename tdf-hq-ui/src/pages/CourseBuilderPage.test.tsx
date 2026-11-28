@@ -198,6 +198,26 @@ describe('CourseBuilderPage', () => {
     upsertMock.mockResolvedValue(buildMetadata());
   });
 
+  it('defaults to 08:00 and honors the saved start hour when the course loads', async () => {
+    let loadCourse!: (meta: CourseMetadata) => void;
+    getMetadataMock.mockReturnValueOnce(new Promise<CourseMetadata>((resolve) => { loadCourse = resolve; }));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      const startHour = getInputByLabelText(container, 'Hora de inicio (24h)');
+      expect(startHour.value).toBe('8');
+      await act(async () => {
+        loadCourse(buildMetadata({ sessionStartHour: 15 }));
+        await flushPromises();
+      });
+      await waitForExpectation(() => expect(startHour.value).toBe('15'));
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('waits for a real local edit before creating a browser draft', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

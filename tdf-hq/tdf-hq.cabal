@@ -53,9 +53,13 @@ library
     TDF.Social.FanEffects
     TDF.Fans.ArtistRecommendations
     TDF.Fans.ArtistSimilarity
+    TDF.Fans.EventAffinity
     TDF.API.FanFollowing
     TDF.Social.RelationshipWrites
     TDF.Social.RelationshipReads
+    TDF.Auth.EmailVerification
+    TDF.Social.SuggestionRank
+    TDF.Social.SuggestionStore
     TDF.Social.Chat
     TDF.Social.Session
     TDF.API.Calendar
@@ -127,6 +131,8 @@ library
     TDF.Commerce.ProviderCapabilityStore
     TDF.Commerce.ProviderExecutionStore
     TDF.Commerce.ProviderReconciliation
+    TDF.Commerce.DatafastRecovery
+    TDF.Commerce.DatafastStatus
     TDF.Commerce.ProviderRuntimeConfig
     TDF.Commerce.DatafastConfig
     TDF.Commerce.DatafastClientIP
@@ -513,13 +519,17 @@ test-suite tdf-hq-test
     TDF.Fans.FeedAffinitySpec
     TDF.Fans.ArtistRecommendationsSpec
     TDF.Fans.ArtistSimilaritySpec
+    TDF.Fans.EventAffinitySpec
     TDF.ServerSpec
     TDF.StartupResponseSpec
     TDF.ServerAdminSpec
     TDF.ServerProposalsSpec
     TDF.Social.FollowHandlerSpec
     TDF.Server.EventRelationsSpec
+    TDF.Server.PublicBookingNotificationsSpec
     TDF.Social.FollowSpec
+    TDF.Social.SuggestionRankSpec
+    TDF.Social.SuggestionStoreSpec
     TDF.Services.EventDiscoverySpec
     TDF.Services.YouTubeSpec
     TDF.Services.RecordsIngestionSpec

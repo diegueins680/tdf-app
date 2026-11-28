@@ -6,7 +6,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Aeson as A
 import Data.Char (chr)
 import Data.Int (Int64)
-import Data.Either (isLeft)
+import Data.Either (isLeft, isRight)
 import qualified Data.Set as Set
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), addUTCTime, fromGregorian, secondsToDiffTime)
@@ -727,6 +727,26 @@ googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
     validateGoogleTokenExpiry (addUTCTime 100 epoch) googleTokenInfo { gitExp = 99 } `shouldSatisfy` isLeft
     validateGoogleTokenExpiry (addUTCTime 100 epoch) googleTokenInfo { gitExp = 100 } `shouldSatisfy` isLeft
     validateGoogleTokenExpiry (addUTCTime 100 epoch) googleTokenInfo { gitExp = 101 } `shouldBe` Right ()
+
+  let web = "3700622137-4mvs5oc77n07e09pk32hk6n4ol07cjpl.apps.googleusercontent.com"
+      mobile = "1016946267087-mvr22vuc8dql37fem7aa1msdnatjvhh4.apps.googleusercontent.com"
+      validate configured audience =
+        validateGoogleIdTokenInfo configured (googleTokenInfo { gitAud = audience })
+  it "accepts both registered TDF login audiences for the production web client" $ do
+    validate (Just web) web `shouldSatisfy` isRight
+    validate (Just web) mobile `shouldSatisfy` isRight
+  it "rejects other audiences, including lookalikes in the same Google project" $ do
+    validate (Just web) "1016946267087-other.apps.googleusercontent.com" `shouldSatisfy` isLeft
+    validate (Just web) (mobile <> ".example") `shouldSatisfy` isLeft
+  it "keeps other configurations isolated and requires a configured audience" $ do
+    validate (Just "client-id") "client-id" `shouldSatisfy` isRight
+    validate (Just "client-id") mobile `shouldSatisfy` isLeft
+    validate Nothing mobile `shouldSatisfy` isLeft
+  it "still rejects an invalid issuer or unverified email for the mobile audience" $ do
+    let mobileInfo = googleTokenInfo { gitAud = mobile }
+    validateGoogleIdTokenInfo (Just web) (mobileInfo { gitIss = Nothing }) `shouldSatisfy` isLeft
+    validateGoogleIdTokenInfo (Just web) (mobileInfo { gitEmailVerified = False })
+      `shouldSatisfy` isLeft
 
   it "normalizes Google emails only after rejecting invalid token email shapes" $ do
     case validateGoogleIdTokenInfo (Just "client-id") googleTokenInfo of

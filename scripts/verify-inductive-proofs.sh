@@ -228,6 +228,17 @@ apalache_expect "${A}" CInitImplementation IndInv IndInv 1 NoError "ArtistSimila
 apalache_expect "${A}" CInitImplementation IndInv Safe 0 NoError "ArtistSimilarity-implication"
 apalache_expect "${A}" CInitNoSnapshot Init TableRefinesReference 6 Error "ArtistSimilarityNoSnapshot-reachable-violation"
 apalache_expect "${A}" CInitNoAgeGuard Init ServedRefinesReference 7 Error "ArtistSimilarityNoAgeGuard-reachable-violation"
+E=EventAffinity.tla
+
+# EVT-AFFINITY-ORDER-001: an artist hidden when the request reads the listing
+# is never evidence for promoting an event, and the response holds exactly
+# the events of the page. Control: the listing of the stored relation.
+tlc_expect "${E}" EventAffinity.cfg pass
+tlc_expect "${E}" EventAffinityStaleListing.cfg violation
+apalache_expect "${E}" CInitImplementation Init IndInv 0 NoError "EventAffinity-initiation"
+apalache_expect "${E}" CInitImplementation IndInv IndInv 1 NoError "EventAffinity-consecution"
+apalache_expect "${E}" CInitImplementation IndInv Safe 0 NoError "EventAffinity-implication"
+apalache_expect "${E}" CInitStaleListing Init NoHiddenEvidence 3 Error "EventAffinityStaleListing-reachable-violation"
 unset CURRENT_MODEL_DIR
 
 Q=QueueContinuation.tla

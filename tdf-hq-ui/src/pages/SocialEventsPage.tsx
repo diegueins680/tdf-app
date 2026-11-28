@@ -83,7 +83,8 @@ import EventTaxDocumentsPanel from '../components/events/EventTaxDocumentsPanel'
 import { RefundManagementPanel } from '../components/RefundManagementPanel';
 import ConfirmDialog from '../components/ConfirmDialog';
 import EventArtistSelector from '../components/events/EventArtistSelector';
-import { EVENT_PAGE_SIZE, eventArtistIds, eventPage, isPastEvent } from './eventDiscoveryFilters';
+import { EVENT_PAGE_SIZE, eventArtistIds, eventForYouOrder, eventHasNextPage, eventPage, eventPageLimit, isPastEvent } from './eventDiscoveryFilters';
+import { isEventAffinityOrderEnabled } from '../config/eventAffinityRollout';
 
 interface InvitationState {
   party: PartySelectorOption | null;
@@ -318,6 +319,8 @@ export default function SocialEventsPage() {
   const sessionPartyId = session?.partyId != null ? String(session.partyId) : null;
   const hasSession = Boolean(sessionPartyId);
   const hasAdminAccess = hasStrictAdminAccess(session?.roles, session?.modules);
+  const forYouAvailable = isEventAffinityOrderEnabled() && hasSession;
+  const forYou = eventForYouOrder(searchParams.get('order'), isEventAffinityOrderEnabled(), hasSession);
   // TAX-FILTER-001: events follow the shared location (venue) and genre
   // (lineup) filters; the free-text city search above stays as it was.
   const taxonomyOptions = useTaxonomyFilterOptions();
@@ -325,7 +328,7 @@ export default function SocialEventsPage() {
   const taxonomyFilters = useSurfaceTaxonomyFilters({ urlBacked: true });
   const taxonomySelection = taxonomyFilters.selection;
   const taxonomyKey = JSON.stringify(taxonomySelection);
-  const eventsQueryKey = ['social-events', sessionPartyId, cityFilter, eventTypeFilter, eventWorkflowStateFilter, artistIds.join(','), includePast, page, taxonomyKey] as const;
+  const eventsQueryKey = ['social-events', sessionPartyId, cityFilter, eventTypeFilter, eventWorkflowStateFilter, artistIds.join(','), includePast, page, forYou, taxonomyKey] as const;
 
   const eventsQuery = useQuery({
     queryKey: eventsQueryKey,
@@ -336,8 +339,9 @@ export default function SocialEventsPage() {
         workflowStateId: eventWorkflowStateFilter || undefined,
         artistIds,
         startAfter: includePast ? undefined : new Date().toISOString(),
-        limit: EVENT_PAGE_SIZE + 1,
+        limit: eventPageLimit(forYou),
         offset: (page - 1) * EVENT_PAGE_SIZE,
+        forYou,
         signal,
         taxonomy: taxonomySelection,
       }),
@@ -398,8 +402,8 @@ export default function SocialEventsPage() {
   ]));
   const hasVenueError = venueQueries.some((query) => query.isError);
 
-  const hasNextPage = (eventsQuery.data?.length ?? 0) > EVENT_PAGE_SIZE;
-  const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventWorkflowStateFilter !== '' || artistIds.length > 0 || includePast || page > 1
+  const hasNextPage = eventHasNextPage(forYou, eventsQuery.data?.length ?? 0);
+  const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventWorkflowStateFilter !== '' || artistIds.length > 0 || includePast || forYou || page > 1
     || !isTaxonomySelectionEmpty(taxonomySelection);
   const eventFacets = useQuery({
     queryKey: ['social-events', 'facets', sessionPartyId, cityFilter, eventTypeFilter, eventWorkflowStateFilter, artistIds.join(','), includePast, taxonomyKey],
@@ -1076,10 +1080,15 @@ export default function SocialEventsPage() {
           <FormControlLabel label="Incluir eventos pasados" control={
             <Switch checked={includePast} onChange={(_event, checked) => updateFilter('past', checked ? '1' : '')} />
           } />
+          {forYouAvailable && (
+            <FormControlLabel label="Ordenar según mis artistas" control={
+              <Switch checked={forYou} onChange={(_event, checked) => updateFilter('order', checked ? 'for_you' : '')} />
+            } />
+          )}
           {eventFiltersActive && (
             <Button
               sx={{ width: { xs: '100%', md: 'auto' } }}
-              onClick={() => taxonomyFilters.clearAll(['city', 'type', 'state', 'artists', 'past'])}
+              onClick={() => taxonomyFilters.clearAll(['city', 'type', 'state', 'artists', 'past', 'order'])}
             >
               Limpiar filtros
             </Button>

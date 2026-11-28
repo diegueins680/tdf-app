@@ -24501,7 +24501,13 @@
       {
         "ordinal": 395,
         "path": "/social/suggestions",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "networkReason",
+            "flag": true
+          }
+        ],
         "bodies": [],
         "authCombinators": [
           "bearer-token"
