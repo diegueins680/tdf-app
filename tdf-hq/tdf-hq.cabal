@@ -271,6 +271,7 @@ library
     TDF.ServerRadio
     TDF.ServerFanClub
     TDF.Fans.FeedAffinity
+    TDF.Social.DiscoverAffinity
     TDF.ServerFuture
     TDF.Routes.Courses
     TDF.Routes.DomoQuotes
@@ -503,6 +504,7 @@ test-suite tdf-hq-test
     TDF.ServerExtraSpec
     TDF.ServerFanClubSpec
     TDF.Fans.FeedAffinitySpec
+    TDF.Social.DiscoverAffinitySpec
     TDF.Fans.ArtistRecommendationsSpec
     TDF.Fans.ArtistSimilaritySpec
     TDF.Fans.EventAffinitySpec

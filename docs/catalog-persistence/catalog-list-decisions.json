@@ -32341,26 +32341,21 @@
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "03614141201ef3733794",
+      "id": "6b45dd0d2e84027499b9",
       "reviewed": true,
-      "justification": "Append the original Datafast recovery migration after the protected venue coordinate constraint. Preserve the complete protected and Datafast review histories.",
+      "justification": "Append the original Discover affinity migration (SOCIAL-DISCOVER-AFFINITY-001) after the protected Datafast recovery migration. It adds a three-argument form of social_v2_discover and two indexes, changes no applied SQL and leaves the order of the earlier entries as reviewed. Preserve the complete protected review history.",
       "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "datafast-after-venue-coordinates",
+      "reviewBatch": "social-discover-affinity-20261127",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 274
+        "valueCount": 275
       },
       "previousDecision": {
-        "$historyRef": "sha256:3b42872026a6cb8dd7840cf348c950ab7136fc038fc6ce538662f521d5c153d5"
-      },
-      "concurrentReviewHistory": [
-        {
-          "$historyRef": "sha256:1917fda2f25576b0fe50dc2154572cf83b4e8c1b3f1fc1a52e975cdac911cb78"
-        }
-      ]
+        "$historyRef": "sha256:fa0bdd618299342caf890d2e92b05e1521f75b3d097515cc5a7b7f5e7d0c1a0b"
+      }
     },
     {
       "id": "02f33c240b0c77ab47d1",

@@ -30399,6 +30399,107 @@
         "reason": "Pure core, model and translation verified as stated; the handler wiring and the web switch have no HTTP-level or browser test."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "SOCIAL-DISCOVER-AFFINITY-001",
+      "title": "People the actor interacted with lead Discover, at most half a page",
+      "statement": "With the runtime gate SOCIAL_DISCOVER_AFFINITY_ENABLED on and the three-argument social_v2_discover installed, an actor who has not switched personalisation off receives the people of Discover with at most page_size div 2 candidates first: those to whose top-level club posts the actor reacted or replied in the last 90 days, by units = min(reactions + 2 * replies, 20) descending, then id. Every other candidate keeps the previous order. In every other case the request runs the previous statement. The candidate set, eligibility, daily sample, limit, reason values and response shape do not change. Route: GET /social/v2/discover.",
+      "domain": "SOCIAL",
+      "authority": "Owner request of 2026-11-27 to continue the discovery half of affinity ranking on GET /social/v2/discover; rule, constants (90 days, reply weight 2, cap 20, half a page), separate flag, unchanged sample of 200, kept web overlay and new switch label approved by the owner on 2026-11-27. formal/system/social-discover-affinity.md.",
+      "source": "formal/system/social-discover-affinity.md",
+      "contract": "tdf-hq/sql/2026-11-27_social_discover_affinity.sql",
+      "property": "For every request: returned(affinity) before truncation is a permutation of returned(previous); gate off \\/ function absent \\/ optedOut \\/ no usable evidence => response = previous response; leaders \\subseteq candidates with units > 0 /\\ |leaders| <= page_size div 2; a candidate that does not lead stands between its previous position and that position + page_size div 2; the order is the strict total order (leader first, units desc, id) then the previous key; units(c) > 0 => the actor reacted or replied within 90 days to a top-level, not hidden, readable post of c; optedOut => no behaviour read.",
+      "actors": [
+        "Fan",
+        "Artist"
+      ],
+      "preconditions": [
+        "Authenticated bearer session, SOCIAL_V2_ENABLED and the social runtime switch, as before",
+        "SOCIAL_DISCOVER_AFFINITY_ENABLED set at startup and tdf-hq/sql/2026-11-27_social_discover_affinity.sql applied for any affinity order (default off)"
+      ],
+      "inputs": [
+        "GET /social/v2/discover?limit=N",
+        "social_v2_preference.personalized of the actor",
+        "The actor's reactions and replies of the last 90 days to top-level club posts of the candidates"
+      ],
+      "state": {
+        "initial": "Stored parties, preferences, pairs, clubs, posts, reactions and replies",
+        "terminal": [
+          "Page in the affinity order",
+          "Page in the previous order"
+        ]
+      },
+      "allowedTransitions": [
+        "None; the function is STABLE and writes nothing."
+      ],
+      "forbiddenTransitions": [
+        "Returning a party the previous function would not return, or dropping one it would return before truncation",
+        "An affinity order with the gate off, where the function is not installed, or for an actor who switched personalisation off",
+        "Reading the behaviour of an actor who switched personalisation off",
+        "Counting an interaction with a hidden post, a reply, a post in a club the actor may not read, a target that is not a club post, or an interaction older than 90 days",
+        "Another party's reactions or replies changing the actor's order",
+        "More than page_size div 2 candidates placed by affinity, or a candidate without units among them",
+        "Returning units, a rank or the mode, or a new reason value"
+      ],
+      "effects": [
+        "None; read-only."
+      ],
+      "authorization": "Unchanged: the social session guards of the route; the actor is taken from the session.",
+      "privacy": "Reads only the actor's own reactions and replies, nothing with the gate off and no behaviour for an actor whose social_v2_preference.personalized is false. Only the order of the actor's own page depends on them; nothing is shown to the candidate or anyone else. The candidate set is the previous one, so a blocked, muted, dismissed, followed, closed, non-discoverable, organisation or credential-less party cannot appear. Hidden or unreadable posts are never evidence.",
+      "concurrency": "One STABLE function call reads one snapshot inside the session transaction. A reaction, block or preference committed later affects the next request.",
+      "idempotency": "Read-only.",
+      "failure": "Where the three-argument function is not installed the request runs the previous statement. Errors of the function (disabled, invalid, unavailable) are those of the previous function.",
+      "recovery": "Unset SOCIAL_DISCOVER_AFFINITY_ENABLED and restart: every request runs the previous statement. tdf-hq/sql/2026-11-27_social_discover_affinity_rollback.sql drops the function and its two indexes.",
+      "observability": "HTTP status only; the mode is not logged or returned.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-27_social_discover_affinity.sql",
+        "tdf-hq/sql/2026-11-27_social_discover_affinity_rollback.sql",
+        "tdf-hq/src/TDF/Social/DiscoverAffinity.hs",
+        "tdf-hq/src/TDF/Social/Server.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/config/default.env.example",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Social/DiscoverAffinitySpec.hs",
+        "scripts/test-social-discover-affinity-sql.py",
+        "scripts/test-social-discover-affinity-postgres.sh",
+        "scripts/verify-inductive-proofs.sh",
+        "formal/social/discover_affinity_arithmetic.py",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx"
+      ],
+      "formalModels": [
+        "formal/social/DiscoverAffinity.tla",
+        "formal/social/DiscoverAffinity.cfg",
+        "formal/social/DiscoverAffinityGateOff.cfg",
+        "formal/social/DiscoverAffinityOptOutIgnored.cfg",
+        "formal/social/DiscoverAffinityUnfilteredEvidence.cfg",
+        "formal/social/DiscoverAffinityThirdPartyEvidence.cfg",
+        "formal/social/DiscoverAffinityNoCap.cfg",
+        "formal/social/discover_affinity_arithmetic.py"
+      ],
+      "verification": "PROVED on the model (Apalache inductive invariant: initiation, consecution, implication; up to four parties of which any subset is the candidate set, three posts, three values of the previous key, units 0..2, Half 0..2): only candidates are returned and each exactly once, evidence only from the actor's own interactions with usable posts, previous order and no behaviour read when the gate is off or the actor opted out or has no usable evidence, order fixed by the key, at most Half leaders each with units, every other candidate between its previous position and that position plus Half. PROVED over the integers (Z3, unsat of the negation): units in 0..20, zero exactly without interaction, monotone in reactions and replies, a reply equal to two reactions; 2 * (page div 2) <= page and a page of one unchanged; the key is a strict total order for distinct ids and equals the previous key where nobody leads; a candidate that does not lead is overtaken only by a leader or by a candidate that already preceded it. BOUNDED (TLC, three parties, two posts, two key values, Half 1): the same invariants with the gate on and off, plus four negative controls that must fail (opt-out ignored, evidence not filtered, third-party evidence, no cap on leaders), repeated as reachable violations in Apalache, and four Z3 witnesses (no cap on units, reply weight one, key without id, whole page). TESTED (Hspec and QuickCheck on the Haskell reference): reference vectors, permutation, previous order without units and for a page of one, leaders by units then id, no leader without units, previous order among the others, displacement between 0 and half a page, independence from units of non-candidates, units range and monotonicity, the gate and installation switch, the two statement texts. TESTED on PostgreSQL (real social foundation and read-model migrations plus this migration, other tables reduced to the columns read): 24 generated worlds under both interaction authorities and page sizes 1, 2, 3, 7, 10 and 50 against an oracle that reproduces the same reference vectors; text equality with the two-argument function with use_affinity false or NULL, for an actor without interactions, for an opted-out actor and with every post hidden; equal items on a full page; third-party interactions ignored; guards; rollback; textual equality of the candidate set, base key and response with the two-argument function. 19 mutations of the migration were each rejected by this test (run once by hand, not in CI).",
+      "evidence": "scripts/verify-inductive-proofs.sh output; formal/social/discover_affinity_arithmetic.py output; tdf-hq-test DiscoverAffinitySpec run; scripts/test-social-discover-affinity-postgres.sh output.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the rule as modelled, for the arithmetic and for the SQL on the tested worlds. The step from the model to the SQL, the migrated production schema, the handler wiring and query cost at production size rest on tests, compilation and review, not on proof.",
+      "ambiguity": [
+        "The model abstracts units to 0, 1 or 2, the previous order to an arbitrary key and the sort to emitting the candidate whose key precedes all waiting ones; that the SQL window and ORDER BY realise this is tested, not proved.",
+        "The Apalache proof is for at most four candidates, three posts and Half up to 2; larger pages are covered by the Z3 pairwise lemmas and by tests.",
+        "The Haskell reference order is not on the request path. It and the test oracle reproduce the same vectors; the SQL is compared with the oracle, not with the Haskell function directly.",
+        "The PostgreSQL test reduces the tables outside the social migrations to the columns read; it does not run on the migrated production schema, and no HTTP-level test serves an affinity page.",
+        "Query plans and cost on production data were not measured; two indexes are added for the legacy evidence reads.",
+        "Readability of a club follows the rule of social_v2_feed, copied into the function; a later change to that rule must be made in both places.",
+        "Affinity only reorders the daily sample of at most 200 parties, and Discover excludes parties the actor follows (owner decision of 2026-11-27).",
+        "The web page still moves PageRank suggestions in front of the server order (owner decision of 2026-11-27).",
+        "The switch label mentions activity even while the gate is off.",
+        "The constants were approved without usage data."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Rule proved on the model and over the integers and tested on the SQL; correspondence of the SQL to the model, the migrated production schema and an HTTP-level affinity response are not established."
+      },
+      "historicalStatus": "new"
     }
   ],
   "sourceFingerprints": {
@@ -30413,7 +30514,7 @@
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/domo-refund-validation.yml": "436ee524abb8d61b216bfb4ab716be30e02be6caf72b04aa301ca25f375c3d1c",
-    ".github/workflows/event-operations-formal.yml": "7f8d14c5c33fab9fe02c55f1c8718bff300987597c432abcee0f431bb17dbbd5",
+    ".github/workflows/event-operations-formal.yml": "f3ee9c0457c1e28ff59460a361a7906c6fd66f1f38d497c4e890210ac0f10800",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -30421,7 +30522,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "66c82418f2f33f377d9e0f8854327cb73602122a062f73996ceb6cfe5f303f11",
+    "docs/catalog-persistence/catalog-list-decisions.json": "931fbd55999164e5b7d56306ab2c4b82a134390d96d165b7d6cbea06d8f79eb5",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -30846,6 +30947,13 @@
     "formal/payments/provider_binding_admission.py": "dba36ddd9614166b7c5257399f755e71874ef86619c64b9ee1c308a7d74d350a",
     "formal/payments/stripe_ticket_capture.py": "0f2196fcad2327bb7f7889b1dabf7190f85637dacd6c860f20895fe7c1e78c5d",
     "formal/player/QueueContinuation.tla": "95ac7eb759106b89defca960df4a9a6a3f1ef56d5e7b6ac36f55d7d96e8f17c8",
+    "formal/social/DiscoverAffinity.cfg": "c1f1d6f1e4dfdbc9266d5cad019509fc149a21b260783d3d17266041d4524c0b",
+    "formal/social/DiscoverAffinity.tla": "a34f1cd84a39a71297ac12211abd7129eef25c43600fb50d79e2fe2d1050d181",
+    "formal/social/DiscoverAffinityGateOff.cfg": "8b7f40a7d00b986b0968cd3e87e72151ca58fd7b9193ebf1e5d69adacce809fc",
+    "formal/social/DiscoverAffinityNoCap.cfg": "4a4e1717eba3c3a8589d101055884877c6d7cfddc57f6b85efb0c2ec4d104f57",
+    "formal/social/DiscoverAffinityOptOutIgnored.cfg": "55fd191f9e74859cfe2a3338b95d3140733ee43698fa25465cdd491a762f36ee",
+    "formal/social/DiscoverAffinityThirdPartyEvidence.cfg": "64b787cb4a83dac048101540c035deee78bc0855d2a0e677077781a20b079853",
+    "formal/social/DiscoverAffinityUnfilteredEvidence.cfg": "bcc45a1fbf57fa7cf7ccea4ab6e9f4ecb84e94039f59b8f74efda0e8116a4849",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/FeedAffinity.cfg": "c87cba1557029ffa8a4b76f5dd16524f227eca79e49d96652b4d07e2c0fabf00",
     "formal/social/FeedAffinity.tla": "5e912cc2fe8a316b4d49aa5f8f43afabaf1c5a2555c2e77aa4d95464623a9333",
@@ -30856,6 +30964,7 @@
     "formal/social/FeedAffinityUnfilteredEvidence.cfg": "1f356c94c33af86262f0280fb3e3bfb4749059f5a03c3bb071af40b636ce05a1",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
+    "formal/social/discover_affinity_arithmetic.py": "e02a327821a84b244d248982d2a9c1d1db39396e32f83c001e308355ff4882a8",
     "formal/social/feed_affinity_arithmetic.py": "053de5d2f33947973a03d0734a649688590b0eadfc2204229f82b4f9072db83b",
     "formal/social/venue_search_bounding_box.py": "0729da6ab97314d3a8337fd00a3d3b2fbbf155e35254684f8c2ceabbbe735919",
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
@@ -30868,7 +30977,7 @@
     "formal/system/public-routes.json": "c2c6ccb156e5aec42bfecf84f6a248ccd5cae1a6c49790b5db11098e6c6274ee",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "364e0351dba750aeeab6cb08358e383a1601218768963fd8d8776c919e7b8082",
+    "formal/system/recovery-expiry-arithmetic.json": "92c43b241bf94b9cd66ff411bac05c4953c000757974ab398059084b8bcb878b",
     "formal/system/route-requirements.json": "fae2eeeb651f354a6535deed3d643e05a564a0cd2a5f2e1803f39ebeb7ca01a0",
     "formal/system/state-machine-bindings.json": "6af96259b546588349a4cbc421d22a749ec4bb5faa5997f2ca7926d4fadc602c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -30890,7 +30999,7 @@
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
     "ops/hetzner/guarded-release.py": "4551cec5f09215463ad98ea7a4dc3e3c47417b02fc5ccbd50fad63c20e15239b",
-    "ops/hetzner/inspect-runtime.py": "cddcd987080a30135610431a89d262e4543bd5d22006b1e7c0b75149875c49db",
+    "ops/hetzner/inspect-runtime.py": "f8598752c4dc49b8128aa9a190d269bb25847e6ba7234137fb42dd866e42ba47",
     "ops/hetzner/isolated-application-canary.py": "a21c2ad244d0c2b5a340c6f51b867a3f5b4c1551340e0953836a1c46375ed83f",
     "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
@@ -30921,7 +31030,7 @@
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
     "scripts/__tests__/catalog-decision-history.test.mjs": "90eb66416f6dd3a92c936aeced40dd23e0d8592026ecbd128430679a93e003b0",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "7c7c018e949ff0e28fe732bb024f0b254d71ec3f83ca0f186d12ee629dc1951f",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "e660473d77bff9f195b8d67069bc03d2ec1d0a9616e79cdc2bf92e94c50c07e6",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -31114,7 +31223,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "e43904645016e803690f27376d1eaf3d0ddeaa7f277b3595762b407b4e04dc06",
+    "scripts/production-migrations.json": "4c74b26352aefdd6722c2d9869229db1e825fd1aa39dd30f7fbd4d7004963ed1",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "e497d1ce41e8b1bdc3ae776a164b0cb3c6317b5c799ecce85205ef9c79602729",
@@ -31272,6 +31381,8 @@
     "scripts/test-service-storefront-checkout-runtime-migration.sh": "b678b1891ce29236acc4598c809ddc0d7a8975c05f176132739c30589b69de87",
     "scripts/test-session-invoice-issue.sh": "c19f451e8899fab4bc6d76e3c97ad73b1f927e1beccae501d32f0c3fce663fc4",
     "scripts/test-social-designation-postgres.sh": "e83d08fc7e50b5fd5b8d1adb4058fec1348a7f4a73492ad33e30cf2839f78e86",
+    "scripts/test-social-discover-affinity-postgres.sh": "63da681ed59431cec46c7a778cfa3474198aabfc08fd56f8df8ed52d0aa05800",
+    "scripts/test-social-discover-affinity-sql.py": "6fdffcb70497b9778861fe58411b72cb0ae094a768034fd9ea74ada1464614c7",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "803f1a3ba0e54e29c3f7ea8fcc2c7e263a0b1c450c0e358912091bd745332369",
     "scripts/test-state-machines.py": "8b04bc8695f89b092627c7a9e58c83ba4a718e12d83dfad3cd07634d0c8d8f72",
@@ -31311,7 +31422,7 @@
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
     "scripts/verify-friend-suggestion-pagerank.py": "5c14674955a43f1874dda45b41f3ab3142187b8527132672ed59fe1cb4aba38a",
     "scripts/verify-google-account-name.py": "db797f61655c32d3df0c6737a18514ea8d49312bfa245253e7c45e521d9ce4e9",
-    "scripts/verify-inductive-proofs.sh": "f4ee5f279051c223cc05285467c731286e7dc815f7e855f261bdfbc0e3871b8e",
+    "scripts/verify-inductive-proofs.sh": "8f063921d18ded09fa39881d0396c2c2b27d9c8d0830ed3903fb7ca5b9549dba",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
     "scripts/verify-music-money-wire.py": "7216e352bba7d6c7f591e0149d89bda8fc8e1a2ac190c96734ba886730d2c86f",
@@ -31738,8 +31849,8 @@
     "tdf-hq-ui/src/features/releases/catalogQueries.test.ts": "0abd74326e5225fed06e81cf01921d6247cb41b23b0c1f33932c43b8a513a2d2",
     "tdf-hq-ui/src/features/releases/catalogQueries.ts": "ab1ac999aeac0c22d337184124e83e5d4f3817d4ba6a242445a877b68ee0113d",
     "tdf-hq-ui/src/features/releases/useReleaseFeed.ts": "d14328c34a608a3748610ffb35448acf5beed529601883f3f5077b70d445ff49",
-    "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx": "f51a44e85dedfb110f2df206367c5a2124827522af413bed1876ff2086b4790c",
-    "tdf-hq-ui/src/features/social/SocialWorkspace.tsx": "94480b73ee96a50de9b174cec1e74fbfea0cb4c8aeb112f107ad0c744c550cad",
+    "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx": "51e0d042ed618f69d7134449924ead8d4ddf0931bdf4caeff04d5085b06e2534",
+    "tdf-hq-ui/src/features/social/SocialWorkspace.tsx": "8ca7d388fbfc584f7799ffbf3925a08a48385512dbd3757029367e3241b33641",
     "tdf-hq-ui/src/features/social/suggestionReason.test.ts": "49de92d7b4710a2574f0b8f4776984d0586daec223bc1c4bce3e61c35bc76336",
     "tdf-hq-ui/src/features/social/suggestionReason.ts": "f0c6a9b9fc8b8de2250e617a5361c695f57817be069b15fc7bc067337dd1e472",
     "tdf-hq-ui/src/hooks/useChatKitScript.ts": "9709e7772a436e059b6444328e7aa82b24f19619e5fca3ee012931c1f0745cb0",
@@ -32112,7 +32223,7 @@
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
     "tdf-hq/assets/feature-registry.json": "cbb7862b7dcbfa17009ad4848cc7565e73a4c722e2fba43e74e2e08b730e52bc",
-    "tdf-hq/config/default.env.example": "66cdb99a2c90e5a29e7871a16baf804365b004ced22cd7e5ffe7be5b7799c44c",
+    "tdf-hq/config/default.env.example": "f121ac9b5543071eb3e451216c53c314792d52dce3d7d18184cd7ce550bca398",
     "tdf-hq/docs/openapi/api.yaml": "bc3d0b98805a65ab66bef71606cf3260ef274bbd775827326303ddec14c3e192",
     "tdf-hq/docs/openapi/artist-playback.yaml": "16c71adea21002fb54ecff645bba84be251a8537828d38342b1fb67a78acabcf",
     "tdf-hq/docs/openapi/directory.yaml": "e75fbc0a2c8675e2bf4566f9e8abc6fe373e5861de9a516320517a3ee02fb2e8",
@@ -32324,6 +32435,8 @@
     "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql": "4f053514c5881c8b1a1dc0090f15b3968921031aa005b3f419e8c2a6c2ceb2ae",
     "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql": "b8b072a0c8c62431c6795e13309e740501af4f5ef90f497396eb15f84477869c",
     "tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql": "10ed3efcf7e1cb08659689bde7e0114f58f0899090eeab164c63da99b59ee55d",
+    "tdf-hq/sql/2026-11-27_social_discover_affinity.sql": "4c0d31ba37b784ec0cd318b71b665c0914f76a13ef7d9ff5c757f78120e25eb2",
+    "tdf-hq/sql/2026-11-27_social_discover_affinity_rollback.sql": "bc373734e021f331be306eea85c59173909166d4588632836547f0275d5bfaa7",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
     "tdf-hq/src/TDF/API.hs": "59f9072aac0c821c25d7961afd6aba27f5d5b46f64da0517fc91fb50bc03c456",
@@ -32403,7 +32516,7 @@
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "7b33d92413ab2ef23d3f4064257448e8ff87109da4098308b752828b679a6edc",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Commerce/TicketBuyerContact.hs": "f0ddbaf6649a0830f2743a520e5e7cd00e989a049e7d85eb65b08dd3fb3892ac",
-    "tdf-hq/src/TDF/Config.hs": "63b4437393fbe93ef8a5db568436f500f7761257f7941860ccf10102743dc5be",
+    "tdf-hq/src/TDF/Config.hs": "c7e8f8289d98fb3562af1b6fd51cd078d1cd69662696193e43a69f5f39423094",
     "tdf-hq/src/TDF/ContentStorage.hs": "9b09965c48bd8fa4f240cb157fb24c76e073cd329741440c46c7adc267ee4cbb",
     "tdf-hq/src/TDF/Contracts/API.hs": "5030fec3414c8afbc5fb71895609ad035be9bdbd0fa95d448f788fc50ac82540",
     "tdf-hq/src/TDF/Contracts/Server.hs": "874d4fd54c05dc35103a2182a8793d3b8277f845803cc963e41582b5a403538d",
@@ -32531,10 +32644,11 @@
     "tdf-hq/src/TDF/Social/AccountOwnership.hs": "f1e76d1e92b76da281dab0e0a0fecd2589ae3f10deb097bb64efc2391556f0de",
     "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs": "9cb6b2f5d808ce531655c3aa7fdff67fc64026c2a419067313e7805c6317df2f",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
+    "tdf-hq/src/TDF/Social/DiscoverAffinity.hs": "d37a547b6e260debb2de3082325a7d07f969798164baba708c24b484f3f33000",
     "tdf-hq/src/TDF/Social/FanEffects.hs": "a55587dcef94c2f5efe35da182a3cd934ca705dc5a685b5ab15eccb89f3a7b26",
     "tdf-hq/src/TDF/Social/RelationshipReads.hs": "c483e2673f057b8d969b11714e391821b4c4c5edc2b3865a16c9236a5f72f924",
     "tdf-hq/src/TDF/Social/RelationshipWrites.hs": "fbe2ab38e7a2730ed13ad065859dffe186646a35d04ff99268597a0ac0fcec7c",
-    "tdf-hq/src/TDF/Social/Server.hs": "3b1b4af11566dd037bf44c8fd89b2c198a085171ee23d5d2b4d1f11ab630a731",
+    "tdf-hq/src/TDF/Social/Server.hs": "a318c388b50a207c124f3a3c43cbfcd12ef3a9bae09afb2779fc1b28cb9e4a90",
     "tdf-hq/src/TDF/Social/Session.hs": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
     "tdf-hq/src/TDF/Social/SuggestionRank.hs": "5e9e231e34f9693c0a09a9f580420285037aa9c69512bee291fc220b21b0c860",
     "tdf-hq/src/TDF/Social/SuggestionStore.hs": "622b599910cb41abc3e20233c13b7d6f544eb5334d3933e40bfbe7dc923f017a",
@@ -32558,7 +32672,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "353808e96b8b95472153fb591befb4e27804ff0dfeb06e5a6928a172d7e75ae8",
+    "tdf-hq/tdf-hq.cabal": "c9c4d39dee2ab0eea39e8b10dd51bdaf851725aeac485923a80f266636bac822",
     "tdf-hq/test/ArtistSimilarityProbe.hs": "7cbbd2d3fadfb1890eee7ae27f838ce237dab93f317893926c9418248714a74a",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
@@ -32567,7 +32681,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "3407a89b9b0005143e0233c261abd7eb747a1e56a371a930def7a8d4c8ab2cd6",
+    "tdf-hq/test/Spec.hs": "9af75da3b3ae2247ff4b64738e2246639a9fbdea9f984a251a471ef98d8069a7",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -32606,7 +32720,7 @@
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "3fac72c8e53e52a81933aeba58c908980c90b6db398eb17716dea7d70b0d3f7c",
     "tdf-hq/test/TDF/EventAdminDelegationSpec.hs": "73b13ff14472e7f3df54cbc44718263313bf255244a71bc9534326998ca63f20",
     "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs": "01a1bacba4c441d49e68162267f0e590b39e2db57f94a29818a7057423ff1065",
-    "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "c5b8518cba6ed23bb90620e9a5a7e84848730f399b712db55e3d70cf60a81580",
+    "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "310da929db1b282576b178f308436fe25ef7f4984458780527eb1105bac33b11",
     "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs": "65bdfb6d20e33eb7a062cebdeef4c1e3dbb48e83b10eda578a9dcdeddd9249dc",
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
     "tdf-hq/test/TDF/EventTicketSaleSpec.hs": "c0645218656951aee61012df54df63ec2f9128b8d787d6899fcd323bc90294dd",
@@ -32647,10 +32761,11 @@
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "4746db879d19f0d2387b5198f6d402b7262b7ed2f50b4ec7772b6585172ae474",
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "0cff8f4196afbd1c7247802a051a70a720eb53ef135d2bc5f5f789efd37f1162",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
-    "tdf-hq/test/TDF/ServerSpec.hs": "e86514c17e9b0ca7a5310767d6294bd8a4a4a0c998ae4128c27bf0a9c6a531ab",
+    "tdf-hq/test/TDF/ServerSpec.hs": "13b0dda6b2e4ff2be8215e47c1b01e392f06a18d720bb5f21af571cfd2f279ba",
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
+    "tdf-hq/test/TDF/Social/DiscoverAffinitySpec.hs": "c369d32d0077f41476802b9316f24ca1fc28934188e236b576f4785015ce8403",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "b7e084839124ff880822e8264211fbadebf88190bd18d2fbd904e1848bdbe9b9",
     "tdf-hq/test/TDF/Social/FollowSpec.hs": "fb6640d2e4e415809328254799fc89c884e1f08e75a4678ef6996f0805c7867b",
     "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs": "f85567f40ae2e3e2b8bee19e37362fe683594fb7de3a28c4c4f009c9002b5ee4",
@@ -35085,6 +35200,10 @@
       },
       {
         "requirement": "EVT-AFFINITY-ORDER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
         "relationship": "implementation"
       }
     ],
@@ -40459,6 +40578,10 @@
       },
       {
         "requirement": "PAY-DATAFAST-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
         "relationship": "implementation"
       }
     ],
@@ -47986,6 +48109,10 @@
       {
         "requirement": "COMMUNITY-FEED-AFFINITY-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/auth/logoutIntent.ts": [
@@ -49654,6 +49781,10 @@
       {
         "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx": [
@@ -50606,6 +50737,10 @@
       {
         "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/FriendSuggestionGraph.als": [
@@ -51221,6 +51356,10 @@
     "tdf-hq/src/TDF/Social/Server.hs": [
       {
         "requirement": "SOCIAL-RELATIONSHIP-WRITES-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
         "relationship": "implementation"
       }
     ],
@@ -55053,6 +55192,94 @@
         "requirement": "EVT-AFFINITY-ORDER-001",
         "relationship": "formalModels"
       }
+    ],
+    "tdf-hq/sql/2026-11-27_social_discover_affinity.sql": [
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-27_social_discover_affinity_rollback.sql": [
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Social/DiscoverAffinity.hs": [
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Social/DiscoverAffinitySpec.hs": [
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-social-discover-affinity-sql.py": [
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-social-discover-affinity-postgres.sh": [
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/social/discover_affinity_arithmetic.py": [
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/DiscoverAffinity.tla": [
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/DiscoverAffinity.cfg": [
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/DiscoverAffinityGateOff.cfg": [
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/DiscoverAffinityOptOutIgnored.cfg": [
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/DiscoverAffinityUnfilteredEvidence.cfg": [
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/DiscoverAffinityThirdPartyEvidence.cfg": [
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/DiscoverAffinityNoCap.cfg": [
+      {
+        "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -55299,7 +55526,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "7f8d14c5c33fab9fe02c55f1c8718bff300987597c432abcee0f431bb17dbbd5",
+      "sha256": "f3ee9c0457c1e28ff59460a361a7906c6fd66f1f38d497c4e890210ac0f10800",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56722,7 +56949,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "cddcd987080a30135610431a89d262e4543bd5d22006b1e7c0b75149875c49db",
+      "sha256": "f8598752c4dc49b8128aa9a190d269bb25847e6ba7234137fb42dd866e42ba47",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57094,7 +57321,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "7c7c018e949ff0e28fe732bb024f0b254d71ec3f83ca0f186d12ee629dc1951f",
+      "sha256": "e660473d77bff9f195b8d67069bc03d2ec1d0a9616e79cdc2bf92e94c50c07e6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60413,7 +60640,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "e43904645016e803690f27376d1eaf3d0ddeaa7f277b3595762b407b4e04dc06",
+      "sha256": "4c74b26352aefdd6722c2d9869229db1e825fd1aa39dd30f7fbd4d7004963ed1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63670,6 +63897,30 @@
       ]
     },
     {
+      "id": "SURFACE-a1f0c08c290b3b34",
+      "path": "scripts/test-social-discover-affinity-postgres.sh",
+      "sha256": "63da681ed59431cec46c7a778cfa3474198aabfc08fd56f8df8ed52d0aa05800",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-69105dff74703851",
+      "path": "scripts/test-social-discover-affinity-sql.py",
+      "sha256": "6fdffcb70497b9778861fe58411b72cb0ae094a768034fd9ea74ada1464614c7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-69baedf792a35920",
       "path": "scripts/test-social-event-optional-end-migration.sh",
       "sha256": "8ffafcc2f11defd17b188a03114a5693ff7130f5f64af439a55a5175bd9c72e9",
@@ -64356,7 +64607,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "f4ee5f279051c223cc05285467c731286e7dc815f7e855f261bdfbc0e3871b8e",
+      "sha256": "8f063921d18ded09fa39881d0396c2c2b27d9c8d0830ed3903fb7ca5b9549dba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64381,6 +64632,10 @@
         },
         {
           "requirement": "COMMUNITY-FEED-AFFINITY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
           "relationship": "tests"
         }
       ]
@@ -71455,11 +71710,15 @@
     {
       "id": "SURFACE-becf808f14372711",
       "path": "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
-      "sha256": "f51a44e85dedfb110f2df206367c5a2124827522af413bed1876ff2086b4790c",
+      "sha256": "51e0d042ed618f69d7134449924ead8d4ddf0931bdf4caeff04d5085b06e2534",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
           "relationship": "tests"
         }
       ]
@@ -71467,7 +71726,7 @@
     {
       "id": "SURFACE-fd02ef36057b6b05",
       "path": "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
-      "sha256": "94480b73ee96a50de9b174cec1e74fbfea0cb4c8aeb112f107ad0c744c550cad",
+      "sha256": "8ca7d388fbfc584f7799ffbf3925a08a48385512dbd3757029367e3241b33641",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71480,6 +71739,10 @@
         },
         {
           "requirement": "COMMUNITY-FRIEND-SUGGESTION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
           "relationship": "implementation"
         }
       ]
@@ -83855,6 +84118,30 @@
       ]
     },
     {
+      "id": "SURFACE-ab06e0759a46b0f6",
+      "path": "tdf-hq/sql/2026-11-27_social_discover_affinity.sql",
+      "sha256": "4c0d31ba37b784ec0cd318b71b665c0914f76a13ef7d9ff5c757f78120e25eb2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-8f1304a17d7b1b34",
+      "path": "tdf-hq/sql/2026-11-27_social_discover_affinity_rollback.sql",
+      "sha256": "bc373734e021f331be306eea85c59173909166d4588632836547f0275d5bfaa7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -85542,7 +85829,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "63b4437393fbe93ef8a5db568436f500f7761257f7941860ccf10102743dc5be",
+      "sha256": "c7e8f8289d98fb3562af1b6fd51cd078d1cd69662696193e43a69f5f39423094",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85583,6 +85870,10 @@
         },
         {
           "requirement": "EVT-AFFINITY-ORDER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
           "relationship": "implementation"
         }
       ]
@@ -88798,6 +89089,18 @@
       ]
     },
     {
+      "id": "SURFACE-bda2089c351de4f8",
+      "path": "tdf-hq/src/TDF/Social/DiscoverAffinity.hs",
+      "sha256": "d37a547b6e260debb2de3082325a7d07f969798164baba708c24b484f3f33000",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-b16b93ab1b670275",
       "path": "tdf-hq/src/TDF/Social/FanEffects.hs",
       "sha256": "a55587dcef94c2f5efe35da182a3cd934ca705dc5a685b5ab15eccb89f3a7b26",
@@ -88843,11 +89146,15 @@
     {
       "id": "SURFACE-f0cebaafb30d082c",
       "path": "tdf-hq/src/TDF/Social/Server.hs",
-      "sha256": "3b1b4af11566dd037bf44c8fd89b2c198a085171ee23d5d2b4d1f11ab630a731",
+      "sha256": "a318c388b50a207c124f3a3c43cbfcd12ef3a9bae09afb2779fc1b28cb9e4a90",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SOCIAL-RELATIONSHIP-WRITES-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
           "relationship": "implementation"
         }
       ]
@@ -89263,7 +89570,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "353808e96b8b95472153fb591befb4e27804ff0dfeb06e5a6928a172d7e75ae8",
+      "sha256": "c9c4d39dee2ab0eea39e8b10dd51bdaf851725aeac485923a80f266636bac822",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -89478,7 +89785,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "3407a89b9b0005143e0233c261abd7eb747a1e56a371a930def7a8d4c8ab2cd6",
+      "sha256": "9af75da3b3ae2247ff4b64738e2246639a9fbdea9f984a251a471ef98d8069a7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -90339,7 +90646,7 @@
     {
       "id": "SURFACE-6a2ebecd249230c2",
       "path": "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
-      "sha256": "c5b8518cba6ed23bb90620e9a5a7e84848730f399b712db55e3d70cf60a81580",
+      "sha256": "310da929db1b282576b178f308436fe25ef7f4984458780527eb1105bac33b11",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -91114,7 +91421,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "e86514c17e9b0ca7a5310767d6294bd8a4a4a0c998ae4128c27bf0a9c6a531ab",
+      "sha256": "13b0dda6b2e4ff2be8215e47c1b01e392f06a18d720bb5f21af571cfd2f279ba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -91373,6 +91680,18 @@
       "requirements": [
         {
           "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-53fc718749574ac4",
+      "path": "tdf-hq/test/TDF/Social/DiscoverAffinitySpec.hs",
+      "sha256": "c369d32d0077f41476802b9316f24ca1fc28934188e236b576f4785015ce8403",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SOCIAL-DISCOVER-AFFINITY-001",
           "relationship": "tests"
         }
       ]
@@ -98870,7 +99189,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b3552bda8abdaa4971d25e75da3b2989c32eae853188006c4897f2c0a0df0936",
+      "sourceSha256": "ef88d68df63213ce720a80291e340e713f54db520c737822f4fbf55bfb76a54c",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -98898,7 +99217,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b3552bda8abdaa4971d25e75da3b2989c32eae853188006c4897f2c0a0df0936",
+      "sourceSha256": "ef88d68df63213ce720a80291e340e713f54db520c737822f4fbf55bfb76a54c",
       "definition": {
         "states": [
           "absent",
@@ -98928,7 +99247,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b3552bda8abdaa4971d25e75da3b2989c32eae853188006c4897f2c0a0df0936",
+      "sourceSha256": "ef88d68df63213ce720a80291e340e713f54db520c737822f4fbf55bfb76a54c",
       "definition": {
         "export": [
           "queued",
@@ -98985,7 +99304,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b3552bda8abdaa4971d25e75da3b2989c32eae853188006c4897f2c0a0df0936",
+      "sourceSha256": "ef88d68df63213ce720a80291e340e713f54db520c737822f4fbf55bfb76a54c",
       "definition": {
         "states": [
           "pending",
@@ -122695,7 +123014,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 243,
+    "PARTIAL": 244,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

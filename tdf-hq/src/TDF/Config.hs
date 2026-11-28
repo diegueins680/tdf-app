@@ -113,6 +113,7 @@ data AppConfig = AppConfig
   , publicReputationProjectionEnabled :: Bool
   , singleFeatureOnboardingExperimentEnabled :: Bool
   , fanFeedAffinityEnabled :: Bool
+  , socialDiscoverAffinityEnabled :: Bool
   , eventDiscoveryEnabled :: Bool
   , eventDiscoveryAutoPublish :: Bool
   , eventDiscoveryPilotLimit :: Int
@@ -815,6 +816,7 @@ loadConfig = do
   publicReputationProjectionEnabledEnv <- lookupEnv "PUBLIC_REPUTATION_PROJECTION_ENABLED"
   singleFeatureOnboardingExperimentEnabledEnv <- lookupEnv "SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED"
   fanFeedAffinityEnabledEnv <- lookupEnv "FAN_FEED_AFFINITY_ENABLED"
+  socialDiscoverAffinityEnabledEnv <- lookupEnv "SOCIAL_DISCOVER_AFFINITY_ENABLED"
   eventDiscoveryEnabledEnv <- lookupEnv "EVENT_DISCOVERY_ENABLED"
   eventDiscoveryAutoPublishEnv <- lookupEnv "EVENT_DISCOVERY_AUTO_PUBLISH"
   eventDiscoveryPilotLimitEnv <- lookupEnv "EVENT_DISCOVERY_PILOT_LIMIT"
@@ -911,6 +913,11 @@ loadConfig = do
       "FAN_FEED_AFFINITY_ENABLED"
       False
       fanFeedAffinityEnabledEnv
+  socialDiscoverAffinityEnabledVal <-
+    validateStartupBooleanFlag
+      "SOCIAL_DISCOVER_AFFINITY_ENABLED"
+      False
+      socialDiscoverAffinityEnabledEnv
   eventDiscoveryEnabledVal <-
     validateStartupBooleanFlag
       "EVENT_DISCOVERY_ENABLED"
@@ -1134,6 +1141,7 @@ loadConfig = do
     , publicReputationProjectionEnabled = publicReputationProjectionEnabledVal
     , singleFeatureOnboardingExperimentEnabled = singleFeatureOnboardingExperimentEnabledVal
     , fanFeedAffinityEnabled = fanFeedAffinityEnabledVal
+    , socialDiscoverAffinityEnabled = socialDiscoverAffinityEnabledVal
     , eventDiscoveryEnabled = eventDiscoveryEnabledVal
     , eventDiscoveryAutoPublish = eventDiscoveryAutoPublishVal
     , eventDiscoveryPilotLimit = eventDiscoveryPilotLimitVal

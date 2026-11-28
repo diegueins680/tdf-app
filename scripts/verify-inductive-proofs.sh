@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Unbounded safety proofs by inductive invariants (Apalache) plus bounded TLC
 # exploration and negative controls for formal/payments, formal/auth,
-# formal/fans, formal/player, formal/directory and formal/social/FeedAffinity.tla.
+# formal/fans, formal/player, formal/directory and formal/social
+# (FeedAffinity.tla, DiscoverAffinity.tla).
 #
 # Requires the pinned official artifacts:
 #   APALACHE_TGZ   apalache.tgz from apalache-mc/apalache release v0.62.4
@@ -312,6 +313,28 @@ apalache_expect "${F}" CInitFloorZero Init Safe 5 Error "FeedAffinityFloorZero-r
 apalache_expect "${F}" CInitNoTieBreak Init Safe 5 Error "FeedAffinityNoTieBreak-reachable-violation"
 apalache_expect "${F}" CInitUnfilteredEvidence Init Safe 5 Error "FeedAffinityUnfilteredEvidence-reachable-violation"
 apalache_expect "${F}" CInitOptOutIgnored Init Safe 5 Error "FeedAffinityOptOutIgnored-reachable-violation"
+unset CURRENT_MODEL_DIR
+
+D=DiscoverAffinity.tla
+CURRENT_MODEL_DIR="${SOCIAL_MODEL_DIR}"
+
+# SOCIAL-DISCOVER-AFFINITY-001: Discover returns exactly the previous
+# candidates; the previous order when the gate is off, the actor opted out or
+# has no usable evidence; evidence only from the actor's own interactions with
+# usable posts; at most Half leaders and a displacement of at most Half.
+tlc_expect "${D}" DiscoverAffinity.cfg pass
+tlc_expect "${D}" DiscoverAffinityGateOff.cfg pass
+tlc_expect "${D}" DiscoverAffinityOptOutIgnored.cfg violation
+tlc_expect "${D}" DiscoverAffinityUnfilteredEvidence.cfg violation
+tlc_expect "${D}" DiscoverAffinityThirdPartyEvidence.cfg violation
+tlc_expect "${D}" DiscoverAffinityNoCap.cfg violation
+apalache_expect "${D}" CInitProof Init IndInv 0 NoError "DiscoverAffinity-initiation"
+apalache_expect "${D}" CInitProof IndInv IndInv 1 NoError "DiscoverAffinity-consecution"
+apalache_expect "${D}" CInitProof IndInv Safe 0 NoError "DiscoverAffinity-implication"
+apalache_expect "${D}" CInitOptOutIgnored Init Safe 5 Error "DiscoverAffinityOptOutIgnored-reachable-violation"
+apalache_expect "${D}" CInitUnfilteredEvidence Init Safe 5 Error "DiscoverAffinityUnfilteredEvidence-reachable-violation"
+apalache_expect "${D}" CInitThirdPartyEvidence Init Safe 5 Error "DiscoverAffinityThirdPartyEvidence-reachable-violation"
+apalache_expect "${D}" CInitNoCap Init Safe 5 Error "DiscoverAffinityNoCap-reachable-violation"
 unset CURRENT_MODEL_DIR
 
 echo "Inductive proofs and controls passed."

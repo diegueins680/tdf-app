@@ -16336,6 +16336,7 @@ marketplaceTestConfig seedFlag =
         , publicReputationProjectionEnabled = False
         , singleFeatureOnboardingExperimentEnabled = False
         , fanFeedAffinityEnabled = False
+        , socialDiscoverAffinityEnabled = False
         , eventDiscoveryEnabled = False
         , eventDiscoveryAutoPublish = False
         , eventDiscoveryPilotLimit = 20

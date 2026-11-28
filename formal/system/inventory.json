@@ -701,6 +701,8 @@
       "scripts/test-service-storefront-phase0-migration.sh",
       "scripts/test-session-invoice-issue.sh",
       "scripts/test-social-designation-postgres.sh",
+      "scripts/test-social-discover-affinity-postgres.sh",
+      "scripts/test-social-discover-affinity-sql.py",
       "scripts/test-social-event-optional-end-migration.sh",
       "scripts/test-specification-conformance.py",
       "scripts/test-specification-inventory.py",
@@ -2457,6 +2459,8 @@
       "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql",
       "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql",
       "tdf-hq/sql/2026-11-24_venue_coordinate_constraint_rollback.sql",
+      "tdf-hq/sql/2026-11-27_social_discover_affinity.sql",
+      "tdf-hq/sql/2026-11-27_social_discover_affinity_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2741,6 +2745,7 @@
       "tdf-hq/src/TDF/Social/AccountOwnership.hs",
       "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs",
       "tdf-hq/src/TDF/Social/Chat.hs",
+      "tdf-hq/src/TDF/Social/DiscoverAffinity.hs",
       "tdf-hq/src/TDF/Social/FanEffects.hs",
       "tdf-hq/src/TDF/Social/Profiles.hs",
       "tdf-hq/src/TDF/Social/RelationshipReads.hs",
@@ -2885,6 +2890,7 @@
       "tdf-hq/test/TDF/Services/YouTubeSpec.hs",
       "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs",
       "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs",
+      "tdf-hq/test/TDF/Social/DiscoverAffinitySpec.hs",
       "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
       "tdf-hq/test/TDF/Social/FollowSpec.hs",
       "tdf-hq/test/TDF/Social/SuggestionRankSpec.hs",
@@ -3478,7 +3484,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "7f8d14c5c33fab9fe02c55f1c8718bff300987597c432abcee0f431bb17dbbd5",
+      "sha256": "f3ee9c0457c1e28ff59460a361a7906c6fd66f1f38d497c4e890210ac0f10800",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4156,7 +4162,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "cddcd987080a30135610431a89d262e4543bd5d22006b1e7c0b75149875c49db",
+      "sha256": "f8598752c4dc49b8128aa9a190d269bb25847e6ba7234137fb42dd866e42ba47",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4318,7 +4324,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "7c7c018e949ff0e28fe732bb024f0b254d71ec3f83ca0f186d12ee629dc1951f",
+      "sha256": "e660473d77bff9f195b8d67069bc03d2ec1d0a9616e79cdc2bf92e94c50c07e6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5932,7 +5938,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "e43904645016e803690f27376d1eaf3d0ddeaa7f277b3595762b407b4e04dc06",
+      "sha256": "4c74b26352aefdd6722c2d9869229db1e825fd1aa39dd30f7fbd4d7004963ed1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7508,6 +7514,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-a1f0c08c290b3b34",
+      "path": "scripts/test-social-discover-affinity-postgres.sh",
+      "sha256": "63da681ed59431cec46c7a778cfa3474198aabfc08fd56f8df8ed52d0aa05800",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-69105dff74703851",
+      "path": "scripts/test-social-discover-affinity-sql.py",
+      "sha256": "6fdffcb70497b9778861fe58411b72cb0ae094a768034fd9ea74ada1464614c7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-69baedf792a35920",
       "path": "scripts/test-social-event-optional-end-migration.sh",
       "sha256": "8ffafcc2f11defd17b188a03114a5693ff7130f5f64af439a55a5175bd9c72e9",
@@ -7792,7 +7810,7 @@
     {
       "id": "SURFACE-6df6b3721bdf6587",
       "path": "scripts/verify-inductive-proofs.sh",
-      "sha256": "f4ee5f279051c223cc05285467c731286e7dc815f7e855f261bdfbc0e3871b8e",
+      "sha256": "8f063921d18ded09fa39881d0396c2c2b27d9c8d0830ed3903fb7ca5b9549dba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11380,13 +11398,13 @@
     {
       "id": "SURFACE-becf808f14372711",
       "path": "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
-      "sha256": "f51a44e85dedfb110f2df206367c5a2124827522af413bed1876ff2086b4790c",
+      "sha256": "51e0d042ed618f69d7134449924ead8d4ddf0931bdf4caeff04d5085b06e2534",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-fd02ef36057b6b05",
       "path": "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
-      "sha256": "94480b73ee96a50de9b174cec1e74fbfea0cb4c8aeb112f107ad0c744c550cad",
+      "sha256": "8ca7d388fbfc584f7799ffbf3925a08a48385512dbd3757029367e3241b33641",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17984,6 +18002,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-ab06e0759a46b0f6",
+      "path": "tdf-hq/sql/2026-11-27_social_discover_affinity.sql",
+      "sha256": "4c0d31ba37b784ec0cd318b71b665c0914f76a13ef7d9ff5c757f78120e25eb2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8f1304a17d7b1b34",
+      "path": "tdf-hq/sql/2026-11-27_social_discover_affinity_rollback.sql",
+      "sha256": "bc373734e021f331be306eea85c59173909166d4588632836547f0275d5bfaa7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -18694,7 +18724,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "63b4437393fbe93ef8a5db568436f500f7761257f7941860ccf10102743dc5be",
+      "sha256": "c7e8f8289d98fb3562af1b6fd51cd078d1cd69662696193e43a69f5f39423094",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19688,6 +19718,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-bda2089c351de4f8",
+      "path": "tdf-hq/src/TDF/Social/DiscoverAffinity.hs",
+      "sha256": "d37a547b6e260debb2de3082325a7d07f969798164baba708c24b484f3f33000",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-b16b93ab1b670275",
       "path": "tdf-hq/src/TDF/Social/FanEffects.hs",
       "sha256": "a55587dcef94c2f5efe35da182a3cd934ca705dc5a685b5ab15eccb89f3a7b26",
@@ -19714,7 +19750,7 @@
     {
       "id": "SURFACE-f0cebaafb30d082c",
       "path": "tdf-hq/src/TDF/Social/Server.hs",
-      "sha256": "3b1b4af11566dd037bf44c8fd89b2c198a085171ee23d5d2b4d1f11ab630a731",
+      "sha256": "a318c388b50a207c124f3a3c43cbfcd12ef3a9bae09afb2779fc1b28cb9e4a90",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19906,7 +19942,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "353808e96b8b95472153fb591befb4e27804ff0dfeb06e5a6928a172d7e75ae8",
+      "sha256": "c9c4d39dee2ab0eea39e8b10dd51bdaf851725aeac485923a80f266636bac822",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19990,7 +20026,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "3407a89b9b0005143e0233c261abd7eb747a1e56a371a930def7a8d4c8ab2cd6",
+      "sha256": "9af75da3b3ae2247ff4b64738e2246639a9fbdea9f984a251a471ef98d8069a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20242,7 +20278,7 @@
     {
       "id": "SURFACE-6a2ebecd249230c2",
       "path": "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
-      "sha256": "c5b8518cba6ed23bb90620e9a5a7e84848730f399b712db55e3d70cf60a81580",
+      "sha256": "310da929db1b282576b178f308436fe25ef7f4984458780527eb1105bac33b11",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20518,7 +20554,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "e86514c17e9b0ca7a5310767d6294bd8a4a4a0c998ae4128c27bf0a9c6a531ab",
+      "sha256": "13b0dda6b2e4ff2be8215e47c1b01e392f06a18d720bb5f21af571cfd2f279ba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20549,6 +20585,12 @@
       "id": "SURFACE-84995ad64af241c6",
       "path": "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs",
       "sha256": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-53fc718749574ac4",
+      "path": "tdf-hq/test/TDF/Social/DiscoverAffinitySpec.hs",
+      "sha256": "c369d32d0077f41476802b9316f24ca1fc28934188e236b576f4785015ce8403",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32044,6 +32086,55 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/social/DiscoverAffinity.cfg",
+      "sha256": "c1f1d6f1e4dfdbc9266d5cad019509fc149a21b260783d3d17266041d4524c0b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/social/DiscoverAffinity.tla",
+      "sha256": "a34f1cd84a39a71297ac12211abd7129eef25c43600fb50d79e2fe2d1050d181",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/social/DiscoverAffinityGateOff.cfg",
+      "sha256": "8b7f40a7d00b986b0968cd3e87e72151ca58fd7b9193ebf1e5d69adacce809fc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/social/DiscoverAffinityNoCap.cfg",
+      "sha256": "4a4e1717eba3c3a8589d101055884877c6d7cfddc57f6b85efb0c2ec4d104f57",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/social/DiscoverAffinityOptOutIgnored.cfg",
+      "sha256": "55fd191f9e74859cfe2a3338b95d3140733ee43698fa25465cdd491a762f36ee",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/social/DiscoverAffinityThirdPartyEvidence.cfg",
+      "sha256": "64b787cb4a83dac048101540c035deee78bc0855d2a0e677077781a20b079853",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/social/DiscoverAffinityUnfilteredEvidence.cfg",
+      "sha256": "bcc45a1fbf57fa7cf7ccea4ab6e9f4ecb84e94039f59b8f74efda0e8116a4849",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/social/DmReadTraces.cfg",
       "sha256": "def47d1e4052c5072c71f531d1da8a70f10c05ee59537593ef4e12e3a3763cb9",
       "authority": "inferred",
@@ -32479,7 +32570,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "f45a02dce7ae1a97256423f0b5dad822702d7cac5ceae72045a119900105a143",
+      "sha256": "bf096327da910c1dda6501d6489e53dc71a6ec4c8ecb925eab613479dc1d276c",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -33634,7 +33725,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b3552bda8abdaa4971d25e75da3b2989c32eae853188006c4897f2c0a0df0936",
+      "sha256": "ef88d68df63213ce720a80291e340e713f54db520c737822f4fbf55bfb76a54c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33663,6 +33754,13 @@
     {
       "path": "formal/system/session-query-isolation.md",
       "sha256": "2a3d72f757e9d8b5bde86bc778f0d1c9569b36c516771bb1699854d265806353",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/social-discover-affinity.md",
+      "sha256": "573260658a89a41d493332e88cf526dc76a2d2a429662bcb86bbd4679b3da38b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -50353,6 +50451,132 @@
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK ConsentIntegrity OwnConsentOnly InactiveActorCannotMutate DeletedTargetCannotMutate StaleRelationshipCommandsDenied AuthoritativeDenial AuthorizedReadAvailable AtMostOnce RequestAdmission",
         "PROPERTY Progress"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/social/DiscoverAffinity.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Parties = {1, 2, 3}",
+        "  Posts = {1, 2}",
+        "  KeyValues = {0, 1}",
+        "  Half = 1",
+        "  Gate = TRUE",
+        "  HonourOptOut = TRUE",
+        "  FilterEvidence = TRUE",
+        "  OwnEvidenceOnly = TRUE",
+        "  CapPromotion = TRUE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/social/DiscoverAffinityGateOff.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Parties = {1, 2, 3}",
+        "  Posts = {1, 2}",
+        "  KeyValues = {0, 1}",
+        "  Half = 1",
+        "  Gate = FALSE",
+        "  HonourOptOut = TRUE",
+        "  FilterEvidence = TRUE",
+        "  OwnEvidenceOnly = TRUE",
+        "  CapPromotion = TRUE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/social/DiscoverAffinityNoCap.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Parties = {1, 2, 3}",
+        "  Posts = {1, 2}",
+        "  KeyValues = {0, 1}",
+        "  Half = 1",
+        "  Gate = TRUE",
+        "  HonourOptOut = TRUE",
+        "  FilterEvidence = TRUE",
+        "  OwnEvidenceOnly = TRUE",
+        "  CapPromotion = FALSE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/social/DiscoverAffinityOptOutIgnored.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Parties = {1, 2, 3}",
+        "  Posts = {1, 2}",
+        "  KeyValues = {0, 1}",
+        "  Half = 1",
+        "  Gate = TRUE",
+        "  HonourOptOut = FALSE",
+        "  FilterEvidence = TRUE",
+        "  OwnEvidenceOnly = TRUE",
+        "  CapPromotion = TRUE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/social/DiscoverAffinityThirdPartyEvidence.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Parties = {1, 2, 3}",
+        "  Posts = {1, 2}",
+        "  KeyValues = {0, 1}",
+        "  Half = 1",
+        "  Gate = TRUE",
+        "  HonourOptOut = TRUE",
+        "  FilterEvidence = TRUE",
+        "  OwnEvidenceOnly = FALSE",
+        "  CapPromotion = TRUE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/social/DiscoverAffinityUnfilteredEvidence.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Parties = {1, 2, 3}",
+        "  Posts = {1, 2}",
+        "  KeyValues = {0, 1}",
+        "  Half = 1",
+        "  Gate = TRUE",
+        "  HonourOptOut = TRUE",
+        "  FilterEvidence = FALSE",
+        "  OwnEvidenceOnly = TRUE",
+        "  CapPromotion = TRUE",
+        "INIT Init",
+        "NEXT Next",
+        "INVARIANTS TypeOK Safe",
+        "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

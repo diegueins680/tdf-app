@@ -30398,6 +30398,107 @@
         "reason": "Pure core, model and translation verified as stated; the handler wiring and the web switch have no HTTP-level or browser test."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "SOCIAL-DISCOVER-AFFINITY-001",
+      "title": "People the actor interacted with lead Discover, at most half a page",
+      "statement": "With the runtime gate SOCIAL_DISCOVER_AFFINITY_ENABLED on and the three-argument social_v2_discover installed, an actor who has not switched personalisation off receives the people of Discover with at most page_size div 2 candidates first: those to whose top-level club posts the actor reacted or replied in the last 90 days, by units = min(reactions + 2 * replies, 20) descending, then id. Every other candidate keeps the previous order. In every other case the request runs the previous statement. The candidate set, eligibility, daily sample, limit, reason values and response shape do not change. Route: GET /social/v2/discover.",
+      "domain": "SOCIAL",
+      "authority": "Owner request of 2026-11-27 to continue the discovery half of affinity ranking on GET /social/v2/discover; rule, constants (90 days, reply weight 2, cap 20, half a page), separate flag, unchanged sample of 200, kept web overlay and new switch label approved by the owner on 2026-11-27. formal/system/social-discover-affinity.md.",
+      "source": "formal/system/social-discover-affinity.md",
+      "contract": "tdf-hq/sql/2026-11-27_social_discover_affinity.sql",
+      "property": "For every request: returned(affinity) before truncation is a permutation of returned(previous); gate off \\/ function absent \\/ optedOut \\/ no usable evidence => response = previous response; leaders \\subseteq candidates with units > 0 /\\ |leaders| <= page_size div 2; a candidate that does not lead stands between its previous position and that position + page_size div 2; the order is the strict total order (leader first, units desc, id) then the previous key; units(c) > 0 => the actor reacted or replied within 90 days to a top-level, not hidden, readable post of c; optedOut => no behaviour read.",
+      "actors": [
+        "Fan",
+        "Artist"
+      ],
+      "preconditions": [
+        "Authenticated bearer session, SOCIAL_V2_ENABLED and the social runtime switch, as before",
+        "SOCIAL_DISCOVER_AFFINITY_ENABLED set at startup and tdf-hq/sql/2026-11-27_social_discover_affinity.sql applied for any affinity order (default off)"
+      ],
+      "inputs": [
+        "GET /social/v2/discover?limit=N",
+        "social_v2_preference.personalized of the actor",
+        "The actor's reactions and replies of the last 90 days to top-level club posts of the candidates"
+      ],
+      "state": {
+        "initial": "Stored parties, preferences, pairs, clubs, posts, reactions and replies",
+        "terminal": [
+          "Page in the affinity order",
+          "Page in the previous order"
+        ]
+      },
+      "allowedTransitions": [
+        "None; the function is STABLE and writes nothing."
+      ],
+      "forbiddenTransitions": [
+        "Returning a party the previous function would not return, or dropping one it would return before truncation",
+        "An affinity order with the gate off, where the function is not installed, or for an actor who switched personalisation off",
+        "Reading the behaviour of an actor who switched personalisation off",
+        "Counting an interaction with a hidden post, a reply, a post in a club the actor may not read, a target that is not a club post, or an interaction older than 90 days",
+        "Another party's reactions or replies changing the actor's order",
+        "More than page_size div 2 candidates placed by affinity, or a candidate without units among them",
+        "Returning units, a rank or the mode, or a new reason value"
+      ],
+      "effects": [
+        "None; read-only."
+      ],
+      "authorization": "Unchanged: the social session guards of the route; the actor is taken from the session.",
+      "privacy": "Reads only the actor's own reactions and replies, nothing with the gate off and no behaviour for an actor whose social_v2_preference.personalized is false. Only the order of the actor's own page depends on them; nothing is shown to the candidate or anyone else. The candidate set is the previous one, so a blocked, muted, dismissed, followed, closed, non-discoverable, organisation or credential-less party cannot appear. Hidden or unreadable posts are never evidence.",
+      "concurrency": "One STABLE function call reads one snapshot inside the session transaction. A reaction, block or preference committed later affects the next request.",
+      "idempotency": "Read-only.",
+      "failure": "Where the three-argument function is not installed the request runs the previous statement. Errors of the function (disabled, invalid, unavailable) are those of the previous function.",
+      "recovery": "Unset SOCIAL_DISCOVER_AFFINITY_ENABLED and restart: every request runs the previous statement. tdf-hq/sql/2026-11-27_social_discover_affinity_rollback.sql drops the function and its two indexes.",
+      "observability": "HTTP status only; the mode is not logged or returned.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-27_social_discover_affinity.sql",
+        "tdf-hq/sql/2026-11-27_social_discover_affinity_rollback.sql",
+        "tdf-hq/src/TDF/Social/DiscoverAffinity.hs",
+        "tdf-hq/src/TDF/Social/Server.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/config/default.env.example",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Social/DiscoverAffinitySpec.hs",
+        "scripts/test-social-discover-affinity-sql.py",
+        "scripts/test-social-discover-affinity-postgres.sh",
+        "scripts/verify-inductive-proofs.sh",
+        "formal/social/discover_affinity_arithmetic.py",
+        "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx"
+      ],
+      "formalModels": [
+        "formal/social/DiscoverAffinity.tla",
+        "formal/social/DiscoverAffinity.cfg",
+        "formal/social/DiscoverAffinityGateOff.cfg",
+        "formal/social/DiscoverAffinityOptOutIgnored.cfg",
+        "formal/social/DiscoverAffinityUnfilteredEvidence.cfg",
+        "formal/social/DiscoverAffinityThirdPartyEvidence.cfg",
+        "formal/social/DiscoverAffinityNoCap.cfg",
+        "formal/social/discover_affinity_arithmetic.py"
+      ],
+      "verification": "PROVED on the model (Apalache inductive invariant: initiation, consecution, implication; up to four parties of which any subset is the candidate set, three posts, three values of the previous key, units 0..2, Half 0..2): only candidates are returned and each exactly once, evidence only from the actor's own interactions with usable posts, previous order and no behaviour read when the gate is off or the actor opted out or has no usable evidence, order fixed by the key, at most Half leaders each with units, every other candidate between its previous position and that position plus Half. PROVED over the integers (Z3, unsat of the negation): units in 0..20, zero exactly without interaction, monotone in reactions and replies, a reply equal to two reactions; 2 * (page div 2) <= page and a page of one unchanged; the key is a strict total order for distinct ids and equals the previous key where nobody leads; a candidate that does not lead is overtaken only by a leader or by a candidate that already preceded it. BOUNDED (TLC, three parties, two posts, two key values, Half 1): the same invariants with the gate on and off, plus four negative controls that must fail (opt-out ignored, evidence not filtered, third-party evidence, no cap on leaders), repeated as reachable violations in Apalache, and four Z3 witnesses (no cap on units, reply weight one, key without id, whole page). TESTED (Hspec and QuickCheck on the Haskell reference): reference vectors, permutation, previous order without units and for a page of one, leaders by units then id, no leader without units, previous order among the others, displacement between 0 and half a page, independence from units of non-candidates, units range and monotonicity, the gate and installation switch, the two statement texts. TESTED on PostgreSQL (real social foundation and read-model migrations plus this migration, other tables reduced to the columns read): 24 generated worlds under both interaction authorities and page sizes 1, 2, 3, 7, 10 and 50 against an oracle that reproduces the same reference vectors; text equality with the two-argument function with use_affinity false or NULL, for an actor without interactions, for an opted-out actor and with every post hidden; equal items on a full page; third-party interactions ignored; guards; rollback; textual equality of the candidate set, base key and response with the two-argument function. 19 mutations of the migration were each rejected by this test (run once by hand, not in CI).",
+      "evidence": "scripts/verify-inductive-proofs.sh output; formal/social/discover_affinity_arithmetic.py output; tdf-hq-test DiscoverAffinitySpec run; scripts/test-social-discover-affinity-postgres.sh output.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the rule as modelled, for the arithmetic and for the SQL on the tested worlds. The step from the model to the SQL, the migrated production schema, the handler wiring and query cost at production size rest on tests, compilation and review, not on proof.",
+      "ambiguity": [
+        "The model abstracts units to 0, 1 or 2, the previous order to an arbitrary key and the sort to emitting the candidate whose key precedes all waiting ones; that the SQL window and ORDER BY realise this is tested, not proved.",
+        "The Apalache proof is for at most four candidates, three posts and Half up to 2; larger pages are covered by the Z3 pairwise lemmas and by tests.",
+        "The Haskell reference order is not on the request path. It and the test oracle reproduce the same vectors; the SQL is compared with the oracle, not with the Haskell function directly.",
+        "The PostgreSQL test reduces the tables outside the social migrations to the columns read; it does not run on the migrated production schema, and no HTTP-level test serves an affinity page.",
+        "Query plans and cost on production data were not measured; two indexes are added for the legacy evidence reads.",
+        "Readability of a club follows the rule of social_v2_feed, copied into the function; a later change to that rule must be made in both places.",
+        "Affinity only reorders the daily sample of at most 200 parties, and Discover excludes parties the actor follows (owner decision of 2026-11-27).",
+        "The web page still moves PageRank suggestions in front of the server order (owner decision of 2026-11-27).",
+        "The switch label mentions activity even while the gate is off.",
+        "The constants were approved without usage data."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Rule proved on the model and over the integers and tested on the SQL; correspondence of the SQL to the model, the migrated production schema and an HTTP-level affinity response are not established."
+      },
+      "historicalStatus": "new"
     }
   ]
 }
