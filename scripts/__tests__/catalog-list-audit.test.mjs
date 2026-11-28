@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
+import { isDeepStrictEqual, promisify } from 'node:util';
 import { DECISIONS_FILE, expandAtRevision, readExpandedDecisions } from '../lib/catalog-decision-history.mjs';
 
 // Complete retained parent assertions; dated inputs are explicitly projected.
@@ -6523,20 +6523,30 @@ const integrationFiles = new Map([
   ['docs/catalog-persistence/event-catalog-current-successors.json', 'successors'],
   ['docs/catalog-persistence/event-integration-retirements.json', 'retirements'],
 ]);
-const integrationCanonical = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
-  ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
+// Index small object shapes so each lookup compares only plausible matches.
+// Serializing each entire subtree here duplicates the expanded review history.
+function integrationLookupKey(node) {
+  if (Array.isArray(node)) return `array/${node.length}`;
+  return JSON.stringify([Object.keys(node).sort(), node.id ?? null, node.name ?? null]);
+}
+
 function integrationFind(value, expected) {
-  if (!value || typeof value !== 'object') return undefined;
+  if (!value || typeof value !== 'object' || !expected || typeof expected !== 'object') return undefined;
   if (!integrationIndexes.has(value)) {
     const index = new Map();
     const visit = node => {
       if (!node || typeof node !== 'object') return;
-      index.set(integrationCanonical(node), node);
+      const key = integrationLookupKey(node);
+      const bucket = index.get(key);
+      if (bucket) bucket.push(node);
+      else index.set(key, [node]);
       for (const child of Object.values(node)) visit(child);
     };
-    visit(value); integrationIndexes.set(value, index);
+    visit(value);
+    integrationIndexes.set(value, index);
   }
-  return integrationIndexes.get(value).get(integrationCanonical(expected));
+  const candidates = integrationIndexes.get(value).get(integrationLookupKey(expected)) ?? [];
+  return candidates.find(node => isDeepStrictEqual(node, expected));
 }
 async function integrationParent(ref, file) {
   const key = `${ref}:${file}`;
@@ -6593,8 +6603,29 @@ async function integrationSource(ref, file) {
 const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1", "5a81672285dc9c03130fc9fd8355e2b4c58e9e12"];
 
 // Qualify the new append against both published parents before running their historical assertions.
-async function manifestBeforeTaxonomy(file) {
+async function manifestBeforeVenueCoordinates(file) {
   const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const entry = current.migrations.at(-1);
+  const original = (await integrationParent('218797e0c3c8d4c5af839f10c42b3549d4f7f7c5', file)).migrations.at(-1);
+  assert.equal(entry.id, '2026-11-24_venue_coordinate_constraint');
+  assert.deepEqual(entry, original);
+  return { ...current, migrations: current.migrations.slice(0, -1) };
+}
+
+test('venue coordinates append the original SQL after the protected migration sequence', async () => {
+  const file = 'scripts/production-migrations.json';
+  const parent = await integrationParent('422a524684ca068b2b4f609688f0ba838919effb', file);
+  assert.deepEqual(await manifestBeforeVenueCoordinates(file), parent);
+  const { migrations } = await integrationParent('218797e0c3c8d4c5af839f10c42b3549d4f7f7c5', file);
+  const entry = migrations.at(-1);
+  await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), await integrationSource(entry.introducedBy, entry.path));
+});
+
+async function manifestBeforeTaxonomy(file) {
+  const suggestions = await manifestBeforeVenueCoordinates(file);
+  assert.equal(suggestions.migrations.at(-1).id, '2026-11-21_social_friend_suggestions');
+  const current = { ...suggestions, migrations: suggestions.migrations.slice(0, -1) };
   const original = (await integrationParent('be996410572a72f8f787b2cd5d345b30523ba1ea', file)).migrations.at(-1);
   assert.equal(original.id, '2026-11-21_location_genre_filters');
   assert.deepEqual(current.migrations.at(-3), original);
@@ -6626,7 +6657,15 @@ async function manifestBeforeLoudness(file) {
 }
 
 function decisionBeforeLoudness(decisions) {
-  const taxonomy = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations');
+  const merged = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations');
+  const suggestions = merged.previousDecision;
+  assert.equal(suggestions.reviewBatch, 'friend-suggestions-main-integration-20261124');
+  const [coordinates] = merged.concurrentReviewHistory;
+  assert.equal(coordinates.reviewBatch, 'venue-coordinate-constraint-main-integration-20261124');
+  assert.equal(coordinates.evidence.valueCount, coordinates.previousDecision.evidence.valueCount + 1);
+  assert.equal(coordinates.concurrentReviewHistory[0].reviewBatch, 'venue-coordinate-constraint-20261124');
+  assert.deepEqual(suggestions.previousDecision, coordinates.previousDecision);
+  const taxonomy = suggestions.previousDecision;
   assert.equal(taxonomy.reviewBatch, 'taxonomy-filters-main-integration-20261124');
   assert.equal(taxonomy.evidence.valueCount, taxonomy.previousDecision.evidence.valueCount + 3);
   assert.equal(taxonomy.concurrentReviewHistory[0].evidence.file, 'scripts/production-migrations.json');
@@ -6913,4 +6952,37 @@ test('sidebar and tab lists retain their six individually reviewed decisions', a
   const reviewed = published.decisions.filter(row => row.reviewBatch === batch);
   assert.equal(reviewed.length, 6);
   assert.deepEqual(readExpandedDecisions(integrationRoot).decisions.filter(row => row.reviewBatch === batch), reviewed);
+});
+
+test('friend suggestions append one original migration and preserve the protected main review', async () => {
+  const base = 'bddc0a2a6c18ef101db3c7750a4ec7fe7f01b4d8';
+  const file = 'scripts/production-migrations.json';
+  const before = await integrationParent(base, file);
+  const current = await manifestBeforeVenueCoordinates(file);
+  const added = current.migrations.at(-1);
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, added] });
+  assert.equal(new Set(current.migrations.map(row => row.id)).size, current.migrations.length);
+  assert.equal(added.id, '2026-11-21_social_friend_suggestions');
+  assert.equal(added.path, 'tdf-hq/sql/2026-11-21_social_friend_suggestions.sql');
+  assert.equal(await fs.readFile(path.join(integrationRoot, added.path), 'utf8'), await integrationSource(added.introducedBy, added.path));
+  await integrationExec('git', ['merge-base', '--is-ancestor', added.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const published = await integrationParent(base, DECISIONS_FILE);
+  const readObject = objectPath => execFileSync('git', ['show', base + ':' + objectPath], { cwd: integrationRoot, encoding: 'utf8' });
+  const manifestDecision = document => document.decisions.find(row => row.evidence?.file === file);
+  const tip = manifestDecision(readExpandedDecisions(integrationRoot)).previousDecision;
+  assert.equal(tip.evidence.valueCount, current.migrations.length);
+  assert.deepEqual(tip.previousDecision, manifestDecision(expandAtRevision(published, readObject)));
+});
+
+test('the combined manifest retains both complete migration reviews', async () => {
+  const manifestDecision = document => document.decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json');
+  const merged = manifestDecision(readExpandedDecisions(integrationRoot));
+  assert.equal(merged.evidence.valueCount, 273);
+  const parentReview = async ref => {
+    const document = await integrationParent(ref, DECISIONS_FILE);
+    const readObject = file => execFileSync('git', ['show', ref + ':' + file], { cwd: integrationRoot, encoding: 'utf8' });
+    return manifestDecision(expandAtRevision(document, readObject));
+  };
+  assert.deepEqual(merged.previousDecision, await parentReview('422a524684ca068b2b4f609688f0ba838919effb'));
+  assert.deepEqual(merged.concurrentReviewHistory, [await parentReview('83e3c864cab056800b833cf82dac94fc8463645d')]);
 });

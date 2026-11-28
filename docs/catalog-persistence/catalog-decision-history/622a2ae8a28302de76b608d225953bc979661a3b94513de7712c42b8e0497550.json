@@ -1,0 +1,21 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "7e2eb77daf47101ca955",
+  "reviewed": true,
+  "justification": "Append the friend suggestions migration after the 271 reviewed migrations on bddc0a2a6c18ef101db3c7750a4ec7fe7f01b4d8. All prior objects and their order are preserved.",
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "friend-suggestions-main-integration-20261124",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 272
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:5c2ed3f8ba488e82825dae4662cc0bf3b42279d79414556834d75a33a8637a8a"
+  }
+}

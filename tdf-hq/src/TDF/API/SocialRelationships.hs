@@ -10,7 +10,7 @@ import TDF.DTO (PartyFollowDTO, SuggestedFriendDTO, VCardExchangeRequest)
 type FollowersAPI = "followers" :> Get '[JSON] [PartyFollowDTO]
 type FollowingAPI = "following" :> Get '[JSON] [PartyFollowDTO]
 type FriendsAPI = "friends" :> Get '[JSON] [PartyFollowDTO]
-type SuggestionsAPI = "suggestions" :> Get '[JSON] [SuggestedFriendDTO]
+type SuggestionsAPI = "suggestions" :> QueryFlag "networkReason" :> Get '[JSON] [SuggestedFriendDTO]
 type RelationshipReadsAPI = FollowersAPI :<|> FollowingAPI :<|> FriendsAPI :<|> SuggestionsAPI
 
 type AddFriendAPI = "friends" :> Capture "partyId" Int64 :> Post '[JSON] [PartyFollowDTO]
