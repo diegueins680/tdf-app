@@ -93,7 +93,7 @@ export default function SocialWorkspace() {
       <FormControlLabel label="Mostrar mi perfil en Descubrir" control={<Checkbox checked={profile.data.discoverable}
         disabled={preferences.isPending} onChange={(_, discoverable) => preferences.mutate({
           discoverable, personalized: profile.data.personalized })} />} />
-      <FormControlLabel label="Personalizar con mis intereses musicales" control={<Checkbox checked={profile.data.personalized}
+      <FormControlLabel label="Personalizar con mis intereses y mi actividad" control={<Checkbox checked={profile.data.personalized}
         disabled={preferences.isPending} onChange={(_, personalized) => preferences.mutate({
           personalized, discoverable: profile.data.discoverable })} />} />
       <Button component={Link} to="/fans">Editar mis intereses musicales</Button>

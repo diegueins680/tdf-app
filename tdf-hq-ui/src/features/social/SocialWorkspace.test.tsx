@@ -48,7 +48,7 @@ it('provides a separate discover tab with an accessible panel and cold-start rec
 });
 it('preserves discoverability when the user opts out of personalization', async () => {
   show();
-  fireEvent.click(await screen.findByRole('checkbox', { name: 'Personalizar con mis intereses musicales' }));
+  fireEvent.click(await screen.findByRole('checkbox', { name: 'Personalizar con mis intereses y mi actividad' }));
   await waitFor(() => expect(preferences).toHaveBeenCalledWith({ discoverable: false, personalized: false }, 0));
 });
 it('offers retry for a denied or failed feed instead of rendering it as empty success', async () => {

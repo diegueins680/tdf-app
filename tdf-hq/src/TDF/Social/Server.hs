@@ -17,8 +17,10 @@ import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, toSqlKey, rawS
 import Servant
 import System.Environment (lookupEnv)
 import TDF.Auth (AuthedUser(..))
+import TDF.Config (socialDiscoverAffinityEnabled)
 import TDF.DB (Env(..))
 import TDF.Social.API
+import TDF.Social.DiscoverAffinity (discoverRows)
 import TDF.Social.Session
 
 -- Both gates default closed: process flag plus database runtime switch.
@@ -33,11 +35,12 @@ socialV2Server user = me :<|> relationship :<|> mutate :<|> preferences :<|> fol
       enabled <- liftIO $ lookupEnv "SOCIAL_V2_ENABLED"
       unless (enabled == Just "true") $ throwError err404
     query = queryWith ReadSession
-    queryWith access sql args = do
+    queryWith access sql args = runRows access (rawSql sql args)
+    runRows access action = do
       gate
       pool <- asks envPool
       result <- liftIO $ runSqlPool
-        (withSocialSession access user (rawSql sql args :: SqlPersistT IO [Single Text])) pool
+        (withSocialSession access user (action :: SqlPersistT IO [Single Text])) pool
       rows <- either throwError pure result
       case rows of
         [Single body] -> case eitherDecodeStrict' (TE.encodeUtf8 body) of
@@ -89,4 +92,6 @@ socialV2Server user = me :<|> relationship :<|> mutate :<|> preferences :<|> fol
       query "SELECT social_v2_feed(?,?,?)::text" [actor,maybe PersistNull PersistInt64 cursor,size]
     discover limit = do
       size <- limitValue limit
-      query "SELECT social_v2_discover(?,?)::text" [actor,size]
+      -- SOCIAL-DISCOVER-AFFINITY-001: gate off runs the previous statement only.
+      affinity <- asks (socialDiscoverAffinityEnabled . envConfig)
+      runRows ReadSession (discoverRows affinity actor size)
