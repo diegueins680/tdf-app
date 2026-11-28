@@ -66,6 +66,14 @@ const GOOGLE_SIGNUP_CONSENT_REQUIRED_ERROR =
 export const isGoogleSignupConsentRequiredError = (error: unknown): boolean =>
   error instanceof Error && error.message.trim() === GOOGLE_SIGNUP_CONSENT_REQUIRED_ERROR;
 
+// The server refuses to create a second account for an email that already
+// signs in to TDF; the only way forward is connecting that account.
+const GOOGLE_EMAIL_IN_USE_ERROR =
+  'Ya existe una cuenta TDF con este correo. Inicia sesión con tu contraseña para conectar Google.';
+
+export const isGoogleEmailInUseError = (error: unknown): boolean =>
+  error instanceof Error && error.message.trim() === GOOGLE_EMAIL_IN_USE_ERROR;
+
 // The open transition can finish after the user has already moved into a
 // field (slow phones). Focusing email then would route typed passwords into it.
 export const focusSignupEmailUnlessFieldActive = (
@@ -176,6 +184,7 @@ export default function LoginPage() {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [googleLinkToken, setGoogleLinkToken] = useState<string | null>(null);
   const [googleLinkAccount, setGoogleLinkAccount] = useState({ username: '', password: '' });
+  const [googleLinkOnly, setGoogleLinkOnly] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetFeedback, setResetFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [signupDialogOpen, setSignupDialogOpen] = useState(false);
@@ -582,8 +591,16 @@ export default function LoginPage() {
       } catch (err) {
         setGoogleCreating(false);
         if (!creatingAccount && isGoogleSignupConsentRequiredError(err)) {
+          setGoogleLinkOnly(false);
           setGoogleLinkToken(credential);
           setGoogleLinkAccount({ username: '', password: '' });
+          return;
+        }
+        if (!linkAccount && isGoogleEmailInUseError(err)) {
+          setGoogleLinkOnly(true);
+          setGoogleError(null);
+          setGoogleLinkToken(credential);
+          setGoogleLinkAccount({ username: parsed?.email ?? '', password: '' });
           return;
         }
         const message = authErrorMessage(err, t, 'authEntry.googleLoginError');
@@ -1201,40 +1218,46 @@ export default function LoginPage() {
       </Container>
       <Dialog open={googleLinkToken !== null} fullWidth maxWidth="xs"
         onClose={() => { setGoogleLinkToken(null); setGoogleLinkAccount({ username: '', password: '' }); }}>
-        <DialogTitle>{t('authEntry.googleNewAccountTitle')}</DialogTitle>
+        <DialogTitle>{t(googleLinkOnly ? 'authEntry.googleLinkTitle' : 'authEntry.googleNewAccountTitle')}</DialogTitle>
         <Box component="form" onSubmit={(event: FormEvent<HTMLFormElement>) => {
           event.preventDefault();
           if (googleLinkToken) void handleGoogleCredential({ credential: googleLinkToken }, googleLinkAccount);
         }}>
           <DialogContent>
             <Stack spacing={2}>
-              <Typography>{t('authEntry.googleNewAccountBody')}</Typography>
-              <Button
-                variant="contained"
-                size="large"
-                fullWidth
-                disabled={googleLoginMutation.isPending}
-                aria-busy={googleCreating}
-                startIcon={googleCreating ? <CircularProgress size={16} color="inherit" /> : undefined}
-                onClick={() => {
-                  if (!googleLinkToken) return;
-                  setGoogleCreating(true);
-                  void handleGoogleCredential({ credential: googleLinkToken }, undefined, true);
-                }}
-              >
-                {googleCreating ? t('authEntry.googleCreating') : t('authEntry.googleCreateWithGoogle')}
-              </Button>
-              <Typography variant="body2" color="text.secondary">
-                <Trans
-                  i18nKey="authEntry.signupClickwrap"
-                  components={{
-                    terms: <Link href={i18n.resolvedLanguage?.startsWith('es') ? '/account/terms-es.html' : '/account/terms.html'} target="_blank" rel="noreferrer" />,
-                    privacy: <Link href={i18n.resolvedLanguage?.startsWith('es') ? '/account/privacy-es.html' : '/account/privacy.html'} target="_blank" rel="noreferrer" />,
-                  }}
-                />
-              </Typography>
-              <Divider />
-              <Typography variant="subtitle2">{t('authEntry.googleLinkInstead')}</Typography>
+              {googleLinkOnly ? (
+                <Typography>{t('authEntry.googleExistingAccountBody')}</Typography>
+              ) : (
+                <>
+                  <Typography>{t('authEntry.googleNewAccountBody')}</Typography>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    disabled={googleLoginMutation.isPending}
+                    aria-busy={googleCreating}
+                    startIcon={googleCreating ? <CircularProgress size={16} color="inherit" /> : undefined}
+                    onClick={() => {
+                      if (!googleLinkToken) return;
+                      setGoogleCreating(true);
+                      void handleGoogleCredential({ credential: googleLinkToken }, undefined, true);
+                    }}
+                  >
+                    {googleCreating ? t('authEntry.googleCreating') : t('authEntry.googleCreateWithGoogle')}
+                  </Button>
+                  <Typography variant="body2" color="text.secondary">
+                    <Trans
+                      i18nKey="authEntry.signupClickwrap"
+                      components={{
+                        terms: <Link href={i18n.resolvedLanguage?.startsWith('es') ? '/account/terms-es.html' : '/account/terms.html'} target="_blank" rel="noreferrer" />,
+                        privacy: <Link href={i18n.resolvedLanguage?.startsWith('es') ? '/account/privacy-es.html' : '/account/privacy.html'} target="_blank" rel="noreferrer" />,
+                      }}
+                    />
+                  </Typography>
+                  <Divider />
+                  <Typography variant="subtitle2">{t('authEntry.googleLinkInstead')}</Typography>
+                </>
+              )}
               <TextField required autoComplete="username" label={t('authEntry.googleLinkUsername')}
                 value={googleLinkAccount.username} onChange={event => setGoogleLinkAccount(value => ({ ...value, username: event.target.value }))} />
               <TextField required type="password" autoComplete="current-password" label={t('authEntry.googleLinkPassword')}

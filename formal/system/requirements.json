@@ -9276,13 +9276,15 @@
       "allowedTransitions": [
         "signup(email,password) -> authenticated -> Comunidad or safe return path",
         "Google unknown identity -> explicit create choice -> authenticated",
-        "returning session at / -> Comunidad"
+        "returning session at / -> Comunidad",
+        "Google unknown identity with an email that already signs in to TDF -> password proof -> linked -> authenticated"
       ],
       "forbiddenTransitions": [
         "required name/phone/profile at signup",
         "external, protocol-relative or backslash redirect target",
         "account linking by email alone",
-        "private email or its local part -> automatic public account name before explicit profile editing"
+        "private email or its local part -> automatic public account name before explicit profile editing",
+        "Google identity whose email already signs in to TDF -> second account"
       ],
       "effects": [
         "Server records the accepted terms version. Email signup and Google signup without a supplied profile name start with a neutral account label, independent of the private email, and people can choose their public name later."
@@ -27917,7 +27919,8 @@
         "token with bad signature, issuer, audience, lifetime, nonce or algorithm yielding a session",
         "account creation without explicit createNewAccount and current terms",
         "account linking by email alone",
-        "account creation when the token carries no email"
+        "account creation when the token carries no email",
+        "account creation for an unbound Google or Apple subject whose token email already belongs to an account with a login"
       ],
       "effects": [
         "Binds issuer https://appleid.apple.com and token sub to one credential under an advisory lock; records login_apple activity and account consent."
@@ -27926,7 +27929,7 @@
       "privacy": "Apple verified relay/contact email is stored as the private primary email; both Google and Apple use canonical initialAccountName when a provider name is absent, never an email as the public display-name fallback. Tokens and raw nonces are never logged.",
       "concurrency": "Per issuer:subject advisory lock shared with Google; JWKS misses and stale known keys single-flight through a cancellation-safe lock. A usable successful key set is cached for strictly less than 900 seconds; a matching kid does not extend that lifetime. Each attempted fetch reserves a 60 second cooldown before I/O, including failed, empty, or canceled attempts. Mobile rollout availability is a public build-time switch; only literal true admits native loading, cached binding reuse, button display and provider entry.",
       "idempotency": "Repeated login for a bound subject reuses the credential.",
-      "failure": "Invalid or expired token yields 401 with a generic message; unconfigured audiences yield 500; key fetch failure fails closed. The optional native Apple flow defaults unavailable until EXPO_PUBLIC_APPLE_SIGN_IN_ENABLED is exactly true; Google/password flows retain their existing behavior.",
+      "failure": "Invalid or expired token yields 401 with a generic message; unconfigured audiences yield 500; key fetch failure fails closed. The optional native Apple flow defaults unavailable until EXPO_PUBLIC_APPLE_SIGN_IN_ENABLED is exactly true; Google/password flows retain their existing behavior. An unbound subject whose email already signs in to TDF is refused with the existing-account message before the consent check and before any write; the web entry then offers only password linking.",
       "recovery": "After key retrieval failure, unusable responses or cancellation, stale known keys fail closed during the attempt cooldown; retry retrieval after the cooldown. Failed attempts never renew successful-cache lifetime. Fresh known keys remain usable while every token signature and claim is rechecked. A backward clock cannot make a future cache timestamp fresh. Users can use email and password or link an existing account. Once the issuer migration is recorded, production schema verification requires the live NOT NULL issuer column and exact validated Google/Apple constraint; an intentional legacy prefix without that migration makes no Apple-support claim.",
       "observability": "login_apple auth activity and rejected-token warnings without token content.",
       "source": "App Store Connect rejection notice relayed by the product owner",

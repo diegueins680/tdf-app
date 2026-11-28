@@ -14,6 +14,7 @@ import Data.Int (Int64)
 import Data.List (isPrefixOf, isSuffixOf)
 import Data.Pool (destroyAllResources)
 import Data.Text (Text)
+import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.UUID as UUID
 import Data.UUID.V4 (nextRandom)
@@ -26,7 +27,7 @@ import Test.Hspec
 import TDF.Auth (lockCredentialForSession, revokeInteractiveSessions)
 import TDF.DTO (LoginResponse, LoginRequest(..))
 import TDF.Models (PartyId, UserCredentialId, UserCredential(..))
-import TDF.ServerAuth (AppleProfile(..), GoogleProfile(..), SessionTokenTtl(..), completeGoogleLogin, completeAppleLogin)
+import TDF.ServerAuth (AppleProfile(..), GoogleProfile(..), SessionTokenTtl(..), completeGoogleLogin, completeAppleLogin, providerAccountEmailInUseError)
 
 -- This starts after provider cryptographic verification. No provider request is
 -- made, and the database is the same fully migrated synthetic HTTP fixture.
@@ -173,6 +174,34 @@ spec = describe "credential-lifecycle-postgresql" $ do
             "SELECT credential_id FROM auth_provider_identity WHERE issuer=? AND subject=?"
             [toPersistValue (apIssuer profile), toPersistValue (apSubject profile)] :: SqlPersistT IO [Single UserCredentialId]) pool
           rowsAfter `shouldBe` [Single credential]
+        it "refuses a second account for an unbound Google subject whose email already signs in, before any account effect" $ \pool -> do
+          (_, _, boundProfile) <- fixture pool
+          subject <- ("synthetic-google-second-" <>) . UUID.toText <$> nextRandom
+          let sameEmail = GoogleProfile "https://accounts.google.com" subject
+                (T.toUpper (gpEmail boundProfile)) Nothing Nothing
+              countParties = runSqlPool (rawSql
+                "SELECT count(*) FROM party WHERE lower(primary_email)=lower(?)"
+                [toPersistValue (gpEmail boundProfile)] :: SqlPersistT IO [Single Int64]) pool
+              refusal = Left (providerAccountEmailInUseError "Google")
+          before <- countParties
+          -- The refusal precedes the consent prompt, so no client offers creation.
+          runSqlPool (google sameEmail) pool >>= \result -> void result `shouldBe` refusal
+          runSqlPool (completeGoogleLogin (SessionTokenTtl 3600) (Just True)
+            (Just "tdf-account-terms-v1") (Just False) Nothing Nothing sameEmail) pool
+            >>= \result -> void result `shouldBe` refusal
+          countParties `shouldReturn` before
+          bindings <- runSqlPool (rawSql
+            "SELECT count(*) FROM auth_provider_identity WHERE issuer=? AND subject=?"
+            [toPersistValue (gpIssuer sameEmail), toPersistValue subject] :: SqlPersistT IO [Single Int64]) pool
+          bindings `shouldBe` [Single 0]
+        it "still creates an Apple account when only a contact without a login shares the email" $ \pool -> do
+          profile <- unboundAppleProfile
+          runSqlPool (rawExecute
+            "INSERT INTO party(display_name,is_org,primary_email,created_at) VALUES ('Synthetic guest contact',false,?,now())"
+            [toPersistValue (apEmail profile)]) pool
+          runSqlPool (completeAppleLogin (SessionTokenTtl 3600) (Just True)
+            (Just "tdf-account-terms-v1") (Just False) Nothing Nothing profile) pool
+            >>= (`shouldSatisfy` isRight)
 
 safeConnection :: String -> Bool
 safeConnection value = not (any (`elem` value) ['?', '#'])

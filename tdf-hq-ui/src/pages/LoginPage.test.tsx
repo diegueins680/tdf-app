@@ -11,6 +11,9 @@ const GOOGLE_CREDENTIAL =
 const GOOGLE_CONSENT_ERROR =
   'Accept the terms and privacy policy through the signup flow before creating a Google account';
 
+const GOOGLE_EMAIL_IN_USE_ERROR =
+  'Ya existe una cuenta TDF con este correo. Inicia sesión con tu contraseña para conectar Google.';
+
 const googleLoginRequestMock = jest.fn<(payload: Record<string, unknown>) => Promise<Record<string, unknown>>>();
 const loginMock = jest.fn();
 const logoutMock = jest.fn();
@@ -69,7 +72,7 @@ jest.unstable_mockModule('../utils/logger', () => ({
 
 
 
-const { default: LoginPage, isGoogleSignupConsentRequiredError, focusSignupEmailUnlessFieldActive } = await import(
+const { default: LoginPage, isGoogleSignupConsentRequiredError, isGoogleEmailInUseError, focusSignupEmailUnlessFieldActive } = await import(
   './LoginPage'
 );
 
@@ -655,6 +658,37 @@ describe('LoginPage Google signup consent flow', () => {
       await waitFor(() => expect(googleLoginRequestMock).toHaveBeenLastCalledWith({
         idToken: GOOGLE_CREDENTIAL, linkAccount: { username: 'existing-user', password: 'fictional-password' },
       }));
+      expect(loginMock).toHaveBeenCalledWith(expect.objectContaining({ partyId: 42 }), { remember: true });
+    } finally { await cleanup(); }
+  });
+
+  it('offers only password linking, never a second account, when the Google email already has a TDF account', async () => {
+    expect(isGoogleEmailInUseError(new Error(` ${GOOGLE_EMAIL_IN_USE_ERROR} `))).toBe(true);
+    expect(isGoogleEmailInUseError(new Error(GOOGLE_CONSENT_ERROR))).toBe(false);
+    googleLoginRequestMock.mockRejectedValueOnce(new Error(GOOGLE_EMAIL_IN_USE_ERROR))
+      .mockResolvedValueOnce({ token: 'fictional-session', partyId: 42, roles: [], modules: [], accountCreated: false });
+    const cleanup = await renderLoginPage();
+    try {
+      await waitFor(() => expect(findButton('Google login test button')).not.toBeNull());
+      await act(async () => { findButton('Google login test button')?.click(); await flushPromises(); });
+      await waitFor(() => expect(findButton('Conectar Google')).not.toBeNull());
+      const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+      expect(dialog?.textContent).toContain('Ya existe una cuenta TDF con este correo.');
+      expect(findButton('Crear mi cuenta con Google')).toBeNull();
+      // The account email from the Google credential is prefilled; only the password is asked.
+      const username = dialog?.querySelector<HTMLInputElement>('input[autocomplete="username"]');
+      expect(username?.value).toBe('andrea@example.com');
+      const password = dialog?.querySelector<HTMLInputElement>('input[autocomplete="current-password"]');
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(password, 'fictional-password');
+        password?.dispatchEvent(new Event('input', { bubbles: true }));
+        await flushPromises();
+      });
+      await act(async () => { findButton('Conectar Google')?.click(); await flushPromises(); });
+      await waitFor(() => expect(googleLoginRequestMock).toHaveBeenLastCalledWith({
+        idToken: GOOGLE_CREDENTIAL, linkAccount: { username: 'andrea@example.com', password: 'fictional-password' },
+      }));
+      expect(googleLoginRequestMock).toHaveBeenCalledTimes(2);
       expect(loginMock).toHaveBeenCalledWith(expect.objectContaining({ partyId: 42 }), { remember: true });
     } finally { await cleanup(); }
   });

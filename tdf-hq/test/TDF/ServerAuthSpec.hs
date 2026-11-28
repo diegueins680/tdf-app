@@ -34,6 +34,7 @@ import TDF.ServerAuth
   , GoogleIdTokenInfo (..)
   , appleDisplayName
   , appleProfileFromIdentity
+  , providerAccountEmailInUseError
   , validateAppleAccountCreationTerms
   , validateAppleFullName
   , validateAppleIdentityTokenInput
@@ -924,6 +925,12 @@ appleLoginInputSpec = describe "Sign in with Apple request handling" $ do
     validateAppleAccountCreationTerms (Just True) (Just "other") `shouldSatisfy` isLeft
     validateAppleAccountCreationTerms Nothing Nothing
       `shouldBe` Left "Accept the terms and privacy policy through the signup flow before creating a Apple account"
+
+  it "names the provider in the existing-account refusal that clients match" $ do
+    providerAccountEmailInUseError "Google"
+      `shouldBe` "Ya existe una cuenta TDF con este correo. Inicia sesión con tu contraseña para conectar Google."
+    providerAccountEmailInUseError "Apple"
+      `shouldBe` "Ya existe una cuenta TDF con este correo. Inicia sesión con tu contraseña para conectar Apple."
 
   it "validates the identity token shape and nonce before verification" $ do
     validateAppleIdentityTokenInput " a.b.c " `shouldBe` Right "a.b.c"
