@@ -26,7 +26,10 @@ export default function MobileAppPage() {
   const { t, i18n } = useTranslation();
   const { search, pathname } = useLocation();
   const detected = detectPlatform(navigator.userAgent, navigator.maxTouchPoints);
-  const [platform, setPlatform] = useState<MobilePlatform>(detected === 'ios' ? 'ios' : 'android');
+  const [platform, setPlatform] = useState<MobilePlatform>(() => {
+    const androidRequested = new URLSearchParams(search).get('platform') === 'android';
+    return detected === 'ios' && !androidRequested ? 'ios' : 'android';
+  });
   const [form, setForm] = useState<'request' | 'feedback' | null>(new URLSearchParams(search).get('feedback') === '1' ? 'feedback' : null);
   const [now, setNow] = useState(Date.now);
   const [qr, setQr] = useState<string | null>(null);

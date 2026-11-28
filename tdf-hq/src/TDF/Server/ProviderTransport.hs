@@ -7,6 +7,8 @@ module TDF.Server.ProviderTransport
   , loadRequiredSafeEnv, providerRequest, providerResponse, paypalAccessTokenForService
   , issuePaypalRefundRemote, issuePaypalRefundWithTokenRemote, isProviderReference ) where
 
+import Control.Monad.Except (runExceptT)
+import TDF.Commerce.DatafastStatus (readRequiredProviderSetting)
 import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT)
@@ -92,17 +94,8 @@ loadPaypalEnvForService = do
   pure (cid, secret, baseUrl, environment, merchantRef)
 
 loadRequiredSafeEnv :: String -> Int -> AppM Text
-loadRequiredSafeEnv variableName maxLength = do
-  rawValue <- liftIO (lookupEnv variableName)
-  case T.strip . T.pack <$> rawValue of
-    Just value
-      | not (T.null value)
-      , T.length value <= maxLength
-      , T.all (\character -> character >= '!' && character <= '~') value -> pure value
-    _ -> throwError err500
-      { errBody = BL.fromStrict (TE.encodeUtf8
-          (T.pack variableName <> " must be configured with safe visible ASCII")) }
-
+loadRequiredSafeEnv name limit = liftIO (runExceptT (readRequiredProviderSetting name limit))
+  >>= either (throwError . configurationError) pure
 
 providerRequest :: Checkout.PaymentProvider -> String -> AppM Request
 providerRequest provider url = do

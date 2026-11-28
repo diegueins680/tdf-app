@@ -6,7 +6,10 @@ import { getAnalyticsClient } from '../analytics/posthog';
 /** Public exploration has no dependency on a profile, location or catalog response. */
 export default function PublicWelcome() {
   const { t } = useTranslation();
-  const track = (destination: '/tdf' | '/records' | '/buscar') => {
+  const now = Date.now();
+  const showTickets = now < Date.parse('2026-11-28T18:00:00-05:00');
+  const showAndroid = now < Date.parse('2026-11-30T00:00:00-05:00');
+  const track = (destination: string) => {
     try {
       getAnalyticsClient().capture('public_discovery_cta_clicked', {
         route: '/inicio', destination,
@@ -27,6 +30,18 @@ export default function PublicWelcome() {
             <Typography id="public-welcome-title" component="h1" sx={{ fontSize: { xs: '2.6rem', md: '3.8rem' }, fontWeight: 800, lineHeight: 1.08 }}>
               {t('directorySearch.welcomeTitle')}
             </Typography>
+            {showAndroid && (
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                {showTickets && (
+                  <Button component={RouterLink} to="/eventos/216/entradas" onClick={() => track('/eventos/216/entradas')} variant="contained" size="large" sx={{ minHeight: 48, bgcolor: '#e6c785', color: '#111b24', '&:hover': { bgcolor: '#f0d9a8' } }}>
+                    {t('directorySearch.psiqueTickets')}
+                  </Button>
+                )}
+                <Button component={RouterLink} to="/app?platform=android" onClick={() => track('/app?platform=android')} variant="outlined" size="large" sx={{ minHeight: 48, color: '#f8fafc', borderColor: '#94a3b8' }}>
+                  {t('directorySearch.tryAndroid')}
+                </Button>
+              </Stack>
+            )}
             <Typography sx={{ fontSize: '1.15rem', lineHeight: 1.7, color: '#e2e8f0' }}>
               {t('directorySearch.welcomeBody')}
             </Typography>
