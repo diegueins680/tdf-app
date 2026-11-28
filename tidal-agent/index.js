@@ -5,9 +5,9 @@
 import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const API_URL = process.env.TIDAL_AGENT_API_URL || process.env.OPENAI_API_URL || 'https://api.openai.com/v1/chat/completions';
-const API_KEY = process.env.TIDAL_AGENT_API_KEY || process.env.OPENAI_API_KEY;
-const MODEL = process.env.TIDAL_AGENT_MODEL || 'gpt-4o-mini';
+const API_URL = 'https://api.venice.ai/api/v1/chat/completions';
+const API_KEY = process.env.VENICE_API_KEY;
+const MODEL = process.env.TIDAL_AGENT_MODEL || process.env.VENICE_MODEL || 'qwen-3-8-27b';
 
 const systemPrompt = `
 You are an assistant that converts natural language musical requests into TidalCycles code.
@@ -122,7 +122,7 @@ export const extractCode = (text) => {
 
 async function callModel(userPrompt) {
   if (!API_KEY) {
-    throw new Error('Set TIDAL_AGENT_API_KEY or OPENAI_API_KEY to call the model.');
+    throw new Error('Set VENICE_API_KEY to call the model.');
   }
   const body = {
     model: MODEL,
@@ -135,6 +135,7 @@ async function callModel(userPrompt) {
   };
   const resp = await fetch(API_URL, {
     method: 'POST',
+    redirect: 'error',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${API_KEY}`,

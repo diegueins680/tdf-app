@@ -7,6 +7,7 @@ module TDF.RagStore
   , refreshRagIndexWith
   , ensureRagIndex
   , retrieveRagContext
+  , retrieveRagContextWith
   , getRagIndexStats
   , availabilityOverlaps
   , callOpenAIEmbeddingsWith
@@ -82,7 +83,10 @@ data EmbeddingReq = EmbeddingReq
   , input :: [Text]
   } deriving (Show, Generic)
 
-instance ToJSON EmbeddingReq
+instance ToJSON EmbeddingReq where
+  toJSON EmbeddingReq{..} = object $
+    ["model" .= model, "input" .= input] <>
+    ["dimensions" .= (1536 :: Int) | model == "text-embedding-qwen3-8b"]
 
 data EmbeddingData = EmbeddingData
   { embedding :: [Double]
@@ -116,14 +120,26 @@ instance FromJSON OpenAIErrorResp where
     OpenAIErrorResp <$> o .: "error"
 
 refreshRagIndex :: AppConfig -> ConnectionPool -> IO (Either Text Int)
-refreshRagIndex cfg = refreshRagIndexWith (embedTexts cfg) cfg
+refreshRagIndex cfg = refreshRagIndexTagged (embedTexts cfg) cfg
 
 -- The injected embedding adapter permits payload/failure checks without a
 -- provider request. Production always supplies the same embedTexts adapter.
 refreshRagIndexWith
   :: ([Text] -> IO (Either Text [[Double]]))
   -> AppConfig -> ConnectionPool -> IO (Either Text Int)
-refreshRagIndexWith embed cfg pool = do
+refreshRagIndexWith embed cfg = refreshRagIndexTagged tagged cfg
+  where
+    tagged inputs = fmap (fmap (\vectors -> (configuredSpace cfg, vectors))) (embed inputs)
+
+configuredSpace :: AppConfig -> Text
+configuredSpace cfg = case openAiApiKey cfg of
+  Nothing -> "local-v1"
+  Just _ -> "venice:" <> openAiEmbedModel cfg
+
+refreshRagIndexTagged
+  :: ([Text] -> IO (Either Text (Text, [[Double]])))
+  -> AppConfig -> ConnectionPool -> IO (Either Text Int)
+refreshRagIndexTagged embed cfg pool = do
   runSqlPool purgeLegacyRagChunks pool
   dimCheck <- validateRagEmbeddingDim cfg pool
   case dimCheck of
@@ -134,24 +150,24 @@ refreshRagIndexWith embed cfg pool = do
       let chunks = concatMap (docToChunks cfg) docs
       if null chunks
         then do
-          runSqlPool (replaceRagChunks [] []) pool
+          runSqlPool (replaceRagChunks "" [] []) pool
           pure (Right 0)
         else do
           embedResult <- embed (map rcContent chunks)
           case embedResult of
             Left err -> pure (Left err)
-            Right embeddings -> do
+            Right (space, embeddings) -> do
               if length embeddings /= length chunks
                 then pure (Left "Embedding response size mismatch")
                 else do
-                  runSqlPool (replaceRagChunks chunks embeddings) pool
+                  runSqlPool (replaceRagChunks space chunks embeddings) pool
                   pure (Right (length chunks))
 
 ensureRagIndex :: AppConfig -> ConnectionPool -> IO (Either Text Bool)
 ensureRagIndex cfg pool = do
   -- Privacy cleanup must not depend on index age or provider availability.
   runSqlPool purgeLegacyRagChunks pool
-  stats <- runSqlPool loadRagIndexStats pool
+  stats <- runSqlPool (loadRagIndexStats (Just (configuredSpace cfg))) pool
   now <- getCurrentTime
   let stale = case risUpdatedAt stats of
         Nothing -> True
@@ -178,21 +194,54 @@ purgeLegacyRagChunks = do
     rawExecute "DELETE FROM rag_chunk WHERE source IS DISTINCT FROM 'course'" []
 
 retrieveRagContext :: AppConfig -> ConnectionPool -> Text -> IO [Text]
-retrieveRagContext cfg pool query = do
+retrieveRagContext cfg = retrieveRagContextWith (embedTexts cfg) cfg
+
+-- The injected adapter returns the embedding space of the query vector, as
+-- embedTexts does. Production always supplies embedTexts.
+retrieveRagContextWith
+  :: ([Text] -> IO (Either Text (Text, [[Double]])))
+  -> AppConfig -> ConnectionPool -> Text -> IO [Text]
+retrieveRagContextWith embed cfg pool query = do
   dimCheck <- validateRagEmbeddingDim cfg pool
   case dimCheck of
     Left _ -> pure []
     Right () -> do
-      embedResult <- embedTexts cfg [query]
+      embedResult <- embed [query]
       case embedResult of
         Left _ -> pure []
-        Right [] -> pure []
-        Right (embedding:_) ->
-          runSqlPool (selectRagChunks cfg embedding) pool
+        Right (_, []) -> pure []
+        Right (space, embedding:_) ->
+          runSqlPool
+            (do
+              (indexSpace, queryVector) <- alignQueryWithIndex cfg space embedding query
+              selectRagChunks cfg indexSpace queryVector)
+            pool
+
+-- A refresh that met a transient provider failure stores the whole corpus in
+-- the local space and keeps it until the refresh interval expires. A provider
+-- query vector cannot rank those rows, so rank them with a local query vector
+-- while no row exists in the provider space.
+alignQueryWithIndex :: AppConfig -> Text -> [Double] -> Text -> SqlPersistT IO (Text, [Double])
+alignQueryWithIndex cfg space embedding query
+  | space == localEmbeddingSpace = pure (space, embedding)
+  | otherwise = do
+      exists <- ragTableExists
+      if not exists
+        then pure (space, embedding)
+        else do
+          rows <- rawSql
+            "SELECT EXISTS (SELECT 1 FROM rag_chunk WHERE metadata->>'embeddingSpace' = ?)"
+            [PersistText space] :: SqlPersistT IO [Single Bool]
+          pure $ case (rows, localEmbeddings cfg [query]) of
+            ([Single False], localVector:_) -> (localEmbeddingSpace, localVector)
+            _ -> (space, embedding)
+
+localEmbeddingSpace :: Text
+localEmbeddingSpace = "local-v1"
 
 getRagIndexStats :: ConnectionPool -> IO (Int, Maybe UTCTime)
 getRagIndexStats pool = do
-  RagIndexStats{..} <- runSqlPool loadRagIndexStats pool
+  RagIndexStats{..} <- runSqlPool (loadRagIndexStats Nothing) pool
   pure (risCount, risUpdatedAt)
 
 buildPublicCourseDocuments :: AppConfig -> Day -> SqlPersistT IO [PublicCourseDocument]
@@ -304,7 +353,7 @@ docToChunks cfg PublicCourseDocument{..} =
           , rcSourceId = Just courseDocumentSlug
           , rcChunkIndex = idx
           , rcContent = content
-          , rcMetadata = object ["slug" .= courseDocumentSlug]
+          , rcMetadata = object ["slug" .= courseDocumentSlug, "requestedSpace" .= configuredSpace cfg]
           })
       [0..]
       chunks
@@ -320,9 +369,9 @@ chunkWords maxWords overlap txt =
       chunkAt start = T.unwords (take safeMax (drop start wordsList))
   in filter (not . T.null) (map chunkAt starts)
 
-replaceRagChunks :: [RagChunk] -> [[Double]] -> SqlPersistT IO ()
+replaceRagChunks :: Text -> [RagChunk] -> [[Double]] -> SqlPersistT IO ()
 -- runSqlPool owns the transaction; do not commit before deleting old rows.
-replaceRagChunks chunks embeddings = do
+replaceRagChunks space chunks embeddings = do
   rawExecute "DELETE FROM rag_chunk" []
   forM_ (zip chunks embeddings) $ \(RagChunk{..}, emb) -> do
     let values =
@@ -331,11 +380,12 @@ replaceRagChunks chunks embeddings = do
           , PersistInt64 (fromIntegral rcChunkIndex)
           , PersistText rcContent
           , PersistText (jsonText rcMetadata)
+          , PersistText space
           , PersistText (vectorText emb)
           ]
     rawExecute
       "INSERT INTO rag_chunk (source, source_id, chunk_index, content, metadata, embedding, updated_at) \
-      \VALUES (?, ?, ?, ?, ?::jsonb, ?::vector, now())"
+      \VALUES (?, ?, ?, ?, ?::jsonb || jsonb_build_object('embeddingSpace', ?::text), ?::vector, now())"
       values
 
 loadRagEmbeddingType :: SqlPersistT IO (Maybe Text)
@@ -361,7 +411,7 @@ validateEmbeddingModelDimensions :: Text -> Either Text Int
 validateEmbeddingModelDimensions model =
   case openAiEmbedDimensions model of
     Nothing ->
-      Left ("OPENAI_EMBED_MODEL desconocido: " <> model <> ". Configura un modelo con dimensiones conocidas.")
+      Left ("VENICE_EMBED_MODEL desconocido: " <> model <> ". Configura un modelo con dimensiones conocidas.")
     Just dim -> Right dim
 
 validateEmbeddingResponseOrder :: Int -> [(Int, [Double])] -> Either Text [[Double]]
@@ -462,18 +512,24 @@ validateRagEmbeddingDim cfg pool =
                     ("Dimensiones incompatibles. Modelo '" <> openAiEmbedModel cfg <>
                      "' requiere " <> T.pack (show expected) <>
                      " pero rag_chunk.embedding es vector(" <> T.pack (show actual) <>
-                     "). Ejecuta migraciones o ajusta OPENAI_EMBED_MODEL."
+                     "). Ejecuta migraciones o ajusta VENICE_EMBED_MODEL."
                     ))
 
-loadRagIndexStats :: SqlPersistT IO RagIndexStats
-loadRagIndexStats = do
+loadRagIndexStats :: Maybe Text -> SqlPersistT IO RagIndexStats
+loadRagIndexStats space = do
   exists <- ragTableExists
   if not exists
     then pure RagIndexStats { risCount = 0, risUpdatedAt = Nothing }
     else do
+      let (predicate, params) = case space of
+            Nothing -> ("", [])
+            Just value ->
+              ( " WHERE metadata->>'embeddingSpace' = ? OR (metadata->>'embeddingSpace' = 'local-v1' AND metadata->>'requestedSpace' = ?)"
+              , [PersistText value, PersistText value]
+              )
       rows <- rawSql
-        "SELECT COUNT(*)::bigint, MAX(updated_at) FROM rag_chunk"
-        [] :: SqlPersistT IO [(Single Int64, Single (Maybe UTCTime))]
+        ("SELECT COUNT(*)::bigint, MAX(updated_at) FROM rag_chunk" <> predicate)
+        params :: SqlPersistT IO [(Single Int64, Single (Maybe UTCTime))]
       case rows of
         [(Single countVal, Single updatedAt)] ->
           pure RagIndexStats
@@ -482,8 +538,8 @@ loadRagIndexStats = do
             }
         _ -> pure RagIndexStats { risCount = 0, risUpdatedAt = Nothing }
 
-selectRagChunks :: AppConfig -> [Double] -> SqlPersistT IO [Text]
-selectRagChunks cfg embedding =
+selectRagChunks :: AppConfig -> Text -> [Double] -> SqlPersistT IO [Text]
+selectRagChunks cfg space embedding =
   let vector = vectorText embedding
       limitVal = fromIntegral (ragTopK cfg) :: Int64
   in do
@@ -498,9 +554,9 @@ selectRagChunks cfg embedding =
           -- have no object authority here. Use the index only to rank public
           -- course IDs; render current public fields, never cached raw content.
           ("SELECT course.id FROM rag_chunk chunk JOIN course ON course.slug = chunk.source_id\
-          \ WHERE chunk.source = 'course' AND " <> publicCourseEligibilitySql
+          \ WHERE chunk.metadata->>'embeddingSpace' = ? AND chunk.source = 'course' AND " <> publicCourseEligibilitySql
           <> " ORDER BY embedding <=> ?::vector LIMIT ?")
-          (publicCourseEligibilityParams cfg today ambiguous
+          ([PersistText space] <> publicCourseEligibilityParams cfg today ambiguous
             <> [PersistText vector, PersistInt64 limitVal])
           :: SqlPersistT IO [Single Int64]
         docs <- forM rows $ \(Single courseId) -> do
@@ -508,13 +564,13 @@ selectRagChunks cfg embedding =
           pure (courseDocumentContent <$> doc)
         pure (catMaybes docs)
 
-embedTexts :: AppConfig -> [Text] -> IO (Either Text [[Double]])
+embedTexts :: AppConfig -> [Text] -> IO (Either Text (Text, [[Double]]))
 embedTexts cfg inputs
-  | null inputs = pure (Right [])
+  | null inputs = pure (Right (configuredSpace cfg, []))
   | otherwise = do
       let fallback = do
             hPutStrLn stderr "[rag] Usando embeddings locales (fallback)."
-            pure (Right (localEmbeddings cfg inputs))
+            pure (Right ("local-v1", localEmbeddings cfg inputs))
       case openAiApiKey cfg of
         Nothing -> fallback
         Just _ -> do
@@ -527,9 +583,9 @@ embedTexts cfg inputs
                   hPutStrLn
                     stderr
                     ("[rag] OpenAI embeddings fallo, usando fallback. " <> T.unpack err)
-                  pure (Right (localEmbeddings cfg inputs))
+                  pure (Right ("local-v1", localEmbeddings cfg inputs))
                 else pure (Left err)
-            Right values -> pure (Right values)
+            Right values -> pure (Right (configuredSpace cfg, values))
   where
     concatEmbeddings xs =
       let failures = [err | Left err <- xs]
@@ -624,7 +680,7 @@ callOpenAIEmbeddingsWith
   -> IO (Either Text [[Double]])
 callOpenAIEmbeddingsWith runEmbeddingRequest cfg inputs =
   case openAiApiKey cfg of
-    Nothing -> pure (Left "OPENAI_API_KEY no configurada")
+    Nothing -> pure (Left "VENICE_API_KEY no configurada")
     Just key -> do
       let embedBase = T.dropWhileEnd (== '/') (chatKitApiBase cfg)
       reqBase <- parseRequest (T.unpack (embedBase <> "/v1/embeddings"))
@@ -634,7 +690,8 @@ callOpenAIEmbeddingsWith runEmbeddingRequest cfg inputs =
             }
           req =
             reqBase
-              { method = "POST"
+              { redirectCount = 0
+          , method = "POST"
               , requestHeaders =
                   [ ("Content-Type", "application/json")
                   , ("Authorization", "Bearer " <> TE.encodeUtf8 key)
