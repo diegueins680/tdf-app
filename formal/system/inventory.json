@@ -19203,7 +19203,7 @@
     {
       "id": "SURFACE-4d5b5b67e9af24f7",
       "path": "tdf-hq/src/TDF/RagStore.hs",
-      "sha256": "e4efb38c1a4993d1b3b9b112b3e1de16a44471faf92cdb2dc35bf993007b6e69",
+      "sha256": "d7ea61afb9b580c7b9393427a06e4747bc04453951f1ba4eb88bc54987f9bb84",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19983,7 +19983,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "4eeab72b9f2dd09ddd04509164efaa8ca130c086fad96346bb8423e12c10f73a",
+      "sha256": "fca8a4905af7ffe1356185009935afbca887ee5d3f3f03423e7ff712446238d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20439,7 +20439,7 @@
     {
       "id": "SURFACE-7a8c25536f4eeac3",
       "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "4fb4b5691dec0c09b8ed1bf7e79cd0f0b9d0299e1ab70612a0229605f64f1fb5",
+      "sha256": "5852d0615dbbc4d22748cb16fcb3cf574bf0d9a658361cd1c69191fb50225c00",
       "semanticConformance": "not-established-by-discovery"
     },
     {

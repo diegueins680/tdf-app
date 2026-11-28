@@ -5617,8 +5617,13 @@ main = hspec $ do
                 "VENICE_API_BASE path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
             assertInvalid
                 "VENICE_API_BASE"
-                (providerApiBase <> ":0443")
+                "https://api.venice.ai:0443/api"
                 "VENICE_API_BASE must be an absolute https URL"
+
+            assertInvalid
+                "VENICE_API_BASE"
+                (providerApiBase <> "/unexpected")
+                "VENICE_API_BASE must be https://api.venice.ai/api"
 
         it "normalizes configured Graph messaging node ids before building send URLs" $
             withEnvOverrides

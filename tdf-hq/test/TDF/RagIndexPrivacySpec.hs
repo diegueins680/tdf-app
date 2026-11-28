@@ -306,6 +306,15 @@ spec = describe "rag-index-privacy-postgresql" $ do
         ensureRagIndex cfg pool `shouldReturn` Right False
         indexRows pool `shouldReturn` [("course", "PUBLIC_PREVIOUS_INDEX")]
 
+      it "waits the refresh interval after local fallback for the configured Venice model" $ \pool -> do
+        local <- testConfig
+        let cfg = local { openAiApiKey = Just "synthetic", openAiEmbedModel = "text-embedding-qwen3-8b" }
+        runSqlPool (rawExecute
+          "UPDATE rag_chunk SET metadata=jsonb_build_object('embeddingSpace','local-v1'::text, 'requestedSpace','venice:text-embedding-qwen3-8b'::text) WHERE source='course'" []) pool
+        ensureRagIndex cfg pool `shouldReturn` Right False
+        runSqlPool (rawExecute "UPDATE rag_chunk SET updated_at=now()-interval '2 days'" []) pool
+        ensureRagIndex cfg pool `shouldReturn` Right True
+
       it "rebuilds a fresh index lacking the configured embedding space" $ \pool -> do
         publicCourse pool
         cfg <- testConfig

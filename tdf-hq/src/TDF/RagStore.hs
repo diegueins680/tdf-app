@@ -319,7 +319,7 @@ docToChunks cfg PublicCourseDocument{..} =
           , rcSourceId = Just courseDocumentSlug
           , rcChunkIndex = idx
           , rcContent = content
-          , rcMetadata = object ["slug" .= courseDocumentSlug]
+          , rcMetadata = object ["slug" .= courseDocumentSlug, "requestedSpace" .= configuredSpace cfg]
           })
       [0..]
       chunks
@@ -489,7 +489,10 @@ loadRagIndexStats space = do
     else do
       let (predicate, params) = case space of
             Nothing -> ("", [])
-            Just value -> (" WHERE metadata->>'embeddingSpace' = ?", [PersistText value])
+            Just value ->
+              ( " WHERE metadata->>'embeddingSpace' = ? OR (metadata->>'embeddingSpace' = 'local-v1' AND metadata->>'requestedSpace' = ?)"
+              , [PersistText value, PersistText value]
+              )
       rows <- rawSql
         ("SELECT COUNT(*)::bigint, MAX(updated_at) FROM rag_chunk" <> predicate)
         params :: SqlPersistT IO [(Single Int64, Single (Maybe UTCTime))]
