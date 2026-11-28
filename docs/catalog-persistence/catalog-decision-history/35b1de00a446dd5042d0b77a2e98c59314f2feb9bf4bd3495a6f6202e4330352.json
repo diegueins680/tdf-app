@@ -1,0 +1,21 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "34760a95b0cb120b1b60",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "datafast-recovery-2026-11-24",
+  "justification": "Preserve all 267 previously reviewed migrations in order and append the Datafast recovery ledger keyed by the existing immutable provider binding. The new table records bounded query attempts and the recovery outcome. This author review covers the manifest entry only.",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 268
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:eb492f0d15276cd15f7ad5e837be0a98655fe0f30c332cd314ad920b22261aad"
+  }
+}

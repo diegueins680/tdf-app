@@ -26674,7 +26674,7 @@
       "concurrency": "Recheck saved provider resources after checkout-row admission waits; a native storefront case observes the blocked reader and concurrently published binding. No universal exactly-once gateway or cross-process configuration-rotation proof is introduced.",
       "idempotency": "Existing operation identities, attempt locks and replay behavior remain unchanged.",
       "failure": "Reject invalid metadata before creating a provider attempt or contacting the gateway.",
-      "recovery": "Use existing authenticated status verification; removing creation metadata is not a refund, no-charge proof or fallback authorization.",
+      "recovery": "Use existing authenticated status verification; removing creation metadata is not a refund, no-charge proof or fallback authorization. A restored checkout with an immutable Datafast binding can enter the gated report-query worker. The worker rechecks merchant, amount, currency, reference, lease and fulfillment hold before posting a unique verified debit. A legacy order reference also requires the provider checkout ID. Reversed or ambiguous reports require reconciliation. Attempts absent from the snapshot require a separate source.",
       "observability": "Retain actual regression, fixed test outputs, source identity and explicit external blockers.",
       "implementation": [
         "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
@@ -26700,7 +26700,13 @@
         "ops/hetzner/Caddyfile.production",
         "scripts/lib/compiled-api-surface.mjs",
         "formal/system/compiled-api-surface.json",
-        "tdf-hq/src/TDF/Server/DatafastCheckoutContext.hs"
+        "tdf-hq/src/TDF/Server/DatafastCheckoutContext.hs",
+        "tdf-hq/sql/2026-11-24_datafast_recovery.sql",
+        "tdf-hq/src/TDF/Commerce/DatafastRecovery.hs",
+        "tdf-hq/src/TDF/Commerce/DatafastStatus.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Server/ProviderTransport.hs",
+        "ops/hetzner/inspect-runtime.py"
       ],
       "tests": [
         "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
@@ -26713,10 +26719,11 @@
         "tdf-hq/test/TDF/Commerce/DatafastClientIPSpec.hs",
         "scripts/verify-datafast-client-ip.py",
         "scripts/__tests__/compiled-api-surface.test.mjs",
-        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs"
+        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
+        "scripts/test-hetzner-inspection.py"
       ],
       "formalModels": [],
-      "verification": "Local Hspec field/UTF-8 cases and SQLite-backed runtime availability tests; no whole-system proof or provider certification. Immutable cart Hspec examples and generated conservation cases cover exact cents, provider field bounds, UTF-8 and refusals; current PostgreSQL/compiled integration evidence is recorded separately. The compiled PostgreSQL reader additionally exercises new and legacy bound references, independent immutable-field faults, read-only replay and behavior-changing source controls; this is not an all-domain handler or settlement execution proof. Transport provenance has actual Servant/WAI examples, generated spoofing cases and six assertion-rejecting source controls. The native storefront route additionally checks pre-attempt refusal, authorization precedence and cached reuse without provider HTTP; other domains retain compiler/type wiring scope. Two direct recheck cases cover latest-resource selection and missing-cache refusal. A native storefront interleaving observes a real PostgreSQL lock waiter and reuses the concurrently published binding without changing its financial snapshot. Existing PostgreSQL ticket sales-gate cases obtain the opaque request argument through its real WAI/Servant combinator; a loopback peer without a forwarded assertion cannot authorize a fresh gateway request. Closed-sales refusals remain authoritative.",
+      "verification": "Local Hspec field/UTF-8 cases and SQLite-backed runtime availability tests; no whole-system proof or provider certification. Immutable cart Hspec examples and generated conservation cases cover exact cents, provider field bounds, UTF-8 and refusals; current PostgreSQL/compiled integration evidence is recorded separately. The compiled PostgreSQL reader additionally exercises new and legacy bound references, independent immutable-field faults, read-only replay and behavior-changing source controls; this is not an all-domain handler or settlement execution proof. Transport provenance has actual Servant/WAI examples, generated spoofing cases and six assertion-rejecting source controls. The native storefront route additionally checks pre-attempt refusal, authorization precedence and cached reuse without provider HTTP; other domains retain compiler/type wiring scope. Two direct recheck cases cover latest-resource selection and missing-cache refusal. A native storefront interleaving observes a real PostgreSQL lock waiter and reuses the concurrently published binding without changing its financial snapshot. Existing PostgreSQL ticket sales-gate cases obtain the opaque request argument through its real WAI/Servant combinator; a loopback peer without a forwarded assertion cannot authorize a fresh gateway request. Closed-sales refusals remain authoritative. The isolated restore suite covers concurrent claims, both references, reversal, wrong amount, expired holds, course seats, service bookings and Domo deposits using a synthetic reporting transport.",
       "evidence": "Exact-candidate local test logs retained in the operator workspace; public secrets excluded.",
       "status": "specified and implemented",
       "critical": true,

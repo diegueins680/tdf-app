@@ -2452,6 +2452,7 @@
       "tdf-hq/sql/2026-11-21_social_friend_suggestions_rollback.sql",
       "tdf-hq/sql/2026-11-21_venue_search_sql.sql",
       "tdf-hq/sql/2026-11-21_venue_search_sql_rollback.sql",
+      "tdf-hq/sql/2026-11-24_datafast_recovery.sql",
       "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
       "tdf-hq/sql/2026-11-24_unicode_genre_suggestion_keys.sql",
       "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql",
@@ -2540,6 +2541,8 @@
       "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
       "tdf-hq/src/TDF/Commerce/DatafastClientIP.hs",
       "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
+      "tdf-hq/src/TDF/Commerce/DatafastRecovery.hs",
+      "tdf-hq/src/TDF/Commerce/DatafastStatus.hs",
       "tdf-hq/src/TDF/Commerce/DepositPolicy.hs",
       "tdf-hq/src/TDF/Commerce/DomoCancellation.hs",
       "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
@@ -4153,7 +4156,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "a91956a44021902210ea5937552a19323ea12a829acd35199b4dffebb49e7650",
+      "sha256": "cddcd987080a30135610431a89d262e4543bd5d22006b1e7c0b75149875c49db",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4315,7 +4318,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "74e2c14a636c9a993bbc12f79bcad76b540b4166cfdb983201843e89d7aa0603",
+      "sha256": "7c7c018e949ff0e28fe732bb024f0b254d71ec3f83ca0f186d12ee629dc1951f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5929,7 +5932,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "875ad459f0912b54eddd4ec6b7cddb10ef6e4b43123f45328a26f8243cf0f353",
+      "sha256": "e43904645016e803690f27376d1eaf3d0ddeaa7f277b3595762b407b4e04dc06",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7753,7 +7756,7 @@
     {
       "id": "SURFACE-d464a3dfb4d5f4a3",
       "path": "scripts/verify-datafast-reference.py",
-      "sha256": "8c5d503657b82ab6d5508a281ca61d416f76d89c2a15a00f746b9a3718019c9f",
+      "sha256": "69824d615c26f961c3930df6746ab34785bebd2419d69cf23b881a5d4a70c92a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11527,13 +11530,13 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "d0637de864bde975f24357b7ecc83c65cfe2bebe6d5e4a65e12c6eb194ff46ae",
+      "sha256": "a8f13c131444f076000448b9f6773ebb623a60ed0a39e9b50d7fc28e75e8ba3e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "9442a329a3e6bdacab998ffb0f1edc552182884d17eed0ba1b379c3bc054ed12",
+      "sha256": "6f64ffa44c78e3f66719ed5e6462ad187dd6b29abb29c198a435c938afb10343",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12439,13 +12442,13 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "bb6078e97918f5169b7d0764d449cff7e3f5042e95309beb4d504409412830a7",
+      "sha256": "6ed621b8f1e8c7c9b8f6807390f7c275e3666eac178d7ec144c39019a8441d28",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "907e370ca6cf8ee903b188ab8806d8b7043d6666fc60c99fd793eb4bdcdcc253",
+      "sha256": "ef4bd0e8bd17b65bc17210104dd10a8a631bb3a7a1c6485137983efc5d0cd27f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17951,6 +17954,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-4a1db15b418bd008",
+      "path": "tdf-hq/sql/2026-11-24_datafast_recovery.sql",
+      "sha256": "2b483352b983daaf6ca25b3975109da8c692c0cf1a2481d292cd26160685e992",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f03461b67698d3bd",
       "path": "tdf-hq/sql/2026-11-24_preserve_selected_genre_ids.sql",
       "sha256": "361a542eccf5b1d225686b116d11e82c857ef1dda39dfe915070d39a222ec689",
@@ -18479,6 +18488,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-e354dd8c2764ac25",
+      "path": "tdf-hq/src/TDF/Commerce/DatafastRecovery.hs",
+      "sha256": "96ac6c6295c068e2c7d7354129ce86fbdff767de683fd697d1b714f160e79729",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5aae0c5d087958c1",
+      "path": "tdf-hq/src/TDF/Commerce/DatafastStatus.hs",
+      "sha256": "352aeb9dbd4f154d3a1554df1a4509f11540ab62642fdc317460fbbab8137e12",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7bb4e94c65f7c89c",
       "path": "tdf-hq/src/TDF/Commerce/DepositPolicy.hs",
       "sha256": "6829fa5bf78c1d1839770e0728960967dfdbcdca62661dadd06adb2191d0a94f",
@@ -18631,7 +18652,7 @@
     {
       "id": "SURFACE-24ec334e6417bf04",
       "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-      "sha256": "e683710d467e99bef533498a64d1220fbd18286fa91f9580f68dfa6eb46c4043",
+      "sha256": "91c8133e0e8ea041d17c0223e9efdce17bb8ab609a6a67ffefa7b218616a04b6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19405,7 +19426,7 @@
     {
       "id": "SURFACE-8bea15f709688422",
       "path": "tdf-hq/src/TDF/Server/ProviderTransport.hs",
-      "sha256": "f42c6b0bf7913cf6f0a0deeae6aa6c14785644edf2d50d97dd840d1202080cae",
+      "sha256": "e0a04ef1b4f99d5709d515f0be96d8071c510ebc5837d962e8ebe5f16d3f7ca6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19435,7 +19456,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "315ba0aaff4bfa27d20e6f22758289a1524a65d3f64d882f541a5192006397ed",
+      "sha256": "4f0276870c13154efee96ccb7396e81e065e35e1f7be7eb3cafaeb9e40a8c901",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19519,7 +19540,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "09d82dfe517305d232220ddb69c0de90ddd8507369a7eabd6ae5b522411bf868",
+      "sha256": "48972a479cae7bb55ef55842ea33683cd5c49ebaacd54dead9ff6896dcdc2121",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19885,7 +19906,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "55f2c7d188e98985c1122ec9841e4dac50964a53a152404ea1c338efd64fc780",
+      "sha256": "353808e96b8b95472153fb591befb4e27804ff0dfeb06e5a6928a172d7e75ae8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20101,7 +20122,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "352682209ac409ce3a40d23d866d4d0898f747478bfccb694a4e0b94a8567191",
+      "sha256": "4f75c2bdf9996722c152e74d80b6ed31e24382300fc6312856c072b0babf8187",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20155,7 +20176,7 @@
     {
       "id": "SURFACE-f0dabee697205b0c",
       "path": "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
-      "sha256": "d034554193df979a6bca21cbc04fe81989ca41e06e8933fbeead3a1ac0afa6bb",
+      "sha256": "04d0fee36364ca33b7e56a6540fd19a9015efe0da1492618c5e928762e8a656a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20473,7 +20494,7 @@
     {
       "id": "SURFACE-7c37a9a53d010234",
       "path": "tdf-hq/test/TDF/ServerAuthSpec.hs",
-      "sha256": "c8521e0423cde9fe12f564c9282f5a4540518be6b4271a0995452c0b0794b53d",
+      "sha256": "5a46228f35aa4916b548b27cee6bfb3830cdef1329b95972979cae7924bbb58f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32710,7 +32731,7 @@
     },
     {
       "path": "formal/system/datafast-merchant-metadata.md",
-      "sha256": "d1f6b8421b962e1f87d7431fd073d23fcfefa0e088f1910bde4b1d9876b9cae4",
+      "sha256": "4296101390c300426820c115d4053d207161d66a2158a4a598e68bc402c8898a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -33613,7 +33634,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f552abea90185d91ed519420ad0e008b871e54377c15457022bfe3a3771e45ff",
+      "sha256": "b3552bda8abdaa4971d25e75da3b2989c32eae853188006c4897f2c0a0df0936",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

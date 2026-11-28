@@ -19,7 +19,7 @@ RUNNER = ROOT / 'tdf-hq/test/integration/DatafastCart.hs'
 def main():
     source = SOURCE.read_text()
     start = source.index('validateBoundDatafastSuccessfulPayment checkout environment')
-    end = source.index('\nvalidateDatafastSuccessfulPayment\n', start)
+    end = source.index('\n-- | Render form parameters', start)
     verifier = source[start:end]
     controls = {
         'ignore-checkout-resource': ('binding.provider_resource_id = ?', '?::text IS NOT NULL'),
