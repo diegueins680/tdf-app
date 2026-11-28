@@ -31532,8 +31532,8 @@
     "tdf-hq-ui/src/auth/logoutIntent.test.ts": "e6d15a80229ee6728882d44e717d955160a597d1f9f3a3ca6ebb0fef2509f1e1",
     "tdf-hq-ui/src/auth/logoutIntent.ts": "abad265a1a074073f4785ddc134df91fe7e1ab5774c49d171690f2e60eeff733",
     "tdf-hq-ui/src/bootSafety.tsx": "6c8dbd26e51d2684d18dd4fd2b74860d03ccbc065be4dee40f65b64f1bc2a992",
-    "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": "043c95c2ec03e39cff5513b872f25a1cc9ca9857b98a2469bc35abab28f62b03",
-    "tdf-hq-ui/src/components/AccountDeletionQueue.tsx": "d78edfc4cef789c2a8f9b2d9d0eb29d43465ede2e3b98c23584364960c9fcd51",
+    "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": "73856e76ad3f7c32f16a3e26a2f861bbf692d992c3cd811c0f4e807dea15f788",
+    "tdf-hq-ui/src/components/AccountDeletionQueue.tsx": "3ade2bd302889e7c88090df67198aebd1d29bb225e5beebb9d3dc86597cf548e",
     "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx": "8c057855c1c9a5d11d6f0d54425d49d1eb5b3e1787d104710180cb34110e8cdf",
     "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx": "06395a1892e95b4d05a90098e954daca051517b77ceb7e17fd5826abc37534ba",
     "tdf-hq-ui/src/components/ArtistCoverPreview.tsx": "7ec230fec58cd0bf78d13c45f79e1293d273ae38307944c58ef6802f7110554d",
@@ -31751,8 +31751,8 @@
     "tdf-hq-ui/src/hooks/useGoogleDriveAuth.ts": "04bcbfd3e8aef525f943efd6c2aa626cda020d844e517f561f184ad7ee15a498",
     "tdf-hq-ui/src/hooks/useMetaTags.test.tsx": "8cce0eb1170e36a446f878f719010bf45c8b53625b9bc9785ec00bcaccb43b02",
     "tdf-hq-ui/src/i18n/index.ts": "53c26394ae54a6dd8fbfd91429e0300bf5b2d324d7e66f48179e283f7fc832e5",
-    "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
-    "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
+    "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "3d3f31a7f996c2cae65ef00ac0c87f8dbca1a2f16c76d8434bf878f03ba0754d",
+    "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "955adc117a22842a12411607143fa81a156384b5be36339a51383d1abb853e3e",
     "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "a8f13c131444f076000448b9f6773ebb623a60ed0a39e9b50d7fc28e75e8ba3e",
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "6f64ffa44c78e3f66719ed5e6462ad187dd6b29abb29c198a435c938afb10343",
     "tdf-hq-ui/src/i18n/locales/de.ts": "cd27dfb75f876cc6d08a391d5252253ef7fb4ba75206a73e50bf38a510c017ba",
@@ -67963,7 +67963,7 @@
     {
       "id": "SURFACE-526786b1dccd2ea9",
       "path": "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
-      "sha256": "043c95c2ec03e39cff5513b872f25a1cc9ca9857b98a2469bc35abab28f62b03",
+      "sha256": "73856e76ad3f7c32f16a3e26a2f861bbf692d992c3cd811c0f4e807dea15f788",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67975,7 +67975,7 @@
     {
       "id": "SURFACE-d0c4c8db8120be10",
       "path": "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
-      "sha256": "d78edfc4cef789c2a8f9b2d9d0eb29d43465ede2e3b98c23584364960c9fcd51",
+      "sha256": "3ade2bd302889e7c88090df67198aebd1d29bb225e5beebb9d3dc86597cf548e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71688,7 +71688,7 @@
     {
       "id": "SURFACE-c97910a5593293cd",
       "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
-      "sha256": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
+      "sha256": "3d3f31a7f996c2cae65ef00ac0c87f8dbca1a2f16c76d8434bf878f03ba0754d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71704,7 +71704,7 @@
     {
       "id": "SURFACE-5e55534c6210f093",
       "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
-      "sha256": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
+      "sha256": "955adc117a22842a12411607143fa81a156384b5be36339a51383d1abb853e3e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
