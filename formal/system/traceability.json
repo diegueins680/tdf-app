@@ -30490,7 +30490,7 @@
     "e2e/web/staff-payment-report-money.spec.mjs": "6f70e7798ab7855b6b06cb82119b77c369c342a569fd534adfe8618931e569be",
     "e2e/web/storage-upload-recovery.spec.mjs": "2efc6e5da85b6862d9987c96aee6ac092ec0d92f53c66f15544549a60e7949c4",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
-    "e2e/web/taxonomy-filters.spec.mjs": "eb8dedc1fb2b6f342b229385ac7abcead7506a4a5cdaea96cccdb4f356be4db8",
+    "e2e/web/taxonomy-filters.spec.mjs": "31d3b43435d0c41695501e6331886ef65804460a0dfb8c2bae723b45fd45b83e",
     "e2e/web/ticket-credential.spec.mjs": "6be28edd99800111f883bbf695d994c9a7114524a6d5d1de9f8c67fb7dc5056b",
     "e2e/web/video-campaigns.spec.mjs": "33bf8365ded5ecdc9329bf260e36486d458f7bedf16bb45f25d04149d7de445c",
     "e2e/web/webtorrent-browser.spec.mjs": "6610f089d7b7c82b5c6460ed623cbc5413e250741162b48cf4e2de7ae14305d0",
@@ -31652,7 +31652,7 @@
     "tdf-hq-ui/src/components/sidebarMenuRules.test.ts": "d57fe4b0650dc7cb602f71aef123b11e1592966fe5e3338a0f727afdd8922da7",
     "tdf-hq-ui/src/components/sidebarMenuRules.ts": "0eb4e09d983ce3faebd89f2e328a3659d948aea7c676af968ad453bad975cf6e",
     "tdf-hq-ui/src/components/taxonomyFilters/GenreSuggestionDialog.tsx": "7d790cab06f1def2de782ce1e131d21b3f1f02a925208cfe41b0394e9470b3ec",
-    "tdf-hq-ui/src/components/taxonomyFilters/TaxonomyFilterBar.tsx": "b1edcb4b3f382c1eab4584a156ab6349cae01079e636e639f79f2a91eccfbbe0",
+    "tdf-hq-ui/src/components/taxonomyFilters/TaxonomyFilterBar.tsx": "f41175c3f7c827a2f75448c4f031e47d83cbf73168f4c20c293d0587393255aa",
     "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.test.ts": "ac694701ae931e9507bdb7e8ae47f39583110564f786b1a60cb45a5dd1f2ea21",
     "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterModel.ts": "b59b3004399e500c5729ae35a5aab825a08e43ee4f07276d69b602f05d8ed401",
     "tdf-hq-ui/src/components/taxonomyFilters/taxonomyFilterStore.ts": "e4dfaac585e8fd764d5e02fbde4ad39c2e0ca5b2edbb6fa3da57eb6041e27a47",
@@ -56362,7 +56362,7 @@
     {
       "id": "SURFACE-238c10bc24bd2a0a",
       "path": "e2e/web/taxonomy-filters.spec.mjs",
-      "sha256": "eb8dedc1fb2b6f342b229385ac7abcead7506a4a5cdaea96cccdb4f356be4db8",
+      "sha256": "31d3b43435d0c41695501e6331886ef65804460a0dfb8c2bae723b45fd45b83e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -70173,7 +70173,7 @@
     {
       "id": "SURFACE-88d4e0a7d6283fb4",
       "path": "tdf-hq-ui/src/components/taxonomyFilters/TaxonomyFilterBar.tsx",
-      "sha256": "b1edcb4b3f382c1eab4584a156ab6349cae01079e636e639f79f2a91eccfbbe0",
+      "sha256": "f41175c3f7c827a2f75448c4f031e47d83cbf73168f4c20c293d0587393255aa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
