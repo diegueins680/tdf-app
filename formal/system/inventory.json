@@ -3999,7 +3999,7 @@
     {
       "id": "SURFACE-238c10bc24bd2a0a",
       "path": "e2e/web/taxonomy-filters.spec.mjs",
-      "sha256": "eb8dedc1fb2b6f342b229385ac7abcead7506a4a5cdaea96cccdb4f356be4db8",
+      "sha256": "31d3b43435d0c41695501e6331886ef65804460a0dfb8c2bae723b45fd45b83e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9969,7 +9969,7 @@
     {
       "id": "SURFACE-100603869e0d8848",
       "path": "tdf-hq-ui/src/components/PublicWelcome.tsx",
-      "sha256": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
+      "sha256": "a0771e4ece7b0ddccffced8b3f221ac68f341bde25dbfd93c1f0e5a1361358e3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10755,7 +10755,7 @@
     {
       "id": "SURFACE-88d4e0a7d6283fb4",
       "path": "tdf-hq-ui/src/components/taxonomyFilters/TaxonomyFilterBar.tsx",
-      "sha256": "b1edcb4b3f382c1eab4584a156ab6349cae01079e636e639f79f2a91eccfbbe0",
+      "sha256": "f41175c3f7c827a2f75448c4f031e47d83cbf73168f4c20c293d0587393255aa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11547,13 +11547,13 @@
     {
       "id": "SURFACE-7e096967d3a00d3b",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-      "sha256": "90952865128bbe26d21ff8ef4e5c161c87a2e12ba7b7ade6e236f8c2fe8f7cf1",
+      "sha256": "b77a13c826aa3f8ec196cbfa679a4a47864b8e2428c309e84c729575238ed6b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-31dfb712c6445325",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
-      "sha256": "a2875fcbee6e0ea19032cee12a187aeff41a3d1597069fa2354755a215591842",
+      "sha256": "f892f7387ab9452fd93e69be4a95714a6273b405ff49bcf50353482a47cb3c8d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12063,7 +12063,7 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "44fc5164de8d794adfb89f8953f78e100ff45c6991f5e7c0bcec3d1f40aa43bd",
+      "sha256": "633d006552fe93ea71bdc369b6e0f83866d1001e702e0eb155dc6c355c581ff0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12615,7 +12615,7 @@
     {
       "id": "SURFACE-c6ff06a2e2277d3e",
       "path": "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-      "sha256": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
+      "sha256": "42b5eed169c5054a34ddb074bdf076c60b3bcb47314f90c98b40e0b50a0aff9e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
