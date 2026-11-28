@@ -5015,7 +5015,7 @@
     {
       "id": "SURFACE-0e466a59b4752a9d",
       "path": "scripts/android-beta-email.py",
-      "sha256": "9f440f634cd91e08ce3e3eed5fb069d34783401f5eeb0c1d68eeec522a4f8b35",
+      "sha256": "9fe01957c82ed7f69af530df95fadb187b219452d165161e040ed8718ea2af79",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7703,7 +7703,7 @@
     {
       "id": "SURFACE-8bd1e496c6893f83",
       "path": "scripts/test_android_beta_email.py",
-      "sha256": "f13a989fb6c0eb45331df7e25cece16dbd1488a1a4b66ad2d79fc15d4825e8b7",
+      "sha256": "8589bcac04f42f35da744c617e54220f0dfc89f58182f26d886a89ada85f0c5e",
       "semanticConformance": "not-established-by-discovery"
     },
     {

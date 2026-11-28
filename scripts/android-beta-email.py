@@ -10,6 +10,7 @@ from email.parser import BytesParser
 from email.utils import parseaddr
 import fcntl
 import hashlib
+from html.parser import HTMLParser
 import imaplib
 import json
 import os
@@ -240,6 +241,48 @@ def smtp_send(message):
         smtp.send_message(message)
 
 
+class VisibleReplyText(HTMLParser):
+    """The text a person sees in an HTML reply, without the quoted message."""
+
+    BLOCKS = {"address", "blockquote", "br", "div", "h1", "h2", "h3", "h4", "h5", "h6", "hr",
+              "li", "ol", "p", "pre", "table", "td", "th", "tr", "ul"}
+    HIDDEN = {"head", "script", "style", "title"}
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.parts = []
+        self.hidden = 0
+        self.quoted = False
+
+    def handle_starttag(self, tag, attrs):
+        if self.quoted:
+            return
+        classes = " ".join(value or "" for key, value in attrs if key == "class")
+        if tag == "blockquote" or "gmail_quote" in classes or "moz-cite-prefix" in classes:
+            self.quoted = True
+        elif tag in self.HIDDEN:
+            self.hidden += 1
+        elif tag in self.BLOCKS:
+            self.parts.append("\n")
+
+    def handle_endtag(self, tag):
+        if tag in self.HIDDEN:
+            self.hidden = max(0, self.hidden - 1)
+        elif tag in self.BLOCKS and not self.quoted:
+            self.parts.append("\n")
+
+    def handle_data(self, data):
+        if not self.quoted and not self.hidden:
+            self.parts.append(data)
+
+
+def html_visible_text(markup):
+    parser = VisibleReplyText()
+    parser.feed(markup)
+    parser.close()
+    return "".join(parts.replace("\xa0", " ") for parts in parser.parts)
+
+
 def reply_kind(raw, recipient, google_email, message_ids):
     message = BytesParser(policy=policy.default).parsebytes(raw)
     if message.get_param("report-type") == "delivery-status":
@@ -262,6 +305,9 @@ def reply_kind(raw, recipient, google_email, message_ids):
     body = message.get_body(preferencelist=("plain", "html"))
     content = body.get_content() if body is not None else ""
     if body is not None and isinstance(content, str):
+        if body.get_content_type() == "text/html":
+            # An HTML-only reply carries the opt-out word inside markup.
+            content = html_visible_text(content)
         visible_lines = []
         for line in content.splitlines():
             stripped = line.strip()

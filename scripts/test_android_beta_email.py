@@ -200,6 +200,20 @@ class AndroidBetaEmailTest(unittest.TestCase):
         reply.set_content("BAJA")
         self.assertEqual(campaign.reply_kind(reply.as_bytes(), contact, None, [message_id]),
                          ("opt-out", None))
+        # An HTML-only reply carries the opt-out word inside markup.
+        reply.set_content("<html><head><style>p{color:red}</style></head><body><div>BAJA</div>"
+                          "<div class=\"gmail_quote\">El lun escribió:<blockquote>Hola</blockquote></div>"
+                          "</body></html>", subtype="html")
+        self.assertEqual(campaign.reply_kind(reply.as_bytes(), contact, None, [message_id]),
+                         ("opt-out", None))
+        reply.set_content("<p>&iexcl;Baja!&nbsp;</p>", subtype="html")
+        self.assertEqual(campaign.reply_kind(reply.as_bytes(), contact, None, [message_id]),
+                         ("opt-out", None))
+        # The quoted invitation mentions BAJA; only the visible answer counts.
+        reply.set_content("<div>Gracias, la pruebo esta semana.</div><blockquote>Si prefieres dejar de "
+                          "recibir mensajes de esta prueba, responde BAJA.</blockquote>", subtype="html")
+        self.assertEqual(campaign.reply_kind(reply.as_bytes(), contact, None, [message_id]),
+                         ("reply", None))
         reply.replace_header("From", "other@example.com")
         self.assertIsNone(campaign.reply_kind(reply.as_bytes(), contact, None, [message_id]))
         dsn = (

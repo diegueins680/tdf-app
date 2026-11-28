@@ -31107,7 +31107,7 @@
     "scripts/__tests__/verification-evidence.test.mjs": "d844c7be68115d503729dc5fc97f7d86766d53d52f641e21f7eeb5c9b1fbe14b",
     "scripts/__tests__/video-campaign-access.test.mjs": "618dec9d2f28c82b786b66403ad33350ca97949a9abb37cb32f9ff03c9522b04",
     "scripts/__tests__/video-campaign-postgres-runner.test.mjs": "72e9e3fe9f0dad70d85a921b9b479465dcc60ba09dd34c7c564eb56af054c0a3",
-    "scripts/android-beta-email.py": "9f440f634cd91e08ce3e3eed5fb069d34783401f5eeb0c1d68eeec522a4f8b35",
+    "scripts/android-beta-email.py": "9fe01957c82ed7f69af530df95fadb187b219452d165161e040ed8718ea2af79",
     "scripts/artist-enrichment.mjs": "7cae285c8ffd2373048ab4d3e4ea2838046b7c62571e795163de86f22516809e",
     "scripts/artist-image-download.mjs": "012978206590de16a22c53b98ed29e5245a586dd2928ad26be34981005e3c20c",
     "scripts/artist-similarity-fixture.sql": "3a2bda3bb8c40e80ed8b3ec28906af1929810d7dee5007f803673b5736dd5df0",
@@ -31396,7 +31396,7 @@
     "scripts/test-weekly-platform-metrics.py": "27de8dd96d8f852d06cb352580144f9a4c988500b876015384f578b99d52d10b",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
-    "scripts/test_android_beta_email.py": "f13a989fb6c0eb45331df7e25cece16dbd1488a1a4b66ad2d79fc15d4825e8b7",
+    "scripts/test_android_beta_email.py": "8589bcac04f42f35da744c617e54220f0dfc89f58182f26d886a89ada85f0c5e",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
@@ -58717,7 +58717,7 @@
     {
       "id": "SURFACE-0e466a59b4752a9d",
       "path": "scripts/android-beta-email.py",
-      "sha256": "9f440f634cd91e08ce3e3eed5fb069d34783401f5eeb0c1d68eeec522a4f8b35",
+      "sha256": "9fe01957c82ed7f69af530df95fadb187b219452d165161e040ed8718ea2af79",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64157,7 +64157,7 @@
     {
       "id": "SURFACE-8bd1e496c6893f83",
       "path": "scripts/test_android_beta_email.py",
-      "sha256": "f13a989fb6c0eb45331df7e25cece16dbd1488a1a4b66ad2d79fc15d4825e8b7",
+      "sha256": "8589bcac04f42f35da744c617e54220f0dfc89f58182f26d886a89ada85f0c5e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
