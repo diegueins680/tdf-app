@@ -31564,7 +31564,7 @@
     "tdf-hq-ui/src/components/PrivateAttachmentLink.tsx": "98b80a1937cfaf68bb86c04d2127f906c149e1c6d2b74fd0d779dfa552b3fc58",
     "tdf-hq-ui/src/components/PublicBranding.test.tsx": "e5c06174e6ff93db020828f979fdca5bf94f779178978685e1898ebf8cd2d2bd",
     "tdf-hq-ui/src/components/PublicBranding.tsx": "892f22e2a92c232eb5f31c63227a8e1df504f81ed48d1b62d4232a06521f87d2",
-    "tdf-hq-ui/src/components/PublicWelcome.tsx": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
+    "tdf-hq-ui/src/components/PublicWelcome.tsx": "a0771e4ece7b0ddccffced8b3f221ac68f341bde25dbfd93c1f0e5a1361358e3",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "72d4103c80721ffeb7bac906016f9a10dbed5fe3b40e8027550f5e7327c061ed",
     "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx": "777ec0f38a960fd8fce241b785f3b92166136aa1df65818b898bd2049eddd777",
     "tdf-hq-ui/src/components/RadioWidget.tsx": "51ed72ea67a1c61ced0421ae874389e91761653f435ac16ef077fe846f33758b",
@@ -31752,8 +31752,8 @@
     "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "a8f13c131444f076000448b9f6773ebb623a60ed0a39e9b50d7fc28e75e8ba3e",
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "6f64ffa44c78e3f66719ed5e6462ad187dd6b29abb29c198a435c938afb10343",
     "tdf-hq-ui/src/i18n/locales/de.ts": "cd27dfb75f876cc6d08a391d5252253ef7fb4ba75206a73e50bf38a510c017ba",
-    "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "90952865128bbe26d21ff8ef4e5c161c87a2e12ba7b7ade6e236f8c2fe8f7cf1",
-    "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "a2875fcbee6e0ea19032cee12a187aeff41a3d1597069fa2354755a215591842",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "b77a13c826aa3f8ec196cbfa679a4a47864b8e2428c309e84c729575238ed6b0",
+    "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "f892f7387ab9452fd93e69be4a95714a6273b405ff49bcf50353482a47cb3c8d",
     "tdf-hq-ui/src/i18n/locales/en.ts": "b486ccba00df978eab3ec24b99088877d1925916b2dbdda82d1a009146d0407a",
     "tdf-hq-ui/src/i18n/locales/es.ts": "d9405d4d5ae2842adf982182ccc086145bc2bb70f16ec3612ae5514fc003e10e",
     "tdf-hq-ui/src/i18n/locales/fr.ts": "288d1e5e4e2e80c960d8c221187d5502265e2f9e41e141fb9c0ae9a8ec76f6d8",
@@ -31811,7 +31811,7 @@
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "a82390c0bda44353dfe0a910b1eb9976dbe0f8a4243d4259f10e89e2d7559e75",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "4d763cefb804af63ef3ad1627aedbef4befc42d41daeb48acdf9b668b5408ff9",
     "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "3d89ff3049614ddca44cf0c7494ff08f3a9c5d7fce2a1eee379e3a50bac49240",
-    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "44fc5164de8d794adfb89f8953f78e100ff45c6991f5e7c0bcec3d1f40aa43bd",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "633d006552fe93ea71bdc369b6e0f83866d1001e702e0eb155dc6c355c581ff0",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "54d62708206a18bedadbc1e367e4e8ab971e8c02b6dd485b817d547f5ac15d6e",
     "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "cf84798fc9aa8afdad0af5272c6d1b4ba84f892325d35be8d7fc509ac174c1ab",
     "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx": "ff462bdf6febe3b83a73935009e770fbb1b9bafe5497749b7eef73bcf382e4ab",
@@ -31871,7 +31871,7 @@
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "7ca4ea0e0c5251120b9b75cce931ced2398540ed2019244a0a5aaf5f220cc4cd",
     "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx": "3dafbfa8fbbfdbd112b011cca5b6db49d3507f599277ae76527bb3cb23bda7a7",
     "tdf-hq-ui/src/pages/MixingMasteringPage.tsx": "71899b12b4b5a6cd8ed8c890670aa6b874aa0a34e4e34fb9f4551944b0c40022",
-    "tdf-hq-ui/src/pages/MobileAppPage.tsx": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
+    "tdf-hq-ui/src/pages/MobileAppPage.tsx": "42b5eed169c5054a34ddb074bdf076c60b3bcb47314f90c98b40e0b50a0aff9e",
     "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx": "b914809cea81f9ff7b4c6f02d95cf01813ae506779335e9113c50d04393c76a9",
     "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx": "d34d0f97e2928b467bffa3031398caef895d82eb7f1d046e578375f1a7389d2c",
     "tdf-hq-ui/src/pages/MusicCatalogPage.tsx": "4d3d0dcf94ceca280c8e667ac511b46486a46769ab261312b256930b830be433",
@@ -68616,7 +68616,7 @@
     {
       "id": "SURFACE-100603869e0d8848",
       "path": "tdf-hq-ui/src/components/PublicWelcome.tsx",
-      "sha256": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
+      "sha256": "a0771e4ece7b0ddccffced8b3f221ac68f341bde25dbfd93c1f0e5a1361358e3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71797,7 +71797,7 @@
     {
       "id": "SURFACE-7e096967d3a00d3b",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-      "sha256": "90952865128bbe26d21ff8ef4e5c161c87a2e12ba7b7ade6e236f8c2fe8f7cf1",
+      "sha256": "b77a13c826aa3f8ec196cbfa679a4a47864b8e2428c309e84c729575238ed6b0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71829,7 +71829,7 @@
     {
       "id": "SURFACE-31dfb712c6445325",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
-      "sha256": "a2875fcbee6e0ea19032cee12a187aeff41a3d1597069fa2354755a215591842",
+      "sha256": "f892f7387ab9452fd93e69be4a95714a6273b405ff49bcf50353482a47cb3c8d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -73039,7 +73039,7 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "44fc5164de8d794adfb89f8953f78e100ff45c6991f5e7c0bcec3d1f40aa43bd",
+      "sha256": "633d006552fe93ea71bdc369b6e0f83866d1001e702e0eb155dc6c355c581ff0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74359,7 +74359,7 @@
     {
       "id": "SURFACE-c6ff06a2e2277d3e",
       "path": "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-      "sha256": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
+      "sha256": "42b5eed169c5054a34ddb074bdf076c60b3bcb47314f90c98b40e0b50a0aff9e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
