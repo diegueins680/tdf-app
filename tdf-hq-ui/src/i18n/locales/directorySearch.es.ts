@@ -20,6 +20,7 @@ const directorySearch = {
   "welcomeImageAlt": "Una persona junto a la consola, instrumentos y equipos de sonido",
   "welcomeSearch": "Buscar artistas y profesionales",
   "welcomeWork": "Mira sesiones y lanzamientos",
+  "tryAndroid": "Probar la app en Android",
   "welcomeStudio": "Conoce TDF y sus servicios",
   "welcomePrivacy": "Explora a tu ritmo, sin registro.",
   "welcomeBody": "Nos apasiona el sonido y todo lo que podemos crear contigo. Conoce el estudio, descubre cómo trabajamos y encuentra música y personas con quienes conectar.",

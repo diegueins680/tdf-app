@@ -2,6 +2,14 @@
 
 Registro de implementación y distribución. La actualización de analytics siguiente sustituye las observaciones anteriores de PostHog; se conserva el historial con sus horas para trazabilidad.
 
+## Reverificación — 27 de noviembre de 2026, ~22:55 UTC
+
+El manifiesto caducó el 22 de noviembre y `/app` dejó de ofrecer los enlaces de tienda durante cinco días, incluido el anuncio de Android del 24. Evidencia: [27 de noviembre](distribution-2026-11-27.json).
+
+- **Android (Play Console, sesión del operador, solo lectura):** Closed testing «Alpha» activo con 1.0.1 (24), 178 países; Production inactivo; **4 de 12 opt-ins**. Los probadores se admiten por tres listas de correo (69, 1 y 11 direcciones), sin Google Groups, de modo que la admisión sigue siendo `approval_required`.
+- **iOS (App Store Connect, sesión del operador en Safari, solo lectura):** el enlace público pertenece al grupo externo «Todos», que ya sirve el **build 34**: dos instalaciones por enlace público el 26 de noviembre. El 34 está en Testing y vence en 89 días. La versión 1.0.1 de App Store sigue rechazada desde el 28 de septiembre (2.1.0 y 4.8.0), con el build 34 adjunto y sin reenvío.
+- El manifiesto pasa a iOS build 34 y se renueva hasta el **4 de diciembre**. Durante la campaña de probadores debe reverificarse antes de esa fecha. Es decisión del propietario al aprobar el PR.
+
 ## Reverificación — 15 de noviembre de 2026, ~20:00 UTC
 
 El manifiesto caducó el 20 de octubre y `/app` dejó de ofrecer los enlaces de tienda durante casi cuatro semanas. Evidencia: [15 de noviembre](distribution-2026-11-15.json).

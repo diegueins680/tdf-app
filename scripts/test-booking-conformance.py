@@ -554,13 +554,16 @@ try:
 
     # Staff assistant retrieval must still render only current public course data
     # (PRIV-RAG-001); the assistant itself is staff-only (AUTH-PUBLIC-001).
-    # No OPENAI_API_KEY is present; local embeddings and fallback reply are used.
+    # No VENICE_API_KEY is present; local embeddings and fallback reply are used.
     embedding = [0] * 1536
     word_hash = 5381
     for character in 'hola': word_hash = word_hash * 33 + ord(character)
     embedding[word_hash % 1536] = 1
+    # Retrieval reads only the embedding space of the query vector; with no
+    # provider key that is the local fallback space, so fixtures carry its tag
+    # and exclusion is decided by source and course authority, not a missing tag.
     def rag_chunk(source, identity, content):
-        sql("INSERT INTO rag_chunk(source,source_id,chunk_index,content,metadata,embedding) VALUES ('" + source + "','" + identity + "',0,'" + content + "','{}','" + json.dumps(embedding) + "'::vector)")
+        sql("INSERT INTO rag_chunk(source,source_id,chunk_index,content,metadata,embedding) VALUES ('" + source + "','" + identity + "',0,'" + content + "','{\"embeddingSpace\":\"local-v1\"}','" + json.dumps(embedding) + "'::vector)")
     check('assistant rejects anonymous caller', request('/ads/assist', {'aarMessage': 'hola'}, token=None, method='POST')[0] == 401)
     check('assistant rejects caller without Social Inbox access', request('/ads/assist', {'aarMessage': 'hola'}, token='fixture-fan', method='POST')[0] == 403)
     def knowledge():

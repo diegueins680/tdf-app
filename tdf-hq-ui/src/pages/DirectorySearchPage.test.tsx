@@ -137,6 +137,26 @@ describe('DirectorySearchPage', () => {
     }
   });
 
+  it.each([
+    ['2026-11-28T22:59:59Z', true],
+    ['2026-11-30T04:59:59Z', true],
+    ['2026-11-30T05:00:00Z', false],
+  ] as const)('features the Android testing link, and no paused Psique tickets, at %s', async (instant, android) => {
+    const clock = jest.spyOn(Date, 'now').mockReturnValue(Date.parse(instant));
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    try {
+      await act(async () => { root.render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/inicio']}><DirectorySearchPage /></MemoryRouter></QueryClientProvider>); });
+      expect(container.querySelector('a[href="/eventos/216/entradas"]')).toBeNull();
+      expect(Boolean(container.querySelector('a[href="/app?platform=android"]'))).toBe(android);
+    } finally {
+      await act(async () => root.unmount());
+      queryClient.clear();
+      clock.mockRestore();
+    }
+  });
+
   it('keeps public exploration available when the directory fails', async () => {
     searchMock.mockRejectedValue(new Error('Synthetic directory outage'));
     const container = document.createElement('div'); document.body.appendChild(container);

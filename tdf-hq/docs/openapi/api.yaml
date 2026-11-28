@@ -9,6 +9,32 @@ servers:
     description: Development server
 
 paths:
+  /assistant/chat:
+    post:
+      operationId: assistantChat
+      summary: Ask the Venice assistant using alternating user and assistant turns
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              minItems: 1
+              maxItems: 21
+              items: {type: string, minLength: 1}
+            description: Start and finish with a user turn. The combined limit is 32000 characters.
+      responses:
+        '200':
+          description: Assistant reply
+          content:
+            application/json:
+              schema: {type: string}
+        '400': {description: Invalid conversation}
+        '401': {description: Invalid session}
+        '403': {description: AI tooling access required}
+        '502': {description: Venice could not answer}
   /music/artists/{artistPartyId}/featured-track:
     $ref: './artist-playback.yaml#/paths/~1music~1artists~1{artistPartyId}~1featured-track'
   /music/me/featured-track:

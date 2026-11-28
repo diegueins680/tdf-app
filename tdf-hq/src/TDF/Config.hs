@@ -151,16 +151,11 @@ data LlmProviderConfig = LlmProviderConfig
 llmProvider :: LlmProviderConfig
 llmProvider =
   LlmProviderConfig
-    { llmProviderName = "openai"
-    , llmProviderApiBase = "https://api.openai.com"
-    , llmProviderDefaultChatModel = "gpt-4.1-mini"
-    , llmProviderChatFallbackModels =
-        [ "gpt-4.1-mini"
-        , "gpt-4o-mini"
-        , "gpt-4.1"
-        , "gpt-4o"
-        ]
-    , llmProviderDefaultEmbedModel = "text-embedding-3-small"
+    { llmProviderName = "venice"
+    , llmProviderApiBase = "https://api.venice.ai/api"
+    , llmProviderDefaultChatModel = "qwen-3-8-27b"
+    , llmProviderChatFallbackModels = ["qwen3-235b-a22b-instruct-2507"]
+    , llmProviderDefaultEmbedModel = "text-embedding-qwen3-8b"
     }
 
 llmChatModelCandidates :: Text -> [Text]
@@ -177,6 +172,7 @@ normalizeLlmApiBase base =
 openAiEmbedDimensions :: Text -> Maybe Int
 openAiEmbedDimensions model =
   case T.toLower (T.strip model) of
+    "text-embedding-qwen3-8b" -> Just 1536
     "text-embedding-3-small" -> Just 1536
     "text-embedding-3-large" -> Just 3072
     "text-embedding-ada-002" -> Just 1536
@@ -771,12 +767,12 @@ loadConfig = do
   courseSlugEnv <- lookupEnv "COURSE_DEFAULT_SLUG"
   courseMapEnv <- lookupEnv "COURSE_DEFAULT_MAP_URL"
   courseInstructorAvatarEnv <- lookupEnv "COURSE_DEFAULT_INSTRUCTOR_AVATAR"
-  openAiKeyEnv <- lookupEnv "OPENAI_API_KEY"
-  openAiModelEnv <- lookupEnv "OPENAI_MODEL"
-  openAiEmbedModelEnv <- lookupEnv "OPENAI_EMBED_MODEL"
+  openAiKeyEnv <- lookupEnv "VENICE_API_KEY"
+  openAiModelEnv <- lookupEnv "VENICE_MODEL"
+  openAiEmbedModelEnv <- lookupEnv "VENICE_EMBED_MODEL"
   chatKitWorkflowEnv <- lookupUniqueNamedEnv
     ["CHATKIT_WORKFLOW_ID", "VITE_CHATKIT_WORKFLOW_ID"]
-  chatKitApiBaseEnv <- lookupEnv "CHATKIT_API_BASE"
+  chatKitApiBaseEnv <- lookupEnv "VENICE_API_BASE"
   ragTopKEnv <- lookupEnv "RAG_TOP_K"
   ragChunkWordsEnv <- lookupEnv "RAG_CHUNK_WORDS"
   ragChunkOverlapEnv <- lookupEnv "RAG_CHUNK_OVERLAP"
@@ -850,9 +846,11 @@ loadConfig = do
   courseInstructorAvatar <- validateConfiguredHttpsUrl "COURSE_DEFAULT_INSTRUCTOR_AVATAR" courseInstructorAvatarEnv
   chatKitApiBaseVal <-
     validateConfiguredApiBaseUrl
-      "CHATKIT_API_BASE"
+      "VENICE_API_BASE"
       (llmProviderApiBase llmProvider)
       chatKitApiBaseEnv
+  when (chatKitApiBaseVal /= llmProviderApiBase llmProvider) $
+    fail "VENICE_API_BASE must be https://api.venice.ai/api"
   chatKitWorkflowIdVal <-
     validateConfiguredChatKitWorkflowId chatKitWorkflowEnv
   googleClientIdVal <-
@@ -1667,7 +1665,7 @@ validateConfiguredNamedGraphAccessToken (Just (envName, rawToken)) =
 validateConfiguredOpenAiModel :: Maybe String -> IO Text
 validateConfiguredOpenAiModel Nothing = pure defaultOpenAiModel
 validateConfiguredOpenAiModel (Just rawModel) =
-  case normalizeConfiguredOpenAiModel "OPENAI_MODEL" rawModel of
+  case normalizeConfiguredOpenAiModel "VENICE_MODEL" rawModel of
     Left msg -> fail msg
     Right Nothing -> pure defaultOpenAiModel
     Right (Just model) -> pure model
@@ -1675,7 +1673,7 @@ validateConfiguredOpenAiModel (Just rawModel) =
 validateConfiguredOpenAiEmbedModel :: Maybe String -> IO Text
 validateConfiguredOpenAiEmbedModel Nothing = pure defaultOpenAiEmbedModel
 validateConfiguredOpenAiEmbedModel (Just rawModel) =
-  case normalizeConfiguredOpenAiModel "OPENAI_EMBED_MODEL" rawModel of
+  case normalizeConfiguredOpenAiModel "VENICE_EMBED_MODEL" rawModel of
     Left msg -> fail msg
     Right Nothing -> pure defaultOpenAiEmbedModel
     Right (Just rawModelId) ->
@@ -1684,14 +1682,14 @@ validateConfiguredOpenAiEmbedModel (Just rawModel) =
         Just _ -> pure model
         Nothing ->
           fail
-            ( "OPENAI_EMBED_MODEL must be one of: text-embedding-3-small, "
+            ( "VENICE_EMBED_MODEL must be one of: text-embedding-qwen3-8b, text-embedding-3-small, "
               <> "text-embedding-3-large, text-embedding-ada-002"
             )
 
 validateConfiguredOpenAiApiKey :: Maybe String -> IO (Maybe Text)
 validateConfiguredOpenAiApiKey Nothing = pure Nothing
 validateConfiguredOpenAiApiKey (Just rawKey) =
-  case normalizeConfiguredOpenAiApiKey "OPENAI_API_KEY" rawKey of
+  case normalizeConfiguredOpenAiApiKey "VENICE_API_KEY" rawKey of
     Left msg -> fail msg
     Right apiKey -> pure apiKey
 

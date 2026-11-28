@@ -40,7 +40,7 @@ import qualified Network.Socket as Socket
 import           Numeric (readHex)
 import qualified Network.HTTP.Client as HC
 import           Servant (Handler, NoContent, ServerError, errHTTPCode, errBody, errHeaders, runHandler, getResponse, getHeaders, serve, hoistServer, (:<|>)(..))
-import           System.Environment (getEnvironment, lookupEnv, setEnv, unsetEnv)
+import           System.Environment (getExecutablePath, getEnvironment, lookupEnv, setEnv, unsetEnv)
 import qualified System.Exit as Exit
 import qualified System.Process as Process
 import           System.IO.Temp (withSystemTempDirectory)
@@ -451,6 +451,7 @@ spec = do
         datafastClientPreflightSpec
         ticketLedgerSpec
         paymentSnapshotRestoreSpec
+        datafastRecoveryWorkerSpec
         ticketAllocationSpec
         legacyStripeRefundSpec
         ticketTierCapacitySpec
@@ -2382,6 +2383,119 @@ paymentSnapshotRestoreSpec = describe "payment snapshot restore laboratory" $
       apply `shouldReturn` Right False
       runSqlPool (captureSnapshot payment) pool `shouldReturn` once
 
+-- The child starts after pg_restore. Only the synthetic provider keeps the
+-- report; the worker must discover the original binding in the database.
+datafastRecoveryWorkerSpec :: SpecWith ConnectionPool
+datafastRecoveryWorkerSpec = describe "Datafast recovery across process loss" $ do
+  childFile <- runIO (lookupEnv "TDF_DATAFAST_LAB_REPORT")
+  case childFile of
+    Just reportFile -> it "runs the restored worker" $ \pool -> do
+      _ <- isolatedRecoveryUrl
+      report <- BL.readFile reportFile >>= either fail pure . A.eitherDecode
+      let (merchant, reference, payload) = report :: (Text,Text,A.Value)
+          fetch request = do
+            Adapter.arMethod request `shouldBe` Adapter.AdapterGet
+            Adapter.arOperation request `shouldBe` Adapter.AdapterQuery
+            Adapter.arBody request `shouldBe` Nothing
+            Adapter.arUrl request `shouldBe` ("https://test.oppwa.com/v1/query?entityId=" <> merchant <> "&merchantTransactionId=" <> reference)
+            pure (Right payload)
+      setLabMerchant pool merchant
+      counts <- concurrently (replicate 4 (runQueryTick pool fetch))
+      sum counts `shouldBe` 1
+      runQueryTick pool noQuery `shouldReturn` 0
+    Nothing -> forM_ ["uuid","legacy","reversed","wrong-amount","expired","service_booking","course_registration","domo_event_quote"] $ \scenario ->
+      it ("restores and verifies the " <> scenario <> " report") $ \pool -> withCompletionEnvironment $ do
+        url <- isolatedRecoveryUrl
+        let alternateDomain = scenario `elem` ["service_booking","course_registration","domo_event_quote"]
+            shouldSettle = alternateDomain || scenario `elem` ["uuid","legacy"]
+        creation <- if alternateDomain then do
+          [Single idText] <- runSqlPool (rawSql "SELECT payment_test.checkout(?)::text" [PersistText (T.pack scenario)]) pool
+          checkoutCreation pool Checkout.ProviderDatafast idText
+          else newCheckout pool
+        let merchant = "synthetic-restore-" <> Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+        setLabMerchant pool merchant
+        payment <- captureFixtureFromCheckout (creation { Checkout.pacMerchantRef=merchant }) "payment" Checkout.AttemptProcessing pool Checkout.ProviderDatafast
+        let attempt = Checkout.paymentAttemptReferenceId (Checkout.vpAttempt payment)
+            checkout = Checkout.checkoutReferenceId (Checkout.vpCheckout payment)
+            isLegacy = scenario == "legacy"
+            reference = if isLegacy then Checkout.vpOrderReference payment else attempt
+            saleAmount = Checkout.vpAmountMinor payment
+            row kind = A.object ["id" A..= ("synthetic-reported-" <> attempt),"paymentType" A..= (kind :: Text),
+              "amount" A..= (if scenario == "wrong-amount" then "125.16" else T.pack (show (Adapter.minorToDecimal saleAmount))),
+              "currency" A..= ("USD" :: Text),"merchantTransactionId" A..= reference,
+              "checkoutId" A..= Checkout.vpProviderResource payment,
+              "result" A..= A.object ["code" A..= ("000.100.112" :: Text)]]
+            records = if scenario == "reversed" then [row "DB",row "RF"] else [row "DB"]
+        runSqlPool (rawExecute
+          "INSERT INTO commerce_datafast_recovery_query(binding_id,attempts,next_query_at,state,outcome)\
+          \ SELECT id,1,now(),'review','fixture' FROM commerce_provider_binding WHERE provider='datafast'\
+          \ AND resource_type='checkout' AND payment_attempt_id<>?::uuid ON CONFLICT DO NOTHING"
+          [PersistText attempt]) pool
+        when isLegacy $ runSqlPool (rawExecute
+          "INSERT INTO commerce_datafast_recovery_query SELECT id,1,now()-interval '1 second','pending','unconfirmed'\
+          \ FROM commerce_provider_binding WHERE resource_type='checkout' AND payment_attempt_id=?::uuid"
+          [PersistText attempt]) pool
+        when (scenario == "expired") $ runSqlPool (rawExecute
+          "UPDATE commerce_checkout_session SET status='expired' WHERE id=?::uuid" [PersistText checkout]) pool
+        setRecoveryFlag pool True
+        resetQueryBudget pool Checkout.ProviderDatafast
+        withSystemTempDirectory "tdf-datafast-process-loss-" $ \dir -> do
+          let dump = dir <> "/before.dump"
+              reportFile = dir <> "/provider.json"
+          callIsolatedPostgresTool "pg_dump" ["-Fc","-f",dump,"--dbname",url]
+          BL.writeFile reportFile (A.encode (merchant,reference,records))
+          when shouldSettle $
+            runSqlPool (Checkout.recordVerifiedPaymentOrReconcile payment) pool `shouldReturn` Right True
+          destroyAllResources pool
+          callIsolatedPostgresTool "pg_restore" ["--clean","--if-exists","--exit-on-error","--no-owner","--dbname",url,dump]
+          destroyAllResources pool
+          exe <- getExecutablePath
+          original <- getEnvironment
+          let env = [("TDF_DATAFAST_LAB_REPORT",reportFile),("DATAFAST_ENTITY_ID",T.unpack merchant),("DATAFAST_RESTORE_RECOVERY_ENABLED","true"),
+                     ("COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED","true"),("COMMERCE_CHECKOUT_ENV","sandbox"),
+                     ("PLACETOPAY_LOGIN",""),("PAYPHONE_TOKEN","")]
+              child = (Process.proc exe ["--match","runs the restored worker","--fail-on=empty","+RTS","-N2","-RTS"])
+                {Process.env=Just (env <> filter (\(k,_) -> k `notElem` map fst env) original)}
+          (code,output,errors) <- Process.readCreateProcessWithExitCode child ""
+          unless (code == Exit.ExitSuccess) $ expectationFailure (output <> errors)
+          results <- runSqlPool (rawSql
+            "SELECT c.paid_minor,q.state,(SELECT count(*) FROM commerce_receipt WHERE checkout_id=c.id),\
+            \ (SELECT count(*) FROM commerce_ledger_transaction WHERE source_id=a.id::text AND status='posted'),\
+            \ (SELECT count(*) FROM event_ticket WHERE order_ref_id=r.order_id)\
+            \ FROM commerce_checkout_session c JOIN commerce_payment_attempt a ON a.checkout_id=c.id\
+            \ JOIN commerce_provider_binding b ON b.payment_attempt_id=a.id AND b.resource_type='checkout'\
+            \ JOIN commerce_datafast_recovery_query q ON q.binding_id=b.id\
+            \ LEFT JOIN event_ticket_checkout_runtime r ON r.checkout_id=c.id WHERE c.id=?::uuid"
+            [PersistText checkout]) pool :: IO [(Single Int64,Single Text,Single Int64,Single Int64,Single Int64)]
+          if shouldSettle
+            then results `shouldBe` [(Single saleAmount,Single "completed",Single 1,Single 1,Single (if alternateDomain then 0 else 1))]
+            else results `shouldBe` [(Single 0,Single "review",Single 0,Single 0,Single 0)]
+          when alternateDomain $ do
+            let predicate = case scenario of
+                  "service_booking" -> "SELECT fulfillment_status='confirmed' FROM service_booking_checkout_runtime"
+                  "course_registration" -> "SELECT enrollment_status='enrolled' FROM course_registration_checkout_runtime"
+                  _ -> "SELECT quote_status='deposit_paid' AND fulfillment_status='date_reserved' FROM domo_event_quote_runtime"
+            runSqlPool (rawSql (predicate <> " WHERE checkout_id=?::uuid") [PersistText checkout]) pool
+              `shouldReturn` [Single True]
+        setRecoveryFlag pool False
+        setLabMerchant pool "synthetic-provider-retry-merchant"
+  where
+    setLabMerchant :: ConnectionPool -> Text -> IO ()
+    setLabMerchant pool merchant = runSqlPool (rawExecute
+      "UPDATE commerce_provider_account SET merchant_account_ref=? WHERE provider='datafast' AND environment='sandbox'"
+      [PersistText merchant]) pool
+
+isolatedRecoveryUrl :: IO String
+isolatedRecoveryUrl = do
+  enabled <- lookupEnv "TDF_RECOVERY_RESTORE_LAB"
+  unless (enabled == Just "synthetic-loopback-only") $
+    pendingWith "Requires explicitly isolated synthetic PostgreSQL laboratory"
+  url <- lookupEnv "TDF_PROVIDER_RETRY_DATABASE_URL" >>= maybe (fail "Missing disposable database") pure
+  let port = T.stripPrefix "postgresql://synthetic@127.0.0.1:" (T.pack url) >>= T.stripSuffix "/tdf_provider_retry_test"
+  unless (maybe False (\p -> not (T.null p) && T.all (\c -> c >= '0' && c <= '9') p) port) $
+    fail "Restore laboratory requires a dedicated synthetic loopback connection"
+  pure url
+
 ticketLedgerSpec :: SpecWith ConnectionPool
 ticketLedgerSpec = describe "ticket capture ledger" $
   forM_ [(0,0),(0,261),(100,0),(100,261)] $ \(fee,tax) ->
@@ -2875,7 +2989,7 @@ captureFixtureFromCheckout seed requestedResourceType stage pool provider = do
     , Checkout.pbcProvider = provider, Checkout.pbcEnvironment = Checkout.CheckoutSandbox
     , Checkout.pbcMerchantRef = Checkout.pacMerchantRef creation, Checkout.pbcResourceType = resourceType
     , Checkout.pbcProviderResource = resource, Checkout.pbcResourcePath = Nothing
-    , Checkout.pbcOrderReference = boundReference, Checkout.pbcAmountMinor = 12515
+    , Checkout.pbcOrderReference = boundReference, Checkout.pbcAmountMinor = Checkout.pacAmountMinor creation
     , Checkout.pbcCurrency = "USD", Checkout.pbcStage = stage
     , Checkout.pbcOccurredAt = Checkout.pacCreatedAt creation
     , Checkout.pbcCorrelationId = "synthetic-capture-binding" }) pool >>= requireRight
@@ -2885,7 +2999,7 @@ captureFixtureFromCheckout seed requestedResourceType stage pool provider = do
     , Checkout.vpMerchantRef = Checkout.pacMerchantRef creation, Checkout.vpResourceType = resourceType
     , Checkout.vpProviderResource = resource, Checkout.vpProviderResourcePath = Nothing
     , Checkout.vpOrderReference = domainReference, Checkout.vpProviderReference = boundReference
-    , Checkout.vpAmountMinor = 12515, Checkout.vpCurrency = "USD"
+    , Checkout.vpAmountMinor = Checkout.pacAmountMinor creation, Checkout.vpCurrency = "USD"
     , Checkout.vpEvidence = "server_to_server", Checkout.vpOccurredAt = Checkout.pacCreatedAt creation
     , Checkout.vpCorrelationId = "synthetic-capture-verification" }
 
