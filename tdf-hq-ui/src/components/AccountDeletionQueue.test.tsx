@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
 import { createInstance } from 'i18next';
@@ -20,6 +20,36 @@ async function show() {
   render(<I18nextProvider i18n={i18n}><QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><Queue /></QueryClientProvider></I18nextProvider>);
 }
 afterEach(() => { cleanup(); list.mockReset(); resolve.mockReset(); });
+it('shows a loading status until the initial request confirms an empty queue', async () => {
+  let finish!: (rows: LegacyFeedbackDTO[]) => void;
+  list.mockReturnValueOnce(new Promise<LegacyFeedbackDTO[]>(resolve => { finish = resolve; }));
+  await show();
+  expect(screen.getByRole('status').textContent).toBe(es.queueLoading);
+  expect(screen.queryByText(es.queueEmpty)).toBeNull();
+  expect(screen.getByRole('button', { name: es.refresh }).hasAttribute('disabled')).toBe(true);
+
+  await act(async () => { finish([]); });
+  await screen.findByText(es.queueEmpty);
+  expect(screen.queryByRole('status')).toBeNull();
+  expect(screen.getByRole('button', { name: es.refresh }).hasAttribute('disabled')).toBe(false);
+});
+
+it.each([{ rows: [] }, { rows: [record(1)] }])('shows refresh progress for cached requests $rows until fetching finishes', async ({ rows }) => {
+  let finish!: (rows: LegacyFeedbackDTO[]) => void;
+  list.mockResolvedValueOnce(rows).mockReturnValueOnce(new Promise<LegacyFeedbackDTO[]>(resolve => { finish = resolve; }));
+  await show();
+  await screen.findByText(rows.length ? 'Deletion 1' : es.queueEmpty);
+  fireEvent.click(screen.getByRole('button', { name: es.refresh }));
+  expect((await screen.findByRole('status')).textContent).toBe(es.queueRefreshing);
+  expect(screen.queryByText(es.queueEmpty)).toBeNull();
+  if (rows.length) expect(screen.getByText('Deletion 1')).toBeTruthy();
+  expect(screen.getByRole('button', { name: es.refresh }).hasAttribute('disabled')).toBe(true);
+
+  await act(async () => { finish(rows); });
+  await waitFor(() => expect(screen.queryByRole('status')).toBeNull());
+  expect(screen.getByRole('button', { name: es.refresh }).hasAttribute('disabled')).toBe(false);
+});
+
 it('keeps the eleventh request visible and exposes older pages with authoritative owner IDs', async () => {
   list.mockResolvedValueOnce(Array.from({ length: 20 }, (_, index) => record(index + 1))).mockResolvedValueOnce([record(21)]).mockResolvedValue(Array.from({ length: 20 }, (_, index) => record(index + 1)));
   await show();

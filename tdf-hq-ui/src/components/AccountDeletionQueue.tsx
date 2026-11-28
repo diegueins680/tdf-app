@@ -54,8 +54,9 @@ export default function AccountDeletionQueue() {
   if (!queueEnabled) return null;
   return <Card variant="outlined"><CardContent><Stack spacing={2}>
     <Typography component="h2" variant="h6">{t('accountDeletion.queueTitle')}</Typography>
+    {requests.isFetching && <Typography role="status" color="text.secondary">{t(requests.data ? 'accountDeletion.queueRefreshing' : 'accountDeletion.queueLoading')}</Typography>}
     {requests.isError && <Alert severity="error">{t('accountDeletion.queueError')}</Alert>}
-    {requests.isSuccess && requests.data.length === 0 && <Typography>{t('accountDeletion.queueEmpty')}</Typography>}
+    {requests.isSuccess && !requests.isFetching && requests.data.length === 0 && <Typography>{t('accountDeletion.queueEmpty')}</Typography>}
     {requests.data?.map(item => <Box key={item.lfdId}>
       <Typography fontWeight={700}>{item.lfdTitle}</Typography>
       <MarkdownText sx={{ overflowWrap: 'anywhere' }}>{item.lfdDescription}</MarkdownText>
