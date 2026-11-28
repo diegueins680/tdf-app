@@ -12,6 +12,10 @@ translation covers four pinned regions:
   * processHostedPayload and markRetry (ProviderEventWorker.hs): what the
     worker writes for each result.
 
+The first pinned region also includes the module imports. The Datafast recovery
+import supports a separate background poll. Hosted event dispositions, leases
+and dead-letter writes in these four regions are unchanged.
+
 One attempt of one event is abstracted to the stage at which reconciliation
 ends, whether this worker still holds the lease when it writes, and whether
 the attempt is the last allowed one.
@@ -59,7 +63,7 @@ ROOT = Path(__file__).resolve().parents[2]
 RECON = 'tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs'
 WORKER = 'tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs'
 REGIONS = (
-    (RECON, 'processProviderEventWith\n', 'data QueryFailure = ', '276af4c661c01f4cfe0491c578b663e63332b934d7cc48b90c3febbae5d3a9bc'),
+    (RECON, 'processProviderEventWith\n', 'data QueryFailure = ', 'f4ede41ca7fc812d2be7888fcbbc457df20dfe0425bfc0c9b8130df9d3638e64'),
     (RECON, 'recordDeadLetterReview\n  :: ProviderEvent.ProviderEventReference', 'retry :: Text -> Maybe', '4670eec7367b0788b5baf10781a98c187354eceaf06a057ef746f168421a4344'),
     (WORKER, 'processHostedPayload\n', 'applyOutcome\n', '81960ddfcba3a796c05ea7024444fae914be0fd5ca8da17d79452d4a4d0cfbc2'),
     (WORKER, 'markRetry\n', 'validateStoredPaypalEvent\n', '2ad6c5d3c190880f77235206412c98d8bef6dc61010d8a39792c2bc03a21d7aa'),
