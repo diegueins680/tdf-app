@@ -31164,7 +31164,7 @@
     "scripts/test-auth-throttle-http.sh": "0761f381914a6c11968049ab002d2b2b8d75c3e8b2cc0b4b8a0985d4df0dffab",
     "scripts/test-automatic-migrations-production-schema.sh": "b8b82512bc54823e0cbff1eddd80445f043254fb0359d03eaa2c706a81e54362",
     "scripts/test-backend-version-rebuild.py": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc",
-    "scripts/test-booking-conformance.py": "2d51aa2f20c498e3c00990c27a5b972d8dfe28593fb668ebd292587131e259dc",
+    "scripts/test-booking-conformance.py": "4ca154bc41f628cd57a5dfc81aee41d0582064fe3fbb2717ff9a046018c96eb1",
     "scripts/test-catalog-production-cutover.sh": "04656c31ef9f3e5c34dbb70c1a3d82cf851a43e07af5f1ec0b67a9875d178b64",
     "scripts/test-chat-notifications.sh": "1fc07b78ce46f1fe6b8dbda96c3a522e57147cd1e29b65b931643f2c5f04b9f5",
     "scripts/test-checkout-money-verifier.py": "cff1bbe3bfb77b881d3e2c8e9f3f04070615f7e1353ccffc5c7891e30e2c023c",
@@ -61726,7 +61726,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "2d51aa2f20c498e3c00990c27a5b972d8dfe28593fb668ebd292587131e259dc",
+      "sha256": "4ca154bc41f628cd57a5dfc81aee41d0582064fe3fbb2717ff9a046018c96eb1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -6603,7 +6603,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "2d51aa2f20c498e3c00990c27a5b972d8dfe28593fb668ebd292587131e259dc",
+      "sha256": "4ca154bc41f628cd57a5dfc81aee41d0582064fe3fbb2717ff9a046018c96eb1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
