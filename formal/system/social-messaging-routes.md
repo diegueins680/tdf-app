@@ -11,7 +11,7 @@ Derived on 2026-11-07 by reading `tdf-hq/src/TDF/Social/*`, `Interactions/Server
 | Routes | Requirement | Basis |
 |---|---|---|
 | friends add/remove, vcard, v2 relationships and preferences | SOCIAL-RELATIONSHIP-WRITES-001 | new |
-| discovery review, chatkit, social-sync ingest, meta backfill | SOCIAL-STAFF-TOOLS-001 | new |
+| discovery review, Venice assistant chat, retired ChatKit session route, social-sync ingest, meta backfill | SOCIAL-STAFF-TOOLS-001 | new |
 | chat dm, messages | MSG-CHAT-WRITES-001 | new |
 | interactions commands, blocks, preferences | SOC-INTERACTION-WRITES-001 | new |
 | reputation consents, preferences | REP-SELF-SERVICE-001 | new |

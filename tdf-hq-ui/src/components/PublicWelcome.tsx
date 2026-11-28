@@ -7,7 +7,6 @@ import { getAnalyticsClient } from '../analytics/posthog';
 export default function PublicWelcome() {
   const { t } = useTranslation();
   const now = Date.now();
-  const showTickets = now < Date.parse('2026-11-28T18:00:00-05:00');
   const showAndroid = now < Date.parse('2026-11-30T00:00:00-05:00');
   const track = (destination: string) => {
     try {
@@ -32,11 +31,6 @@ export default function PublicWelcome() {
             </Typography>
             {showAndroid && (
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-                {showTickets && (
-                  <Button component={RouterLink} to="/eventos/216/entradas" onClick={() => track('/eventos/216/entradas')} variant="contained" size="large" sx={{ minHeight: 48, bgcolor: '#e6c785', color: '#111b24', '&:hover': { bgcolor: '#f0d9a8' } }}>
-                    {t('directorySearch.psiqueTickets')}
-                  </Button>
-                )}
                 <Button component={RouterLink} to="/app?platform=android" onClick={() => track('/app?platform=android')} variant="outlined" size="large" sx={{ minHeight: 48, color: '#f8fafc', borderColor: '#94a3b8' }}>
                   {t('directorySearch.tryAndroid')}
                 </Button>

@@ -138,17 +138,17 @@ describe('DirectorySearchPage', () => {
   });
 
   it.each([
-    ['2026-11-28T22:59:59Z', true, true],
-    ['2026-11-28T23:00:00Z', false, true],
-    ['2026-11-30T05:00:00Z', false, false],
-  ] as const)('features the current homepage links at %s', async (instant, tickets, android) => {
+    ['2026-11-28T22:59:59Z', true],
+    ['2026-11-30T04:59:59Z', true],
+    ['2026-11-30T05:00:00Z', false],
+  ] as const)('features the Android testing link, and no paused Psique tickets, at %s', async (instant, android) => {
     const clock = jest.spyOn(Date, 'now').mockReturnValue(Date.parse(instant));
     const container = document.createElement('div');
     const root = createRoot(container);
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     try {
       await act(async () => { root.render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/inicio']}><DirectorySearchPage /></MemoryRouter></QueryClientProvider>); });
-      expect(Boolean(container.querySelector('a[href="/eventos/216/entradas"]'))).toBe(tickets);
+      expect(container.querySelector('a[href="/eventos/216/entradas"]')).toBeNull();
       expect(Boolean(container.querySelector('a[href="/app?platform=android"]'))).toBe(android);
     } finally {
       await act(async () => root.unmount());

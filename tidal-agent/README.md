@@ -5,9 +5,8 @@ CLI que toma un prompt en lenguaje natural y devuelve solo código TidalCycles, 
 ## Uso rápido
 
 ```bash
-export TIDAL_AGENT_API_KEY="sk-..."
-# opcional: export TIDAL_AGENT_API_URL="https://api.openai.com/v1/chat/completions"
-# opcional: export TIDAL_AGENT_MODEL="gpt-4o-mini"
+export VENICE_API_KEY="<clave-de-inferencia>"
+# opcional: export TIDAL_AGENT_MODEL="qwen-3-8-27b"
 
 # Prompt como argumento
 tidal-agent "groove house con bombo a negras y hats rápidos"
@@ -20,7 +19,7 @@ El CLI imprime solo el código Tidal filtrado, sin texto extra. Puedes pipearlo 
 
 ## Cómo funciona
 
-- Envia el prompt y un system prompt estricto a un endpoint compatible con OpenAI Chat (configurable con `TIDAL_AGENT_API_URL`/`TIDAL_AGENT_MODEL`).
+- Envia el prompt y un system prompt estricto a Venice (modelo configurable con `TIDAL_AGENT_MODEL`).
 - Post-procesa la respuesta para quedase solo con líneas que empiezan con `d1`–`d4`, `hush`, `bps`/`cps`, etc. El resto se descarta.
 - Limita a pocas líneas para evitar patrones largos o peligrosos.
 

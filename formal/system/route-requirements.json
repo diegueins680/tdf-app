@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 549,
-    "named": 467,
+    "total": 550,
+    "named": 468,
     "path-named": 0,
     "reviewed": 82,
     "unspecified": 0,
-    "covered": 549
+    "covered": 550
   },
   "routes": [
     {
@@ -767,6 +767,14 @@
       "basis": "named",
       "requirements": [
         "INV-ASSET-ADMIN-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/assistant/chat",
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-STAFF-TOOLS-001"
       ]
     },
     {
