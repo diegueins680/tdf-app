@@ -85,6 +85,32 @@ psql "${database_url}" -X -v ON_ERROR_STOP=1 \
 node "${repo_root}/scripts/render-production-schema-verification.mjs" \
   | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
 
+# Production release 11 (2026-11-27) found venues created after the earlier city
+# reference backfill, so the location migration updated them and then could not
+# build its venue index: the updates had queued the deferred search sync trigger.
+# An empty venue table hides this. Recreate that state and apply the migration.
+psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null <<'SQL'
+INSERT INTO venue (name, city, country_code)
+VALUES ('Venue created after the city reference backfill', 'Quito', 'EC');
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM venue WHERE country_id IS NULL AND country_code = 'EC') THEN
+    RAISE EXCEPTION 'Fixture venue no longer needs the country backfill';
+  END IF;
+END
+$$;
+DROP INDEX ix_venue_taxonomy_location;
+SQL
+for migration in 2026-11-21_location_genre_filters 2026-11-21_location_genre_filters \
+  2026-11-24_unicode_genre_suggestion_keys 2026-11-24_preserve_selected_genre_ids; do
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${repo_root}/tdf-hq/sql/${migration}.sql" >/dev/null
+done
+test "$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM venue WHERE country_id IS NULL AND country_code = 'EC';")" = "0"
+test "$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM pg_indexes WHERE schemaname = 'public' AND indexname = 'ix_venue_taxonomy_location';")" = "1"
+node "${repo_root}/scripts/render-production-schema-verification.mjs" \
+  | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
+echo "PASS location migration builds its venue index after backfilling existing venues"
+
 # A rolled-back migration keeps its ledger row and may restore an older object
 # under the same name. Roll the registered music/invitation migrations back along
 # their designed path, newest first; after each step the gate must reject the

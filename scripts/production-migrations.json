@@ -1367,6 +1367,9 @@
     {
       "id": "2026-11-21_location_genre_filters",
       "path": "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
+      "compatibleAppliedChecksums": [
+        "e1712fe18f285960258cb8fb41c1ea13be44f648357d35a73e5a996f58a91fba"
+      ],
       "introducedBy": "a0ca9cd7367ecdd7252dfe50d0a9c94365fc2fcf"
     },
     {

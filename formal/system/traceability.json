@@ -30924,7 +30924,7 @@
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
     "scripts/__tests__/catalog-decision-history.test.mjs": "90eb66416f6dd3a92c936aeced40dd23e0d8592026ecbd128430679a93e003b0",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "7c7c018e949ff0e28fe732bb024f0b254d71ec3f83ca0f186d12ee629dc1951f",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "8a8c6717c05506e59fb0d31febaae3a03080d4d0a5df23776d6d6e782e48bec8",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -31117,7 +31117,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "e43904645016e803690f27376d1eaf3d0ddeaa7f277b3595762b407b4e04dc06",
+    "scripts/production-migrations.json": "93785ebe994ff68b30a717d90b2b8cee97be5b9f2f9b773fc1b3406abf21e8fd",
     "scripts/production-release.mjs": "ad0c935d3bcc523b875051f50582742baf566b3b6615e7c23f7fcab043f62a7e",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "e497d1ce41e8b1bdc3ae776a164b0cb3c6317b5c799ecce85205ef9c79602729",
@@ -31162,7 +31162,7 @@
     "scripts/test-auth-predicates.py": "d84c51fe21419d6dc1ad6136be88b4231c4c53177c011be084444babb939c30b",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-auth-throttle-http.sh": "0761f381914a6c11968049ab002d2b2b8d75c3e8b2cc0b4b8a0985d4df0dffab",
-    "scripts/test-automatic-migrations-production-schema.sh": "b8b82512bc54823e0cbff1eddd80445f043254fb0359d03eaa2c706a81e54362",
+    "scripts/test-automatic-migrations-production-schema.sh": "81fbb614a812a9c29821c54188bced22da2e11ef597b22212871bf601869983c",
     "scripts/test-backend-version-rebuild.py": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc",
     "scripts/test-booking-conformance.py": "4ca154bc41f628cd57a5dfc81aee41d0582064fe3fbb2717ff9a046018c96eb1",
     "scripts/test-catalog-production-cutover.sh": "04656c31ef9f3e5c34dbb70c1a3d82cf851a43e07af5f1ec0b67a9875d178b64",
@@ -32314,7 +32314,7 @@
     "tdf-hq/sql/2026-11-21_artist_similarity.sql": "93df37bc310e3559d3127d7fc4c5c3229577139fc32d88e7780c18803f765da7",
     "tdf-hq/sql/2026-11-21_directory_semantic_search.sql": "81f9103c5784b7b37a64ddf3bf8b6ba47a1cceef8e0abcbb70d02df21953d148",
     "tdf-hq/sql/2026-11-21_directory_semantic_search_rollback.sql": "5315ffa9ab1537f23395649fec23ea8af1f7dc26e9d6923977353a0090a0136f",
-    "tdf-hq/sql/2026-11-21_location_genre_filters.sql": "e1712fe18f285960258cb8fb41c1ea13be44f648357d35a73e5a996f58a91fba",
+    "tdf-hq/sql/2026-11-21_location_genre_filters.sql": "c67fbe64fbce4b476e8387fc7dccecb2b0d778d6e2043ddbef52b85e07f78cc8",
     "tdf-hq/sql/2026-11-21_location_genre_filters_rollback.sql": "0428f90dd75f8088b7a9fa36e1f2abee0e01eaec5b9aca9a51a8d514047abf6a",
     "tdf-hq/sql/2026-11-21_music_audio_measurement.sql": "504e94c2cb73ee03e3c9aa2dd98ad536d33de2b2d9e5001383293316c9a1888a",
     "tdf-hq/sql/2026-11-21_music_audio_measurement_rollback.sql": "5b2ea6d7ce1ad395773f06b955721531c5ce4d7640432ac02389dcd55a2aec25",
@@ -57108,7 +57108,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "7c7c018e949ff0e28fe732bb024f0b254d71ec3f83ca0f186d12ee629dc1951f",
+      "sha256": "8a8c6717c05506e59fb0d31febaae3a03080d4d0a5df23776d6d6e782e48bec8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60427,7 +60427,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "e43904645016e803690f27376d1eaf3d0ddeaa7f277b3595762b407b4e04dc06",
+      "sha256": "93785ebe994ff68b30a717d90b2b8cee97be5b9f2f9b773fc1b3406abf21e8fd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61690,7 +61690,7 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "b8b82512bc54823e0cbff1eddd80445f043254fb0359d03eaa2c706a81e54362",
+      "sha256": "81fbb614a812a9c29821c54188bced22da2e11ef597b22212871bf601869983c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83704,7 +83704,7 @@
     {
       "id": "SURFACE-849abcdada34a597",
       "path": "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
-      "sha256": "e1712fe18f285960258cb8fb41c1ea13be44f648357d35a73e5a996f58a91fba",
+      "sha256": "c67fbe64fbce4b476e8387fc7dccecb2b0d778d6e2043ddbef52b85e07f78cc8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

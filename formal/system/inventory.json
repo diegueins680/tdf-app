@@ -4317,7 +4317,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "7c7c018e949ff0e28fe732bb024f0b254d71ec3f83ca0f186d12ee629dc1951f",
+      "sha256": "8a8c6717c05506e59fb0d31febaae3a03080d4d0a5df23776d6d6e782e48bec8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5931,7 +5931,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "e43904645016e803690f27376d1eaf3d0ddeaa7f277b3595762b407b4e04dc06",
+      "sha256": "93785ebe994ff68b30a717d90b2b8cee97be5b9f2f9b773fc1b3406abf21e8fd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6591,7 +6591,7 @@
     {
       "id": "SURFACE-5786747bd405aa1a",
       "path": "scripts/test-automatic-migrations-production-schema.sh",
-      "sha256": "b8b82512bc54823e0cbff1eddd80445f043254fb0359d03eaa2c706a81e54362",
+      "sha256": "81fbb614a812a9c29821c54188bced22da2e11ef597b22212871bf601869983c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17901,7 +17901,7 @@
     {
       "id": "SURFACE-849abcdada34a597",
       "path": "tdf-hq/sql/2026-11-21_location_genre_filters.sql",
-      "sha256": "e1712fe18f285960258cb8fb41c1ea13be44f648357d35a73e5a996f58a91fba",
+      "sha256": "c67fbe64fbce4b476e8387fc7dccecb2b0d778d6e2043ddbef52b85e07f78cc8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
