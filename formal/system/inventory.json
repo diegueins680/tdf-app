@@ -4330,7 +4330,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "81b32113ad6d356cd1a1af114d17978422860f81c6ec82069db39c4a5de2a1e1",
+      "sha256": "32dba5134720a45a76e009393871745bd2b1ea8c5ff2b0ade0a756a0d5b5810d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
