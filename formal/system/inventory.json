@@ -4369,7 +4369,7 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "21f2a734e9b43bb5b75e783fee6a021732bee0376cf018dc657511fd15a56c59",
+      "sha256": "e6af0dc3c83c85e331a7d606e3c54626f7071e22e308bc56c004a0af365cb518",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5287,7 +5287,7 @@
     {
       "id": "SURFACE-655b9679c92bd422",
       "path": "scripts/continuous-improvement-loop.mjs",
-      "sha256": "042ea8ee69649c5de3b838a82d404488dc444fd40b65052a0b2364b9496b0672",
+      "sha256": "8791db668bd1918d9baefe7bb6751fda083a2d0575b20886febc6ad393f2683b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5551,7 +5551,7 @@
     {
       "id": "SURFACE-596444d6be3be153",
       "path": "scripts/lib/continuous-improvement-loop.mjs",
-      "sha256": "658148df4d0bf1c8df6e19da2d1266673158ba934f2191186b3b57b5e2e36fae",
+      "sha256": "a6ded71c27c74488feec29a3b50069600b95fcc59ee3d0b3efc4f0830a106626",
       "semanticConformance": "not-established-by-discovery"
     },
     {

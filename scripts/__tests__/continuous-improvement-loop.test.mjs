@@ -13,6 +13,7 @@ import {
   htmlToText,
   parseIdeaMarkdown,
   parseGitHubRemote,
+  sameGitHubRepository,
   summarizeWorkflowRuns,
   verifyImprovementLoopModel,
 } from '../lib/continuous-improvement-loop.mjs';
@@ -62,6 +63,14 @@ test('expandTemplate substitutes known placeholders and leaves unknown ones inta
   });
 
   assert.equal(rendered, 'idea=/tmp/idea.md missing={unknown}');
+});
+
+test('sameGitHubRepository ignores case and rejects missing or different names', () => {
+  assert.equal(sameGitHubRepository('example/project', 'Example/Project'), true);
+  assert.equal(sameGitHubRepository('example/project', 'example/project'), true);
+  assert.equal(sameGitHubRepository('example/project', 'example/other'), false);
+  assert.equal(sameGitHubRepository(undefined, 'example/project'), false);
+  assert.equal(sameGitHubRepository('', ''), false);
 });
 
 test('parseGitHubRemote supports ssh and https remotes', () => {
@@ -1190,7 +1199,8 @@ test('publication recovery reuses a draft when the creation response was lost', 
       assert.equal(new URL(url).searchParams.get('head'), `example:${branch.branchName}`);
       return new Response(JSON.stringify([{
         number: 42,
-        head: { sha, ref: branch.branchName, repo: { full_name: 'example/project' } },
+        // GitHub answers with the canonical casing, which may differ from the remote URL's.
+        head: { sha, ref: branch.branchName, repo: { full_name: 'Example/Project' } },
       }]));
     };
     const config = { pushRemote: 'origin', openPullRequest: true };

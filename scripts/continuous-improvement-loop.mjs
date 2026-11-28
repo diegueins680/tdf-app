@@ -19,6 +19,7 @@ import {
   htmlToText,
   parseIdeaMarkdown,
   parseGitHubRemote,
+  sameGitHubRepository,
   summarizeCheckRuns,
   summarizeWorkflowRuns,
   verifyImprovementLoopModel,
@@ -1258,7 +1259,7 @@ async function completePendingPublication(repoRoot, config) {
 
   const { branch, context, sha, repository } = pending;
   const remote = await getGitHubRemote(repoRoot, config.pushRemote);
-  if (!config.openPullRequest || repository !== `${remote.owner}/${remote.repo}` ||
+  if (!config.openPullRequest || !sameGitHubRepository(repository, `${remote.owner}/${remote.repo}`) ||
       branch.baseBranch !== resolveBaseBranch(config) ||
       !branch.branchName.startsWith(resolveBranchPrefix(config))) {
     throw new Error('Pending loop publication does not match the current configuration.');
@@ -1274,7 +1275,7 @@ async function completePendingPublication(repoRoot, config) {
   const existing = pulls.find((pull) => pull.head?.ref === branch.branchName);
   let result;
   if (existing) {
-    if (existing.head.sha !== sha || existing.head.repo?.full_name !== repository) {
+    if (existing.head.sha !== sha || !sameGitHubRepository(existing.head.repo?.full_name, repository)) {
       throw new Error('The existing pull request does not match the recorded publication.');
     }
     result = { number: existing.number ?? null, url: existing.html_url ?? '' };
