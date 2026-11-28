@@ -14,6 +14,8 @@ export default {
   auditActor: "Operator {{actor}} · {{date}}",
 
   queueTitle: 'Account deletion requests',
+  queueLoading: 'Loading requests…',
+  queueRefreshing: 'Refreshing requests…',
   queueEmpty: 'There are no requests on this page.',
   queueError: 'Could not load account deletion requests.',
   previous: 'Previous',
