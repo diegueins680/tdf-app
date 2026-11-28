@@ -137,7 +137,13 @@ export default function TaxonomyFilterBar({
   const panelId = `${idPrefix}-taxonomy-panel`;
 
   return (
-    <Box component="section" aria-label={t('taxonomyFilters.title')} data-testid={`${idPrefix}-taxonomy-filters`}>
+    <Box
+      component="section"
+      aria-label={t('taxonomyFilters.title')}
+      data-testid={`${idPrefix}-taxonomy-filters`}
+      // A partially open panel must not scroll its controls under the pointer.
+      sx={{ '& > .MuiCollapse-root:not(.MuiCollapse-entered)': { overflow: 'clip' } }}
+    >
       <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
         <Button
           size="small"
