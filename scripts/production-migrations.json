@@ -1388,6 +1388,11 @@
       "id": "2026-11-24_venue_coordinate_constraint",
       "path": "tdf-hq/sql/2026-11-24_venue_coordinate_constraint.sql",
       "introducedBy": "866fdf72a77045234a257e66752148f15e817d1e"
+    },
+    {
+      "id": "2026-11-24_datafast_recovery",
+      "path": "tdf-hq/sql/2026-11-24_datafast_recovery.sql",
+      "introducedBy": "918c883d204b46fa6bf0ded53f3d854065e13bb4"
     }
   ]
 }
