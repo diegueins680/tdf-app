@@ -4354,7 +4354,7 @@
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "d86d7c4db38bd1648dd981df2548e0b4eb02562c8b7ca0589259a6f79e4f48ec",
+      "sha256": "dcc8c9ca2af56f6787587377d09648da0780e3c4476e9d2f00e3c5d7ece325c4",
       "semanticConformance": "not-established-by-discovery"
     },
     {

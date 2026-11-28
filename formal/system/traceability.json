@@ -30934,7 +30934,7 @@
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
     "scripts/__tests__/ci-job-admission.test.mjs": "21f9fcbd2e4137eec6442862ce49639423eba49712e28987bf99b562de85df6f",
     "scripts/__tests__/ci-pipeline.test.mjs": "91f2cab7cea81f7d4119f6c7e859c21ef71edba0e86dd725a0da549934903953",
-    "scripts/__tests__/compiled-api-surface.test.mjs": "d86d7c4db38bd1648dd981df2548e0b4eb02562c8b7ca0589259a6f79e4f48ec",
+    "scripts/__tests__/compiled-api-surface.test.mjs": "dcc8c9ca2af56f6787587377d09648da0780e3c4476e9d2f00e3c5d7ece325c4",
     "scripts/__tests__/content-storage-model.test.mjs": "ec3c939221c9a2470f0706c49ec6d2e52e91ebbc4b756419874beddbd8e501ea",
     "scripts/__tests__/content-storage-reconciliation.test.mjs": "e495bbdecb4c88ad8c178c8d06d17cfebafc71148e2fcebeca1423b4558c27da",
     "scripts/__tests__/continuous-improvement-loop.test.mjs": "5af9e5dc2fda29168ecdaf142b4032214b07cb0b204d6da6f1e85b7a5e8ab382",
@@ -57314,7 +57314,7 @@
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "d86d7c4db38bd1648dd981df2548e0b4eb02562c8b7ca0589259a6f79e4f48ec",
+      "sha256": "dcc8c9ca2af56f6787587377d09648da0780e3c4476e9d2f00e3c5d7ece325c4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
