@@ -60,6 +60,13 @@ type PrivateTrialsAPI =
   :<|> "students" :> Get '[JSON] [StudentDTO]
   :<|> "students" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] StudentCreate :> PostCreated '[JSON] StudentDTO
   :<|> "students" :> Capture "id" Int :> ReqBody '[JSON] StudentUpdate :> Patch '[JSON] StudentDTO
+  -- Last on purpose: tests destructure this API by position.
+  :<|> "class-sessions" :> "suggestions"
+        :> QueryParam "teacherId" Int :> QueryParam "studentId" Int :> QueryParam "subjectId" Int
+        :> QueryParam "roomId" Int :> QueryParam "durationMinutes" Int
+        :> QueryParam "from" UTCTime :> QueryParam "days" Int :> QueryParam "limit" Int
+        :> QueryParams "preferredStart" UTCTime :> QueryParams "preferredEnd" UTCTime
+        :> Get '[JSON] SlotSuggestionsDTO
 
 -- Minimal DTOs for the above (you likely have them elsewhere; these are placeholders)
 data SignupIn = SignupIn { firstName :: Text, lastName :: Text, email :: Text, phone :: Maybe Text, password :: Maybe Text, googleIdToken :: Maybe Text, marketingOptIn :: Bool } deriving (Generic)

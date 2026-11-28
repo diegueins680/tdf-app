@@ -41,6 +41,7 @@ import           Servant.Server.Experimental.Auth (AuthHandler)
 
 import           Database.Persist.SqlBackend (getRDBMS)
 import           Database.Persist.Sql hiding (loadConfig)
+import           Database.PostgreSQL.Simple (SqlError (..))
 
 import           TDF.Auth             (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
 import qualified TDF.Catalog.Models   as Catalog
@@ -49,7 +50,7 @@ import           TDF.Catalog.Security
   , hasCanonicalPartyRole
   , selectCanonicalPartyIdsByRole
   )
-import           TDF.Config          (loadConfig)
+import           TDF.Config          (lessonSlotSuggestionsEnabled, loadConfig)
 import           TDF.Models          ( Party(..)
                                       , PartyId
                                       , ResourceId
@@ -64,6 +65,7 @@ import           TDF.Trials.DTO
 import           TDF.Trials.Models
 import qualified TDF.PublicUrl          as PublicUrl
 import qualified TDF.Trials.Models      as Trials
+import qualified TDF.Trials.SlotSuggestions as Slots
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 
 type AppM = SqlPersistT IO
@@ -1320,6 +1322,7 @@ privateTrialsServer user@AuthedUser{..} =
     :<|> studentsListH
     :<|> studentCreateH
     :<|> studentUpdateH
+    :<|> slotSuggestionsH
   where
     hasRole :: RoleEnum -> Bool
     hasRole role = role `elem` auRoles
@@ -1879,6 +1882,67 @@ privateTrialsServer user@AuthedUser{..} =
       rows <- rawSql ("SELECT ?? FROM class_session WHERE id = ?" <> lock) [toPersistValue key]
       pure (entityVal <$> listToMaybe rows)
 
+    -- SCHOOL-SLOT-SUGGESTION-001: read-only advice for one new lesson. The
+    -- authorization is createClassH's; the ranking is TDF.Trials.SlotSuggestions.
+    slotSuggestionsH
+      :: Maybe Int -> Maybe Int -> Maybe Int -> Maybe Int -> Maybe Int
+      -> Maybe UTCTime -> Maybe Int -> Maybe Int -> [UTCTime] -> [UTCTime]
+      -> AppM SlotSuggestionsDTO
+    slotSuggestionsH mTeacherId mStudentId mSubjectId mRoomId mDuration mFrom mDays mLimit
+        preferredStarts preferredEnds = do
+      cfg <- liftIO loadConfig
+      unless (lessonSlotSuggestionsEnabled cfg) $
+        liftIO $ throwIO err404 { errBody = "Slot suggestions are unavailable" }
+      ensureSchoolAccess
+      now <- liftIO getCurrentTime
+      let badRequest message =
+            liftIO $ throwIO err400 { errBody = BL8.fromStrict (TE.encodeUtf8 message) }
+          requiredId name =
+            maybe (badRequest (name <> " is required")) $ \raw ->
+              if raw > 0 then pure raw else badRequest (name <> " must be a positive integer")
+      teacherInt <- requiredId "teacherId" mTeacherId
+      studentInt <- requiredId "studentId" mStudentId
+      subjectInt <- requiredId "subjectId" mSubjectId
+      roomInt <- traverse (requiredId "roomId" . Just) mRoomId
+      request <- either badRequest pure $
+        Slots.mkSlotRequest now mFrom mDays mDuration mLimit preferredStarts preferredEnds
+      let teacherKey = intKey teacherInt :: PartyId
+          isSelfTeacher = teacherKey == auPartyId
+      unless (isSchoolStaff || isSelfTeacher) $
+        liftIO $ throwIO err403
+      studentKey <- ensureStudentExists studentInt
+      subjectKey <- ensureSubjectExists subjectInt
+      ensureTeacherSelection teacherKey
+      when (isSelfTeacher && not isSchoolStaff) $ do
+        ensureTeacherSubject teacherKey subjectKey
+        ownsStudent <- teacherOwnsStudent teacherKey studentKey
+        unless ownsStudent $
+          liftIO $ throwIO err403
+      forM_ roomInt $ \raw -> do
+        let roomKey = intKey raw :: ResourceId
+        ensureSchedulableRoom roomKey
+        ensureRoomAllowed subjectKey roomKey
+      loaded <- Slots.loadSlotSnapshot
+        (fromIntegral teacherInt) (fromIntegral studentInt) (fromIntegral subjectInt)
+        (fromIntegral <$> roomInt) request
+      snapshot <- case loaded of
+        Right snapshot -> pure snapshot
+        Left _ -> liftIO $ throwIO err500 { errBody = "Slot suggestions could not be computed" }
+      pure SlotSuggestionsDTO
+        { computedAt = now
+        , suggestions =
+            [ SlotSuggestionDTO
+                { startAt = Slots.sgStart suggestion
+                , endAt = Slots.sgEnd suggestion
+                , roomId = fromIntegral (Slots.sgRoomId suggestion)
+                , roomName = Slots.sgRoomName suggestion
+                , insidePreferred = Slots.sgInsidePreferred suggestion
+                , teacherGapMinutes = Slots.sgTeacherGapMinutes suggestion
+                }
+            | suggestion <- Slots.suggestSlots request snapshot
+            ]
+        }
+
     createClassH :: ClassSessionIn -> AppM ClassSessionOut
     createClassH ClassSessionIn{..} = do
       ensureSchoolAccess
@@ -2392,8 +2456,17 @@ trialsServer pool =
       result <- liftIO (runTrialsAction x)
       either throwError pure result
 
+    -- The schedule exclusion constraint (school_schedule_occupancy, 23P01) is
+    -- the authority on double bookings; its refusal is a conflict, not a fault.
     runTrialsAction :: AppM a -> IO (Either ServerError a)
-    runTrialsAction action = try (runSqlPool action pool)
+    runTrialsAction action = do
+      outcome <- try (try (runSqlPool action pool))
+      case outcome of
+        Left sqlError
+          | sqlState sqlError == "23P01" ->
+              pure (Left err409 { errBody = "Horario no disponible: el profesor, el estudiante o la sala ya tienen una reserva" })
+          | otherwise -> throwIO (sqlError :: SqlError)
+        Right result -> pure result
 
     authedPrivateServer :: AuthedUser -> ServerT PrivateTrialsAPI AppM
     authedPrivateServer user = privateTrialsServer user

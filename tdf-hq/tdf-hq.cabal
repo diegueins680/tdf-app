@@ -280,6 +280,7 @@ library
     TDF.Trials.Models
     TDF.Trials.Seed
     TDF.Trials.Server
+    TDF.Trials.SlotSuggestions
     TDF.Calendar.Models
     TDF.Calendar.TokenCipher
     TDF.Auth.Throttle
@@ -407,6 +408,19 @@ executable tdf-hq-exe
     , aeson                >=2.0
     , bytestring
 
+executable tdf-slot-suggestions-oracle
+  main-is:          SlotSuggestionsOracle.hs
+  hs-source-dirs:   app
+  default-language: Haskell2010
+  ghc-options:      -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints
+  build-depends:
+      base                 >=4.14 && <5
+    , tdf-hq
+    , aeson
+    , bytestring
+    , text
+    , time
+
 executable tdf-ddex-render
   main-is:          MusicDdexRenderMain.hs
   hs-source-dirs:   app
@@ -521,6 +535,7 @@ test-suite tdf-hq-test
     TDF.Services.RecordsIngestionSpec
     TDF.Server.EventResearchSpec
     TDF.Trials.PublicLeadSpec
+    TDF.Trials.SlotSuggestionsSpec
     TDF.DDEX.ERN.V432.ParseSpec
     TDF.DDEX.ERN.V432.BusinessRulesSpec
     TDF.Operations.ModelSpec

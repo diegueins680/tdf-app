@@ -953,6 +953,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/trials/v1/class-sessions/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Suggest the best feasible slots for one new lesson
+         * @description SCHOOL-SLOT-SUGGESTION-001. Read-only advice for one lesson of a teacher, a student and a subject. A suggestion is not a reservation: creating the lesson re-validates and the schedule exclusion constraint answers 409 when the slot was taken meanwhile. Slots lie on a 30-minute grid inside 08:00-22:00 America/Guayaquil, at least 12 hours ahead, inside one of the teacher's availability windows for the subject and room, while the student holds an open unexpired package for the subject, and overlap no commitment of the teacher, the student or the room. Order: inside a preferred window, fewest idle minutes added to the teacher's day, room priority, start. One suggestion per start instant. Out-of-range parameters are refused, not clamped. Requires school access; a teacher may ask only for their own lessons with their own students. Answers 404 while LESSON_SLOT_SUGGESTIONS_ENABLED is off (the default).
+         */
+        get: operations["suggestLessonSlots"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social/v2/me": {
         parameters: {
             query?: never;
@@ -16727,6 +16747,27 @@ export interface components {
             /** Format: date-time */
             revokedAt: string | null;
         };
+        LessonSlotSuggestion: {
+            /** Format: date-time */
+            startAt: string;
+            /** Format: date-time */
+            endAt: string;
+            /** Format: int64 */
+            roomId: number;
+            roomName: string;
+            /** @description The request named preferred windows and this slot lies inside one. */
+            insidePreferred: boolean;
+            /** @description Minutes to the teacher's nearest commitment that day; null when the day is otherwise empty. */
+            teacherGapMinutes: number | null;
+        };
+        LessonSlotSuggestions: {
+            /**
+             * Format: date-time
+             * @description Instant of the snapshot. The slots were free then; they are not held.
+             */
+            computedAt: string;
+            suggestions: components["schemas"]["LessonSlotSuggestion"][];
+        };
         ArtistInvitationLinkIssued: {
             invitation: components["schemas"]["ArtistInvitationLink"];
             /**
@@ -22279,6 +22320,73 @@ export interface operations {
             };
             /** @description The accepted request has different details. */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    suggestLessonSlots: {
+        parameters: {
+            query: {
+                teacherId: number;
+                studentId: number;
+                subjectId: number;
+                roomId?: number;
+                durationMinutes?: number;
+                from?: string;
+                days?: number;
+                limit?: number;
+                /** @description Start of a preferred window; paired by position with preferredEnd. */
+                preferredStart?: string[];
+                preferredEnd?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Suggestions, best first; empty when no slot is feasible */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonSlotSuggestions"];
+                };
+            };
+            /** @description Missing */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No valid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Caller may not schedule this teacher or student */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Feature disabled */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Room is not a room or is not allowed for the subject */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

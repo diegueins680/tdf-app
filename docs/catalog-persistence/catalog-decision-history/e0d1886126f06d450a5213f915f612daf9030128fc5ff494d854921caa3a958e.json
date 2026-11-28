@@ -1,0 +1,21 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "955ad55808ec46c69ff8",
+  "reviewed": true,
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "lesson-slot-suggestions-2026-11-21",
+  "justification": "Preserve all 264 reviewed migration objects of protected main 030ca5c3b0c993a8783a1146d75c8f7bc48188a9 in their exact order and append one entry, 2026-11-21_school_schedule_occupancy (SCHOOL-SLOT-SUGGESTION-001), as the last migration. Its SQL is the immutable file introduced by c97018569ad80d494695b58e7c79f74b26c41025: one occupancy table with an exclusion constraint, its projection triggers and a backfill of future rows that aborts on a pre-existing overlap. No existing entry is reordered, altered or removed. The previous decision is retained whole below. This author review does not authorize deployment and is not independent approval.",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 265
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:379128378cc4adc104c5c8043b8950624bcc0b4b471940d44da8e3838628805f"
+  }
+}

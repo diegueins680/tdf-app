@@ -95,6 +95,33 @@ export interface ClassSessionUpdate {
   status?: string;
 }
 
+/** One suggested lesson slot (SCHOOL-SLOT-SUGGESTION-001). Advice, not a reservation. */
+export interface LessonSlotSuggestion {
+  startAt: string;
+  endAt: string;
+  roomId: number;
+  roomName: string;
+  insidePreferred: boolean;
+  teacherGapMinutes: number | null;
+}
+
+export interface LessonSlotSuggestions {
+  computedAt: string;
+  suggestions: LessonSlotSuggestion[];
+}
+
+export interface LessonSlotSuggestionQuery {
+  teacherId: number;
+  studentId: number;
+  subjectId: number;
+  roomId?: number;
+  durationMinutes?: number;
+  from?: string;
+  days?: number;
+  limit?: number;
+  preferred?: PreferredSlot[];
+}
+
 export interface ClassSessionAttend {
   attended: boolean;
   notes?: string | null;
@@ -197,6 +224,22 @@ export const Trials = {
     setTrimmedParam(search, 'status', params?.status);
     const qs = search.toString();
     return get<ClassSessionDTO[]>(`${base}/class-sessions${qs ? `?${qs}` : ''}`);
+  },
+  suggestLessonSlots: (query: LessonSlotSuggestionQuery) => {
+    const search = new URLSearchParams();
+    search.set('teacherId', String(requirePositiveInteger(query.teacherId, 'teacherId')));
+    search.set('studentId', String(requirePositiveInteger(query.studentId, 'studentId')));
+    search.set('subjectId', String(requirePositiveInteger(query.subjectId, 'subjectId')));
+    setPositiveIntParam(search, 'roomId', query.roomId);
+    setPositiveIntParam(search, 'durationMinutes', query.durationMinutes);
+    setTrimmedParam(search, 'from', query.from);
+    setPositiveIntParam(search, 'days', query.days);
+    setPositiveIntParam(search, 'limit', query.limit);
+    for (const window of query.preferred ?? []) {
+      search.append('preferredStart', window.startAt);
+      search.append('preferredEnd', window.endAt);
+    }
+    return get<LessonSlotSuggestions>(`${base}/class-sessions/suggestions?${search.toString()}`);
   },
   createClassSession: (payload: ClassSessionCreate) =>
     post<ClassSessionOut>(`${base}/class-sessions`, {

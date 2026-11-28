@@ -166,7 +166,7 @@ editStudent :: AuthedUser -> Int -> D.StudentUpdate -> AppM D.StudentDTO
 editStudent user =
   let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
         :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
-        :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> handler = privateTrialsServer user
+        :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> handler :<|> _ = privateTrialsServer user
   in handler
 actor :: Int64 -> [RoleEnum] -> AuthedUser
 actor key roles = AuthedUser (toSqlKey key) roles (modulesForRoles roles) Nothing Nothing

@@ -1,0 +1,26 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "f5c2102bf11f22b8bd08",
+  "reviewed": true,
+  "justification": "Append the school schedule occupancy migration to the reviewed manifest on 4699f8327f6e565cc164081b0192249cab56a076.",
+  "reviewMethod": "successor-of-reviewed-decision",
+  "reviewBatch": "lesson-slot-main-integration-20261125",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 272
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:5c2ed3f8ba488e82825dae4662cc0bf3b42279d79414556834d75a33a8637a8a"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:e0d1886126f06d450a5213f915f612daf9030128fc5ff494d854921caa3a958e"
+    }
+  ]
+}

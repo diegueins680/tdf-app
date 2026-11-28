@@ -685,6 +685,7 @@ import qualified TDF.WhatsAppRedeliverySpec as WhatsAppRedeliverySpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
+import qualified TDF.Trials.SlotSuggestionsSpec as SlotSuggestionsSpec
 import qualified TDF.Fans.FeedAffinitySpec as FeedAffinitySpec
 import qualified TDF.Fans.ArtistRecommendationsSpec as ArtistRecommendationsSpec
 import qualified TDF.Fans.ArtistSimilaritySpec as ArtistSimilaritySpec
@@ -18602,6 +18603,7 @@ main = hspec $ do
     ServerProposalsSpec.spec
     ServerExtraSpec.spec
     ServerFanClubSpec.spec
+    SlotSuggestionsSpec.spec
     FeedAffinitySpec.spec
     ArtistRecommendationsSpec.spec
     ArtistSimilaritySpec.spec

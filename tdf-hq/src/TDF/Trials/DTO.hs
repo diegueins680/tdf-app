@@ -281,3 +281,23 @@ data TeacherStudentLinkIn = TeacherStudentLinkIn
 instance ToJSON TeacherStudentLinkIn
 instance FromJSON TeacherStudentLinkIn where
   parseJSON = genericParseJSON strictObjectOptions
+
+-- | One suggested lesson slot (SCHOOL-SLOT-SUGGESTION-001). Advice only: the
+-- slot is not reserved.
+data SlotSuggestionDTO = SlotSuggestionDTO
+  { startAt           :: UTCTime
+  , endAt             :: UTCTime
+  , roomId            :: Int
+  , roomName          :: Text
+  , insidePreferred   :: Bool
+  , teacherGapMinutes :: Maybe Int
+  } deriving (Show, Generic)
+instance ToJSON SlotSuggestionDTO
+instance FromJSON SlotSuggestionDTO
+
+data SlotSuggestionsDTO = SlotSuggestionsDTO
+  { computedAt  :: UTCTime
+  , suggestions :: [SlotSuggestionDTO]
+  } deriving (Show, Generic)
+instance ToJSON SlotSuggestionsDTO
+instance FromJSON SlotSuggestionsDTO

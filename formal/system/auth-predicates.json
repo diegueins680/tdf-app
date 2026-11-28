@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "353808e96b8b95472153fb591befb4e27804ff0dfeb06e5a6928a172d7e75ae8"
+    "tdf-hq/tdf-hq.cabal": "8d5d516ff54bc7389f5ecc8c8c4e6084815a2e0654b10f8ae4bf0c957c53fb38"
   },
   "obligations": [
     {
@@ -1100,6 +1100,15 @@
       "change": "Register the two Datafast payment modules.",
       "semanticReview": "Compared with protected main, the Cabal diff adds only DatafastRecovery and DatafastStatus to the library module list. Dependencies, flags, compiler options and other reviewed sources are identical.",
       "qualification": "Source-bound solver and mutation checks cover this composition."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "087f5aa8ae4fb728b4ecbc5a6009d60674f1fcee",
+      "previousSha256": "353808e96b8b95472153fb591befb4e27804ff0dfeb06e5a6928a172d7e75ae8",
+      "currentSha256": "8d5d516ff54bc7389f5ecc8c8c4e6084815a2e0654b10f8ae4bf0c957c53fb38",
+      "change": "Register the TDF.Trials.SlotSuggestions library module, its TDF.Trials.SlotSuggestionsSpec test module and the tdf-slot-suggestions-oracle verification executable on protected main 087f5aa8a.",
+      "semanticReview": "The Cabal file differs from protected main's by exactly fifteen added lines: the TDF.Trials.SlotSuggestions entry in the library's other-modules, the TDF.Trials.SlotSuggestionsSpec entry in the test suite's other-modules, and one new executable stanza, tdf-slot-suggestions-oracle (app/SlotSuggestionsOracle.hs), which depends only on base, tdf-hq, aeson, bytestring, text and time, all already dependencies of the package. The library module holds a pure slot search and one read-only query, imports nothing from this package and is imported only by TDF.Trials.Server and the oracle; the test module imports only that module. No dependency, flag or build option of an existing component changes, so the conditional authentication and recovery import, binding and translation context is unchanged.",
+      "qualification": "This review covers the conditional solver source context."
     }
   ]
 }

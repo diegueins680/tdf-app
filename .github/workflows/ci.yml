@@ -454,6 +454,13 @@ jobs:
           TDF_BOOKING_TEST_OUTPUT: tmp/specification/booking-conformance
         run: python3 scripts/test-booking-conformance.py
 
+      - name: Check the lesson slot predicate against the schedule exclusion constraint
+        run: |
+          oracle="$(dirname "$BACKEND_BINARY_OUT")/tdf-slot-suggestions-oracle"
+          test -x "$oracle"
+          PGPASSWORD=postgres psql -X -h postgres -U postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE tdf_lesson_slot_test'
+          python3 scripts/test-lesson-slot-suggestions-sql.py postgresql://postgres:postgres@postgres:5432/tdf_lesson_slot_test "$oracle"
+
       - name: Verify artist self-service transactions and migration
         env:
           PGHOST: postgres

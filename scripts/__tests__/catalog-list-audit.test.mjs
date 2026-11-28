@@ -6607,8 +6607,40 @@ const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26
 
 // Qualify the new append against both published parents before running their historical assertions.
 // Compare historical compositions with the entire prefix preceding the verified Datafast append.
-async function manifestBeforeDatafast(file) {
+// The school schedule occupancy append is the verified last entry; history below it is main's.
+async function manifestBeforeOccupancy(file) {
   const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const occupancy = manifest.migrations.at(-1);
+  assert.equal(occupancy.id, '2026-11-21_school_schedule_occupancy');
+  assert.deepEqual(occupancy, (await integrationParent('208e3a3b7438476ed8644e3b559554de8b0d9360', file)).migrations.at(-1));
+  return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
+}
+
+function decisionBeforeOccupancy(decisions) {
+  const occupancy = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations');
+  assert.equal(occupancy.reviewBatch, 'lesson-slot-main-integration-20261127');
+  assert.equal(occupancy.evidence.valueCount, occupancy.previousDecision.evidence.valueCount + 1);
+  assert.equal(occupancy.concurrentReviewHistory.length, 1);
+  assert.equal(occupancy.concurrentReviewHistory[0].reviewBatch, 'lesson-slot-main-integration-20261125');
+  return occupancy.previousDecision;
+}
+
+test('school schedule occupancy appends its original SQL after the protected manifest and keeps its decision', async () => {
+  const file = 'scripts/production-migrations.json';
+  const main = '087f5aa8ae4fb728b4ecbc5a6009d60674f1fcee';
+  assert.deepEqual(await manifestBeforeOccupancy(file), await integrationParent(main, file));
+  const entry = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8')).migrations.at(-1);
+  await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), await integrationSource(entry.introducedBy, entry.path));
+  const readObject = objectPath => execFileSync('git', ['show', main + ':' + objectPath],
+    { cwd: integrationRoot, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const isManifest = row => row.evidence?.file === file && row.evidence?.name === 'migrations';
+  const prior = expandAtRevision(await integrationParent(main, DECISIONS_FILE), readObject);
+  assert.deepEqual(decisionBeforeOccupancy(readExpandedDecisions(integrationRoot).decisions), prior.decisions.find(isManifest));
+});
+
+async function manifestBeforeDatafast(file) {
+  const manifest = await manifestBeforeOccupancy(file);
   assert.equal(manifest.migrations.at(-1).id, '2026-11-24_datafast_recovery');
   return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
 }
@@ -6617,7 +6649,7 @@ test('Datafast recovery appends its original SQL and preserves the complete prot
   const file = 'scripts/production-migrations.json';
   const base = '64ec5907337e4c1c1fea22760eac2f1b1a73bddb';
   const parent = await integrationParent(base, file);
-  const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const manifest = await manifestBeforeOccupancy(file);
   const added = {
     id: '2026-11-24_datafast_recovery',
     path: 'tdf-hq/sql/2026-11-24_datafast_recovery.sql',
@@ -6630,7 +6662,7 @@ test('Datafast recovery appends its original SQL and preserves the complete prot
     { cwd: integrationRoot, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   const prior = expandAtRevision(await integrationParent(base, DECISIONS_FILE), readObject);
   const isManifest = row => row.evidence?.file === file && row.evidence?.name === 'migrations';
-  const current = readExpandedDecisions(integrationRoot).decisions.find(isManifest);
+  const current = decisionBeforeOccupancy(readExpandedDecisions(integrationRoot).decisions);
   assert.equal(current.reviewBatch, 'datafast-after-venue-coordinates');
   assert.equal(current.evidence.valueCount, manifest.migrations.length);
   const datafastParent = '8463e86eb3c5a92dd9d4e114c387e36f8e32912a';
@@ -6695,7 +6727,7 @@ async function manifestBeforeLoudness(file) {
 }
 
 function decisionBeforeLoudness(decisions) {
-  const merged = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations').previousDecision;
+  const merged = decisionBeforeOccupancy(decisions).previousDecision;
   const suggestions = merged.previousDecision;
   assert.equal(suggestions.reviewBatch, 'friend-suggestions-main-integration-20261124');
   const [coordinates] = merged.concurrentReviewHistory;
@@ -7006,7 +7038,7 @@ test('friend suggestions append one original migration and preserve the protecte
   const published = await integrationParent(base, DECISIONS_FILE);
   const readObject = objectPath => execFileSync('git', ['show', base + ':' + objectPath], { cwd: integrationRoot, encoding: 'utf8' });
   const manifestDecision = document => document.decisions.find(row => row.evidence?.file === file);
-  const coordinates = manifestDecision(readExpandedDecisions(integrationRoot)).previousDecision;
+  const coordinates = decisionBeforeOccupancy(readExpandedDecisions(integrationRoot).decisions).previousDecision;
   const tip = coordinates.previousDecision;
   assert.equal(tip.evidence.valueCount, current.migrations.length);
   assert.deepEqual(tip.previousDecision, manifestDecision(expandAtRevision(published, readObject)));
@@ -7014,7 +7046,7 @@ test('friend suggestions append one original migration and preserve the protecte
 
 test('the combined manifest retains both complete migration reviews', async () => {
   const manifestDecision = document => document.decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json');
-  const merged = manifestDecision(readExpandedDecisions(integrationRoot)).previousDecision;
+  const merged = decisionBeforeOccupancy(readExpandedDecisions(integrationRoot).decisions).previousDecision;
   assert.equal(merged.evidence.valueCount, 273);
   const parentReview = async ref => {
     const document = await integrationParent(ref, DECISIONS_FILE);

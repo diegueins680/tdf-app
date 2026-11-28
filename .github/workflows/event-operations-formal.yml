@@ -75,6 +75,8 @@ jobs:
           python scripts/verify-payment-arithmetic.py > "${{ runner.temp }}/payment-proof/solver-output.json"
           mv "${{ runner.temp }}/payment-proof/solver-output.json" "${{ runner.temp }}/payment-proof/result.json"
           python scripts/test-payment-arithmetic-verifier.py
+      - name: Prove the lesson slot overlap predicate against the exclusion constraint
+        run: python scripts/verify-lesson-slot-suggestions.py
       - name: Verify exact music money encoding and negative controls
         run: |
           python scripts/verify-music-money-wire.py > "${{ runner.temp }}/payment-proof/music-money-wire-output.json"
@@ -244,6 +246,9 @@ jobs:
 
       - name: Check friend suggestion SQL and migration on isolated PostgreSQL
         run: sh scripts/test-friend-suggestions-postgres.sh
+
+      - name: Check lesson schedule migration and slot snapshot SQL on isolated PostgreSQL
+        run: sh scripts/test-lesson-slot-suggestions-postgres.sh
 
       - name: Check feed affinity evidence SQL on isolated PostgreSQL
         run: sh scripts/test-feed-affinity-postgres.sh

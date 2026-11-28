@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Unbounded safety proofs by inductive invariants (Apalache) plus bounded TLC
 # exploration and negative controls for formal/payments, formal/auth,
-# formal/fans, formal/player, formal/directory and formal/social/FeedAffinity.tla.
+# formal/school, formal/fans, formal/player, formal/directory and formal/social/FeedAffinity.tla.
 #
 # Requires the pinned official artifacts:
 #   APALACHE_TGZ   apalache.tgz from apalache-mc/apalache release v0.62.4
@@ -17,6 +17,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 MODEL_DIR="${REPO_DIR}/formal/payments"
 AUTH_MODEL_DIR="${REPO_DIR}/formal/auth"
+SCHOOL_MODEL_DIR="${REPO_DIR}/formal/school"
 FANS_MODEL_DIR="${REPO_DIR}/formal/fans"
 PLAYER_MODEL_DIR="${REPO_DIR}/formal/player"
 DIRECTORY_MODEL_DIR="${REPO_DIR}/formal/directory"
@@ -194,6 +195,21 @@ apalache_expect "${E}" CInitCurrent IndInv IndInv 1 NoError "SessionExpiry-conse
 apalache_expect "${E}" CInitCurrent IndInv Safe 0 NoError "SessionExpiry-implication"
 apalache_expect "${E}" CInitCurrent Init NoMintedSessionUsed 3 Error "SessionExpiry-reachability-witness"
 apalache_expect "${E}" CInitNotFailClosed Init Safe 4 Error "SessionExpiryNotFailClosed-reachable-violation"
+
+A=LessonSlotAdvice.tla
+CURRENT_MODEL_DIR="${SCHOOL_MODEL_DIR}"
+
+# SCHOOL-SLOT-SUGGESTION-001: a suggested slot is advice. With the exclusion
+# constraint a stale suggestion is rejected and no slot is booked twice, for
+# every set of up to four clients and three slots; without it two clients book
+# the same slot. Advice does go stale (reachability witness).
+tlc_expect "${A}" LessonSlotAdvice.cfg pass
+tlc_expect "${A}" LessonSlotAdviceLegacy.cfg violation
+tlc_expect "${A}" LessonSlotAdviceStale.cfg violation
+apalache_expect "${A}" CInitExclusion Init IndInv 0 NoError "LessonSlotAdvice-initiation"
+apalache_expect "${A}" CInitExclusion IndInv IndInv 1 NoError "LessonSlotAdvice-consecution"
+apalache_expect "${A}" CInitExclusion IndInv Safe 0 NoError "LessonSlotAdvice-implication"
+apalache_expect "${A}" CInitLegacy Init Safe 6 Error "LessonSlotAdviceLegacy-reachable-violation"
 unset CURRENT_MODEL_DIR
 
 A=ArtistSimilarity.tla

@@ -1296,6 +1296,54 @@ paths:
     $ref: './trials-identity.yaml#/paths/~1trials~1v1~1trial-requests'
   /trials/v1/students:
     $ref: './trials-identity.yaml#/paths/~1trials~1v1~1students'
+  /trials/v1/class-sessions/suggestions:
+    get:
+      tags: [Trials]
+      operationId: suggestLessonSlots
+      summary: Suggest the best feasible slots for one new lesson
+      description: >-
+        SCHOOL-SLOT-SUGGESTION-001. Read-only advice for one lesson of a teacher, a
+        student and a subject. A suggestion is not a reservation: creating the lesson
+        re-validates and the schedule exclusion constraint answers 409 when the slot was
+        taken meanwhile. Slots lie on a 30-minute grid inside 08:00-22:00 America/Guayaquil,
+        at least 12 hours ahead, inside one of the teacher's availability windows for the
+        subject and room, while the student holds an open unexpired package for the
+        subject, and overlap no commitment of the teacher, the student or the room.
+        Order: inside a preferred window, fewest idle minutes added to the teacher's day,
+        room priority, start. One suggestion per start instant. Out-of-range parameters
+        are refused, not clamped. Requires school access; a teacher may ask only for
+        their own lessons with their own students. Answers 404 while
+        LESSON_SLOT_SUGGESTIONS_ENABLED is off (the default).
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: teacherId, in: query, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+        - { name: studentId, in: query, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+        - { name: subjectId, in: query, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+        - { name: roomId, in: query, required: false, schema: { type: integer, format: int64, minimum: 1 } }
+        - { name: durationMinutes, in: query, required: false, schema: { type: integer, minimum: 30, maximum: 180, multipleOf: 30, default: 60 } }
+        - { name: from, in: query, required: false, schema: { type: string, format: date-time } }
+        - { name: days, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 28, default: 14 } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 20, default: 5 } }
+        - name: preferredStart
+          in: query
+          required: false
+          description: Start of a preferred window; paired by position with preferredEnd.
+          schema: { type: array, maxItems: 5, items: { type: string, format: date-time } }
+        - name: preferredEnd
+          in: query
+          required: false
+          schema: { type: array, maxItems: 5, items: { type: string, format: date-time } }
+      responses:
+        '200':
+          description: Suggestions, best first; empty when no slot is feasible
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LessonSlotSuggestions' }
+        '400': { description: Missing, malformed or out-of-range parameter }
+        '401': { description: No valid session }
+        '403': { description: Caller may not schedule this teacher or student }
+        '404': { description: Feature disabled, or unknown teacher, student, subject or room }
+        '422': { description: Room is not a room or is not allowed for the subject }
   /social/v2/me:
     $ref: ./social-v2.yaml#/paths/~1social~1v2~1me
   /social/v2/relationships/{partyId}:
@@ -19589,6 +19637,35 @@ components:
         redeemedByPartyId: { type: integer, format: int64, nullable: true }
         redeemedByName: { type: string, nullable: true }
         revokedAt: { type: string, format: date-time, nullable: true }
+    LessonSlotSuggestion:
+      type: object
+      additionalProperties: false
+      required: [startAt, endAt, roomId, roomName, insidePreferred, teacherGapMinutes]
+      properties:
+        startAt: { type: string, format: date-time }
+        endAt: { type: string, format: date-time }
+        roomId: { type: integer, format: int64 }
+        roomName: { type: string }
+        insidePreferred:
+          type: boolean
+          description: The request named preferred windows and this slot lies inside one.
+        teacherGapMinutes:
+          type: integer
+          nullable: true
+          description: Minutes to the teacher's nearest commitment that day; null when the day is otherwise empty.
+    LessonSlotSuggestions:
+      type: object
+      additionalProperties: false
+      required: [computedAt, suggestions]
+      properties:
+        computedAt:
+          type: string
+          format: date-time
+          description: Instant of the snapshot. The slots were free then; they are not held.
+        suggestions:
+          type: array
+          maxItems: 20
+          items: { $ref: '#/components/schemas/LessonSlotSuggestion' }
     ArtistInvitationLinkIssued:
       type: object
       additionalProperties: false
