@@ -11894,6 +11894,12 @@ export interface components {
             /** Format: int64 */
             platformFeeMinor: number;
             termsVersion: string;
+            /** @description Tier recorded on the purchased checkout line. */
+            tierName?: string | null;
+            /** @description Terms of the policy accepted for this order. */
+            termsSummary?: string;
+            /** @description Refund policy accepted for this order. */
+            refundPolicy?: string;
         };
         PublicEventTicket: {
             /** Format: int64 */

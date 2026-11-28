@@ -84,8 +84,7 @@ tasa de aceptación, RAS) en PostHog antes de la campaña.
 
 ## Fase 2, parte B2b-1: Botón de PayPhone con split (ADR 0136)
 
-Nada de esto se probó contra PayPhone. Antes de registrar evidencia hay que verificar en el modo de
-pruebas de PayPhone, con dos cuentas y un receptor real:
+El 17 de noviembre de 2026 se probó el Botón en el comercio Tdf Records en modo Prueba. Prepare devolvió la página alojada, la consulta previa al pago devolvió 404, la consulta por referencia devolvió una lista, Confirm fue idempotente y Reverse respondió correctamente. El retorno incluyó ambos identificadores. La confirmación automática dentro de cinco minutos y el abono al receptor del split siguen pendientes de prueba con comprador y receptor controlados. [Registro del ensayo](https://github.com/diegueins680/tdf-app/pull/783).
 
 | Supuesto del código | Cómo verificarlo |
 | --- | --- |
@@ -99,9 +98,7 @@ pruebas de PayPhone, con dos cuentas y un receptor real:
 | PayPhone no permite pagar un formulario del Botón cargado más de diez minutos después de prepararlo | TDF solo entrega la página durante diez minutos desde la preparación (`loadOperation`); el formulario vive diez minutos desde que se carga, así que el pago ocurre a más tardar a los veinte minutos y el worker lo confirma dentro de sus 24 minutos. Abrir un enlace guardado de `payWithCard` pasada esa ventana debería fallar en PayPhone |
 | El Botón solo se ofrece con el worker de consultas activo | `PaymentAvailability` exige `COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED=true`, las tablas de recuperación y `checkout.provider_query_recovery` con la cuenta lista. Un intento del Botón que nadie paga termina en revisión al agotar los 24 intentos; mientras tanto el depósito no vence |
 
-Configuración: `PAYPHONE_CODING_PASSWORD` (exactamente 32 caracteres, de PayPhone Developer) además de
-`PAYPHONE_TOKEN`, `PAYPHONE_STORE_ID` y `PAYPHONE_RESPONSE_URL`. Sin la contraseña el método `card`
-de PayPhone no se ofrece.
+El Botón requiere `PAYPHONE_TOKEN`, `PAYPHONE_STORE_ID`, `PAYPHONE_RESPONSE_URL` y el worker de consultas. Para un cobro con split se requiere además `PAYPHONE_CODING_PASSWORD` (32 caracteres de PayPhone Developer).
 
 Evidencia de capacidades, solo después de la verificación y de la autorización de split de PayPhone
 (una fila por capacidad; `sandbox_verified` en staging, `production_verified` en producción):
