@@ -3980,7 +3980,7 @@ protectedServer user =
   :<|> socialServer user
   :<|> chatServer user
   :<|> notificationDeliveryServer user
-  :<|> chatkitSessionServer user
+  :<|> (assistantChatServer user :<|> chatkitSessionServer user)
   :<|> tidalAgentServer user
   :<|> socialSyncServer user
   :<|> socialDiscoveryServer user
@@ -14372,7 +14372,7 @@ resolveAdsAssistFinalReply cfg (Left err)
 
 shouldUseAdsAssistNoAiFallback :: Text -> Bool
 shouldUseAdsAssistNoAiFallback rawError =
-  errorMessage == "openai_api_key no configurada"
+  errorMessage == "venice_api_key no configurada"
     || errorMessage == "no pude generar una respuesta automática en este momento."
     || shouldRetryWithFallbackModel 404 rawError
   where
@@ -14769,7 +14769,7 @@ tidalAgentServer user TidalAgentRequest{..} = do
   when (T.any isUnsupportedTidalAgentPromptChar prompt) $
     throwBadRequest "Prompt contiene caracteres de control o formato no soportados"
   apiKey <- case openAiApiKey envConfig of
-    Nothing -> throwError err503 { errBody = "OPENAI_API_KEY no configurada" }
+    Nothing -> throwError err503 { errBody = "VENICE_API_KEY no configurada" }
     Just key -> pure key
   let model = fromMaybe (openAiModel envConfig) (taModel >>= nonEmptyText)
       apiBase = normalizeLlmApiBase (chatKitApiBase envConfig)
@@ -14785,7 +14785,8 @@ tidalAgentServer user TidalAgentRequest{..} = do
         ]
       req =
         reqBase
-          { method = "POST"
+          { redirectCount = 0
+          , method = "POST"
           , requestHeaders =
               [ ("Content-Type", "application/json")
               , ("Authorization", "Bearer " <> TE.encodeUtf8 apiKey)
@@ -14813,53 +14814,21 @@ tidalAgentServer user TidalAgentRequest{..} = do
             Left _ -> baseMsg
       throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
-chatkitSessionServer :: AuthedUser -> ChatKitSessionRequest -> AppM ChatKitSessionResponse
-chatkitSessionServer user ChatKitSessionRequest{..} = do
-  unless (hasAiToolingAccess user) $
-    throwError err403 { errBody = "Missing required module access" }
+assistantChatServer :: AuthedUser -> [Text] -> AppM Text
+assistantChatServer user turns = do
+  unless (hasAiToolingAccess user) $ throwError err403
+  when (null turns || even (length turns) || length turns > 21
+        || any (T.null . T.strip) turns || sum (map T.length turns) > 32000) $
+    throwBadRequest "Conversación inválida o demasiado larga"
   Env{..} <- ask
-  let cfg = envConfig
-  workflowId <- either throwError pure (resolveWorkflowId cksWorkflowId (chatKitWorkflowId cfg))
-  apiKey <- case openAiApiKey cfg of
-    Nothing -> throwError err503 { errBody = "OPENAI_API_KEY no configurada" }
-    Just key -> pure key
-  let userId = T.pack (show (fromSqlKey (auPartyId user)))
-      apiBase = normalizeLlmApiBase (chatKitApiBase cfg)
-  manager <- pure sharedTlsManager
-  reqBase <- liftIO $ parseRequest (T.unpack (apiBase <> "/v1/chatkit/sessions"))
-  let body = encode $ object
-        [ "workflow" .= object ["id" .= workflowId]
-        , "user" .= userId
-        ]
-      req =
-        reqBase
-          { method = "POST"
-          , requestHeaders =
-              [ ("Content-Type", "application/json")
-              , ("Authorization", "Bearer " <> TE.encodeUtf8 apiKey)
-              , ("OpenAI-Beta", "chatkit_beta=v1")
-              ]
-          , requestBody = RequestBodyLBS body
-          }
-  resp <- liftIO $ httpLbs req manager
-  let status = statusCode (responseStatus resp)
-      raw = responseBody resp
-  if status >= 200 && status < 300
-    then case (eitherDecode raw :: Either String Value) of
-      Left err ->
-        throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack err)) }
-      Right payload ->
-        case validateChatKitSessionPayload payload of
-          Right (secret, expiresAfter) ->
-            pure ChatKitSessionResponse
-              { ckrClientSecret = secret
-              , ckrExpiresAfter = expiresAfter
-              }
-          Left msg ->
-            throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
-    else do
-      let msg = chatKitSessionErrorMessage status raw
-      throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+  let messages = zipWith OpenAIChatMessage (cycle ["user", "assistant"]) turns
+  reply <- liftIO $ callOpenAIChat envConfig messages
+  either (const $ throwError err502 { errBody = "Venice no pudo responder" }) pure reply
+
+chatkitSessionServer :: AuthedUser -> ChatKitSessionRequest -> AppM ChatKitSessionResponse
+chatkitSessionServer user _ = do
+  unless (hasAiToolingAccess user) $ throwError err403
+  throwError err410 { errBody = "Usa /assistant/chat" }
 
 chatKitSessionErrorMessage :: Int -> BL.ByteString -> Text
 chatKitSessionErrorMessage status raw =

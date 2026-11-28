@@ -130,7 +130,7 @@ buildRagMessages kb examples userMsg mChannel =
 callOpenAIChat :: AppConfig -> [OpenAIChatMessage] -> IO (Either Text Text)
 callOpenAIChat cfg messages =
   case openAiApiKey cfg of
-    Nothing -> pure (Left "OPENAI_API_KEY no configurada")
+    Nothing -> pure (Left "VENICE_API_KEY no configurada")
     Just key -> do
       manager <- pure sharedTlsManager
       let apiBase = normalizeLlmApiBase (chatKitApiBase cfg)
@@ -168,7 +168,8 @@ requestOpenAIChat manager reqBase key modelName messages = do
         }
       req =
         reqBase
-          { method = "POST"
+          { redirectCount = 0
+          , method = "POST"
           , requestHeaders =
               [ ("Content-Type", "application/json")
               , ("Authorization", "Bearer " <> TE.encodeUtf8 key)

@@ -164,7 +164,7 @@ the guarded write makes the second a replacement by the same vector.
 | Constant | Value |
 |---|---|
 | flag | `DIRECTORY_SEMANTIC_SEARCH_ENABLED`, default `false` |
-| provider, model | OpenAI, `OPENAI_EMBED_MODEL` (the RAG setting); 1536 dimensions |
+| provider, model | Venice, `VENICE_EMBED_MODEL` (the RAG setting); 1536 dimensions |
 | semantic weight | `.15` (unchanged) |
 | minimum query length | 3 characters |
 | request wait for a query embedding | 400 ms |

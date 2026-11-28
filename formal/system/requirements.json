@@ -24263,13 +24263,13 @@
     },
     {
       "id": "SOCIAL-STAFF-TOOLS-001",
-      "title": "Social discovery review, ChatKit sessions, social sync ingest and Meta backfill",
-      "statement": "Strict administrators review discovered posts, ingest social posts and backfill Meta inboxes; operations staff mint ChatKit sessions. Routes: PUT /social-discovery/posts/{postId}/review; POST /chatkit/sessions; POST /social-sync/social-sync/ingest; POST /meta/backfill.",
+      "title": "Social discovery review, Venice assistant, social sync ingest and Meta backfill",
+      "statement": "Strict administrators review discovered posts, ingest social posts and backfill Meta inboxes; operations staff use the Venice assistant. Routes: PUT /social-discovery/posts/{postId}/review; POST /assistant/chat; POST /chatkit/sessions; POST /social-sync/social-sync/ingest; POST /meta/backfill.",
       "domain": "SOCIAL",
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
       "source": "formal/system/social-messaging-routes.md",
       "contract": "formal/system/social-messaging-routes.md",
-      "property": "Discovery review needs hasSocialSyncAccess (strict admin, 403), a positive id (400), a status of pending, approved or dismissed with notes up to 2000 (400), an Instagram post (404) with event terms (409), and inserts or updates the review. ChatKit needs ops or admin access (403), a workflow id (400), an OpenAI key (503) and calls the ChatKit API (502 on failure) without database writes. Ingest needs strict admin, 1..max unique posts with bounded fields and resolvable artists (400/404) and updates or inserts each social_sync_post plus a run row. Backfill needs the Admin role (403), a platform and limits (400) and reads designated connected accounts plus the environment token through the Graph API, storing inbound rows once (MSG-META-REDELIVERY-001).",
+      "property": "Discovery review needs hasSocialSyncAccess (strict admin, 403), a positive id (400), a status of pending, approved or dismissed with notes up to 2000 (400), an Instagram post (404) with event terms (409), and inserts or updates the review. Assistant chat requires AI tooling access (403) and a bounded conversation (400). It calls Venice server-side (502 on failure). The former ChatKit session route returns 410 after authorization. Ingest needs strict admin, 1..max unique posts with bounded fields and resolvable artists (400/404) and updates or inserts each social_sync_post plus a run row. Backfill needs the Admin role (403), a platform and limits (400) and reads designated connected accounts plus the environment token through the Graph API, storing inbound rows once (MSG-META-REDELIVERY-001).",
       "actors": [
         "Strict administrator",
         "Operations staff"
@@ -24279,6 +24279,7 @@
       ],
       "inputs": [
         "PUT /social-discovery/posts/{postId}/review",
+        "POST /assistant/chat",
         "POST /chatkit/sessions",
         "POST /social-sync/social-sync/ingest",
         "POST /meta/backfill"
@@ -24303,9 +24304,9 @@
         "social_sync_run",
         "instagram_message",
         "facebook_message",
-        "ChatKit and Graph API calls"
+        "Venice and Graph API calls"
       ],
-      "authorization": "Strict admin for review and ingest; ops or admin for ChatKit; Admin role for backfill.",
+      "authorization": "Strict admin for review and ingest; AI tooling access for assistant chat; Admin role for backfill.",
       "privacy": "Unchanged; see the route table.",
       "concurrency": "Review and ingest read then insert in separate transactions without a lock; backfill is store-once.",
       "idempotency": "Review is last-writer-wins; ingest re-runs update; backfill is naturally idempotent.",
@@ -24317,13 +24318,13 @@
         "tdf-hq/src/TDF/Server/SocialSync.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
-        "tdf-hq-ui/src/hooks/useChatKitScript.ts",
+        "tdf-hq-ui/src/components/VeniceAssistant.tsx",
         "tdf-hq-ui/src/pages/ChatKitPage.tsx",
-        "tdf-hq-ui/src/services/chatkit.ts"
+        "tdf-hq/src/TDF/Services/LlmChat.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq-ui/src/services/chatkit.test.ts"
+        "tdf-hq-ui/src/pages/ChatKitPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
@@ -25272,7 +25273,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
       "source": "formal/system/commerce-integration-routes.md",
       "contract": "formal/system/commerce-integration-routes.md",
-      "property": "Tidal needs ops or admin access (403), a prompt of 1..2000 safe characters (400) and an OpenAI key (503), and calls chat completions (502 on failure) without database writes. Ads assist needs hasSocialInboxAccess (403), a message of 1..2000 safe characters, positive ids, a channel and no partyId (400); it reads the ad and its examples, retrieves public course context (PRIV-RAG-001) and calls the model (502, or a canned Spanish fallback without a key).",
+      "property": "Tidal needs ops or admin access (403), a prompt of 1..2000 safe characters (400) and a Venice inference key (503), and calls chat completions (502 on failure) without database writes. Ads assist needs hasSocialInboxAccess (403), a message of 1..2000 safe characters, positive ids, a channel and no partyId (400); it reads the ad and its examples, retrieves public course context (PRIV-RAG-001) and calls the model (502, or a canned Spanish fallback without a key).",
       "actors": [
         "Operations staff",
         "Social inbox staff"
@@ -25312,7 +25313,9 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq-ui/src/services/tidalAgent.ts",
         "tdf-hq-ui/src/pages/TidalAgentPage.tsx",
-        "tdf-hq-ui/src/pages/MusicMakerPage.tsx"
+        "tdf-hq-ui/src/pages/MusicMakerPage.tsx",
+        "tidal-agent/index.js",
+        "tdf-hq-ui/public/privacy.html"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",

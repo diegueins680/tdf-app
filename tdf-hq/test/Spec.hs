@@ -5542,7 +5542,7 @@ main = hspec $ do
             let providerApiBaseText = llmProviderApiBase llmProvider
                 providerApiBase = Data.Text.unpack providerApiBaseText
             withEnvOverrides
-                [ ("CHATKIT_API_BASE", Just (" " <> providerApiBase <> "/ "))
+                [ ("VENICE_API_BASE", Just (" " <> providerApiBase <> "/ "))
                 , ("FACEBOOK_GRAPH_BASE", Just " https://graph.facebook.com/v21.0/ ")
                 , ( "FACEBOOK_MESSAGING_API_BASE"
                   , Just " https://graph.facebook.com/v22.0/ "
@@ -5565,7 +5565,7 @@ main = hspec $ do
         it "rejects malformed outbound API base URLs before token-bearing requests are built" $ do
             let providerApiBase = Data.Text.unpack (llmProviderApiBase llmProvider)
             let apiBaseKeys =
-                    [ "CHATKIT_API_BASE"
+                    [ "VENICE_API_BASE"
                     , "FACEBOOK_GRAPH_BASE"
                     , "FACEBOOK_MESSAGING_API_BASE"
                     , "INSTAGRAM_GRAPH_BASE"
@@ -5592,13 +5592,13 @@ main = hspec $ do
                 "https://192.0.2.10/v20.0"
                 "FACEBOOK_GRAPH_BASE must be an absolute https URL"
             assertInvalid
-                "CHATKIT_API_BASE"
+                "VENICE_API_BASE"
                 "   "
-                "CHATKIT_API_BASE is configured but blank; unset it to use the default"
+                "VENICE_API_BASE is configured but blank; unset it to use the default"
             assertInvalid
-                "CHATKIT_API_BASE"
+                "VENICE_API_BASE"
                 (providerApiBase <> "?proxy=1")
-                "CHATKIT_API_BASE must be an absolute https URL without query or fragment"
+                "VENICE_API_BASE must be an absolute https URL without query or fragment"
             assertInvalid
                 "FACEBOOK_MESSAGING_API_BASE"
                 "https://graph.facebook.com//v20.0"
@@ -5612,13 +5612,18 @@ main = hspec $ do
                 "https://graph.facebook.com/v20.0/../debug"
                 "FACEBOOK_GRAPH_BASE path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
             assertInvalid
-                "CHATKIT_API_BASE"
+                "VENICE_API_BASE"
                 (providerApiBase <> "/v1//chat")
-                "CHATKIT_API_BASE path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
+                "VENICE_API_BASE path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
             assertInvalid
-                "CHATKIT_API_BASE"
-                (providerApiBase <> ":0443")
-                "CHATKIT_API_BASE must be an absolute https URL"
+                "VENICE_API_BASE"
+                "https://api.venice.ai:0443/api"
+                "VENICE_API_BASE must be an absolute https URL"
+
+            assertInvalid
+                "VENICE_API_BASE"
+                (providerApiBase <> "/unexpected")
+                "VENICE_API_BASE must be https://api.venice.ai/api"
 
         it "normalizes configured Graph messaging node ids before building send URLs" $
             withEnvOverrides
@@ -5830,39 +5835,39 @@ main = hspec $ do
 
         it "normalizes configured OpenAI embedding models before sizing RAG storage" $
             withEnvOverrides
-                [ ("OPENAI_EMBED_MODEL", Just " TEXT-EMBEDDING-3-LARGE ") ]
+                [ ("VENICE_EMBED_MODEL", Just " TEXT-EMBEDDING-3-LARGE ") ]
                 $ do
                     cfg <- loadConfig
                     openAiEmbedModel cfg `shouldBe` "text-embedding-3-large"
 
         it "rejects unknown OpenAI embedding models instead of defaulting RAG dimensions" $
             withEnvOverrides
-                [ ("OPENAI_EMBED_MODEL", Just "text-embedding-unknown") ]
+                [ ("VENICE_EMBED_MODEL", Just "text-embedding-unknown") ]
                 $ loadConfig `shouldThrow` \err ->
-                    "OPENAI_EMBED_MODEL must be one of"
+                    "VENICE_EMBED_MODEL must be one of"
                         `isInfixOf` show (err :: IOException)
 
         it "rejects malformed OpenAI embedding model ids before sizing RAG storage" $ do
             let assertInvalid rawModel expectedMessage =
                     withEnvOverrides
-                        [ ("OPENAI_EMBED_MODEL", Just rawModel) ]
+                        [ ("VENICE_EMBED_MODEL", Just rawModel) ]
                         $ loadConfig `shouldThrow` \err ->
                             expectedMessage `isInfixOf` show (err :: IOException)
             assertInvalid
                 "text-embedding-3-small debug"
-                "OPENAI_EMBED_MODEL must not contain whitespace"
+                "VENICE_EMBED_MODEL must not contain whitespace"
             assertInvalid
                 "text-embedding-3-small/path"
-                "OPENAI_EMBED_MODEL must use only ASCII letters"
+                "VENICE_EMBED_MODEL must use only ASCII letters"
             assertInvalid
                 ("text-embedding-3-small" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
-                "OPENAI_EMBED_MODEL must use only ASCII letters"
+                "VENICE_EMBED_MODEL must use only ASCII letters"
 
         it "normalizes configured OpenAI chat models before fallback requests are built" $ do
             let providerChatModelText = llmProviderDefaultChatModel llmProvider
                 providerChatModel = Data.Text.unpack providerChatModelText
             withEnvOverrides
-                [ ("OPENAI_MODEL", Just (" " <> providerChatModel <> " ")) ]
+                [ ("VENICE_MODEL", Just (" " <> providerChatModel <> " ")) ]
                 $ do
                     cfg <- loadConfig
                     openAiModel cfg `shouldBe` providerChatModelText
@@ -5871,49 +5876,49 @@ main = hspec $ do
             let providerChatModel = Data.Text.unpack (llmProviderDefaultChatModel llmProvider)
             let assertInvalid rawModel expectedMessage =
                     withEnvOverrides
-                        [ ("OPENAI_MODEL", Just rawModel) ]
+                        [ ("VENICE_MODEL", Just rawModel) ]
                         $ loadConfig `shouldThrow` \err ->
                             expectedMessage `isInfixOf` show (err :: IOException)
             assertInvalid
                 "gpt 4.1"
-                "OPENAI_MODEL must not contain whitespace"
+                "VENICE_MODEL must not contain whitespace"
             assertInvalid
                 (providerChatModel <> "\nsource")
-                "OPENAI_MODEL must not contain whitespace"
+                "VENICE_MODEL must not contain whitespace"
             assertInvalid
                 "gpt/4?debug=1"
-                "OPENAI_MODEL must use only ASCII letters"
+                "VENICE_MODEL must use only ASCII letters"
             assertInvalid
                 (Data.Text.unpack (Data.Text.replicate 257 "a"))
-                "OPENAI_MODEL must be 256 characters or fewer"
+                "VENICE_MODEL must be 256 characters or fewer"
 
         it "rejects malformed OpenAI API keys before bearer requests are built" $ do
             withEnvOverrides
-                [ ("OPENAI_API_KEY", Just " sk-test_123 ") ]
+                [ ("VENICE_API_KEY", Just " sk-test_123 ") ]
                 $ do
                     cfg <- loadConfig
                     openAiApiKey cfg `shouldBe` Just "sk-test_123"
 
             let assertInvalid rawKey expectedMessage =
                     withEnvOverrides
-                        [ ("OPENAI_API_KEY", Just rawKey) ]
+                        [ ("VENICE_API_KEY", Just rawKey) ]
                         $ loadConfig `shouldThrow` \err ->
                             expectedMessage `isInfixOf` show (err :: IOException)
             assertInvalid
                 "sk test"
-                "OPENAI_API_KEY must not contain whitespace or control characters"
+                "VENICE_API_KEY must not contain whitespace or control characters"
             assertInvalid
                 "sk-test\nInjected: value"
-                "OPENAI_API_KEY must not contain whitespace or control characters"
+                "VENICE_API_KEY must not contain whitespace or control characters"
             assertInvalid
                 ("sk-test" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
-                "OPENAI_API_KEY must not contain hidden formatting characters"
+                "VENICE_API_KEY must not contain hidden formatting characters"
             assertInvalid
                 "sk-tést"
-                "OPENAI_API_KEY must contain visible ASCII characters only"
+                "VENICE_API_KEY must contain visible ASCII characters only"
             assertInvalid
                 (Data.Text.unpack (Data.Text.replicate 4097 "a"))
-                "OPENAI_API_KEY must be 4096 characters or fewer"
+                "VENICE_API_KEY must be 4096 characters or fewer"
 
         it "does not hide OpenAI billing failures behind model fallback retries" $ do
             shouldRetryWithFallbackModel
@@ -16338,8 +16343,8 @@ main = hspec $ do
         it "returns sanitized request exceptions as errors so embedding fallback can handle them" $
             withEnvOverrides
                 ( clearRagEnv
-                    ++ [ ("OPENAI_API_KEY", Just "sk-test")
-                       , ("OPENAI_EMBED_MODEL", Just "text-embedding-3-small")
+                    ++ [ ("VENICE_API_KEY", Just "sk-test")
+                       , ("VENICE_EMBED_MODEL", Just "text-embedding-3-small")
                        ]
                 )
                 $ do
@@ -16372,8 +16377,8 @@ main = hspec $ do
         it "redacts upstream embedding secrets before fallback error handling exposes them" $
             withEnvOverrides
                 ( clearRagEnv
-                    ++ [ ("OPENAI_API_KEY", Just "sk-test")
-                       , ("OPENAI_EMBED_MODEL", Just "text-embedding-3-small")
+                    ++ [ ("VENICE_API_KEY", Just "sk-test")
+                       , ("VENICE_EMBED_MODEL", Just "text-embedding-3-small")
                        ]
                 )
                 $ do
