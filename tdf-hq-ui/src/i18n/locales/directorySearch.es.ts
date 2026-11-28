@@ -20,7 +20,6 @@ const directorySearch = {
   "welcomeImageAlt": "Una persona junto a la consola, instrumentos y equipos de sonido",
   "welcomeSearch": "Buscar artistas y profesionales",
   "welcomeWork": "Mira sesiones y lanzamientos",
-  "psiqueTickets": "Entradas para Psique",
   "tryAndroid": "Probar la app en Android",
   "welcomeStudio": "Conoce TDF y sus servicios",
   "welcomePrivacy": "Explora a tu ritmo, sin registro.",

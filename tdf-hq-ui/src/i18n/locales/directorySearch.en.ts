@@ -20,7 +20,6 @@ const directorySearch = {
   "welcomeImageAlt": "A person beside a mixing console, instruments and audio equipment",
   "welcomeSearch": "Search artists and professionals",
   "welcomeWork": "Watch sessions and discover releases",
-  "psiqueTickets": "Tickets for Psique",
   "tryAndroid": "Try the Android app",
   "welcomeStudio": "Explore TDF and its services",
   "welcomePrivacy": "Explore at your own pace, without signing up.",

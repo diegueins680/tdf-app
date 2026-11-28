@@ -9970,7 +9970,7 @@
     {
       "id": "SURFACE-100603869e0d8848",
       "path": "tdf-hq-ui/src/components/PublicWelcome.tsx",
-      "sha256": "a0771e4ece7b0ddccffced8b3f221ac68f341bde25dbfd93c1f0e5a1361358e3",
+      "sha256": "2e0fd9187ec07890cdf7ca83b6605ec474b014364bed94519c07c48575a3a435",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11548,13 +11548,13 @@
     {
       "id": "SURFACE-7e096967d3a00d3b",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-      "sha256": "b77a13c826aa3f8ec196cbfa679a4a47864b8e2428c309e84c729575238ed6b0",
+      "sha256": "0b6e276c28371336fab3484e0ba0bedf5caa492f763b0c4dae2e04a884763a44",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-31dfb712c6445325",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
-      "sha256": "f892f7387ab9452fd93e69be4a95714a6273b405ff49bcf50353482a47cb3c8d",
+      "sha256": "968c6a931d82acbc33a405de2bd5db86f64c205d0a05af4691dbf9f2ce7e05c6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12058,7 +12058,7 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "633d006552fe93ea71bdc369b6e0f83866d1001e702e0eb155dc6c355c581ff0",
+      "sha256": "9190b9f254b4ed469b3085f5285f7a8d4de5ec91ba6f24330a011da5790d2bd0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
