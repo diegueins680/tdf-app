@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "reviewedSources": {
-    "tdf-hq/src/TDF/ServerAuth.hs": "48972a479cae7bb55ef55842ea33683cd5c49ebaacd54dead9ff6896dcdc2121",
+    "tdf-hq/src/TDF/ServerAuth.hs": "09d82dfe517305d232220ddb69c0de90ddd8507369a7eabd6ae5b522411bf868",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
@@ -1159,6 +1159,15 @@
       "change": "Accept the TDF mobile audience alongside the configured TDF web audience.",
       "semanticReview": "Compared with protected main, ServerAuth changes only validateGoogleIdTokenInfo and its local audience allowlist. Password reset issuance, confirmation and expiry code is identical to main.",
       "qualification": "Source-bound solver and mutation checks cover this composition."
+    },
+    {
+      "source": "tdf-hq/src/TDF/ServerAuth.hs",
+      "reviewedAgainst": "016020362987588979726dc99378314584eb8af1",
+      "previousSha256": "48972a479cae7bb55ef55842ea33683cd5c49ebaacd54dead9ff6896dcdc2121",
+      "currentSha256": "09d82dfe517305d232220ddb69c0de90ddd8507369a7eabd6ae5b522411bf868",
+      "change": "Refuse provider account creation when the provider email already belongs to an account with a login.",
+      "semanticReview": "Compared with protected main, ServerAuth adds providerAccountEmailInUseError and one signupEmailExists check in completeProviderLogin before the consent check. Password reset issuance, confirmation and expiry code is identical to main.",
+      "qualification": "Author comparison only; no independent review. The source-bound solver checks were re-run against this composition."
     }
   ]
 }

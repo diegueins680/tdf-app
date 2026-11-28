@@ -56,6 +56,7 @@ module TDF.ServerAuth
   , validateGoogleAccountCreationTerms
   , validateAppleAccountCreationTerms
   , validateProviderAccountCreationTerms
+  , providerAccountEmailInUseError
   , validateAppleIdentityTokenInput
   , validateAppleNonceInput
   , validateAppleFullName
@@ -511,6 +512,14 @@ validateProviderAccountCreationTerms _ (Just True) (Just version)
   | version == supportedAccountTermsVersion = Right ()
 validateProviderAccountCreationTerms providerLabel _ _ =
   Left ("Accept the terms and privacy policy through the signup flow before creating a " <> providerLabel <> " account")
+
+-- | Refusal shown when an unbound provider identity carries the email of an
+-- existing TDF account. Clients match this exact text to offer password
+-- linking instead of account creation.
+providerAccountEmailInUseError :: Text -> Text
+providerAccountEmailInUseError providerLabel =
+  "Ya existe una cuenta TDF con este correo. Inicia sesión con tu contraseña para conectar "
+    <> providerLabel <> "."
 
 normalizeAuthPhoneNumber :: Text -> Maybe Text
 normalizeAuthPhoneNumber raw =
@@ -2437,10 +2446,15 @@ completeProviderLogin ttl ProviderLoginSpec{..} creationIntent acceptedTermsVers
               case mUser of
                 Nothing -> transactionUndo >> pure (Left "No pudimos cargar tu perfil.")
                 Just user -> pure (Right ((toLoginResponse sessionToken user) { accountCreated = Just False }))
-        Nothing ->
-          case validateProviderAccountCreationTerms plsProviderLabel creationIntent acceptedTermsVersion of
-            Left consentError -> pure (Left consentError)
-            Right () ->
+        Nothing -> do
+          -- An unbound subject never becomes a second account for an email that
+          -- already signs in to TDF. The email grants no access to that account:
+          -- the caller is sent to the password-proof linking path instead.
+          emailInUse <- maybe (pure False) signupEmailExists ppEmail
+          case (emailInUse, validateProviderAccountCreationTerms plsProviderLabel creationIntent acceptedTermsVersion) of
+            (True, _) -> pure (Left (providerAccountEmailInUseError plsProviderLabel))
+            (False, Left consentError) -> pure (Left consentError)
+            (False, Right ()) ->
               case ppEmail of
                 Nothing -> pure (Left plsMissingEmailError)
                 Just primaryEmail -> do

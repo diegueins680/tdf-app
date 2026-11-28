@@ -167,6 +167,7 @@ export default {
   "passwordInvalid": "Use 8 or more characters, without hidden or control characters.",
   "googleNewAccountTitle": "Create your account with Google",
   "googleNewAccountBody": "There is no TDF account connected to this Google account yet. You can create it now with one tap.",
+  "googleExistingAccountBody": "A TDF account already uses this email. Enter its password to connect it to Google and always sign in to the same account.",
   "googleCreateWithGoogle": "Create my account with Google",
   "googleLinkInstead": "Already have a TDF account with a password? Connect it to Google:",
   "googleCreating": "Creating your account…",
