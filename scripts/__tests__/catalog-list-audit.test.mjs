@@ -7038,7 +7038,7 @@ test('friend suggestions append one original migration and preserve the protecte
   const published = await integrationParent(base, DECISIONS_FILE);
   const readObject = objectPath => execFileSync('git', ['show', base + ':' + objectPath], { cwd: integrationRoot, encoding: 'utf8' });
   const manifestDecision = document => document.decisions.find(row => row.evidence?.file === file);
-  const coordinates = manifestDecision(readExpandedDecisions(integrationRoot)).previousDecision;
+  const coordinates = decisionBeforeOccupancy(readExpandedDecisions(integrationRoot).decisions).previousDecision;
   const tip = coordinates.previousDecision;
   assert.equal(tip.evidence.valueCount, current.migrations.length);
   assert.deepEqual(tip.previousDecision, manifestDecision(expandAtRevision(published, readObject)));
@@ -7046,7 +7046,7 @@ test('friend suggestions append one original migration and preserve the protecte
 
 test('the combined manifest retains both complete migration reviews', async () => {
   const manifestDecision = document => document.decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json');
-  const merged = manifestDecision(readExpandedDecisions(integrationRoot)).previousDecision;
+  const merged = decisionBeforeOccupancy(readExpandedDecisions(integrationRoot).decisions).previousDecision;
   assert.equal(merged.evidence.valueCount, 273);
   const parentReview = async ref => {
     const document = await integrationParent(ref, DECISIONS_FILE);
