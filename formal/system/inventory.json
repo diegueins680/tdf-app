@@ -18185,13 +18185,13 @@
     {
       "id": "SURFACE-f53dee8d468f33b8",
       "path": "tdf-hq/src/TDF/Services/EventDiscovery.hs",
-      "sha256": "5e20776b2f857475d8c7b0fe4e4566fabe78b82bf1ac128e66f78dd00220bd47",
+      "sha256": "ba2931ad9a0545fd5d6dee21f924bfabb5c56aa5b92e93e8044ab71274e27fa3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-dfd6616359647c1a",
       "path": "tdf-hq/src/TDF/Services/EventDiscoveryLinkedData.hs",
-      "sha256": "8920fffd28e64ae62190cada54a8ffa5cc9dbe8b1171c825d63e1fd3a58234de",
+      "sha256": "e4c926693310bae4fa4ef92ad5e120c25b072afcbc840f35ea06dc1616e4c25f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18983,7 +18983,7 @@
     {
       "id": "SURFACE-916f8955abd0c6a2",
       "path": "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs",
-      "sha256": "923b4128c425fc73bdad450972aa6451b34a7f9f0923eade287f4d396f1914e3",
+      "sha256": "51cb50e9ed41239dfdc45b79cd2ec297aa331c59fe2fc999a962c5eee800b3bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
