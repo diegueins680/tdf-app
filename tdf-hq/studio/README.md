@@ -10,6 +10,8 @@ The intake limit is 30 positions per batch and 25 MiB per file. The shared limit
 
 For local API development, run from `tdf-hq` with Python 3, Pillow and `heif-thumbnailer` on the path. Both backend runtime images include these dependencies. Run `python3 studio/test_submissions.py` for storage and review checks.
 
+Photos are decoded inside the API container, which has 512 MiB. A file may be up to 25 MiB. JPEG is decoded at reduced scale, so camera photos up to 50 megapixels are accepted. HEIC is converted by `heif-thumbnailer` at the largest stored size. PNG is refused above 13 megapixels and WebP above 8, because neither can be decoded at reduced scale. The test suite checks that a 50-megapixel JPEG is processed in under 256 MiB.
+
 ## Release order
 
 Release the reviewed backend and gallery migration first. Before promoting the web build, verify that the production API returns a published Spanish gallery with the expected existing photos from `GET /cms/content?slug=studio-gallery&locale=es`. A missing or empty record on first rollout leaves the current web deployment in service. Verify that signed-out queue access returns 401, then promote the web build. Staff can now create the unlisted invitation. Confirm a pending submission stays private and review a real photo before publishing it through the normal CMS approval flow.

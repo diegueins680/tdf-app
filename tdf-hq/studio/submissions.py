@@ -28,6 +28,13 @@ MAX_FILE = 25 * 1024**2
 MAX_STORAGE = 5 * 1024**3
 DAY = 86400
 Image.MAX_IMAGE_PIXELS = 50_000_000
+# Pixels decoded into memory at once. Pillow keeps four bytes per pixel and
+# WebP decoding needs about fifteen, so the API container's 512 MiB allows far
+# fewer decoded pixels than the file limit suggests. JPEG is decoded at reduced
+# scale, so a 50-megapixel camera JPEG still fits; PNG and WebP must already
+# be this small.
+DECODED_PIXELS = {"JPEG": 13_000_000, "PNG": 13_000_000, "WEBP": 8_000_000}
+LARGEST = 1600
 
 
 class Problem(Exception):
@@ -58,7 +65,7 @@ def derivatives(path):
         ):
             source = str(Path(directory) / "primary.png")
             subprocess.run(
-                ["heif-thumbnailer", "-p", "-s", "1600", path, source],
+                ["heif-thumbnailer", "-p", "-s", str(LARGEST), path, source],
                 timeout=30,
                 check=True,
                 stdout=subprocess.DEVNULL,
@@ -73,11 +80,24 @@ def derivatives(path):
                 422,
                 "La imagen es demasiado grande.",
             )
+            if image.format == "JPEG":
+                image.draft("RGB", (LARGEST, LARGEST))
+            require(
+                image.width * image.height <= DECODED_PIXELS[image.format],
+                422,
+                "La imagen es demasiado grande.",
+            )
+            # Shrink in place before any copy is made, so the decoded source is
+            # the only full-size buffer this process ever holds.
+            if image.mode not in ("RGB", "RGBA", "L", "LA"):
+                alpha = "A" in image.getbands() or "transparency" in image.info
+                image = image.convert("RGBA" if alpha else "RGB")
+            image.thumbnail((LARGEST, LARGEST), Image.Resampling.LANCZOS)
             image = ImageOps.exif_transpose(image).convert("RGBA")
             flattened = Image.new("RGB", image.size, "white")
             flattened.paste(image, mask=image.getchannel("A"))
             result = []
-            for width in (1600, 640):
+            for width in (LARGEST, 640):
                 flattened.thumbnail((width, width), Image.Resampling.LANCZOS)
                 output = io.BytesIO()
                 flattened.save(output, "JPEG", quality=84, optimize=True)

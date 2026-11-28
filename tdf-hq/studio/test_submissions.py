@@ -3,6 +3,8 @@ import io
 import os
 from pathlib import Path
 import sqlite3
+import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -93,6 +95,43 @@ class StudioIntakeTest(unittest.TestCase):
             Image.new("RGB", (96, 64), "plum").save(self.path, format=image_format)
             self.assertFalse(self.upload(position)["duplicate"])
         self.assertEqual(len(self.call("queue")), 2)
+
+    def test_large_photos_stay_within_the_container_memory(self):
+        # A 50-megapixel camera JPEG is decoded at reduced scale and accepted.
+        exif = Image.Exif()
+        exif[274] = 6
+        Image.new("RGB", (8660, 5773), "teal").save(self.path, exif=exif)
+        script = (
+            "import resource, sys; sys.path.insert(0, sys.argv[1]); import submissions; "
+            "large, small = submissions.derivatives(sys.argv[2]); "
+            "peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss; "
+            "print(peak // (1024 if sys.platform == 'darwin' else 1))"
+        )
+        peak_kib = int(
+            subprocess.run(
+                [sys.executable, "-c", script, os.path.dirname(os.path.abspath(__file__)), self.path],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout
+        )
+        self.assertLess(peak_kib, 256 * 1024)
+        self.assertFalse(self.upload()["duplicate"])
+        (row,) = self.call("queue")
+        self.call("review", ids=[row["id"]], state="accepted")
+        image = Image.open(
+            io.BytesIO(base64.b64decode(self.call("image", id=row["id"], size="large")["jpeg"]))
+        )
+        self.assertEqual(image.size, (1067, 1600))
+        # Formats that cannot be decoded at reduced scale are refused above the budget.
+        for position, (image_format, size) in enumerate(
+            (("PNG", (4001, 3250)), ("WEBP", (4000, 2001))), start=1
+        ):
+            Image.new("RGB", size, "plum").save(self.path, format=image_format)
+            with self.assertRaises(Problem) as problem:
+                self.upload(position)
+            self.assertEqual(problem.exception.status, 422)
+        self.assertEqual(len(self.call("queue")), 1)
 
     def test_rate_and_file_size_limits(self):
         with open(self.path, "wb") as stream:
