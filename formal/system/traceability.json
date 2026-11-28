@@ -9277,13 +9277,15 @@
       "allowedTransitions": [
         "signup(email,password) -> authenticated -> Comunidad or safe return path",
         "Google unknown identity -> explicit create choice -> authenticated",
-        "returning session at / -> Comunidad"
+        "returning session at / -> Comunidad",
+        "Google unknown identity with an email that already signs in to TDF -> password proof -> linked -> authenticated"
       ],
       "forbiddenTransitions": [
         "required name/phone/profile at signup",
         "external, protocol-relative or backslash redirect target",
         "account linking by email alone",
-        "private email or its local part -> automatic public account name before explicit profile editing"
+        "private email or its local part -> automatic public account name before explicit profile editing",
+        "Google identity whose email already signs in to TDF -> second account"
       ],
       "effects": [
         "Server records the accepted terms version. Email signup and Google signup without a supplied profile name start with a neutral account label, independent of the private email, and people can choose their public name later."
@@ -27918,7 +27920,8 @@
         "token with bad signature, issuer, audience, lifetime, nonce or algorithm yielding a session",
         "account creation without explicit createNewAccount and current terms",
         "account linking by email alone",
-        "account creation when the token carries no email"
+        "account creation when the token carries no email",
+        "account creation for an unbound Google or Apple subject whose token email already belongs to an account with a login"
       ],
       "effects": [
         "Binds issuer https://appleid.apple.com and token sub to one credential under an advisory lock; records login_apple activity and account consent."
@@ -27927,7 +27930,7 @@
       "privacy": "Apple verified relay/contact email is stored as the private primary email; both Google and Apple use canonical initialAccountName when a provider name is absent, never an email as the public display-name fallback. Tokens and raw nonces are never logged.",
       "concurrency": "Per issuer:subject advisory lock shared with Google; JWKS misses and stale known keys single-flight through a cancellation-safe lock. A usable successful key set is cached for strictly less than 900 seconds; a matching kid does not extend that lifetime. Each attempted fetch reserves a 60 second cooldown before I/O, including failed, empty, or canceled attempts. Mobile rollout availability is a public build-time switch; only literal true admits native loading, cached binding reuse, button display and provider entry.",
       "idempotency": "Repeated login for a bound subject reuses the credential.",
-      "failure": "Invalid or expired token yields 401 with a generic message; unconfigured audiences yield 500; key fetch failure fails closed. The optional native Apple flow defaults unavailable until EXPO_PUBLIC_APPLE_SIGN_IN_ENABLED is exactly true; Google/password flows retain their existing behavior.",
+      "failure": "Invalid or expired token yields 401 with a generic message; unconfigured audiences yield 500; key fetch failure fails closed. The optional native Apple flow defaults unavailable until EXPO_PUBLIC_APPLE_SIGN_IN_ENABLED is exactly true; Google/password flows retain their existing behavior. An unbound subject whose email already signs in to TDF is refused with the existing-account message before the consent check and before any write; the web entry then offers only password linking.",
       "recovery": "After key retrieval failure, unusable responses or cancellation, stale known keys fail closed during the attempt cooldown; retry retrieval after the cooldown. Failed attempts never renew successful-cache lifetime. Fresh known keys remain usable while every token signature and claim is rechecked. A backward clock cannot make a future cache timestamp fresh. Users can use email and password or link an existing account. Once the issuer migration is recorded, production schema verification requires the live NOT NULL issuer column and exact validated Google/Apple constraint; an intentional legacy prefix without that migration makes no Apple-support claim.",
       "observability": "login_apple auth activity and rejected-token warnings without token content.",
       "source": "App Store Connect rejection notice relayed by the product owner",
@@ -30868,7 +30871,7 @@
     "formal/system/public-routes.json": "c2c6ccb156e5aec42bfecf84f6a248ccd5cae1a6c49790b5db11098e6c6274ee",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "364e0351dba750aeeab6cb08358e383a1601218768963fd8d8776c919e7b8082",
+    "formal/system/recovery-expiry-arithmetic.json": "e48840f2aedb72e8b342f25219c964e606beedb1083907f4f87f0c64ea6df536",
     "formal/system/route-requirements.json": "fae2eeeb651f354a6535deed3d643e05a564a0cd2a5f2e1803f39ebeb7ca01a0",
     "formal/system/state-machine-bindings.json": "6af96259b546588349a4cbc421d22a749ec4bb5faa5997f2ca7926d4fadc602c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -31749,8 +31752,8 @@
     "tdf-hq-ui/src/i18n/index.ts": "53c26394ae54a6dd8fbfd91429e0300bf5b2d324d7e66f48179e283f7fc832e5",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
-    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "a8f13c131444f076000448b9f6773ebb623a60ed0a39e9b50d7fc28e75e8ba3e",
-    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "6f64ffa44c78e3f66719ed5e6462ad187dd6b29abb29c198a435c938afb10343",
+    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "d0637de864bde975f24357b7ecc83c65cfe2bebe6d5e4a65e12c6eb194ff46ae",
+    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "9442a329a3e6bdacab998ffb0f1edc552182884d17eed0ba1b379c3bc054ed12",
     "tdf-hq-ui/src/i18n/locales/de.ts": "cd27dfb75f876cc6d08a391d5252253ef7fb4ba75206a73e50bf38a510c017ba",
     "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "90952865128bbe26d21ff8ef4e5c161c87a2e12ba7b7ade6e236f8c2fe8f7cf1",
     "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "a2875fcbee6e0ea19032cee12a187aeff41a3d1597069fa2354755a215591842",
@@ -31850,8 +31853,8 @@
     "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx": "5189701c17624ff9ee775f7817b32e1a04ececd9627b4e67b1ac693be137bccb",
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx": "a9e3c68b966d0449aa88bf45ddf8699f5fb439a4f75cf057bbf1ea17bbb54e74",
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": "92a29403cea86f9248089d86285156bf517edb0acbab7d478bc751ce7940ae64",
-    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "6ed621b8f1e8c7c9b8f6807390f7c275e3666eac178d7ec144c39019a8441d28",
-    "tdf-hq-ui/src/pages/LoginPage.tsx": "ef4bd0e8bd17b65bc17210104dd10a8a631bb3a7a1c6485137983efc5d0cd27f",
+    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "bb6078e97918f5169b7d0764d449cff7e3f5042e95309beb4d504409412830a7",
+    "tdf-hq-ui/src/pages/LoginPage.tsx": "907e370ca6cf8ee903b188ab8806d8b7043d6666fc60c99fd793eb4bdcdcc253",
     "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx": "6059f4004bfc7f095c5ae497377f07817bc39e9db08d6d98c1feeda7fac7ffe1",
     "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx": "fb162fbafb8695f9954c90c50cd03f72177278679e29dfd912713fb4d0423284",
     "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx": "e07cd7bcbb66d6c13cc79d9b2e15440d955cf8ec65b6a9c583475147113a034d",
@@ -32514,7 +32517,7 @@
     "tdf-hq/src/TDF/Server/TicketSalesWindow.hs": "fd215386f1396fb5dc12414bae565889b31f196de8efcc431037df4f9517fa9a",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "275d926b7861b10ac4022f8d6f3ddf7d1348fcce214ec9416938cf6e2c43f645",
-    "tdf-hq/src/TDF/ServerAuth.hs": "48972a479cae7bb55ef55842ea33683cd5c49ebaacd54dead9ff6896dcdc2121",
+    "tdf-hq/src/TDF/ServerAuth.hs": "09d82dfe517305d232220ddb69c0de90ddd8507369a7eabd6ae5b522411bf868",
     "tdf-hq/src/TDF/ServerExtra.hs": "8d687b85c57102a16614ec245ba96c2d1d53f8a9ac2e63ac61d3a5ad1d5cd892",
     "tdf-hq/src/TDF/ServerFanClub.hs": "33f33ace3dea49738921abd7dc4b09b84bca0d1b0d7556300d8050f5eb3a4300",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
@@ -32596,7 +32599,7 @@
     "tdf-hq/test/TDF/CorsSpec.hs": "8663de653f6eb0ba12b8889b2645a537fc6ec0f6dad951cb340f674aa3838357",
     "tdf-hq/test/TDF/CourseIdentitySpec.hs": "b2a85128b237876bf57fcf54a8e1d0047032bf68f3591ed6bb5203df28f10203",
     "tdf-hq/test/TDF/CoursePublicMetadataSpec.hs": "320d459c822262d4241f2cba3f7557de8717617d57dab9200b0182d5bb217dd6",
-    "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "04d0fee36364ca33b7e56a6540fd19a9015efe0da1492618c5e928762e8a656a",
+    "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "d034554193df979a6bca21cbc04fe81989ca41e06e8933fbeead3a1ac0afa6bb",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
     "tdf-hq/test/TDF/Directory/PolicySpec.hs": "dbdf1ba83c196b2fa26cdbe9af0348da88a562e4cc454cca7198daa590033884",
@@ -32643,7 +32646,7 @@
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/Server/PublicBookingNotificationsSpec.hs": "020dd1d269b9c5841f390dd1e60767a824af1846a18e130a99394d39cf3d70ef",
     "tdf-hq/test/TDF/ServerAdminSpec.hs": "e7a0734ee48ad1e74fd70aae7b82928001c36512bc1de5f6aebaa2c80bc283b8",
-    "tdf-hq/test/TDF/ServerAuthSpec.hs": "5a46228f35aa4916b548b27cee6bfb3830cdef1329b95972979cae7924bbb58f",
+    "tdf-hq/test/TDF/ServerAuthSpec.hs": "c8521e0423cde9fe12f564c9282f5a4540518be6b4271a0995452c0b0794b53d",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "4746db879d19f0d2387b5198f6d402b7262b7ed2f50b4ec7772b6585172ae474",
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "0cff8f4196afbd1c7247802a051a70a720eb53ef135d2bc5f5f789efd37f1162",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
@@ -71701,7 +71704,7 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "a8f13c131444f076000448b9f6773ebb623a60ed0a39e9b50d7fc28e75e8ba3e",
+      "sha256": "d0637de864bde975f24357b7ecc83c65cfe2bebe6d5e4a65e12c6eb194ff46ae",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71741,7 +71744,7 @@
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "6f64ffa44c78e3f66719ed5e6462ad187dd6b29abb29c198a435c938afb10343",
+      "sha256": "9442a329a3e6bdacab998ffb0f1edc552182884d17eed0ba1b379c3bc054ed12",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -73950,7 +73953,7 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "6ed621b8f1e8c7c9b8f6807390f7c275e3666eac178d7ec144c39019a8441d28",
+      "sha256": "bb6078e97918f5169b7d0764d449cff7e3f5042e95309beb4d504409412830a7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -73986,7 +73989,7 @@
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "ef4bd0e8bd17b65bc17210104dd10a8a631bb3a7a1c6485137983efc5d0cd27f",
+      "sha256": "907e370ca6cf8ee903b188ab8806d8b7043d6666fc60c99fd793eb4bdcdcc253",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -88364,7 +88367,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "48972a479cae7bb55ef55842ea33683cd5c49ebaacd54dead9ff6896dcdc2121",
+      "sha256": "09d82dfe517305d232220ddb69c0de90ddd8507369a7eabd6ae5b522411bf868",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -90160,7 +90163,7 @@
     {
       "id": "SURFACE-f0dabee697205b0c",
       "path": "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
-      "sha256": "04d0fee36364ca33b7e56a6540fd19a9015efe0da1492618c5e928762e8a656a",
+      "sha256": "d034554193df979a6bca21cbc04fe81989ca41e06e8933fbeead3a1ac0afa6bb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -90998,7 +91001,7 @@
     {
       "id": "SURFACE-7c37a9a53d010234",
       "path": "tdf-hq/test/TDF/ServerAuthSpec.hs",
-      "sha256": "5a46228f35aa4916b548b27cee6bfb3830cdef1329b95972979cae7924bbb58f",
+      "sha256": "c8521e0423cde9fe12f564c9282f5a4540518be6b4271a0995452c0b0794b53d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -98870,7 +98873,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b3552bda8abdaa4971d25e75da3b2989c32eae853188006c4897f2c0a0df0936",
+      "sourceSha256": "6ab5e6025840bbd9225a92b44b68ec8c773eff8857f82da20253d89c8c507c91",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -98898,7 +98901,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b3552bda8abdaa4971d25e75da3b2989c32eae853188006c4897f2c0a0df0936",
+      "sourceSha256": "6ab5e6025840bbd9225a92b44b68ec8c773eff8857f82da20253d89c8c507c91",
       "definition": {
         "states": [
           "absent",
@@ -98928,7 +98931,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b3552bda8abdaa4971d25e75da3b2989c32eae853188006c4897f2c0a0df0936",
+      "sourceSha256": "6ab5e6025840bbd9225a92b44b68ec8c773eff8857f82da20253d89c8c507c91",
       "definition": {
         "export": [
           "queued",
@@ -98985,7 +98988,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b3552bda8abdaa4971d25e75da3b2989c32eae853188006c4897f2c0a0df0936",
+      "sourceSha256": "6ab5e6025840bbd9225a92b44b68ec8c773eff8857f82da20253d89c8c507c91",
       "definition": {
         "states": [
           "pending",
