@@ -1,0 +1,127 @@
+{
+  "checkedAt": "2026-11-27T22:55:00Z",
+  "source": "Play Console (Dashboard, Closed testing and the track's Testers tab) in the operator's signed-in Chrome, read-only; App Store Connect (TestFlight builds, the Todos external group and App Review) in the operator's signed-in Safari, read-only; public TestFlight invite page fetched anonymously; no store API, no tester identities or credentials retained",
+  "decision": "Seven-day renewal of both channels after the manifest lapsed on 2026-11-22. The product owner asked for this renewal on 2026-11-27 as the first step of the store launch plan and approves or rejects it when reviewing the pull request that carries this file.",
+  "previousEvidence": "distribution-2026-11-15.json",
+  "ios": {
+    "checkedAt": "2026-11-27T22:55:00Z",
+    "method": "Anonymous HTTPS request for the invite page; App Store Connect read in the operator's signed-in Safari, nothing changed",
+    "testFlightUrl": "https://testflight.apple.com/join/7k3VE2JJ",
+    "httpStatus": 200,
+    "pageTitle": "Join the TDF Records Mobile beta - TestFlight - Apple",
+    "joinActionPresent": true,
+    "fullOrClosedNoticePresent": false,
+    "appStoreConnectChecked": true,
+    "publicLinkGroup": {
+      "name": "Todos",
+      "type": "external",
+      "testers": 3,
+      "builds": 2,
+      "publicLinkInstalls": [
+        {
+          "build": "34",
+          "installed": "2026-11-26"
+        },
+        {
+          "build": "34",
+          "installed": "2026-11-26"
+        },
+        {
+          "build": "31",
+          "installed": "2026-10-15"
+        }
+      ]
+    },
+    "builds": [
+      {
+        "build": "34",
+        "status": "Testing",
+        "expiresInDays": 89,
+        "invites": 4,
+        "installs": 3,
+        "sessions": 7
+      },
+      {
+        "build": "33",
+        "status": "Testing",
+        "expiresInDays": 87,
+        "invites": 4,
+        "installs": 2,
+        "sessions": 7
+      },
+      {
+        "build": "32",
+        "status": "Ready to Submit",
+        "expiresInDays": 37
+      },
+      {
+        "build": "31",
+        "status": "Testing",
+        "expiresInDays": 37,
+        "invites": 4,
+        "installs": 3,
+        "sessions": 26
+      }
+    ],
+    "appReview": {
+      "version": "1.0.1",
+      "versionState": "Prepare for Submission",
+      "attachedBuild": "34",
+      "lastSubmission": "2026-09-18",
+      "submissionState": "Unresolved Issues",
+      "rejection": [
+        "2.1.0 Performance: App Completeness",
+        "4.8.0 Design: Login Services"
+      ],
+      "appleMessageDate": "2026-09-28",
+      "resubmitted": false
+    },
+    "notVerified": [
+      "public App Store listing (not re-requested; no release has been made)",
+      "the Sign in with Apple journey on a physical iPhone"
+    ],
+    "version": "1.0.1",
+    "build": "34"
+  },
+  "android": {
+    "checkedAt": "2026-11-27T22:40:00Z",
+    "method": "Authenticated Google Play Console, read-only; nothing changed",
+    "packageName": "com.tdf.records",
+    "accountType": "Personal account",
+    "productionTrack": "Inactive",
+    "activeTrack": "Closed testing - Alpha",
+    "trackState": "Active",
+    "release": "1.0.1 (24) - TDF tester analytics",
+    "releaseLastUpdated": "2026-10-05",
+    "countries": 178,
+    "testerSelection": {
+      "mode": "Email lists",
+      "lists": 3,
+      "listSizes": [
+        69,
+        1,
+        11
+      ],
+      "googleGroups": false
+    },
+    "productionAccessChecklist": {
+      "closedTestingReleasePublished": true,
+      "testersOptedIn": 4,
+      "testersRequired": 12,
+      "continuousDaysRequired": 14
+    },
+    "last28Days": {
+      "deviceAcquisitions": 1,
+      "monthlyActiveDevices": 2
+    },
+    "accountNotice": "Console shows 'Declare your trader status by February, 2027' as action required; not acted on",
+    "admission": "approval_required",
+    "notVerified": [
+      "opt-in page as an eligible tester",
+      "public Play listing (not re-requested; production is inactive)",
+      "whether internal-track build 25 will be promoted to closed testing"
+    ],
+    "version": "1.0.1",
+    "build": "24"
+  }
+}
