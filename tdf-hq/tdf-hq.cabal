@@ -454,6 +454,7 @@ test-suite tdf-hq-test
     TDF.Commerce.CheckoutMoneySpec
     TDF.Commerce.PaymentArithmeticSpec
     TDF.Commerce.DatafastConfigSpec
+    TDF.Commerce.BuyerNetworkAddressSpec
     TDF.Commerce.DatafastClientIPSpec
     TDF.EmailHeadersSpec
     TDF.CorsSpec

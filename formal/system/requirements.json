@@ -24759,7 +24759,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
       "source": "formal/system/commerce-integration-routes.md",
       "contract": "formal/system/commerce-integration-routes.md",
-      "property": "The checkout id must be a UUID (400); X-Checkout-Lookup-Token (16..512) is hashed and matched to the checkout, which must be awaiting payment, processing or failed and unexpired (404); Idempotency-Key (16..128) and User-Agent are required (400); provider and method are validated (400); ticket checkouts need open sales (409, re-checked under the event lock); provider readiness and merchant configuration answer 503. The handler begins a guarded payment attempt and intent, prepares and claims a provider operation, calls the provider once, records the binding and result, and marks ambiguous outcomes (503) instead of retrying.",
+      "property": "The checkout id must be a UUID (400); X-Checkout-Lookup-Token (16..512) is hashed and matched to the checkout, which must be awaiting payment, processing or failed and unexpired (404); Idempotency-Key (16..128) and User-Agent are required (400); provider and method are validated (400); ticket checkouts need open sales (409, re-checked under the event lock); provider readiness and merchant configuration answer 503. The handler begins a guarded payment attempt and intent, prepares and claims a provider operation, calls the provider once, records the binding and result, and marks ambiguous outcomes (503) instead of retrying. The buyer network address sent to PlaceToPay is the transport-verified customer address of PAY-DATAFAST-001 (the dedicated X-TDF-Client-IP header, only from a proxy listed in DATAFAST_TRUSTED_PROXY_IPS, or a public peer itself) when it can be established; otherwise the socket peer is sent, never a client-written value.",
       "actors": [
         "Anonymous buyer"
       ],
@@ -24797,19 +24797,23 @@
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
-        "tdf-hq/src/TDF/Server/ProviderExecution.hs"
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+        "tdf-hq/src/TDF/API/ProviderExecution.hs",
+        "tdf-hq/src/TDF/Commerce/DatafastClientIP.hs"
       ],
       "tests": [
-        "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs"
+        "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
+        "tdf-hq/test/TDF/Commerce/BuyerNetworkAddressSpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-28: tdf-hq/test/TDF/Commerce/BuyerNetworkAddressSpec.hs drives the real route combinator and checks verifiedBuyerAddress (listed proxy header, public peer, unlisted proxy, missing/duplicate/chained/reserved header, invalid setting).",
       "evidence": "formal/system/commerce-integration-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "The lookup token is verified by SQL equality on its SHA-256 hash rather than a constant-time compare in the handler."
+        "The lookup token is verified by SQL equality on its SHA-256 hash rather than a constant-time compare in the handler.",
+        "Until DATAFAST_TRUSTED_PROXY_IPS lists the production reverse proxy, PlaceToPay still receives the proxy address instead of the buyer address (the payment is not refused, unlike Datafast)."
       ],
       "conformance": {
         "classification": "IMPLEMENTED BUT UNSPECIFIED",

@@ -19,6 +19,7 @@ import           Servant
 
 import           TDF.API.Types (prefixedStrictObjectOptions)
 import           TDF.API.Types (RawJSON)
+import           TDF.Commerce.DatafastClientIP (DatafastClientRequest)
 
 data PaymentSessionCreateDTO = PaymentSessionCreateDTO
   { pscProvider         :: Text
@@ -67,6 +68,7 @@ type ProviderExecutionAPI =
          :> Header "X-Checkout-Lookup-Token" Text
          :> Header "Idempotency-Key" Text
          :> Header "User-Agent" Text
+         :> DatafastClientRequest
          :> RemoteHost
          :> ReqBody '[JSON] PaymentSessionCreateDTO
          :> PostAccepted '[JSON] PaymentSessionDTO

@@ -4,6 +4,8 @@
 
 module TDF.Server.ProviderExecution
   ( providerExecutionServer
+  , createPaymentSession
+  , verifiedBuyerAddress
   , providerReference
   , providerReferenceFor
   , providerReturnUrl
@@ -30,6 +32,8 @@ import           Servant
 import           System.Entropy (getEntropy)
 
 import           TDF.API.ProviderExecution
+import           System.Environment (lookupEnv)
+import qualified TDF.Commerce.DatafastClientIP as ClientIP
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.Commerce.ProviderAdapter
 import           TDF.Commerce.ProviderAdapter.Http
@@ -50,22 +54,33 @@ type AppM = ReaderT Env Handler
 
 providerExecutionServer :: ServerT ProviderExecutionAPI AppM
 providerExecutionServer =
-       createPaymentSession
+       createPaymentSessionRoute
   :<|> getPaymentSession
   :<|> placeToPayNotification
   :<|> payPhoneNotification
   :<|> payPhoneNotification
+
+createPaymentSessionRoute
+  :: Text -> Maybe Text -> Maybe Text -> Maybe Text
+  -> ClientIP.DatafastClientRequest -> SockAddr -> PaymentSessionCreateDTO
+  -> AppM PaymentSessionDTO
+createPaymentSessionRoute checkoutId lookupToken idempotencyKey userAgent clientRequest peer request = do
+  configured <- liftIO (lookupEnv "DATAFAST_TRUSTED_PROXY_IPS")
+  createPaymentSession checkoutId lookupToken idempotencyKey userAgent
+    (verifiedBuyerAddress configured clientRequest) peer request
 
 createPaymentSession
   :: Text
   -> Maybe Text
   -> Maybe Text
   -> Maybe Text
+  -> Maybe Text
+  -- ^ transport-verified buyer address, when it could be established
   -> SockAddr
   -> PaymentSessionCreateDTO
   -> AppM PaymentSessionDTO
 createPaymentSession rawCheckoutId rawLookupToken rawIdempotencyKey rawUserAgent
-    remoteAddress request = do
+    verifiedAddress remoteAddress request = do
   Env{envPool} <- ask
   checkoutId <- either (throwError . badRequest) pure (validatedUuid "checkoutId" rawCheckoutId)
   lookupToken <- requireLookupToken rawLookupToken
@@ -86,13 +101,14 @@ createPaymentSession rawCheckoutId rawLookupToken rawIdempotencyKey rawUserAgent
     -- A prepared operation has not been contacted. Starting it still needs all
     -- current checkout, account, capability and secret gates below.
     _ -> startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider
-      paymentMethod remoteAddress request encryptionKey
+      paymentMethod verifiedAddress remoteAddress request encryptionKey
 
 startPaymentSession
   :: Text -> Text -> Text -> Text -> Checkout.PaymentProvider -> PaymentMethod
-  -> SockAddr -> PaymentSessionCreateDTO -> Text -> AppM PaymentSessionDTO
+  -> Maybe Text -> SockAddr -> PaymentSessionCreateDTO -> Text
+  -> AppM PaymentSessionDTO
 startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paymentMethod
-    remoteAddress request encryptionKey = do
+    verifiedAddress remoteAddress request encryptionKey = do
   Env{envPool} <- ask
   now <- liftIO getCurrentTime
   checkout <- liftIO (runSqlPool
@@ -140,8 +156,12 @@ startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paym
   unless (paymentMethod `elem` rpaConfiguredMethods runtime) $
     throwError unavailable
       { errBody = "Requested provider and payment method are not operationally available" }
-  clientIp <- liftIO (numericHost remoteAddress)
-    >>= either (throwError . unavailableText) pure
+  -- Without a verified address the socket peer is sent, as before: behind an
+  -- unlisted proxy that is the proxy's own address, never a client-written one.
+  clientIp <- case verifiedAddress of
+    Just address -> pure address
+    Nothing -> liftIO (numericHost remoteAddress)
+      >>= either (throwError . unavailableText) pure
   nonce <- liftIO (getEntropy 32)
   let correlationId = "provider-create:" <> checkoutId <> ":" <> idempotencyKey
       preflightPayment = CreatePayment
@@ -502,6 +522,16 @@ requireUserAgent rawUserAgent = case T.strip <$> rawUserAgent of
     , T.length userAgent <= 512
     , T.all (\character -> character >= ' ' && character < '\DEL') userAgent -> pure userAgent
   _ -> throwError (badRequest "A valid User-Agent header is required")
+
+-- | The transport-verified buyer address under the Datafast rule
+-- (PAY-DATAFAST-001): the dedicated header, only from a proxy listed in
+-- @DATAFAST_TRUSTED_PROXY_IPS@, or a public peer itself. 'Nothing' when it
+-- cannot be established (unlisted proxy, invalid setting, reserved address).
+verifiedBuyerAddress :: Maybe String -> ClientIP.DatafastClientRequest -> Maybe Text
+verifiedBuyerAddress configured clientRequest =
+  either (const Nothing) (Just . ClientIP.datafastClientIPText) $
+    ClientIP.parseTrustedDatafastProxies configured
+      >>= \policy -> ClientIP.resolveDatafastClientIP policy clientRequest
 
 numericHost :: SockAddr -> IO (Either Text Text)
 numericHost address = do

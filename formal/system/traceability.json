@@ -24760,7 +24760,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
       "source": "formal/system/commerce-integration-routes.md",
       "contract": "formal/system/commerce-integration-routes.md",
-      "property": "The checkout id must be a UUID (400); X-Checkout-Lookup-Token (16..512) is hashed and matched to the checkout, which must be awaiting payment, processing or failed and unexpired (404); Idempotency-Key (16..128) and User-Agent are required (400); provider and method are validated (400); ticket checkouts need open sales (409, re-checked under the event lock); provider readiness and merchant configuration answer 503. The handler begins a guarded payment attempt and intent, prepares and claims a provider operation, calls the provider once, records the binding and result, and marks ambiguous outcomes (503) instead of retrying.",
+      "property": "The checkout id must be a UUID (400); X-Checkout-Lookup-Token (16..512) is hashed and matched to the checkout, which must be awaiting payment, processing or failed and unexpired (404); Idempotency-Key (16..128) and User-Agent are required (400); provider and method are validated (400); ticket checkouts need open sales (409, re-checked under the event lock); provider readiness and merchant configuration answer 503. The handler begins a guarded payment attempt and intent, prepares and claims a provider operation, calls the provider once, records the binding and result, and marks ambiguous outcomes (503) instead of retrying. The buyer network address sent to PlaceToPay is the transport-verified customer address of PAY-DATAFAST-001 (the dedicated X-TDF-Client-IP header, only from a proxy listed in DATAFAST_TRUSTED_PROXY_IPS, or a public peer itself) when it can be established; otherwise the socket peer is sent, never a client-written value.",
       "actors": [
         "Anonymous buyer"
       ],
@@ -24798,19 +24798,23 @@
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
-        "tdf-hq/src/TDF/Server/ProviderExecution.hs"
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+        "tdf-hq/src/TDF/API/ProviderExecution.hs",
+        "tdf-hq/src/TDF/Commerce/DatafastClientIP.hs"
       ],
       "tests": [
-        "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs"
+        "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
+        "tdf-hq/test/TDF/Commerce/BuyerNetworkAddressSpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-28: tdf-hq/test/TDF/Commerce/BuyerNetworkAddressSpec.hs drives the real route combinator and checks verifiedBuyerAddress (listed proxy header, public peer, unlisted proxy, missing/duplicate/chained/reserved header, invalid setting).",
       "evidence": "formal/system/commerce-integration-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "The lookup token is verified by SQL equality on its SHA-256 hash rather than a constant-time compare in the handler."
+        "The lookup token is verified by SQL equality on its SHA-256 hash rather than a constant-time compare in the handler.",
+        "Until DATAFAST_TRUSTED_PROXY_IPS lists the production reverse proxy, PlaceToPay still receives the proxy address instead of the buyer address (the payment is not refused, unlike Datafast)."
       ],
       "conformance": {
         "classification": "IMPLEMENTED BUT UNSPECIFIED",
@@ -30865,13 +30869,13 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
-    "formal/system/compiled-api-surface.json": "c1adcb16d675ed3ec6dc314fa9026c763e0461af7f1192d89cc0782fc7851cad",
+    "formal/system/compiled-api-surface.json": "a82505f0851547ba0182adf6105ebc2f27fedbce75259e234c159e26045ce938",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
     "formal/system/public-routes.json": "c2c6ccb156e5aec42bfecf84f6a248ccd5cae1a6c49790b5db11098e6c6274ee",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "364e0351dba750aeeab6cb08358e383a1601218768963fd8d8776c919e7b8082",
+    "formal/system/recovery-expiry-arithmetic.json": "684513364dd7db113205d37c506c366595e265d5c6177aff5d51bc5ae13b1b32",
     "formal/system/route-requirements.json": "12c62b58f05d244738fe6a498664b7dcc230c7dfc57b9fe83f92c3b74ec5904c",
     "formal/system/state-machine-bindings.json": "6af96259b546588349a4cbc421d22a749ec4bb5faa5997f2ca7926d4fadc602c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -30930,7 +30934,7 @@
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
     "scripts/__tests__/ci-job-admission.test.mjs": "21f9fcbd2e4137eec6442862ce49639423eba49712e28987bf99b562de85df6f",
     "scripts/__tests__/ci-pipeline.test.mjs": "91f2cab7cea81f7d4119f6c7e859c21ef71edba0e86dd725a0da549934903953",
-    "scripts/__tests__/compiled-api-surface.test.mjs": "d86d7c4db38bd1648dd981df2548e0b4eb02562c8b7ca0589259a6f79e4f48ec",
+    "scripts/__tests__/compiled-api-surface.test.mjs": "dcc8c9ca2af56f6787587377d09648da0780e3c4476e9d2f00e3c5d7ece325c4",
     "scripts/__tests__/content-storage-model.test.mjs": "ec3c939221c9a2470f0706c49ec6d2e52e91ebbc4b756419874beddbd8e501ea",
     "scripts/__tests__/content-storage-reconciliation.test.mjs": "e495bbdecb4c88ad8c178c8d06d17cfebafc71148e2fcebeca1423b4558c27da",
     "scripts/__tests__/continuous-improvement-loop.test.mjs": "5af9e5dc2fda29168ecdaf142b4032214b07cb0b204d6da6f1e85b7a5e8ab382",
@@ -32345,6 +32349,7 @@
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/MusicRelease.hs": "6d25546ffeeb29a6ef8501b8f45dcaa590710312fdbd2f51db6a34181e25bd07",
     "tdf-hq/src/TDF/API/NotificationDelivery.hs": "5e3ae4c9ab2f8fc188b138288c7bcfd7d9597230aa9643492c020496773fc2e3",
+    "tdf-hq/src/TDF/API/ProviderExecution.hs": "655e7833a31fe2e21866b0740101464c80db934406547980932e02a3c557a1ab",
     "tdf-hq/src/TDF/API/Radio.hs": "3b01c772d15c8798d929bb0cfab1619bee8d58a363b8399cac3e5cf58b1e4906",
     "tdf-hq/src/TDF/API/ServiceStorefront.hs": "9695a49d51f2b9c62f4c9703f09266daa50698dfab767dc473e6e2e7186d8d25",
     "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "518bbefbe360e85da7e0f0daf6f669d83e62a17a533193afec7d5177acbbb197",
@@ -32375,7 +32380,7 @@
     "tdf-hq/src/TDF/Commerce/ArtistTipStore.hs": "2963db1597da29ad46498dd329df42ed521f314ff091f03113d6cd6acb36e7af",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "4e1031e6416fa416dafdd8da29d80cb383c96966a4b7a9b4981d975feecdbaa9",
     "tdf-hq/src/TDF/Commerce/CourseCheckout.hs": "89f7c69cf5cf176c890e0cd09f1a0e561ab0fe3e45e9f14fc738b9479a5df917",
-    "tdf-hq/src/TDF/Commerce/DatafastClientIP.hs": "ada9342fd3d6cd991870e28b5f117a4efaf9645868f47c3daf7a2d0a0350c88f",
+    "tdf-hq/src/TDF/Commerce/DatafastClientIP.hs": "c950cb8fcb5fea564e000a2ff7bcd43b9526f6d311fc3b8f3f4411c9fe0d4e7b",
     "tdf-hq/src/TDF/Commerce/DatafastConfig.hs": "fd9b7ef3181f883abfe4a52a96c632f8d8890111f8b956544ba7f250754ea136",
     "tdf-hq/src/TDF/Commerce/DatafastRecovery.hs": "96ac6c6295c068e2c7d7354129ce86fbdff767de683fd697d1b714f160e79729",
     "tdf-hq/src/TDF/Commerce/DatafastStatus.hs": "352aeb9dbd4f154d3a1554df1a4509f11540ab62642fdc317460fbbab8137e12",
@@ -32497,7 +32502,7 @@
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
     "tdf-hq/src/TDF/Server/NotificationDelivery.hs": "d307fb3570a9cf510205f376f2ef96878b59bff9d9a2333ba69cd563ab308ea0",
     "tdf-hq/src/TDF/Server/PaymentAvailability.hs": "b5c07724c67c4f02591abd0bec054547c47f45795f269b804318b7e85f062fae",
-    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "e635917ea9b611e78acc7621d88a132ebd7bc3e5e7411e3170e925fa2272a58c",
+    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "28594765bf7638203529b19a55493d631ccaceaba7adcae75ea42b266d950e0e",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "e0a04ef1b4f99d5709d515f0be96d8071c510ebc5837d962e8ebe5f16d3f7ca6",
     "tdf-hq/src/TDF/Server/PublicBookingNotifications.hs": "2febaf5e9291240b45ed6c2a0d29ef6bcc2bd2276e6f280eb3acfab18c5c999d",
     "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs": "9ec708b9886bc37b131a48003a35a2ae4ca97f1b09a2b78bd9d52587f5b10a6f",
@@ -32561,7 +32566,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "353808e96b8b95472153fb591befb4e27804ff0dfeb06e5a6928a172d7e75ae8",
+    "tdf-hq/tdf-hq.cabal": "e9587211c3594265d855221ca59d7929306fb124c6f41e7963780915719dcbf4",
     "tdf-hq/test/ArtistSimilarityProbe.hs": "7cbbd2d3fadfb1890eee7ae27f838ce237dab93f317893926c9418248714a74a",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
@@ -32570,7 +32575,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "fca8a4905af7ffe1356185009935afbca887ee5d3f3f03423e7ff712446238d1",
+    "tdf-hq/test/Spec.hs": "bdd8734cdfede47bc6af8ba3c73477b5b489f1c63e9b58bff97d5bd69f829404",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -32581,6 +32586,7 @@
     "tdf-hq/test/TDF/ChatDeliverySpec.hs": "9bc4fc31b9423e694ec6b6ae746909523d0d6caee6ddcf12737f5072334a9554",
     "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs": "ad485e08cc1c0433c8cfeb343d07feff37287d4fc63143126e827580776728c6",
     "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs": "821455528e37e95f4baab3ec32621766ce289b8eefd5033186d03571c0cd875f",
+    "tdf-hq/test/TDF/Commerce/BuyerNetworkAddressSpec.hs": "d42ae80a38eac27a83b133d882df9a481ef245f5e183e0e8b87377f60c1f2826",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/DatafastClientIPSpec.hs": "5fde8c9e4727c48da2284064470a560a3b66e8573b3032178f766804105b4d7e",
     "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs": "666470ccb0cb34da5456b28da49a666ac67e87b922071acd5efe459c563604f6",
@@ -32590,7 +32596,7 @@
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "5b0a405f5a8e81e439655b8aac0384c828258113c625cfa1f1d4acb0376a3cde",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "4f75c2bdf9996722c152e74d80b6ed31e24382300fc6312856c072b0babf8187",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "7e68ff786c9b70a4c79516576a3e3d5596eec39290b6af2c8aded4e9cd2ad046",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "135de88596c0230d902d294fcb47728f872f5a668d4bd51659c8f7b1e27ec425",
@@ -32664,7 +32670,7 @@
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "d57960358b7aa404aff386e6b5fb319a61eef4162cffb5c2877f179360195845",
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "787b4aca5216a0e5ee10906523087f49791ef9b86a2a59eb9d487478e97440e2",
-    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "e39aced356e643801238fd0b935d1e3dd97f713c28fd1fa7722f639f516c8015",
+    "tdf-hq/test/TDF/TicketPaymentGateSpec.hs": "6b6118a5171b5da0b9678ff591b4c0473f3b46a3bedcdf3b46f651fa7cc1a8b1",
     "tdf-hq/test/TDF/TicketPaymentReceiptSpec.hs": "cec7960d91dcca1fdb69846eef1ed504824a0cda51c252aceb32e162ae5ef432",
     "tdf-hq/test/TDF/TrialIdentitySpec.hs": "b0aedc327dffadf0a90fa678a2a1baa4a5a619175585c0a8ad469c37fa4a2f63",
     "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": "eebde69c59c367555188cf00435c64dadb9b0c0c99fa724f58cade0c427b2242",
@@ -51286,6 +51292,28 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/API/ProviderExecution.hs": [
+      {
+        "requirement": "PAY-HOSTED-SESSION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/DatafastClientIP.hs": [
+      {
+        "requirement": "PAY-HOSTED-SESSION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-DATAFAST-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Commerce/BuyerNetworkAddressSpec.hs": [
+      {
+        "requirement": "PAY-HOSTED-SESSION-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/Server/PaymentAvailability.hs": [
       {
         "requirement": "PAY-PAYPHONE-CARD-001",
@@ -52237,12 +52265,6 @@
       }
     ],
     "tdf-hq/src/TDF/Commerce/TicketBuyerContact.hs": [
-      {
-        "requirement": "PAY-DATAFAST-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/src/TDF/Commerce/DatafastClientIP.hs": [
       {
         "requirement": "PAY-DATAFAST-001",
         "relationship": "implementation"
@@ -57292,7 +57314,7 @@
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "d86d7c4db38bd1648dd981df2548e0b4eb02562c8b7ca0589259a6f79e4f48ec",
+      "sha256": "dcc8c9ca2af56f6787587377d09648da0780e3c4476e9d2f00e3c5d7ece325c4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84345,9 +84367,14 @@
     {
       "id": "SURFACE-7372ceb0e4611b65",
       "path": "tdf-hq/src/TDF/API/ProviderExecution.hs",
-      "sha256": "e79761e4e026fee86108343d8e0ae9f263d188c537790cce6abad0518c75d004",
+      "sha256": "655e7833a31fe2e21866b0740101464c80db934406547980932e02a3c557a1ab",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-HOSTED-SESSION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9deb4ef00a69e5d0",
@@ -85014,9 +85041,13 @@
     {
       "id": "SURFACE-a8f3588b41804b8c",
       "path": "tdf-hq/src/TDF/Commerce/DatafastClientIP.hs",
-      "sha256": "ada9342fd3d6cd991870e28b5f117a4efaf9645868f47c3daf7a2d0a0350c88f",
+      "sha256": "c950cb8fcb5fea564e000a2ff7bcd43b9526f6d311fc3b8f3f4411c9fe0d4e7b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "PAY-HOSTED-SESSION-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "PAY-DATAFAST-001",
           "relationship": "implementation"
@@ -87823,7 +87854,7 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "e635917ea9b611e78acc7621d88a132ebd7bc3e5e7411e3170e925fa2272a58c",
+      "sha256": "28594765bf7638203529b19a55493d631ccaceaba7adcae75ea42b266d950e0e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -89274,7 +89305,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "353808e96b8b95472153fb591befb4e27804ff0dfeb06e5a6928a172d7e75ae8",
+      "sha256": "e9587211c3594265d855221ca59d7929306fb124c6f41e7963780915719dcbf4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -89489,7 +89520,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "fca8a4905af7ffe1356185009935afbca887ee5d3f3f03423e7ff712446238d1",
+      "sha256": "bdd8734cdfede47bc6af8ba3c73477b5b489f1c63e9b58bff97d5bd69f829404",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -89833,6 +89864,18 @@
       ]
     },
     {
+      "id": "SURFACE-3721a5732333f0e7",
+      "path": "tdf-hq/test/TDF/Commerce/BuyerNetworkAddressSpec.hs",
+      "sha256": "d42ae80a38eac27a83b133d882df9a481ef245f5e183e0e8b87377f60c1f2826",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-HOSTED-SESSION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-841860cc12b9ab42",
       "path": "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
       "sha256": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -89983,7 +90026,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "4f75c2bdf9996722c152e74d80b6ed31e24382300fc6312856c072b0babf8187",
+      "sha256": "7e68ff786c9b70a4c79516576a3e3d5596eec39290b6af2c8aded4e9cd2ad046",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -91594,7 +91637,7 @@
     {
       "id": "SURFACE-b88bd7d333ae2b44",
       "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
-      "sha256": "e39aced356e643801238fd0b935d1e3dd97f713c28fd1fa7722f639f516c8015",
+      "sha256": "6b6118a5171b5da0b9678ff591b4c0473f3b46a3bedcdf3b46f651fa7cc1a8b1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -97167,7 +97210,6 @@
     "SURFACE-e454210d86a70f09",
     "SURFACE-4ec58002d2eff1e2",
     "SURFACE-bab78e6c1c75dd3b",
-    "SURFACE-7372ceb0e4611b65",
     "SURFACE-f4f87f692fd74e88",
     "SURFACE-4669c83019e74b2e",
     "SURFACE-6a44888932d60538",
@@ -98884,7 +98926,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0592fcc138cab8d4d84c2ebf12d996a94159b227d5577155b2caeea88d67455b",
+      "sourceSha256": "e6888d9baaab79cb4a59149a9c548c59f4a0b99284f4db7f7fcef2b7da30d2ef",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -98912,7 +98954,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0592fcc138cab8d4d84c2ebf12d996a94159b227d5577155b2caeea88d67455b",
+      "sourceSha256": "e6888d9baaab79cb4a59149a9c548c59f4a0b99284f4db7f7fcef2b7da30d2ef",
       "definition": {
         "states": [
           "absent",
@@ -98942,7 +98984,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0592fcc138cab8d4d84c2ebf12d996a94159b227d5577155b2caeea88d67455b",
+      "sourceSha256": "e6888d9baaab79cb4a59149a9c548c59f4a0b99284f4db7f7fcef2b7da30d2ef",
       "definition": {
         "export": [
           "queued",
@@ -98999,7 +99041,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0592fcc138cab8d4d84c2ebf12d996a94159b227d5577155b2caeea88d67455b",
+      "sourceSha256": "e6888d9baaab79cb4a59149a9c548c59f4a0b99284f4db7f7fcef2b7da30d2ef",
       "definition": {
         "states": [
           "pending",

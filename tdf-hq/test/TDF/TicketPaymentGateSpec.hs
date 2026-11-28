@@ -48,7 +48,7 @@ import TDF.Server.EventTicketCheckout
   , ticketOrderSalesOpen, ticketSalesClosedRefusal, ticketUnverifiedCaptureRefusal )
 import qualified TDF.Server.TicketPaymentReceipt as Receipt
 import TDF.Server.SocialEventsHandlers (socialEventsServer)
-import TDF.Server.ProviderExecution (providerExecutionServer)
+import TDF.Server.ProviderExecution (createPaymentSession)
 
 -- | A held, unpaid ticket order must not be payable once its event stops selling
 -- tickets, through any endpoint that starts or takes a payment. Orders are
@@ -511,10 +511,9 @@ captureUnverified (Right _) = False
 
 hostedSession :: ConnectionPool -> Order -> IO (Either ServerError ())
 hostedSession pool order = do
-  let createSession :<|> _ = providerExecutionServer
-  fmap (const ()) <$> run pool (createSession (oCheckout order) (Just (oToken order))
+  fmap (const ()) <$> run pool (createPaymentSession (oCheckout order) (Just (oToken order))
     (Just ("synthetic-hosted-session-" <> T.pack (show (oOrder order)))) (Just "ticket-payment-gate-spec")
-    (SockAddrInet 0 (tupleToHostAddress (127, 0, 0, 1)))
+    Nothing (SockAddrInet 0 (tupleToHostAddress (127, 0, 0, 1)))
     (PaymentSessionCreateDTO "placetopay" "card" Nothing Nothing))
 
 ticketSalesOpenFor :: ConnectionPool -> Order -> IO Bool

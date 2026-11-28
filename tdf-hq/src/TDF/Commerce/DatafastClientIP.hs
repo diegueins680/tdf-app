@@ -17,6 +17,7 @@ module TDF.Commerce.DatafastClientIP
   , parseTrustedDatafastProxies
   , resolveDatafastClientIP
   , datafastClientIPParameters
+  , datafastClientIPText
   ) where
 
 import Control.Monad (unless)
@@ -85,6 +86,11 @@ resolveDatafastClientIP (TrustedDatafastProxies trusted) (DatafastClientRequest 
 datafastClientIPParameters :: DatafastClientIP -> [(ByteString, ByteString)]
 datafastClientIPParameters (DatafastClientIP address) =
   [("customer.ip", TE.encodeUtf8 (T.pack (show address)))]
+
+-- | The verified customer address in canonical text form, for providers
+-- that take it as a JSON field (PlaceToPay).
+datafastClientIPText :: DatafastClientIP -> Text
+datafastClientIPText (DatafastClientIP address) = T.pack (show address)
 
 socketIP :: Socket.SockAddr -> Maybe IP.IP
 socketIP (Socket.SockAddrInet6 _ _ _ scope) | scope /= 0 = Nothing

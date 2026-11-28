@@ -79,7 +79,16 @@ test('all seven declared Dataweb creation routes carry transport context without
     '/services/storefront/order/{orderId}/datafast/checkout',
     '/bookings/public/orders/{bookingId}/datafast/checkout',
   ];
-  const routes = snapshot.surface.operations.filter(operation => operation.internalInputs.includes('datafast-client-request'));
+  // The shared payment-session route reads the same transport context for the
+  // PlaceToPay buyer address (PAY-HOSTED-SESSION-001); it is not a Dataweb route.
+  const sessionPath = '/commerce/checkouts/{checkoutId}/payment-sessions';
+  const carriers = snapshot.surface.operations.filter(operation => operation.internalInputs.includes('datafast-client-request'));
+  const session = carriers.filter(operation => operation.path === sessionPath);
+  assert.equal(session.length, 1);
+  assert.equal(session[0].method, 'POST');
+  assert.deepEqual(session[0].internalInputs, ['datafast-client-request', 'remote-host']);
+  assert.ok(!session[0].parameters.some(parameter => /client.ip|forwarded/i.test(parameter.name)));
+  const routes = carriers.filter(operation => operation.path !== sessionPath);
   assert.deepEqual(routes.map(operation => operation.path), paths);
   for (const route of routes) {
     assert.equal(route.method, 'POST');

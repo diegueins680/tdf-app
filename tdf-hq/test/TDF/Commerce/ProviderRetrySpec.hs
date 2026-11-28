@@ -77,7 +77,7 @@ import qualified TDF.Commerce.RefundReconciliation as TicketRecovery
 import qualified TDF.Commerce.ProviderAdapter.PayPalRefund as TicketQuery
 import qualified TDF.Server.TicketRefunds as TicketRefundAPI
 import           TDF.Commerce.StateMachine (PaymentEvent(..))
-import           TDF.Server.ProviderExecution (providerReference, providerExecutionServer, providerReturnUrl)
+import           TDF.Server.ProviderExecution (createPaymentSession, providerReference, providerExecutionServer, providerReturnUrl)
 import qualified TDF.Ticketing.Refund as TicketRefund
 import qualified TDF.Ticketing.Admission as Admission
 import qualified TDF.Ticketing.Inventory as TicketInventory
@@ -3746,12 +3746,12 @@ setOperationState pool operation status certainty = runSqlPool (rawExecute
 replayHandler :: ConnectionPool -> Checkout.PaymentAttemptCreation -> PaymentSessionCreateDTO
   -> IO (Either ServerError PaymentSessionDTO)
 replayHandler pool creation request = do
-  let create :<|> _ = providerExecutionServer
+  let create = createPaymentSession
       checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
       env = Env pool (error "Recovery must not use AppConfig")
   runHandler (runReaderT (create checkoutId (Just checkoutId)
     (Just (Checkout.pacIdempotencyKey creation)) (Just "Synthetic provider recovery test")
-    (SockAddrInet 0 0) request) env)
+    Nothing (SockAddrInet 0 0) request) env)
 
 assertHttpError :: Int -> Either ServerError PaymentSessionDTO -> Expectation
 assertHttpError status = either ((`shouldBe` status) . errHTTPCode)

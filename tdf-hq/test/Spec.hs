@@ -56,6 +56,7 @@ import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
 import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
 import qualified TDF.Commerce.DatafastConfigSpec as DatafastConfigSpec
+import qualified TDF.Commerce.BuyerNetworkAddressSpec as BuyerNetworkAddressSpec
 import qualified TDF.Commerce.DatafastClientIPSpec as DatafastClientIPSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
@@ -941,6 +942,7 @@ main = hspec $ do
     WorkerLoggingSpec.spec
     PaymentArithmeticSpec.spec
     DatafastConfigSpec.spec
+    BuyerNetworkAddressSpec.spec
     DatafastClientIPSpec.spec
     CheckoutMoneySpec.spec
     EmailHeadersSpec.spec
