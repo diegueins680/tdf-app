@@ -194,6 +194,7 @@ type SocialAPI =
 type ChatAPI = Chat.ChatAPI
 
 type ChatKitSessionAPI =
+       ("assistant" :> "chat" :> ReqBody '[JSON] [Text] :> Post '[JSON] Text) :<|>
        "chatkit" :> "sessions" :> ReqBody '[JSON] ChatKitSessionRequest :> Post '[JSON] ChatKitSessionResponse
 
 type TidalAgentAPI =

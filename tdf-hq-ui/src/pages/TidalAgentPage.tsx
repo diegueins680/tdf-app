@@ -408,7 +408,7 @@ export default function TidalAgentPage() {
         </Card>
 
         <Alert severity="info" variant="outlined">
-          Env vars: `VITE_API_BASE` en el frontend, `OPENAI_API_KEY` en el backend. Opcional `VITE_TIDAL_AGENT_MODEL`.
+          Env vars: `VITE_API_BASE` en el frontend, `VENICE_API_KEY` en el backend. Opcional `VITE_TIDAL_AGENT_MODEL`.
         </Alert>
       </Stack>
     </Box>

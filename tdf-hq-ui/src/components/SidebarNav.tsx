@@ -241,7 +241,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: 'HERRAMIENTAS',
     icon: <BuildOutlinedIcon sx={GROUP_HEADER_ICON_SX} />,
     items: [
-      { label: 'ChatKit', path: '/herramientas/chatkit' },
+      { label: 'Asistente de TDF', path: '/herramientas/chatkit' },
       { label: 'Agente Tidal', path: '/herramientas/tidal-agent' },
       { label: 'Creador musical', path: '/herramientas/creador-musical' },
       { label: 'Token API', path: '/herramientas/token-admin' },

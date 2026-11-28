@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "4b789f94b37a6df7d8fe9d098d2a89ceb520b4e4",
+  "mobileRevision": "a32caf89be54121112fb73647b58532931a4cba4",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -1157,6 +1157,7 @@
       "tdf-hq-ui/src/components/UserProfileLink.tsx",
       "tdf-hq-ui/src/components/UserRoleManagement.test.tsx",
       "tdf-hq-ui/src/components/UserRoleManagement.tsx",
+      "tdf-hq-ui/src/components/VeniceAssistant.tsx",
       "tdf-hq-ui/src/components/WaitlistJoinDialog.logic.test.ts",
       "tdf-hq-ui/src/components/WaitlistJoinDialog.logic.ts",
       "tdf-hq-ui/src/components/WaitlistJoinDialog.tsx",
@@ -1361,7 +1362,6 @@
       "tdf-hq-ui/src/hooks/useAutoSave.test.ts",
       "tdf-hq-ui/src/hooks/useAutoSave.ts",
       "tdf-hq-ui/src/hooks/useBreakpoint.ts",
-      "tdf-hq-ui/src/hooks/useChatKitScript.ts",
       "tdf-hq-ui/src/hooks/useChatUnreadCount.ts",
       "tdf-hq-ui/src/hooks/useCmsContent.ts",
       "tdf-hq-ui/src/hooks/useContactCreation.test.ts",
@@ -1436,6 +1436,7 @@
       "tdf-hq-ui/src/pages/CampaignAutomationsPage.tsx",
       "tdf-hq-ui/src/pages/CatalogsPage.test.ts",
       "tdf-hq-ui/src/pages/CatalogsPage.tsx",
+      "tdf-hq-ui/src/pages/ChatKitPage.test.tsx",
       "tdf-hq-ui/src/pages/ChatKitPage.tsx",
       "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
       "tdf-hq-ui/src/pages/ChatPage.tsx",
@@ -1716,8 +1717,6 @@
       "tdf-hq-ui/src/routes/publicRoutes.tsx",
       "tdf-hq-ui/src/services/cartSummary.test.ts",
       "tdf-hq-ui/src/services/cartSummary.ts",
-      "tdf-hq-ui/src/services/chatkit.test.ts",
-      "tdf-hq-ui/src/services/chatkit.ts",
       "tdf-hq-ui/src/services/directoryPreviewImage.ts",
       "tdf-hq-ui/src/services/googleDrive.compatibility.test.ts",
       "tdf-hq-ui/src/services/googleDrive.recovery.test.ts",
@@ -4228,7 +4227,7 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "f7c69d7d5fef627b68b1f4eae37b6117c98a9bbc5ed9b73cf2395cedd62db1a4",
+      "sha256": "e46db8282eff598a984400e92fc5b961d113c158cd661962370feaa8a1610701",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6604,7 +6603,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "2d51aa2f20c498e3c00990c27a5b972d8dfe28593fb668ebd292587131e259dc",
+      "sha256": "4ca154bc41f628cd57a5dfc81aee41d0582064fe3fbb2717ff9a046018c96eb1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8368,7 +8367,7 @@
     {
       "id": "SURFACE-52eaee55a9a4d661",
       "path": "tdf-hq-ui/package.json",
-      "sha256": "c257a4af51c56735996dd32138844e38718ba1431dc62a58f80151a219f3e236",
+      "sha256": "d1b87e228b73f0a5505e611e1b3ac95d271b6011e120b908fe2d5fbd72680185",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8452,7 +8451,7 @@
     {
       "id": "SURFACE-c13a12d2ea792bdf",
       "path": "tdf-hq-ui/public/privacy.html",
-      "sha256": "9d5fd58b762f6b5cf8198c0a2ef2c8a29ad994bd7565d5b5009420039ecb6819",
+      "sha256": "94be476e1bf8e621f99bb2d01d7a48b3f9b0a3b30a0fd6b503419ebd5589994f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9076,7 +9075,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "3a7be44565d79a724a3f6eee06971aedec47cecc9136cc4f62f180e8dbfddf9f",
+      "sha256": "13facc693bb9dfd1179b70553a254accb84c9581f853c36475531b51aa8dc5d9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9760,7 +9759,7 @@
     {
       "id": "SURFACE-85a789593d432274",
       "path": "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
-      "sha256": "88d0bc910d5475efcacd80343a2ca22c26deeed0877a1a8b33ee776d2b9f7b74",
+      "sha256": "2bc186583be3d8a932451aaba94ceadae09edfd5e730988f16252deee171faea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10102,7 +10101,7 @@
     {
       "id": "SURFACE-eacab29ef41a9481",
       "path": "tdf-hq-ui/src/components/SidebarNav.tsx",
-      "sha256": "051caa33edea03eba70a277f80410cbff736c98aed5d621f980229df175b7f93",
+      "sha256": "67807946fee6c7699b12cdc6e2e34b848740737da83e173a9f2be159e362b8ab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10193,6 +10192,12 @@
       "id": "SURFACE-2ee2512253184a55",
       "path": "tdf-hq-ui/src/components/UserRoleManagement.tsx",
       "sha256": "6ef73cb6cc00fedbc59017cafb01838c5261a3780e419030b6d2cb4f1e278d11",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-572988670cdd18ff",
+      "path": "tdf-hq-ui/src/components/VeniceAssistant.tsx",
+      "sha256": "a637f1206e1b7dbc6daf7036423772f7a42c1b44b94e52d91ae16077757e1cc4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11420,12 +11425,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-925beea0bce49282",
-      "path": "tdf-hq-ui/src/hooks/useChatKitScript.ts",
-      "sha256": "9709e7772a436e059b6444328e7aa82b24f19619e5fca3ee012931c1f0745cb0",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-ebefb66a9835f525",
       "path": "tdf-hq-ui/src/hooks/useChatUnreadCount.ts",
       "sha256": "81cbfa55a1156b2bdfb4a7d93832eeaaa6b2352b1a92b59c45d098f4fd8be23a",
@@ -11870,9 +11869,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-eea1a8dfb1cb4097",
+      "path": "tdf-hq-ui/src/pages/ChatKitPage.test.tsx",
+      "sha256": "2e3c12692805784a2e85cba6ff45d74b734448b2abc7a7ba127374bc7e193f29",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7dcbd0bbd9154a13",
       "path": "tdf-hq-ui/src/pages/ChatKitPage.tsx",
-      "sha256": "49d877385e03884964f5e846aa00ace2ae861c1d32e300be8488eeee471eab11",
+      "sha256": "dac800cb8fa291365601418fb6520d1ba01c4ba5d5c172f5d5fc0b3cf5729236",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13120,7 +13125,7 @@
     {
       "id": "SURFACE-b3708173ec172c34",
       "path": "tdf-hq-ui/src/pages/TidalAgentPage.tsx",
-      "sha256": "6735c4b7da713b82c799b364caedae41543cf4f978bb8b3fe5ef3d73a9c9562b",
+      "sha256": "2c5455ea174897b544080558f2fb8543cb3b027974dbea39c821c676b8476bd9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13547,18 +13552,6 @@
       "id": "SURFACE-669e889a0ee796aa",
       "path": "tdf-hq-ui/src/services/cartSummary.ts",
       "sha256": "5a5aa5124166fcd225a1119be605a698f5790037a5c7158cd0fbf66092eee069",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-da584b04b98ddce4",
-      "path": "tdf-hq-ui/src/services/chatkit.test.ts",
-      "sha256": "1dccb3233df93d94bbc29dc1dd3c9aa5ae671932fad79b68a0c3b98c28df9e0f",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-ed8d6a15f76d1ff3",
-      "path": "tdf-hq-ui/src/services/chatkit.ts",
-      "sha256": "aa9d12f21b3cfdd2c4ff4ff34cac5c478994e8eff297ee7a32fe83e9c98fa9c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14806,7 +14799,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "bc3d0b98805a65ab66bef71606cf3260ef274bbd775827326303ddec14c3e192",
+      "sha256": "dd3aaffb9174a8b2af93fabed862a94b5a3670ef4390eee77b0ed8018cb83373",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18016,7 +18009,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "59f9072aac0c821c25d7961afd6aba27f5d5b46f64da0517fc91fb50bc03c456",
+      "sha256": "592125906f54eed359d051952ae946694fc4f905964a7700191e22b0a995c45a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18694,7 +18687,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "63b4437393fbe93ef8a5db568436f500f7761257f7941860ccf10102743dc5be",
+      "sha256": "c15943b4cb85a74192f19d53f2dc3eed50c9599f3338d369407a8c394113a0f5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18916,7 +18909,7 @@
     {
       "id": "SURFACE-65fa05e273480c4e",
       "path": "tdf-hq/src/TDF/Directory/SemanticSearch.hs",
-      "sha256": "b2cfca71b8778db49d8496ffe27f2354e12f0a725b766866b93fdec9378b26a3",
+      "sha256": "aa687f3167cfe3d73ce35df5ad62dd3f121d864d5136225b8a2e6af4645dbd60",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19210,7 +19203,7 @@
     {
       "id": "SURFACE-4d5b5b67e9af24f7",
       "path": "tdf-hq/src/TDF/RagStore.hs",
-      "sha256": "f76a6745947e7f2087606d2d78a2fb8309560fc43c7adb00da9f210b430bd4c6",
+      "sha256": "af2e414d4c295e9343c2a7917d32f1b55dffc388c3372a808078a13ea37ee2b3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19264,7 +19257,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "a866a4fce309f11c4b993979ce2497f85f9329042783cfd1d48b4a1ea5a36b67",
+      "sha256": "9b0fb59472cd3f64019648f69d8465203c32f845fe4a060d54a1a026fbb1e471",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19642,7 +19635,7 @@
     {
       "id": "SURFACE-e60c666298519425",
       "path": "tdf-hq/src/TDF/Services/LlmChat.hs",
-      "sha256": "9c2a181eb58e95a0e66ab55afc0c66f50ff5e2b04a5b7917c52ca844e6c1785b",
+      "sha256": "8957a50625f0fd10474ad1fae5651fd6da2a1becd20c2ad0dd3d4801a041b318",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19990,7 +19983,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "3407a89b9b0005143e0233c261abd7eb747a1e56a371a930def7a8d4c8ab2cd6",
+      "sha256": "fca8a4905af7ffe1356185009935afbca887ee5d3f3f03423e7ff712446238d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20446,7 +20439,7 @@
     {
       "id": "SURFACE-7a8c25536f4eeac3",
       "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "52081eaf4528c2149b352cc3e1f6d55dc0af2a89875112678217d9395aae91d0",
+      "sha256": "5514a3375d74d379fafbce1e3f449e79a794b118d04a300514de191a07a61088",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20518,7 +20511,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "e86514c17e9b0ca7a5310767d6294bd8a4a4a0c998ae4128c27bf0a9c6a531ab",
+      "sha256": "ba8ab42d9160fc3029ac41d3b2f957ef0032cf82dd49c4f7a034f99dac5f0358",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22606,7 +22599,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "3a7be44565d79a724a3f6eee06971aedec47cecc9136cc4f62f180e8dbfddf9f",
+      "sha256": "13facc693bb9dfd1179b70553a254accb84c9581f853c36475531b51aa8dc5d9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23626,7 +23619,7 @@
     {
       "id": "SURFACE-54bf47f9e4362775",
       "path": "tidal-agent/index.js",
-      "sha256": "ff34e046e7393bb9fce15b123f497351376641156336b96c6f9f3b9cedf40f05",
+      "sha256": "f6e1ea6c8ff9109020b652b2d09648e1866da89b9bd0c059d69df7ac8ab05e68",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32794,7 +32787,7 @@
     },
     {
       "path": "formal/system/directory-semantic-search.md",
-      "sha256": "6ebbe0ff6bf1b3fc04d115b2a6e3fefb3bd7ce69c0634c4d287f922e3b90ca8a",
+      "sha256": "a59fd3f9e0009631a9d8f60ba34a1924758df30477c5e373d295ac2fb0645b84",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -33634,7 +33627,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b3552bda8abdaa4971d25e75da3b2989c32eae853188006c4897f2c0a0df0936",
+      "sha256": "0592fcc138cab8d4d84c2ebf12d996a94159b227d5577155b2caeea88d67455b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -33676,7 +33669,7 @@
     },
     {
       "path": "formal/system/social-messaging-routes.md",
-      "sha256": "c0d688d2ebc31b062fd790c4f3d7480f5954641bbf81cc4f583262274218e0b2",
+      "sha256": "e0a118125f6824d6bd16e239bdabfc69157ee3701ae5a3ea4085d88622d0c1df",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -34012,7 +34005,7 @@
     },
     {
       "path": "tdf-hq-ui/public/privacy.html",
-      "sha256": "9d5fd58b762f6b5cf8198c0a2ef2c8a29ad994bd7565d5b5009420039ecb6819",
+      "sha256": "94be476e1bf8e621f99bb2d01d7a48b3f9b0a3b30a0fd6b503419ebd5589994f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
@@ -34082,7 +34075,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "bc3d0b98805a65ab66bef71606cf3260ef274bbd775827326303ddec14c3e192",
+      "sha256": "dd3aaffb9174a8b2af93fabed862a94b5a3670ef4390eee77b0ed8018cb83373",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -34404,7 +34397,7 @@
     },
     {
       "path": "tidal-agent/README.md",
-      "sha256": "4ead6479a46259b8bc5c14ccefb6c8a675a9f5c27cf3b6fae903297662577e92",
+      "sha256": "ee47f88f0a23202e204385ca82481aa2fbd374a60d048b7d70d25198c194bc01",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
