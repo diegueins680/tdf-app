@@ -30391,6 +30391,110 @@
         "reason": "Pure core, model and translation verified as stated; the handler wiring and the web switch have no HTTP-level or browser test."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "MKT-ANDROID-BETA-EMAIL-001",
+      "title": "Approved, capped email sequence for the Android closed test",
+      "statement": "The Android closed-test email campaign sends only to the exact audience and texts an approver accepted by SHA-256, at most five attempts in any 24 hours, never retries an attempt whose outcome is uncertain, sends nothing further to a contact after an opt-out, a bounce, an SMTP rejection, an uncertain attempt or a changed CRM address, and sends no reminder to a contact who replied.",
+      "domain": "MKT",
+      "authority": "inferred",
+      "source": "docs/release/android-beta-crm-email.md; scripts/android-beta-email.py (PR #765); owner confirmation of the intended behaviour pending",
+      "contract": "docs/release/android-beta-crm-email.md",
+      "property": "No message is attempted unless a campaign record exists whose plan hash equalled the approved hash at activation, the campaign is not paused, and fewer attempts than the plan's daily limit (five) were recorded in the preceding 24 hours; each contact and stage has at most one recorded attempt; invitations and reminders additionally need a recorded Play Console count below 12 and fewer verified testers than the larger of the batch goal and 12 minus that count.",
+      "actors": [
+        "Campaign operator",
+        "Audience and sequence approver",
+        "Scheduled systemd service running as the dedicated tdf-android-beta-email user",
+        "CRM contact invited to the closed test"
+      ],
+      "preconditions": [
+        "A private cohort CSV of party_id, email and permission_ref prepared by the operator; the CRM contacts API does not expose email consent, so eligibility is established outside the program.",
+        "A preview file whose SHA-256 the approver accepted, activated with that same hash.",
+        "A Play Console tester count recorded by the operator before recruiting.",
+        "TDF_CRM_TOKEN and mailbox credentials supplied through a root-owned mode 0600 environment file; the mailbox user equals the approved sender."
+      ],
+      "inputs": [
+        "Cohort CSV and sender address (preview)",
+        "Approved preview file and its SHA-256 (activate)",
+        "Operator records: console-count, requested, access, verified, installed, stop, withdrawn, pause, resume",
+        "CRM contact lookup by party id",
+        "Replies and bounces read from the campaign mailbox over IMAP"
+      ],
+      "state": {
+        "states": [
+          "no campaign",
+          "active",
+          "paused"
+        ],
+        "initial": "no campaign",
+        "terminal": [],
+        "contactStages": [
+          "invite",
+          "reminder",
+          "access",
+          "check-in"
+        ],
+        "deliveryStatus": [
+          "uncertain",
+          "accepted",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "no campaign -> active by activate with a plan whose hash equals the approved hash",
+        "active <-> paused by the operator",
+        "Per contact: invite, then one reminder after 72 hours without a reply, then an access message once the operator records access, then one check-in from day 7 and before day 14 of the verified enrolment",
+        "A delivery row is committed as uncertain before SMTP and then set to accepted or rejected"
+      ],
+      "forbiddenTransitions": [
+        "Sending without an activated plan, with a hash that differs from the approved one, or while paused",
+        "Activating a second or modified audience over an existing campaign",
+        "A sixth attempt within 24 hours",
+        "Retrying a contact and stage that already has a recorded attempt, including one left uncertain",
+        "Any further message to a contact that opted out, bounced, has a rejected or uncertain attempt, or whose CRM email no longer matches the approved one",
+        "An invitation or reminder to a contact who already replied, requested access or was given access",
+        "Recruiting when the recorded Play Console count is 12 or more or missing, or when verified testers reach the larger of the goal and 12 minus the count",
+        "Treating a reply claiming enrolment, or SMTP acceptance, as verified Google Play enrolment",
+        "Continuing a tick after a transport or configuration failure"
+      ],
+      "effects": [
+        "Email sent from the approved sender through SMTP",
+        "Private SQLite record of the plan, contacts, attempts and operator events",
+        "No write to the CRM; contacts are read by id only"
+      ],
+      "authorization": "Preview reads the CRM with the operator's token. Sending requires the approver's hash at activation and an operator-recorded Play Console count. The service runs as a dedicated unprivileged user with NoNewPrivileges and a strict read-only system view.",
+      "privacy": "The cohort, preview and state hold names, email addresses and Google account addresses and stay in private files with umask 0077 and a mode 0700 state directory. The journal reports counts of attempts and problems and does not list addresses. Every message carries an opt-out instruction.",
+      "concurrency": "One state file per campaign and one oneshot service started every 15 minutes; systemd does not start a second instance while one runs. Running replicas against different state files is outside the contract and is an operator error named in the runbook.",
+      "idempotency": "The attempt row is committed before SMTP and keyed by contact and stage, so a repeated tick, a crash or a restart cannot send the same stage twice.",
+      "failure": "An SMTP recipient refusal marks the delivery rejected and ends that contact's sequence. A transport or configuration error ends the tick, leaves that attempt uncertain (which also ends that contact's sequence until an operator reviews it) and reports a problem. A missing, organizational or changed CRM contact stops that contact as crm-changed.",
+      "recovery": "Uncertain attempts are reviewed by the operator in the mailbox and are never retried automatically. The operator can pause, resume, stop a contact, or record a reviewed request, access, verification, installation or withdrawal.",
+      "observability": "The status subcommand lists each contact's state and attempts; each tick prints the count of SMTP-accepted attempts and problems, which the service journal retains.",
+      "implementation": [
+        "scripts/android-beta-email.py",
+        "ops/hetzner/tdf-android-beta-email.service",
+        "ops/hetzner/tdf-android-beta-email.timer",
+        "docs/release/android-beta-crm-email.md"
+      ],
+      "tests": [
+        "scripts/test_android_beta_email.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "verification": "Ten unit tests with an in-memory state, a stub CRM lookup and stub SMTP/IMAP: approval and Play-count gate, duplicate and updated audience refusal, single reminder, distinct request/access/claim/verification/installation states, duplicate Google account, stop at seven verified testers, daily cap, pause and transport failure, opt-out and failed mailbox, reply correlation and bounce detection, IMAP read without marking. No formal model; no test against a real SMTP or IMAP server or an installed timer.",
+      "evidence": "scripts/test_android_beta_email.py output at the reviewed revision.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Source-derived contract and unit tests with stub transports; production installation and a live send are unverified.",
+      "ambiguity": [
+        "Email consent is not available from the CRM API; the permission_ref column is recorded but its validity rests on the operator and the approver.",
+        "The unit files are not installed by any release script; installation follows the runbook by hand.",
+        "The goal of seven verified testers and the ceiling of twelve are campaign parameters taken from the runbook, not from a Google Play policy citation in this repository."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The program and its unit tests correspond to the runbook; installed-timer behaviour, real mailbox handling and an owner-approved send have not been observed."
+      },
+      "historicalStatus": null
     }
   ]
 }
