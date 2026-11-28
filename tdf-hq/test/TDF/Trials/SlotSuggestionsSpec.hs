@@ -161,6 +161,19 @@ spec = describe "TDF.Trials.SlotSuggestions" $ do
       mergeIntervals [span' 60 120, span' 0 60, span' 200 300, span' 250 260]
         `shouldBe` [span' 0 120, span' 200 300]
       mergeIntervals [span' 10 10, span' 20 5] `shouldBe` []
+    it "merges a window that spans a nested one and reaches a later one" $ do
+      mergeIntervals [span' 0 120, span' 30 60, span' 90 180] `shouldBe` [span' 0 180]
+      mergeIntervals [span' 0 300, span' 10 20, span' 30 40, span' 50 60, span' 400 500]
+        `shouldBe` [span' 0 300, span' 400 500]
+    it "returns disjoint, non-adjacent intervals covering the same minutes" $ property $ \pairs ->
+      let windows = [ span' (min x y) (max x y)
+                    | (a, b) <- pairs :: [(Integer, Integer)]
+                    , let x = a `mod` 600
+                    , let y = b `mod` 600 ]
+          merged = mergeIntervals windows
+          covered ivs m = any (\iv -> ivStart iv <= atMinute m && atMinute m < ivEnd iv) ivs
+      in and (zipWith (\x y -> ivEnd x < ivStart y) merged (drop 1 merged))
+           && all (\m -> covered windows m == covered merged m) [0 .. 600]
 
   describe "mkSlotRequest" $ do
     let now = atMinute baseMinute

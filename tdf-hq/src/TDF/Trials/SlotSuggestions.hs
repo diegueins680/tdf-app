@@ -213,8 +213,10 @@ contains outer inner = ivStart outer <= ivStart inner && ivEnd inner <= ivEnd ou
 mergeIntervals :: [Interval] -> [Interval]
 mergeIntervals = foldr step [] . sortOn ivStart . filter (\iv -> ivEnd iv > ivStart iv)
   where
+    -- The accumulator is already disjoint and in start order, but an interval
+    -- that absorbs its successor can reach the ones after it, so keep merging.
     step iv (next : rest)
-      | ivEnd iv >= ivStart next = Interval (ivStart iv) (max (ivEnd iv) (ivEnd next)) : rest
+      | ivEnd iv >= ivStart next = step (Interval (ivStart iv) (max (ivEnd iv) (ivEnd next))) rest
     step iv acc = iv : acc
 
 minutes :: Int -> NominalDiffTime
