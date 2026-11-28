@@ -30479,8 +30479,8 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/studio/submissions.py": "485b649326cd0f4857ab080dd10ab5262399b5ae83bcc11fff56680d279751cc",
-    "tdf-hq/studio/test_submissions.py": "3a1cdf78b0b66d3ce2f21248cda78d52062d86f1fca95de26f6b80dc2cfb7df9",
+    "tdf-hq/studio/submissions.py": "80c5a91e684e611bc8308fff246c40533befdf4c50103fe0459e94888d83e969",
+    "tdf-hq/studio/test_submissions.py": "f82d856f97d41b7284aa43bedfdfb8b8b35671bb8cc16c898f52acde8df991cd",
     "tdf-hq/tdf-hq.cabal": "3e8c1128cd34d5968dd45312e70bf4b621aff92da0d9a49113ab05af52ea6652",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
@@ -81389,7 +81389,7 @@
     {
       "id": "SURFACE-4a07821d2bfefd09",
       "path": "tdf-hq/studio/submissions.py",
-      "sha256": "485b649326cd0f4857ab080dd10ab5262399b5ae83bcc11fff56680d279751cc",
+      "sha256": "80c5a91e684e611bc8308fff246c40533befdf4c50103fe0459e94888d83e969",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81401,7 +81401,7 @@
     {
       "id": "SURFACE-cee901608a22fc03",
       "path": "tdf-hq/studio/test_submissions.py",
-      "sha256": "3a1cdf78b0b66d3ce2f21248cda78d52062d86f1fca95de26f6b80dc2cfb7df9",
+      "sha256": "f82d856f97d41b7284aa43bedfdfb8b8b35671bb8cc16c898f52acde8df991cd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

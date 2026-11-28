@@ -18769,13 +18769,13 @@
     {
       "id": "SURFACE-4a07821d2bfefd09",
       "path": "tdf-hq/studio/submissions.py",
-      "sha256": "485b649326cd0f4857ab080dd10ab5262399b5ae83bcc11fff56680d279751cc",
+      "sha256": "80c5a91e684e611bc8308fff246c40533befdf4c50103fe0459e94888d83e969",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-cee901608a22fc03",
       "path": "tdf-hq/studio/test_submissions.py",
-      "sha256": "3a1cdf78b0b66d3ce2f21248cda78d52062d86f1fca95de26f6b80dc2cfb7df9",
+      "sha256": "f82d856f97d41b7284aa43bedfdfb8b8b35671bb8cc16c898f52acde8df991cd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -32451,7 +32451,7 @@
     },
     {
       "path": "tdf-hq/studio/README.md",
-      "sha256": "ea83f4345160202ead7a7ec88c8ba743759441bf17e6acdfd7dbc7fa02359430",
+      "sha256": "f4289a1c328416261e9e5533e8f1021091885196bfc1a88023e906f8d88bc6b2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
