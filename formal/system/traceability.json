@@ -31539,8 +31539,8 @@
     "tdf-hq-ui/src/components/ArtistCoverPreview.tsx": "7ec230fec58cd0bf78d13c45f79e1293d273ae38307944c58ef6802f7110554d",
     "tdf-hq-ui/src/components/ArtistFansList.test.tsx": "bd3dab4df6469191bc1cdc53c951410c01fd9cf98bd874b1b55c3c88f8d92e8c",
     "tdf-hq-ui/src/components/ArtistFansList.tsx": "274c061bf5429a1a2e292f63a172d6ab237a214ea967afebe4f53620f6acd9d0",
-    "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx": "8f8f91271a67f1b9122b00076a85823ca32804b8b2b776bd31536e55539ff22e",
-    "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx": "17c32d75dcce72b280738b18daa461e6b3f01fb4b95a9d5a2f20ed218a99744c",
+    "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx": "891885762ef9df13163b50606214eef76c063c673d1ad16e58b7c8de3cbb10dd",
+    "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx": "b9dd75bb93c80ba47c81a8a21bf5a9ab5da5fe8b3a56fb94dfd136c67ace372f",
     "tdf-hq-ui/src/components/ArtistProfileImage.test.tsx": "826bfe01af0ec470ce6a8096068960b87b61df5f6a582568bfbfadfcbc950b0a",
     "tdf-hq-ui/src/components/ArtistProfileImage.tsx": "3c8e49833a85f3220ca06125db816d25bfbd6a465abc82f300be2d0759cb1370",
     "tdf-hq-ui/src/components/ArtistProfileLink.tsx": "b320117e6d8108cad10a55c193ff7c05111a2abbaae149d4628499eef34ad15b",
@@ -68118,7 +68118,7 @@
     {
       "id": "SURFACE-fe47678f5e1d55b6",
       "path": "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx",
-      "sha256": "8f8f91271a67f1b9122b00076a85823ca32804b8b2b776bd31536e55539ff22e",
+      "sha256": "891885762ef9df13163b50606214eef76c063c673d1ad16e58b7c8de3cbb10dd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68134,7 +68134,7 @@
     {
       "id": "SURFACE-237fd771d24b44a0",
       "path": "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
-      "sha256": "17c32d75dcce72b280738b18daa461e6b3f01fb4b95a9d5a2f20ed218a99744c",
+      "sha256": "b9dd75bb93c80ba47c81a8a21bf5a9ab5da5fe8b3a56fb94dfd136c67ace372f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -57,6 +57,7 @@ async function renderPanel() {
   });
   return {
     container,
+    queryClient,
     cleanup: async () => {
       await act(async () => {
         root?.unmount();
@@ -77,6 +78,63 @@ describe('ArtistInvitationLinksPanel', () => {
     listMock.mockReset();
     createMock.mockReset();
     revokeMock.mockReset();
+  });
+
+  it('shows a loading message until invitations arrive', async () => {
+    let resolveList!: (invitations: ArtistInvitationLinkDTO[]) => void;
+    listMock.mockReturnValue(new Promise((resolve) => { resolveList = resolve; }));
+    const view = await renderPanel();
+    try {
+      expect(view.container.querySelector('[role="status"]')?.textContent).toBe('Cargando invitaciones…');
+      expect(findButton(view.container, 'Revocar')).toBeUndefined();
+
+      await act(async () => {
+        resolveList([invitation()]);
+        await flushPromises();
+        await flushPromises();
+      });
+
+      expect(view.container.querySelector('[role="status"]')).toBeNull();
+      expect(view.container.textContent).toContain('Banda Sur');
+      expect(findButton(view.container, 'Revocar')).toBeDefined();
+    } finally {
+      await view.cleanup();
+    }
+  });
+
+  it('indicates a background refresh while keeping invitations visible', async () => {
+    listMock.mockResolvedValueOnce([invitation()]);
+    const view = await renderPanel();
+    try {
+      await act(async () => {
+        await flushPromises();
+        await flushPromises();
+      });
+      expect(view.container.querySelector('[role="status"]')).toBeNull();
+
+      let resolveList!: (invitations: ArtistInvitationLinkDTO[]) => void;
+      listMock.mockReturnValueOnce(new Promise((resolve) => { resolveList = resolve; }));
+      await act(async () => {
+        void view.queryClient.invalidateQueries({ queryKey: ['artist-invitations'] });
+        await flushPromises();
+        await flushPromises();
+      });
+
+      expect(view.container.querySelector('[role="status"]')?.textContent).toBe('Actualizando invitaciones…');
+      expect(view.container.textContent).toContain('Banda Sur');
+
+      await act(async () => {
+        resolveList([invitation({ status: 'revoked' })]);
+        await flushPromises();
+        await flushPromises();
+      });
+
+      expect(view.container.querySelector('[role="status"]')).toBeNull();
+      expect(view.container.textContent).toContain('Revocado');
+      expect(findButton(view.container, 'Revocar')).toBeUndefined();
+    } finally {
+      await view.cleanup();
+    }
   });
 
   it('issues a personal link for one invitee and shows it once', async () => {
