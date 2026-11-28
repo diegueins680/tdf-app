@@ -259,6 +259,12 @@ WHERE btrim(coalesce(artist.city, '')) <> ''
   AND taxonomy_city_from_text(artist.city, artist.country_id) IS NULL
 ON CONFLICT (entity_table, entity_id, field_name) DO NOTHING;
 
+-- The venue backfill above queues the deferred search sync trigger
+-- (trg_directory_sync_venue_search) for every row it changes, and PostgreSQL
+-- refuses to build an index on a table with pending trigger events. Run the
+-- queued syncs now. Production release 11 (2026-11-27) applied exactly this
+-- statement at this position.
+SET CONSTRAINTS ALL IMMEDIATE;
 CREATE INDEX IF NOT EXISTS ix_venue_taxonomy_location ON venue (city_id, country_id);
 
 -- ---------------------------------------------------------------------------
