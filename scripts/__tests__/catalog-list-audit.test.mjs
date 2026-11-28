@@ -6605,10 +6605,45 @@ async function integrationSource(ref, file) {
 // Retain both original published parents and additionally guard latest published main.
 const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1", "5a81672285dc9c03130fc9fd8355e2b4c58e9e12"];
 
+// Production release 11 found that the taxonomy migration could not build its
+// venue index after backfilling venues. The repair is one statement, and the
+// reviewed bytes stay an accepted applied checksum. The historical compositions
+// below compare the manifest without that single reviewed addition.
+const TAXONOMY_MIGRATION_ID = '2026-11-21_location_genre_filters';
+const TAXONOMY_INDEX_REPAIR = `-- The venue backfill above queues the deferred search sync trigger
+-- (trg_directory_sync_venue_search) for every row it changes, and PostgreSQL
+-- refuses to build an index on a table with pending trigger events. Run the
+-- queued syncs now. Production release 11 (2026-11-27) applied exactly this
+-- statement at this position.
+SET CONSTRAINTS ALL IMMEDIATE;
+`;
+async function taxonomySourceBeforeIndexRepair(entry) {
+  const current = await fs.readFile(path.join(integrationRoot, entry.path), 'utf8');
+  assert.equal(current.split(TAXONOMY_INDEX_REPAIR).length, 2);
+  return current.replace(TAXONOMY_INDEX_REPAIR, '');
+}
+async function manifestBeforeTaxonomyIndexRepair(file) {
+  const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const migrations = [];
+  for (const entry of manifest.migrations) {
+    if (entry.id !== TAXONOMY_MIGRATION_ID) { migrations.push(entry); continue; }
+    const { compatibleAppliedChecksums, ...reviewed } = entry;
+    const original = await integrationSource(reviewed.introducedBy, reviewed.path);
+    assert.equal(compatibleAppliedChecksums.length, 1);
+    assert.equal(compatibleAppliedChecksums[0], createHash('sha256').update(original).digest('hex'));
+    assert.equal(await taxonomySourceBeforeIndexRepair(reviewed), original);
+    assert.deepEqual(Object.keys(entry), ['id', 'path', 'compatibleAppliedChecksums', 'introducedBy']);
+    migrations.push(reviewed);
+  }
+  assert.equal(migrations.filter(entry => entry.compatibleAppliedChecksums === undefined).length,
+    manifest.migrations.filter(entry => entry.compatibleAppliedChecksums === undefined).length + 1);
+  return { ...manifest, migrations };
+}
+
 // Qualify the new append against both published parents before running their historical assertions.
 // Compare historical compositions with the entire prefix preceding the verified Datafast append.
 async function manifestBeforeDatafast(file) {
-  const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const manifest = await manifestBeforeTaxonomyIndexRepair(file);
   assert.equal(manifest.migrations.at(-1).id, '2026-11-24_datafast_recovery');
   return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
 }
@@ -6617,7 +6652,7 @@ test('Datafast recovery appends its original SQL and preserves the complete prot
   const file = 'scripts/production-migrations.json';
   const base = '64ec5907337e4c1c1fea22760eac2f1b1a73bddb';
   const parent = await integrationParent(base, file);
-  const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const manifest = await manifestBeforeTaxonomyIndexRepair(file);
   const added = {
     id: '2026-11-24_datafast_recovery',
     path: 'tdf-hq/sql/2026-11-24_datafast_recovery.sql',
@@ -6683,7 +6718,7 @@ test('taxonomy appends its original migration to the full loudness manifest', as
   const { migrations } = await integrationParent('be996410572a72f8f787b2cd5d345b30523ba1ea', file);
   const entry = migrations.at(-1);
   await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
-  assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), await integrationSource(entry.introducedBy, entry.path));
+  assert.equal(await taxonomySourceBeforeIndexRepair(entry), await integrationSource(entry.introducedBy, entry.path));
 });
 
 async function manifestBeforeLoudness(file) {
