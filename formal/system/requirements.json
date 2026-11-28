@@ -24798,6 +24798,7 @@
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+        "tdf-hq/src/TDF/API/ProviderExecution.hs",
         "tdf-hq/src/TDF/Commerce/DatafastClientIP.hs"
       ],
       "tests": [
