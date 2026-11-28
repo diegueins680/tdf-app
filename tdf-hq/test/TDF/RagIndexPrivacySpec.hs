@@ -22,7 +22,7 @@ import Database.PostgreSQL.Simple (SqlError, sqlState)
 import System.Environment (lookupEnv)
 import Test.Hspec
 import TDF.Config (AppConfig(..), loadConfig)
-import TDF.RagStore (ensureRagIndex, refreshRagIndexWith, retrieveRagContext)
+import TDF.RagStore (ensureRagIndex, refreshRagIndexWith, retrieveRagContext, retrieveRagContextWith)
 import TDF.Test.DisposablePostgres (isDisposablePostgresUrl)
 
 spec :: Spec
@@ -314,6 +314,25 @@ spec = describe "rag-index-privacy-postgresql" $ do
         ensureRagIndex cfg pool `shouldReturn` Right False
         runSqlPool (rawExecute "UPDATE rag_chunk SET updated_at=now()-interval '2 days'" []) pool
         ensureRagIndex cfg pool `shouldReturn` Right True
+
+      it "ranks a local fallback index with a local query vector after Venice recovers" $ \pool -> do
+        publicCourse pool
+        local <- testConfig
+        let cfg = local { openAiApiKey = Just "synthetic", openAiEmbedModel = "text-embedding-qwen3-8b" }
+            space = "venice:text-embedding-qwen3-8b"
+            recovered inputs = pure (Right (space, vectors inputs))
+        ensureRagIndex local pool `shouldReturn` Right True
+        runSqlPool (rawExecute
+          "UPDATE rag_chunk SET metadata=metadata || jsonb_build_object('requestedSpace','venice:text-embedding-qwen3-8b'::text) WHERE source='course'" []) pool
+        fallbackDocs <- retrieveRagContextWith recovered cfg pool "synthetic course query"
+        T.unwords fallbackDocs `shouldSatisfy` T.isInfixOf "PUBLIC_COURSE_SENTINEL"
+        runSqlPool (rawExecute
+          "UPDATE rag_chunk SET metadata=metadata || jsonb_build_object('embeddingSpace','venice:text-embedding-qwen3-8b'::text) WHERE source='course'" []) pool
+        providerDocs <- retrieveRagContextWith recovered cfg pool "synthetic course query"
+        T.unwords providerDocs `shouldSatisfy` T.isInfixOf "PUBLIC_COURSE_SENTINEL"
+        runSqlPool (rawExecute
+          "UPDATE rag_chunk SET metadata=metadata || jsonb_build_object('embeddingSpace','other-space'::text) WHERE source='course'" []) pool
+        retrieveRagContextWith recovered cfg pool "synthetic course query" `shouldReturn` []
 
       it "rebuilds a fresh index lacking the configured embedding space" $ \pool -> do
         publicCourse pool

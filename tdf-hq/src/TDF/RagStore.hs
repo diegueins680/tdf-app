@@ -7,6 +7,7 @@ module TDF.RagStore
   , refreshRagIndexWith
   , ensureRagIndex
   , retrieveRagContext
+  , retrieveRagContextWith
   , getRagIndexStats
   , availabilityOverlaps
   , callOpenAIEmbeddingsWith
@@ -193,17 +194,50 @@ purgeLegacyRagChunks = do
     rawExecute "DELETE FROM rag_chunk WHERE source IS DISTINCT FROM 'course'" []
 
 retrieveRagContext :: AppConfig -> ConnectionPool -> Text -> IO [Text]
-retrieveRagContext cfg pool query = do
+retrieveRagContext cfg = retrieveRagContextWith (embedTexts cfg) cfg
+
+-- The injected adapter returns the embedding space of the query vector, as
+-- embedTexts does. Production always supplies embedTexts.
+retrieveRagContextWith
+  :: ([Text] -> IO (Either Text (Text, [[Double]])))
+  -> AppConfig -> ConnectionPool -> Text -> IO [Text]
+retrieveRagContextWith embed cfg pool query = do
   dimCheck <- validateRagEmbeddingDim cfg pool
   case dimCheck of
     Left _ -> pure []
     Right () -> do
-      embedResult <- embedTexts cfg [query]
+      embedResult <- embed [query]
       case embedResult of
         Left _ -> pure []
         Right (_, []) -> pure []
         Right (space, embedding:_) ->
-          runSqlPool (selectRagChunks cfg space embedding) pool
+          runSqlPool
+            (do
+              (indexSpace, queryVector) <- alignQueryWithIndex cfg space embedding query
+              selectRagChunks cfg indexSpace queryVector)
+            pool
+
+-- A refresh that met a transient provider failure stores the whole corpus in
+-- the local space and keeps it until the refresh interval expires. A provider
+-- query vector cannot rank those rows, so rank them with a local query vector
+-- while no row exists in the provider space.
+alignQueryWithIndex :: AppConfig -> Text -> [Double] -> Text -> SqlPersistT IO (Text, [Double])
+alignQueryWithIndex cfg space embedding query
+  | space == localEmbeddingSpace = pure (space, embedding)
+  | otherwise = do
+      exists <- ragTableExists
+      if not exists
+        then pure (space, embedding)
+        else do
+          rows <- rawSql
+            "SELECT EXISTS (SELECT 1 FROM rag_chunk WHERE metadata->>'embeddingSpace' = ?)"
+            [PersistText space] :: SqlPersistT IO [Single Bool]
+          pure $ case (rows, localEmbeddings cfg [query]) of
+            ([Single False], localVector:_) -> (localEmbeddingSpace, localVector)
+            _ -> (space, embedding)
+
+localEmbeddingSpace :: Text
+localEmbeddingSpace = "local-v1"
 
 getRagIndexStats :: ConnectionPool -> IO (Int, Maybe UTCTime)
 getRagIndexStats pool = do

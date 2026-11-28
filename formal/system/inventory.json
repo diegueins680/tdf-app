@@ -19203,7 +19203,7 @@
     {
       "id": "SURFACE-4d5b5b67e9af24f7",
       "path": "tdf-hq/src/TDF/RagStore.hs",
-      "sha256": "d7ea61afb9b580c7b9393427a06e4747bc04453951f1ba4eb88bc54987f9bb84",
+      "sha256": "af2e414d4c295e9343c2a7917d32f1b55dffc388c3372a808078a13ea37ee2b3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20439,7 +20439,7 @@
     {
       "id": "SURFACE-7a8c25536f4eeac3",
       "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "5852d0615dbbc4d22748cb16fcb3cf574bf0d9a658361cd1c69191fb50225c00",
+      "sha256": "5514a3375d74d379fafbce1e3f449e79a794b118d04a300514de191a07a61088",
       "semanticConformance": "not-established-by-discovery"
     },
     {

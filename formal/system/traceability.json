@@ -32464,7 +32464,7 @@
     "tdf-hq/src/TDF/Profiles/Artist.hs": "806657f972b93ae6ecc0b4e27bea896b3009de3123440a5eddef9e28e3fb3a21",
     "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs": "352dd0ea4d8df0c977b6f02acdba30a38e4275b2c2d48872480ddbdff205461a",
     "tdf-hq/src/TDF/PublicUrl.hs": "f6d8765fca93de1e02416ce6aa5eab9712efb191fc5565e4b66ff22e2926ad4d",
-    "tdf-hq/src/TDF/RagStore.hs": "d7ea61afb9b580c7b9393427a06e4747bc04453951f1ba4eb88bc54987f9bb84",
+    "tdf-hq/src/TDF/RagStore.hs": "af2e414d4c295e9343c2a7917d32f1b55dffc388c3372a808078a13ea37ee2b3",
     "tdf-hq/src/TDF/Reputation.hs": "410eabe943cc2389b5113e439427d78781200a61ded87310e470010a20babd9a",
     "tdf-hq/src/TDF/Routes/Academy.hs": "d644f064a85ed0bd8a5c9ed7244873011ab78f9ec90f1c44fcb2087f9a97a2ea",
     "tdf-hq/src/TDF/Routes/Courses.hs": "a84a2a2c5e23f83a7e578ec4de33eef16866702bb414ad89e3333f93d0a68014",
@@ -32641,7 +32641,7 @@
     "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs": "800836782553cecc8a7715636eec74e9fad398c772e4653b05a43e9766ff070e",
     "tdf-hq/test/TDF/Profiles/ArtistSpec.hs": "012311f9c2954e1611e71c80b53eb4107a8f24cc8b1955a1b692265267f06429",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
-    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "5852d0615dbbc4d22748cb16fcb3cf574bf0d9a658361cd1c69191fb50225c00",
+    "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "5514a3375d74d379fafbce1e3f449e79a794b118d04a300514de191a07a61088",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/Server/PublicBookingNotificationsSpec.hs": "020dd1d269b9c5841f390dd1e60767a824af1846a18e130a99394d39cf3d70ef",
@@ -86781,7 +86781,7 @@
     {
       "id": "SURFACE-4d5b5b67e9af24f7",
       "path": "tdf-hq/src/TDF/RagStore.hs",
-      "sha256": "d7ea61afb9b580c7b9393427a06e4747bc04453951f1ba4eb88bc54987f9bb84",
+      "sha256": "af2e414d4c295e9343c2a7917d32f1b55dffc388c3372a808078a13ea37ee2b3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -90840,7 +90840,7 @@
     {
       "id": "SURFACE-7a8c25536f4eeac3",
       "path": "tdf-hq/test/TDF/RagIndexPrivacySpec.hs",
-      "sha256": "5852d0615dbbc4d22748cb16fcb3cf574bf0d9a658361cd1c69191fb50225c00",
+      "sha256": "5514a3375d74d379fafbce1e3f449e79a794b118d04a300514de191a07a61088",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
