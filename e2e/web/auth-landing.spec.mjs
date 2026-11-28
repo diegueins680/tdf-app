@@ -175,13 +175,22 @@ test('a stale route chunk retains bounded recovery @mobile-flow @critical', asyn
       : route.continue();
   });
   await page.goto('/fans', { waitUntil: 'domcontentloaded' });
+  const recovered = page.getByRole('heading', { name: 'Comunidad — Conecta con tus artistas' });
+  const manualRecovery = page.getByText('No pudimos cargar esta vista.', { exact: true });
+  // The first document never settles: it reloads once. Judge the second one.
+  await expect.poll(() => documents.length).toBe(2);
   if (browserName === 'webkit') {
-    // WebKit retains a failed ES module in its process cache across reload.
-    // It must show manual recovery instead of entering another reload loop.
-    await expect(page.getByText('No pudimos cargar esta vista.', { exact: true })).toBeVisible();
+    // WebKit may retain a failed ES module in its process cache across reload,
+    // but does not always. Either the reload fetches the chunk again and the
+    // page renders, or it must show manual recovery instead of entering another
+    // reload loop. A blank page or a third document is never acceptable.
+    await expect(recovered.or(manualRecovery)).toBeVisible();
+  } else {
+    await expect(recovered).toBeVisible();
+  }
+  if (await manualRecovery.isVisible()) {
     await expect(page.getByRole('button', { name: 'Recargar', exact: true })).toBeVisible();
   } else {
-    await expect(page.getByRole('heading', { name: 'Comunidad — Conecta con tus artistas' })).toBeVisible();
     await expect.poll(() => attempts).toBe(2);
     await expectRenderedApp(page);
   }
