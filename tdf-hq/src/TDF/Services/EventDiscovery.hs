@@ -1738,6 +1738,9 @@ normalizeEventStatus ::
   Text
 normalizeEventStatus now startsAt endsAt sourceStatus saleOpen
   | normalizedSource `elem` ["cancelled", "canceled"] = "cancelled"
+  -- A publisher's postponement outranks the clock and the offers: the old
+  -- start time is no longer a schedule, so the event is neither live nor on sale.
+  | normalizedSource == "postponed" = "postponed"
   | now >= startsAt && maybe False (>= now) endsAt = "live"
   | saleOpen = "on_sale"
   | otherwise = "announced"

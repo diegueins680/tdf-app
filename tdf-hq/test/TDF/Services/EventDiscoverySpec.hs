@@ -314,6 +314,41 @@ spec = do
       map discoveredEventStatus events `shouldBe` ["announced", "cancelled"]
       map (discoveredVenueName . discoveredEventVenue) events
         `shouldBe` ["Teatro Centro de Arte", "Teatro Centro de Arte"]
+    it "keeps a publisher's postponement instead of an active schedule" $ do
+      let page status =
+            block
+              ( "{\"@type\":\"Event\",\"name\":\"Noche de jazz\",\"startDate\":\"2026-11-20T19:30:00-05:00\","
+                  <> "\"eventStatus\":\"https://schema.org/" <> status <> "\","
+                  <> "\"location\":{\"@type\":\"Place\",\"name\":\"MicroTeatro UIO\",\"address\":{\"addressLocality\":\"Quito\",\"addressCountry\":\"EC\"}},"
+                  <> "\"offers\":[{\"@type\":\"Offer\",\"price\":\"12.5\",\"priceCurrency\":\"USD\",\"availability\":\"https://schema.org/InStock\"}]}"
+              )
+          statusOf status =
+            map discoveredEventStatus (normalize platform Nothing True "https://www.meet2go.com/seo/ev/jazz" (page status))
+      statusOf "EventPostponed" `shouldBe` ["postponed"]
+      statusOf "EventScheduled" `shouldBe` ["on_sale"]
+      statusOf "EventCancelled" `shouldBe` ["cancelled"]
+    it "takes the price from offers in the event's own currency" $ do
+      let page offers =
+            block
+              ( "{\"@type\":\"Event\",\"name\":\"Concierto\",\"startDate\":\"2026-11-20T19:30:00-05:00\","
+                  <> "\"location\":{\"@type\":\"Place\",\"name\":\"Movistar Arena\",\"address\":{\"addressLocality\":\"Bogotá\",\"addressCountry\":\"CO\"}},"
+                  <> "\"offers\":[" <> offers <> "]}"
+              )
+          priceOf offers =
+            [ (discoveredEventPriceCents event, discoveredEventCurrency event)
+            | event <- normalize platform Nothing True "https://www.tuboleta.com/es/eventos/concierto" (page offers)
+            ]
+          offer price currency = "{\"@type\":\"Offer\",\"price\":\"" <> price <> "\"" <> currency <> "}"
+          inCurrency code = ",\"priceCurrency\":\"" <> code <> "\""
+      priceOf (offer "100000" (inCurrency "COP") <> "," <> offer "25" (inCurrency "USD"))
+        `shouldBe` [(Just 10000000, "COP")]
+      priceOf (offer "25" (inCurrency "USD") <> "," <> offer "100000" (inCurrency "COP") <> "," <> offer "20" (inCurrency "USD"))
+        `shouldBe` [(Just 2000, "USD")]
+      -- An offer without a currency is read in the country's default, here COP.
+      priceOf (offer "90000" "" <> "," <> offer "100000" (inCurrency "COP"))
+        `shouldBe` [(Just 9000000, "COP")]
+      priceOf (offer "25" (inCurrency "USD") <> "," <> offer "90000" "")
+        `shouldBe` [(Just 2500, "USD")]
     it "keeps one identity for a listed event with its own page when it is rescheduled" $ do
       let guayaquil = EventDiscoveryCity "Guayaquil" "EC" (Just "America/Guayaquil")
           config = platform { linkedDataVenueName = Just "Teatro Centro de Arte" }

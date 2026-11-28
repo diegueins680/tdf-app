@@ -398,17 +398,23 @@ normalizeLinkedDataDocument lookaheadDays configuredCurrency sourceKey config fi
           saleOpen = any (maybe False ("InStock" `T.isInfixOf`) . linkedText "availability") offers
           sourceStatus =
             case linkedText "eventStatus" event of
-              Just status | "Cancelled" `T.isInfixOf` status -> Just "cancelled"
+              Just status
+                | "Cancelled" `T.isInfixOf` status -> Just "cancelled"
+                | "Postponed" `T.isInfixOf` status -> Just "postponed"
               _ -> Nothing
-          offerCurrency =
-            listToMaybe (mapMaybe (\offer -> linkedText "priceCurrency" offer >>= normalizeCurrencyCode) offers)
+          currencyOf offer = linkedText "priceCurrency" offer >>= normalizeCurrencyCode
+          offerCurrency = listToMaybe (mapMaybe currencyOf offers)
           defaultCurrencyCode
             | eventDiscoveryCityCountryCode city == "CO" = "COP"
             | otherwise = configuredCurrency
           currency = fromMaybe defaultCurrencyCode offerCurrency
+          -- A price is an amount in its own offer's currency. Compare only
+          -- the offers quoted in the currency the event is stored with; an
+          -- offer that names no currency is read in the default one.
           prices =
             [ price
             | offer <- offers
+            , fromMaybe defaultCurrencyCode (currencyOf offer) == currency
             , Just price <- [linkedNumber "price" offer <|> linkedNumber "lowPrice" offer]
             , not (isNaN price || isInfinite price)
             , price >= 0
