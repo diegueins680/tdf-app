@@ -30445,7 +30445,7 @@
     "e2e/web/analytics-privacy.spec.mjs": "7919f29fba68e18b86e9bb32b3ad4bd66236e926c664b3158229934960332b06",
     "e2e/web/artist-follow.spec.mjs": "ed6c600fc6928a8c7a273aca09fdcc1bf9231602bf13dbd89e3e5c468c3d8a83",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
-    "e2e/web/auth-landing.spec.mjs": "f69976e1516323adf28208deaed41806edb962be2f52fa1060c0518f5880cfba",
+    "e2e/web/auth-landing.spec.mjs": "2fb4d9f5419632c816eca9262679ace1fcf7c053be5701c740f4df5e01183cd0",
     "e2e/web/booking-catalog-recovery.spec.mjs": "04b68c770c5c7fb56db87697bf9d613c99f92e3d73bf087b24810128c68207be",
     "e2e/web/booking-introduction.spec.mjs": "c46296e4f287004eb23e8e764ea4044c56ba955645b6abacc72650ae078e5aac",
     "e2e/web/booking-service-picker.spec.mjs": "791e55ce6e9ce1dba931839bea55d732042f2a9af39c21ecf6f8d4f97aacc6d6",
@@ -55620,7 +55620,7 @@
     {
       "id": "SURFACE-8096aa6aaf7d328c",
       "path": "e2e/web/auth-landing.spec.mjs",
-      "sha256": "f69976e1516323adf28208deaed41806edb962be2f52fa1060c0518f5880cfba",
+      "sha256": "2fb4d9f5419632c816eca9262679ace1fcf7c053be5701c740f4df5e01183cd0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
