@@ -30933,7 +30933,7 @@
     "scripts/__tests__/compiled-api-surface.test.mjs": "d86d7c4db38bd1648dd981df2548e0b4eb02562c8b7ca0589259a6f79e4f48ec",
     "scripts/__tests__/content-storage-model.test.mjs": "ec3c939221c9a2470f0706c49ec6d2e52e91ebbc4b756419874beddbd8e501ea",
     "scripts/__tests__/content-storage-reconciliation.test.mjs": "e495bbdecb4c88ad8c178c8d06d17cfebafc71148e2fcebeca1423b4558c27da",
-    "scripts/__tests__/continuous-improvement-loop.test.mjs": "5af9e5dc2fda29168ecdaf142b4032214b07cb0b204d6da6f1e85b7a5e8ab382",
+    "scripts/__tests__/continuous-improvement-loop.test.mjs": "e6af0dc3c83c85e331a7d606e3c54626f7071e22e308bc56c004a0af365cb518",
     "scripts/__tests__/delivery-matrix.test.mjs": "37dfd759fd9d46dac0b539dc88e9b8d8d64a6c2f777b7034d1f60c541fc2aac9",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
@@ -31041,9 +31041,9 @@
     "scripts/content-storage-model.mjs": "cae41e9ce3b6cf072d9255e94932a237a52c3f5193e6b8def8d97447bc9240d1",
     "scripts/continuous-improvement-loop-supervisor.sh": "5f7ad2ee6a6070463e7fb8e5da4eeda56afc66c00015dc4eb6935b4a0ca4d7b4",
     "scripts/continuous-improvement-loop-verify.mjs": "cda066e5c99afe1f8d2018e559813afaf8814216c23ad7df7cb2b6d67a46be76",
-    "scripts/continuous-improvement-loop.codex.json": "bb03117ee8f488069cca81703f8e70f96fb7412902f9bfb78b7f1363ed9a1af2",
-    "scripts/continuous-improvement-loop.example.json": "6f0a787a68041a7413c53b447854f77ce09accaf37efb14aee92bc90334a2a3d",
-    "scripts/continuous-improvement-loop.mjs": "f2618194f28d356e0d5d9c856bf92397f7b69b7b6e2bbde1a2745ea58cbc79c6",
+    "scripts/continuous-improvement-loop.codex.json": "c831a6b49afc58ba3a84e58ee4739a5ede35c64079c5fdfea50654a77400e85e",
+    "scripts/continuous-improvement-loop.example.json": "00c741c2d02c4a55edc9a2af06eb4157d1cba1d9d9aee1c17feaf39681419d5a",
+    "scripts/continuous-improvement-loop.mjs": "8791db668bd1918d9baefe7bb6751fda083a2d0575b20886febc6ad393f2683b",
     "scripts/delivery-matrix.mjs": "b69aeaee6ffcfc23ea4a86a5060a6c170cbc2a60d80f4df77a9a744819536cf2",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
@@ -31070,7 +31070,7 @@
     "scripts/lib/catalog-decision-history.mjs": "57c2b822b62515f22aaf324db783d46a0a83229b5ec3c32fe403da7444f383f7",
     "scripts/lib/compiled-api-surface.mjs": "71831644e36c3e2d5e2a51309d701aab8b08f5b3a43ca9ff4ea085b30aef1437",
     "scripts/lib/continuous-improvement-loop-verify.mjs": "3db41dd0683f33d1a03d46f402e6cd9c25a4e07cd2b690a179ba8e6744fc9f97",
-    "scripts/lib/continuous-improvement-loop.mjs": "658148df4d0bf1c8df6e19da2d1266673158ba934f2191186b3b57b5e2e36fae",
+    "scripts/lib/continuous-improvement-loop.mjs": "a6ded71c27c74488feec29a3b50069600b95fcc59ee3d0b3efc4f0830a106626",
     "scripts/lib/delivery-matrix.mjs": "0052f89b9b64323d3d7fa9fc14d9837087edbbbe602c479dfabc7125147ad8de",
     "scripts/lib/discovery.mjs": "347304302f3a0e0161a6b8fc95d311a1eca12b6cd11bb3ffec378b862878ac4b",
     "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
@@ -57336,7 +57336,7 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "5af9e5dc2fda29168ecdaf142b4032214b07cb0b204d6da6f1e85b7a5e8ab382",
+      "sha256": "e6af0dc3c83c85e331a7d606e3c54626f7071e22e308bc56c004a0af365cb518",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59141,7 +59141,7 @@
     {
       "id": "SURFACE-4866f83da6180efe",
       "path": "scripts/continuous-improvement-loop.codex.json",
-      "sha256": "bb03117ee8f488069cca81703f8e70f96fb7412902f9bfb78b7f1363ed9a1af2",
+      "sha256": "c831a6b49afc58ba3a84e58ee4739a5ede35c64079c5fdfea50654a77400e85e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59153,7 +59153,7 @@
     {
       "id": "SURFACE-587b06f07bbc17e1",
       "path": "scripts/continuous-improvement-loop.example.json",
-      "sha256": "6f0a787a68041a7413c53b447854f77ce09accaf37efb14aee92bc90334a2a3d",
+      "sha256": "00c741c2d02c4a55edc9a2af06eb4157d1cba1d9d9aee1c17feaf39681419d5a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59165,7 +59165,7 @@
     {
       "id": "SURFACE-655b9679c92bd422",
       "path": "scripts/continuous-improvement-loop.mjs",
-      "sha256": "f2618194f28d356e0d5d9c856bf92397f7b69b7b6e2bbde1a2745ea58cbc79c6",
+      "sha256": "8791db668bd1918d9baefe7bb6751fda083a2d0575b20886febc6ad393f2683b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59620,7 +59620,7 @@
     {
       "id": "SURFACE-596444d6be3be153",
       "path": "scripts/lib/continuous-improvement-loop.mjs",
-      "sha256": "658148df4d0bf1c8df6e19da2d1266673158ba934f2191186b3b57b5e2e36fae",
+      "sha256": "a6ded71c27c74488feec29a3b50069600b95fcc59ee3d0b3efc4f0830a106626",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

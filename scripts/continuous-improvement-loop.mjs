@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';
 import { statfsSync } from 'node:fs';
 import os from 'node:os';
@@ -18,6 +19,7 @@ import {
   htmlToText,
   parseIdeaMarkdown,
   parseGitHubRemote,
+  sameGitHubRepository,
   summarizeCheckRuns,
   summarizeWorkflowRuns,
   verifyImprovementLoopModel,
@@ -50,7 +52,6 @@ const DEFAULTS = {
   baseBranch: 'main',
   branchPrefix: 'continuous-improvement-loop/',
   openPullRequest: true,
-  draftPullRequest: true,
   maxOpenPullRequests: 3,
   prBacklogDelaySeconds: 900,
   requireLinkedWorktree: true,
@@ -216,7 +217,13 @@ function buildContext(repoRoot, contextDir, iteration) {
 function loopEnvironment(context) {
   // Steps must not inherit the supervisor's status file: a nested loop run (for example the
   // loop's own tests inside the verification gate) would overwrite the live status.
-  const { CONTINUOUS_LOOP_SUPERVISOR_STATUS_FILE: _statusFile, ...inheritedEnv } = process.env;
+  const inheritedEnv = { ...process.env };
+  for (const name of [
+    'CONTINUOUS_LOOP_SUPERVISOR_STATUS_FILE', 'GH_TOKEN', 'GITHUB_TOKEN',
+    'GH_ENTERPRISE_TOKEN', 'GITHUB_ENTERPRISE_TOKEN', 'SSH_AUTH_SOCK', 'GIT_ASKPASS', 'SSH_ASKPASS',
+  ]) {
+    delete inheritedEnv[name];
+  }
   return {
     ...inheritedEnv,
     CONTINUOUS_LOOP_REPO_ROOT: context.repo_root,
@@ -490,7 +497,7 @@ function isValidBranchPrefix(prefix) {
 
 function buildIterationBranchName(config = {}, iteration = 1, now = new Date()) {
   const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\..*$/, '').replace('T', '-');
-  return `${resolveBranchPrefix(config)}${stamp}-${iteration}`;
+  return `${resolveBranchPrefix(config)}${stamp}-${iteration}-${randomUUID()}`;
 }
 
 async function isLinkedWorktree(repoRoot) {
@@ -845,8 +852,23 @@ async function commitStagedChanges(repoRoot, commitMessage, stagedFiles) {
   };
 }
 
-async function pushHead(repoRoot, remoteName, branchName) {
-  await execText('git', ['push', remoteName, `HEAD:refs/heads/${branchName}`], repoRoot);
+async function assertSinglePushDestination(repoRoot, remoteName) {
+  const { stdout } = await execText('git', ['remote', 'get-url', '--push', '--all', remoteName], repoRoot);
+  if (stdout.trim() !== await getRemoteUrl(repoRoot, remoteName)) {
+    throw new Error('The loop remote must have one push URL matching its fetch URL.');
+  }
+}
+
+async function pushIterationCommit(repoRoot, remoteName, branchName, sha, expectedSha = '') {
+  await assertSinglePushDestination(repoRoot, remoteName);
+  const ref = `refs/heads/${branchName}`;
+  if (expectedSha) {
+    await execText('git', ['merge-base', '--is-ancestor', expectedSha, sha], repoRoot);
+  }
+  await execText('git', [
+    'push', '--no-follow-tags', '--recurse-submodules=no', `--force-with-lease=${ref}:${expectedSha}`,
+    '--', remoteName, `${sha}:${ref}`,
+  ], repoRoot);
 }
 
 async function syncSubmodulesRecursively(repoRoot, { checkout = false } = {}) {
@@ -871,7 +893,7 @@ async function fetchBaseBranch(repoRoot, config) {
   const baseBranch = resolveBaseBranch(config);
   const remoteRef = buildRemoteBranchRef(remoteName, baseBranch);
   try {
-    await execText('git', ['fetch', remoteName, baseBranch], repoRoot);
+    await execText('git', ['fetch', '--no-tags', '--refmap=', '--', remoteName, `refs/heads/${baseBranch}`], repoRoot);
   } catch (error) {
     if (isMissingRemoteRefError(error.message)) {
       throw new Error(`Base branch ${remoteRef} does not exist on the remote.`);
@@ -881,7 +903,7 @@ async function fetchBaseBranch(repoRoot, config) {
   return {
     remoteRef,
     baseBranch,
-    sha: await getRevisionSha(repoRoot, remoteRef),
+    sha: await getRevisionSha(repoRoot, 'FETCH_HEAD'),
   };
 }
 
@@ -967,18 +989,20 @@ async function deleteLocalLoopBranches(repoRoot, config) {
 }
 
 async function prepareIterationBranch(repoRoot, config, iteration) {
-  const base = await fetchBaseBranch(repoRoot, config);
   if (!config.allowDirty) {
-    await discardIterationChanges(repoRoot, config);
+    if ((await readLoopBranchLedger(repoRoot)).includes(await currentBranch(repoRoot))) {
+      await discardIterationChanges(repoRoot, config);
+    }
+    await ensureStartState(repoRoot, false);
   }
-  await execText('git', ['checkout', '--quiet', '--detach', base.remoteRef], repoRoot);
+  const base = await fetchBaseBranch(repoRoot, config);
+  await execText('git', ['checkout', '--quiet', '--no-overwrite-ignore', '--detach', base.sha], repoRoot);
   await deleteLocalLoopBranches(repoRoot, config);
 
   const branchName = buildIterationBranchName(config, iteration);
-  // Recorded before it exists, so an interruption right after creation still
-  // leaves it identifiable as this runner's.
+  await execText('git', ['checkout', '--quiet', '--no-track', '-b', branchName, base.sha], repoRoot);
+  // Record only branches this worktree successfully created.
   await writeLoopBranchLedger(repoRoot, [...(await readLoopBranchLedger(repoRoot)), branchName]);
-  await execText('git', ['checkout', '--quiet', '--no-track', '-b', branchName, base.remoteRef], repoRoot);
   await syncSubmodulesRecursively(repoRoot, { checkout: Boolean(config.checkoutSubmodules) });
   return {
     branchName,
@@ -989,8 +1013,18 @@ async function prepareIterationBranch(repoRoot, config, iteration) {
 }
 
 async function leaveIterationBranch(repoRoot, branch) {
-  await tryGit(repoRoot, ['checkout', '--quiet', '--detach', branch.baseRef]);
+  await tryGit(repoRoot, ['checkout', '--quiet', '--no-overwrite-ignore', '--detach', branch.baseSha]);
   await tryGit(repoRoot, ['branch', '-D', branch.branchName]);
+}
+
+async function currentBranch(repoRoot) {
+  return (await execText('git', ['branch', '--show-current'], repoRoot)).stdout.trim();
+}
+
+async function assertIterationHead(repoRoot, branch, expectedSha) {
+  if (await currentBranch(repoRoot) !== branch.branchName || await getHeadSha(repoRoot) !== expectedSha) {
+    throw new Error('The iteration checkout or its commit changed unexpectedly.');
+  }
 }
 
 async function countOpenLoopPullRequests(repoRoot, config) {
@@ -1200,13 +1234,80 @@ async function openPullRequest(repoRoot, config, context, branch) {
       head: branch.branchName,
       base: branch.baseBranch,
       body: buildPullRequestBody(config, context, branch),
-      draft: config.draftPullRequest !== false,
+      draft: true,
     }),
   });
   return {
     number: payload.number ?? null,
     url: payload.html_url ?? '',
   };
+}
+
+async function pendingPublicationPath(repoRoot) {
+  return path.join(path.dirname(await loopBranchLedgerPath(repoRoot)), 'continuous-loop-pending-pr.json');
+}
+
+async function completePendingPublication(repoRoot, config) {
+  const journal = await pendingPublicationPath(repoRoot);
+  let pending;
+  try {
+    pending = JSON.parse(await fs.readFile(journal, 'utf8'));
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+
+  const { branch, context, sha, repository } = pending;
+  const remote = await getGitHubRemote(repoRoot, config.pushRemote);
+  if (!config.openPullRequest || !sameGitHubRepository(repository, `${remote.owner}/${remote.repo}`) ||
+      branch.baseBranch !== resolveBaseBranch(config) ||
+      !branch.branchName.startsWith(resolveBranchPrefix(config))) {
+    throw new Error('Pending loop publication does not match the current configuration.');
+  }
+  await assertSinglePushDestination(repoRoot, config.pushRemote);
+  const query = new URLSearchParams({
+    state: 'all',
+    base: branch.baseBranch,
+    head: `${remote.owner}:${branch.branchName}`,
+  });
+  const pulls = await githubJson(`repos/${repository}/pulls?${query}`);
+  if (!Array.isArray(pulls)) throw new Error('Unexpected response when looking up the pending pull request.');
+  const existing = pulls.find((pull) => pull.head?.ref === branch.branchName);
+  let result;
+  if (existing) {
+    if (existing.head.sha !== sha || !sameGitHubRepository(existing.head.repo?.full_name, repository)) {
+      throw new Error('The existing pull request does not match the recorded publication.');
+    }
+    result = { number: existing.number ?? null, url: existing.html_url ?? '' };
+  } else {
+    const ref = `refs/heads/${branch.branchName}`;
+    const { stdout } = await execText('git', ['ls-remote', '--refs', '--', config.pushRemote, ref], repoRoot);
+    const remoteSha = stdout.trim().split(/\s+/)[0];
+    if (remoteSha && remoteSha !== sha) throw new Error('The pending publication branch points to a different commit.');
+    if (!remoteSha) await pushIterationCommit(repoRoot, config.pushRemote, branch.branchName, sha);
+    result = await openPullRequest(repoRoot, config, context, branch);
+  }
+  await fs.unlink(journal);
+  return result;
+}
+
+async function publishInitialPullRequest(repoRoot, config, context, branch, sha) {
+  const remote = await getGitHubRemote(repoRoot, config.pushRemote);
+  const journal = await pendingPublicationPath(repoRoot);
+  const temporary = `${journal}.${randomUUID()}`;
+  try {
+    await fs.writeFile(temporary, JSON.stringify({ branch, context, sha, repository: `${remote.owner}/${remote.repo}` }), {
+      flag: 'wx',
+      mode: 0o600,
+    });
+    await fs.link(temporary, journal);
+  } finally {
+    await fs.rm(temporary, { force: true });
+  }
+  context.publicationPending = true;
+  const pullRequest = await completePendingPublication(repoRoot, config);
+  context.publicationPending = false;
+  return pullRequest;
 }
 
 async function runVerification(repoRoot, config, context) {
@@ -1217,6 +1318,31 @@ async function runVerification(repoRoot, config, context) {
   if (result.code !== 0) {
     throw new Error(`Verification failed with exit code ${result.code}; the iteration's changes were not committed.`);
   }
+}
+
+async function verifyCandidateTree(repoRoot, config, context, branch, parentSha) {
+  await assertIterationHead(repoRoot, branch, parentSha);
+  const writeTree = async () => (await execText('git', ['write-tree'], repoRoot)).stdout.trim();
+  const stage = () => listStagedFiles(repoRoot, config.initialUntracked, config.initialTrackedPaths);
+  await stage();
+  const proposedTree = await writeTree();
+  await runVerification(repoRoot, config, context);
+  await assertIterationHead(repoRoot, branch, parentSha);
+  let stagedFiles = await stage();
+  const tree = await writeTree();
+  if (tree !== proposedTree) {
+    // The built-in gate regenerates these indexes. Verify the updated tree once more.
+    const { stdout } = await execText('git', ['diff', '--name-only', '--no-renames', '-z', proposedTree, tree], repoRoot);
+    const generated = new Set(['formal/system/inventory.json', 'formal/system/traceability.json']);
+    if (stdout.split('\0').filter(Boolean).some((file) => !generated.has(file))) {
+      throw new Error('Verification changed files outside the generated specification indexes.');
+    }
+    await runVerification(repoRoot, config, context);
+    await assertIterationHead(repoRoot, branch, parentSha);
+    stagedFiles = await stage();
+    if (await writeTree() !== tree) throw new Error('The candidate tree changed during the second verification.');
+  }
+  return { tree, stagedFiles };
 }
 
 
@@ -1577,6 +1703,7 @@ async function finalizeIteration(repoRoot, config, context, branch) {
   }
 
   let pullRequest = null;
+  let publishedSha = '';
   let repairAttempts = 0;
 
   while (true) {
@@ -1591,17 +1718,8 @@ async function finalizeIteration(repoRoot, config, context, branch) {
     // Nothing is committed, pushed, or proposed until the build-and-test gate passes.
     await emitLoopStatus({ state: 'running', phase: 'verification', ideaTitle: context.idea_title });
     logStep('Verification');
-    // Stage the proposal first: freshness checks such as `git diff --exit-code`
-    // after regenerating files compare against the index, which must hold the
-    // proposed tree rather than the base.
-    await stageCommitCandidates(repoRoot, config.initialUntracked, config.initialTrackedPaths);
-    await runVerification(repoRoot, config, context);
-
-    const stagedFiles = await listStagedFiles(
-      repoRoot,
-      config.initialUntracked,
-      config.initialTrackedPaths,
-    );
+    const parentSha = publishedSha || branch.baseSha;
+    const { tree, stagedFiles } = await verifyCandidateTree(repoRoot, config, context, branch, parentSha);
     if (stagedFiles.length === 0) {
       return {
         ok: true,
@@ -1613,17 +1731,23 @@ async function finalizeIteration(repoRoot, config, context, branch) {
     const commitContext = buildCommitContext(context, stagedFiles);
     const commitMessage = expandTemplate(config.commitMessageTemplate, commitContext);
     const commitResult = await commitStagedChanges(repoRoot, commitMessage, stagedFiles);
+    await assertIterationHead(repoRoot, branch, commitResult.sha);
+    const { stdout: parents } = await execText('git', ['show', '-s', '--format=%P', commitResult.sha], repoRoot);
+    if (parents.trim() !== parentSha || await getRevisionSha(repoRoot, `${commitResult.sha}^{tree}`) !== tree) {
+      throw new Error('The commit does not match the verified tree and parent.');
+    }
     context.head_sha = commitResult.sha;
     context.last_commit_message = context.last_commit_message || commitMessage;
     console.log(`Committed ${commitResult.sha} with ${commitResult.stagedFiles.length} file(s).`);
 
     console.log(`Pushing ${commitResult.sha} to ${config.pushRemote}:${branch.branchName}`);
-    await pushHead(repoRoot, config.pushRemote, branch.branchName);
-
     if (config.openPullRequest && !pullRequest) {
-      pullRequest = await openPullRequest(repoRoot, config, context, branch);
+      pullRequest = await publishInitialPullRequest(repoRoot, config, context, branch, commitResult.sha);
       console.log(`Opened pull request ${pullRequest.url || `#${pullRequest.number}`}.`);
+    } else {
+      await pushIterationCommit(repoRoot, config.pushRemote, branch.branchName, commitResult.sha, publishedSha);
     }
+    publishedSha = commitResult.sha;
 
     const published = {
       ok: true,
@@ -1669,6 +1793,7 @@ async function finalizeIteration(repoRoot, config, context, branch) {
 }
 
 async function runIteration(repoRoot, config, iteration) {
+  if (!config.dryRun) await completePendingPublication(repoRoot, config);
   const contextDir = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-'));
   const context = buildContext(repoRoot, contextDir, iteration);
 
@@ -1722,13 +1847,13 @@ async function runIteration(repoRoot, config, iteration) {
       }
     }
     try {
-      await discardIterationChanges(repoRoot, config);
+      if (await currentBranch(repoRoot) === branch.branchName) await discardIterationChanges(repoRoot, config);
     } catch (discardError) {
       console.error(`Failed to discard iteration changes: ${discardError.message}`);
     }
     throw error;
   } finally {
-    await leaveIterationBranch(repoRoot, branch);
+    if (!context.publicationPending) await leaveIterationBranch(repoRoot, branch);
     if (succeeded) {
       await fs.rm(contextDir, { recursive: true, force: true });
     }
@@ -2002,6 +2127,7 @@ async function main() {
     !config.dryRun &&
     !config.allowDirty &&
     validatedConfig.requireLinkedWorktree &&
+    (await readLoopBranchLedger(repoRoot)).includes(await currentBranch(repoRoot)) &&
     (await listTrackedChanges(repoRoot)).length + (await listUntrackedFiles(repoRoot)).length > 0
   ) {
     // Leftovers from an interrupted run in the loop's own worktree are unverified work.
@@ -2132,7 +2258,10 @@ export {
   listUnmappedSurfaceFiles,
   isLinkedWorktree,
   openPullRequest,
+  completePendingPublication,
   prepareIterationBranch,
+  pushIterationCommit,
+  verifyCandidateTree,
   validateLoopConfig,
   syncSubmodulesRecursively,
   waitForGreenCi,

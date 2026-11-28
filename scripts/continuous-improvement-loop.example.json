@@ -10,7 +10,6 @@
   "baseBranch": "main",
   "branchPrefix": "continuous-improvement-loop/",
   "openPullRequest": true,
-  "draftPullRequest": true,
   "maxOpenPullRequests": 3,
   "pollGitHub": false,
   "pollIntervalSeconds": 30,

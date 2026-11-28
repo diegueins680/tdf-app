@@ -290,6 +290,14 @@ export function buildCommitContext(context, stagedFiles) {
   };
 }
 
+// GitHub owner and repository names are case-insensitive. A remote URL keeps
+// whatever casing it was typed with, while the API answers with the canonical
+// one, so the two are compared without regard to case.
+export function sameGitHubRepository(left, right) {
+  return typeof left === 'string' && typeof right === 'string' &&
+    left.length > 0 && left.toLowerCase() === right.toLowerCase();
+}
+
 export function parseGitHubRemote(remoteUrl) {
   if (!remoteUrl) return null;
   const trimmed = remoteUrl.trim();
