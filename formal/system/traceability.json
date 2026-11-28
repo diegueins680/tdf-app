@@ -30392,6 +30392,110 @@
         "reason": "Pure core, model and translation verified as stated; the handler wiring and the web switch have no HTTP-level or browser test."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "MKT-ANDROID-BETA-EMAIL-001",
+      "title": "Approved, capped email sequence for the Android closed test",
+      "statement": "The Android closed-test email campaign sends only to the exact audience and texts an approver accepted by SHA-256, at most five attempts in any 24 hours, never retries an attempt whose outcome is uncertain, sends nothing further to a contact after an opt-out, a bounce, an SMTP rejection, an uncertain attempt or a changed CRM address, and sends no reminder to a contact who replied.",
+      "domain": "MKT",
+      "authority": "inferred",
+      "source": "docs/release/android-beta-crm-email.md; scripts/android-beta-email.py (PR #765); owner confirmation of the intended behaviour pending",
+      "contract": "docs/release/android-beta-crm-email.md",
+      "property": "No message is attempted unless a campaign record exists whose plan hash equalled the approved hash at activation, the campaign is not paused, and fewer attempts than the plan's daily limit (five) were recorded in the preceding 24 hours; each contact and stage has at most one recorded attempt; invitations and reminders additionally need a recorded Play Console count below 12 and fewer verified testers than the larger of the batch goal and 12 minus that count.",
+      "actors": [
+        "Campaign operator",
+        "Audience and sequence approver",
+        "Scheduled systemd service running as the dedicated tdf-android-beta-email user",
+        "CRM contact invited to the closed test"
+      ],
+      "preconditions": [
+        "A private cohort CSV of party_id, email and permission_ref prepared by the operator; the CRM contacts API does not expose email consent, so eligibility is established outside the program.",
+        "A preview file whose SHA-256 the approver accepted, activated with that same hash.",
+        "A Play Console tester count recorded by the operator before recruiting.",
+        "TDF_CRM_TOKEN and mailbox credentials supplied through a root-owned mode 0600 environment file; the mailbox user equals the approved sender."
+      ],
+      "inputs": [
+        "Cohort CSV and sender address (preview)",
+        "Approved preview file and its SHA-256 (activate)",
+        "Operator records: console-count, requested, access, verified, installed, stop, withdrawn, pause, resume",
+        "CRM contact lookup by party id",
+        "Replies and bounces read from the campaign mailbox over IMAP"
+      ],
+      "state": {
+        "states": [
+          "no campaign",
+          "active",
+          "paused"
+        ],
+        "initial": "no campaign",
+        "terminal": [],
+        "contactStages": [
+          "invite",
+          "reminder",
+          "access",
+          "check-in"
+        ],
+        "deliveryStatus": [
+          "uncertain",
+          "accepted",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "no campaign -> active by activate with a plan whose hash equals the approved hash",
+        "active <-> paused by the operator",
+        "Per contact: invite, then one reminder after 72 hours without a reply, then an access message once the operator records access, then one check-in from day 7 and before day 14 of the verified enrolment",
+        "A delivery row is committed as uncertain before SMTP and then set to accepted or rejected"
+      ],
+      "forbiddenTransitions": [
+        "Sending without an activated plan, with a hash that differs from the approved one, or while paused",
+        "Activating a second or modified audience over an existing campaign",
+        "A sixth attempt within 24 hours",
+        "Retrying a contact and stage that already has a recorded attempt, including one left uncertain",
+        "Any further message to a contact that opted out, bounced, has a rejected or uncertain attempt, or whose CRM email no longer matches the approved one",
+        "An invitation or reminder to a contact who already replied, requested access or was given access",
+        "Recruiting when the recorded Play Console count is 12 or more or missing, or when verified testers reach the larger of the goal and 12 minus the count",
+        "Treating a reply claiming enrolment, or SMTP acceptance, as verified Google Play enrolment",
+        "Continuing a tick after a transport or configuration failure"
+      ],
+      "effects": [
+        "Email sent from the approved sender through SMTP",
+        "Private SQLite record of the plan, contacts, attempts and operator events",
+        "No write to the CRM; contacts are read by id only"
+      ],
+      "authorization": "Preview reads the CRM with the operator's token. Sending requires the approver's hash at activation and an operator-recorded Play Console count. The service runs as a dedicated unprivileged user with NoNewPrivileges and a strict read-only system view.",
+      "privacy": "The cohort, preview and state hold names, email addresses and Google account addresses and stay in private files with umask 0077 and a mode 0700 state directory. The journal reports counts of attempts and problems and does not list addresses. Every message carries an opt-out instruction.",
+      "concurrency": "One state file per campaign and one oneshot service started every 15 minutes; systemd does not start a second instance while one runs. Running replicas against different state files is outside the contract and is an operator error named in the runbook.",
+      "idempotency": "The attempt row is committed before SMTP and keyed by contact and stage, so a repeated tick, a crash or a restart cannot send the same stage twice.",
+      "failure": "An SMTP recipient refusal marks the delivery rejected and ends that contact's sequence. A transport or configuration error ends the tick, leaves that attempt uncertain (which also ends that contact's sequence until an operator reviews it) and reports a problem. A missing, organizational or changed CRM contact stops that contact as crm-changed.",
+      "recovery": "Uncertain attempts are reviewed by the operator in the mailbox and are never retried automatically. The operator can pause, resume, stop a contact, or record a reviewed request, access, verification, installation or withdrawal.",
+      "observability": "The status subcommand lists each contact's state and attempts; each tick prints the count of SMTP-accepted attempts and problems, which the service journal retains.",
+      "implementation": [
+        "scripts/android-beta-email.py",
+        "ops/hetzner/tdf-android-beta-email.service",
+        "ops/hetzner/tdf-android-beta-email.timer",
+        "docs/release/android-beta-crm-email.md"
+      ],
+      "tests": [
+        "scripts/test_android_beta_email.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "verification": "Ten unit tests with an in-memory state, a stub CRM lookup and stub SMTP/IMAP: approval and Play-count gate, duplicate and updated audience refusal, single reminder, distinct request/access/claim/verification/installation states, duplicate Google account, stop at seven verified testers, daily cap, pause and transport failure, opt-out and failed mailbox, reply correlation and bounce detection, IMAP read without marking. No formal model; no test against a real SMTP or IMAP server or an installed timer.",
+      "evidence": "scripts/test_android_beta_email.py output at the reviewed revision.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Source-derived contract and unit tests with stub transports; production installation and a live send are unverified.",
+      "ambiguity": [
+        "Email consent is not available from the CRM API; the permission_ref column is recorded but its validity rests on the operator and the approver.",
+        "The unit files are not installed by any release script; installation follows the runbook by hand.",
+        "The goal of seven verified testers and the ceiling of twelve are campaign parameters taken from the runbook, not from a Google Play policy citation in this repository."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The program and its unit tests correspond to the runbook; installed-timer behaviour, real mailbox handling and an owner-approved send have not been observed."
+      },
+      "historicalStatus": null
     }
   ],
   "sourceFingerprints": {
@@ -30419,6 +30523,7 @@
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
+    "docs/release/android-beta-crm-email.md": "382ceec4a4f4feca5ef1be050e1f053a488430b08d5dffc08e70003c2472ade3",
     "docs/release/delivery-evidence-matrix.md": "6044ad469758e8e6459c413acd7d3fe290920af123a3ed29d388e88d133b2015",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/desktop/helpers/api-fixture.mjs": "67b6cd86c8383a4c7c6e8c228f5340aef5c43559c4987015ab031cc5e8792071",
@@ -30891,6 +30996,8 @@
     "ops/hetzner/recovery-tools.json": "a2427185433ece7d46514d9827eb788a223d09881b3d68adb259c1df44b6c2a4",
     "ops/hetzner/rehearse-postgres-restore.py": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
     "ops/hetzner/release-journal.py": "1c9dccb95894a676582e27acee4f8191225dcbd33a776f773e12fc322289635d",
+    "ops/hetzner/tdf-android-beta-email.service": "aee35653165f468ab8123b6550a6661b2265184458eb5c25f2988bf37b595638",
+    "ops/hetzner/tdf-android-beta-email.timer": "2f8579e2d164151db93c09d2473429fbe122efb774f0741f8c261e37aa223c47",
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
@@ -31000,6 +31107,7 @@
     "scripts/__tests__/verification-evidence.test.mjs": "d844c7be68115d503729dc5fc97f7d86766d53d52f641e21f7eeb5c9b1fbe14b",
     "scripts/__tests__/video-campaign-access.test.mjs": "618dec9d2f28c82b786b66403ad33350ca97949a9abb37cb32f9ff03c9522b04",
     "scripts/__tests__/video-campaign-postgres-runner.test.mjs": "72e9e3fe9f0dad70d85a921b9b479465dcc60ba09dd34c7c564eb56af054c0a3",
+    "scripts/android-beta-email.py": "9f440f634cd91e08ce3e3eed5fb069d34783401f5eeb0c1d68eeec522a4f8b35",
     "scripts/artist-enrichment.mjs": "7cae285c8ffd2373048ab4d3e4ea2838046b7c62571e795163de86f22516809e",
     "scripts/artist-image-download.mjs": "012978206590de16a22c53b98ed29e5245a586dd2928ad26be34981005e3c20c",
     "scripts/artist-similarity-fixture.sql": "3a2bda3bb8c40e80ed8b3ec28906af1929810d7dee5007f803673b5736dd5df0",
@@ -31112,7 +31220,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "e497d1ce41e8b1bdc3ae776a164b0cb3c6317b5c799ecce85205ef9c79602729",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "0af61bd6fd80e7c38365c2ed7de377bbc97f9b1f4a715788553c030d36522d61",
+    "scripts/quality-repo.sh": "f31cddfae26cdab8ebbee9e7d215429f39eed247c819a7ac140703b941582e90",
     "scripts/quality-ui.sh": "4361a3180ecaf177a227915374253d8c0e4ec9eb21e87fc52c52442e31d04fda",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
@@ -31288,6 +31396,7 @@
     "scripts/test-weekly-platform-metrics.py": "27de8dd96d8f852d06cb352580144f9a4c988500b876015384f578b99d52d10b",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
+    "scripts/test_android_beta_email.py": "f13a989fb6c0eb45331df7e25cece16dbd1488a1a4b66ad2d79fc15d4825e8b7",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "cd9c567c6b0a76fdbf73c8dc5a499e17d6accce56dc1e0d6ba69c734783efe8e",
@@ -33192,6 +33301,10 @@
       {
         "requirement": "SYS-ARCH-BOUNDARY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-ANDROID-BETA-EMAIL-001",
+        "relationship": "tests"
       }
     ],
     "scripts/delivery-matrix.mjs": [
@@ -55009,6 +55122,36 @@
         "requirement": "EVT-AFFINITY-ORDER-001",
         "relationship": "formalModels"
       }
+    ],
+    "scripts/android-beta-email.py": [
+      {
+        "requirement": "MKT-ANDROID-BETA-EMAIL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "ops/hetzner/tdf-android-beta-email.service": [
+      {
+        "requirement": "MKT-ANDROID-BETA-EMAIL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "ops/hetzner/tdf-android-beta-email.timer": [
+      {
+        "requirement": "MKT-ANDROID-BETA-EMAIL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "docs/release/android-beta-crm-email.md": [
+      {
+        "requirement": "MKT-ANDROID-BETA-EMAIL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test_android_beta_email.py": [
+      {
+        "requirement": "MKT-ANDROID-BETA-EMAIL-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -56811,14 +56954,24 @@
       "path": "ops/hetzner/tdf-android-beta-email.service",
       "sha256": "aee35653165f468ab8123b6550a6661b2265184458eb5c25f2988bf37b595638",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MKT-ANDROID-BETA-EMAIL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-b22cd92b352ffeb9",
       "path": "ops/hetzner/tdf-android-beta-email.timer",
       "sha256": "2f8579e2d164151db93c09d2473429fbe122efb774f0741f8c261e37aa223c47",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MKT-ANDROID-BETA-EMAIL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8b539014a90ca8b5",
@@ -58566,7 +58719,12 @@
       "path": "scripts/android-beta-email.py",
       "sha256": "9f440f634cd91e08ce3e3eed5fb069d34783401f5eeb0c1d68eeec522a4f8b35",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MKT-ANDROID-BETA-EMAIL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-76fec67f22657bb4",
@@ -60589,7 +60747,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "0af61bd6fd80e7c38365c2ed7de377bbc97f9b1f4a715788553c030d36522d61",
+      "sha256": "f31cddfae26cdab8ebbee9e7d215429f39eed247c819a7ac140703b941582e90",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60679,6 +60837,10 @@
         {
           "requirement": "SYS-ARCH-BOUNDARY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-ANDROID-BETA-EMAIL-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -63997,7 +64159,12 @@
       "path": "scripts/test_android_beta_email.py",
       "sha256": "f13a989fb6c0eb45331df7e25cece16dbd1488a1a4b66ad2d79fc15d4825e8b7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MKT-ANDROID-BETA-EMAIL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-dcfbc3e06e8b9e4f",
@@ -96177,8 +96344,6 @@
     "SURFACE-f4743034f585d310",
     "SURFACE-c9ca596d51c940f8",
     "SURFACE-b85ac3ceaf40e5fb",
-    "SURFACE-4c9e65087e7bdc29",
-    "SURFACE-b22cd92b352ffeb9",
     "SURFACE-0da2aa9657386c51",
     "SURFACE-039bc8d278e3dafc",
     "SURFACE-d96822f506e6f794",
@@ -96210,7 +96375,6 @@
     "SURFACE-c000c38c68fca4c6",
     "SURFACE-0d3a8be771c58138",
     "SURFACE-743d6ba1991f20d7",
-    "SURFACE-0e466a59b4752a9d",
     "SURFACE-76fec67f22657bb4",
     "SURFACE-3014541c9bf2251f",
     "SURFACE-ca58968f6f854ab3",
@@ -96371,7 +96535,6 @@
     "SURFACE-27f5d30ad4a9fccb",
     "SURFACE-306ef04f302e88df",
     "SURFACE-773458db4c86e811",
-    "SURFACE-8bd1e496c6893f83",
     "SURFACE-4ab08b8d4e69f343",
     "SURFACE-7ade12b1e0a8aa7b",
     "SURFACE-488ec868b5fc5265",
@@ -98806,7 +98969,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "79ba8f97c1c49a4f41e03e34b1077f98073e45a9509ea889f658cc85c5829aa0",
+      "sourceSha256": "398c2913b2528334f0656fc2523178660d5c8a4a56e6214eb935cd9bea46fe02",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -98834,7 +98997,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "79ba8f97c1c49a4f41e03e34b1077f98073e45a9509ea889f658cc85c5829aa0",
+      "sourceSha256": "398c2913b2528334f0656fc2523178660d5c8a4a56e6214eb935cd9bea46fe02",
       "definition": {
         "states": [
           "absent",
@@ -98864,7 +99027,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "79ba8f97c1c49a4f41e03e34b1077f98073e45a9509ea889f658cc85c5829aa0",
+      "sourceSha256": "398c2913b2528334f0656fc2523178660d5c8a4a56e6214eb935cd9bea46fe02",
       "definition": {
         "export": [
           "queued",
@@ -98921,7 +99084,7 @@
     {
       "id": "MEDIA-MUSIC-LOUDNESS-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "79ba8f97c1c49a4f41e03e34b1077f98073e45a9509ea889f658cc85c5829aa0",
+      "sourceSha256": "398c2913b2528334f0656fc2523178660d5c8a4a56e6214eb935cd9bea46fe02",
       "definition": {
         "states": [
           "pending",
@@ -122631,7 +122794,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 243,
+    "PARTIAL": 244,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

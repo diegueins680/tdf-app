@@ -5987,7 +5987,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "0af61bd6fd80e7c38365c2ed7de377bbc97f9b1f4a715788553c030d36522d61",
+      "sha256": "f31cddfae26cdab8ebbee9e7d215429f39eed247c819a7ac140703b941582e90",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -33648,7 +33648,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "79ba8f97c1c49a4f41e03e34b1077f98073e45a9509ea889f658cc85c5829aa0",
+      "sha256": "398c2913b2528334f0656fc2523178660d5c8a4a56e6214eb935cd9bea46fe02",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
