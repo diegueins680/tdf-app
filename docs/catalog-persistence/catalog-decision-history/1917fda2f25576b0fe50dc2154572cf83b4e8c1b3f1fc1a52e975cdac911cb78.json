@@ -1,0 +1,26 @@
+{
+  "classification": "security-system-registry",
+  "disposition": "retain-reviewed-deployment-manifest",
+  "specializedModel": "production migration manifest and applied migration ledger",
+  "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+  "id": "d1dfa5c895f157048c91",
+  "reviewed": true,
+  "justification": "Append the original Datafast recovery migration after the complete protected manifest, including friend suggestions. Preserve both earlier manifest reviews.",
+  "reviewMethod": "successor-of-reviewed-decisions",
+  "reviewBatch": "datafast-recovery-main-integration-20261126",
+  "evidence": {
+    "file": "scripts/production-migrations.json",
+    "line": 3,
+    "kind": "json-array",
+    "name": "migrations",
+    "valueCount": 273
+  },
+  "previousDecision": {
+    "$historyRef": "sha256:622a2ae8a28302de76b608d225953bc979661a3b94513de7712c42b8e0497550"
+  },
+  "concurrentReviewHistory": [
+    {
+      "$historyRef": "sha256:33f89be3fbe8f7ec9d0bcfdf034dd8881135eb01623931eab2ea32a7ca674522"
+    }
+  ]
+}
