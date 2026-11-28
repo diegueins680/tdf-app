@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
+import { isDeepStrictEqual, promisify } from 'node:util';
 import { DECISIONS_FILE, expandAtRevision, readExpandedDecisions } from '../lib/catalog-decision-history.mjs';
 
 // Complete retained parent assertions; dated inputs are explicitly projected.
@@ -6523,20 +6523,32 @@ const integrationFiles = new Map([
   ['docs/catalog-persistence/event-catalog-current-successors.json', 'successors'],
   ['docs/catalog-persistence/event-integration-retirements.json', 'retirements'],
 ]);
-const integrationCanonical = value => JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
-  ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item);
+// Index small object shapes so each lookup compares only plausible matches.
+// Serializing each entire subtree here duplicates the expanded review history.
+function integrationLookupKey(node) {
+  if (Array.isArray(node)) return `array/${node.length}`;
+  return JSON.stringify([Object.keys(node).sort(), node.id ?? null, node.name ?? null]);
+}
+
 function integrationFind(value, expected) {
-  if (!value || typeof value !== 'object') return undefined;
+  if (!value || typeof value !== 'object' || !expected || typeof expected !== 'object') return undefined;
   if (!integrationIndexes.has(value)) {
     const index = new Map();
+    const visited = new WeakSet();
     const visit = node => {
-      if (!node || typeof node !== 'object') return;
-      index.set(integrationCanonical(node), node);
+      if (!node || typeof node !== 'object' || visited.has(node)) return;
+      visited.add(node);
+      const key = integrationLookupKey(node);
+      const bucket = index.get(key);
+      if (bucket) bucket.push(node);
+      else index.set(key, [node]);
       for (const child of Object.values(node)) visit(child);
     };
-    visit(value); integrationIndexes.set(value, index);
+    visit(value);
+    integrationIndexes.set(value, index);
   }
-  return integrationIndexes.get(value).get(integrationCanonical(expected));
+  const candidates = integrationIndexes.get(value).get(integrationLookupKey(expected)) ?? [];
+  return candidates.find(node => isDeepStrictEqual(node, expected));
 }
 async function integrationParent(ref, file) {
   const key = `${ref}:${file}`;
@@ -6544,31 +6556,32 @@ async function integrationParent(ref, file) {
     { cwd: integrationRoot, maxBuffer: 64 * 1024 * 1024 }).then(({ stdout }) => JSON.parse(stdout)));
   return integrationCache.get(key);
 }
-// The decisions file stores its review history by reference
-// (scripts/lib/catalog-decision-history.mjs); read it fully expanded, exactly
-// as the nested document it represents.
-let expandedDecisionsText;
-async function integrationCurrentText(file, encoding) {
-  if (file !== DECISIONS_FILE) return fs.readFile(path.join(integrationRoot, file), encoding);
-  expandedDecisionsText ??= `${JSON.stringify(readExpandedDecisions(integrationRoot), null, 2)}\n`;
-  return expandedDecisionsText;
+// Read the compact bytes for change detection. Keep the expanded decisions as
+// a graph so shared historical reviews are indexed only once.
+async function integrationCurrentValue(file) {
+  const bytes = await fs.readFile(path.join(integrationRoot, file), 'utf8');
+  if (!integrationCurrentFiles.has(file)) {
+    const value = file === DECISIONS_FILE ? readExpandedDecisions(integrationRoot) : JSON.parse(bytes);
+    integrationCurrentFiles.set(file, { bytes, value });
+  }
+  const snapshot = integrationCurrentFiles.get(file);
+  assert.equal(snapshot.bytes, bytes, `Composed source changed during parent assertions: ${file}`);
+  return snapshot.value;
 }
 async function integrationRead(ref, file, encoding) {
-  const actualBytes = await integrationCurrentText(file, encoding);
-  if (file === 'scripts/production-migrations.json' || integrationFiles.has(file)) {
-    if (!integrationCurrentFiles.has(file)) integrationCurrentFiles.set(file, { bytes: actualBytes, value: JSON.parse(actualBytes) });
-    assert.equal(integrationCurrentFiles.get(file).bytes, actualBytes, `Composed source changed during parent assertions: ${file}`);
+  const key = integrationFiles.get(file);
+  if (!key && file !== 'scripts/production-migrations.json') {
+    return fs.readFile(path.join(integrationRoot, file), encoding);
   }
+  const actual = await integrationCurrentValue(file);
   if (file === 'scripts/production-migrations.json') {
-    const actual = integrationCurrentFiles.get(file).value; const parent = await integrationParent(ref, file);
+    const parent = await integrationParent(ref, file);
     return JSON.stringify({ ...parent, migrations: parent.migrations.map(row => {
       const found = actual.migrations.find(item => item.id === row.id);
       assert.deepEqual(found, row, `Dated migration changed: ${ref}:${row.id}`); return found;
     }) });
   }
-  const key = integrationFiles.get(file);
-  if (!key) return actualBytes;
-  const actual = integrationCurrentFiles.get(file).value; const parent = await integrationParent(ref, file);
+  const parent = await integrationParent(ref, file);
   return JSON.stringify({ ...parent, [key]: parent[key].map(row => {
     const found = integrationFind(actual, row);
     assert.ok(found, `Lost whole parent review/resolution: ${ref}:${file}:${row.id ?? row.name}`);
@@ -6593,8 +6606,64 @@ async function integrationSource(ref, file) {
 const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26bfd0ace6f606f827d81bfc4180acaebcf1", "5a81672285dc9c03130fc9fd8355e2b4c58e9e12"];
 
 // Qualify the new append against both published parents before running their historical assertions.
+// Compare historical compositions with the entire prefix preceding the verified Datafast append.
+async function manifestBeforeDatafast(file) {
+  const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  assert.equal(manifest.migrations.at(-1).id, '2026-11-24_datafast_recovery');
+  return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
+}
+
+test('Datafast recovery appends its original SQL and preserves the complete protected manifest decision', async () => {
+  const file = 'scripts/production-migrations.json';
+  const base = '64ec5907337e4c1c1fea22760eac2f1b1a73bddb';
+  const parent = await integrationParent(base, file);
+  const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const added = {
+    id: '2026-11-24_datafast_recovery',
+    path: 'tdf-hq/sql/2026-11-24_datafast_recovery.sql',
+    introducedBy: '918c883d204b46fa6bf0ded53f3d854065e13bb4',
+  };
+  assert.deepEqual(manifest, { ...parent, migrations: [...parent.migrations, added] });
+  await integrationExec('git', ['merge-base', '--is-ancestor', added.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, added.path), 'utf8'), await integrationSource(added.introducedBy, added.path));
+  const readObject = objectPath => execFileSync('git', ['show', base + ':' + objectPath],
+    { cwd: integrationRoot, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const prior = expandAtRevision(await integrationParent(base, DECISIONS_FILE), readObject);
+  const isManifest = row => row.evidence?.file === file && row.evidence?.name === 'migrations';
+  const current = readExpandedDecisions(integrationRoot).decisions.find(isManifest);
+  assert.equal(current.reviewBatch, 'datafast-after-venue-coordinates');
+  assert.equal(current.evidence.valueCount, manifest.migrations.length);
+  const datafastParent = '8463e86eb3c5a92dd9d4e114c387e36f8e32912a';
+  const readDatafastObject = objectPath => execFileSync('git', ['show', datafastParent + ':' + objectPath],
+    { cwd: integrationRoot, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const datafast = expandAtRevision(await integrationParent(datafastParent, DECISIONS_FILE), readDatafastObject);
+  assert.deepEqual(current.concurrentReviewHistory, [datafast.decisions.find(isManifest)]);
+  assert.deepEqual(current.previousDecision, prior.decisions.find(isManifest));
+});
+
+async function manifestBeforeVenueCoordinates(file) {
+  const current = await manifestBeforeDatafast(file);
+  const entry = current.migrations.at(-1);
+  const original = (await integrationParent('218797e0c3c8d4c5af839f10c42b3549d4f7f7c5', file)).migrations.at(-1);
+  assert.equal(entry.id, '2026-11-24_venue_coordinate_constraint');
+  assert.deepEqual(entry, original);
+  return { ...current, migrations: current.migrations.slice(0, -1) };
+}
+
+test('venue coordinates append the original SQL after the protected migration sequence', async () => {
+  const file = 'scripts/production-migrations.json';
+  const parent = await integrationParent('422a524684ca068b2b4f609688f0ba838919effb', file);
+  assert.deepEqual(await manifestBeforeVenueCoordinates(file), parent);
+  const { migrations } = await integrationParent('218797e0c3c8d4c5af839f10c42b3549d4f7f7c5', file);
+  const entry = migrations.at(-1);
+  await integrationExec('git', ['merge-base', '--is-ancestor', entry.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, entry.path), 'utf8'), await integrationSource(entry.introducedBy, entry.path));
+});
+
 async function manifestBeforeTaxonomy(file) {
-  const current = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const suggestions = await manifestBeforeVenueCoordinates(file);
+  assert.equal(suggestions.migrations.at(-1).id, '2026-11-21_social_friend_suggestions');
+  const current = { ...suggestions, migrations: suggestions.migrations.slice(0, -1) };
   const original = (await integrationParent('be996410572a72f8f787b2cd5d345b30523ba1ea', file)).migrations.at(-1);
   assert.equal(original.id, '2026-11-21_location_genre_filters');
   assert.deepEqual(current.migrations.at(-3), original);
@@ -6626,7 +6695,15 @@ async function manifestBeforeLoudness(file) {
 }
 
 function decisionBeforeLoudness(decisions) {
-  const taxonomy = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations');
+  const merged = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations').previousDecision;
+  const suggestions = merged.previousDecision;
+  assert.equal(suggestions.reviewBatch, 'friend-suggestions-main-integration-20261124');
+  const [coordinates] = merged.concurrentReviewHistory;
+  assert.equal(coordinates.reviewBatch, 'venue-coordinate-constraint-main-integration-20261124');
+  assert.equal(coordinates.evidence.valueCount, coordinates.previousDecision.evidence.valueCount + 1);
+  assert.equal(coordinates.concurrentReviewHistory[0].reviewBatch, 'venue-coordinate-constraint-20261124');
+  assert.deepEqual(suggestions.previousDecision, coordinates.previousDecision);
+  const taxonomy = suggestions.previousDecision;
   assert.equal(taxonomy.reviewBatch, 'taxonomy-filters-main-integration-20261124');
   assert.equal(taxonomy.evidence.valueCount, taxonomy.previousDecision.evidence.valueCount + 3);
   assert.equal(taxonomy.concurrentReviewHistory[0].evidence.file, 'scripts/production-migrations.json');
@@ -6724,7 +6801,7 @@ test('actual UX/storage composition preserves current main, immutable SQL and bo
     await integrationExec('git', ['merge-base', '--is-ancestor', row.introducedBy, 'HEAD'], { cwd: integrationRoot });
   }
   for (const [reviewFile, key] of integrationFiles) {
-    const current = JSON.parse(await integrationCurrentText(reviewFile, 'utf8'));
+    const current = await integrationCurrentValue(reviewFile);
     for (const ref of INTEGRATION_PARENTS) {
       const prior = await integrationParent(ref, reviewFile);
       for (const row of prior[key]) assert.ok(integrationFind(current, row), `Lost whole parent object: ${ref}:${reviewFile}`);
@@ -6753,7 +6830,7 @@ test('studio gallery appends its original migration and preserves both complete 
   const { stdout } = await integrationExec('git', ['show', original.introducedBy + ':' + original.path], { cwd: integrationRoot });
   assert.equal(await fs.readFile(path.join(integrationRoot, original.path), 'utf8'), stdout);
   for (const [reviewFile, key] of integrationFiles) {
-    const currentReview = JSON.parse(await integrationCurrentText(reviewFile, 'utf8'));
+    const currentReview = await integrationCurrentValue(reviewFile);
     for (const parent of [base, gallery]) {
       const old = await integrationParent(parent, reviewFile);
       const row = old[key].find(r => r.evidence?.file === file || r.name === 'migrations' || r.source?.name === 'migrations');
@@ -6822,8 +6899,7 @@ test('artist similarity appends exactly one migration after venue search and nes
 test('My tickets retains both complete published review graphs and immutable migrations', async () => {
   const assertParent = async (ref) => {
     for (const [file, key] of integrationFiles) {
-      const current = integrationCurrentFiles.get(file)?.value
-        ?? JSON.parse(await integrationCurrentText(file, 'utf8'));
+      const current = await integrationCurrentValue(file);
       const before = await integrationParent(ref, file);
       for (const row of before[key]) {
         assert.ok(integrationFind(current, row), `Lost whole ticket parent object: ${ref}:${file}`);
@@ -6913,4 +6989,38 @@ test('sidebar and tab lists retain their six individually reviewed decisions', a
   const reviewed = published.decisions.filter(row => row.reviewBatch === batch);
   assert.equal(reviewed.length, 6);
   assert.deepEqual(readExpandedDecisions(integrationRoot).decisions.filter(row => row.reviewBatch === batch), reviewed);
+});
+
+test('friend suggestions append one original migration and preserve the protected main review', async () => {
+  const base = 'bddc0a2a6c18ef101db3c7750a4ec7fe7f01b4d8';
+  const file = 'scripts/production-migrations.json';
+  const before = await integrationParent(base, file);
+  const current = await manifestBeforeVenueCoordinates(file);
+  const added = current.migrations.at(-1);
+  assert.deepEqual(current, { ...before, migrations: [...before.migrations, added] });
+  assert.equal(new Set(current.migrations.map(row => row.id)).size, current.migrations.length);
+  assert.equal(added.id, '2026-11-21_social_friend_suggestions');
+  assert.equal(added.path, 'tdf-hq/sql/2026-11-21_social_friend_suggestions.sql');
+  assert.equal(await fs.readFile(path.join(integrationRoot, added.path), 'utf8'), await integrationSource(added.introducedBy, added.path));
+  await integrationExec('git', ['merge-base', '--is-ancestor', added.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  const published = await integrationParent(base, DECISIONS_FILE);
+  const readObject = objectPath => execFileSync('git', ['show', base + ':' + objectPath], { cwd: integrationRoot, encoding: 'utf8' });
+  const manifestDecision = document => document.decisions.find(row => row.evidence?.file === file);
+  const coordinates = manifestDecision(readExpandedDecisions(integrationRoot)).previousDecision;
+  const tip = coordinates.previousDecision;
+  assert.equal(tip.evidence.valueCount, current.migrations.length);
+  assert.deepEqual(tip.previousDecision, manifestDecision(expandAtRevision(published, readObject)));
+});
+
+test('the combined manifest retains both complete migration reviews', async () => {
+  const manifestDecision = document => document.decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json');
+  const merged = manifestDecision(readExpandedDecisions(integrationRoot)).previousDecision;
+  assert.equal(merged.evidence.valueCount, 273);
+  const parentReview = async ref => {
+    const document = await integrationParent(ref, DECISIONS_FILE);
+    const readObject = file => execFileSync('git', ['show', ref + ':' + file], { cwd: integrationRoot, encoding: 'utf8' });
+    return manifestDecision(expandAtRevision(document, readObject));
+  };
+  assert.deepEqual(merged.previousDecision, await parentReview('422a524684ca068b2b4f609688f0ba838919effb'));
+  assert.deepEqual(merged.concurrentReviewHistory, [await parentReview('83e3c864cab056800b833cf82dac94fc8463645d')]);
 });

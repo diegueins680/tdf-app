@@ -48,3 +48,28 @@ is listed, not followed, not the caller and followable under the policy; every n
 seed is listed and the caller's; the sort keys are strict total orders on distinct
 ids over IEEE doubles; no score is NaN. Each guard is removed in turn and must break
 a proof. The script's docstring lists what it does not cover.
+
+## Event order by affinity (`EventAffinity.tla`, `event_affinity_order.py`)
+
+EVT-AFFINITY-ORDER-001. Contract: [../system/event-affinity.md](../system/event-affinity.md).
+
+`EventAffinity.tla`: a request permutes the page the date-ordered query chose and
+promotes an event when a lineup artist is evidence. Artists are hidden and shown, the
+caller's signals change and the job runs at any time; the request reads the listing
+live. `Safe` = no artist hidden at the request's read is evidence, the response holds
+exactly the events of the page, and a promoted event has a listed lineup artist that
+is evidence. Weights, the similarity value and the order inside the two groups are not
+modelled.
+
+| Obligation | Tool | Result |
+|---|---|---|
+| Two artists, two events, every lineup | TLC 1.7.2 | no violation (193,536 states) |
+| Listing taken from the stored relation's snapshot | TLC | `NoHiddenEvidence` violated, as expected |
+| `Init => IndInv`, `IndInv /\ Next => IndInv'`, `IndInv => Safe` (three artists, two events) | Apalache 0.62.4 | NoError |
+| Stale listing, three steps from `Init` | Apalache | `NoHiddenEvidence` violated, as expected |
+
+`event_affinity_order.py` (Z3 4.13.3, source regions pinned by SHA-256): an artist
+with an affinity and a seed contributing to one are usable; own-signal affinities are
+numbers in (1, 2], inferred ones in [0, 1], event affinities numbers that are not
+negative; the page key is a strict total order on distinct positions. Three witnesses;
+six guards removed in turn each break a proof, and allowing NaN breaks the order.

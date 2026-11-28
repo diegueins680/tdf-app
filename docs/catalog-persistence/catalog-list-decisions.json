@@ -32341,26 +32341,64 @@
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "id": "2fbe85dc2eccf49b01cd",
+      "id": "03614141201ef3733794",
       "reviewed": true,
-      "justification": "Keep the reviewed migration sequence from main 228ab63e and append the location and genre filters migration followed by the Unicode suggestion-key and unavailable-genre corrections. Retain the independent parent review histories of the loudness and taxonomy lists.",
-      "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "taxonomy-filters-main-integration-20261124",
+      "justification": "Append the original Datafast recovery migration after the protected venue coordinate constraint. Preserve the complete protected and Datafast review histories.",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "reviewBatch": "datafast-after-venue-coordinates",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 271
+        "valueCount": 274
       },
       "previousDecision": {
-        "$historyRef": "sha256:4c0c7a51f06d9355e78bcc8e1538bb9d25b9e24e627cf34811767d530cee55ea"
+        "$historyRef": "sha256:3b42872026a6cb8dd7840cf348c950ab7136fc038fc6ce538662f521d5c153d5"
       },
       "concurrentReviewHistory": [
         {
-          "$historyRef": "sha256:e534c249ba5da74ebc4b96cce59f58fc3a0ea3c3b199b711fab0d31544167562"
+          "$historyRef": "sha256:1917fda2f25576b0fe50dc2154572cf83b4e8c1b3f1fc1a52e975cdac911cb78"
         }
       ]
+    },
+    {
+      "id": "02f33c240b0c77ab47d1",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Uncoordinated changes could repeat queries or settle a report that requires review.",
+      "justification": "The migration constrains the durable query ledger to its three worker states. Its transitions fence active claims and stop completed or review-required bindings from retrying. These values are an internal persistence protocol.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "datafast-recovery-2026-11-24",
+      "evidence": {
+        "file": "tdf-hq/sql/2026-11-24_datafast_recovery.sql",
+        "line": 8,
+        "kind": "sql-check-values",
+        "name": "CHECK IN",
+        "valueCount": 3
+      }
+    },
+    {
+      "id": "b92b2074d6c8d7ba28c1",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Uncoordinated changes could repeat queries or settle a report that requires review.",
+      "justification": "This private result type distinguishes retryable reports, reports requiring operator review and a uniquely verified debit. Only the last branch can call the domain settlement path.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "datafast-recovery-2026-11-24",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Commerce/DatafastRecovery.hs",
+        "line": 126,
+        "kind": "haskell-sum-type",
+        "name": "Answer",
+        "valueCount": 3
+      }
     }
   ],
   "sourceContextHistory": [

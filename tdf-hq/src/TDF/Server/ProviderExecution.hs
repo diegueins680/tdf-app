@@ -428,7 +428,7 @@ operationToDTO checkoutId operation = PaymentSessionDTO
   , pssExternalId = Store.porProviderResourceId operation
   , pssRedirectUrl = Store.porRedirectUrl operation
   , pssOutcomeCertainty = outcomeCertaintyText (Store.porOutcomeCertainty operation)
-  , pssCanRetryOrFallback = safeToFallback (Store.porOutcomeCertainty operation)
+  , pssCanRetryOrFallback = hostedSessionCanRetry (Store.porStatus operation) (Store.porOutcomeCertainty operation)
   }
 
 checkoutMoneyBreakdown :: Store.CheckoutExecution -> MoneyBreakdown

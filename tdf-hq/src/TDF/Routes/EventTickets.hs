@@ -122,6 +122,9 @@ data PublicEventTicketQuoteDTO = PublicEventTicketQuoteDTO
   , checkoutTotalMinor     :: Int64
   , organizerPayableMinor  :: Int64
   , platformFeeMinor       :: Int64
+  , tierName               :: Maybe Text
+  , termsSummary           :: Text
+  , refundPolicy           :: Text
   , termsVersion           :: Text
   } deriving (Eq, Show, Generic)
 

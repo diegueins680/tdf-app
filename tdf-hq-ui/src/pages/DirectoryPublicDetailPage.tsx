@@ -32,6 +32,7 @@ import { Link as RouterLink, Navigate, useLocation, useParams } from 'react-rout
 
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
 import { describeTerms } from '../features/marketplace/offers';
+import { SocialEventsAPI } from '../api/socialEvents';
 import { EventTickets } from '../api/eventTickets';
 import { findExternalTicketLink, localizeTicketUnavailableReason } from '../utils/externalTicketing';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -44,6 +45,7 @@ import {
 } from '../utils/directoryContactRouting';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventRsvpFeed from '../components/events/EventRsvpFeed';
+import { jamRegistrationPath, mentionsJamCircuit } from '../utils/jamCircuit';
 import { canonicalEventUrl } from '../utils/eventSharing';
 import { resolveDirectoryPreviewImage } from '../services/directoryPreviewImage';
 import ExpandablePreviewImage from '../components/directory/ExpandablePreviewImage';
@@ -108,6 +110,15 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
     enabled: Boolean(identifier),
     ...(authenticationFallback ? { retry: false } : {}),
   });
+  const accountScope = session ? `account:${session.partyId ?? session.username}` : 'anonymous';
+  const adminAccess = useQuery({
+    queryKey: ['social-event-admin-access', identifier, accountScope],
+    queryFn: () => SocialEventsAPI.getEventAdminAccess(identifier),
+    enabled: kind === 'event' && Boolean(session) && PUBLIC_EVENT_ID.test(identifier),
+    retry: false,
+  });
+  const canManageEvent = kind === 'event' && session && adminAccess.isSuccess
+    && (adminAccess.data.eaaAccess === 'owner' || adminAccess.data.eaaAccess === 'admin');
   // Whether the TDF checkout actually sells this event. Imported events
   // (Eventbrite and similar) have no storefront, so the ticket card must
   // point at the external vendor instead of an empty order form.
@@ -330,6 +341,11 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                       {eventCancelled && <Chip color="error" label={english ? 'Cancelled' : 'Cancelado'} />}
                     </Stack>
                     <Typography component="h1" variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '3.7rem' } }}>{title}</Typography>
+                    {canManageEvent && (
+                      <Button component={RouterLink} to={`/social/eventos/${identifier}`} variant="outlined" sx={{ mt: 1 }}>
+                        {english ? 'Manage event' : 'Gestionar evento'}
+                      </Button>
+                    )}
                     {eventDate && <Typography variant="h6" color="text.secondary" mt={1}>{eventDate}</Typography>}
                     {author && <Typography variant="h6" color="text.secondary" mt={1}>Publicado por {text(author['name'])}</Typography>}
                     {sourceProfile && text(sourceProfile['canonicalUrl']) && (
@@ -397,6 +413,12 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
               )}
               <Divider />
               <MarkdownText sx={{ fontSize: '1.08rem', lineHeight: 1.75 }}>{detailDescription}</MarkdownText>
+              {kind === 'event' && mentionsJamCircuit(detailDescription) && (
+                <Button component={RouterLink} variant="outlined" sx={{ alignSelf: 'flex-start' }}
+                  to={session ? jamRegistrationPath : buildLoginRedirectPath(jamRegistrationPath)}>
+                  {english ? 'Register a jam' : 'Registrar una jam'}
+                </Button>
+              )}
 
               {kind === 'event' && (
                 <Stack spacing={2}>
