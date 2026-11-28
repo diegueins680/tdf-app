@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "353808e96b8b95472153fb591befb4e27804ff0dfeb06e5a6928a172d7e75ae8",
+    "tdf-hq/tdf-hq.cabal": "c9c4d39dee2ab0eea39e8b10dd51bdaf851725aeac485923a80f266636bac822",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -1186,6 +1186,15 @@
       "change": "Register the two Datafast payment modules.",
       "semanticReview": "Compared with protected main, the Cabal diff adds only DatafastRecovery and DatafastStatus to the library module list. Dependencies, flags, compiler options and other reviewed sources are identical.",
       "qualification": "Source-bound solver and mutation checks cover this composition."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "42510396a7dfbc4d2b1f7e4f22f231b2a1a3c6c6",
+      "previousSha256": "353808e96b8b95472153fb591befb4e27804ff0dfeb06e5a6928a172d7e75ae8",
+      "currentSha256": "c9c4d39dee2ab0eea39e8b10dd51bdaf851725aeac485923a80f266636bac822",
+      "change": "Register the new TDF.Social.DiscoverAffinity module in the library's other-modules and TDF.Social.DiscoverAffinitySpec in the test suite's other-modules (SOCIAL-DISCOVER-AFFINITY-001).",
+      "semanticReview": "The Cabal file differs from protected main's by exactly two added lines, the TDF.Social.DiscoverAffinity library module and its TDF.Social.DiscoverAffinitySpec test module. The library module holds the reference order of Discover and chooses which form of social_v2_discover a request runs; it is imported only by TDF.Social.Server. No dependency, flag, language extension or compiler option changes, and no other reviewed source changes.",
+      "qualification": "This review covers the conditional solver source context."
     }
   ]
 }

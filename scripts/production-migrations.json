@@ -1393,6 +1393,11 @@
       "id": "2026-11-24_datafast_recovery",
       "path": "tdf-hq/sql/2026-11-24_datafast_recovery.sql",
       "introducedBy": "918c883d204b46fa6bf0ded53f3d854065e13bb4"
+    },
+    {
+      "id": "2026-11-27_social_discover_affinity",
+      "path": "tdf-hq/sql/2026-11-27_social_discover_affinity.sql",
+      "introducedBy": "5def54821b047ba41a77815fed28b5fd37e489ea"
     }
   ]
 }

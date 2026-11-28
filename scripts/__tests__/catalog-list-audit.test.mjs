@@ -6607,8 +6607,45 @@ const INTEGRATION_PARENTS = ["b99ce783caa8446920c5950f5111865e7f05cfa3", "d5cb26
 
 // Qualify the new append against both published parents before running their historical assertions.
 // Compare historical compositions with the entire prefix preceding the verified Datafast append.
-async function manifestBeforeDatafast(file) {
+async function manifestBeforeDiscoverAffinity(file) {
   const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  assert.equal(manifest.migrations.at(-1).id, '2026-11-27_social_discover_affinity');
+  return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
+}
+
+// The manifest decision protected main held before the Discover affinity successor.
+function decisionBeforeDiscoverAffinity(decisions) {
+  const current = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations');
+  assert.equal(current.reviewBatch, 'social-discover-affinity-20261127');
+  assert.equal(current.evidence.valueCount, current.previousDecision.evidence.valueCount + 1);
+  return current.previousDecision;
+}
+
+test('Discover affinity appends its original SQL after the protected manifest and keeps the protected decision', async () => {
+  const file = 'scripts/production-migrations.json';
+  const base = '42510396a7dfbc4d2b1f7e4f22f231b2a1a3c6c6';
+  const parent = await integrationParent(base, file);
+  const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const added = {
+    id: '2026-11-27_social_discover_affinity',
+    path: 'tdf-hq/sql/2026-11-27_social_discover_affinity.sql',
+    introducedBy: '5def54821b047ba41a77815fed28b5fd37e489ea',
+  };
+  assert.deepEqual(manifest, { ...parent, migrations: [...parent.migrations, added] });
+  assert.deepEqual(await manifestBeforeDiscoverAffinity(file), parent);
+  await integrationExec('git', ['merge-base', '--is-ancestor', added.introducedBy, 'HEAD'], { cwd: integrationRoot });
+  assert.equal(await fs.readFile(path.join(integrationRoot, added.path), 'utf8'), await integrationSource(added.introducedBy, added.path));
+  const readObject = objectPath => execFileSync('git', ['show', base + ':' + objectPath],
+    { cwd: integrationRoot, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  const prior = expandAtRevision(await integrationParent(base, DECISIONS_FILE), readObject);
+  const isManifest = row => row.evidence?.file === file && row.evidence?.name === 'migrations';
+  const { decisions } = readExpandedDecisions(integrationRoot);
+  assert.equal(decisions.find(isManifest).evidence.valueCount, manifest.migrations.length);
+  assert.deepEqual(decisionBeforeDiscoverAffinity(decisions), prior.decisions.find(isManifest));
+});
+
+async function manifestBeforeDatafast(file) {
+  const manifest = await manifestBeforeDiscoverAffinity(file);
   assert.equal(manifest.migrations.at(-1).id, '2026-11-24_datafast_recovery');
   return { ...manifest, migrations: manifest.migrations.slice(0, -1) };
 }
@@ -6617,7 +6654,7 @@ test('Datafast recovery appends its original SQL and preserves the complete prot
   const file = 'scripts/production-migrations.json';
   const base = '64ec5907337e4c1c1fea22760eac2f1b1a73bddb';
   const parent = await integrationParent(base, file);
-  const manifest = JSON.parse(await fs.readFile(path.join(integrationRoot, file), 'utf8'));
+  const manifest = await manifestBeforeDiscoverAffinity(file);
   const added = {
     id: '2026-11-24_datafast_recovery',
     path: 'tdf-hq/sql/2026-11-24_datafast_recovery.sql',
@@ -6630,7 +6667,7 @@ test('Datafast recovery appends its original SQL and preserves the complete prot
     { cwd: integrationRoot, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   const prior = expandAtRevision(await integrationParent(base, DECISIONS_FILE), readObject);
   const isManifest = row => row.evidence?.file === file && row.evidence?.name === 'migrations';
-  const current = readExpandedDecisions(integrationRoot).decisions.find(isManifest);
+  const current = decisionBeforeDiscoverAffinity(readExpandedDecisions(integrationRoot).decisions);
   assert.equal(current.reviewBatch, 'datafast-after-venue-coordinates');
   assert.equal(current.evidence.valueCount, manifest.migrations.length);
   const datafastParent = '8463e86eb3c5a92dd9d4e114c387e36f8e32912a';
@@ -6695,7 +6732,7 @@ async function manifestBeforeLoudness(file) {
 }
 
 function decisionBeforeLoudness(decisions) {
-  const merged = decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json' && row.evidence?.name === 'migrations').previousDecision;
+  const merged = decisionBeforeDiscoverAffinity(decisions).previousDecision;
   const suggestions = merged.previousDecision;
   assert.equal(suggestions.reviewBatch, 'friend-suggestions-main-integration-20261124');
   const [coordinates] = merged.concurrentReviewHistory;
@@ -7006,7 +7043,7 @@ test('friend suggestions append one original migration and preserve the protecte
   const published = await integrationParent(base, DECISIONS_FILE);
   const readObject = objectPath => execFileSync('git', ['show', base + ':' + objectPath], { cwd: integrationRoot, encoding: 'utf8' });
   const manifestDecision = document => document.decisions.find(row => row.evidence?.file === file);
-  const coordinates = manifestDecision(readExpandedDecisions(integrationRoot)).previousDecision;
+  const coordinates = decisionBeforeDiscoverAffinity(readExpandedDecisions(integrationRoot).decisions).previousDecision;
   const tip = coordinates.previousDecision;
   assert.equal(tip.evidence.valueCount, current.migrations.length);
   assert.deepEqual(tip.previousDecision, manifestDecision(expandAtRevision(published, readObject)));
@@ -7014,7 +7051,7 @@ test('friend suggestions append one original migration and preserve the protecte
 
 test('the combined manifest retains both complete migration reviews', async () => {
   const manifestDecision = document => document.decisions.find(row => row.evidence?.file === 'scripts/production-migrations.json');
-  const merged = manifestDecision(readExpandedDecisions(integrationRoot)).previousDecision;
+  const merged = decisionBeforeDiscoverAffinity(readExpandedDecisions(integrationRoot).decisions).previousDecision;
   assert.equal(merged.evidence.valueCount, 273);
   const parentReview = async ref => {
     const document = await integrationParent(ref, DECISIONS_FILE);
