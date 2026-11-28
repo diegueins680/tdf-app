@@ -32423,7 +32423,7 @@
     "tdf-hq/src/TDF/Trials/DTO.hs": "151f8670f041102883d6c4aeb25bdeb2b445d180de61f55a75b9c48d389771b0",
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "63fb60b4ade0b1638b9e327f381fca1bcc25b00f074ab7959f37e70f4865af52",
-    "tdf-hq/src/TDF/Trials/SlotSuggestions.hs": "fd1f7fae54b51c6795ff2baa375c1ccb7eff4fc013778c52cd50dae9b6d6ea3c",
+    "tdf-hq/src/TDF/Trials/SlotSuggestions.hs": "832c662b443c0f2daf4a8c6f52e8b14e3f831e179d18d74eb75493db1b43235e",
     "tdf-hq/src/TDF/Venues/Search.hs": "c0352e27e14fdb7ec8fd49c83214053bc0c65853cc5183a0ee7ed11a384a2967",
     "tdf-hq/src/TDF/Venues/SearchFold.hs": "8c63e3a0d1a0a4f33dc1cbe9bb54980b0ae40d1ee2b0628fbfdec30c9b8c1731",
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
@@ -32534,7 +32534,7 @@
     "tdf-hq/test/TDF/TicketPaymentReceiptSpec.hs": "cec7960d91dcca1fdb69846eef1ed504824a0cda51c252aceb32e162ae5ef432",
     "tdf-hq/test/TDF/TrialIdentitySpec.hs": "0396689e05f550caa0dd75909cf0536bca39bc3ed64f0c50ff780750b530511b",
     "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": "f74f8ac1026283bf624373db16161741794f20a0e8305328709e7dd6ff55fb3a",
-    "tdf-hq/test/TDF/Trials/SlotSuggestionsSpec.hs": "78cf6987131f09f5618277304b9dd11766bcde27d6bb6df807b3c8bc12f3989e",
+    "tdf-hq/test/TDF/Trials/SlotSuggestionsSpec.hs": "c2ea38ab73b6468ba1e53549fce59756366e1b36b1dae31bd2a949fd13df7647",
     "tdf-hq/test/TDF/Venues/SearchSpec.hs": "a31e06c160bb0aac3509150e0111e29e9fd94314d994ff11eeda885cb1a4afc9",
     "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "8a3d61f60286b5846516d8ea0bfd68154fa62172354f69232dc385e4615daad2",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
@@ -88614,7 +88614,7 @@
     {
       "id": "SURFACE-7319ba3beaa31203",
       "path": "tdf-hq/src/TDF/Trials/SlotSuggestions.hs",
-      "sha256": "fd1f7fae54b51c6795ff2baa375c1ccb7eff4fc013778c52cd50dae9b6d6ea3c",
+      "sha256": "832c662b443c0f2daf4a8c6f52e8b14e3f831e179d18d74eb75493db1b43235e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -91101,7 +91101,7 @@
     {
       "id": "SURFACE-7017451c6e1e194d",
       "path": "tdf-hq/test/TDF/Trials/SlotSuggestionsSpec.hs",
-      "sha256": "78cf6987131f09f5618277304b9dd11766bcde27d6bb6df807b3c8bc12f3989e",
+      "sha256": "c2ea38ab73b6468ba1e53549fce59756366e1b36b1dae31bd2a949fd13df7647",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

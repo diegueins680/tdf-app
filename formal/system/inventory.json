@@ -19769,7 +19769,7 @@
     {
       "id": "SURFACE-7319ba3beaa31203",
       "path": "tdf-hq/src/TDF/Trials/SlotSuggestions.hs",
-      "sha256": "fd1f7fae54b51c6795ff2baa375c1ccb7eff4fc013778c52cd50dae9b6d6ea3c",
+      "sha256": "832c662b443c0f2daf4a8c6f52e8b14e3f831e179d18d74eb75493db1b43235e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20561,7 +20561,7 @@
     {
       "id": "SURFACE-7017451c6e1e194d",
       "path": "tdf-hq/test/TDF/Trials/SlotSuggestionsSpec.hs",
-      "sha256": "78cf6987131f09f5618277304b9dd11766bcde27d6bb6df807b3c8bc12f3989e",
+      "sha256": "c2ea38ab73b6468ba1e53549fce59756366e1b36b1dae31bd2a949fd13df7647",
       "semanticConformance": "not-established-by-discovery"
     },
     {
