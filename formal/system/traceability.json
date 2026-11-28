@@ -31420,7 +31420,7 @@
     "tdf-hq-ui/public/mobile-app/privacy.html": "5aadcfc8e72fe83f6ed58999ee0f1963ca3b1eec031212bc7a3fdf1fc51d4f5b",
     "tdf-hq-ui/public/mobile-app/support.html": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
     "tdf-hq-ui/public/mobile-app/terms.html": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
-    "tdf-hq-ui/public/mobile-distribution.json": "076cb7a81ebfaec803ff40d3d9c4ebd48c8ecdd184a383ac4b80977500126b17",
+    "tdf-hq-ui/public/mobile-distribution.json": "f071b8a8e76b6ca9ce441f307e99b585cad08cf4f2a48d0952bb5d6ffadfd99c",
     "tdf-hq-ui/public/privacy.html": "94be476e1bf8e621f99bb2d01d7a48b3f9b0a3b30a0fd6b503419ebd5589994f",
     "tdf-hq-ui/public/robots.txt": "082606e607e29733ad0e44ad1efd702079008d9bf867b97638b289d9a18cfb76",
     "tdf-hq-ui/public/sitemap.xml": "8505cc2b842001ad079cd642fb689dce40e8710c6bee468661c204c24963780b",
@@ -65732,7 +65732,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "076cb7a81ebfaec803ff40d3d9c4ebd48c8ecdd184a383ac4b80977500126b17",
+      "sha256": "f071b8a8e76b6ca9ce441f307e99b585cad08cf4f2a48d0952bb5d6ffadfd99c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
